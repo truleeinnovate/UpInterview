@@ -6,6 +6,7 @@ import { BrandingSection } from "./BrandingSection";
 import { Outlet, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
+import Loading from "../../../../../Components/Loading";
 
 const CompanyProfile = () => {
   const { organizationsLoading, organizationData } = useCustomContext();
@@ -48,7 +49,7 @@ const CompanyProfile = () => {
   }, [organizationData]);
 
   if (organizationsLoading) {
-    return <h4>Loading ...</h4>;
+    return <Loading />;
   }
 
   return (

@@ -8,6 +8,7 @@ const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
 const Tenant = require("../models/Tenant");
 const config = require("../config.js");
+const { getAuthCookieOptions } = require('../utils/cookieUtils');
 
 router.use((req, res, next) => {
   if (req.method === "OPTIONS") {
@@ -120,6 +121,10 @@ router.post("/check-user", async (req, res) => {
         freelancer: existingUser.isFreelancer,
       };
       const token = generateToken(payload);
+
+      // Set auth token cookie
+      res.cookie('authToken', token, getAuthCookieOptions());
+
       return res.json({
         existingUser: true,
         email: existingUser.email,
@@ -209,6 +214,9 @@ router.post("/check-user", async (req, res) => {
         freelancer: newUser.isFreelancer,
       });
 
+      // Set auth token cookie
+      res.cookie('authToken', token, getAuthCookieOptions());
+
       return res.json({
         existingUser: false,
         email: newUser.email,
@@ -247,10 +255,10 @@ router.post("/check-user", async (req, res) => {
 
     //   res.json(responsePayload);
   } catch (error) {
-    console.error("Backend Error:", error);
+    console.error("Error in LinkedIn authentication:", error);
     res.status(500).json({
-      error: "Failed to process LinkedIn data",
-      details: error.response?.data || error.message,
+      error: "Internal server error",
+      details: error.message,
     });
   }
 });

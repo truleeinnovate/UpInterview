@@ -20,15 +20,44 @@ import NotificationPanel from "../../Pages/Push-Notification/NotificationPanel.j
 import { logout } from "../../utils/AuthCookieManager/AuthCookieManager";
 import { useCustomContext } from "../../Context/Contextfetch.js";
 import { usePermissions } from "../../Context/PermissionsContext";
+import { usePermissionCheck } from "../../utils/permissionUtils";
 
 const Navbar = () => {
-  const { effectivePermissions } = usePermissions();
+  const { checkPermission, isInitialized, loading } = usePermissionCheck();
   const location = useLocation();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const { userProfile, singlecontact } = useCustomContext();
   const navigate = useNavigate();
+
+  console.log('🧭 Navbar render:', {
+    isInitialized,
+    loading,
+    location: location.pathname,
+    hasAuthToken: !!authToken
+  });
+
+  // Debug permission checks
+  const debugPermissions = () => {
+    const permissions = [
+      'Candidates', 'Positions', 'Interviews', 'MockInterviews',
+      'InterviewTemplates', 'Assessments', 'Analytics', 'SupportDesk',
+      'QuestionBank', 'Billing', 'Wallet'
+    ];
+
+    console.log('🔍 Permission check results:');
+    permissions.forEach(permission => {
+      const hasPermission = checkPermission(permission);
+      console.log(`  ${permission}: ${hasPermission ? '✅' : '❌'}`);
+    });
+  };
+
+  // Debug permissions on mount and when permissions change
+  useEffect(() => {
+    console.log('🔄 Navbar permissions changed, debugging...');
+    debugPermissions();
+  }, [isInitialized, loading]);
 
   // Format name to capitalize first letter of first and last names
   const formatName = (name) => {
@@ -174,6 +203,21 @@ const Navbar = () => {
   // Check if a nav item or icon is active
   const isActive = (path) => location.pathname === path;
 
+  // Debug specific permission checks
+  const candidatesPermission = checkPermission("Candidates");
+  const positionsPermission = checkPermission("Positions");
+  const interviewsPermission = checkPermission("Interviews");
+  const mockInterviewsPermission = checkPermission("MockInterviews");
+  const interviewTemplatesPermission = checkPermission("InterviewTemplates");
+
+  console.log('🎯 Specific permission checks:', {
+    candidatesPermission,
+    positionsPermission,
+    interviewsPermission,
+    mockInterviewsPermission,
+    interviewTemplatesPermission
+  });
+
   const outlineDropdownContent = (
     <div className="absolute top-12 w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
       <div className="flex justify-between items-center px-4 py-2">
@@ -292,31 +336,30 @@ const Navbar = () => {
         </button>
       </div>
       <div
-        className={`px-2 py-1 ${
-          effectivePermissions.Billing?.ViewTab &&
-          effectivePermissions.Wallet?.ViewTab
-            ? "border-t"
-            : ""
-        }`}
+        className={`px-2 py-1 ${checkPermission("Billing") &&
+          checkPermission("Wallet")
+          ? "border-t"
+          : ""
+          }`}
       >
         {[
-          ...(effectivePermissions.Billing?.ViewTab
+          ...(checkPermission("Billing")
             ? [
-                {
-                  to: "/account-settings/billing-details",
-                  label: "Billing",
-                  icon: <CiCreditCard1 />,
-                },
-              ]
+              {
+                to: "/account-settings/billing-details",
+                label: "Billing",
+                icon: <CiCreditCard1 />,
+              },
+            ]
             : []),
-          ...(effectivePermissions.Wallet?.ViewTab
+          ...(checkPermission("Wallet")
             ? [
-                {
-                  to: "/account-settings/wallet",
-                  label: "My Wallet",
-                  icon: <LiaWalletSolid />,
-                },
-              ]
+              {
+                to: "/account-settings/wallet",
+                label: "My Wallet",
+                icon: <LiaWalletSolid />,
+              },
+            ]
             : []),
         ].map(({ to, label, icon }, index) => (
           <NavLink
@@ -413,11 +456,10 @@ const Navbar = () => {
               />
             ) : (
               <CgProfile
-                className={`cursor-pointer ${
-                  dropdownState.profileDropdown
-                    ? "text-custom-blue"
-                    : "text-black"
-                }`}
+                className={`cursor-pointer ${dropdownState.profileDropdown
+                  ? "text-custom-blue"
+                  : "text-black"
+                  }`}
               />
             )}
             {dropdownState.profileDropdown && (
@@ -427,9 +469,8 @@ const Navbar = () => {
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>
       ),
-      className: `text-xl border rounded-md ${
-        singlecontact?.imageData?.path ? "p-1" : "p-2"
-      }`,
+      className: `text-xl border rounded-md ${singlecontact?.imageData?.path ? "p-1" : "p-2"
+        }`,
       isActive: dropdownState.profileDropdown,
     },
   ];
@@ -453,14 +494,13 @@ const Navbar = () => {
             {/* Desktop navigation */}
             <nav className="hidden lg:flex xl:flex 2xl:flex items-center justify-center flex-1">
               <div className="flex items-center space-x-8 max-w-3xl">
-                {effectivePermissions.Candidates?.ViewTab && (
+                {checkPermission("Candidates") && (
                   <NavLink
                     to="/candidate"
-                    className={`h-full flex items-center relative px-1 ${
-                      isActive("/candidate")
-                        ? "text-custom-blue font-bold"
-                        : "text-gray-600 hover:text-custom-blue"
-                    }`}
+                    className={`h-full flex items-center relative px-1 ${isActive("/candidate")
+                      ? "text-custom-blue font-bold"
+                      : "text-gray-600 hover:text-custom-blue"
+                      }`}
                     onClick={() => closeAllDropdowns()}
                   >
                     Candidates
@@ -470,14 +510,13 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {effectivePermissions.Positions?.ViewTab && (
+                {checkPermission("Positions") && (
                   <NavLink
                     to="/position"
-                    className={`h-full flex items-center relative px-1 ${
-                      isActive("/position")
-                        ? "text-custom-blue font-bold"
-                        : "text-gray-600 hover:text-custom-blue"
-                    }`}
+                    className={`h-full flex items-center relative px-1 ${isActive("/position")
+                      ? "text-custom-blue font-bold"
+                      : "text-gray-600 hover:text-custom-blue"
+                      }`}
                     onClick={() => closeAllDropdowns()}
                   >
                     Positions
@@ -487,198 +526,192 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {(effectivePermissions.Interviews?.ViewTab ||
-                  effectivePermissions.MockInterviews?.ViewTab ||
-                  effectivePermissions.InterviewTemplates?.ViewTab) && (
-                  <div
-                    className="relative h-full flex items-center"
-                    ref={interviewRef}
-                  >
-                    <button
-                      className={`flex items-center h-full relative px-1 ${
-                        isActive("/interviewList") ||
-                        isActive("/mockinterview") ||
-                        isActive("/interview-templates")
+                {(checkPermission("Interviews") ||
+                  checkPermission("MockInterviews") ||
+                  checkPermission("InterviewTemplates")) && (
+                    <div
+                      className="relative h-full flex items-center"
+                      ref={interviewRef}
+                    >
+                      <button
+                        className={`flex items-center h-full relative px-1 ${isActive("/interviewList") ||
+                          isActive("/mockinterview") ||
+                          isActive("/interview-templates")
                           ? "text-custom-blue font-bold"
                           : "text-gray-600 hover:text-custom-blue"
-                      }`}
-                      onClick={toggleInterviewDropdown}
-                    >
-                      Interviews
-                      {dropdownState.interviewDropdown ? (
-                        <IoIosArrowUp />
-                      ) : (
-                        <IoIosArrowDown />
-                      )}
-                      {(isActive("/interviewList") ||
-                        isActive("/mockinterview") ||
-                        isActive("/interview-templates")) && (
-                        <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                      )}
-                    </button>
-                    {dropdownState.interviewDropdown && (
-                      <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                        <div className="space-y-1">
-                          {[
-                            ...(effectivePermissions.InterviewTemplates?.ViewTab
-                              ? [
+                          }`}
+                        onClick={toggleInterviewDropdown}
+                      >
+                        Interviews
+                        {dropdownState.interviewDropdown ? (
+                          <IoIosArrowUp />
+                        ) : (
+                          <IoIosArrowDown />
+                        )}
+                        {(isActive("/interviewList") ||
+                          isActive("/mockinterview") ||
+                          isActive("/interview-templates")) && (
+                            <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          )}
+                      </button>
+                      {dropdownState.interviewDropdown && (
+                        <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                          <div className="space-y-1">
+                            {[
+                              ...(checkPermission("InterviewTemplates")
+                                ? [
                                   {
                                     to: "/interview-templates",
                                     label: "Interview Templates",
                                   },
                                 ]
-                              : []),
-                            ...(effectivePermissions.Interviews?.ViewTab
-                              ? [{ to: "/interviewList", label: "Interviews" }]
-                              : []),
-                            // Only include Mock Interviews if organization is NOT present
-                            ...(effectivePermissions.MockInterviews?.ViewTab
-                              ? [
+                                : []),
+                              ...(checkPermission("Interviews")
+                                ? [{ to: "/interviewList", label: "Interviews" }]
+                                : []),
+                              // Only include Mock Interviews if organization is NOT present
+                              ...(checkPermission("MockInterviews")
+                                ? [
                                   {
                                     to: "/mockinterview",
                                     label: "Mock Interviews",
                                   },
                                 ]
-                              : []),
-                          ].map(({ to, label }) => (
-                            <NavLink
-                              key={to}
-                              className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                                isActive(to)
+                                : []),
+                            ].map(({ to, label }) => (
+                              <NavLink
+                                key={to}
+                                className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to)
                                   ? "bg-gray-100 text-custom-blue"
                                   : ""
-                              }`}
-                              to={to}
-                              onClick={() => closeAllDropdowns()}
-                            >
-                              {label}
-                            </NavLink>
-                          ))}
+                                  }`}
+                                to={to}
+                                onClick={() => closeAllDropdowns()}
+                              >
+                                {label}
+                              </NavLink>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
 
-                {(effectivePermissions.Assessment_Template?.ViewTab ||
-                  effectivePermissions.Assessments?.ViewTab) && (
-                  <div
-                    className="relative h-full flex items-center"
-                    ref={assessmentRef}
-                  >
-                    <button
-                      className={`flex items-center h-full relative px-1 ${
-                        isActive("/assessments") || isActive("/assessments-template")
+                {(checkPermission("Assessment_Template") ||
+                  checkPermission("Assessments")) && (
+                    <div
+                      className="relative h-full flex items-center"
+                      ref={assessmentRef}
+                    >
+                      <button
+                        className={`flex items-center h-full relative px-1 ${isActive("/assessments") || isActive("/assessments-template")
                           ? "text-custom-blue font-bold"
                           : "text-gray-600 hover:text-custom-blue"
-                      }`}
-                      onClick={toggleAssessmentDropdown}
-                    >
-                      Assessments
-                      {dropdownState.assessmentDropdown ? (
-                        <IoIosArrowUp />
-                      ) : (
-                        <IoIosArrowDown />
-                      )}
-                      {(isActive("/assessments") ||
-                        isActive("/assessments-template")) && (
-                        <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                      )}
-                    </button>
-                    {dropdownState.assessmentDropdown && (
-                      <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                        <div className="space-y-1">
-                          {[
-                            ...(effectivePermissions.Assessment_Template?.ViewTab
-                              ? [{ to: "/assessments-template", label: "Assessments Template" }]
-                              : []),
-                              ...(effectivePermissions.Assessments?.ViewTab
+                          }`}
+                        onClick={toggleAssessmentDropdown}
+                      >
+                        Assessments
+                        {dropdownState.assessmentDropdown ? (
+                          <IoIosArrowUp />
+                        ) : (
+                          <IoIosArrowDown />
+                        )}
+                        {(isActive("/assessments") ||
+                          isActive("/assessments-template")) && (
+                            <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          )}
+                      </button>
+                      {dropdownState.assessmentDropdown && (
+                        <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                          <div className="space-y-1">
+                            {[
+                              ...(checkPermission("Assessment_Template")
+                                ? [{ to: "/assessments-template", label: "Assessments Template" }]
+                                : []),
+                              ...(checkPermission("Assessments")
                                 ? [{ to: "/assessments", label: "Assessments" }]
                                 : []),
-                          ].map(({ to, label }) => (
-                            <NavLink
-                              key={to}
-                              className={`block px-3 py-2 whitespace-nowrap hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                                isActive(to)
+                            ].map(({ to, label }) => (
+                              <NavLink
+                                key={to}
+                                className={`block px-3 py-2 whitespace-nowrap hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to)
                                   ? "bg-gray-100 text-custom-blue"
                                   : ""
-                              }`}
-                              to={to}
-                              onClick={() => closeAllDropdowns()}
-                            >
-                              {label}
-                            </NavLink>
-                          ))}
+                                  }`}
+                                to={to}
+                                onClick={() => closeAllDropdowns()}
+                              >
+                                {label}
+                              </NavLink>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
 
-                {(effectivePermissions.Analytics?.ViewTab ||
-                  effectivePermissions.SupportDesk?.ViewTab ||
-                  effectivePermissions.QuestionBank?.ViewTab) && (
-                  <div
-                    className="relative h-full flex items-center"
-                    ref={moreRef}
-                  >
-                    <button
-                      className={`flex items-center h-full relative px-1 ${
-                        isActive("/analytics") || isActive("/support-desk") || isActive("/questionBank")
+                {(checkPermission("Analytics") ||
+                  checkPermission("SupportDesk") ||
+                  checkPermission("QuestionBank")) && (
+                    <div
+                      className="relative h-full flex items-center"
+                      ref={moreRef}
+                    >
+                      <button
+                        className={`flex items-center h-full relative px-1 ${isActive("/analytics") || isActive("/support-desk") || isActive("/questionBank")
                           ? "text-custom-blue font-bold"
                           : "text-gray-600 hover:text-custom-blue"
-                      }`}
-                      onClick={toggleMoreDropdown}
-                    >
-                      More
-                      {dropdownState.moreDropdown ? (
-                        <IoIosArrowUp />
-                      ) : (
-                        <IoIosArrowDown />
-                      )}
-                      {(isActive("/analytics") ||
-                        isActive("/support-desk") ||
-                        isActive("/questionBank"))&& (
-                        <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                      )}
-                    </button>
-                    {dropdownState.moreDropdown && (
-                      <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                        <div className="space-y-1">
-                          {[
-                            ...(effectivePermissions.Analytics?.ViewTab
-                              ? [{ to: "/analytics", label: "Analytics" }]
-                              : []),
-                            ...(effectivePermissions.SupportDesk?.ViewTab
-                              ? [{ to: "/support-desk", label: "Support Desk" }]
-                              : []),
-                              ...(effectivePermissions.QuestionBank?.ViewTab
-                                ? [
-                                    {
-                                      to: "/questionBank",
-                                      label: "Question Bank",
-                                    },
-                                  ]
+                          }`}
+                        onClick={toggleMoreDropdown}
+                      >
+                        More
+                        {dropdownState.moreDropdown ? (
+                          <IoIosArrowUp />
+                        ) : (
+                          <IoIosArrowDown />
+                        )}
+                        {(isActive("/analytics") ||
+                          isActive("/support-desk") ||
+                          isActive("/questionBank")) && (
+                            <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          )}
+                      </button>
+                      {dropdownState.moreDropdown && (
+                        <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                          <div className="space-y-1">
+                            {[
+                              ...(checkPermission("Analytics")
+                                ? [{ to: "/analytics", label: "Analytics" }]
                                 : []),
-                          ].map(({ to, label }) => (
-                            <NavLink
-                              key={to}
-                              className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                                isActive(to)
+                              ...(checkPermission("SupportDesk")
+                                ? [{ to: "/support-desk", label: "Support Desk" }]
+                                : []),
+                              ...(checkPermission("QuestionBank")
+                                ? [
+                                  {
+                                    to: "/questionBank",
+                                    label: "Question Bank",
+                                  },
+                                ]
+                                : []),
+                            ].map(({ to, label }) => (
+                              <NavLink
+                                key={to}
+                                className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to)
                                   ? "bg-gray-100 text-custom-blue"
                                   : ""
-                              }`}
-                              to={to}
-                              onClick={() => closeAllDropdowns()}
-                            >
-                              {label}
-                            </NavLink>
-                          ))}
+                                  }`}
+                                to={to}
+                                onClick={() => closeAllDropdowns()}
+                              >
+                                {label}
+                              </NavLink>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
               </div>
             </nav>
 
@@ -687,9 +720,8 @@ const Navbar = () => {
               {icons.map(({ key, ref, content, className, isActive }) => (
                 <div
                   key={key}
-                  className={`${className} ${
-                    isActive ? "text-custom-blue" : "text-black"
-                  }`}
+                  className={`${className} ${isActive ? "text-custom-blue" : "text-black"
+                    }`}
                   ref={ref}
                 >
                   {content}
@@ -704,14 +736,13 @@ const Navbar = () => {
           <div className="fixed inset-0 top-16 bg-gray-800 bg-opacity-75 z-40 lg:hidden">
             <div className="fixed left-0 w-64 bg-white h-full z-50 overflow-y-auto">
               <div className="p-4 space-y-1">
-                {effectivePermissions.Candidates?.ViewTab && (
+                {checkPermission("Candidates") && (
                   <NavLink
                     to="/candidate"
-                    className={`block px-4 py-3 rounded-md ${
-                      isActive("/candidate")
-                        ? "bg-gray-100 text-custom-blue font-bold"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`block px-4 py-3 rounded-md ${isActive("/candidate")
+                      ? "bg-gray-100 text-custom-blue font-bold"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                     onClick={() => {
                       closeAllDropdowns();
                       toggleSidebar();
@@ -721,14 +752,13 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {effectivePermissions.Positions?.ViewTab && (
+                {checkPermission("Positions") && (
                   <NavLink
                     to="/position"
-                    className={`block px-4 py-3 rounded-md ${
-                      isActive("/position")
-                        ? "bg-gray-100 text-custom-blue font-bold"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`block px-4 py-3 rounded-md ${isActive("/position")
+                      ? "bg-gray-100 text-custom-blue font-bold"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                     onClick={() => {
                       closeAllDropdowns();
                       toggleSidebar();
@@ -738,170 +768,164 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {(effectivePermissions.Interviews?.ViewTab ||
-                  effectivePermissions.MockInterviews?.ViewTab ||
-                  effectivePermissions.InterviewTemplates?.ViewTab) && (
-                  <div className="relative" ref={interviewRef}>
-                    <button
-                      className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                        isActive("/interviewList") ||
-                        isActive("/mockinterview") ||
-                        isActive("/interview-templates")
+                {(checkPermission("Interviews") ||
+                  checkPermission("MockInterviews") ||
+                  checkPermission("InterviewTemplates")) && (
+                    <div className="relative" ref={interviewRef}>
+                      <button
+                        className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/interviewList") ||
+                          isActive("/mockinterview") ||
+                          isActive("/interview-templates")
                           ? "bg-gray-100 text-custom-blue font-bold"
                           : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                      onClick={toggleInterviewDropdown}
-                    >
-                      <span>Interviews</span>
-                      {dropdownState.interviewDropdown ? (
-                        <IoIosArrowUp />
-                      ) : (
-                        <IoIosArrowDown />
-                      )}
-                    </button>
-                    {dropdownState.interviewDropdown && (
-                      <div className="mt-1 ml-4 space-y-1">
-                        {[
-                          ...(effectivePermissions.InterviewTemplates?.ViewTab
-                            ? [
+                          }`}
+                        onClick={toggleInterviewDropdown}
+                      >
+                        <span>Interviews</span>
+                        {dropdownState.interviewDropdown ? (
+                          <IoIosArrowUp />
+                        ) : (
+                          <IoIosArrowDown />
+                        )}
+                      </button>
+                      {dropdownState.interviewDropdown && (
+                        <div className="mt-1 ml-4 space-y-1">
+                          {[
+                            ...(checkPermission("InterviewTemplates")
+                              ? [
                                 {
                                   to: "/interview-templates",
                                   label: "Interview Templates",
                                 },
                               ]
-                            : []),
-                          ...(effectivePermissions.Interviews?.ViewTab
-                            ? [{ to: "/interviewList", label: "Interviews" }]
-                            : []),
-                          ...(organization
-                            ? []
-                            : effectivePermissions.MockInterviews?.ViewTab
-                            ? [
-                                {
-                                  to: "/mockinterview",
-                                  label: "Mock Interviews",
-                                },
-                              ]
-                            : []),
-                        ].map(({ to, label }) => (
-                          <NavLink
-                            key={to}
-                            className={`block px-4 py-2 rounded-md ${
-                              isActive(to)
+                              : []),
+                            ...(checkPermission("Interviews")
+                              ? [{ to: "/interviewList", label: "Interviews" }]
+                              : []),
+                            ...(organization
+                              ? []
+                              : checkPermission("MockInterviews")
+                                ? [
+                                  {
+                                    to: "/mockinterview",
+                                    label: "Mock Interviews",
+                                  },
+                                ]
+                                : []),
+                          ].map(({ to, label }) => (
+                            <NavLink
+                              key={to}
+                              className={`block px-4 py-2 rounded-md ${isActive(to)
                                 ? "bg-gray-200 text-custom-blue"
                                 : "hover:bg-gray-100"
-                            }`}
-                            to={to}
-                            onClick={() => {
-                              closeAllDropdowns();
-                              toggleSidebar();
-                            }}
-                          >
-                            {label}
-                          </NavLink>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                                }`}
+                              to={to}
+                              onClick={() => {
+                                closeAllDropdowns();
+                                toggleSidebar();
+                              }}
+                            >
+                              {label}
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                {(effectivePermissions.Assessments?.ViewTab ||
-                  effectivePermissions.QuestionBank?.ViewTab) && (
-                  <div className="relative" ref={assessmentRef}>
-                    <button
-                      className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                        isActive("/assessments") || isActive("/questionBank")
+                {(checkPermission("Assessments") ||
+                  checkPermission("QuestionBank")) && (
+                    <div className="relative" ref={assessmentRef}>
+                      <button
+                        className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/assessments") || isActive("/questionBank")
                           ? "bg-gray-100 text-custom-blue font-bold"
                           : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                      onClick={toggleAssessmentDropdown}
-                    >
-                      <span>Assessments</span>
-                      {dropdownState.assessmentDropdown ? (
-                        <IoIosArrowUp />
-                      ) : (
-                        <IoIosArrowDown />
-                      )}
-                    </button>
-                    {dropdownState.assessmentDropdown && (
-                      <div className="mt-1 ml-4 space-y-1">
-                        {[
-                          ...(effectivePermissions.Assessments?.ViewTab
-                            ? [{ to: "/assessments", label: "Assessments" }]
-                            : []),
-                          ...(effectivePermissions.QuestionBank?.ViewTab
-                            ? [{ to: "/questionBank", label: "Question Bank" }]
-                            : []),
-                        ].map(({ to, label }) => (
-                          <NavLink
-                            key={to}
-                            className={`block px-4 py-2 rounded-md ${
-                              isActive(to)
+                          }`}
+                        onClick={toggleAssessmentDropdown}
+                      >
+                        <span>Assessments</span>
+                        {dropdownState.assessmentDropdown ? (
+                          <IoIosArrowUp />
+                        ) : (
+                          <IoIosArrowDown />
+                        )}
+                      </button>
+                      {dropdownState.assessmentDropdown && (
+                        <div className="mt-1 ml-4 space-y-1">
+                          {[
+                            ...(checkPermission("Assessments")
+                              ? [{ to: "/assessments", label: "Assessments" }]
+                              : []),
+                            ...(checkPermission("QuestionBank")
+                              ? [{ to: "/questionBank", label: "Question Bank" }]
+                              : []),
+                          ].map(({ to, label }) => (
+                            <NavLink
+                              key={to}
+                              className={`block px-4 py-2 rounded-md ${isActive(to)
                                 ? "bg-gray-200 text-custom-blue"
                                 : "hover:bg-gray-100"
-                            }`}
-                            to={to}
-                            onClick={() => {
-                              closeAllDropdowns();
-                              toggleSidebar();
-                            }}
-                          >
-                            {label}
-                          </NavLink>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                                }`}
+                              to={to}
+                              onClick={() => {
+                                closeAllDropdowns();
+                                toggleSidebar();
+                              }}
+                            >
+                              {label}
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                {(effectivePermissions.Analytics?.ViewTab ||
-                  effectivePermissions.SupportDesk?.ViewTab) && (
-                  <div className="relative" ref={moreRef}>
-                    <button
-                      className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                        isActive("/analytics") || isActive("/support-desk")
+                {(checkPermission("Analytics") ||
+                  checkPermission("SupportDesk")) && (
+                    <div className="relative" ref={moreRef}>
+                      <button
+                        className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") || isActive("/support-desk")
                           ? "bg-gray-100 text-custom-blue font-bold"
                           : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                      onClick={toggleMoreDropdown}
-                    >
-                      <span>More</span>
-                      {dropdownState.moreDropdown ? (
-                        <IoIosArrowUp />
-                      ) : (
-                        <IoIosArrowDown />
-                      )}
-                    </button>
-                    {dropdownState.moreDropdown && (
-                      <div className="mt-1 ml-4 space-y-1">
-                        {[
-                          ...(effectivePermissions.Analytics?.ViewTab
-                            ? [{ to: "/analytics", label: "Analytics" }]
-                            : []),
-                          ...(effectivePermissions.SupportDesk?.ViewTab
-                            ? [{ to: "/support-desk", label: "Support Desk" }]
-                            : []),
-                        ].map(({ to, label }) => (
-                          <NavLink
-                            key={to}
-                            className={`block px-4 py-2 rounded-md ${
-                              isActive(to)
+                          }`}
+                        onClick={toggleMoreDropdown}
+                      >
+                        <span>More</span>
+                        {dropdownState.moreDropdown ? (
+                          <IoIosArrowUp />
+                        ) : (
+                          <IoIosArrowDown />
+                        )}
+                      </button>
+                      {dropdownState.moreDropdown && (
+                        <div className="mt-1 ml-4 space-y-1">
+                          {[
+                            ...(checkPermission("Analytics")
+                              ? [{ to: "/analytics", label: "Analytics" }]
+                              : []),
+                            ...(checkPermission("SupportDesk")
+                              ? [{ to: "/support-desk", label: "Support Desk" }]
+                              : []),
+                          ].map(({ to, label }) => (
+                            <NavLink
+                              key={to}
+                              className={`block px-4 py-2 rounded-md ${isActive(to)
                                 ? "bg-gray-200 text-custom-blue"
                                 : "hover:bg-gray-100"
-                            }`}
-                            to={to}
-                            onClick={() => {
-                              closeAllDropdowns();
-                              toggleSidebar();
-                            }}
-                          >
-                            {label}
-                          </NavLink>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                                }`}
+                              to={to}
+                              onClick={() => {
+                                closeAllDropdowns();
+                                toggleSidebar();
+                              }}
+                            >
+                              {label}
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
             </div>
           </div>

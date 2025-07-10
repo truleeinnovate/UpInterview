@@ -2,7 +2,8 @@ import Cookies from 'js-cookie';
 
 export const setAuthCookies = ({ authToken, impersonationToken, userId, tenantId, organization, impersonatedUserId }) => {
   const isLocalhost = window.location.hostname === 'localhost';
-  const domain = isLocalhost ? undefined : '.upinterview.io';
+  // Don't set domain for production - let the browser handle it
+  const domain = isLocalhost ? undefined : undefined;
   const expiresInSeconds = 25200; // 7 hours
   const expirationDate = new Date();
   expirationDate.setSeconds(expirationDate.getSeconds() + expiresInSeconds);
@@ -95,7 +96,8 @@ export const setAuthCookies = ({ authToken, impersonationToken, userId, tenantId
 // Function to clear authentication cookies selectively
 export const clearAllCookies = ({ preserveSuperAdmin = false } = {}) => {
   const isLocalhost = window.location.hostname === 'localhost';
-  const domain = isLocalhost ? undefined : '.upinterview.io';
+  // Don't set domain for production - let the browser handle it
+  const domain = isLocalhost ? undefined : undefined;
   const cookies = document.cookie.split('; ');
   const preserveCookies = preserveSuperAdmin ? ['impersonationToken', 'impersonatedUserId'] : [];
 
