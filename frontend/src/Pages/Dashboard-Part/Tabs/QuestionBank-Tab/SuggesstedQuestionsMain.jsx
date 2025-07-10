@@ -194,7 +194,7 @@ const SuggestedQuestionsComponent = ({
                 customizations: null,
             };
             updateQuestionsInAddedSectionFromQuestionBank(sectionName, questionToAdd);
-            toast.success("Question added successfully!");
+            toast.success("Question Added Successfully!");
         } else {
             try {
                 const questionToAdd = {
@@ -208,7 +208,7 @@ const SuggestedQuestionsComponent = ({
                 if (onAddQuestion) {
                     onAddQuestion(questionToAdd);
                 }
-                toast.success("Question added successfully!");
+                toast.success("Question Added Successfully!");
             } catch (error) {
                 toast.error("Failed to add question");
                 console.error("Error adding question:", error);
@@ -319,17 +319,16 @@ const SuggestedQuestionsComponent = ({
 
     const getDifficultyStyles = (difficulty) => {
         switch (difficulty) {
-            case "Easy":
-                return "border-white rounded-md px-2 py-1 bg-green-300";
-            case "Medium":
-                return "border-white rounded-md px-2 py-1 bg-orange-300";
-            case "Hard":
-                return "border-white rounded-md px-2 py-1 bg-red-300";
-            default:
-                return "";
+          case "Easy":
+            return "border-white rounded-md px-2 py-1 bg-[#81C784]";
+          case "Medium":
+            return "border-white rounded-md px-2 py-1 bg-[#FFD54F]";
+          case "Hard":
+            return "border-white rounded-md px-2 py-1 bg-[#E57373]";
+          default:
+            return "";
         }
-        
-    };
+      };
         const toggleDropdown = (questionId) => {
         setDropdownOpen(dropdownOpen === questionId ? null : questionId);
     };
@@ -393,7 +392,7 @@ const SuggestedQuestionsComponent = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <h2 className="text-gray-700 font-semibold text-lg">No questions available</h2>
+                <h2 className="text-gray-700 font-semibold text-lg">No Questions Available</h2>
                 <p className="text-gray-500">Please try again later or check your data source.</p>
             </div>
         );
@@ -625,7 +624,7 @@ const SuggestedQuestionsComponent = ({
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
-                                    <h2 className="text-gray-700 font-semibold text-lg">No questions found</h2>
+                                    <h2 className="text-gray-700 font-semibold text-lg">No Questions Found</h2>
                                     <p className="text-gray-500">Try again with different filter options</p>
                                 </div>
                             )}
