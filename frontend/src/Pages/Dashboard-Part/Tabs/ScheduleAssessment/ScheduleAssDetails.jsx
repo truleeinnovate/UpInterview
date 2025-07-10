@@ -25,11 +25,6 @@ function ScheduleAssDetails() {
 
   // Fetch candidates if not present in navigation state
   useEffect(() => {
-    if (!schedule) return;
-    if (schedule.candidates && schedule.candidates.length) {
-      setCandidates(schedule.candidates);
-      return;
-    }
     const load = async () => {
       try {
         if (!schedule.assessmentId) return;
@@ -47,6 +42,7 @@ function ScheduleAssDetails() {
       }
     };
     load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!schedule) {
