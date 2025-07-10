@@ -179,18 +179,35 @@ export const isAuthenticated = () => {
 // Logout function
 export const logout = (organization = false) => {
   const isImpersonating = !!Cookies.get('impersonationToken');
-  clearAllCookies({ preserveSuperAdmin: isImpersonating });
 
-  const redirectPath = isImpersonating ? '/admin-dashboard' : organization ? '/organization-login' : '/select-user-type';
-  const currentHost = window.location.hostname;
-  const isLocalhost = currentHost === 'localhost';
+  if (isImpersonating) {
+    // If impersonating, clear only the effective user cookies and redirect to admin dashboard
+    clearAllCookies({ preserveSuperAdmin: true });
+    const currentHost = window.location.hostname;
+    const isLocalhost = currentHost === 'localhost';
 
-  if (!isLocalhost && currentHost.includes('upinterview.io')) {
-    const mainDomain = 'app.upinterview.io';
-    window.location.href = `https://${mainDomain}${redirectPath}`;
+    if (!isLocalhost && currentHost.includes('upinterview.io')) {
+      const mainDomain = 'app.upinterview.io';
+      window.location.href = `https://${mainDomain}/admin-dashboard`;
+    } else {
+      if (window.location.pathname !== '/admin-dashboard') {
+        window.location.replace('/admin-dashboard');
+      }
+    }
   } else {
-    if (window.location.pathname !== redirectPath) {
-      window.location.replace(redirectPath);
+    // If not impersonating, clear all cookies and redirect to login
+    clearAllCookies({ preserveSuperAdmin: false });
+    const redirectPath = organization ? '/organization-login' : '/select-user-type';
+    const currentHost = window.location.hostname;
+    const isLocalhost = currentHost === 'localhost';
+
+    if (!isLocalhost && currentHost.includes('upinterview.io')) {
+      const mainDomain = 'app.upinterview.io';
+      window.location.href = `https://${mainDomain}${redirectPath}`;
+    } else {
+      if (window.location.pathname !== redirectPath) {
+        window.location.replace(redirectPath);
+      }
     }
   }
 };
