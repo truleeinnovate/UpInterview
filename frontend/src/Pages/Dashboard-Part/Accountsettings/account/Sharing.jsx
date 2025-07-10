@@ -4,11 +4,20 @@ import { sharingSettings, sharedContent, sharingAnalytics } from '../mockData/sh
 import { EditButton } from '../common/Buttons'
 import { SharingSettingsPopup } from './SharingSettingsPopup'
 import { ShareContentPopup } from './ShareContentPopup'
+import { usePermissions } from '../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../utils/permissionUtils';
 
 const Sharing = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const [isEditingSettings, setIsEditingSettings] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const [selectedContent, setSelectedContent] = useState(null)
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Sharing")) {
+    return null;
+  }
 
   const handleUpdateSettings = (newSettings) => {
     console.log('Update settings:', newSettings)

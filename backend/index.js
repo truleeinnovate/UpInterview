@@ -108,9 +108,43 @@ app.use((req, res, next) => {
 // Standard middleware
 app.use(bodyParser.json());
 
-// Apply permission middleware to all routes
+// Apply permission middleware to all routes except authentication routes
 const { permissionMiddleware } = require('./middleware/permissionMiddleware');
-app.use(permissionMiddleware);
+
+// Create a middleware that skips permission check for auth routes
+const conditionalPermissionMiddleware = (req, res, next) => {
+  // Skip permission middleware for authentication routes
+  const authRoutes = [
+    '/Organization/Login',
+    '/Organization/Signup',
+    '/Organization/reset-password',
+    '/Organization/verify-email',
+    '/Organization/verify-user-email',
+    '/Individual/Login',
+    '/Individual/Signup',
+    '/linkedin/auth',
+    '/linkedin/callback',
+    '/users/permissions', // Add permissions endpoint to excluded routes
+    '/test-login',
+    '/test-permission-cookies',
+    '/test-cookies',
+    '/set-test-cookie',
+    '/debug-cookies',
+    '/test-cookie-flow'
+  ];
+
+  const isAuthRoute = authRoutes.some(route => req.path.includes(route));
+  
+  if (isAuthRoute) {
+    console.log(`[Permission Middleware] Skipping permission check for auth route: ${req.path}`);
+    return next();
+  }
+
+  // Apply permission middleware for non-auth routes
+  return permissionMiddleware(req, res, next);
+};
+
+app.use(conditionalPermissionMiddleware);
 
 // API Routes
 const apiRoutes = require('./routes/apiRoutes');

@@ -32,7 +32,7 @@ const getAuthCookieOptions = () => {
   }
 
   const options = {
-    httpOnly: true, // Prevents client-side JS from reading the cookie
+    httpOnly: false, // Allow client-side JS to read the cookie
     secure: true, // Always secure when using sameSite: 'None'
     sameSite: isLocalhost ? 'Lax' : 'None', // Required for cross-site cookies
     maxAge: 24 * 60 * 60 * 1000, // 1 day

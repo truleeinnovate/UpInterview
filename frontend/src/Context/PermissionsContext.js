@@ -3,6 +3,7 @@ import axios from 'axios';
 import { config } from '../config';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import { getAuthToken, getImpersonationToken } from '../utils/AuthCookieManager/AuthCookieManager';
 
 const PermissionsContext = createContext();
 
@@ -17,7 +18,7 @@ const getCachedPermissions = () => {
     const timestamp = localStorage.getItem(PERMISSIONS_CACHE_TIMESTAMP);
     const cached = localStorage.getItem(PERMISSIONS_CACHE_KEY);
 
-    console.log('🔍 Checking cached permissions:', { timestamp, cached: !!cached });
+    // console.log('🔍 Checking cached permissions:', { timestamp, cached: !!cached });
 
     if (timestamp && cached) {
       const age = Date.now() - parseInt(timestamp);
@@ -99,22 +100,50 @@ export const PermissionsProvider = ({ children }) => {
       console.log('🌐 Fetching fresh permissions from API');
       setPermissionState((prev) => ({ ...prev, loading: true }));
 
-      const authToken = Cookies.get('authToken');
-      const impersonationToken = Cookies.get('impersonationToken');
+      // Use the proper token getter functions that handle encoding/decoding
+      const authToken = getAuthToken();
+      const impersonationToken = getImpersonationToken();
+      
+      // Check if we have at least one valid token (either authToken OR impersonationToken)
+      const hasAnyToken = authToken || impersonationToken;
+      
+      if (!hasAnyToken) {
+        console.log('❌ No tokens found, returning empty permissions');
+        setPermissionState({
+          effectivePermissions: {},
+          superAdminPermissions: null,
+          inheritedRoleIds: [],
+          isImpersonating: false,
+          effectivePermissions_RoleType: null,
+          effectivePermissions_RoleLevel: null,
+          effectivePermissions_RoleName: null,
+          impersonatedUser_roleType: null,
+          impersonatedUser_roleName: null,
+          loading: false,
+          authError: 'No authentication tokens found',
+          isInitialized: true,
+        });
+        return;
+      }
+
+      
       const tokenPayload = authToken ? decodeJwt(authToken) : null;
 
-      console.log('🔑 Tokens:', {
+      console.log('🔑 Tokens for permissions API:', {
         hasAuthToken: !!authToken,
         hasImpersonationToken: !!impersonationToken,
         tokenPayload
       });
 
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users/permissions`, {
+      const permissionsUrl = `${config.REACT_APP_API_URL}/users/permissions`;
+      console.log('📡 Making permissions API call to:', permissionsUrl);
+
+      const response = await axios.get(permissionsUrl, {
         withCredentials: true,
       });
 
       const permissionData = response.data;
-      console.log('📡 API Response:', permissionData);
+      console.log('📡 Permissions API Response:', permissionData);
 
       // Cache the permissions
       cachePermissions(permissionData);
@@ -129,6 +158,12 @@ export const PermissionsProvider = ({ children }) => {
       console.log('✅ Permissions loaded and state updated');
     } catch (error) {
       console.error('❌ Permission refresh error:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
       setPermissionState((prev) => ({
         ...prev,
         loading: false,
@@ -160,13 +195,13 @@ export const PermissionsProvider = ({ children }) => {
 
   // Optimized permission checking function
   const hasPermission = useCallback((objectName, permissionType = "ViewTab") => {
-    const { effectivePermissions, superAdminPermissions, isInitialized } = permissionState;
+    const { effectivePermissions, superAdminPermissions, isInitialized, isImpersonating } = permissionState;
 
-    console.log('🔍 Checking permission:', { objectName, permissionType, isInitialized });
+    console.log('🔍 Checking permission:', { objectName, permissionType, isInitialized, isImpersonating });
     console.log('📊 Current permissions:', { effectivePermissions, superAdminPermissions });
 
     if (!isInitialized) {
-      console.log('❌ Permissions not initialized yet');
+      console.log('❌ Permissions not initialized yet, returning false');
       return false;
     }
 
@@ -186,15 +221,15 @@ export const PermissionsProvider = ({ children }) => {
     if (effectivePermissions && effectivePermissions[objectName]) {
       if (typeof effectivePermissions[objectName] === "boolean") {
         const result = effectivePermissions[objectName];
-        console.log('✅ Effective permission found:', { objectName, result });
+        // console.log('✅ Effective permission found:', { objectName, result });
         return result;
       }
       const result = effectivePermissions[objectName][permissionType] ?? false;
-      console.log('✅ Effective permission found:', { objectName, permissionType, result });
+      // console.log('✅ Effective permission found:', { objectName, permissionType, result });
       return result;
     }
 
-    console.log('❌ No permission found for:', { objectName, permissionType });
+    // console.log('❌ No permission found for:', { objectName, permissionType });
     return false;
   }, [permissionState]);
 

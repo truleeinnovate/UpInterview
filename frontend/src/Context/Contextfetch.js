@@ -162,7 +162,6 @@ const CustomProvider = ({ children }) => {
 
   const fetchGroupsData = useCallback(async () => {
     if (!tenantId) {
-      console.error("No tenantId found in cookies");
       setGroups([]);
       setLoading(false);
       return;

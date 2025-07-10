@@ -4,8 +4,12 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { config } from '../../../../../config';
+import { usePermissions } from '../../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../../utils/permissionUtils';
 
 const DomainManagement = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const [subdomain, setSubdomain] = useState('')
   const [isChecking, setIsChecking] = useState(false)
   const [availability, setAvailability] = useState(null)
@@ -226,6 +230,11 @@ console.log("organizationId in subdomainmanagement", organizationId);
     } finally {
       setLoading(false)
     }
+  }
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Subdomain")) {
+    return null;
   }
 
   return (

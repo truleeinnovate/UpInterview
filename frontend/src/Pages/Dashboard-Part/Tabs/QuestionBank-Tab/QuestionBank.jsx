@@ -2,6 +2,8 @@ import { useState } from "react";
 import MyQuestionListMain from "./MyQuestionsList.jsx"
 import SuggesstedQuestions from "./SuggesstedQuestionsMain.jsx";
 import { XCircle } from "lucide-react";
+import { usePermissions } from "../../../../Context/PermissionsContext";
+import { usePermissionCheck } from "../../../../utils/permissionUtils";
 
 const QuestionBank = ({ assessmentId,
   sectionName,
@@ -18,8 +20,15 @@ const QuestionBank = ({ assessmentId,
 
   console.log("type:", type);
 
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([])
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("QuestionBank")) {
+    return null;
+  }
 
   const handleSuggestedTabClick = (questionType) => {
     setActiveTab("SuggesstedQuestions");
