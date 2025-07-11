@@ -19,7 +19,7 @@ import { X } from "lucide-react";
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
-import { clearAllCookies, logout } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
+import { clearAllAuth, logout } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
 import { usePermissions } from "../../../Context/PermissionsContext";
 
 function Header() {
@@ -393,11 +393,11 @@ function Header() {
 
     if (isImpersonating) {
       // If impersonating, clear only the effective user cookies and redirect to admin dashboard
-      clearAllCookies({ preserveSuperAdmin: true });
+      clearAllAuth();
       navigate("/organization-login");
     } else {
       // If not impersonating, clear all cookies and redirect to login
-      logout(true); // true for organization login
+      logout(navigate); // true for organization login
     }
   };
 

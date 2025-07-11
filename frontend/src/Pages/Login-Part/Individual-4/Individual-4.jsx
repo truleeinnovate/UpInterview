@@ -10,7 +10,7 @@ import AdditionalDetails from "./AdditionalDetails.jsx";
 import InterviewDetails from "./InterviewDetails.jsx";
 import AvailabilityDetails from "./AvailabilityDetails.jsx";
 import { config } from "../../../config.js";
-import { setAuthCookies } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
+import { setAuthCookies, clearAllAuth } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
 import { useIndividualLogin } from "../../../apiHooks/useIndividualLogin";
 import { uploadFile } from "../../../apiHooks/imageApis.js";
 import Loading from "../../../Components/Loading.js";
@@ -548,6 +548,10 @@ const MultiStepForm = () => {
       );
 
       if (response.data.token) {
+        // Clear all cookies and localStorage before setting new ones
+        clearAllAuth();
+        console.log('✅ Cleared all cookies and localStorage for individual signup');
+        
         setAuthCookies(response.data.token);
 
         // CUSTOM PROFILE PIC OR LINKEDIN PROFILE PIC

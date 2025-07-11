@@ -18,7 +18,7 @@ import {
 import { CgDetailsMore } from "react-icons/cg";
 import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 import { usePermissions } from "../../../Context/PermissionsContext";
-import { clearAllCookies, logout } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
+import { clearAllAuth, logout } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
 
 function Sidebar({ open, onClose }) {
   const { superAdminPermissions, effectivePermissions, isImpersonating } = usePermissions();
@@ -87,7 +87,7 @@ function Sidebar({ open, onClose }) {
 
     if (isImpersonating) {
       // If impersonating, clear only the effective user cookies and redirect to admin dashboard
-      clearAllCookies({ preserveSuperAdmin: true });
+      clearAllAuth({ preserveSuperAdmin: true });
       navigate("/admin-dashboard");
     } else {
       // If not impersonating, clear all cookies and redirect to login

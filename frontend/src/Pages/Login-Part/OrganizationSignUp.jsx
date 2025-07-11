@@ -14,7 +14,7 @@ import {
   validatePassword,
   validateConfirmPassword
 } from '../../utils/OrganizationSignUpValidation';
-import { setAuthCookies, clearAllCookies } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { setAuthCookies, clearAllAuth } from '../../utils/AuthCookieManager/AuthCookieManager.jsx';
 import { validateWorkEmail, checkEmailExists } from '../../utils/workEmailValidation.js';
 
 export const Organization = () => {
@@ -288,7 +288,7 @@ export const Organization = () => {
 
     try {
       // Clear all cookies before setting new ones
-      clearAllCookies();
+      clearAllAuth();
 
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
       const { token } = response.data;
