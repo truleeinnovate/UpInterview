@@ -101,7 +101,8 @@ const PositionRoundCard = ({
   }, [showQuestions, round?.assessmentId]);
 
 
-  console.log("round", round);
+  // Remove console.log to prevent loops
+  // console.log("round", round);
 
 
 
