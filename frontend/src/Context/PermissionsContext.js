@@ -103,10 +103,10 @@ export const PermissionsProvider = ({ children }) => {
       // Use the proper token getter functions that handle encoding/decoding
       const authToken = getAuthToken();
       const impersonationToken = getImpersonationToken();
-      
+
       // Check if we have at least one valid token (either authToken OR impersonationToken)
       const hasAnyToken = authToken || impersonationToken;
-      
+
       if (!hasAnyToken) {
         console.log('❌ No tokens found, returning empty permissions');
         setPermissionState({
@@ -126,7 +126,6 @@ export const PermissionsProvider = ({ children }) => {
         return;
       }
 
-      
       const tokenPayload = authToken ? decodeJwt(authToken) : null;
 
       console.log('🔑 Tokens for permissions API:', {

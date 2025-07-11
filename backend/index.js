@@ -1054,9 +1054,6 @@ app.get("/org-users", async (req, res) => {
   }
 });
 
-// const usersRoutes = require("./routes/usersRoutes.js");
-// app.use("/users", usersRoutes);
-
 // Email TemplateRouter
 const EmailTemplateRouter = require("./routes/EmailTemplateRoutes.js");
 app.use("/emailTemplate", EmailTemplateRouter);
