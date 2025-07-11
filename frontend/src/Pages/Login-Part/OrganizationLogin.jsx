@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
-import { setAuthCookies, clearAllCookies, debugTokenSources, testCookieFunctionality } from '../../utils/AuthCookieManager/AuthCookieManager';
+import { setAuthCookies, clearAllAuth, debugTokenSources, testCookieFunctionality } from '../../utils/AuthCookieManager/AuthCookieManager';
 import { config } from "../../config";
 import { validateWorkEmail } from '../../utils/workEmailValidation.js';
 import toast from "react-hot-toast";
@@ -204,7 +204,7 @@ const OrganizationLogin = () => {
   
     try {
       // Step 1: Clear cookies
-      clearAllCookies();
+      await clearAllAuth();
       console.log(`[OrganizationLogin][${loginStartTime}] Cleared all cookies`);
   
       // Step 2: Make login request

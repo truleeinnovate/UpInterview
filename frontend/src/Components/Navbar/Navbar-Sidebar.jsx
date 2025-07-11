@@ -328,8 +328,8 @@ const Navbar = () => {
           className="text-custom-blue hover:text-blue-500"
           onClick={() => {
             closeAllDropdowns();
-            logout(organization);
-            navigate("/");
+            logout(navigate);
+            // navigate("/");
           }}
         >
           Log Out
