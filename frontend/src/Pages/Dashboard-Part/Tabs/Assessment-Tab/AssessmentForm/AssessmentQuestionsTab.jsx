@@ -212,9 +212,9 @@ const AssessmentQuestionsTab = ({
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-3">
                       <span className="bg-white px-3 py-1 rounded-lg border border-gray-200 text-sm font-medium shadow-xs">
-                        {section.Questions?.length || 0} Questions
+                        {section.Questions?.length || 0} {section.Questions?.length <= 1 ? 'Question' : 'Questions'}
                       </span>
-                      <h3 className="font-semibold text-gray-800">{section.SectionName}</h3>
+                      <h3 className="font-semibold text-gray-800">{section.SectionName ? section.SectionName.charAt(0).toUpperCase() + section.SectionName.slice(1) : ""}</h3>
                     </div>
 
                     <button
@@ -268,13 +268,13 @@ const AssessmentQuestionsTab = ({
                     {passScoreType === "Each Section" && (
                       <>
                         <div className="flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-lg">
-                          <span className="text-sm font-medium text-blue-600">
+                          <span className="text-sm font-medium text-custom-blue">
                             Total: {totalScores[section.SectionName] || "0"}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-lg">
-                          <CheckCircleIcon className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-600">
+                          <CheckCircleIcon className="w-4 h-4 text-custom-blue" />
+                          <span className="text-sm font-medium text-custom-blue">
                             Pass: {passScores[section.SectionName] || "0"}
                           </span>
                         </div>
@@ -359,7 +359,7 @@ const AssessmentQuestionsTab = ({
                                 onChange={() =>
                                   handleQuestionSelection(section.SectionName, questionIndex)
                                 }
-                                className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                className="mt-1 h-4 w-4 text-custom-blue rounded border-gray-300 focus:ring-blue-500"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-baseline gap-2">

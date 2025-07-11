@@ -246,7 +246,7 @@ useEffect(() => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${row.firstName || ""} ${row.lastName || ""}`.trim() || "Unknown"}
+              {`${row.firstName ? row.firstName.charAt(0).toUpperCase().trim()+ row.firstName.slice(1).trim() : ""} ${row.lastName ? row.lastName.charAt(0).toUpperCase().trim() + row.lastName.slice(1) : ""}`.trim() || "Unknown"}
             </div>
           </div>
         </div>
@@ -293,6 +293,7 @@ useEffect(() => {
   ];
 
   return (
+    <>
     <div className="h-screen fixed w-full flex">
       <div className="" />
       <div className="flex-1 flex flex-col ml-0 h-full">
@@ -447,7 +448,8 @@ useEffect(() => {
           </motion.div>
         </div>
       </div>
-      {showUserManagementPopup && (
+    </div>
+    {showUserManagementPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -521,12 +523,12 @@ useEffect(() => {
       )}
       <ConfirmationModal
         show={showConfirmation}
-        userName={`${selectedUser?.firstName} ${selectedUser?.lastName}`}
+        userName={`${selectedUser?.firstName ? selectedUser?.firstName.charAt(0).toUpperCase()+selectedUser?.firstName.slice(1) : ""} ${selectedUser?.lastName ? selectedUser?.lastName.charAt(0).toUpperCase()+selectedUser?.lastName.slice(1) : ""}`}
         newStatus={newStatus}
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}
       />
-    </div>
+    </>
   );
 };
 

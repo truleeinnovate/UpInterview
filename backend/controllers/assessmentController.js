@@ -68,13 +68,13 @@ exports.newAssessment = async (req, res) => {
 
     let nextNumber = 1;
     if (lastAssessment?.AssessmentCode) {
-      const match = lastAssessment.AssessmentCode.match(/ASMT-(\d+)/);
+      const match = lastAssessment.AssessmentCode.match(/ASMT-TPL-(\d+)/);
       if (match) {
         nextNumber = parseInt(match[1], 10) + 1;
       }
     }
 
-    const assessmentCode = `ASMT-${String(nextNumber).padStart(5, "0")}`;
+    const assessmentCode = `ASMT-TPL-${String(nextNumber).padStart(5, "0")}`;
     newAssessmentData.AssessmentCode = assessmentCode;
 
     const assessment = new Assessment(newAssessmentData);

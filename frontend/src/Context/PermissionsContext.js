@@ -99,6 +99,7 @@ export const PermissionsProvider = ({ children }) => {
       console.log('🌐 Fetching fresh permissions from API');
       setPermissionState((prev) => ({ ...prev, loading: true }));
 
+
       // Get authentication status
       // const authStatus = AuthCookieManager.getAuthStatus();
       // console.log('🔑 Current auth status:', authStatus);
@@ -133,6 +134,7 @@ export const PermissionsProvider = ({ children }) => {
         hasActiveToken: !!activeToken,
         tokenPayload,
         // authStatus
+
       });
 
       const permissionsUrl = `${config.REACT_APP_API_URL}/users/permissions`;
