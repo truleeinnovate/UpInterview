@@ -39,13 +39,13 @@ export const useAssessments = () => {
     mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
       if (isEditing) {
         const { data } = await axios.patch(
-          `${config.REACT_APP_API_URL}/assessment/update/${id}`,
+          `${config.REACT_APP_API_URL}/assessments/update/${id}`,
           assessmentData,
         );
         return data;
       }
       const { data } = await axios.post(
-        `${config.REACT_APP_API_URL}/assessment/create`,
+        `${config.REACT_APP_API_URL}/assessments/new-assessment`,
         assessmentData,
       );
       return data;
@@ -93,7 +93,7 @@ export const useAssessments = () => {
   const fetchAssessmentResults = async (assessmentId) => {
     try {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/assessment-results/${assessmentId}`
+        `${config.REACT_APP_API_URL}/assessments/${assessmentId}/results`
       );
       if (response.data.success) {
         return { data: response.data.data, error: null };
@@ -109,7 +109,7 @@ export const useAssessments = () => {
   const fetchScheduledAssessments = async (assessmentId) => {
     try {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedule`
+        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
       );
       if (response.data.success) {
         return { data: response.data.data, error: null };
