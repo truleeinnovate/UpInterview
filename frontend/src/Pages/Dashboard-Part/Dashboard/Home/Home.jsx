@@ -65,6 +65,7 @@ const Home = () => {
 
         <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row sm:gap-8 gap-6 mt-6">
           {/* Main Content Area */}
+          <div className='flex flex-col gap-6'>
           <div className="flex-grow space-y-6 sm:space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6">
               <motion.div
@@ -119,9 +120,10 @@ const Home = () => {
             </motion.div>
 
             <FeedbackList />
-            <NotificationSection />
+            
           </div>
-
+          <NotificationSection />
+          </div>
           {/* Right Sidebar */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}

@@ -131,9 +131,59 @@ const ScheduleAssessment = () => {
 
   // Table definitions
   const tableColumns = [
+    // Assessment Template ID
+    {
+      key: 'assessmentId',
+      header: 'Assessment Template ID',
+      render: (value, row) => {
+        // Determine Assessment object (it may come populated or we find it in assessmentData)
+        let assessmentObj = null;
+        if (value) {
+          if (typeof value === 'object') {
+            assessmentObj = value;
+          } else {
+            assessmentObj = (assessmentData || []).find((a) => a._id === value);
+          }
+        }
+        const code = assessmentObj?.AssessmentCode || assessmentObj?._id || 'Not Provided';
+        return (
+          <div
+            className="text-sm font-medium text-custom-blue cursor-pointer"
+            onClick={() => handleView(row)}
+          >
+            {code}
+          </div>
+        );
+      },
+    },
+    // Assessment Template Name
+    {
+      key: 'assessmentTemplateName',
+      header: 'Assessment Template Name',
+      render: (_, row) => {
+        const value = row.assessmentId;
+        let assessmentObj = null;
+        if (value) {
+          if (typeof value === 'object') {
+            assessmentObj = value;
+          } else {
+            assessmentObj = (assessmentData || []).find((a) => a._id === value);
+          }
+        }
+        const title = assessmentObj?.AssessmentTitle || 'Not Provided';
+        return (
+          <div
+            className="text-sm font-medium text-custom-blue cursor-pointer"
+            onClick={() => handleView(row)}
+          >
+            {title.charAt ? title.charAt(0).toUpperCase() + title.slice(1) : title}
+          </div>
+        );
+      },
+    },
     {
       key: 'scheduledAssessmentCode',
-      header: 'Schedule ID',
+      header: 'Assessment ID',
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
@@ -143,11 +193,11 @@ const ScheduleAssessment = () => {
         </div>
       ),
     },
-    {
-      key: 'order',
-      header: 'ORDER',
-      render: (v) => v || 'Not Provided',
-    },
+    // {
+    //   key: 'order',
+    //   header: 'ORDER',
+    //   render: (v) => v || 'Not Provided',
+    // },
     {
       key: 'expiryAt',
       header: 'Expiry Date',
