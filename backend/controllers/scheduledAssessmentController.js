@@ -77,7 +77,7 @@ exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
       };
     });
 
-    res.status(200).json(schedulesWithCandidates);
+    res.status(200).json({ success: true, data: schedulesWithCandidates });
   } catch (error) {
     console.error(
       "Error fetching scheduled assessments with candidates:",
