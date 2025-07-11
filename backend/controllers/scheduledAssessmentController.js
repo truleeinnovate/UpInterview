@@ -101,8 +101,7 @@ exports.createScheduledAssessment = async (req, res) => {
     } = req.body;
 
     // Generate custom code like ASMT-TPL-00001
-    const lastScheduled = await scheduledAssessmentsSchema
-      .findOne({ organizationId })
+    const lastScheduled = await scheduledAssessmentsSchema.findOne({ })
       .sort({ _id: -1 })
       .select("scheduledAssessmentCode")
       .lean();
@@ -110,17 +109,18 @@ exports.createScheduledAssessment = async (req, res) => {
     let nextNumber = 1;
     if (lastScheduled?.scheduledAssessmentCode) {
       const match =
-        lastScheduled.scheduledAssessmentCode.match(/ASMT-TPL-(\d+)/);
+        lastScheduled.scheduledAssessmentCode.match(/ASMT-(\d+)/);
       if (match) {
         nextNumber = parseInt(match[1], 10) + 1;
       }
     }
 
-    const scheduledAssessmentCode = `ASMT-TPL-${String(nextNumber).padStart(
+    const scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(
       5,
       "0"
     )}`;
 
+    console.log("expiryAt---", expiryAt);
     // Build new object
     const scheduledAssessment = new scheduledAssessmentsSchema({
       scheduledAssessmentCode,

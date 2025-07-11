@@ -174,7 +174,7 @@ const Assessment = () => {
   const tableColumns = [
     {
       key: "AssessmentCode",
-      header: "Assessment ID",
+      header: "Assessment Template ID",
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
@@ -186,7 +186,7 @@ const Assessment = () => {
     },
     {
       key: "AssessmentTitle",
-      header: "Assessment Name",
+      header: "Assessment Template Name",
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"

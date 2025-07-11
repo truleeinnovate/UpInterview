@@ -160,7 +160,10 @@ const ScheduleAssessmentKanban = ({
                         )}
                       </Draggable>
                     ))}
-                    {provided.placeholder}
+                    {column.items.length === 0 && (
+                        <div className="py-4 text-sm text-center text-gray-500">No {column.title} Assessments</div>
+                      )}
+                      {provided.placeholder}
                   </div>
                 )}
               </Droppable>

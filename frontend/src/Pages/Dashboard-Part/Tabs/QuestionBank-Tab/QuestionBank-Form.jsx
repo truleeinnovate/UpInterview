@@ -744,14 +744,14 @@ useEffect(() => {
                   {/* Display Selected Skills */}
                   <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 mt-1">
                     {Array.isArray(selectedSkill) && selectedSkill.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center">No skills selected</p>
+                      <p className="text-sm text-gray-500 text-center">No Skills Selected</p>
                     ) : (
                       <div>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center">
                             <BadgeCheck className="h-4 w-4 text-gray-500 mr-2" />
                             <span className="text-sm text-gray-700">
-                              {selectedSkill.length} skill{selectedSkill.length !== 1 ? "s" : ""} selected
+                              {selectedSkill.length} Skill{selectedSkill.length !== 1 ? "s" : ""} Selected
                             </span>
                           </div>
                           {selectedSkill.length > 0 && (
@@ -890,8 +890,10 @@ useEffect(() => {
                                 </button>
                                 <button
                                   type="button"
-                                  className="  p-1  bg-white"
+                                  className={`p-1  bg-white ${mcqOptions.length <= 2 ? 'cursor-not-allowed opacity-50' : ''}`}
+                                  disabled={mcqOptions.length <= 2}
                                   onClick={() => handleCancelOption(index)}
+                                  
                                 >
                                   <MdOutlineCancel className="fill-red-400" />
                                 </button>
@@ -907,8 +909,9 @@ useEffect(() => {
                                 </button>
                                 <button
                                   type="button"
-                                  className=" mt-2  p-1 bg-white"
+                                  className={` mt-2 p-1 bg-white ${mcqOptions.length <= 2 ? 'cursor-not-allowed opacity-50' : ''}`}
                                   onClick={() => handleDeleteOption(index)}
+                                  disabled={mcqOptions.length <= 2}
                                 >
                                   <FaTrash />
                                 </button>
