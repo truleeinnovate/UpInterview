@@ -42,7 +42,8 @@ export const useScheduleAssessments = () => {
     retry: 1,
     staleTime: 1000 * 60 * 5,
   });
- console.log("scheduleData------",scheduleData);
+ // Remove console.log to prevent loops
+ // console.log("scheduleData------",scheduleData);
   /* -------------------------------------------------------------------------- */
   /*                           MUTATION:  CREATE / UPDATE                       */
   /* -------------------------------------------------------------------------- */

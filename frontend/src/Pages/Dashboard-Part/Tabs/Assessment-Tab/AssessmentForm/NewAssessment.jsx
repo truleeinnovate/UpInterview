@@ -60,7 +60,7 @@ const NewAssessment = () => {
   const sidebarRefAddQuestion = useRef(null);
   const [toggleStates, setToggleStates] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState("");
-  console.log('selectedPosition----',selectedPosition);
+  // console.log('selectedPosition----',selectedPosition);
 
   const [value, setValue] = useState("");
 
@@ -168,14 +168,14 @@ const NewAssessment = () => {
   // Load assessment questions and section-specific scores
   useEffect(() => {
     if (isEditing && assessment && id) {
-      console.log("Fetching assessment questions for ID:", id);
+      // console.log("Fetching assessment questions for ID:", id);
       axios
         .get(`${config.REACT_APP_API_URL}/assessment-questions/list/${id}`)
         .then((response) => {
-          console.log("API Response:", response.data);
+          // console.log("API Response:", response.data);
           if (response.data.success) {
             const data = response.data.data;
-            console.log("Received assessment questions data:", data);
+            // console.log("Received assessment questions data:", data);
 
             // Transform the API data to match the addedSections structure
             const formattedSections = data.sections.map((section) => ({
@@ -404,17 +404,17 @@ const NewAssessment = () => {
 
   const handleSave = async (event, currentTab, actionType) => {
     event.preventDefault();
-    console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
+    // console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
 
     const { errors, assessmentData } = validateAndPrepareData(currentTab);
 
     if (errors) {
-      console.warn('❗ Validation failed:', errors);
+      // console.warn('❗ Validation failed:', errors);
       setErrors(errors);
       return;
     }
 
-    console.log('✅ Validation passed. Prepared assessment data:', assessmentData);
+    // console.log('✅ Validation passed. Prepared assessment data:', assessmentData);
 
     try {
       const response = await addOrUpdateAssessment({
@@ -435,7 +435,7 @@ const NewAssessment = () => {
         const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
 
         if (!assessmentId) {
-          console.error('❌ Missing assessmentId before saving questions.');
+          // console.error('❌ Missing assessmentId before saving questions.');
           return;
         }
 
@@ -444,10 +444,10 @@ const NewAssessment = () => {
           assessmentId
         );
 
-        console.log('📦 Prepared questions data:', assessmentQuestionsData);
+        // console.log('📦 Prepared questions data:', assessmentQuestionsData);
 
         if (!assessmentQuestionsData.sections?.length) {
-          console.error('❌ Sections array is empty. Cannot proceed.');
+          // console.error('❌ Sections array is empty. Cannot proceed.');
           return;
         }
 
@@ -455,12 +455,12 @@ const NewAssessment = () => {
           assessmentQuestionsData
         );
 
-        console.log('✅ Questions saved successfully:', questionsResponse.message);
+        // console.log('✅ Questions saved successfully:', questionsResponse.message);
       }
 
       // 🧠 Action after save
       if (actionType === 'close') {
-        console.log('🛑 Closing form after save');
+        // console.log('🛑 Closing form after save');
         navigate('/assessments');
       } else if (actionType === 'next') {
         const tabOrder = ['Basicdetails', 'Details', 'Questions', 'Candidates'];
@@ -468,10 +468,10 @@ const NewAssessment = () => {
         const nextTab = tabOrder[currentIndex + 1];
 
         if (nextTab) {
-          console.log(`➡️ Navigating to next tab: ${nextTab}`);
+          // console.log(`➡️ Navigating to next tab: ${nextTab}`);
           setActiveTab(nextTab);
         } else {
-          console.log('🚫 No next tab found');
+          // console.log('🚫 No next tab found');
         }
       }
     } catch (error) {

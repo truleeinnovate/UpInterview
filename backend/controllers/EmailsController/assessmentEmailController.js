@@ -880,11 +880,7 @@ exports.resendAssessmentLink = async (req, res) => {
 };
 
 exports.shareAssessment = async (req, res) => {
-  let session;
   try {
-    session = await mongoose.startSession();
-    await session.startTransaction();
-
     const {
       assessmentId,
       selectedCandidates,
@@ -903,10 +899,9 @@ exports.shareAssessment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No candidates selected' });
     }
 
-    // Fetch assessment with validation
-    const assessment = await Assessment.findById(assessmentId).session(session);
+    // Fetch assessment without session for Cosmos DB compatibility
+    const assessment = await Assessment.findById(assessmentId);
     if (!assessment) {
-      await session.abortTransaction();
       return res.status(404).json({ success: false, message: 'Assessment not found' });
     }
 
@@ -922,7 +917,6 @@ exports.shareAssessment = async (req, res) => {
 
     // Verify date is valid
     if (isNaN(expiryAt.getTime())) {
-      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: 'Invalid expiry date calculation',
@@ -935,8 +929,8 @@ exports.shareAssessment = async (req, res) => {
 
     const assessmentDuration = assessment.assessmentDuration || 60; // Default to 60 minutes if not set
 
-    // Create schedule assessment
-    const scheduleCount = await ScheduleAssessment.countDocuments({ assessmentId }).session(session);
+    // Create schedule assessment without session
+    const scheduleCount = await ScheduleAssessment.countDocuments({ assessmentId });
     const scheduleAssessment = new ScheduleAssessment({
       assessmentId,
       organizationId,
@@ -945,13 +939,13 @@ exports.shareAssessment = async (req, res) => {
       createdBy: userId,
       order: `Assessment ${scheduleCount + 1}`,
     });
-    await scheduleAssessment.save({ session });
+    await scheduleAssessment.save();
 
-    // Check for existing candidate assessments
+    // Check for existing candidate assessments without session
     const existingAssessments = await CandidateAssessment.find({
       scheduledAssessmentId: scheduleAssessment._id,
       candidateId: { $in: selectedCandidates.map(c => c._id) },
-    }).session(session);
+    });
 
     const existingCandidateIds = existingAssessments.map(a => a.candidateId.toString());
     const newCandidates = selectedCandidates.filter(
@@ -959,7 +953,6 @@ exports.shareAssessment = async (req, res) => {
     );
 
     if (newCandidates.length === 0) {
-      await session.commitTransaction();
       return res.status(200).json({
         success: true,
         message: 'All selected candidates already assigned',
@@ -977,17 +970,16 @@ exports.shareAssessment = async (req, res) => {
       assessmentLink: '',
     }));
 
-    const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments, { session });
+    const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments);
 
-    // Process emails
+    // Process emails without session
     const emailTemplate = await emailTemplateModel.findOne({
       category: 'assessment_invite',
       isSystemTemplate: true,
       isActive: true
-    }).session(session);
+    });
 
     if (!emailTemplate) {
-      await session.abortTransaction();
       return res.status(404).json({ success: false, message: 'Email template not found' });
     }
 
@@ -995,7 +987,7 @@ exports.shareAssessment = async (req, res) => {
     const emailPromises = [];
 
     for (const candidate of newCandidates) {
-      const candidateData = await Candidate.findOne({ _id: candidate._id }).session(session);
+      const candidateData = await Candidate.findOne({ _id: candidate._id });
       if (!candidateData) {
         console.error(`Candidate not found: ${candidate._id}`);
         continue;
@@ -1017,14 +1009,13 @@ exports.shareAssessment = async (req, res) => {
       if (!candidateAssessment) continue;
 
       const encryptedId = encrypt(candidateAssessment._id.toString(), 'test');
-      console.log("encryptedId", encryptedId)
-      console.log("config.REACT_APP_API_URL_FRONTEND", config.REACT_APP_API_URL_FRONTEND)
+      // console.log("encryptedId", encryptedId)
+      // console.log("config.REACT_APP_API_URL_FRONTEND", config.REACT_APP_API_URL_FRONTEND)
       const link = `${config.REACT_APP_API_URL_FRONTEND}/assessmenttest?candidateAssessmentId=${encryptedId}`;
-      console.log("link", link)
+      // console.log("link", link)
       await CandidateAssessment.findByIdAndUpdate(
         candidateAssessment._id,
-        { assessmentLink: link },
-        { session }
+        { assessmentLink: link }
       );
 
       // Format email content
@@ -1057,24 +1048,6 @@ exports.shareAssessment = async (req, res) => {
         )
       );
 
-      // notifications.push({
-      //   toAddress: emails,
-      //   fromAddress: process.env.EMAIL_FROM,
-      //   title: `Assessment Invitation`,
-      //   body: `Assessment invitation sent to ${candidateName}`,
-      //   notificationType: 'email',
-      //   object: {
-      //     objectName: 'assessment',
-      //     objectId: assessmentId,
-      //   },
-      //   status: 'Pending',
-      //   tenantId: organizationId,
-      //   ownerId: userId,
-      //   recipientId: candidate._id,
-      //   createdBy: userId,
-      //   updatedBy: userId,
-      // });
-
       notifications.push({
         toAddress: emails,
         fromAddress: process.env.EMAIL_FROM,
@@ -1094,13 +1067,10 @@ exports.shareAssessment = async (req, res) => {
       });
     }
 
-    // Save notifications
+    // Save notifications without session
     if (notifications.length > 0) {
-      await Notification.insertMany(notifications, { session });
+      await Notification.insertMany(notifications);
     }
-
-    // Commit transaction before sending emails
-    await session.commitTransaction();
 
     // Send emails outside transaction
     const emailResults = await Promise.all(emailPromises);
@@ -1126,7 +1096,6 @@ exports.shareAssessment = async (req, res) => {
     });
 
   } catch (error) {
-    if (session) await session.abortTransaction();
     console.error('Error sharing assessment:', error);
     return res.status(500).json({
       success: false,
@@ -1134,7 +1103,5 @@ exports.shareAssessment = async (req, res) => {
       error: error.message,
       ...(error.errors ? { details: error.errors } : {})
     });
-  } finally {
-    if (session) session.endSession();
   }
 };

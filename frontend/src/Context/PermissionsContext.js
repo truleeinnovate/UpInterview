@@ -175,7 +175,7 @@ export const PermissionsProvider = ({ children }) => {
 
   // Initialize permissions on mount
   useEffect(() => {
-    console.log('🚀 PermissionsProvider mounted, initializing permissions');
+    // console.log('🚀 PermissionsProvider mounted, initializing permissions');
     refreshPermissions();
   }, [refreshPermissions]);
 
@@ -183,7 +183,7 @@ export const PermissionsProvider = ({ children }) => {
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'authToken' || e.key === 'impersonationToken') {
-        console.log('🔄 Token changed, clearing cache and refreshing permissions');
+        // console.log('🔄 Token changed, clearing cache and refreshing permissions');
         clearPermissionsCache();
         refreshPermissions(true);
       }
@@ -197,11 +197,11 @@ export const PermissionsProvider = ({ children }) => {
   const hasPermission = useCallback((objectName, permissionType = "ViewTab") => {
     const { effectivePermissions, superAdminPermissions, isInitialized, isImpersonating } = permissionState;
 
-    console.log('🔍 Checking permission:', { objectName, permissionType, isInitialized, isImpersonating });
-    console.log('📊 Current permissions:', { effectivePermissions, superAdminPermissions });
+    // console.log('🔍 Checking permission:', { objectName, permissionType, isInitialized, isImpersonating });
+    // console.log('📊 Current permissions:', { effectivePermissions, superAdminPermissions });
 
     if (!isInitialized) {
-      console.log('❌ Permissions not initialized yet, returning false');
+      // console.log('❌ Permissions not initialized yet, returning false');
       return false;
     }
 
@@ -209,12 +209,12 @@ export const PermissionsProvider = ({ children }) => {
     if (superAdminPermissions && superAdminPermissions[objectName]) {
       if (typeof superAdminPermissions[objectName] === "boolean") {
         const result = superAdminPermissions[objectName];
-        console.log('✅ Super admin permission found:', { objectName, result });
+        // console.log('✅ Super admin permission found:', { objectName, result });
         return result;
       }
-      const result = superAdminPermissions[objectName][permissionType] ?? false;
-      console.log('✅ Super admin permission found:', { objectName, permissionType, result });
-      return result;
+              const result = superAdminPermissions[objectName][permissionType] ?? false;
+        // console.log('✅ Super admin permission found:', { objectName, permissionType, result });
+        return result;
     }
 
     // Check effective permissions

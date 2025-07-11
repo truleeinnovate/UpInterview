@@ -61,15 +61,16 @@ function AssessmentTest({ assessment, candidate, questions, duration,candidateAs
             sections: questions.sections.map(section => ({
                 SectionName: section.sectionName || 'Unnamed Section',
                 Answers: section.questions.map(question => {
-                    console.log("Question ID:", question._id);
-                    console.log("Question:", question);
+                    // Remove console logs to prevent loops
+                    // console.log("Question ID:", question._id);
+                    // console.log("Question:", question);
                     const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
                     const selectedAnswer = answers[question._id];
                     const isCorrect = correctAnswer === selectedAnswer;
                     const score = isCorrect ? question.score ?? 0 : 0;
-                    console.log("Correct Answer:", correctAnswer);
-                    console.log("Selected Answer:", selectedAnswer);
-                    console.log("Score:", score);
+                    // console.log("Correct Answer:", correctAnswer);
+                    // console.log("Selected Answer:", selectedAnswer);
+                    // console.log("Score:", score);
                     return {
                         questionId: question._id,
                         answer: selectedAnswer,

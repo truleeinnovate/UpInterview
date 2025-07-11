@@ -14,9 +14,10 @@ const AssessmentTestPage2 = ({
     isVerified
 }) => {
 
-    console.log('assessment', assessment);
-    console.log('candidate', candidate);
-    console.log('assessmentQuestions', assessmentQuestions);
+    // Remove console logs to prevent loops
+    // console.log('assessment', assessment);
+    // console.log('candidate', candidate);
+    // console.log('assessmentQuestions', assessmentQuestions);
 
     const [hasStartedTest, setHasStartedTest] = useState(false);
 
