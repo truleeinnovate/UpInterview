@@ -123,7 +123,7 @@ const ScheduleAssessment = () => {
 
   const handleView = (schedule) => {
     // Adjust route when details page exists
-    navigate(`/schedule-assessment/${schedule._id}`, { state: { schedule } });
+    navigate(`/assessment/${schedule._id}`, { state: { schedule } });
   };
   // const handleEdit = (schedule) => {
   //   navigate(`/schedule-assessment/edit/${schedule._id}`);
@@ -274,6 +274,7 @@ const ScheduleAssessment = () => {
             ) : (
               <ScheduleAssessmentKanban
                 schedules={currentRows}
+                assessments={assessmentData}
                 loading={isLoading}
                 onView={handleView}
                 //onEdit={handleEdit}
