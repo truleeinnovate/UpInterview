@@ -312,7 +312,7 @@ const RoundCard = ({
                   {round.duration && (
                     <div className="flex items-center text-sm text-gray-500 mt-1">
                       <Clock className="h-4 w-4 mr-1" />
-                      <span>Duration: {round.duration} minutes</span>
+                      <span>Duration: {round.duration} Minutes</span>
                     </div>
                   )}
                 </div>

@@ -865,7 +865,7 @@ function RoundFormPosition() {
                     {formData.roundTitle !== "Assessment" &&
                       <div >
                         <label htmlFor="duration" className="block text-sm font-medium text-gray-700">
-                          Duration (minutes)
+                          Duration (Minutes)
                         </label>
                         <select
                           id="duration"
@@ -938,7 +938,7 @@ function RoundFormPosition() {
                                       </div>
                                     ))
                                   ) : (
-                                    <div className="px-3 py-2 text-gray-500">No assessments found</div>
+                                    <div className="px-3 py-2 text-gray-500">No Assessments Found</div>
                                   )
                                 }
                               </div>
@@ -973,7 +973,7 @@ function RoundFormPosition() {
                               <div className="space-y-4">
                                 {!sectionQuestions || sectionQuestions.noQuestions ? (
                                   <div className="text-center py-4 text-gray-500">
-                                    No sections available for this assessment
+                                    No Sections Available for this Assessment
                                   </div>
                                 ) :
 
@@ -1132,7 +1132,7 @@ function RoundFormPosition() {
                                                 ))
                                               ) : (
                                                 <div className="text-center py-4 text-gray-500">
-                                                  No questions found in this section
+                                                  No Questions found in this section
                                                 </div>
                                               )}
                                             </div>
@@ -1142,7 +1142,7 @@ function RoundFormPosition() {
                                     })
                                   ) : (
                                     <div className="text-center py-4 text-gray-500">
-                                      No assessment data available
+                                      No Assessment data available
                                     </div>
                                   )}
                               </div>
@@ -1175,7 +1175,7 @@ function RoundFormPosition() {
                                 disabled={isExternalSelected}
                                 title={isExternalSelected ? "Clear external interviewers first" : ""}
                               >
-                                <User className="h-4 w-4 mr-1 text-blue-600" />
+                                <User className="h-4 w-4 mr-1 text-custom-blue" />
                                 Select Internal
                               </Button>
                             ) : (
@@ -1191,7 +1191,7 @@ function RoundFormPosition() {
                                 disabled={isExternalSelected}
                                 title={isExternalSelected ? "Clear external interviewers first" : ""}
                               >
-                                <User className="h-4 w-4 mr-1 text-blue-600" />
+                                <User className="h-4 w-4 mr-1 text-custom-blue" />
                                 Select Internal
                               </Button>
                             )}
@@ -1219,7 +1219,7 @@ function RoundFormPosition() {
                         {/* Selected Interviewers Summary */}
                         <div className=" p-4 bg-gray-50 rounded-md border border-gray-200">
                           {!formData.interviewerType ? (
-                            <p className="text-sm text-gray-500 text-center">No interviewers selected</p>
+                            <p className="text-sm text-gray-500 text-center">No Interviewers Selected</p>
                           ) : (
                             <div>
                               <div className="flex items-center justify-between ">
@@ -1227,8 +1227,8 @@ function RoundFormPosition() {
                                   <Users className="h-4 w-4 text-gray-500 mr-2" />
                                   <span className="text-sm text-gray-700">
                                     {isInternalSelected
-                                      ? `${formData.interviewers.length} interviewer${formData.interviewers.length !== 1 ? "s" : ""}`
-                                      : "Outsourced interviewers"} selected
+                                      ? `${formData.interviewers.length} Interviewer${formData.interviewers.length !== 1 ? "s" : ""}`
+                                      : "Outsourced Interviewers"} Selected
                                     {isInternalSelected && (
                                       <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
                                         Internal
@@ -1258,8 +1258,8 @@ function RoundFormPosition() {
                               {isInternalSelected && formData.interviewers.length > 0 && (
                                 <section className="mb-4 w-full">
                                   <h4 className="text-sm font-semibold text-gray-600 mb-3">
-                                    {formData.interviewerViewType === 'groups' ? 'Interviewer Groups ' : 'Internal Interviewers'}
-                                    <span className="text-xs text-blue-700">({formData.interviewers.length || "Not Provided"} members)</span>
+                                    {formData.interviewerViewType === 'groups' ? 'Interviewer Groups ' : 'Internal Interviewers '}
+                                    <span className="text-xs text-custom-blue">({formData.interviewers.length || "Not Provided"} {formData.interviewers.length > 1 ? "Members" : "Member"})</span>
                                     {/* {formData.interviewerViewType === 'groups' && formData.interviewerGroupName && (
                                       <span className="ml-2 text-sm font-normal">(Group: {formData.interviewerGroupName})</span>
                                     )} */}
@@ -1496,7 +1496,7 @@ function RoundFormPosition() {
                                 })}
                               </ul>
                             ) : (
-                              <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                              <p className="mt-2 text-gray-500 flex justify-center">No Questions added yet.</p>
                             )}
 
                           </div>

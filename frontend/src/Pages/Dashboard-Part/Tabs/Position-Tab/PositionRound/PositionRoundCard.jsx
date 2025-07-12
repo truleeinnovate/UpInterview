@@ -275,7 +275,7 @@ const PositionRoundCard = ({
                   {round.duration && (
                     <div className="flex items-center text-sm text-gray-500 mt-1">
                       <Clock className="h-4 w-4 mr-1" />
-                      <span>Duration: {round.duration} minutes</span>
+                      <span>Duration: {round.duration} Minutes</span>
                     </div>
                   )}
                 </div>
@@ -407,7 +407,7 @@ const PositionRoundCard = ({
                           })}
                         </ul>
                       ) : (
-                        <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                        <p className="mt-2 text-gray-500 flex justify-center">No Questions added yet.</p>
                       )}
 
                     </div>
@@ -581,7 +581,7 @@ const PositionRoundCard = ({
                                           ))
                                         ) : (
                                           <div className="text-center py-4 text-gray-500">
-                                            No questions found in this section
+                                            No Questions found in this section
                                           </div>
                                         )}
                                       </div>
@@ -591,7 +591,7 @@ const PositionRoundCard = ({
                               })
                             ) : (
                               <div className="text-center py-4 text-gray-500">
-                                No sections available for this assessment
+                                No sections available for this Assessment
                               </div>
                             )}
                           </div>
@@ -643,7 +643,7 @@ const PositionRoundCard = ({
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <div className="bg-white p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-3">
-              Are you sure you want to {confirmAction.toLowerCase()} this round?
+              Are you sure you want to {confirmAction.toLowerCase()} this Round?
             </h3>
             <div className="flex justify-end space-x-3">
               <Button variant="outline" onClick={() => setShowConfirmModal(false)}>
@@ -661,7 +661,7 @@ const PositionRoundCard = ({
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <div className="bg-white p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-3">
-              Are you sure you want to delete this round?
+              Are you sure you want to delete this Round?
             </h3>
             <div className="flex justify-end space-x-3">
               <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)}>
