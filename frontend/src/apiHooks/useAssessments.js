@@ -5,7 +5,7 @@ import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 
-export const useAssessments = () => {
+export const useAssessments = (filters = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Assessment_Template?.View;
@@ -16,8 +16,9 @@ export const useAssessments = () => {
     isLoading: isQueryLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ['Assessment_Template'],
+    queryKey: ['Assessment_Template', filters],
     queryFn: async () => {
       const data = await fetchFilterData('assessment');
       return data.map(assessment => ({
@@ -27,11 +28,12 @@ export const useAssessments = () => {
     },
     enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
+    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnReconnect: false, // Don't refetch on network reconnect
   });
-
-  // Remove the console.log that's causing loops
-  // console.log("assessmentData---", assessmentData);
 
   const isLoading = isQueryLoading;
 
@@ -50,7 +52,25 @@ export const useAssessments = () => {
       );
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['Assessment_Template', filters], (oldData) => {
+        if (!oldData) return oldData;
+        
+        if (variables.isEditing) {
+          // Update existing assessment
+          return oldData.map(assessment => 
+            assessment._id === variables.id 
+              ? { ...assessment, ...data.data }
+              : assessment
+          );
+        } else {
+          // Add new assessment
+          return [data.data, ...oldData];
+        }
+      });
+      
+      // Invalidate to ensure consistency
       queryClient.invalidateQueries(['Assessment_Template']);
     },
     onError: (err) => {
@@ -153,6 +173,7 @@ export const useAssessments = () => {
     upsertAssessmentQuestions: upsertAssessmentQuestions.mutateAsync,
     fetchAssessmentQuestions, // assessment questions getting 
     fetchAssessmentResults,
-    fetchScheduledAssessments
+    fetchScheduledAssessments,
+    refetch,
   };
 };

@@ -22,6 +22,7 @@ import { useCustomContext } from "../../Context/Contextfetch.js";
 import { usePermissions } from "../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../utils/permissionUtils";
 import AuthCookieManager from "../../utils/AuthCookieManager/AuthCookieManager";
+import { useSingleContact } from "../../apiHooks/useUsers";
 
 const CombinedNavbar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
@@ -29,7 +30,8 @@ const CombinedNavbar = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
-  const { userProfile, singlecontact } = useCustomContext();
+  const { userProfile } = useCustomContext();
+  const { singleContact, isLoading: singleContactLoading } = useSingleContact();
   const navigate = useNavigate();
 
   // Get user type
@@ -70,8 +72,8 @@ const CombinedNavbar = () => {
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   };
 
-  const firstName = formatName(singlecontact?.firstName);
-  const lastName = formatName(singlecontact?.lastName);
+  const firstName = formatName(singleContact?.firstName);
+  const lastName = formatName(singleContact?.lastName);
   const organization = tokenPayload?.organization;
 
   // State for dropdowns and sidebar
@@ -460,9 +462,11 @@ const CombinedNavbar = () => {
           className="font-medium text-custom-blue"
           onClick={toggleProfileDropdown}
         >
-          {singlecontact?.imageData?.path ? (
+          {singleContactLoading ? (
+            <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse"></div>
+          ) : singleContact?.imageData?.path ? (
             <img
-              src={singlecontact.imageData.path}
+              src={singleContact.imageData.path}
               alt="Profile"
               className="w-7 h-7 rounded-full"
             />
@@ -471,7 +475,11 @@ const CombinedNavbar = () => {
           )}
         </p>
         <span className="font-medium ml-1">
-          {firstName} {lastName}
+          {singleContactLoading ? (
+            <div className="h-4 w-20 bg-gray-200 animate-pulse rounded"></div>
+          ) : (
+            `${firstName} ${lastName}`
+          )}
         </span>
       </div>
       <div className="flex justify-between px-3 py-1 text-xs">
@@ -607,9 +615,11 @@ const CombinedNavbar = () => {
             className="font-medium cursor-pointer"
             onClick={toggleProfileDropdown}
           >
-            {singlecontact?.imageData?.path ? (
+            {singleContactLoading ? (
+              <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse"></div>
+            ) : singleContact?.imageData?.path ? (
               <img
-                src={singlecontact?.imageData?.path}
+                src={singleContact?.imageData?.path}
                 alt="Profile"
                 className="w-7 h-7 rounded-full object-cover"
               />
@@ -628,7 +638,7 @@ const CombinedNavbar = () => {
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>
       ),
-      className: `text-xl border rounded-md ${singlecontact?.imageData?.path ? "p-1" : "p-2"
+      className: `text-xl border rounded-md ${singleContact?.imageData?.path ? "p-1" : "p-2"
         }`,
       isActive: dropdownState.profileDropdown,
     },

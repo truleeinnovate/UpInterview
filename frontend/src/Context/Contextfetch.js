@@ -273,25 +273,7 @@ const CustomProvider = ({ children }) => {
     fetchContactsData();
   }, []);
 
-  const [singlecontact, setsingleContact] = useState([]);
-
-  const currentUser = AuthCookieManager.getCurrentUserId();
-  console.log("currentUser", currentUser);
-
-  useEffect(() => {
-    const fetchContacts = async (usersId = null) => {
-      try {
-        const res = await axios.get(
-          `${config.REACT_APP_API_URL}/users/owner/${currentUser}`
-        );
-        setsingleContact(res.data);
-      } catch (err) {
-        console.error("Error fetching user contacts:", err);
-      }
-    };
-
-    fetchContacts();
-  }, [userId]);
+  // Removed singlecontact logic - now using useSingleContact hook from apiHooks
 
   // fetching super admin
   // const [superAdminProfile, setSuperAdminProfile] = useState([]);
@@ -740,7 +722,7 @@ const {
         fetchContactsData,
         contacts,
         setContacts,
-        singlecontact,
+        // singlecontact - now using useSingleContact hook from apiHooks
         // fetchContacts,
 
         interviewers,

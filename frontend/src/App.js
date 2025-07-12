@@ -23,6 +23,7 @@ import VerifyUserEmail from "./VerifyUserEmail.jsx";
 import { DocumentsSection } from "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/DocumentsDetails/DocumentsSection.jsx";
 import SessionExpiration from "./Components/SessionExpiration.jsx";
 import Loading from "./Components/Loading.js";
+import UserDataLoader from "./Components/UserDataLoader.jsx";
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
@@ -1155,14 +1156,16 @@ const App = () => {
       <SuspenseWithLoading>
         <CustomProvider>
           <PermissionsProvider>
-            <MainAppRoutes
-              location={location}
-              organization={organization}
-              sessionExpired={sessionExpired}
-              setSessionExpired={setSessionExpired}
-              showLogoPaths={showLogoPaths}
-              noNavbarPaths={noNavbarPaths}
-            />
+            <UserDataLoader>
+              <MainAppRoutes
+                location={location}
+                organization={organization}
+                sessionExpired={sessionExpired}
+                setSessionExpired={setSessionExpired}
+                showLogoPaths={showLogoPaths}
+                noNavbarPaths={noNavbarPaths}
+              />
+            </UserDataLoader>
           </PermissionsProvider>
         </CustomProvider>
       </SuspenseWithLoading>

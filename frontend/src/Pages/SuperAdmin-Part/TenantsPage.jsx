@@ -22,9 +22,10 @@ import {
 import axios from "axios";
 import { config } from "../../config.js";
 import { usePermissions } from "../../Context/PermissionsContext";
+import { useQuery } from "@tanstack/react-query";
 
 function TenantsPage() {
-  const { superAdminPermissions } = usePermissions();
+  const { superAdminPermissions, isInitialized } = usePermissions();
   const [view, setView] = useState("table");
   // const [selectedTenant, setSelectedTenant] = useState(null);
   // const [selectTenantView, setSelectTenantView] = useState(false);
@@ -40,12 +41,29 @@ function TenantsPage() {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState("Admin");
 
-  const [tenants, setTenants] = useState([]);
-
   const [selectedType, setSelectedType] = useState("all");
+
+  // Use React Query for data fetching with proper dependency on permissions
+  const {
+    data: tenants = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['tenants'],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/Organization/all-organizations`
+      );
+      return response.data.organizations || [];
+    },
+    enabled: isInitialized && !!superAdminPermissions, // Only fetch when permissions are initialized
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 15, // 15 minutes
+    retry: 1,
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -114,25 +132,6 @@ function TenantsPage() {
       setView("table");
     }
   }, [isTablet]);
-
-  // Fetch tenants
-  useEffect(() => {
-    const getTenants = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/Organization/all-organizations`
-        );
-        setTenants(response.data.organizations);
-      } catch (error) {
-        console.error("Error fetching organizations:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getTenants();
-  }, []);
 
   const dataToUse = tenants;
 
@@ -219,13 +218,29 @@ function TenantsPage() {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  // if (isLoading) {
-  //   return <Loading />;
-  // }
+  // Show loading if permissions are not initialized or data is loading
+  if (!isInitialized || isLoading) {
+    return <Loading />;
+  }
 
-  // if (!tenants || tenants.length === 0) {
-  //   return <div>No tenants found.</div>;
-  // }
+  // Show error if there's an error fetching data
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-red-600 text-lg font-semibold mb-2">
+            Error loading tenants
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };

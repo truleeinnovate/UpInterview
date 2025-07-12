@@ -7,12 +7,10 @@ import { usePermissions } from '../Context/PermissionsContext';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
-export const useQuestions = () => {
+export const useQuestions = (filters = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.QuestionBank?.View;
-
-
 
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
@@ -25,8 +23,9 @@ export const useQuestions = () => {
     isLoading: isMyQuestionsLoading,
     isError: isMyQuestionsError,
     error: myQuestionsError,
+    refetch: refetchQuestions,
   } = useQuery({
-    queryKey: ['questions'],
+    queryKey: ['questions', filters],
     queryFn: async () => {
       const data = await fetchFilterData('tenantquestions');
       return Object.keys(data).reduce((acc, key) => {
@@ -41,7 +40,11 @@ export const useQuestions = () => {
     },
     enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
+    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
   // 2️⃣ Fetch Created Lists
@@ -50,8 +53,9 @@ export const useQuestions = () => {
     isLoading: isListsLoading,
     isError: isListsError,
     error: listsError,
+    refetch: refetchLists,
   } = useQuery({
-    queryKey: ['createdLists', userId, tenantId, organization],
+    queryKey: ['createdLists', userId, tenantId, organization, filters],
     queryFn: async () => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-list/lists/${userId}`, {
         params: {
@@ -63,7 +67,11 @@ export const useQuestions = () => {
     },
     enabled: !!userId,
     retry: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   // 3️⃣ Fetch Suggested Questions
@@ -72,8 +80,9 @@ export const useQuestions = () => {
     isLoading: isSuggestedQuestionsLoading,
     isError: isSuggestedQuestionsError,
     error: suggestedQuestionsError,
+    refetch: refetchSuggestedQuestions,
   } = useQuery({
-    queryKey: ['suggestedQuestions'],
+    queryKey: ['suggestedQuestions', filters],
     queryFn: async () => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
       if (response.data.success) {
@@ -82,7 +91,11 @@ export const useQuestions = () => {
       return [];
     },
     retry: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   // 4️⃣ Custom Hook: Fetch Question by Suggested ID
@@ -107,7 +120,11 @@ export const useQuestions = () => {
         }
       },
       enabled: !!suggestedQuestionId && !!(organization ? tenantId : userId),
-      staleTime: 1000 * 60 * 5,
+      staleTime: 1000 * 60 * 10, // 10 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     });
 
   // ✅ Mutation #1: Save or Update a Question
@@ -134,8 +151,33 @@ export const useQuestions = () => {
       console.log('Mutation response:', response.data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       console.log('saveOrUpdateQuestion mutation succeeded');
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['questions', filters], (oldData) => {
+        if (!oldData) return oldData;
+        
+        if (variables.isEdit) {
+          // Update existing question
+          return Object.keys(oldData).reduce((acc, key) => {
+            acc[key] = oldData[key].map(question => 
+              question._id === variables.questionId 
+                ? { ...question, ...data.data }
+                : question
+            );
+            return acc;
+          }, {});
+        } else {
+          // Add new question to appropriate category
+          const category = data.data.category || 'general';
+          return {
+            ...oldData,
+            [category]: [data.data, ...(oldData[category] || [])]
+          };
+        }
+      });
+      
       queryClient.invalidateQueries(['myQuestions']);
     },
     onError: (error) => {
@@ -164,7 +206,24 @@ export const useQuestions = () => {
         return response.data;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['createdLists', userId, tenantId, organization, filters], (oldData) => {
+        if (!oldData) return oldData;
+        
+        if (variables.isEditing) {
+          // Update existing list
+          return oldData.map(list => 
+            list._id === variables.editingSectionId 
+              ? { ...list, label: variables.newListName, name: variables.newListNameForName }
+              : list
+          );
+        } else {
+          // Add new list
+          return [data, ...oldData];
+        }
+      });
+      
       queryClient.invalidateQueries(['createdLists']);
     },
     onError: (error) => {
@@ -248,38 +307,47 @@ export const useQuestions = () => {
         );
         return updateResponse.data;
       }
-      return null;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(['myQuestions']);
-      queryClient.invalidateQueries(['questionBySuggestedId']);
+      queryClient.invalidateQueries(['questionBySuggestedId', variables.suggestedQuestionId]);
+      queryClient.invalidateQueries(['allQuestionLists']);
     },
     onError: (error) => {
-      console.error('Failed to remove question from lists:', error.response?.data?.message || error.message);
-    },
+      console.error('Remove failed:', error.response?.data?.message || error.message);
+    }
   });
+
+  // Calculate loading states
+  const isMutationLoading = saveOrUpdateQuestionMutation.isPending || 
+                           saveOrUpdateListMutation.isPending || 
+                           addQuestionToListMutation.isPending || 
+                           removeQuestionFromListMutation.isPending;
+
+  const isLoading = isMyQuestionsLoading || isListsLoading || isSuggestedQuestionsLoading || isMutationLoading;
 
   return {
     myQuestionsList,
     createdLists,
     suggestedQuestions,
-    useQuestionBySuggestedId,
-    isLoading: isMyQuestionsLoading || isListsLoading || isSuggestedQuestionsLoading,
-    isError: isMyQuestionsError || isListsError || isSuggestedQuestionsError,
+    isLoading,
+    isMyQuestionsLoading,
+    isListsLoading,
+    isSuggestedQuestionsLoading,
+    isMutationLoading,
+    isMyQuestionsError,
     myQuestionsError,
+    isListsError,
     listsError,
+    isSuggestedQuestionsError,
     suggestedQuestionsError,
     saveOrUpdateQuestion: saveOrUpdateQuestionMutation.mutateAsync,
-    saveOrUpdateQuestionLoading: saveOrUpdateQuestionMutation.isPending,
-    saveOrUpdateQuestionError: saveOrUpdateQuestionMutation.error,
     saveOrUpdateList: saveOrUpdateListMutation.mutateAsync,
-    saveOrUpdateListLoading: saveOrUpdateListMutation.isPending,
-    saveOrUpdateListError: saveOrUpdateListMutation.error,
     addQuestionToList: addQuestionToListMutation.mutateAsync,
-    addQuestionToListLoading: addQuestionToListMutation.isPending,
-    addQuestionToListError: addQuestionToListMutation.error,
     removeQuestionFromList: removeQuestionFromListMutation.mutateAsync,
-    removeQuestionFromListLoading: removeQuestionFromListMutation.isPending,
-    removeQuestionFromListError: removeQuestionFromListMutation.error,
+    useQuestionBySuggestedId,
+    refetchQuestions,
+    refetchLists,
+    refetchSuggestedQuestions,
   };
 };
