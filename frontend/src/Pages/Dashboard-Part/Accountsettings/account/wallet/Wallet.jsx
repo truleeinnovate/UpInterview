@@ -53,33 +53,15 @@ const Wallet = () => {
   const [isBankAccountsOpen, setIsBankAccountsOpen] = useState(false);
   const [animateTopUp, setAnimateTopUp] = useState(true);
   const topUpButtonRef = useRef(null);
-  
-  useEffect(() => {
-    setAnimateTopUp(true);
-    const animationTimer = setTimeout(() => {
-      setAnimateTopUp(false);
-    }, 20000);
-    
-    return () => clearTimeout(animationTimer);
-  }, []);
-
-  useEffect(() => {
-    fetchWalletData();
-  }, []);
-
-  // Permission check after all hooks
-  if (!isInitialized || !checkPermission("Wallet")) {
-    return null;
-  }
 
   // Function to fetch wallet data directly
-  const fetchWalletData = async () => {
+  async function fetchWalletData() {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       if (!userId) {
         console.error('User ID not found');
         setIsLoading(false);
-        return
+        return;
       }
 
       console.log('Fetching wallet data for user:', userId);
@@ -99,7 +81,27 @@ const Wallet = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    fetchWalletData();
+  }, []);
+
+  useEffect(() => {
+    setAnimateTopUp(true);
+    const animationTimer = setTimeout(() => {
+      setAnimateTopUp(false);
+    }, 20000);
+    
+    return () => clearTimeout(animationTimer);
+  }, []);
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Wallet")) {
+    return null;
+  }
+
+
   
   // Get wallet transactions from the fetched data
   const walletTransactions = walletBalance?.transactions || [];
@@ -154,7 +156,7 @@ const Wallet = () => {
       <div className="flex justify-center items-center w-full h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading wallet data...</p>
+          <p className="text-gray-600">Loading Wallet...</p>
         </div>
       </div>
     );

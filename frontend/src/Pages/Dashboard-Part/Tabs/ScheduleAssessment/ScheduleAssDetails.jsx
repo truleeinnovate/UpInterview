@@ -121,7 +121,7 @@ function ScheduleAssDetails() {
               {/* Candidates list */}
         <div className="flex-1 overflow-auto p-4">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading candidates...</div>
+            <div className="text-center py-8 text-gray-500">Loading Candidates...</div>
           ) : (
             <Candidate
               candidates={formattedCandidates(candidates)}
