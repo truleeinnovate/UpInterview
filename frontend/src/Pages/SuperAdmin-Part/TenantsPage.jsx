@@ -256,13 +256,13 @@ function TenantsPage() {
           <div className="ml-4">
             <div
               className={`font-medium ${
-                superAdminPermissions.Tenants.View
+                superAdminPermissions?.Tenants?.View
                   ? "text-custom-blue cursor-pointer"
                   : "text-gray-900"
               }`}
               onClick={(e) => {
                 e.stopPropagation(); // Prevents row-level handlers (if any)
-                if (superAdminPermissions.Tenants.View && row?._id) {
+                if (superAdminPermissions?.Tenants?.View && row?._id) {
                   navigate(`/tenants/${row._id}`);
                 }
               }}
@@ -326,7 +326,7 @@ function TenantsPage() {
 
   // Table Actions Configuration
   const tableActions = [
-    ...(superAdminPermissions.Tenants.View
+    ...(superAdminPermissions?.Tenants?.View
       ? [
           {
             key: "view",
@@ -336,7 +336,7 @@ function TenantsPage() {
           },
         ]
       : []),
-    ...(superAdminPermissions.Tenants.Edit
+    ...(superAdminPermissions?.Tenants?.Edit
       ? [
           {
             key: "edit",
@@ -374,7 +374,7 @@ function TenantsPage() {
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink } = {}) => (
     <div className="flex items-center gap-1">
-      {superAdminPermissions.Tenants.View && (
+      {superAdminPermissions?.Tenants?.View && (
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -387,7 +387,7 @@ function TenantsPage() {
         </button>
       )}
 
-      {!isLoading && superAdminPermissions.Tenants.View ? (
+      {!isLoading && superAdminPermissions?.Tenants?.View ? (
         <>
           <button
             onClick={(e) => {
@@ -411,7 +411,7 @@ function TenantsPage() {
           </button>
         </>
       ) : (
-        superAdminPermissions.Tenants.Edit && (
+        superAdminPermissions?.Tenants?.Edit && (
           <button
             onClick={(e) => {
               e.stopPropagation();

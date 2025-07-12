@@ -48,7 +48,7 @@ router.get('/permissions', async (req, res) => {
     // If we have at least one token, use the permission middleware to get permissions
     console.log('[Permissions Endpoint] Tokens found, using permission middleware');
     return permissionMiddleware(req, res, () => {
-      res.json({
+      const response = {
         effectivePermissions: res.locals.effectivePermissions,
         superAdminPermissions: res.locals.superAdminPermissions,
         inheritedRoleIds: res.locals.inheritedRoleIds,
@@ -58,7 +58,19 @@ router.get('/permissions', async (req, res) => {
         effectivePermissions_RoleName: res.locals.effectivePermissions_RoleName,
         impersonatedUser_roleType: res.locals.impersonatedUser_roleType,
         impersonatedUser_roleName: res.locals.impersonatedUser_roleName
+      };
+      
+      console.log('[Permissions Endpoint] Response:', {
+        hasSuperAdminPermissions: !!response.superAdminPermissions,
+        superAdminPermissionKeys: response.superAdminPermissions ? Object.keys(response.superAdminPermissions) : [],
+        hasEffectivePermissions: !!response.effectivePermissions,
+        effectivePermissionKeys: response.effectivePermissions ? Object.keys(response.effectivePermissions) : [],
+        isImpersonating: response.isImpersonating,
+        roleType: response.effectivePermissions_RoleType,
+        roleName: response.effectivePermissions_RoleName
       });
+      
+      res.json(response);
     });
 
   } catch (error) {

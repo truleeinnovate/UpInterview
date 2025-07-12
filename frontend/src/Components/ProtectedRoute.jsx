@@ -80,7 +80,12 @@ const ProtectedRoute = ({ children }) => {
         console.log('[ProtectedRoute] All cookies:', document.cookie);
 
         // Debug all token sources
-        debugTokenSources();
+        try {
+          const debugResult = debugTokenSources();
+          console.log('[ProtectedRoute] Token debug result:', debugResult);
+        } catch (error) {
+          console.error('[ProtectedRoute] Error in debugTokenSources:', error);
+        }
 
         // SIMPLE CHECK: If we have any token at all, allow access
         const hasAnyToken = authToken || impersonationToken;
