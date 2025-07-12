@@ -343,7 +343,7 @@ const InvoiceTab = () => {
             <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background w-full">
                 <div className="w-full overflow-auto">
                     {loading ? (
-                        <Loading />
+                        <Loading message="Loading Invoices..."/>
                     ) : (
                         <motion.div className="w-full">
                             <div className="relative w-full">

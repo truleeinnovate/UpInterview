@@ -137,6 +137,9 @@ const AssessmentTest = lazy(() =>
 const ScheduleAssessment = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssessment")
 );
+const ScheduleAssDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
+);
 const MyProfile = lazy(() =>
   import(
     "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"
@@ -604,7 +607,7 @@ const MainAppRoutes = ({
                 <Route path="/questionBank" element={<QuestionBank />} />
               )}
 
-              {/* Assessment */}
+              {/* Assessment_Template */}
               {hasPermission("Assessment_Template") && (
                 <>
                   <Route path="/assessments-template" element={<Assessment />} />
@@ -651,30 +654,51 @@ const MainAppRoutes = ({
               )}
 
               {/* Assessment */}
-              {hasPermission("Assessments", "View") && (
-                <Route path="/assessments" element={<ScheduleAssessment />}>
-                  {/* <Route
-                    path="assessments-details/:id"
-                    element={<AssessmentDetails />}
-                  /> */}
-                </Route>
+              {hasPermission("Assessments") && (
+                <>
+                <Route path="/assessments" element={<ScheduleAssessment />} />
+                
+                {hasPermission("Assessments", "View") && (
+                  <Route
+                    path="assessment/:id"
+                    element={<><ScheduleAssDetails /> <ScheduleAssessment /></>}
+                  />
+                )}
+                </>
               )}
+              
 
               {/* Wallet */}
               {hasPermission("Wallet") && (
                 <Route path="/wallet" element={<Wallet />}>
-                  <Route
-                    path="wallet-details/:id"
-                    element={<WalletBalancePopup />}
-                  />
-                  <Route
-                    path="wallet-transaction/:id"
-                    element={<WalletTransactionPopup />}
-                  />
+                  {hasPermission("Wallet", "View") && (
+                    <>
+                      <Route
+                        path="wallet-details/:id"
+                        element={<WalletBalancePopup />}
+                      />
+                      <Route
+                        path="wallet-transaction/:id"
+                        element={<WalletTransactionPopup />}
+                      />
+                    </>
+                  )}
                 </Route>
               )}
 
-              {/* Account Settings Routes - Unified for both user types */}
+
+              {hasPermission("Billing") && (
+                  <Route path="billing-details" element={<BillingSubtabs />}>
+                    <Route index element={null} />
+                    <Route
+                      path="details/:id"
+                      element={<UserInvoiceDetails />}
+                    />
+                  </Route>
+                )}
+
+              {/* Account Settings Routes from effective user */}
+
               <Route
                 path="/account-settings"
                 element={<AccountSettingsSidebar />}
