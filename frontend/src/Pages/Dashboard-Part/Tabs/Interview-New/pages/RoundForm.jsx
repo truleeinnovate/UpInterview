@@ -1469,7 +1469,7 @@ const RoundFormInterviews = () => {
 
                           <div className="mt-4">
                             <label htmlFor="duration" className="block text-sm font-medium text-gray-700">
-                              Duration (minutes)
+                              Duration (Minutes)
                             </label>
                             <select
                               id="duration"
@@ -1615,8 +1615,8 @@ const RoundFormInterviews = () => {
                             {isInternalSelected && (
                               <section className="mb-4 w-full">
                                 <h4 className="text-sm font-semibold text-gray-600 mb-3">
-                                  {interviewerViewType === 'groups' ? 'Interviewer Groups ' : 'Internal Interviewers'}
-                                  <span className="text-xs text-custom-blue">({internalInterviewers.length || "Not Provided"}{' '}{internalInterviewers.length > 1 ? "members" : "member"})</span>
+                                  {interviewerViewType === 'groups' ? 'Interviewer Groups ' : 'Internal Interviewers '}
+                                  <span className="text-xs text-custom-blue">({internalInterviewers.length || "Not Provided"}{internalInterviewers.length > 1 ? " members" : " member"})</span>
                                   {/* {formData.interviewerViewType === 'groups' && formData.interviewerGroupName && (
                                                     <span className="ml-2 text-sm font-normal">(Group: {formData.interviewerGroupName})</span>
                                                                   )} */}
@@ -1774,7 +1774,7 @@ const RoundFormInterviews = () => {
                                 })}
                               </ul>
                             ) : (
-                              <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                              <p className="mt-2 text-gray-500 flex justify-center">No Questions added yet.</p>
                             )}
                           </div>
 

@@ -84,7 +84,7 @@ const CompanyProfile = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Company Name
                   </label>
-                  <p>{companyProfile?.company || "Not Provided"}</p>
+                  <p>{companyProfile?.company ? companyProfile?.company.charAt(0).toUpperCase() + companyProfile?.company.slice(1) : "Not Provided"}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">

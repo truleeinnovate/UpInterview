@@ -50,7 +50,7 @@ const NewAssessment = () => {
   const [showMessage, setShowMessage] = useState(false);
   const [errors, setErrors] = useState("");
   const [showDropdownAssessment, setShowDropdownAssessment] = useState(false);
-  const [selectedDuration, setSelectedDuration] = useState("60 minutes");
+  const [selectedDuration, setSelectedDuration] = useState("60 Minutes");
   const [showDropdownDuration, setShowDropdownDuration] = useState(false);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
@@ -95,7 +95,7 @@ const NewAssessment = () => {
   const [formData, setFormData] = useState({
     AssessmentTitle: "",
     Position: "",
-    Duration: "60 minutes",
+    Duration: "60 Minutes",
     DifficultyLevel: "",
     NumberOfQuestions: "",
     ExpiryDate: new Date(),
@@ -127,7 +127,7 @@ const NewAssessment = () => {
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",
         DifficultyLevel: assessment.DifficultyLevel || "",
-        Duration: assessment.Duration || "60 minutes",
+        Duration: assessment.Duration || "60 Minutes",
         NumberOfQuestions: assessment.NumberOfQuestions || "",
         ExpiryDate: assessment.ExpiryDate ? new Date(assessment.ExpiryDate) : new Date(),
         status: assessment.status || "Active",
@@ -656,7 +656,7 @@ const NewAssessment = () => {
     setShowDropdownAssessment(!showDropdownAssessment);
   };
 
-  const durations = ["30 minutes", "45 minutes", "60 minutes", "90 minutes"];
+  const durations = ["30 Minutes", "45 Minutes", "60 Minutes", "90 Minutes"];
 
   const toggleDropdownDuration = () => {
     setShowDropdownDuration(!showDropdownDuration);
@@ -667,7 +667,7 @@ const NewAssessment = () => {
   };
 
   const handleDurationSelect = (duration) => {
-    if (duration === "60 minutes" || duration === "90 minutes") {
+    if (duration === "60 Minutes" || duration === "90 Minutes") {
       setShowUpgradePopup(true);
       setShowDropdownDuration(false);
     } else {

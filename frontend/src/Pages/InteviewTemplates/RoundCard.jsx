@@ -165,7 +165,7 @@ const RoundCard = ({
 
               <div className="flex items-center text-sm text-gray-500">
                 <Clock className="h-4 w-4 mr-1" />
-                <span>Duration: {round?.duration} minutes</span>
+                <span>Duration: {round?.duration} Minutes</span>
               </div>
 
 
@@ -290,14 +290,14 @@ const RoundCard = ({
                         >
                           <span className="">
                             {/* {qIndex + 1}. */}
-                            • {questionText || "No question text available"}
+                            • {questionText || "No Question Text Available"}
                           </span>
                         </li>
                       );
                     })}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                  <p className="mt-2 text-gray-500 flex justify-center">No Questions added yet.</p>
                 )}
 
               </div>
@@ -468,7 +468,7 @@ const RoundCard = ({
                                     ))
                                   ) : (
                                     <div className="text-center py-4 text-gray-500">
-                                      No questions found in this section
+                                      No Questions found in this section
                                     </div>
                                   )}
                                 </div>
@@ -478,7 +478,7 @@ const RoundCard = ({
                         })
                       ) : (
                         <div className="text-center py-4 text-gray-500">
-                          No sections available for this assessment
+                          No sections available for this Assessment
                         </div>
                       )}
                     </div>
