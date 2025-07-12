@@ -1,6 +1,16 @@
 import { usageMetrics } from '../mockData/usageData'
+import { usePermissions } from '../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../utils/permissionUtils';
 
 const Usage = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Usage")) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Usage Analytics</h2>

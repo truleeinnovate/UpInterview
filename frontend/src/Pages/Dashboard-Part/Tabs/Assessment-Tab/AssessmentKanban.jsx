@@ -23,7 +23,9 @@ const AssessmentKanban = ({
   assessmentSections,
   loading = false 
 }) => {
-  console.log("assessments----",assessments);
+  // Remove the console.log that's causing loops
+  // console.log("assessments----",assessments);
+  
   const [columns, setColumns] = useState({
     active: {
       title: 'Active',
@@ -66,120 +68,35 @@ const AssessmentKanban = ({
         [source.droppableId]: { ...sourceColumn, items: sourceItems },
         [destination.droppableId]: { ...destColumn, items: destItems }
       });
-    } else {
-      const column = columns[source.droppableId];
-      const copiedItems = [...column.items];
-      const [movedItem] = copiedItems.splice(source.index, 1);
-      copiedItems.splice(destination.index, 0, movedItem);
-
-      setColumns({
-        ...columns,
-        [source.droppableId]: { ...column, items: copiedItems }
-      });
     }
-  };
-
-  const getStatusColor = (status) => {
-    return status === 'Active'
-      ? 'bg-green-100 text-green-800'
-      : 'bg-red-100 text-red-800';
   };
 
   if (loading) {
     return (
-      <motion.div 
-        className="w-full h-[calc(100vh-12rem)] rounded-xl p-6 overflow-x-auto"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center justify-end mb-4">
-          <div className="h-8 w-32 bg-gray-200 animate-pulse rounded-lg"></div>
-        </div>
-
-        <div className="flex sm:flex-col flex-row gap-6 pb-6">
-          {['active', 'inactive'].map((columnId, colIndex) => (
-            <motion.div
-              key={columnId}
-              className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: colIndex * 0.1 }}
-            >
-              <div className="h-8 w-1/3 bg-gray-200 animate-pulse rounded mb-4"></div>
-              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-                {[...Array(4)].map((_, index) => (
-                  <motion.div
-                    key={index}
-                    className="bg-white rounded-lg shadow p-4 space-y-3 border border-gray-200"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + index * 0.05 }}
-                  >
-                    <div className="absolute top-2 right-2 flex space-x-1">
-                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                    </div>
-                    <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="space-y-2">
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                    </div>
-                    <div className="flex justify-between pt-2">
-                      <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
-                      <div className="h-4 w-12 bg-gray-200 animate-pulse rounded"></div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-custom-blue"></div>
+      </div>
     );
   }
 
   return (
-    <motion.div 
-      className="w-full h-[calc(100vh-12rem)] rounded-xl p-6 overflow-x-auto"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <motion.div 
-        className="flex items-center justify-end mb-4"
-        initial={{ x: 20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-          {assessments.length} {assessments.length <= 1 ? 'Assessment' : 'Assessments'}
-        </span>
-      </motion.div>
-
+    <div className="h-full">
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex sm:flex-col flex-row gap-6 pb-6">
-          {Object.entries(columns).map(([columnId, column], colIndex) => (
-            <motion.div
-              key={columnId}
-              className="sm:w-full w-1/2 bg-gray-50 rounded-xl p-4 shadow"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: colIndex * 0.1 }}
-            >
-              <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                {column.title} ({column.items.length})
-              </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+          {Object.entries(columns).map(([columnId, column]) => (
+            <div key={columnId} className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {column.title} ({column.items.length})
+                </h3>
+              </div>
+              
               <Droppable droppableId={columnId}>
                 {(provided) => (
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4"
+                    className="space-y-3 min-h-[200px]"
                   >
                     {column.items.map((assessment, index) => (
                       <Draggable
@@ -187,17 +104,18 @@ const AssessmentKanban = ({
                         draggableId={assessment._id}
                         index={index}
                       >
-                        {(provided) => (
+                        {(provided, snapshot) => (
                           <motion.div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className="bg-white rounded-lg shadow p-4 space-y-3 relative group border border-gray-200"
-                            whileHover={{ y: -5 }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2, delay: index * 0.05 }}
+                            className={`bg-white rounded-lg shadow-sm border p-4 cursor-pointer transition-all duration-200 ${
+                              snapshot.isDragging ? 'shadow-lg transform rotate-2' : 'hover:shadow-md'
+                            }`}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
+
                             <motion.div 
                               className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity"
                               whileHover={{ scale: 1.05 }}
@@ -298,74 +216,58 @@ const AssessmentKanban = ({
                                 <CalendarIcon className="w-4 h-4" />
                                 {format(new Date(assessment.ExpiryDate), 'MMM dd, yyyy')}
                               </motion.div>
-                            </div>
 
-                            <div className="flex items-center justify-between pt-2">
-                              <motion.span
-                                className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                                  assessment.status
-                                )}`}
-                                whileHover={{ scale: 1.05 }}
-                              >
-                                {assessment.status}
-                              </motion.span>
-                              <span className="text-xs text-gray-500">
-                                {assessmentSections[assessment._id] ?? 0} {assessmentSections[assessment._id] <= 1 ? 'Section' : 'Sections'}
-                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div className="flex items-center text-gray-600">
+                                <ClockIcon className="w-4 h-4 mr-1" />
+                                <span>{assessment.assessmentDuration || 'N/A'} min</span>
+                              </div>
+                              
+                              <div className="flex items-center text-gray-600">
+                                <DocumentTextIcon className="w-4 h-4 mr-1" />
+                                <span>{assessmentSections[assessment._id] ?? 0} sections</span>
+                              </div>
+                              
+                              <div className="flex items-center text-gray-600">
+                                <AcademicCapIcon className="w-4 h-4 mr-1" />
+                                <span>{assessment.DifficultyLevel || 'N/A'}</span>
+                              </div>
+                              
+                              <div className="flex items-center text-gray-600">
+                                <CalendarIcon className="w-4 h-4 mr-1" />
+                                <span>
+                                  {assessment.createdAt 
+                                    ? format(new Date(assessment.createdAt), 'MMM dd, yyyy')
+                                    : 'N/A'
+                                  }
+                                </span>
+                              </div>
                             </div>
                           </motion.div>
                         )}
                       </Draggable>
                     ))}
-                    
-                    {column.items.length === 0 && (
-                      <div className="col-span-full flex flex-col items-center justify-center py-8 text-gray-500">
-                        <DocumentTextIcon className="w-12 h-12 text-gray-300 mb-3" />
-                        <h3 className="text-lg font-medium text-gray-700 mb-1">
-                          No {column.title} Assessments Found
-                        </h3>
-                        <p className="text-gray-500 text-center max-w-md text-sm">
-                          {column.title === 'Active' 
-                            ? 'There are no active assessments to display.'
-                            : 'There are no inactive assessments at the moment.'}
-                        </p>
-                      </div>
-                    )}
-                    
                     {provided.placeholder}
                   </div>
                 )}
               </Droppable>
-            </motion.div>
+            </div>
           ))}
         </div>
       </DragDropContext>
-    </motion.div>
+    </div>
   );
 };
 
 AssessmentKanban.propTypes = {
-  assessments: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      AssessmentTitle: PropTypes.string.isRequired,
-      status: PropTypes.oneOf(['Active', 'Inactive']).isRequired,
-      Position: PropTypes.string,
-      Duration: PropTypes.string,
-      DifficultyLevel: PropTypes.string,
-      NumberOfQuestions: PropTypes.number,
-      ExpiryDate: PropTypes.string
-    })
-  ).isRequired,
+  assessments: PropTypes.array.isRequired,
   onView: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
   onShare: PropTypes.func.isRequired,
   assessmentSections: PropTypes.object.isRequired,
-  loading: PropTypes.bool
-};
-
-AssessmentKanban.defaultProps = {
-  loading: false
+  loading: PropTypes.bool,
 };
 
 export default AssessmentKanban;

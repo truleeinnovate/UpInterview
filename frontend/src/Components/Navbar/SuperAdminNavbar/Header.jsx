@@ -19,11 +19,11 @@ import { X } from "lucide-react";
 import { useCustomContext } from "../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
-import { clearAllCookies } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
+import { clearAllAuth, logout } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
 import { usePermissions } from "../../../Context/PermissionsContext";
 
 function Header() {
-  const { superAdminPermissions } = usePermissions();
+  const { superAdminPermissions, isImpersonating } = usePermissions();
   // const { user, hasRole } = useAuth();
   // const [showDropdown, setShowDropdown] = useState(false);
   // const [showMore, setShowMore] = useState(false);
@@ -231,6 +231,19 @@ function Header() {
       : location.pathname.startsWith(path);
   };
 
+
+  const handleLogout = () => {
+    closeAllDropdowns();
+
+    if (isImpersonating) {
+      // If impersonating, clear only the effective user cookies and redirect to admin dashboard
+      clearAllAuth();
+      navigate("/organization-login");
+    } else {
+      // If not impersonating, clear all cookies and redirect to login
+      logout(navigate); // true for organization login
+    }
+  };
   const outlineDropdownContent = (
     <div className="absolute top-12 w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
       <div className="flex justify-between items-center px-4 py-2">
@@ -342,10 +355,7 @@ function Header() {
           className="text-custom-blue hover:text-blue-500"
           onClick={() => {
             closeAllDropdowns();
-
-            // logout(organization);
-            clearAllCookies();
-            navigate("/organization-login");
+            handleLogout();
           }}
         >
           Log Out

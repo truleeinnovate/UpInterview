@@ -37,6 +37,8 @@ import { config } from "../../../config.js";
 import {
   setAuthCookies,
   getImpersonationToken,
+  getAuthToken,
+  loginAsUser,
 } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
 import { toast } from "react-toastify";
 import { usePermissions } from "../../../Context/PermissionsContext";
@@ -170,14 +172,24 @@ function UsersTab({ users, viewMode }) {
 
   // Common function for Login as User API call
   const handleLoginAsUser = async (userId) => {
+    console.log("🚀 Starting login as user process for userId:", userId);
+    
     try {
       const impersonationToken = getImpersonationToken();
+      console.log("🔑 Impersonation token check:", !!impersonationToken);
+      
       if (!impersonationToken) {
+        console.error("❌ No impersonation token found");
         toast.error("Super admin session expired. Please log in again.");
         navigate("/organization-login");
         return;
       }
 
+      console.log("📡 Making API request to login-as-user endpoint");
+      console.log("🌐 API URL:", `${config.REACT_APP_API_URL}/Organization/login-as-user`);
+      console.log("🔑 Using impersonation token:", impersonationToken ? "EXISTS" : "MISSING");
+      console.log("📦 Request body:", { userId });
+      
       const response = await fetch(
         `${config.REACT_APP_API_URL}/Organization/login-as-user`,
         {
@@ -190,24 +202,57 @@ function UsersTab({ users, viewMode }) {
           credentials: "include",
         }
       );
-      console.log("Login as user response:", response);
+      console.log("📥 Login as user response status:", response.status);
+      console.log("📥 Login as user response:", response);
+      console.log("📥 Response headers:", Object.fromEntries(response.headers.entries()));
 
       const data = await response.json();
+      console.log("📋 Response data:", data);
+      console.log("📋 Response data keys:", Object.keys(data));
+      
       if (data.success) {
-        setAuthCookies({
-          authToken: data.authToken,
+        console.log("✅ Login successful, authToken received:", !!data.authToken);
+        console.log("🔑 AuthToken details:", {
+          hasToken: !!data.authToken,
+          tokenLength: data.authToken ? data.authToken.length : 0,
+          userId: data.userId,
+          tenantId: data.tenantId,
+          isOrganization: data.isOrganization
+        });
+        
+        console.log("🍪 Setting auth cookies with data:", {
+          authToken: !!data.authToken,
+          authTokenLength: data.authToken ? data.authToken.length : 0,
           userId: data.userId,
           tenantId: data.tenantId,
           organization: data.isOrganization,
         });
+        
+        console.log("🔧 Calling loginAsUser function...");
+        loginAsUser(data.authToken, {
+          userId: data.userId,
+          tenantId: data.tenantId,
+          organization: data.isOrganization,
+        });
+        console.log("✅ loginAsUser function completed");
+        
+        // Verify cookies were set
+        console.log("🔍 Verifying cookies after setting:");
+        const verifyAuthToken = getAuthToken();
+        const verifyImpersonationToken = getImpersonationToken();
+        console.log("🔍 Auth token after setting:", verifyAuthToken ? "EXISTS" : "MISSING");
+        console.log("🔍 Impersonation token after setting:", verifyImpersonationToken ? "EXISTS" : "MISSING");
+        
+        console.log("🔄 Refreshing permissions");
         await refreshPermissions();
+        console.log("🏠 Navigating to home page");
         navigate("/home");
       } else {
-        console.error("Login failed:", data.message);
+        console.error("❌ Login failed:", data.message);
         toast.error(data.message || "Login failed");
       }
     } catch (error) {
-      console.error("Error during login as user:", error);
+      console.error("💥 Error during login as user:", error);
       toast.error("An error occurred during login");
     }
   };
@@ -259,7 +304,14 @@ function UsersTab({ users, viewMode }) {
       key: "login-as-user",
       label: "Login as User",
       icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => handleLoginAsUser(row._id),
+      onClick: (row) => {
+        console.log("🖱️ Login as User button clicked for user:", {
+          userId: row._id,
+          userName: row.firstName,
+          userEmail: row.email
+        });
+        handleLoginAsUser(row._id);
+      },
     },
   ];
 
@@ -774,7 +826,14 @@ function UsersTab({ users, viewMode }) {
                 <div className="space-y-3">
                   <button
                     className="w-full btn-primary flex items-center justify-center space-x-2"
-                    onClick={() => handleLoginAsUser(selectedUser._id)}
+                    onClick={() => {
+                      console.log("🖱️ Modal Login as User button clicked for user:", {
+                        userId: selectedUser._id,
+                        userName: selectedUser.name,
+                        userEmail: selectedUser.email
+                      });
+                      handleLoginAsUser(selectedUser._id);
+                    }}
                   >
                     <AiOutlineUser />
                     <span>Login as User</span>

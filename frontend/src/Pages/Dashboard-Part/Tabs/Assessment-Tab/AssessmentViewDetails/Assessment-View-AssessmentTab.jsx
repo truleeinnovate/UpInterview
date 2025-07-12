@@ -16,11 +16,12 @@ function AssessmentsTab({ assessment }) {
 
 
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
-  useEffect(() => {
-    if (assessment) {
-      console.log('assessment', assessment);
-    }
-  }, [assessment]);
+  // Remove console.log to prevent loops
+  // useEffect(() => {
+  //   if (assessment) {
+  //     console.log('assessment', assessment);
+  //   }
+  // }, [assessment]);
 
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;

@@ -93,7 +93,8 @@ const RoundCard = ({
   }, [showQuestions, round?.assessmentId]);
 
 
-  console.log("round", round);
+  // Remove console.log to prevent loops
+  // console.log("round", round);
 
   const toggleSection = async (sectionId) => {
 

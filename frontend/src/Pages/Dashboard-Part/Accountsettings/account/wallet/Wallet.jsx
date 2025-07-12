@@ -4,13 +4,14 @@ import { ViewDetailsButton, EditButton } from '../../common/Buttons'
 import axios from 'axios'
 import Cookies from "js-cookie";
 import { Outlet } from 'react-router-dom'
-// Removed useCustomContext import as we're fetching data directly
 import WalletBalancePopup from './WalletBalancePopup';
 import WalletTransactionPopup from './WalletTransactionPopup';
 import { WalletTopupPopup } from './WalletTopupPopup'
 import { BankAccountsPopup } from './BankAccountsPopup'
-import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
 import './topupAnimation.css';
+import { usePermissions } from '../../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../../utils/permissionUtils';
 
 export const getTransactionTypeStyle = (type) => {
   switch (type) {
@@ -39,15 +40,11 @@ export const calculatePendingBalance = (walletBalance) => {
 
 
 const Wallet = () => {
-  // Remove unused navigate - fixing lint error
-  // const navigate = useNavigate();
-
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const authToken = Cookies.get("authToken");
-    const tokenPayload = decodeJwt(authToken);
-    
-    
-    const userId = tokenPayload?.userId;
-
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
   const [walletBalance, setWalletBalance] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -57,6 +54,24 @@ const Wallet = () => {
   const [animateTopUp, setAnimateTopUp] = useState(true);
   const topUpButtonRef = useRef(null);
   
+  useEffect(() => {
+    setAnimateTopUp(true);
+    const animationTimer = setTimeout(() => {
+      setAnimateTopUp(false);
+    }, 20000);
+    
+    return () => clearTimeout(animationTimer);
+  }, []);
+
+  useEffect(() => {
+    fetchWalletData();
+  }, []);
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Wallet")) {
+    return null;
+  }
+
   // Function to fetch wallet data directly
   const fetchWalletData = async () => {
     try {
@@ -90,21 +105,21 @@ const Wallet = () => {
   const walletTransactions = walletBalance?.transactions || [];
 
   // Fetch wallet data on component mount
-  useEffect(() => {
-    fetchWalletData();
-  }, []);
+  // useEffect(() => {
+  //   fetchWalletData();
+  // }, []);
   
   console.log("walletBalance ", walletBalance);
   
   // Start animation on page load and stop after 20 seconds
-  useEffect(() => {
-    setAnimateTopUp(true);
-    const animationTimer = setTimeout(() => {
-      setAnimateTopUp(false);
-    }, 20000);
+  // useEffect(() => {
+  //   setAnimateTopUp(true);
+  //   const animationTimer = setTimeout(() => {
+  //     setAnimateTopUp(false);
+  //   }, 20000);
     
-    return () => clearTimeout(animationTimer);
-  }, []);
+  //   return () => clearTimeout(animationTimer);
+  // }, []);
  
   const pendingBalance = calculatePendingBalance(walletBalance);
 

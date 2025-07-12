@@ -288,23 +288,35 @@ const organizationUserCreation = async (req, res) => {
 
 const loginOrganization = async (req, res) => {
   try {
+    console.log('[loginOrganization] Login request received');
+    console.log('[loginOrganization] Request body:', req.body);
+    
     let { email, password } = req.body;
     email = email?.trim().toLowerCase();
     password = password?.trim();
 
+    console.log('[loginOrganization] Processed credentials:', { email: email ? '***' : 'missing', password: password ? '***' : 'missing' });
+
     if (!email || !password) {
+      console.log('[loginOrganization] Missing email or password');
       return res
         .status(400)
         .json({ success: false, message: "Email and password are required" });
     }
 
+    console.log('[loginOrganization] Looking up user by email:', email);
     const user = await Users.findOne({ email }).select("+password");
     if (!user) {
+      console.log('[loginOrganization] User not found for email:', email);
       return res
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
+    
+    console.log('[loginOrganization] User found:', { userId: user._id, isEmailVerified: user.isEmailVerified });
+    
     if (!user.isEmailVerified) {
+      console.log('[loginOrganization] Email not verified for user:', user._id);
       return res.status(403).json({
         success: false,
         message: "Email not verified",
@@ -316,26 +328,36 @@ const loginOrganization = async (req, res) => {
     let roleName = null;
     let roleType = null;
     if (user.roleId) {
+      console.log('[loginOrganization] Looking up role for user:', user.roleId);
       const role = await RolesPermissionObject.findById(user.roleId);
       roleName = role?.roleName;
       roleType = role?.roleType;
+      console.log('[loginOrganization] Role found:', { roleName, roleType });
     }
 
+    console.log('[loginOrganization] Verifying password...');
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log('[loginOrganization] Invalid password for user:', user._id);
       return res
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
+    console.log('[loginOrganization] Password verified successfully');
 
     // For internal roleType (super admin)
     if (roleType === "internal") {
+      console.log('[loginOrganization] Processing internal user login');
       const payload = {
         impersonatedUserId: user._id.toString(),
         // role: 'superadmin',
         timestamp: new Date().toISOString(),
       };
       const impersonationToken = generateToken(payload, { expiresIn: "7h" });
+
+      // Set impersonation token cookie
+      res.cookie('impersonationToken', impersonationToken, getAuthCookieOptions());
+      console.log('[loginOrganization] Set impersonation token cookie');
 
       return res.status(200).json({
         success: true,
@@ -349,18 +371,28 @@ const loginOrganization = async (req, res) => {
     }
 
     // For non-internal users, proceed with tenant checks
+    console.log('[loginOrganization] Processing regular user login, checking tenant:', user.tenantId);
     const organization = await Tenant.findOne({ _id: user.tenantId });
     if (!organization || organization.status === "inactive") {
+      console.log('[loginOrganization] Organization not found or inactive:', { 
+        found: !!organization, 
+        status: organization?.status 
+      });
       return res.status(403).json({
         success: false,
         message: "Account not active",
         status: organization?.status || "not found",
       });
     }
+    console.log('[loginOrganization] Organization found and active:', { 
+      orgId: organization._id, 
+      status: organization.status 
+    });
 
     // Fetch contactId where ownerId matches user._id
     const contact = await Contacts.findOne({ ownerId: user._id });
     const contactEmailFromOrg = contact?.email || null;
+    console.log('[loginOrganization] Contact found:', { contactId: contact?._id, email: contactEmailFromOrg });
 
     // Generate JWT for non-internal users
     const payload = {
@@ -371,7 +403,11 @@ const loginOrganization = async (req, res) => {
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
 
-    res.status(200).json({
+    // Set auth token cookie
+    res.cookie('authToken', authToken, getAuthCookieOptions());
+    console.log('[loginOrganization] Set auth token cookie');
+
+    const responseData = {
       success: true,
       message: "Login successful",
       ownerId: user._id.toString(),
@@ -382,9 +418,19 @@ const loginOrganization = async (req, res) => {
       contactEmailFromOrg,
       isEmailVerified: user.isEmailVerified,
       status: organization.status,
+    };
+    
+    console.log('[loginOrganization] Sending successful response:', {
+      success: responseData.success,
+      ownerId: responseData.ownerId,
+      tenantId: responseData.tenantId,
+      status: responseData.status,
+      isProfileCompleted: responseData.isProfileCompleted
     });
+
+    res.status(200).json(responseData);
   } catch (error) {
-    console.error("Error during login:", error);
+    console.error("[loginOrganization] Error during login:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

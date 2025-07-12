@@ -22,7 +22,7 @@ export const config = {
   // REACT_APP_REDIRECT_URI: process.env.REACT_APP_REDIRECT_URI,
   // online linked in redirect uri
   REACT_APP_REDIRECT_URI: "https://app.upinterview.io/callback",
-  REACT_APP_API_URL: process.env.REACT_APP_API_URL
+  REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000'
 };
 
 export const linkedInConfig = {
