@@ -331,7 +331,7 @@ function InternalLogsPage() {
 
   // Table Actions Configuration
   const tableActions = [
-    ...(superAdminPermissions.InternalLogs.View
+    ...(superAdminPermissions?.InternalLogs?.View
       ? [
           {
             key: "view",
@@ -345,7 +345,7 @@ function InternalLogsPage() {
         ]
       : []),
 
-    ...(superAdminPermissions.InternalLogs.View
+    ...(superAdminPermissions?.InternalLogs?.View
       ? [
           {
             key: "360-view",

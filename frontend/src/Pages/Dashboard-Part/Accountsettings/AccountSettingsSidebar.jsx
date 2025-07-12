@@ -440,7 +440,23 @@ const AccountSettingsSidebar = ({ type }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Select permissions based on type
-  const permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
+  let permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
+  
+  // Fallback for super admin when superAdminPermissions is null
+  if (type === 'superAdmin' && !superAdminPermissions) {
+    console.log('🔍 Super admin permissions not loaded, using fallback permissions');
+    permissions = {
+      SuperAdminMyProfile: {
+        ViewTab: true
+      },
+      SuperAdminRole: {
+        ViewTab: true
+      },
+      SuperAdminUser: {
+        ViewTab: true
+      }
+    };
+  }
 
   // Extract active tab from URL
   const pathParts = location.pathname.split('/');
@@ -489,7 +505,7 @@ const AccountSettingsSidebar = ({ type }) => {
   const permissionMap = {
     'my-profile': type === 'superAdmin' ? 'SuperAdminMyProfile' : 'MyProfile',
     'profile': 'CompanyProfile',
-    'billing-details': 'Billing',
+    'billing-details': type === 'superAdmin' ? 'SuperAdminBilling' : 'Billing',
     'subscription': 'Subscription',
     'wallet': 'Wallet',
     'security': 'Security',
@@ -504,21 +520,80 @@ const AccountSettingsSidebar = ({ type }) => {
     'webhooks': 'Webhooks',
     'hrms-ats': 'HrmsAts'
   };
+  
+  console.log('🔍 AccountSettingsSidebar Permission Map Debug:', {
+    type,
+    permissionMap,
+    availablePermissionKeys: permissions ? Object.keys(permissions) : []
+  });
 
   // Filter navigation based on type and permissions
+  console.log('🔍 AccountSettingsSidebar Debug:', {
+    type,
+    permissions,
+    superAdminPermissions,
+    effectivePermissions,
+    organization,
+    permissionMap
+  });
+  
   const filteredNavigation = navigation.map(section => ({
     ...section,
     items: section.items.filter(item => {
       if (type === 'superAdmin') {
-        return ['my-profile', 'roles', 'users'].includes(item.id) && permissions[permissionMap[item.id]]?.ViewTab;
+        // For super admin, only show specific items that they have permissions for
+        const superAdminItems = ['my-profile', 'roles', 'users'];
+        
+        if (!superAdminItems.includes(item.id)) {
+          console.log(`🔍 SuperAdmin filtering out ${item.id}: not in super admin items list`);
+          return false;
+        }
+        
+        const permissionKey = permissionMap[item.id];
+        let permissionObject = permissions?.[permissionKey];
+        
+        // Fallback: if the permission key doesn't exist, try alternative keys
+        if (!permissionObject) {
+          const alternativeKeys = {
+            'my-profile': ['MyProfile', 'Profile', 'SuperAdminProfile'],
+            'roles': ['Roles', 'Role', 'SuperAdminRole'],
+            'users': ['Users', 'User', 'SuperAdminUser']
+          };
+          
+          const keysToTry = alternativeKeys[item.id] || [];
+          for (const key of keysToTry) {
+            if (permissions?.[key]) {
+              console.log(`🔍 Using alternative permission key for ${item.id}: ${key}`);
+              permissionObject = permissions[key];
+              break;
+            }
+          }
+        }
+        
+        const hasPermission = permissionObject?.ViewTab ?? true; // Default to true for super admin if permissions not loaded
+        console.log(`🔍 SuperAdmin ${item.id}:`, {
+          permissionKey: permissionMap[item.id],
+          permissionObject,
+          hasPermission
+        });
+        return hasPermission;
       }
+      
+      // For non-super admin users
       const permissionKey = permissionMap[item.id];
-      if (['profile', 'users', 'sub-domain', 'roles', 'interviewer-groups', 'sharing', 'webhooks', 'hrms-ats'].includes(item.id)) {
-        return organization && permissionKey && permissions[permissionKey]?.ViewTab;
+      if (!permissions || !permissionKey) {
+        console.log(`🔍 Non-super admin filtering out ${item.id}: no permissions or permission key`);
+        return false;
       }
-      return permissionKey && permissions[permissionKey]?.ViewTab;
+      
+      if (['profile', 'users', 'sub-domain', 'roles', 'interviewer-groups', 'sharing', 'webhooks', 'hrms-ats'].includes(item.id)) {
+        return organization && permissions[permissionKey]?.ViewTab;
+      }
+      return permissions[permissionKey]?.ViewTab;
     })
   })).filter(section => section.items.length > 0);
+  
+  console.log('📋 Filtered Navigation:', filteredNavigation);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((prev) => !prev);

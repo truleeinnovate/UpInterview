@@ -231,18 +231,19 @@ function Header() {
       : location.pathname.startsWith(path);
   };
 
-  // Helper function to check permissions
-  const hasPermission = (permissionKey) => {
-    if (!permissionKey) return true;
 
-    // Check super admin permissions first
-    if (superAdminPermissions && superAdminPermissions[permissionKey]) {
-      return superAdminPermissions[permissionKey];
+  const handleLogout = () => {
+    closeAllDropdowns();
+
+    if (isImpersonating) {
+      // If impersonating, clear only the effective user cookies and redirect to admin dashboard
+      clearAllAuth();
+      navigate("/organization-login");
+    } else {
+      // If not impersonating, clear all cookies and redirect to login
+      logout(navigate); // true for organization login
     }
-
-    return false;
   };
-
   const outlineDropdownContent = (
     <div className="absolute top-12 w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">
       <div className="flex justify-between items-center px-4 py-2">
@@ -388,19 +389,6 @@ function Header() {
     navigate("/super-admin-account-settings");
   };
 
-  const handleLogout = () => {
-    closeAllDropdowns();
-
-    if (isImpersonating) {
-      // If impersonating, clear only the effective user cookies and redirect to admin dashboard
-      clearAllAuth();
-      navigate("/organization-login");
-    } else {
-      // If not impersonating, clear all cookies and redirect to login
-      logout(navigate); // true for organization login
-    }
-  };
-
   // Icon configuration for Home, Information, Bell, and Profile
   const icons = [
     {
@@ -488,10 +476,11 @@ function Header() {
               />
             ) : (
               <CgProfile
-                className={`cursor-pointer ${dropdownState.profileDropdown
+                className={`cursor-pointer ${
+                  dropdownState.profileDropdown
                     ? "text-custom-blue"
                     : "text-black"
-                  }`}
+                }`}
               />
             )}
             {dropdownState.profileDropdown && (
@@ -501,11 +490,312 @@ function Header() {
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>
       ),
-      className: `text-xl border rounded-md ${superAdminProfile?.imageData?.path ? "p-1" : "p-2"
-        }`,
+      className: `text-xl border rounded-md ${
+        superAdminProfile?.imageData?.path ? "p-1" : "p-2"
+      }`,
       isActive: dropdownState.profileDropdown,
     },
   ];
+
+  // return (
+  //   <div className="fixed top-0 z-50 left-0 w-full flex items-center justify-between px-4 sm:px-4 md:px-4 lg:px-4 xl:px-4 2xl:px-4 bg-white border border-b-gray-200">
+  //     <div className="flex items-center flex-1">
+  //       <div className="flex items-center flex-shrink-0 gap-2">
+  //         <button
+  //           className="lg:hidden xl:hidden 2xl:hidden"
+  //           onClick={handleSidebarToggle}
+  //         >
+  //           <FaBars className="size-5 md:size-6" />
+  //         </button>
+  //         <div className="flex items-center">
+  //           <img src={logo} alt="Logo" className="w-24" />
+  //         </div>
+  //       </div>
+
+  //       <nav className="hidden lg:flex xl:flex s2xl:flex ml-16 gap-x-1">
+  //         {mainNavItems.map(
+  //           (item) =>
+  //             !item.role &&
+  //             (!item.permissionKey ||
+  //               item.permissionKey
+  //                 .split(".")
+  //                 .reduce((acc, key) => acc?.[key], superAdminPermissions)) && (
+  //               <NavLink
+  //                 key={item.path}
+  //                 to={item.path}
+  //                 className={`h-16 flex items-center relative mx-4 first:ml-0 last:mr-0 ${
+  //                   isActive(item.path)
+  //                     ? "text-custom-blue border-b-2 border-custom-blue font-bold"
+  //                     : "text-gray-600 hover:text-custom-blue"
+  //                 }`}
+  //               >
+  //                 {item.label}
+  //                 {isActive(item.path) && (
+  //                   <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-custom-blue"></div>
+  //                 )}
+  //               </NavLink>
+  //             )
+  //         )}
+
+  //         {/* More Dropdown */}
+  //         {/* <div className="relative flex items-center" ref={moreRef}>
+  //           <button
+  //             className={`flex items-center h-16 relative px-1 transition-colors duration-300 ${
+  //               moreNavItems.some(
+  //                 (item) =>
+  //                   isActive(item.path) &&
+  //                   (!item.permissionKey ||
+  //                     item.permissionKey
+  //                       .split(".")
+  //                       .reduce(
+  //                         (acc, key) => acc?.[key],
+  //                         superAdminPermissions
+  //                       ))
+  //               )
+  //                 ? "text-custom-blue font-bold border-b-2 border-custom-blue"
+  //                 : "text-gray-600 hover:text-custom-blue"
+  //             }`}
+  //             onClick={toggleMoreDropdown}
+  //           >
+  //             More
+  //             <AiOutlineDown
+  //               className={`ml-1 transition-transform duration-300 ease-in-out ${
+  //                 dropdownState.moreDropdown ? "rotate-180" : ""
+  //               }`}
+  //             />
+  //             {moreNavItems.some((item) => isActive(item.path)) && (
+  //               <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-custom-blue"></div>
+  //             )}
+  //           </button>
+
+  //           <div
+  //             className={`absolute left-0 top-12 z-50 mt-0 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 border p-2 transform transition-all duration-300 ease-in-out origin-top ${
+  //               dropdownState.moreDropdown
+  //                 ? "opacity-100 scale-100 translate-y-0"
+  //                 : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+  //             }`}
+  //           >
+  //             <div className="space-y-1">
+  //               {moreNavItems
+  //                 .filter(
+  //                   (item) =>
+  //                     !item.role &&
+  //                     (!item.permissionKey ||
+  //                       item.permissionKey
+  //                         .split(".")
+  //                         .reduce(
+  //                           (acc, key) => acc?.[key],
+  //                           superAdminPermissions
+  //                         ))
+  //                 )
+  //                 .map(({ path: to, label }) => (
+  //                   <NavLink
+  //                     key={to}
+  //                     to={to}
+  //                     className={`block px-3 py-2 rounded-md hover:bg-gray-100 hover:text-custom-blue transition-colors duration-200 ${
+  //                       isActive(to)
+  //                         ? "bg-gray-100 text-custom-blue font-semibold"
+  //                         : "text-gray-700"
+  //                     }`}
+  //                     onClick={() => closeAllDropdowns()}
+  //                   >
+  //                     {label}
+  //                   </NavLink>
+  //                 ))}
+  //             </div>
+  //           </div>
+  //         </div> */}
+  //       </nav>
+
+  //       <div className="xl:hidden">
+  //         {isSidebarOpen && (
+  //           <Sidebar open={isSidebarOpen} onClose={handleSidebarToggle} />
+  //         )}
+  //       </div>
+
+  //       {/* Search bar */}
+  //       <div className="ml-8 flex-1 max-w-lg">
+  //         {/* <div className="relative rounded-md shadow-sm">
+  //           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+  //             <AiOutlineSearch className="h-5 w-5 text-gray-400" />
+  //           </div>
+  //           <input
+  //             type="text"
+  //             className="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 py-2 sm:text-sm border-gray-300 rounded-md"
+  //             placeholder="Search..."
+  //           />
+  //         </div> */}
+  //       </div>
+  //     </div>
+
+  //     <div className="flex items-center space-x-2">
+  //       {/* <NavLink to="/admin-dashboard">
+  //         <button
+  //           type="button"
+  //           className="p-2 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none"
+  //         >
+  //           <AiOutlineHome className="h-6 w-6" />
+  //         </button>
+  //       </NavLink>
+
+  //       <button
+  //         type="button"
+  //         className="p-2 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none hidden sm:block"
+  //       >
+  //         <AiOutlineQuestionCircle className="h-6 w-6" />
+  //       </button>
+
+  //       <button
+  //         type="button"
+  //         className="p-2 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none"
+  //       >
+  //         <AiOutlineBell className="h-6 w-6" />
+  //       </button>
+
+  //       <div className="relative">
+  //         <button
+  //           type="button"
+  //           className="flex items-center max-w-xs rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+  //           onClick={() => setShowDropdown(!showDropdown)}
+  //         >
+  //           <img
+  //             className="h-8 w-8 rounded-full"
+  //             src={user?.avatar || "https://i.pravatar.cc/150?img=68"}
+  //             alt=""
+  //           />
+  //         </button>
+
+  //         {showDropdown && (
+  //           <div className="origin-top-right absolute right-0 mt-2 w-48 z-10 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+  //             <div className="py-1">
+  //               <a
+  //                 href="#profile"
+  //                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+  //                 onClick={(e) => {
+  //                   e.preventDefault();
+  //                   setShowDropdown(false);
+  //                 }}
+  //               >
+  //                 Your Profile
+  //               </a>
+  //               <a
+  //                 href="#settings"
+  //                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+  //                 onClick={(e) => {
+  //                   e.preventDefault();
+  //                   setShowDropdown(false);
+  //                 }}
+  //               >
+  //                 Settings
+  //               </a>
+  //               <a
+  //                 href="#logout"
+  //                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+  //                 onClick={(e) => {
+  //                   e.preventDefault();
+  //                   setShowDropdown(false);
+  //                 }}
+  //               >
+  //                 Sign out
+  //               </a>
+  //             </div>
+  //           </div>
+  //         )}
+  //       </div> */}
+
+  //       {/* Icons (both mobile and desktop) */}
+  //       <div className="flex items-center space-x-2 sm:space-x-3">
+  //         {icons.map(({ key, ref, content, className, isActive }) => (
+  //           <div
+  //             key={key}
+  //             className={`${className} ${
+  //               isActive ? "text-custom-blue" : "text-black"
+  //             }`}
+  //             ref={ref}
+  //           >
+  //             {content}
+  //           </div>
+  //         ))}
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
+
+  // return (
+  //   <>
+  //     <div className="fixed top-0 z-50 left-0 right-0 bg-white shadow-sm border-b border-gray-200">
+  //       <div className="flex items-center justify-between px-4 py-2">
+  //         {/* Left: Sidebar Toggle + Logo */}
+  //         <div className="flex items-center gap-2 flex-shrink-0">
+  //           <button
+  //             className="lg:hidden xl:hidden 2xl:hidden"
+  //             onClick={handleSidebarToggle}
+  //           >
+  //             <FaBars className="size-5 md:size-6" />
+  //           </button>
+  //           <img src={logo} alt="Logo" className="w-24" />
+  //         </div>
+
+  //         {/* Center: Navigation */}
+  //         <nav className="hidden lg:flex xl:flex 2xl:flex justify-center flex-1">
+  //           <div className="flex items-center gap-x-8 max-w-5xl">
+  //             {mainNavItems.map(
+  //               (item) =>
+  //                 !item.role &&
+  //                 (!item.permissionKey ||
+  //                   item.permissionKey
+  //                     .split(".")
+  //                     .reduce(
+  //                       (acc, key) => acc?.[key],
+  //                       superAdminPermissions
+  //                     )) && (
+  //                   <NavLink
+  //                     key={item.path}
+  //                     to={item.path}
+  //                     className={`h-16 flex items-center relative ${
+  //                       isActive(item.path)
+  //                         ? "text-custom-blue font-bold border-b-2 border-custom-blue"
+  //                         : "text-gray-600 hover:text-custom-blue"
+  //                     }`}
+  //                   >
+  //                     {item.label}
+  //                     {isActive(item.path) && (
+  //                       <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-custom-blue" />
+  //                     )}
+  //                   </NavLink>
+  //                 )
+  //             )}
+  //           </div>
+  //         </nav>
+
+  //         {/* Right: Icons */}
+  //         <div className="flex items-center space-x-2 sm:space-x-3">
+  //           {icons.map(({ key, ref, content, className, isActive }) => (
+  //             <div
+  //               key={key}
+  //               ref={ref}
+  //               className={`${className} ${
+  //                 isActive ? "text-custom-blue" : "text-black"
+  //               }`}
+  //             >
+  //               {content}
+  //             </div>
+  //           ))}
+  //         </div>
+  //       </div>
+
+  //       {/* Optional: Sidebar for mobile */}
+  //       <div className="xl:hidden">
+  //         {isSidebarOpen && (
+  //           <Sidebar open={isSidebarOpen} onClose={handleSidebarToggle} />
+  //         )}
+  //       </div>
+  //     </div>
+
+  //     {/* Spacer for fixed header */}
+  //     <div className="mb-16"></div>
+  //   </>
+  // );
 
   return (
     <>
@@ -526,48 +816,58 @@ function Header() {
           <nav className="hidden lg:flex xl:flex 2xl:flex justify-center flex-1">
             <div className="flex items-center gap-x-6 max-w-5xl h-full">
               {mainNavItems.map(
-                (item) => {
-                  // Check if user has permission for this item
-                  const hasItemPermission = hasPermission(item.permissionKey);
-
-                  if (!hasItemPermission) return null;
-
-                  return (
+                (item) =>
+                  !item.role &&
+                  (!item.permissionKey ||
+                    item.permissionKey
+                      .split(".")
+                      .reduce(
+                        (acc, key) => acc?.[key],
+                        superAdminPermissions
+                      )) && (
                     <NavLink
                       key={item.path}
                       to={item.path}
-                      className={`h-[52px] flex items-center relative ${isActive(item.path)
+                      className={`h-[52px] flex items-center relative ${
+                        isActive(item.path)
                           ? "text-custom-blue font-bold border-b-2 border-custom-blue"
                           : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                      }`}
                     >
                       {item.label}
                       {isActive(item.path) && (
                         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-custom-blue" />
                       )}
                     </NavLink>
-                  );
-                }
+                  )
               )}
             </div>
 
             {/* More Dropdown */}
             <div className="relative flex items-center ml-6" ref={moreRef}>
               <button
-                className={`h-[52px] flex items-center relative transition-colors duration-300 ${moreNavItems.some(
-                  (item) =>
-                    isActive(item.path) &&
-                    hasPermission(item.permissionKey)
-                )
+                className={`h-[52px] flex items-center relative transition-colors duration-300 ${
+                  moreNavItems.some(
+                    (item) =>
+                      isActive(item.path) &&
+                      (!item.permissionKey ||
+                        item.permissionKey
+                          .split(".")
+                          .reduce(
+                            (acc, key) => acc?.[key],
+                            superAdminPermissions
+                          ))
+                  )
                     ? "text-custom-blue font-bold border-b-2 border-custom-blue"
                     : "text-gray-600 hover:text-custom-blue"
-                  }`}
+                }`}
                 onClick={toggleMoreDropdown}
               >
                 More
                 <AiOutlineDown
-                  className={`ml-1 transition-transform duration-300 ease-in-out ${dropdownState.moreDropdown ? "rotate-180" : ""
-                    }`}
+                  className={`ml-1 transition-transform duration-300 ease-in-out ${
+                    dropdownState.moreDropdown ? "rotate-180" : ""
+                  }`}
                 />
                 {moreNavItems.some((item) => isActive(item.path)) && (
                   <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-custom-blue"></div>
@@ -575,24 +875,34 @@ function Header() {
               </button>
 
               <div
-                className={`absolute left-0 top-10 z-50 w-max bg-white rounded-md shadow-lg border transform transition-all duration-300 ease-in-out origin-top ${dropdownState.moreDropdown
+                className={`absolute left-0 top-10 z-50 w-max bg-white rounded-md shadow-lg border transform transition-all duration-300 ease-in-out origin-top ${
+                  dropdownState.moreDropdown
                     ? "opacity-100 scale-100 translate-y-0"
                     : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
-                  }`}
+                }`}
               >
                 <div className="flex flex-col min-w-[150px]">
                   {moreNavItems
                     .filter(
-                      (item) => hasPermission(item.permissionKey)
+                      (item) =>
+                        !item.role &&
+                        (!item.permissionKey ||
+                          item.permissionKey
+                            .split(".")
+                            .reduce(
+                              (acc, key) => acc?.[key],
+                              superAdminPermissions
+                            ))
                     )
                     .map(({ path, label }) => (
                       <NavLink
                         key={path}
                         to={path}
-                        className={`h-[42px] flex items-center px-4 relative ${isActive(path)
+                        className={`h-[42px] flex items-center px-4 relative ${
+                          isActive(path)
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
-                          }`}
+                        }`}
                         onClick={closeAllDropdowns}
                       >
                         {label}
@@ -609,8 +919,9 @@ function Header() {
               <div
                 key={key}
                 ref={ref}
-                className={`${className} ${isActive ? "text-custom-blue" : "text-black"
-                  }`}
+                className={`${className} ${
+                  isActive ? "text-custom-blue" : "text-black"
+                }`}
               >
                 {content}
               </div>
