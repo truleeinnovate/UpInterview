@@ -4,26 +4,30 @@ import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 
-export const usePositions = () => {
+export const usePositions = (filters = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Positions?.View;
-
 
   const {
     data: positionData = [],
     isLoading: isQueryLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ['positions'],
+    queryKey: ['positions', filters],
     queryFn: async () => {
       const data = await fetchFilterData('position');
       return data.reverse();
     },
     enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
+    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
   const positionMutation = useMutation({
@@ -36,7 +40,25 @@ export const usePositions = () => {
       const response = await axios[method](url, data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['positions', filters], (oldData) => {
+        if (!oldData) return oldData;
+        
+        if (variables.id) {
+          // Update existing position
+          return oldData.map(position => 
+            position._id === variables.id 
+              ? { ...position, ...data.data }
+              : position
+          );
+        } else {
+          // Add new position
+          return [data.data, ...oldData];
+        }
+      });
+      
+      // Invalidate to ensure consistency
       queryClient.invalidateQueries(['positions']);
     },
     onError: (error) => {
@@ -52,14 +74,23 @@ export const usePositions = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['positions', filters], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map(position => 
+          position._id === variables.positionId 
+            ? { ...position, rounds: [...(position.rounds || []), ...data.data] }
+            : position
+        );
+      });
+      
       queryClient.invalidateQueries(['positions']);
     },
     onError: (error) => {
       console.log('Error adding rounds:', error);
     },
   });
-
 
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId) => {
@@ -68,7 +99,16 @@ export const usePositions = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['positions', filters], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map(position => ({
+          ...position,
+          rounds: position.rounds?.filter(round => round._id !== variables) || []
+        }));
+      });
+      
       queryClient.invalidateQueries(['positions']);
     },
     onError: (error) => {
@@ -79,7 +119,6 @@ export const usePositions = () => {
 
   const isMutationLoading = positionMutation.isPending || addRoundsMutation.isPending || deleteRoundMutation.isPending;
   const isLoading = isQueryLoading || isMutationLoading;
-
 
   return {
     positionData,
@@ -94,6 +133,7 @@ export const usePositions = () => {
     addRoundsMutationError: addRoundsMutation.error,
     addOrUpdatePosition: positionMutation.mutateAsync,
     addRounds: addRoundsMutation.mutateAsync,
-    deleteRoundMutation: deleteRoundMutation.mutateAsync
+    deleteRoundMutation: deleteRoundMutation.mutateAsync,
+    refetch,
   };
 };

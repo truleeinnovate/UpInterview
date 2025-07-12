@@ -5,42 +5,7 @@ import { usePermissions } from "../Context/PermissionsContext";
 import { config } from "../config";
 import { uploadFile } from "./imageApis";
 
-// export const useCandidates = () => {
-//   const queryClient = useQueryClient();
-//   // const { sharingPermissionscontext = {} } = usePermissions() || {};
-//   // const candidatePermissions = sharingPermissionscontext?.candidate || {};
-
-//   const {
-//     data: candidateData = [],
-//     isLoading: isQueryLoading,
-//     isError,
-//     error,
-//   } = useQuery({
-//     queryKey: ["candidates"],
-//     queryFn: async () => {
-//       const filteredCandidates = await fetchFilterData(
-//         "candidate",
-//       );
-//       return filteredCandidates
-//         .map((candidate) => {
-//           if (candidate.ImageData?.filename) {
-//             return {
-//               ...candidate,
-//               imageUrl: `${
-//                 config.REACT_APP_API_URL
-//               }/${candidate.ImageData.path.replace(/\\/g, "/")}`,
-//             };
-//           }
-//           return candidate;
-//         })
-//         .reverse();
-//     },
-//     // enabled: !!candidatePermissions,
-//     retry: 1,
-//     staleTime: 1000 * 60 * 5,
-//   });
-
-export const useCandidates = () => {
+export const useCandidates = (filters = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
 
@@ -52,8 +17,9 @@ export const useCandidates = () => {
     isLoading: isQueryLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ["candidates"],
+    queryKey: ["candidates", filters],
     queryFn: async () => {
       const data = await fetchFilterData("candidate", effectivePermissions);
       return data.map((candidate) => {
@@ -68,7 +34,11 @@ export const useCandidates = () => {
     },
     enabled: !!hasViewPermission, // Only fetch if user has permission
     retry: 1,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
+    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
   const mutation = useMutation({
@@ -112,7 +82,25 @@ export const useCandidates = () => {
       return response.data;
     },
 
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(["candidates", filters], (oldData) => {
+        if (!oldData) return oldData;
+        
+        if (variables.id) {
+          // Update existing candidate
+          return oldData.map(candidate => 
+            candidate._id === variables.id 
+              ? { ...candidate, ...data.data }
+              : candidate
+          );
+        } else {
+          // Add new candidate
+          return [data.data, ...oldData];
+        }
+      });
+      
+      // Invalidate to ensure consistency
       queryClient.invalidateQueries(["candidates"]);
     },
     onError: (error) => {
@@ -135,5 +123,6 @@ export const useCandidates = () => {
     isMutationError: mutation.isError,
     mutationError: mutation.error,
     addOrUpdateCandidate: mutation.mutateAsync,
+    refetch,
   };
 };

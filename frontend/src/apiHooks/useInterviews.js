@@ -6,7 +6,8 @@ import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
-export const useInterviews = () => {
+
+export const useInterviews = (filters = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Interviews?.View;
@@ -18,8 +19,9 @@ export const useInterviews = () => {
     isLoading: isQueryLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ['interviews'],
+    queryKey: ['interviews', filters],
     queryFn: async () => {
       const interviews = await fetchFilterData('interview');
 
@@ -49,7 +51,11 @@ export const useInterviews = () => {
     },
     enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
+    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
   // Create new interview mutation
@@ -79,7 +85,13 @@ export const useInterviews = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries([' inclusief']);
+      // Optimistically update the cache
+      queryClient.setQueryData(['interviews', filters], (oldData) => {
+        if (!oldData) return oldData;
+        return [data, ...oldData];
+      });
+      
+      queryClient.invalidateQueries(['interviews']);
       navigate(`/interviews/${data._id}`);
     },
     onError: (error) => {
@@ -132,7 +144,17 @@ export const useInterviews = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['interviews', filters], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map(interview => 
+          interview._id === variables.interviewId 
+            ? { ...interview, status: variables.status }
+            : interview
+        );
+      });
+      
       queryClient.invalidateQueries(['interviews']);
     },
     onError: (error) => {
@@ -192,5 +214,6 @@ export const useInterviews = () => {
     updateInterviewStatus: updateInterviewStatus.mutateAsync,
     // refetchInterviews,
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
+    refetch,
   };
 };

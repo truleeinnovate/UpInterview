@@ -5,30 +5,34 @@ import axios from 'axios';
 import { config } from '../config';
 import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
 
-export const useRolesQuery = () => {
+export const useRolesQuery = (filters = {}) => {
   const userType = AuthCookieManager.getUserType();
   
   return useQuery({
-    queryKey: ['roles', userType],
+    queryKey: ['roles', userType, filters],
     queryFn: async () => {
-      console.log(`Fetching roles for userType=${userType}`);
+      // console.log(`Fetching roles for userType=${userType}`);
       const response = await axios.get(`${config.REACT_APP_API_URL}/getAllRoles`);
       const allRoles = response.data;
-      console.log('All roles fetched:', allRoles);
+      // console.log('All roles fetched:', allRoles);
 
       if (userType === 'superAdmin') {
         const filteredRoles = allRoles.filter(role => role.roleType === 'internal');
-        console.log(`Filtered roles for superAdmin:`, filteredRoles);
+        // console.log(`Filtered roles for superAdmin:`, filteredRoles);
         return filteredRoles;
       } else {
         const filteredRoles = allRoles.filter(role => role.roleType === 'organization');
-        console.log(`Filtered roles for ${userType}:`, filteredRoles);
+        // console.log(`Filtered roles for ${userType}:`, filteredRoles);
         return filteredRoles;
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
     retry: 2, // Retry twice before failing
     enabled: !!userType, // Only run query if userType is available
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 };
 
