@@ -303,7 +303,7 @@ const Navbar = () => {
           ...(effectivePermissions.Billing?.ViewTab
             ? [
                 {
-                  to: "/account-settings/billing-details",
+                  to: "/billing-details",
                   label: "Billing",
                   icon: <CiCreditCard1 />,
                 },
@@ -312,7 +312,7 @@ const Navbar = () => {
           ...(effectivePermissions.Wallet?.ViewTab
             ? [
                 {
-                  to: "/account-settings/wallet",
+                  to: "/wallet",
                   label: "My Wallet",
                   icon: <LiaWalletSolid />,
                 },
