@@ -169,15 +169,13 @@ export const PermissionsProvider = ({ children }) => {
       // }
 
       // Get the active token for API calls
-      // const activeToken = AuthCookieManager.getActiveToken();
-      const activeToken = AuthCookieManager.getAuthToken();
+      const activeToken = AuthCookieManager.getActiveToken();
       const tokenPayload = activeToken ? decodeJwt(activeToken) : null;
 
       console.log('🔑 Active token for permissions API:', {
         hasActiveToken: !!activeToken,
         tokenPayload,
-        // authStatus
-
+        userType: AuthCookieManager.getUserType()
       });
 
       const permissionsUrl = `${config.REACT_APP_API_URL}/users/permissions`;
@@ -211,13 +209,13 @@ export const PermissionsProvider = ({ children }) => {
           superAdminPermissions: null // Remove super admin permissions completely
         };
       } else if (userType === 'superAdmin') {
-        // For super admin, only cache super admin permissions
+        // For super admin, cache super admin permissions and keep effective permissions for fallback
         permissionsToCache = {
-          effectivePermissions: null, // Remove effective permissions completely
+          effectivePermissions: permissionData.effectivePermissions || {}, // Keep for fallback
           superAdminPermissions: permissionData.superAdminPermissions || {},
-          effectivePermissions_RoleType: null,
-          effectivePermissions_RoleLevel: null,
-          effectivePermissions_RoleName: null,
+          effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
+          effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
+          effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
           inheritedRoleIds: permissionData.inheritedRoleIds || [],
           isImpersonating: permissionData.isImpersonating || false,
           impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
@@ -244,7 +242,7 @@ export const PermissionsProvider = ({ children }) => {
         } else if (hasSuperAdminPermissions && !hasEffectivePermissions) {
           // Only super admin permissions available
           permissionsToCache = {
-            effectivePermissions: null,
+            effectivePermissions: {}, // Empty object instead of null
             superAdminPermissions: permissionData.superAdminPermissions,
             effectivePermissions_RoleType: null,
             effectivePermissions_RoleLevel: null,
@@ -270,11 +268,11 @@ export const PermissionsProvider = ({ children }) => {
             };
           } else {
             permissionsToCache = {
-              effectivePermissions: null,
+              effectivePermissions: permissionData.effectivePermissions || {}, // Keep for fallback
               superAdminPermissions: permissionData.superAdminPermissions,
-              effectivePermissions_RoleType: null,
-              effectivePermissions_RoleLevel: null,
-              effectivePermissions_RoleName: null,
+              effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
+              effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
+              effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
               inheritedRoleIds: permissionData.inheritedRoleIds || [],
               isImpersonating: permissionData.isImpersonating || false,
               impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
@@ -284,8 +282,8 @@ export const PermissionsProvider = ({ children }) => {
         } else {
           // No permissions available
           permissionsToCache = {
-            effectivePermissions: null,
-            superAdminPermissions: null,
+            effectivePermissions: {},
+            superAdminPermissions: {},
             effectivePermissions_RoleType: null,
             effectivePermissions_RoleLevel: null,
             effectivePermissions_RoleName: null,
@@ -319,11 +317,46 @@ export const PermissionsProvider = ({ children }) => {
         status: error.response?.status
       });
 
-      setPermissionState((prev) => ({
-        ...prev,
-        loading: false,
-        authError: error.message || 'Failed to load permissions',
-      }));
+      // For super admin users, provide fallback permissions on error
+      const userType = AuthCookieManager.getUserType();
+      if (userType === 'superAdmin') {
+        console.log('🔄 Setting fallback permissions for super admin due to error');
+        const fallbackPermissions = {
+          effectivePermissions: {},
+          superAdminPermissions: {
+            Tenants: { ViewTab: true, View: true, Create: true, Edit: true },
+            InterviewRequest: { ViewTab: true, View: true },
+            OutsourceInterviewerRequest: { ViewTab: true, View: true },
+            SupportDesk: { ViewTab: true, View: true },
+            Billing: { ViewTab: true, View: true },
+            InternalLogs: { ViewTab: true, View: true },
+            IntegrationLogs: { ViewTab: true, View: true },
+            MyProfile: { ViewTab: true, View: true },
+            Roles: { ViewTab: true, View: true },
+            Users: { ViewTab: true, View: true }
+          },
+          effectivePermissions_RoleType: null,
+          effectivePermissions_RoleLevel: null,
+          effectivePermissions_RoleName: null,
+          inheritedRoleIds: [],
+          isImpersonating: false,
+          impersonatedUser_roleType: null,
+          impersonatedUser_roleName: null
+        };
+
+        setPermissionState({
+          ...fallbackPermissions,
+          loading: false,
+          authError: error.message || 'Failed to load permissions',
+          isInitialized: true,
+        });
+      } else {
+        setPermissionState((prev) => ({
+          ...prev,
+          loading: false,
+          authError: error.message || 'Failed to load permissions',
+        }));
+      }
     }
   }, []);
 
@@ -395,6 +428,34 @@ export const PermissionsProvider = ({ children }) => {
       const result = effectivePermissions[objectName][permissionType] ?? false;
       console.log('✅ Effective permission found:', { objectName, permissionType, result });
       return result;
+    }
+
+    // For super admin users, provide fallback permissions for common objects
+    const userType = AuthCookieManager.getUserType();
+    if (userType === 'superAdmin') {
+      const fallbackPermissions = {
+        'Tenants': { ViewTab: true, View: true, Create: true, Edit: true },
+        'InterviewRequest': { ViewTab: true, View: true },
+        'OutsourceInterviewerRequest': { ViewTab: true, View: true },
+        'SupportDesk': { ViewTab: true, View: true },
+        'Billing': { ViewTab: true, View: true },
+        'InternalLogs': { ViewTab: true, View: true },
+        'IntegrationLogs': { ViewTab: true, View: true },
+        'MyProfile': { ViewTab: true, View: true },
+        'Roles': { ViewTab: true, View: true },
+        'Users': { ViewTab: true, View: true }
+      };
+      
+      if (fallbackPermissions[objectName]) {
+        const fallback = fallbackPermissions[objectName];
+        if (typeof fallback === "boolean") {
+          console.log('🔄 Using fallback permission for super admin:', { objectName, fallback });
+          return fallback;
+        }
+        const result = fallback[permissionType] ?? false;
+        console.log('🔄 Using fallback permission for super admin:', { objectName, permissionType, result });
+        return result;
+      }
     }
 
     console.log('❌ No permission found for:', { objectName, permissionType });

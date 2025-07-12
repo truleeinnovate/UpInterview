@@ -102,6 +102,31 @@ const CombinedNavbar = () => {
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
+  // Enhanced permission check with fallback for super admin
+  const enhancedCheckPermission = (permissionKey) => {
+    const hasPermission = checkPermission(permissionKey);
+    
+    // For super admin users, provide fallback permissions while loading
+    if (userType === 'superAdmin' && !isInitialized) {
+      const fallbackPermissions = {
+        'Tenants': true,
+        'InterviewRequest': true,
+        'OutsourceInterviewerRequest': true,
+        'SupportDesk': true,
+        'Billing': true,
+        'InternalLogs': true,
+        'IntegrationLogs': true
+      };
+      
+      if (fallbackPermissions[permissionKey]) {
+        console.log(`🔄 Using fallback permission for ${permissionKey} while loading`);
+        return true;
+      }
+    }
+    
+    return hasPermission;
+  };
+
   // Utility function to close all dropdowns
   const closeAllDropdowns = React.useCallback((openDropdown = null) => {
     setDropdownState((prevState) => ({
@@ -183,22 +208,18 @@ const CombinedNavbar = () => {
   // Handle clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        [
-          assessmentRef,
-          interviewRef,
-          moreRef,
-          outlineRef,
-          notificationRef,
-          profileRef,
-        ].every((ref) => ref.current && !ref.current.contains(event.target))
-      ) {
+      // For super admin users, only check the refs that are actually used
+      const refsToCheck = userType === 'superAdmin' 
+        ? [moreRef, outlineRef, notificationRef, profileRef]
+        : [assessmentRef, interviewRef, moreRef, outlineRef, notificationRef, profileRef];
+      
+      if (refsToCheck.every((ref) => ref.current && !ref.current.contains(event.target))) {
         closeAllDropdowns();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [closeAllDropdowns]);
+  }, [closeAllDropdowns, userType]);
 
   const handleSettingsClick = () => {
     closeAllDropdowns();
@@ -234,14 +255,14 @@ const CombinedNavbar = () => {
           permissionKey: "OutsourceInterviewerRequest.ViewTab",
         },
         {
-          path: "/super-admin-desk",
+          path: "/support-desk",
           label: "Support Desk",
-          permissionKey: "SuperAdminSupportDesk.ViewTab",
+          permissionKey: "SupportDesk.ViewTab",
         },
         {
           path: "/admin-billing",
           label: "Billing",
-          permissionKey: "SuperAdminBilling.ViewTab",
+          permissionKey: "Billing.ViewTab",
         },
       ];
     } else {
@@ -635,7 +656,7 @@ const CombinedNavbar = () => {
                 {/* Super Admin Navigation */}
                 {userType === 'superAdmin' && (
                   <>
-                    {checkPermission("Tenants") && (
+                    {enhancedCheckPermission("Tenants") && (
                       <NavLink
                         to="/tenants"
                         className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative' : 'h-full flex items-center relative px-1'} ${isActive("/tenants")
@@ -651,7 +672,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("InterviewRequest") && (
+                    {enhancedCheckPermission("InterviewRequest") && (
                       <NavLink
                         to="/interviewer-requests"
                         className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative' : 'h-full flex items-center relative px-1'} ${isActive("/interviewer-requests")
@@ -667,7 +688,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("OutsourceInterviewerRequest") && (
+                    {enhancedCheckPermission("OutsourceInterviewerRequest") && (
                       <NavLink
                         to="/outsource-interviewers"
                         className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative' : 'h-full flex items-center relative px-1'} ${isActive("/outsource-interviewers")
@@ -683,7 +704,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("SuperAdminSupportDesk") && (
+                    {enhancedCheckPermission("SupportDesk") && (
                       <NavLink
                         to="/super-admin-desk"
                         className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative' : 'h-full flex items-center relative px-1'} ${isActive("/super-admin-desk")
@@ -699,7 +720,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("SuperAdminBilling") && (
+                    {enhancedCheckPermission("Billing") && (
                       <NavLink
                         to="/admin-billing"
                         className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative' : 'h-full flex items-center relative px-1'} ${isActive("/admin-billing")
@@ -767,7 +788,7 @@ const CombinedNavbar = () => {
                 {/* Effective User Navigation */}
                 {userType === 'effective' && (
                   <>
-                    {checkPermission("Candidates") && (
+                    {enhancedCheckPermission("Candidates") && (
                       <NavLink
                         to="/candidate"
                         className={`h-full flex items-center relative px-1 ${isActive("/candidate")
@@ -783,7 +804,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("Positions") && (
+                    {enhancedCheckPermission("Positions") && (
                       <NavLink
                         to="/position"
                         className={`h-full flex items-center relative px-1 ${isActive("/position")
@@ -799,9 +820,9 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {(checkPermission("Interviews") ||
-                      checkPermission("MockInterviews") ||
-                      checkPermission("InterviewTemplates")) && (
+                    {(enhancedCheckPermission("Interviews") ||
+                      enhancedCheckPermission("MockInterviews") ||
+                      enhancedCheckPermission("InterviewTemplates")) && (
                         <div
                           className="relative h-full flex items-center"
                           ref={interviewRef}
@@ -831,7 +852,7 @@ const CombinedNavbar = () => {
                             <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                               <div className="space-y-1">
                                 {[
-                                  ...(checkPermission("InterviewTemplates")
+                                  ...(enhancedCheckPermission("InterviewTemplates")
                                     ? [
                                       {
                                         to: "/interview-templates",
@@ -839,10 +860,10 @@ const CombinedNavbar = () => {
                                       },
                                     ]
                                     : []),
-                                  ...(checkPermission("Interviews")
+                                  ...(enhancedCheckPermission("Interviews")
                                     ? [{ to: "/interviewList", label: "Interviews" }]
                                     : []),
-                                  ...(checkPermission("MockInterviews")
+                                  ...(enhancedCheckPermission("MockInterviews")
                                     ? [
                                       {
                                         to: "/mockinterview",
@@ -869,8 +890,8 @@ const CombinedNavbar = () => {
                         </div>
                       )}
 
-                    {(checkPermission("Assessment_Template") ||
-                      checkPermission("Assessments")) && (
+                    {(enhancedCheckPermission("Assessment_Template") ||
+                      enhancedCheckPermission("Assessments")) && (
                         <div
                           className="relative h-full flex items-center"
                           ref={assessmentRef}
@@ -897,10 +918,10 @@ const CombinedNavbar = () => {
                             <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                               <div className="space-y-1">
                                 {[
-                                  ...(checkPermission("Assessment_Template")
+                                  ...(enhancedCheckPermission("Assessment_Template")
                                     ? [{ to: "/assessments-template", label: "Assessment Templates" }]
                                     : []),
-                                  ...(checkPermission("Assessments")
+                                  ...(enhancedCheckPermission("Assessments")
                                     ? [{ to: "/assessments", label: "Assessments" }]
                                     : []),
                                 ].map(({ to, label }) => (
@@ -922,9 +943,9 @@ const CombinedNavbar = () => {
                         </div>
                       )}
 
-                    {(checkPermission("Analytics") ||
-                      checkPermission("SupportDesk") ||
-                      checkPermission("QuestionBank")) && (
+                    {(enhancedCheckPermission("Analytics") ||
+                      enhancedCheckPermission("SupportDesk") ||
+                      enhancedCheckPermission("QuestionBank")) && (
                         <div
                           className="relative h-full flex items-center"
                           ref={moreRef}
@@ -952,13 +973,13 @@ const CombinedNavbar = () => {
                             <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                               <div className="space-y-1">
                                 {[
-                                  ...(checkPermission("Analytics")
+                                  ...(enhancedCheckPermission("Analytics")
                                     ? [{ to: "/analytics", label: "Analytics" }]
                                     : []),
-                                  ...(checkPermission("SupportDesk")
+                                  ...(enhancedCheckPermission("SupportDesk")
                                     ? [{ to: "/support-desk", label: "Support Desk" }]
                                     : []),
-                                  ...(checkPermission("QuestionBank")
+                                  ...(enhancedCheckPermission("QuestionBank")
                                     ? [
                                       {
                                         to: "/questionBank",
@@ -1013,7 +1034,7 @@ const CombinedNavbar = () => {
                 {/* Super Admin Mobile Navigation */}
                 {userType === 'superAdmin' && (
                   <>
-                    {checkPermission("Tenants") && (
+                    {enhancedCheckPermission("Tenants") && (
                       <NavLink
                         to="/tenants"
                         className={`block px-4 py-3 rounded-md ${isActive("/tenants")
@@ -1029,7 +1050,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("InterviewRequest") && (
+                    {enhancedCheckPermission("InterviewRequest") && (
                       <NavLink
                         to="/interviewer-requests"
                         className={`block px-4 py-3 rounded-md ${isActive("/interviewer-requests")
@@ -1045,7 +1066,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("OutsourceInterviewerRequest") && (
+                    {enhancedCheckPermission("OutsourceInterviewerRequest") && (
                       <NavLink
                         to="/outsource-interviewers"
                         className={`block px-4 py-3 rounded-md ${isActive("/outsource-interviewers")
@@ -1061,7 +1082,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("SuperAdminSupportDesk") && (
+                    {enhancedCheckPermission("SupportDesk") && (
                       <NavLink
                         to="/super-admin-desk"
                         className={`block px-4 py-3 rounded-md ${isActive("/super-admin-desk")
@@ -1077,7 +1098,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("SuperAdminBilling") && (
+                    {enhancedCheckPermission("Billing") && (
                       <NavLink
                         to="/admin-billing"
                         className={`block px-4 py-3 rounded-md ${isActive("/admin-billing")
@@ -1098,7 +1119,7 @@ const CombinedNavbar = () => {
                 {/* Effective User Mobile Navigation */}
                 {userType === 'effective' && (
                   <>
-                    {checkPermission("Candidates") && (
+                    {enhancedCheckPermission("Candidates") && (
                       <NavLink
                         to="/candidate"
                         className={`block px-4 py-3 rounded-md ${isActive("/candidate")
@@ -1114,7 +1135,7 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {checkPermission("Positions") && (
+                    {enhancedCheckPermission("Positions") && (
                       <NavLink
                         to="/position"
                         className={`block px-4 py-3 rounded-md ${isActive("/position")
@@ -1130,9 +1151,9 @@ const CombinedNavbar = () => {
                       </NavLink>
                     )}
 
-                    {(checkPermission("Interviews") ||
-                      checkPermission("MockInterviews") ||
-                      checkPermission("InterviewTemplates")) && (
+                    {(enhancedCheckPermission("Interviews") ||
+                      enhancedCheckPermission("MockInterviews") ||
+                      enhancedCheckPermission("InterviewTemplates")) && (
                         <div className="relative" ref={interviewRef}>
                           <button
                             className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/interviewList") ||
@@ -1153,7 +1174,7 @@ const CombinedNavbar = () => {
                           {dropdownState.interviewDropdown && (
                             <div className="mt-1 ml-4 space-y-1">
                               {[
-                                ...(checkPermission("InterviewTemplates")
+                                ...(enhancedCheckPermission("InterviewTemplates")
                                   ? [
                                     {
                                       to: "/interview-templates",
@@ -1161,10 +1182,10 @@ const CombinedNavbar = () => {
                                     },
                                   ]
                                   : []),
-                                ...(checkPermission("Interviews")
+                                ...(enhancedCheckPermission("Interviews")
                                   ? [{ to: "/interviewList", label: "Interviews" }]
                                   : []),
-                                ...(checkPermission("MockInterviews")
+                                ...(enhancedCheckPermission("MockInterviews")
                                   ? [
                                     {
                                       to: "/mockinterview",
@@ -1193,8 +1214,8 @@ const CombinedNavbar = () => {
                         </div>
                       )}
 
-                    {(checkPermission("Assessment_Template") ||
-                      checkPermission("Assessments")) && (
+                    {(enhancedCheckPermission("Assessment_Template") ||
+                      enhancedCheckPermission("Assessments")) && (
                         <div className="relative" ref={assessmentRef}>
                           <button
                             className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/assessments") ||
@@ -1214,7 +1235,7 @@ const CombinedNavbar = () => {
                           {dropdownState.assessmentDropdown && (
                             <div className="mt-1 ml-4 space-y-1">
                               {[
-                                ...(checkPermission("Assessment_Template")
+                                ...(enhancedCheckPermission("Assessment_Template")
                                   ? [
                                     {
                                       to: "/assessments-template",
@@ -1222,7 +1243,7 @@ const CombinedNavbar = () => {
                                     },
                                   ]
                                   : []),
-                                ...(checkPermission("Assessments")
+                                ...(enhancedCheckPermission("Assessments")
                                   ? [{ to: "/assessments", label: "Assessments" }]
                                   : []),
                               ].map(({ to, label }) => (
@@ -1246,9 +1267,9 @@ const CombinedNavbar = () => {
                         </div>
                       )}
 
-                    {(checkPermission("Analytics") ||
-                      checkPermission("SupportDesk") ||
-                      checkPermission("QuestionBank")) && (
+                    {(enhancedCheckPermission("Analytics") ||
+                      enhancedCheckPermission("SupportDesk") ||
+                      enhancedCheckPermission("QuestionBank")) && (
                         <div className="relative" ref={moreRef}>
                           <button
                             className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") ||
@@ -1269,13 +1290,13 @@ const CombinedNavbar = () => {
                           {dropdownState.moreDropdown && (
                             <div className="mt-1 ml-4 space-y-1">
                               {[
-                                ...(checkPermission("Analytics")
+                                ...(enhancedCheckPermission("Analytics")
                                   ? [{ to: "/analytics", label: "Analytics" }]
                                   : []),
-                                ...(checkPermission("SupportDesk")
+                                ...(enhancedCheckPermission("SupportDesk")
                                   ? [{ to: "/support-desk", label: "Support Desk" }]
                                   : []),
-                                ...(checkPermission("QuestionBank")
+                                ...(enhancedCheckPermission("QuestionBank")
                                   ? [
                                     {
                                       to: "/questionBank",

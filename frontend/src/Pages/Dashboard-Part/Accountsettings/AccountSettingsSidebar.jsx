@@ -321,63 +321,24 @@
 //     }
 //   ];
 
-//   const toggleSidebar = useCallback(() => {
-//     setIsSidebarOpen((prev) => !prev);
-//   }, []);
-
-//   const handleTabChange = (tabId) => {
-//     if (tabId === 'my-profile') {
-//       navigate(`/account-settings/my-profile/basic`);
-//       setIsSidebarOpen(true);
-//     } else if (tabId === 'profile' && organization) {
-//       navigate(`/account-settings/profile`);
-//     } else {
-//       navigate(`/account-settings/${tabId}`);
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (location.pathname === '/account-settings') {
-//       if (organization) {
-//         navigate('/account-settings/profile', { replace: true });
-//       } else {
-//         navigate('/account-settings/my-profile/basic', { replace: true });
-//       }
-//     }
-
-//     if (location.pathname === '/account-settings/my-profile') {
-//       navigate('/account-settings/my-profile/basic', { replace: true });
-//     }
-//   }, [location.pathname, navigate, organization]);
-
-//   // Map navigation item IDs to permission objects
-//   const permissionMap = {
-//     'my-profile': 'MyProfile',
-//     'profile': 'CompanyProfile',
-//     'billing-details': 'Billing',
-//     'subscription': 'Subscription',
-//     'wallet': 'Wallet',
-//     'security': 'Security',
-//     'notifications': 'NotificationsSettings',
-//     'email-settings': 'Notification',
-//     'usage': 'Usage',
-//     'users': 'Users',
-//     'interviewer-groups': 'InterviewerGroups',
-//     'roles': 'Roles',
-//     'sharing': 'Sharing',
-//     'sub-domain': 'Subdomain',
-//     'webhooks': 'Webhooks',
-//     'hrms-ats': 'HrmsAts'
-//   };
-
-//   // Filter navigation based on effectivePermissions.ViewTab
 //   const filteredNavigation = navigation.map(section => ({
 //     ...section,
 //     items: section.items.filter(item => {
-//       const permissionKey = permissionMap[item.id];
-//       return permissionKey && effectivePermissions[permissionKey]?.ViewTab;
+//       if ([
+//         'profile',
+//         'users',
+//         'sub-domain',
+//         'roles',
+//         'interviewer-groups',
+//         'sharing',
+//         'webhooks',
+//         'hrms-ats'
+//       ].includes(item.id)) {
+//         return organization;
+//       }
+//       return true;
 //     })
-//   })).filter(section => section.items.length > 0);
+//   }));
 
 //   return (
 //     <div className="h-screen fixed w-full pb-14 bg-gray-50 flex mt-1">
@@ -387,9 +348,9 @@
 //         handleTabChange={handleTabChange}
 //         activeTab={activeTab}
 //         filteredNavigation={filteredNavigation}
-//         effectivePermissions={effectivePermissions}
 //       />
 
+//       {/* Main Content */}
 //       <div className="flex-1 flex flex-col ml-0 h-full overflow-y-auto z-50">
 //         <div className="flex-grow">
 //           <div className="p-4 sm:p-8 mt-1 lg:mt-0 xl:mt-0 2xl:mt-0">
@@ -398,6 +359,7 @@
 //         </div>
 //       </div>
 
+//       {/* Overlay */}
 //       {isSidebarOpen && (
 //         <div
 //           className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden xl:hidden 2xl:hidden"
@@ -447,20 +409,20 @@ const AccountSettingsSidebar = () => {
   let permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
   
   // Fallback for super admin when superAdminPermissions is null
-  if (userType === 'superAdmin' && !superAdminPermissions) {
-    console.log('🔍 Super admin permissions not loaded, using fallback permissions');
-    permissions = {
-      SuperAdminMyProfile: {
-        ViewTab: true
-      },
-      SuperAdminRole: {
-        ViewTab: true
-      },
-      SuperAdminUser: {
-        ViewTab: true
-      }
-    };
-  }
+  // if (userType === 'superAdmin' && !superAdminPermissions) {
+  //   console.log('🔍 Super admin permissions not loaded, using fallback permissions');
+  //   permissions = {
+  //     SuperAdminMyProfile: {
+  //       ViewTab: true
+  //     },
+  //     SuperAdminRole: {
+  //       ViewTab: true
+  //     },
+  //     SuperAdminUser: {
+  //       ViewTab: true
+  //     }
+  //   };
+  // }
 
   // Extract active tab from URL
   const pathParts = location.pathname.split('/');
@@ -471,18 +433,30 @@ const AccountSettingsSidebar = () => {
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
 
-  // Define navigation data
-  const mainNavigation = [
+  // Define navigation data with better categorization
+  const accountNavigation = [
     { name: 'Company Profile', icon: BuildingOfficeIcon, id: 'profile' },
     { name: 'My Profile', icon: UserIcon, id: 'my-profile' },
+  ];
+
+  const billingNavigation = [
     { name: 'Billing', icon: CreditCardIcon, id: 'billing-details' },
     { name: 'Subscription', icon: Cog6ToothIcon, id: 'subscription' },
     { name: 'Wallet', icon: WalletIcon, id: 'wallet' },
+  ];
+
+  const securityNavigation = [
     { name: 'Security', icon: KeyIcon, id: 'security' },
     { name: 'Usage', icon: ChartBarIcon, id: 'usage' },
+  ];
+
+  const organizationNavigation = [
     { name: 'Users', icon: UsersIcon, id: 'users' },
     { name: 'Interviewer Groups', icon: UserGroupIcon, id: 'interviewer-groups' },
     { name: 'Roles', icon: UserIcon, id: 'roles' },
+  ];
+
+  const settingsNavigation = [
     { name: 'Sharing Settings', icon: ShareIcon, id: 'sharing' },
     { name: 'Subdomain Management', icon: GlobeAltIcon, id: 'sub-domain' },
     { name: 'Notifications', icon: BellIcon, id: 'email-settings' },
@@ -496,8 +470,24 @@ const AccountSettingsSidebar = () => {
 
   const navigation = [
     {
-      category: 'Account',
-      items: mainNavigation
+      category: 'Account Management',
+      items: accountNavigation
+    },
+    {
+      category: 'Billing & Payments',
+      items: billingNavigation
+    },
+    {
+      category: 'Security & Usage',
+      items: securityNavigation
+    },
+    {
+      category: 'Organization',
+      items: organizationNavigation
+    },
+    {
+      category: 'Settings',
+      items: settingsNavigation
     },
     {
       category: 'Integrations',
@@ -507,18 +497,18 @@ const AccountSettingsSidebar = () => {
 
   // Map navigation item IDs to permission objects
   const permissionMap = {
-    'my-profile': userType === 'superAdmin' ? 'SuperAdminMyProfile' : 'MyProfile',
+    'my-profile': 'MyProfile',
     'profile': 'CompanyProfile',
-    'billing-details': userType === 'superAdmin' ? 'SuperAdminBilling' : 'Billing',
+    'billing-details': 'Billing',
     'subscription': 'Subscription',
     'wallet': 'Wallet',
     'security': 'Security',
     'notifications': 'NotificationsSettings',
     'email-settings': 'Notification',
     'usage': 'Usage',
-    'users': userType === 'superAdmin' ? 'SuperAdminUser' : 'Users',
+    'users': 'Users',
     'interviewer-groups': 'InterviewerGroups',
-    'roles': userType === 'superAdmin' ? 'SuperAdminRole' : 'Roles',
+    'roles': 'Roles',
     'sharing': 'Sharing',
     'sub-domain': 'Subdomain',
     'webhooks': 'Webhooks',
@@ -557,22 +547,22 @@ const AccountSettingsSidebar = () => {
         let permissionObject = permissions?.[permissionKey];
         
         // Fallback: if the permission key doesn't exist, try alternative keys
-        if (!permissionObject) {
-          const alternativeKeys = {
-            'my-profile': ['MyProfile', 'Profile', 'SuperAdminProfile'],
-            'roles': ['Roles', 'Role', 'SuperAdminRole'],
-            'users': ['Users', 'User', 'SuperAdminUser']
-          };
+        // if (!permissionObject) {
+        //   const alternativeKeys = {
+        //     'my-profile': ['MyProfile', 'Profile', 'SuperAdminProfile'],
+        //     'roles': ['Roles', 'Role', 'SuperAdminRole'],
+        //     'users': ['Users', 'User', 'SuperAdminUser']
+        //   };
           
-          const keysToTry = alternativeKeys[item.id] || [];
-          for (const key of keysToTry) {
-            if (permissions?.[key]) {
-              console.log(`🔍 Using alternative permission key for ${item.id}: ${key}`);
-              permissionObject = permissions[key];
-              break;
-            }
-          }
-        }
+        //   const keysToTry = alternativeKeys[item.id] || [];
+        //   for (const key of keysToTry) {
+        //     if (permissions?.[key]) {
+        //       console.log(`🔍 Using alternative permission key for ${item.id}: ${key}`);
+        //       permissionObject = permissions[key];
+        //       break;
+        //     }
+        //   }
+        // }
         
         const hasPermission = permissionObject?.ViewTab ?? true; // Default to true for super admin if permissions not loaded
         console.log(`🔍 SuperAdmin ${item.id}:`, {
@@ -604,7 +594,7 @@ const AccountSettingsSidebar = () => {
   }, []);
 
   const handleTabChange = (tabId) => {
-    const basePath = userType === 'superAdmin' ? '/super-admin-account-settings' : '/account-settings';
+    const basePath = '/account-settings';
     if (tabId === 'my-profile') {
       navigate(`${basePath}/my-profile/basic`);
       setIsSidebarOpen(true);
@@ -616,7 +606,7 @@ const AccountSettingsSidebar = () => {
   };
 
   useEffect(() => {
-    const basePath = userType === 'superAdmin' ? '/super-admin-account-settings' : '/account-settings';
+    const basePath = '/account-settings';
     if (location.pathname === basePath) {
       if (organization && userType !== 'superAdmin') {
         navigate(`${basePath}/profile`, { replace: true });
