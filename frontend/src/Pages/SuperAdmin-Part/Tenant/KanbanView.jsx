@@ -12,6 +12,7 @@ const capitalizeFirstLetter = (str) =>
 
 const KanbanView = ({
   data = [],
+  tenants = [],
   columns = [],
   loading = false,
   renderActions = () => null,
@@ -28,13 +29,13 @@ const KanbanView = ({
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-gray-800">All Tenants</h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-            {data?.length || 0} Tenants
+            {tenants?.length || 0} Tenants
           </span>
         </div>
 
         {loading ? (
           <div className="text-center py-10 text-gray-500">Loading...</div>
-        ) : data?.length === 0 ? (
+        ) : tenants?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full">

@@ -234,7 +234,7 @@ function TenantsPage() {
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  console.log("TENANTS TESTING ===========================> ", tenants);
+
   // Table Columns
   const tableColumns = [
     {
@@ -638,6 +638,7 @@ function TenantsPage() {
                       subtitle: tenant.lastName || "N/A",
                       avatar: tenant?.contact?.imageData?.path || null,
                     }))}
+                    tenants={tenants}
                     columns={kanbanColumns}
                     loading={isLoading}
                     renderActions={renderKanbanActions}

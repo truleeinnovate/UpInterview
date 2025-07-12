@@ -15,47 +15,47 @@ function MetricsOverview() {
   const [metrics, setMetrics] = useState([
     {
       title: "Total Interviews",
-      value: "12,843",
+      value: "0",
       description: "Across all tenants",
       icon: <AiOutlineCalendar size={24} />,
       trend: "up",
-      trendValue: "15%",
+      trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/interview/all-interviews`,
     },
     {
       title: "Active Assessments",
-      value: "456",
+      value: "0",
       description: "Live assessment sessions",
       icon: <AiOutlineCheckSquare size={24} />,
       trend: "up",
-      trendValue: "8%",
+      trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/assessments/all-assessments`,
     },
     {
       title: "Platform Users",
-      value: "8,392",
+      value: "0",
       description: "Total registered users",
       icon: <AiOutlineTeam size={24} />,
       trend: "up",
-      trendValue: "12%",
+      trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/users/platform-users`,
     },
     {
       title: "Outsource Interviews",
-      value: "324",
+      value: "0",
       description: "Active freelance interviews",
       icon: <AiOutlineUserSwitch size={24} />,
       trend: "up",
-      trendValue: "25%",
+      trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/outsourceInterviewers/all-interviews`,
     },
     {
       title: "Support Tickets",
-      value: "24",
+      value: "0",
       description: "Unresolved tickets",
       icon: <AiOutlineCustomerService size={24} />,
       trend: "down",
-      trendValue: "10%",
+      trendValue: "0%",
       endpoint: `${config.REACT_APP_API_URL}/all-tickets`,
     },
   ]);
@@ -87,7 +87,7 @@ function MetricsOverview() {
     }
 
     fetchAllCardData();
-  }, []);
+  }, [metrics]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">

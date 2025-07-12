@@ -17,8 +17,7 @@ const CompanyProfile = () => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organizationId = tokenPayload.tenantId;
-  console.log("organizationId 2", organizationId);
-  console.log("organizationDATAAAAAAAAAAAAAAA : ", organizationData);
+
 
   // useEffect(() => {
   //   const fetchData = async () => {

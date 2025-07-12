@@ -1294,7 +1294,10 @@ const MainAppRoutes = ({
               {/* Assessment */}
               {hasPermission("Assessment_Template") && (
                 <>
-                  <Route path="/assessments-template" element={<Assessment />} />
+                  <Route
+                    path="/assessments-template"
+                    element={<Assessment />}
+                  />
                   {hasPermission("Assessment_Template", "Create") && (
                     <Route
                       path="/assessments-template/new"
@@ -1453,7 +1456,10 @@ const MainAppRoutes = ({
                 {hasPermission("Users") && (
                   <Route path="users" element={<UsersLayout />}>
                     {hasPermission("Users", "Create") && (
-                      <Route path="new" element={<UserForm mode="create" type="effective" />} />
+                      <Route
+                        path="new"
+                        element={<UserForm mode="create" type="effective" />}
+                      />
                     )}
                     {hasPermission("Users", "Edit") && (
                       <Route
@@ -1743,9 +1749,17 @@ const MainAppRoutes = ({
                   )}
                 </>
               )}
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/internal-logs" element={<InternalLogsPage />} />
-              <Route path="/integrations" element={<IntegrationsPage />} />
+
+              {hasPermission("Settings") && (
+                <Route path="/settings" element={<SettingsPage />} />
+              )}
+              {hasPermission("InternalLogs") && (
+                <Route path="/internal-logs" element={<InternalLogsPage />} />
+              )}
+              {hasPermission("IntegrationLogs") && (
+                <Route path="/integrations" element={<IntegrationsPage />} />
+              )}
+
               <Route
                 path="/contact-profile-details"
                 element={
@@ -1765,10 +1779,19 @@ const MainAppRoutes = ({
                 element={<AccountSettingsSidebar type="superAdmin" />}
               >
                 {hasPermission("SuperAdminMyProfile") && (
-                  <Route path="my-profile" element={<MyProfile type="superAdmin" />}>
+                  <Route
+                    path="my-profile"
+                    element={<MyProfile type="superAdmin" />}
+                  >
                     <Route index element={<Navigate to="basic" replace />} />
-                    <Route path="basic" element={<BasicDetails type="superAdmin" />} />
-                    <Route path="advanced" element={<AdvancedDetails type="superAdmin" />} />
+                    <Route
+                      path="basic"
+                      element={<BasicDetails type="superAdmin" />}
+                    />
+                    <Route
+                      path="advanced"
+                      element={<AdvancedDetails type="superAdmin" />}
+                    />
                     <Route
                       path="basic-edit/:id"
                       element={<BasicDetailsEditPage from="my-profile" />}
@@ -1798,9 +1821,15 @@ const MainAppRoutes = ({
                 )}
 
                 {hasPermission("SuperAdminUser") && (
-                  <Route path="users" element={<UsersLayout type="superAdmin" />}>
+                  <Route
+                    path="users"
+                    element={<UsersLayout type="superAdmin" />}
+                  >
                     {hasPermission("SuperAdminUser", "Create") && (
-                      <Route path="new" element={<UserForm mode="create" type="superAdmin" />} />
+                      <Route
+                        path="new"
+                        element={<UserForm mode="create" type="superAdmin" />}
+                      />
                     )}
                     {hasPermission("SuperAdminUser", "Edit") && (
                       <Route

@@ -766,6 +766,7 @@ function IntegrationsPage() {
                         title: integrationLog.logId || "N/A",
                         subtitle: formatDate(integrationLog?.timeStamp),
                       }))}
+                      integrations={integrations}
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}

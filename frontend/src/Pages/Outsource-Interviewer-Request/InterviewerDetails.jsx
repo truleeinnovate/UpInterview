@@ -269,13 +269,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
           className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm"
           onClick={onClose}
         />
-        {/* <div
-          className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col ${
-            isExpanded
-              ? "w-full"
-              : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
-          }`}
-        > */}
         <div
           className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col ${
             isExpanded ? "w-full xl:w-1/2 2xl:w-1/2" : "w-full"
@@ -311,12 +304,10 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
               </div>
             </div>
           </div>
-          {/* <div className="min-h-screen grid md:grid-cols-1 lg:grid-cols-[250px_1fr] xl:grid-cols-[250px_1fr] 2xl:grid-cols-[250px_1fr] p-3 gap-4"> */}
-          {/* <div className="flex-1 grid md:grid-cols-1 lg:grid-cols-[250px_1fr] xl:grid-cols-[250px_1fr] 2xl:grid-cols-[250px_1fr] p-3 gap-4 overflow-hidden"> */}
           <div
             className={`flex-1 grid p-3 gap-4 overflow-hidden ${
               isExpanded
-                ? "grid-cols-1" // Full width single column layout when expanded
+                ? "grid-cols-1"
                 : "md:grid-cols-1 lg:grid-cols-[250px_1fr] xl:grid-cols-[250px_1fr] 2xl:grid-cols-[250px_1fr]"
             }`}
           >
@@ -328,11 +319,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                   : "lg:flex-col xl:flex-col 2xl:flex-col lg:items-center xl:items-center 2xl:items-center"
               }`}
             >
-              {/* <img
-                src={interviewer?.imageData?.path || maleImage}
-                alt={interviewer?.firstName || "Interviewer"}
-                className="w-32 h-32 rounded-full object-cover mb-4"
-              /> */}
               <img
                 src={interviewer?.imageData?.path || maleImage}
                 alt={interviewer?.firstName || "Interviewer"}
@@ -425,48 +411,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                       <h3 className="text-lg font-semibold mb-6">
                         Basic Details:
                       </h3>
-                      {/* <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-6">
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            Name
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.firstName || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            Profile ID
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.profileId || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            Email Address
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.email || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            Phone Number
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.phone || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            LinkedIn URL
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.linkedinUrl || "Not Provided"}
-                          </span>
-                        </div>
-                      </div> */}
                       <div
                         className={`grid gap-y-6 ${
                           isExpanded

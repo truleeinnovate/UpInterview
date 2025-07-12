@@ -684,50 +684,47 @@ function UsersTab({ users, viewMode }) {
 
         <main>
           <div className="sm:px-0">
-            {!users ? (
-              <Loading />
-            ) : (
-              <motion.div className="bg-white">
-                <div className="relative w-full">
-                  {view === "table" ? (
-                    <div className="w-full">
-                      <TableView
-                        data={currentFilteredRows}
-                        columns={tableColumns}
-                        loading={isLoading}
-                        actions={actions}
-                        emptyState="No users found."
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full">
-                      <KanbanView
-                        data={currentFilteredRows.map((user) => ({
-                          ...user,
-                          id: user._id,
-                          title: user.firstName || "N/A",
-                          subtitle: user.roleName || "N/A",
-                          avatar: user.imageData?.path || null,
-                        }))}
-                        columns={kanbanColumns}
-                        loading={isLoading}
-                        renderActions={renderKanbanActions}
-                        emptyState="No Users found."
-                        viewMode={viewMode}
-                      />
-                    </div>
-                  )}
+            <motion.div className="bg-white">
+              <div className="relative w-full">
+                {view === "table" ? (
+                  <div className="w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={isLoading}
+                      actions={actions}
+                      emptyState="No users found."
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <KanbanView
+                      data={currentFilteredRows.map((user) => ({
+                        ...user,
+                        id: user._id,
+                        title: user.firstName || "N/A",
+                        subtitle: user.roleName || "N/A",
+                        avatar: user.imageData?.path || null,
+                      }))}
+                      users={users}
+                      columns={kanbanColumns}
+                      loading={isLoading}
+                      renderActions={renderKanbanActions}
+                      emptyState="No Users found."
+                      viewMode={viewMode}
+                    />
+                  </div>
+                )}
 
-                  <FilterPopup
-                    isOpen={isFilterPopupOpen}
-                    onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleFilterChange}
-                    initialFilters={selectedFilters}
-                    filterIconRef={filterIconRef}
-                  />
-                </div>
-              </motion.div>
-            )}
+                <FilterPopup
+                  isOpen={isFilterPopupOpen}
+                  onClose={() => setFilterPopupOpen(false)}
+                  onApply={handleFilterChange}
+                  initialFilters={selectedFilters}
+                  filterIconRef={filterIconRef}
+                />
+              </div>
+            </motion.div>
           </div>
         </main>
       </div>

@@ -790,6 +790,7 @@ function InvoicesTable({ organizationId, viewMode }) {
                         title: invoice.invoiceCode || "N/A",
                         subtitle: invoice.type || "N/A",
                       }))}
+                      invoices={invoices}
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}

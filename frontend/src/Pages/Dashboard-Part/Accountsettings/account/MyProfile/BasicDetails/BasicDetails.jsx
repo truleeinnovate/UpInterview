@@ -51,7 +51,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type,basePath }) => {
   }, [userProfile, usersId,]);
 
 
-
+  console.log('USER PROFILE: ', userProfile)
 
   const handleResendEmailVerification = async () => {
     try {

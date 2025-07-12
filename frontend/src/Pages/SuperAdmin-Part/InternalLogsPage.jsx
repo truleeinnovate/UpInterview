@@ -777,6 +777,7 @@ function InternalLogsPage() {
                             ? formatDate(log?.timeStamp)
                             : "N/A",
                         }))}
+                        logs={logs}
                         columns={kanbanColumns}
                         loading={isLoading}
                         renderActions={renderKanbanActions}

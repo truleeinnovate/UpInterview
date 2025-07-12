@@ -771,6 +771,7 @@ function PaymentsTable({ organizationId, viewMode }) {
                         title: payment.paymentCode || "N/A",
                         subtitle: formatDate(payment.transactionDate) || "N/A",
                       }))}
+                      payments={payments}
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}

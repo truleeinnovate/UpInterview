@@ -690,6 +690,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
                         title: payment.receiptCode || "N/A",
                         subtitle: formatDate(payment.paymentDate) || "N/A",
                       }))}
+                      receipts={receipts}
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}

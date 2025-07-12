@@ -1761,10 +1761,17 @@ const InternalRequest = () => {
       header: "Interviewer ID",
       render: (vale, row) => (
         <span
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => {
-            setSelectedRequestId(row._id);
-            setIsPopupOpen(true);
+          className={`font-medium ${
+            superAdminPermissions.InterviewRequest.View
+              ? "text-custom-blue cursor-pointer"
+              : "text-gray-900"
+          }`}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevents row-level handlers (if any)
+            if (superAdminPermissions.InterviewRequest.View && row?._id) {
+              setSelectedRequestId(row._id);
+              setIsPopupOpen(true);
+            }
           }}
         >
           {row?.interviewRequestCode ? row.interviewRequestCode : "N/A"}
@@ -1865,21 +1872,30 @@ const InternalRequest = () => {
 
   // Shared Actions Configuration for Table and Kanban
   const actions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => {
-        setSelectedRequestId(row._id);
-        setIsPopupOpen(true);
-      },
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+    ...(superAdminPermissions?.InterviewRequest?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              setSelectedRequestId(row._id);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
+
+    ...(superAdminPermissions?.InterviewRequest?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
     // {
     //   key: "login-as-user",
     //   label: "Login as User",
@@ -2143,6 +2159,7 @@ const InternalRequest = () => {
                     title: interview.interviewRequestCode || "N/A",
                     subtitle: formatDate(interview?.requestedAt) || "N/A",
                   }))}
+                  interviewRequests={interviewRequests}
                   columns={kanbanColumns}
                   loading={isLoading}
                   renderActions={renderKanbanActions}
