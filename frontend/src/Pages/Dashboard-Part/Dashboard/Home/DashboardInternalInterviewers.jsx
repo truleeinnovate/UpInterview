@@ -17,7 +17,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
             .filter(interviewer => interviewer.type === 'internal')
             .map(interviewer => {
                 const contact = interviewer.contact || {};
-                const fullName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
+                const fullName = `${contact.firstName ? contact.firstName.charAt(0).toUpperCase()+contact.firstName.slice(1): ''} ${contact.lastName ? contact.lastName.charAt(0).toUpperCase()+contact.lastName.slice(1): ''}`.trim();
                 return {
                     id: interviewer._id,
                     name: fullName || 'Unnamed Interviewer',
@@ -58,7 +58,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-xl font-semibold text-gray-800">Internal Interviewers</h2>
-                    <p className="text-sm text-gray-500">internal interviewers ready to help</p>
+                    <p className="text-sm text-gray-500">Internal Interviewers ready to help</p>
                 </div>
                 <button
                     onClick={() => setInternalInterviews(true)}
@@ -72,7 +72,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
             <div className="relative h-[160px] overflow-hidden">
                 {displayInterviewers.length === 0 ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <p className="text-gray-500">No interviewers available.</p>
+                        <p className="text-gray-500">No Internal Interviewers available.</p>
                     </div>
                 ) : (
                     displayInterviewers.map((interviewer, index) => (
@@ -127,7 +127,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                                         </div>
                                         <div className="flex items-center space-x-[2px] text-xs text-gray-500">
                                             <Briefcase size={14} />
-                                            <span>{interviewer.completedInterviews} interviews</span>
+                                            <span>{interviewer.completedInterviews} Interviews</span>
                                         </div>
                                     </div>
 

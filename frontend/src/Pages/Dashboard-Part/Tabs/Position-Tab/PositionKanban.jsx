@@ -21,7 +21,7 @@ const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissio
           <div className="h-8 w-1/4 bg-gray-200 animate-pulse rounded"></div>
           <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
           {[...Array(8)].map((_, index) => (
             <motion.div
               key={index}
@@ -97,7 +97,7 @@ const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissio
             {positions?.length} {`Position${positions?.length === 1 ? '' : 's'}`}
             </span>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
             {positions.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
                 <Briefcase className="w-16 h-16 text-gray-300 mb-4" />
