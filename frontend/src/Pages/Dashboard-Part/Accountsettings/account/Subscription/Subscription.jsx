@@ -7,6 +7,7 @@ import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from "js-cookie";
 import "./subscription-animations.css";
 import LoadingButton from "../../../../../Components/LoadingButton";
+import Loading from "../../../../../Components/Loading";
 import { usePositions } from '../../../../../apiHooks/usePositions';
 import { usePermissions } from '../../../../../Context/PermissionsContext';
 import { usePermissionCheck } from '../../../../../utils/permissionUtils';
@@ -333,6 +334,11 @@ const Subscription = () => {
 
   const isHighlighted = (plan) =>
     hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
+
+
+  if (loading) {
+    return <Loading message="Loading Subscription..." />;
+  }
 
   return (
     <>
