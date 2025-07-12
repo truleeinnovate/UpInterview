@@ -12,6 +12,7 @@ import { config } from "../config.js";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { uploadFile } from "../apiHooks/imageApis.js";
+import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
 
 const CustomContext = createContext();
 
@@ -274,11 +275,14 @@ const CustomProvider = ({ children }) => {
 
   const [singlecontact, setsingleContact] = useState([]);
 
+  const currentUser = AuthCookieManager.getCurrentUserId();
+  console.log("currentUser", currentUser);
+
   useEffect(() => {
     const fetchContacts = async (usersId = null) => {
       try {
         const res = await axios.get(
-          `${config.REACT_APP_API_URL}/users/owner/${userId}`
+          `${config.REACT_APP_API_URL}/users/owner/${currentUser}`
         );
         setsingleContact(res.data);
       } catch (err) {
@@ -290,22 +294,22 @@ const CustomProvider = ({ children }) => {
   }, [userId]);
 
   // fetching super admin
-  const [superAdminProfile, setSuperAdminProfile] = useState([]);
-  useEffect(() => {
-    const fetchContacts = async (usersId = null) => {
-      try {
-        const res = await axios.get(
-          `${config.REACT_APP_API_URL}/users/owner/${impersonatedUserId}`
-        );
-        setSuperAdminProfile(res.data);
-        // console.log("SUPER ADMIN USER: ", res.data);
-      } catch (err) {
-        console.error("Error fetching user contacts:", err);
-      }
-    };
+  // const [superAdminProfile, setSuperAdminProfile] = useState([]);
+  // useEffect(() => {
+  //   const fetchContacts = async (usersId = null) => {
+  //     try {
+  //       const res = await axios.get(
+  //         `${config.REACT_APP_API_URL}/users/owner/${impersonatedUserId}`
+  //       );
+  //       setSuperAdminProfile(res.data);
+  //       // console.log("SUPER ADMIN USER: ", res.data);
+  //     } catch (err) {
+  //       console.error("Error fetching user contacts:", err);
+  //     }
+  //   };
 
-    fetchContacts();
-  }, [impersonatedUserId]);
+  //   fetchContacts();
+  // }, [impersonatedUserId]);
 
   // getting interviewers and showing it in the home (available interviewers) and interviewers
   const [interviewers, setInterviewers] = useState([]);
@@ -749,7 +753,7 @@ const {
 
         interviewRounds,
         fetchInterviewRounds,
-        superAdminProfile,
+        // superAdminProfile,
       }}
     >
       {children}

@@ -1302,8 +1302,7 @@ import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
 import ErrorBoundary from "./Components/ErrorBoundary";
 import { getActivityEmitter } from "./utils/activityTracker";
-import Navbar from "./Components/Navbar/Navbar-Sidebar";
-import SuperAdminNavbar from "./Components/Navbar/SuperAdminNavbar/Header.jsx";
+import CombinedNavbar from "./Components/Navbar/CombinedNavbar";
 import Logo from "./Pages/Login-Part/Logo";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
@@ -1321,6 +1320,7 @@ import AccountSettingsSidebar from "./Pages/Dashboard-Part/Accountsettings/Accou
 import VerifyUserEmail from "./VerifyUserEmail.jsx";
 import { DocumentsSection } from "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/DocumentsDetails/DocumentsSection.jsx";
 import SessionExpiration from "./Components/SessionExpiration.jsx";
+import Loading from "./Components/Loading.js";
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
@@ -1673,7 +1673,7 @@ const ContactProfileDetails = lazy(() =>
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
-  <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+  <Suspense fallback={<Loading />}>{children}</Suspense>
 );
 
 // Move all logic that uses usePermissions into this component
@@ -1684,7 +1684,6 @@ const MainAppRoutes = ({
   setSessionExpired,
   showLogoPaths,
   noNavbarPaths,
-  superAdminPaths,
 }) => {
   const { effectivePermissions, superAdminPermissions } = usePermissions();
 
@@ -1695,10 +1694,6 @@ const MainAppRoutes = ({
   }, [effectivePermissions, superAdminPermissions]);
 
   const showLogo = showLogoPaths.includes(location.pathname);
-  const isSuperAdminRoute = superAdminPaths.some((path) => {
-    const regex = new RegExp(`^${path.replace(/:id/, "[^/]+")}$`);
-    return regex.test(location.pathname);
-  });
   const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);
 
   // Permission check function
@@ -1768,8 +1763,7 @@ const MainAppRoutes = ({
                   <CustomProvider>
                     <PermissionsProvider>
                       <PageSetter />
-                      {shouldRenderNavbar &&
-                        (isSuperAdminRoute ? <SuperAdminNavbar /> : <Navbar />)}
+                      {shouldRenderNavbar && <CombinedNavbar />}
                       <Outlet />
                     </PermissionsProvider>
                   </CustomProvider>
@@ -2506,42 +2500,7 @@ const App = () => {
     []
   );
 
-  const superAdminPaths = useMemo(
-    () => [
-      "/admin-dashboard",
-      "/tenants",
-      "/tenants/new",
-      "/tenants/edit/:id",
-      "/tenants/:id",
-      "/outsource-requests",
-      "/outsource-interviewers",
-      "/interviewer-requests",
-      "/admin-billing",
-      "/admin-billing/new",
-      "/admin-billing/edit/:id",
-      "/super-admin-desk",
-      "/super-admin-desk/new",
-      "/super-admin-desk/edit/:id",
-      "/settings",
-      "/internal-logs",
-      "/integrations",
-      "/contact-profile-details",
-      "/super-admin-account-settings",
-      "/super-admin-account-settings/profile",
-      "/super-admin-account-settings/my-profile/basic",
-      "/super-admin-account-settings/profile/basic-edit/:id",
-      "/super-admin-account-settings/profile/advanced",
-      "/super-admin-account-settings/profile/advanced-edit/:id",
-      "/super-admin-account-settings/my-profile",
-      "/super-admin-account-settings/roles",
-      "/super-admin-account-settings/roles/role-edit/:id",
-      "/super-admin-account-settings/users",
-      "/super-admin-account-settings/users/new",
-      "/super-admin-account-settings/users/edit/:id",
-      "/super-admin-account-settings/users/details/:id",
-    ],
-    []
-  );
+
 
   useEffect(() => {
     const emitter = getActivityEmitter();
@@ -2569,7 +2528,6 @@ const App = () => {
               setSessionExpired={setSessionExpired}
               showLogoPaths={showLogoPaths}
               noNavbarPaths={noNavbarPaths}
-              superAdminPaths={superAdminPaths}
             />
           </PermissionsProvider>
         </CustomProvider>

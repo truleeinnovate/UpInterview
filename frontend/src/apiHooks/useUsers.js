@@ -1,19 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../config"; // assuming similar structure
+import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
+
 
 // ✅ Custom hook to fetch user profile
-export const useUserProfile = (ownerId) => {
+export const useUserProfile = () => {
+  const currentUser = AuthCookieManager.getCurrentUserId();
   const {
     data: userProfile = null,
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ["userProfile", ownerId],
+    queryKey: ["userProfile", currentUser],
     queryFn: async () => {
-      if (!ownerId) return null;
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
+      if (!currentUser) return null;
+      const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${currentUser}`);
       
       // console.log("response.data",response.data);
 
@@ -21,7 +24,7 @@ export const useUserProfile = (ownerId) => {
     },
     staleTime: 0, // ✅ Always fetch fresh data
     cacheTime: 0, // ✅ Discard cache immediately
-    enabled: !!ownerId,
+    enabled: !!currentUser,
   });
 
   return { userProfile, isLoading, isError, error };
