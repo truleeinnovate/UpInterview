@@ -345,21 +345,25 @@ const Navbar = () => {
         {[
           ...(checkPermission("Billing")
             ? [
-              {
-                to: "/account-settings/billing-details",
-                label: "Billing",
-                icon: <CiCreditCard1 />,
-              },
-            ]
+
+                {
+                  to: "/billing-details",
+                  label: "Billing",
+                  icon: <CiCreditCard1 />,
+                },
+              ]
+
             : []),
           ...(checkPermission("Wallet")
             ? [
-              {
-                to: "/account-settings/wallet",
-                label: "My Wallet",
-                icon: <LiaWalletSolid />,
-              },
-            ]
+
+                {
+                  to: "/wallet",
+                  label: "My Wallet",
+                  icon: <LiaWalletSolid />,
+                },
+              ]
+
             : []),
         ].map(({ to, label, icon }, index) => (
           <NavLink

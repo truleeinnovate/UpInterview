@@ -115,64 +115,108 @@ const AssessmentKanban = ({
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-gray-900 mb-1">
-                                  {assessment.AssessmentTitle || 'Untitled Assessment'}
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  {assessment.AssessmentCode || 'No Code'}
-                                </p>
-                              </div>
-                              
-                              <div className="flex items-center space-x-1">
-                                <Tooltip title="View Details" enterDelay={300} leaveDelay={100} arrow>
-                                  <motion.span whileHover={{ scale: 1.05 }}>
-                                    <button
-                                      onClick={() => onView(assessment)}
-                                      className="p-1 text-gray-500 rounded hover:text-blue-600 hover:bg-blue-50"
-                                    >
-                                      <EyeIcon className="w-5 h-5" />
-                                    </button>
-                                  </motion.span>
-                                </Tooltip>
-                                
-                                <Tooltip title="Edit Assessment" enterDelay={300} leaveDelay={100} arrow>
-                                  <motion.span whileHover={{ scale: 1.05 }}>
-                                    <button
-                                      onClick={() => onEdit(assessment)}
-                                      className="p-1 text-gray-500 rounded hover:text-yellow-600 hover:bg-yellow-50"
-                                    >
-                                      <PencilSquareIcon className="w-5 h-5" />
-                                    </button>
-                                  </motion.span>
-                                </Tooltip>
-                                
-                                <Tooltip
-                                  title={
-                                    (assessmentSections[assessment._id] ?? 0) === 0
-                                      ? 'No questions added'
-                                      : 'Share'
-                                  }
-                                  enterDelay={300}
-                                  leaveDelay={100}
-                                  arrow
+
+                            <motion.div 
+                              className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => onView(assessment)}
+                                className="p-1 text-gray-500 hover:text-custom-blue hover:bg-blue-50 rounded"
+                                title="View"
+                              >
+                                <EyeIcon className="w-5 h-5" />
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => onEdit(assessment)}
+                                className="p-1 text-gray-500 hover:text-custom-blue hover:bg-indigo-50 rounded"
+                                title="Edit"
+                              >
+                                <PencilSquareIcon className="w-5 h-5" />
+                              </motion.button>
+                              <Tooltip
+                                title={
+                                  (assessmentSections[assessment._id] ?? 0) === 0
+                                    ? 'No questions added'
+                                    : 'Share'
+                                }
+                                enterDelay={300}
+                                leaveDelay={100}
+                                arrow
+                              >
+                                <motion.span
+                                  whileHover={{ scale: 1.05 }}
                                 >
-                                  <motion.span whileHover={{ scale: 1.05 }}>
-                                    <button
-                                      onClick={() => onShare(assessment)}
-                                      className={`p-1 text-gray-500 rounded ${
-                                        (assessmentSections[assessment._id] ?? 0) === 0
-                                          ? 'cursor-not-allowed opacity-50'
-                                          : 'hover:text-green-600 hover:bg-green-50'
-                                      }`}
-                                      disabled={(assessmentSections[assessment._id] ?? 0) === 0}
-                                    >
-                                      <ShareIcon className="w-5 h-5" />
-                                    </button>
-                                  </motion.span>
-                                </Tooltip>
-                              </div>
+                                  <button
+                                    onClick={() => onShare(assessment)}
+                                    className={`p-1 text-gray-500 rounded ${
+                                      (assessmentSections[assessment._id] ?? 0) === 0
+                                        ? 'cursor-not-allowed opacity-50'
+                                        : 'hover:text-green-600 hover:bg-green-50'
+                                    }`}
+                                    disabled={(assessmentSections[assessment._id] ?? 0) === 0}
+                                  >
+                                    <ShareIcon className="w-5 h-5" />
+                                  </button>
+                                </motion.span>
+                              </Tooltip>
+                            </motion.div>
+
+                            <motion.div 
+                              className="flex items-start"
+                              whileHover={{ x: 2 }}
+                            >
+                              <h3 
+                                className="font-medium text-lg text-custom-blue pr-20 cursor-pointer"
+                                onClick={() => onView(assessment)}
+                              >
+                                {assessment.AssessmentTitle.charAt(0).toUpperCase() + assessment.AssessmentTitle.slice(1)}
+                              </h3>
+                            </motion.div>
+
+                            <div className="space-y-2 text-sm text-gray-600">
+                              {assessment.AssessmentCode && (
+                                <motion.div 
+                                  className="flex items-center gap-2"
+                                  whileHover={{ x: 2 }}
+                                >
+                                  <UserIcon className="w-4 h-4" />
+                                  {assessment.AssessmentCode}
+                                </motion.div>
+                              )}
+                              <motion.div 
+                                className="flex items-center gap-2"
+                                whileHover={{ x: 2 }}
+                              >
+                                <ClockIcon className="w-4 h-4" />
+                                {assessment.Duration}
+                              </motion.div>
+                              <motion.div 
+                                className="flex items-center gap-2"
+                                whileHover={{ x: 2 }}
+                              >
+                                <AcademicCapIcon className="w-4 h-4" />
+                                {assessment.DifficultyLevel}
+                              </motion.div>
+                              <motion.div 
+                                className="flex items-center gap-2"
+                                whileHover={{ x: 2 }}
+                              >
+                                <DocumentTextIcon className="w-4 h-4" />
+                                {assessment.NumberOfQuestions} Questions
+                              </motion.div>
+                              <motion.div 
+                                className="flex items-center gap-2"
+                                whileHover={{ x: 2 }}
+                              >
+                                <CalendarIcon className="w-4 h-4" />
+                                {format(new Date(assessment.ExpiryDate), 'MMM dd, yyyy')}
+                              </motion.div>
+
                             </div>
                             
                             <div className="grid grid-cols-2 gap-3 text-sm">

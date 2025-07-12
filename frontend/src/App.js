@@ -1965,16 +1965,30 @@ const MainAppRoutes = ({
               {/* Wallet */}
               {hasPermission("Wallet") && (
                 <Route path="/wallet" element={<Wallet />}>
-                  <Route
-                    path="wallet-details/:id"
-                    element={<WalletBalancePopup />}
-                  />
-                  <Route
-                    path="wallet-transaction/:id"
-                    element={<WalletTransactionPopup />}
-                  />
+                  {hasPermission("Wallet", "View") && (
+                    <>
+                      <Route
+                        path="wallet-details/:id"
+                        element={<WalletBalancePopup />}
+                      />
+                      <Route
+                        path="wallet-transaction/:id"
+                        element={<WalletTransactionPopup />}
+                      />
+                    </>
+                  )}
                 </Route>
               )}
+
+              {hasPermission("Billing") && (
+                  <Route path="billing-details" element={<BillingSubtabs />}>
+                    <Route index element={null} />
+                    <Route
+                      path="details/:id"
+                      element={<UserInvoiceDetails />}
+                    />
+                  </Route>
+                )}
 
               {/* Account Settings Routes from effective user */}
               <Route
