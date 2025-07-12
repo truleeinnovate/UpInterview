@@ -83,20 +83,20 @@ import {
 const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeTab, filteredNavigation, userType, permissions: originalPermissions }) => {
   // Fallback for super admin when permissions are null
   let permissions = originalPermissions;
-  if (userType === 'superAdmin' && !originalPermissions) {
-    console.log('🔍 Super admin permissions not loaded, using fallback permissions');
-    permissions = {
-      SuperAdminMyProfile: {
-        ViewTab: true
-      },
-      SuperAdminRole: {
-        ViewTab: true
-      },
-      SuperAdminUser: {
-        ViewTab: true
-      }
-    };
-  }
+  // if (userType === 'superAdmin' && !originalPermissions) {
+  //   console.log('🔍 Super admin permissions not loaded, using fallback permissions');
+  //   permissions = {
+  //     SuperAdminMyProfile: {
+  //       ViewTab: true
+  //     },
+  //     SuperAdminRole: {
+  //       ViewTab: true
+  //     },
+  //     SuperAdminUser: {
+  //       ViewTab: true
+  //     }
+  //   };
+  // }
 
   // Define tabs for super admin explicitly
   const superAdminTabs = [
@@ -142,9 +142,9 @@ const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeT
                   {superAdminTabs.map((item) => {
                     // Default to true for super admin if permissions are not loaded yet
                     const hasPermission = 
-                      (item.id === 'my-profile' && (permissions?.SuperAdminMyProfile?.ViewTab ?? true)) ||
-                      (item.id === 'roles' && (permissions?.SuperAdminRole?.ViewTab ?? true)) ||
-                      (item.id === 'users' && (permissions?.SuperAdminUser?.ViewTab ?? true));
+                      (item.id === 'my-profile' && (permissions?.MyProfile?.ViewTab ?? true)) ||
+                      (item.id === 'roles' && (permissions?.Roles?.ViewTab ?? true)) ||
+                      (item.id === 'users' && (permissions?.Users?.ViewTab ?? true));
                     
                     return hasPermission ? (
                       <button

@@ -3,28 +3,32 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { config } from '../config';
+import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
 
-export const useRolesQuery = (type) => {
+export const useRolesQuery = () => {
+  const userType = AuthCookieManager.getUserType();
+  
   return useQuery({
-    queryKey: ['roles', type],
+    queryKey: ['roles', userType],
     queryFn: async () => {
-      console.log(`Fetching roles for type=${type}`);
+      console.log(`Fetching roles for userType=${userType}`);
       const response = await axios.get(`${config.REACT_APP_API_URL}/getAllRoles`);
       const allRoles = response.data;
       console.log('All roles fetched:', allRoles);
 
-      if (type === 'superAdmin') {
+      if (userType === 'superAdmin') {
         const filteredRoles = allRoles.filter(role => role.roleType === 'internal');
         console.log(`Filtered roles for superAdmin:`, filteredRoles);
         return filteredRoles;
       } else {
         const filteredRoles = allRoles.filter(role => role.roleType === 'organization');
-        console.log(`Filtered roles for ${type}:`, filteredRoles);
+        console.log(`Filtered roles for ${userType}:`, filteredRoles);
         return filteredRoles;
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2, // Retry twice before failing
+    enabled: !!userType, // Only run query if userType is available
   });
 };
 

@@ -9,8 +9,10 @@ import { DocumentsSection } from './DocumentsDetails/DocumentsSection';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { usePermissions } from '../../../../../Context/PermissionsContext';
+import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
 
-const MyProfile = ({ type }) => {
+const MyProfile = () => {
+  const userType = AuthCookieManager.getUserType();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -20,11 +22,11 @@ const MyProfile = ({ type }) => {
   const { effectivePermissions, superAdminPermissions } = usePermissions();
 
   // Select permissions based on type
-  let permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
-  const permissionKey = type === 'superAdmin' ? 'SuperAdminMyProfile' : 'MyProfile';
+  let permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
+  const permissionKey = 'MyProfile';
   
   // Fallback for super admin when superAdminPermissions is null
-  if (type === 'superAdmin' && !superAdminPermissions) {
+  if (userType === 'superAdmin' && !superAdminPermissions) {
     console.log('🔍 Super admin permissions not loaded, using fallback permissions');
     permissions = {
       SuperAdminMyProfile: {
@@ -45,7 +47,7 @@ const MyProfile = ({ type }) => {
   }
   
   console.log('🔍 Permission Key Debug:', {
-    type,
+    userType,
     permissionKey,
     hasSuperAdminPermissions: !!superAdminPermissions,
     superAdminPermissionKeys: superAdminPermissions ? Object.keys(superAdminPermissions) : [],
@@ -105,7 +107,7 @@ const MyProfile = ({ type }) => {
   }, [userId, singlecontact]);
 
   const activeTab = subtab || 'basic';
-  const basePath = type === 'superAdmin' ? '/super-admin-account-settings' : '/account-settings';
+  const basePath ='/account-settings';
 
   const handleSubTabChange = (tab) => {
     
@@ -123,18 +125,18 @@ const MyProfile = ({ type }) => {
   // Render subtab content
   const renderSubTabContent = () => {
     const subTabComponents = {
-      basic: <BasicDetailsTab type={type} basePath={basePath} />,
-      advanced: <AdvancedDetails type={type} basePath={basePath} />,
-      interview: <InterviewUserDetails type={type} basePath={basePath} />,
-      availability: <AvailabilityUser type={type} basePath={basePath} />,
-      documents: <DocumentsSection documents={documents} onUpdate={setDocuments} type={type} basePath={basePath} />,
+      basic: <BasicDetailsTab basePath={basePath} />,
+      advanced: <AdvancedDetails basePath={basePath} />,
+      interview: <InterviewUserDetails basePath={basePath} />,
+      availability: <AvailabilityUser basePath={basePath} />,
+      documents: <DocumentsSection documents={documents} onUpdate={setDocuments} basePath={basePath} />,
     };
     return subTabComponents[activeTab] || subTabComponents['basic'];
   };
 
   // Build a list of tabs that the current user is allowed to see
   console.log('🔍 MyProfile Debug:', {
-    type,
+    userType,
     permissionKey,
     permissions,
     superAdminPermissions,
@@ -145,20 +147,20 @@ const MyProfile = ({ type }) => {
   
   // Fallback: if the permission key doesn't exist, try alternative keys
   let permissionObject = permissions?.[permissionKey];
-  if (!permissionObject && type === 'superAdmin') {
-    // Try alternative keys for super admin
-    const alternativeKeys = ['MyProfile', 'Profile', 'SuperAdminProfile'];
-    for (const key of alternativeKeys) {
-      if (permissions?.[key]) {
-        console.log(`🔍 Using alternative permission key: ${key}`);
-        permissionObject = permissions[key];
-        break;
-      }
-    }
-  }
+  // if (!permissionObject && type === 'superAdmin') {
+  //   // Try alternative keys for super admin
+  //   const alternativeKeys = ['MyProfile', 'Profile', 'SuperAdminProfile'];
+  //   for (const key of alternativeKeys) {
+  //     if (permissions?.[key]) {
+  //       console.log(`🔍 Using alternative permission key: ${key}`);
+  //       permissionObject = permissions[key];
+  //       break;
+  //     }
+  //   }
+  // }
   
   // If still no permission object found, use default permissions for super admin
-  if (!permissionObject && type === 'superAdmin') {
+  if (!permissionObject && userType === 'superAdmin') {
     console.log('🔍 No permission object found, using default super admin permissions');
     permissionObject = {
       Basic: true,
