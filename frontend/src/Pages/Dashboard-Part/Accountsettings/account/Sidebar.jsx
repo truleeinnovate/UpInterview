@@ -80,10 +80,10 @@ import {
   UsersIcon
 } from '@heroicons/react/24/outline';
 
-const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeTab, filteredNavigation, type, permissions: originalPermissions }) => {
+const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeTab, filteredNavigation, userType, permissions: originalPermissions }) => {
   // Fallback for super admin when permissions are null
   let permissions = originalPermissions;
-  if (type === 'superAdmin' && !originalPermissions) {
+  if (userType === 'superAdmin' && !originalPermissions) {
     console.log('🔍 Super admin permissions not loaded, using fallback permissions');
     permissions = {
       SuperAdminMyProfile: {
@@ -133,7 +133,7 @@ const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeT
           </div>
           <div className="flex-grow overflow-y-auto">
             <nav className="mt-2 pb-4">
-              {type === 'superAdmin' ? (
+              {userType === 'superAdmin' ? (
                 // Render only My Profile, Roles, and Users for super admins
                 <div className="py-2">
                   <h2 className="px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">

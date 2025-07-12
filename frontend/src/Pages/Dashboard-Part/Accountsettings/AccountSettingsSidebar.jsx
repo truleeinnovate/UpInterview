@@ -416,6 +416,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import SidebarProfile from './account/Sidebar';
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode';
 import { usePermissions } from "../../../Context/PermissionsContext";
+import AuthCookieManager from '../../../utils/AuthCookieManager/AuthCookieManager';
 import {
   Cog6ToothIcon,
   BuildingOfficeIcon,
@@ -433,17 +434,20 @@ import {
   ArrowsRightLeftIcon
 } from '@heroicons/react/24/outline';
 
-const AccountSettingsSidebar = ({ type }) => {
+const AccountSettingsSidebar = () => {
   const { effectivePermissions, superAdminPermissions } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Select permissions based on type
-  let permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
+  // Get user type from AuthCookieManager
+  const userType = AuthCookieManager.getUserType();
+
+  // Select permissions based on user type
+  let permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
   
   // Fallback for super admin when superAdminPermissions is null
-  if (type === 'superAdmin' && !superAdminPermissions) {
+  if (userType === 'superAdmin' && !superAdminPermissions) {
     console.log('🔍 Super admin permissions not loaded, using fallback permissions');
     permissions = {
       SuperAdminMyProfile: {
@@ -503,18 +507,18 @@ const AccountSettingsSidebar = ({ type }) => {
 
   // Map navigation item IDs to permission objects
   const permissionMap = {
-    'my-profile': type === 'superAdmin' ? 'SuperAdminMyProfile' : 'MyProfile',
+    'my-profile': userType === 'superAdmin' ? 'SuperAdminMyProfile' : 'MyProfile',
     'profile': 'CompanyProfile',
-    'billing-details': type === 'superAdmin' ? 'SuperAdminBilling' : 'Billing',
+    'billing-details': userType === 'superAdmin' ? 'SuperAdminBilling' : 'Billing',
     'subscription': 'Subscription',
     'wallet': 'Wallet',
     'security': 'Security',
     'notifications': 'NotificationsSettings',
     'email-settings': 'Notification',
     'usage': 'Usage',
-    'users': type === 'superAdmin' ? 'SuperAdminUser' : 'Users',
+    'users': userType === 'superAdmin' ? 'SuperAdminUser' : 'Users',
     'interviewer-groups': 'InterviewerGroups',
-    'roles': type === 'superAdmin' ? 'SuperAdminRole' : 'Roles',
+    'roles': userType === 'superAdmin' ? 'SuperAdminRole' : 'Roles',
     'sharing': 'Sharing',
     'sub-domain': 'Subdomain',
     'webhooks': 'Webhooks',
@@ -522,14 +526,14 @@ const AccountSettingsSidebar = ({ type }) => {
   };
   
   console.log('🔍 AccountSettingsSidebar Permission Map Debug:', {
-    type,
+    userType,
     permissionMap,
     availablePermissionKeys: permissions ? Object.keys(permissions) : []
   });
 
-  // Filter navigation based on type and permissions
+  // Filter navigation based on user type and permissions
   console.log('🔍 AccountSettingsSidebar Debug:', {
-    type,
+    userType,
     permissions,
     superAdminPermissions,
     effectivePermissions,
@@ -540,7 +544,7 @@ const AccountSettingsSidebar = ({ type }) => {
   const filteredNavigation = navigation.map(section => ({
     ...section,
     items: section.items.filter(item => {
-      if (type === 'superAdmin') {
+      if (userType === 'superAdmin') {
         // For super admin, only show specific items that they have permissions for
         const superAdminItems = ['my-profile', 'roles', 'users'];
         
@@ -600,11 +604,11 @@ const AccountSettingsSidebar = ({ type }) => {
   }, []);
 
   const handleTabChange = (tabId) => {
-    const basePath = type === 'superAdmin' ? '/super-admin-account-settings' : '/account-settings';
+    const basePath = userType === 'superAdmin' ? '/super-admin-account-settings' : '/account-settings';
     if (tabId === 'my-profile') {
       navigate(`${basePath}/my-profile/basic`);
       setIsSidebarOpen(true);
-    } else if (tabId === 'profile' && organization && type !== 'superAdmin') {
+    } else if (tabId === 'profile' && organization && userType !== 'superAdmin') {
       navigate(`${basePath}/profile`);
     } else {
       navigate(`${basePath}/${tabId}`);
@@ -612,9 +616,9 @@ const AccountSettingsSidebar = ({ type }) => {
   };
 
   useEffect(() => {
-    const basePath = type === 'superAdmin' ? '/super-admin-account-settings' : '/account-settings';
+    const basePath = userType === 'superAdmin' ? '/super-admin-account-settings' : '/account-settings';
     if (location.pathname === basePath) {
-      if (organization && type !== 'superAdmin') {
+      if (organization && userType !== 'superAdmin') {
         navigate(`${basePath}/profile`, { replace: true });
       } else {
         navigate(`${basePath}/my-profile/basic`, { replace: true });
@@ -624,7 +628,7 @@ const AccountSettingsSidebar = ({ type }) => {
     if (location.pathname === `${basePath}/my-profile`) {
       navigate(`${basePath}/my-profile/basic`, { replace: true });
     }
-  }, [location.pathname, navigate, organization, type]);
+  }, [location.pathname, navigate, organization, userType]);
 
   return (
     <div className="h-screen fixed w-full pb-14 bg-gray-50 flex mt-1">
@@ -634,7 +638,7 @@ const AccountSettingsSidebar = ({ type }) => {
         handleTabChange={handleTabChange}
         activeTab={activeTab}
         filteredNavigation={filteredNavigation}
-        type={type}
+        userType={userType}
         permissions={permissions}
       />
 

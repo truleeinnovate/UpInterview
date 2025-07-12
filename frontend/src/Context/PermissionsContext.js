@@ -6,29 +6,45 @@ import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
 const PermissionsContext = createContext();
 
-// Cache keys
-const PERMISSIONS_CACHE_KEY = 'app_permissions_cache';
-const PERMISSIONS_CACHE_TIMESTAMP = 'app_permissions_timestamp';
+// Cache keys - separate for effective and super admin
+const EFFECTIVE_PERMISSIONS_CACHE_KEY = 'effective_permissions_cache';
+const EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP = 'effective_permissions_timestamp';
+const SUPER_ADMIN_PERMISSIONS_CACHE_KEY = 'super_admin_permissions_cache';
+const SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP = 'super_admin_permissions_timestamp';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Helper function to get cached permissions
+// Helper function to get cached permissions based on user type
 const getCachedPermissions = () => {
   try {
-    const timestamp = localStorage.getItem(PERMISSIONS_CACHE_TIMESTAMP);
-    const cached = localStorage.getItem(PERMISSIONS_CACHE_KEY);
+    const userType = AuthCookieManager.getUserType();
+    let cacheKey, timestampKey;
+    
+    if (userType === 'effective') {
+      cacheKey = EFFECTIVE_PERMISSIONS_CACHE_KEY;
+      timestampKey = EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP;
+    } else if (userType === 'superAdmin') {
+      cacheKey = SUPER_ADMIN_PERMISSIONS_CACHE_KEY;
+      timestampKey = SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP;
+    } else {
+      console.log('❌ No valid user type for permissions cache');
+      return null;
+    }
+
+    const timestamp = localStorage.getItem(timestampKey);
+    const cached = localStorage.getItem(cacheKey);
 
     if (timestamp && cached) {
       const age = Date.now() - parseInt(timestamp);
-      console.log('⏰ Cache age:', age, 'ms (max:', CACHE_DURATION, 'ms)');
+      console.log(`⏰ ${userType} cache age:`, age, 'ms (max:', CACHE_DURATION, 'ms)');
       if (age < CACHE_DURATION) {
         const parsedCache = JSON.parse(cached);
-        console.log('✅ Using cached permissions:', parsedCache);
+        console.log(`✅ Using cached ${userType} permissions:`, parsedCache);
         return parsedCache;
       } else {
-        console.log('⏰ Cache expired, will fetch fresh permissions');
+        console.log(`⏰ ${userType} cache expired, will fetch fresh permissions`);
       }
     } else {
-      console.log('❌ No cached permissions found');
+      console.log(`❌ No cached ${userType} permissions found`);
     }
   } catch (error) {
     console.warn('⚠️ Error reading cached permissions:', error);
@@ -36,24 +52,51 @@ const getCachedPermissions = () => {
   return null;
 };
 
-// Helper function to cache permissions
+// Helper function to cache permissions based on user type
 const cachePermissions = (permissions) => {
   try {
-    console.log('💾 Caching permissions:', permissions);
-    localStorage.setItem(PERMISSIONS_CACHE_KEY, JSON.stringify(permissions));
-    localStorage.setItem(PERMISSIONS_CACHE_TIMESTAMP, Date.now().toString());
-    console.log('✅ Permissions cached successfully');
+    const userType = AuthCookieManager.getUserType();
+    let cacheKey, timestampKey;
+    
+    if (userType === 'effective') {
+      cacheKey = EFFECTIVE_PERMISSIONS_CACHE_KEY;
+      timestampKey = EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP;
+    } else if (userType === 'superAdmin') {
+      cacheKey = SUPER_ADMIN_PERMISSIONS_CACHE_KEY;
+      timestampKey = SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP;
+    } else {
+      console.log('❌ No valid user type for caching permissions');
+      return;
+    }
+
+    console.log(`💾 Caching ${userType} permissions:`, permissions);
+    localStorage.setItem(cacheKey, JSON.stringify(permissions));
+    localStorage.setItem(timestampKey, Date.now().toString());
+    console.log(`✅ ${userType} permissions cached successfully`);
   } catch (error) {
     console.warn('⚠️ Error caching permissions:', error);
   }
 };
 
-// Helper function to clear cache
-const clearPermissionsCache = () => {
+// Helper function to clear cache for specific user type
+const clearPermissionsCache = (userType = null) => {
   try {
-    console.log('🗑️ Clearing permissions cache');
-    localStorage.removeItem(PERMISSIONS_CACHE_KEY);
-    localStorage.removeItem(PERMISSIONS_CACHE_TIMESTAMP);
+    if (userType === 'effective') {
+      console.log('🗑️ Clearing effective permissions cache');
+      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
+      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
+    } else if (userType === 'superAdmin') {
+      console.log('🗑️ Clearing super admin permissions cache');
+      localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
+      localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
+    } else {
+      // Clear all permission caches
+      console.log('🗑️ Clearing all permissions cache');
+      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
+      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
+      localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
+      localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
+    }
   } catch (error) {
     console.warn('⚠️ Error clearing permissions cache:', error);
   }
@@ -150,11 +193,117 @@ export const PermissionsProvider = ({ children }) => {
       const permissionData = response.data;
       console.log('📡 Permissions API Response:', permissionData);
 
-      // Cache the permissions
-      cachePermissions(permissionData);
+      // Separate permissions based on user type and cache appropriately
+      const userType = AuthCookieManager.getUserType();
+      let permissionsToCache;
+      
+      if (userType === 'effective') {
+        // For effective users, only cache effective permissions
+        permissionsToCache = {
+          effectivePermissions: permissionData.effectivePermissions || {},
+          effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
+          effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
+          effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
+          inheritedRoleIds: permissionData.inheritedRoleIds || [],
+          isImpersonating: permissionData.isImpersonating || false,
+          impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
+          impersonatedUser_roleName: permissionData.impersonatedUser_roleName,
+          superAdminPermissions: null // Remove super admin permissions completely
+        };
+      } else if (userType === 'superAdmin') {
+        // For super admin, only cache super admin permissions
+        permissionsToCache = {
+          effectivePermissions: null, // Remove effective permissions completely
+          superAdminPermissions: permissionData.superAdminPermissions || {},
+          effectivePermissions_RoleType: null,
+          effectivePermissions_RoleLevel: null,
+          effectivePermissions_RoleName: null,
+          inheritedRoleIds: permissionData.inheritedRoleIds || [],
+          isImpersonating: permissionData.isImpersonating || false,
+          impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
+          impersonatedUser_roleName: permissionData.impersonatedUser_roleName
+        };
+      } else {
+        // Fallback - check what permissions are available and use accordingly
+        const hasEffectivePermissions = permissionData.effectivePermissions && Object.keys(permissionData.effectivePermissions).length > 0;
+        const hasSuperAdminPermissions = permissionData.superAdminPermissions && Object.keys(permissionData.superAdminPermissions).length > 0;
+        
+        if (hasEffectivePermissions && !hasSuperAdminPermissions) {
+          // Only effective permissions available
+          permissionsToCache = {
+            effectivePermissions: permissionData.effectivePermissions,
+            effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
+            effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
+            effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
+            inheritedRoleIds: permissionData.inheritedRoleIds || [],
+            isImpersonating: permissionData.isImpersonating || false,
+            impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
+            impersonatedUser_roleName: permissionData.impersonatedUser_roleName,
+            superAdminPermissions: null
+          };
+        } else if (hasSuperAdminPermissions && !hasEffectivePermissions) {
+          // Only super admin permissions available
+          permissionsToCache = {
+            effectivePermissions: null,
+            superAdminPermissions: permissionData.superAdminPermissions,
+            effectivePermissions_RoleType: null,
+            effectivePermissions_RoleLevel: null,
+            effectivePermissions_RoleName: null,
+            inheritedRoleIds: permissionData.inheritedRoleIds || [],
+            isImpersonating: permissionData.isImpersonating || false,
+            impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
+            impersonatedUser_roleName: permissionData.impersonatedUser_roleName
+          };
+        } else if (hasEffectivePermissions && hasSuperAdminPermissions) {
+          // Both permissions available - use based on user type
+          if (userType === 'effective') {
+            permissionsToCache = {
+              effectivePermissions: permissionData.effectivePermissions,
+              effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
+              effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
+              effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
+              inheritedRoleIds: permissionData.inheritedRoleIds || [],
+              isImpersonating: permissionData.isImpersonating || false,
+              impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
+              impersonatedUser_roleName: permissionData.impersonatedUser_roleName,
+              superAdminPermissions: null
+            };
+          } else {
+            permissionsToCache = {
+              effectivePermissions: null,
+              superAdminPermissions: permissionData.superAdminPermissions,
+              effectivePermissions_RoleType: null,
+              effectivePermissions_RoleLevel: null,
+              effectivePermissions_RoleName: null,
+              inheritedRoleIds: permissionData.inheritedRoleIds || [],
+              isImpersonating: permissionData.isImpersonating || false,
+              impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
+              impersonatedUser_roleName: permissionData.impersonatedUser_roleName
+            };
+          }
+        } else {
+          // No permissions available
+          permissionsToCache = {
+            effectivePermissions: null,
+            superAdminPermissions: null,
+            effectivePermissions_RoleType: null,
+            effectivePermissions_RoleLevel: null,
+            effectivePermissions_RoleName: null,
+            inheritedRoleIds: [],
+            isImpersonating: false,
+            impersonatedUser_roleType: null,
+            impersonatedUser_roleName: null
+          };
+        }
+      }
+
+      console.log(`💾 Caching ${userType} permissions:`, permissionsToCache);
+
+      // Cache the separated permissions
+      cachePermissions(permissionsToCache);
 
       setPermissionState({
-        ...permissionData,
+        ...permissionsToCache,
         loading: false,
         authError: null,
         isInitialized: true,
@@ -185,32 +334,32 @@ export const PermissionsProvider = ({ children }) => {
   }, [refreshPermissions]);
 
   // Listen for authentication changes
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'authToken' || e.key === 'impersonationToken') {
-        console.log('🔄 Authentication changed, clearing cache and refreshing permissions');
-        clearPermissionsCache();
-        refreshPermissions(true);
-      }
-    };
+  // useEffect(() => {
+  //   const handleStorageChange = (e) => {
+  //     if (e.key === 'authToken' || e.key === 'impersonationToken') {
+  //       console.log('🔄 Authentication changed, clearing cache and refreshing permissions');
+  //       clearPermissionsCache();
+  //       refreshPermissions(true);
+  //     }
+  //   };
 
-    const handleCookieChange = () => {
-      console.log('🔄 Cookie changed, refreshing permissions');
-      clearPermissionsCache();
-      refreshPermissions(true);
-    };
+  //   const handleCookieChange = () => {
+  //     console.log('🔄 Cookie changed, refreshing permissions');
+  //     clearPermissionsCache();
+  //     refreshPermissions(true);
+  //   };
 
-    // Listen for storage events (localStorage changes)
-    window.addEventListener('storage', handleStorageChange);
+  //   // Listen for storage events (localStorage changes)
+  //   window.addEventListener('storage', handleStorageChange);
 
-    // Listen for cookie changes (we'll use a custom event)
-    window.addEventListener('authChange', handleCookieChange);
+  //   // Listen for cookie changes (we'll use a custom event)
+  //   window.addEventListener('authChange', handleCookieChange);
 
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('authChange', handleCookieChange);
-    };
-  }, [refreshPermissions]);
+  //   return () => {
+  //     window.removeEventListener('storage', handleStorageChange);
+  //     window.removeEventListener('authChange', handleCookieChange);
+  //   };
+  // }, [refreshPermissions]);
 
   // Optimized permission checking function
   const hasPermission = useCallback((objectName, permissionType = "ViewTab") => {
@@ -252,23 +401,23 @@ export const PermissionsProvider = ({ children }) => {
     return false;
   }, [permissionState]);
 
-  const logout = useCallback(() => {
-    AuthCookieManager.logout();
-    clearPermissionsCache();
-    setPermissionState({
-      effectivePermissions: {},
-      superAdminPermissions: null,
-      inheritedRoleIds: [],
-      isImpersonating: false,
-      effectivePermissions_RoleType: null,
-      effectivePermissions_RoleLevel: null,
-      effectivePermissions_RoleName: null,
-      impersonatedUser_roleType: null,
-      impersonatedUser_roleName: null,
-      loading: false,
-      authError: null,
-    });
-  }, []);
+  // const logout = useCallback(() => {
+  //   AuthCookieManager.logout();
+  //   clearPermissionsCache();
+  //   setPermissionState({
+  //     effectivePermissions: {},
+  //     superAdminPermissions: null,
+  //     inheritedRoleIds: [],
+  //     isImpersonating: false,
+  //     effectivePermissions_RoleType: null,
+  //     effectivePermissions_RoleLevel: null,
+  //     effectivePermissions_RoleName: null,
+  //     impersonatedUser_roleType: null,
+  //     impersonatedUser_roleName: null,
+  //     loading: false,
+  //     authError: null,
+  //   });
+  // }, []);
 
   // Memoized context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
@@ -280,7 +429,7 @@ export const PermissionsProvider = ({ children }) => {
     // loginAsEffectiveUser,
     // impersonateUser,
     // logoutFromImpersonation,
-    logout,
+    // logout,
   }), [
     permissionState,
     refreshPermissions,
@@ -290,7 +439,7 @@ export const PermissionsProvider = ({ children }) => {
     // loginAsEffectiveUser,
     // impersonateUser,
     // logoutFromImpersonation,
-    logout
+    // logout
   ]);
 
   console.log('🎯 Context value:', contextValue);

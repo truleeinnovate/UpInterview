@@ -171,7 +171,7 @@ const MyProfile = ({ type }) => {
   
   const tabsToShow = [
     permissionObject?.Basic && 'basic',
-    permissionObject?.Advanced && 'advanced',
+    permissionObject?.Advance && 'advanced',
     permissionObject?.Interview && 'interview',
     permissionObject?.Availability && 'availability',
     permissionObject?.Documents && 'documents',

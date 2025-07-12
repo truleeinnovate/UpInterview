@@ -39,7 +39,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type,basePath }) => {
 
   // console.log("ownerId ownerId",ownerId);
 
-  const { userProfile, isLoading, isError, error } = useUserProfile(ownerId)
+  const { userProfile, isLoading, isError, error } = useUserProfile()
 
 
 
