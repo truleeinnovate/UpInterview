@@ -12,7 +12,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
   const [timeZone] = useState(interviewer?.timeZone || "Not Provided");
   const [selectedDuration, setSelectedDuration] = useState(
-    interviewer?.PreferredDuration + " mints" || "Not Provided"
+    interviewer?.PreferredDuration + " mins" || "Not Provided"
   );
   const [activeTab, setActiveTab] = useState("Details");
   const [readyToTakeMockInterview, setReadyToTakeMockInterview] = useState(
@@ -27,7 +27,46 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     setIsExpanded(!isExpanded);
   };
 
+  // const fetchInterviewers = useCallback(async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/outsourceInterviewers`
+  //     );
+
+  //     console.log("response:", response.data);
+
+  //     if (!interviewer || !interviewer._id) {
+  //       console.error("No valid interviewer selected");
+  //       return;
+  //     }
+
+  //     const interviewerId = interviewer._id;
+
+  //     console.log("Interviewer._id:", interviewerId);
+
+  //     // Filter data where contactId matches the selected interviewer's _id
+  //     const filteredData = response.data.filter(
+  //       (item) => item.contactId._id === interviewerId
+  //     );
+
+  //     console.log("filteredData:", filteredData);
+  //     if (filteredData.length > 0) {
+  //       setFeedbackData(filteredData || []);
+  //     } else {
+  //       setFeedbackData([]);
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching interviewers:", err);
+  //   }
+  // }, [interviewer]);
+
   const fetchInterviewers = useCallback(async () => {
+    if (!interviewer || !interviewer._id) {
+      console.error("No valid interviewer selected");
+      setFeedbackData([]);
+      return;
+    }
+
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/outsourceInterviewers`
@@ -35,27 +74,18 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
 
       console.log("response:", response.data);
 
-      if (!interviewer || !interviewer._id) {
-        console.error("No valid interviewer selected");
-        return;
-      }
-
       const interviewerId = interviewer._id;
 
       console.log("Interviewer._id:", interviewerId);
 
       // Filter data where contactId matches the selected interviewer's _id
       const filteredData = response.data.filter(
-        (item) => item.contactId._id === interviewerId
+        (item) => item.contactId?._id === interviewerId
       );
 
       console.log("filteredData:", filteredData);
 
-      if (filteredData.length > 0) {
-        setFeedbackData(filteredData || []);
-      } else {
-        setFeedbackData([]);
-      }
+      setFeedbackData(filteredData);
     } catch (err) {
       console.error("Error fetching interviewers:", err);
     }
@@ -101,12 +131,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     closed: false,
   });
 
-  // const [feedback, setFeedback] = useState({
-  //   status: 'New',
-  //   rating: 4.5,
-  //   comments: ''
-  // });
-
   const [newStatus, setNewStatus] = useState({
     status: "",
     rating: 4.5,
@@ -136,6 +160,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
       setTimes({});
     }
   }, [interviewer?.availability]);
+
   const [hasInterviewExperience, setHasInterviewExperience] = useState(
     interviewer?.InterviewPreviousExperience === "yes"
   );
@@ -166,7 +191,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     hasInterviewExperience,
     interviewer?.PreviousExperienceConductingInterviewsYears,
   ]);
-  console.log("SELECTED OUT SOURCE: ", interviewer);
 
   const statusOptions = [
     "Contacted",
@@ -175,40 +199,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     "InActive",
     "Blacklisted",
   ];
-
-  // const updateStatusLine = (status) => {
-  //   const newStatusLine = {
-  //     new: true,
-  //     contacted: false,
-  //     inprogress: false,
-  //     selected: false,
-  //     closed: false,
-  //   };
-
-  //   switch (status) {
-  //     case 'Contacted':
-  //       newStatusLine.contacted = true;
-  //       break;
-  //     case 'In Progress':
-  //       newStatusLine.contacted = true;
-  //       newStatusLine.inprogress = true;
-  //       break;
-  //     case 'Active/InActive':
-  //       newStatusLine.contacted = true;
-  //       newStatusLine.inprogress = true;
-  //       newStatusLine.selected = true;
-  //       break;
-  //     case 'Blacklisted':
-  //       newStatusLine.contacted = true;
-  //       newStatusLine.inprogress = true;
-  //       newStatusLine.selected = true;
-  //       newStatusLine.closed = true;
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  //   setStatusLine(newStatusLine);
-  // };
 
   const handleChangeStatus = () => {
     if (feedbackData?.length > 0) {
@@ -221,31 +211,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     setShowStatusModal(true);
   };
 
-  // const handleSave = () => {
-  //   if (!newStatus.status) {
-  //     return;
-  //   }
-  //   setFeedback({
-  //     status: newStatus.status,
-  //     rating: newStatus.rating,
-  //     comments: newStatus.comments,
-  //   });
-  //   updateStatusLine(newStatus.status);
-  //   setNewStatus({ status: '', rating: 4.5, comments: '' });
-  //   setShowStatusModal(false);
-  // };
-
-  // const handleCancel = () => {
-  //   setNewStatus({ status: '', rating: 4.5, comments: '' });
-  //   setShowStatusModal(false);
-  // };
-
-  // Find the interviewer based on the ID
-  // const interviewer = interviewers.find(int => int.id === parseInt(id));
-
-  // if (!interviewer) {
-  //   return <div>Interviewer not found</div>;
-  // }
 
   const options = [
     { label: "Charge 25% without rescheduling", value: "25-no-reschedule" },
@@ -304,19 +269,20 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
               </div>
             </div>
           </div>
+
           <div
-            className={`flex-1 grid p-3 gap-4 overflow-hidden ${
+            className={`flex-1 grid p-3 gap-4 h-full ${
               isExpanded
-                ? "grid-cols-1"
+                ? "grid-cols-1 overflow-y-auto h-full"
                 : "md:grid-cols-1 lg:grid-cols-[250px_1fr] xl:grid-cols-[250px_1fr] 2xl:grid-cols-[250px_1fr]"
             }`}
           >
             {/* Left Content section */}
             <div
-              className={`flex h-full p-6 border border-gray-200 rounded-lg ${
+              className={`flex p-6 border border-gray-200 rounded-lg ${
                 isExpanded
                   ? "flex-row items-start"
-                  : "lg:flex-col xl:flex-col 2xl:flex-col lg:items-center xl:items-center 2xl:items-center"
+                  : "mb-[72px] lg:flex-col xl:flex-col 2xl:flex-col lg:items-center xl:items-center 2xl:items-center"
               }`}
             >
               <img
@@ -334,7 +300,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                     : "lg:text-center xl:text-center 2xl:text-center"
                 }`}
               >
-                <h2 className="text-2xl font-medium text-custom-blue mb-1">
+                <h2 className="text-2xl font-medium text-custom-blue mb-1 font-serif">
                   {interviewer?.firstName || "N/A"}
                 </h2>
                 <p className="text-gray-700 font-medium mb-1">
@@ -347,8 +313,11 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
             </div>
 
             {/* Right Content Section - Changes based on active tab */}
-            {/* <div> */}
-            <div className="flex flex-col h-full overflow-y-auto pr-2">
+            <div
+              className={`flex flex-col pr-2 ${
+                isExpanded ? "" : "overflow-y-auto h-full pb-[72px]"
+              }`}
+            >
               <div className="flex items-center gap-2 mb-6">
                 <span
                   className="text-custom-blue font-bold cursor-pointer"
@@ -486,57 +455,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                       <h3 className="text-lg font-semibold mb-6">
                         Additional Details:
                       </h3>
-                      {/* <div className="grid lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-6">
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            Current Role
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.currentRole || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            Industry
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.industry || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32 whitespace-nowrap ">
-                            Years of Experience
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.yearsOfExperience || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            Location
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.location || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8 col-span-2">
-                          <span className="text-gray-700 font-medium w-32">
-                            Introduction
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.Introduction || "Not Provided"}
-                          </span>
-                        </div>
-                        <div className="flex gap-8">
-                          <span className="text-gray-700 font-medium w-32">
-                            Resume
-                          </span>
-                          <span className="text-gray-600 flex-1">
-                            {interviewer?.resume?.filename || "Not Provided"}
-                          </span>
-                        </div>
-                      </div> */}
-                      {/* <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-6 gap-x-6"> */}
                       <div
                         className={`grid gap-y-6 gap-x-6 ${
                           isExpanded
@@ -945,27 +863,29 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
                     <div className="bg-white border min-h-screen border-gray-200 p-6 rounded-lg">
                       <h2 className="text-lg font-medium mb-4">Feedback:</h2>
                       <div className="space-y-4">
-                        <div className="flex items-start gap-x-20">
-                          <span className="text-gray-700 font-medium w-24">
+                        <div className="grid grid-cols-[min-content,1fr] gap-x-20">
+                          <span className="text-gray-700 font-medium">
                             Status
                           </span>
                           <span className="text-gray-600">
                             {feedbackData[0]?.status}
                           </span>
                         </div>
-                        <div className="flex items-start gap-x-20">
-                          <span className="text-gray-700 font-medium w-24">
+
+                        <div className="grid grid-cols-[min-content,1fr] gap-x-20">
+                          <span className="text-gray-700 font-medium">
                             Rating
                           </span>
                           <span className="text-gray-600">
                             {feedbackData[0]?.feedback[0]?.rating}
                           </span>
                         </div>
-                        <div className="flex items-start gap-x-20">
-                          <span className="text-gray-700 font-medium w-24">
+
+                        <div className="grid grid-cols-[min-content,1fr] gap-x-20">
+                          <span className="text-gray-700 font-medium">
                             Notes
                           </span>
-                          <span className="text-gray-600">
+                          <span className="text-gray-600 break-words">
                             {feedbackData[0]?.feedback[0]?.comments}
                           </span>
                         </div>

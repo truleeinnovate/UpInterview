@@ -164,7 +164,7 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
    
     } else {
       // navigate('/account-settings/my-profile/availability');
-      navigate(-1);
+      navigate(-1); // Added by Ashok
     }
 
   }

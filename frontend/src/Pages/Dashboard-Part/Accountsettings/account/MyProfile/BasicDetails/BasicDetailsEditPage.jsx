@@ -302,7 +302,7 @@ const BasicDetailsEditPage = ({
       setBasicEditOpen(false);
     } else {
       // navigate(`${basePath}/my-profile/basic`, { replace: true });
-      navigate(-1);
+      navigate(-1); // Added by Ashok
     }
   };
 
