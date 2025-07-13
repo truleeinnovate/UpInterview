@@ -37,10 +37,10 @@ const MyProfile = () => {
         Documents: false,
         ViewTab: true
       },
-      SuperAdminRole: {
+      Roles: {
         ViewTab: true
       },
-      SuperAdminUser: {
+      Users: {
         ViewTab: true
       }
     };

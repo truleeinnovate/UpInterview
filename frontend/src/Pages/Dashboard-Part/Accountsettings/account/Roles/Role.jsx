@@ -240,13 +240,19 @@ import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 import PermissionDisplay from './PermissionDisplay';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils';
 import Loading from '../../../../../Components/Loading.js';
+import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
 
-const Role = ({ type }) => {
+const Role = () => {
+  const userType = AuthCookieManager.getUserType();
+
   const { effectivePermissions, superAdminPermissions } = usePermissions();
-  const permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
-  const permissionKey = type === 'superAdmin' ? 'SuperAdminRole' : 'Roles';
+  const permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
+  const permissionKey = 'Roles';
   
-  const { data: organizationRoles, isLoading, isError, error } = useRolesQuery(type);
+  // const { data: organizationRoles, isLoading, isError, error } = useRolesQuery();
+  const { data: allRoles, isLoading, isError, error } = useRolesQuery({ fetchAllRoles: true });
+  console.log('allRoles', allRoles);
+  
   const [roles, setRoles] = useState([]);
   const navigate = useNavigate();
   const authToken = Cookies.get('authToken');
@@ -254,13 +260,13 @@ const Role = ({ type }) => {
   const tenantId = tokenPayload.tenantId;
 
   useEffect(() => {
-    if (!organizationRoles) return;
+    if (!allRoles) return;
 
     const fetchRoleOverrides = async () => {
       try {
         const rolesWithOverrides = await Promise.all(
-          organizationRoles.map(async (role) => {
-            if (type === 'superAdmin') {
+          allRoles.map(async (role) => {
+            if (userType === 'superAdmin') {
               return {
                 ...role,
                 level: role.level ?? 0,
@@ -328,15 +334,15 @@ const Role = ({ type }) => {
     };
 
     fetchRoleOverrides();
-  }, [organizationRoles, tenantId, type]);
+  }, [allRoles, tenantId, userType]);
 
   const renderRoleCard = (role) => {
-    const isAdmin = permissions[permissionKey].RoleName === 'Admin' && role.roleName === 'Admin';
+    const isAdmin = permissions?.[permissionKey]?.RoleName === 'Admin' && role.roleName === 'Admin';
     const isAdminRole = role.roleName === 'Admin';
     const maxRows = 2;
     const visibleObjects = role.objects
       ? role.objects.filter((obj) =>
-          type === 'superAdmin' ? true : obj.visibility === 'view_all'
+        userType === 'superAdmin' ? true : obj.visibility === 'view_all'
         ).slice(0, maxRows)
       : [];
 
@@ -351,14 +357,10 @@ const Role = ({ type }) => {
               <p className="text-gray-600 text-sm">{role.description || 'No description available'}</p>
               <p className="text-sm text-gray-500 mt-1">Level: {role.level}</p>
             </div>
-            {(type === 'superAdmin' ? permissions.SuperAdminRole?.Edit : permissions.Roles?.Edit && !isAdminRole) && !isAdmin && (
+            {(userType === 'superAdmin' ? permissions?.Roles?.Edit : permissions?.Roles?.Edit && !isAdminRole) && !isAdmin && (
               <EditButton
                 onClick={() => {
-                  navigate(
-                    type === 'superAdmin'
-                      ? `/super-admin-account-settings/roles/role-edit/${role._id}`
-                      : `/account-settings/roles/role-edit/${role._id}`
-                  );
+                  navigate(`/account-settings/roles/role-edit/${role._id}`);
                 }}
               />
             )}
@@ -384,14 +386,12 @@ const Role = ({ type }) => {
             </div>
             {role.objects &&
               role.objects.filter((obj) =>
-                type === 'superAdmin' ? true : obj.visibility === 'view_all'
+                userType === 'superAdmin' ? true : obj.visibility === 'view_all'
               ).length > maxRows && (
                 <button
                   onClick={() =>
                     navigate(
-                      type === 'superAdmin'
-                        ? `/super-admin-account-settings/roles/view/${role._id}`
-                        : `/account-settings/roles/view/${role._id}`,
+                      `/account-settings/roles/view/${role._id}`,
                       { state: { role, roles } }
                     )
                   }
@@ -402,7 +402,7 @@ const Role = ({ type }) => {
               )}
           </div>
 
-          {type !== 'superAdmin' && role.inherits && role.inherits.length > 0 && !isAdmin && (
+          {userType !== 'superAdmin' && role.inherits && role.inherits.length > 0 && !isAdmin && (
             <div className="mt-4">
               <h4 className="font-medium mb-2">Inherits From</h4>
               <div className="flex flex-wrap gap-2">
@@ -434,13 +434,10 @@ const Role = ({ type }) => {
       <div className="space-y-6 mb-4">
         <div className="flex justify-between items-center mt-3 px-3">
           <h2 className="text-lg text-custom-blue font-semibold">Roles & Permissions</h2>
-          {(type === 'superAdmin' ? permissions.SuperAdminRole?.Create : permissions.Roles?.Create) && (
+          {(permissions?.Roles?.Create) && (
             <button
               onClick={() =>
-                navigate(
-                  type === 'superAdmin'
-                    ? '/super-admin-account-settings/roles/role-edit/new'
-                    : '/account-settings/roles/role-edit/new'
+                navigate('/account-settings/roles/role-edit/new'
                 )
               }
               className="px-4 py-1 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90"
