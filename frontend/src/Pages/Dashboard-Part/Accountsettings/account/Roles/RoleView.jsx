@@ -185,7 +185,7 @@ import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 const RoleView = ({ type }) => {
   const { effectivePermissions, superAdminPermissions } = usePermissions();
   const permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
-  const permissionKey = type === 'superAdmin' ? 'SuperAdminRole' : 'Roles';
+  const permissionKey = 'Roles';
   const [isExpanded, setIsExpanded] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const navigate = useNavigate();
@@ -194,7 +194,7 @@ const RoleView = ({ type }) => {
   const roles = location.state?.roles || [];
 
   if (!role) {
-    navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles');
+    navigate('/account-settings/roles');
     return null;
   }
 
@@ -215,17 +215,14 @@ const RoleView = ({ type }) => {
   };
 
   const handleEdit = () => {
-    navigate(
-      type === 'superAdmin'
-        ? `/super-admin-account-settings/roles/role-edit/${role._id}`
-        : `/account-settings/roles/role-edit/${role._id}`
+    navigate(`/account-settings/roles/role-edit/${role._id}`
     );
   };
 
   return (
     <Modal
       isOpen={true}
-      onRequestClose={() => navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles')}
+      onRequestClose={() => navigate('/account-settings/roles')}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
@@ -237,7 +234,7 @@ const RoleView = ({ type }) => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-custom-blue">{role.label}</h2>
             <div className="flex items-center gap-2">
-              {(type === 'superAdmin' ? permissions.SuperAdminRole?.Edit : permissions.Roles?.Edit && role.roleName !== 'Admin') && (
+              {(type === 'superAdmin' ? permissions.Roles?.Edit : permissions.Roles?.Edit && role.roleName !== 'Admin') && (
                 <button onClick={handleEdit} className="p-1 rounded-full hover:bg-white/10">
                   <PencilIcon className="h-5 w-5 text-gray-500" />
                 </button>
@@ -250,7 +247,7 @@ const RoleView = ({ type }) => {
                 )}
               </button>
               <button
-                onClick={() => navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles')}
+                onClick={() => navigate('/account-settings/roles')}
                 className="p-1 rounded-full hover:bg-white/10"
               >
                 <XMarkIcon className="h-5 w-5 text-gray-500" />

@@ -25,9 +25,10 @@ import ConfirmationModal from "./ConfirmModel";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { config } from "../../../../../config";
 import axios from "axios";
+import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
 
-const UsersAccountTab = ({ type }) => {
-  console.log("UsersAccountTab type:", type);
+const UsersAccountTab = () => {
+  const userType = AuthCookieManager.getUserType();
   
   const { effectivePermissions, superAdminPermissions } = usePermissions();
   const {  usersRes,usersLoading, currentPlan, toggleUserStatus } = useCustomContext();
@@ -50,12 +51,12 @@ const UsersAccountTab = ({ type }) => {
   const filterIconRef = useRef(null);
 
   // Select data and loading state based on type
-  const dataSource = type === 'superAdmin' ? superAdminUsers : usersRes;
-  const loading = type === 'superAdmin' ? superAdminLoading : usersLoading;
+  const dataSource = userType === 'superAdmin' ? superAdminUsers : usersRes;
+  const loading = userType === 'superAdmin' ? superAdminLoading : usersLoading;
 
   // Fetch super admin users when type is superAdmin
 useEffect(() => {
-    if (type === 'superAdmin') {
+    if (userType === 'superAdmin') {
       const fetchSuperAdminUsers = async () => {
         setSuperAdminLoading(true);
         try {
@@ -78,7 +79,7 @@ useEffect(() => {
       };
       fetchSuperAdminUsers();
     }
-  }, [type]);
+  }, [userType]);
 
   // Set view based on screen size
   useEffect(() => {
@@ -334,7 +335,7 @@ useEffect(() => {
             transition={{ duration: 0.3 }}
           >
             <Header
-              title={type === 'superAdmin' ? "Super Admins" : "Users"}
+              title={userType === 'superAdmin' ? "Super Admins" : "Users"}
               onAddClick={() => {
                 if (dataSource.length >= currentPlan.maxUsers) {
                   toast(
@@ -353,7 +354,9 @@ useEffect(() => {
                 }
               }}
               addButtonText="Add User"
-              canCreate={type === 'superAdmin' ? superAdminPermissions.SuperAdminUser?.Create : effectivePermissions.Users?.Create}
+              canCreate={userType === 'superAdmin' ? superAdminPermissions?.Users
+                ?.Create : effectivePermissions?.Users
+                ?.Create}
             />
           </motion.div>
           <Toolbar
@@ -383,7 +386,7 @@ useEffect(() => {
                     columns={tableColumns}
                     loading={loading}
                     actions={tableActions}
-                    emptyState={type === 'superAdmin' ? "No super admins found." : "No users found."}
+                    emptyState={userType === 'superAdmin' ? "No super admins found." : "No users found."}
                   />
                 </div>
               ) : (
@@ -461,10 +464,10 @@ useEffect(() => {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">
-                    {type === 'superAdmin' ? "Super Admin Management Guide" : "User Management Guide"}
+                    {userType === 'superAdmin' ? "Super Admin Management Guide" : "User Management Guide"}
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    {type === 'superAdmin' ? "Manage super admin accounts efficiently" : "Manage your team's interviewers efficiently"}
+                    {userType === 'superAdmin' ? "Manage super admin accounts efficiently" : "Manage your team's interviewers efficiently"}
                   </p>
                 </div>
                 <button
@@ -481,14 +484,14 @@ useEffect(() => {
                     <Info size={20} />
                   </div>
                   <p className="ml-3">
-                    {type === 'superAdmin' ? "Manage all super admin users, including:" : "Manage all users who can conduct interviews, including:"}
+                    {userType === 'superAdmin' ? "Manage all super admin users, including:" : "Manage all users who can conduct interviews, including:"}
                   </p>
                 </div>
                 <ul className="space-y-3 pl-8">
                   <li className="flex items-start">
                     <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-custom-blue rounded-full"></span>
                     <span className="ml-2">
-                      {type === 'superAdmin' ? "Create and manage super admin accounts" : "Create and manage interviewer accounts"}
+                      {userType === 'superAdmin' ? "Create and manage super admin accounts" : "Create and manage interviewer accounts"}
                     </span>
                   </li>
                   <li className="flex items-start">
