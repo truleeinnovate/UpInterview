@@ -1120,9 +1120,59 @@ const deleteRound = async (req, res) => {
   }
 };
 
+// SUPER ADMIN added by Ashok ----------------------------------------------------------->
+const getInterviews = async (req, res) => {
+  try {
+    const now = new Date();
+
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const totalInterviews = await Interview.countDocuments();
+
+    const interviewsThisMonth = await Interview.countDocuments({
+      createdAt: { $gte: startOfCurrentMonth, $lt: startOfNextMonth },
+    });
+
+    const interviewsLastMonth = await Interview.countDocuments({
+      createdAt: { $gte: startOfLastMonth, $lt: startOfCurrentMonth },
+    });
+
+    let trend = "neutral";
+    let trendValue = "0%";
+
+    if (interviewsLastMonth > 0) {
+      const change =
+        ((interviewsThisMonth - interviewsLastMonth) / interviewsLastMonth) *
+        100;
+      trend = change > 0 ? "up" : change < 0 ? "down" : "neutral";
+      trendValue = `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
+    } else if (interviewsThisMonth > 0) {
+      trend = "up";
+      trendValue = "+100%";
+    }
+
+    res.json({
+      metric: {
+        title: "Total Interviews",
+        value: totalInterviews.toLocaleString(),
+        description: "Across all tenants",
+        trend,
+        trendValue,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+// -------------------------------------------------------------------------------------->
+
 module.exports = {
   createInterview,
   saveInterviewRound,
   getDashboardStats,
   deleteRound,
+  getInterviews,
 };

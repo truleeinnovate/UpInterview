@@ -19,7 +19,7 @@ import {
 import {
   // useQuery,
   //  useMutation,
-  useQueryClient
+  useQueryClient,
 } from "@tanstack/react-query";
 import { validateFile } from "../../../../../../utils/FileValidation/FileValidation";
 import { uploadFile } from "../../../../../../apiHooks/imageApis";
@@ -34,7 +34,7 @@ const EditAdvacedDetails = ({
   usersId,
   setAdvacedEditOpen,
   onSuccess,
-  basePath
+  basePath,
 }) => {
   // onSave
   // const {
@@ -43,10 +43,11 @@ const EditAdvacedDetails = ({
   // } = useCustomContext();
 
   const {
-    // skills, 
+    // skills,
     locations,
     industries,
-    currentRoles } = useMasterData();
+    currentRoles,
+  } = useMasterData();
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -57,9 +58,9 @@ const EditAdvacedDetails = ({
 
   const {
     userProfile,
-     isLoading, 
-    //  isError, 
-    //  error 
+    isLoading,
+    //  isError,
+    //  error
   } = useUserProfile(resolvedId);
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
@@ -189,7 +190,8 @@ const EditAdvacedDetails = ({
     if (from === "users") {
       setAdvacedEditOpen(false);
     } else {
-      navigate(`${basePath}/my-profile/advanced`);
+      // navigate(`${basePath}/my-profile/advanced`);
+      navigate(-1); // Added by Ashok ------------------->
       //  navigate(previousPath || '/account-settings/my-profile/basic');
     }
   };
@@ -282,21 +284,21 @@ const EditAdvacedDetails = ({
     }));
     setShowDropdownIndustry(false);
     setSearchTermIndustry("");
-    setErrors((prev) => ({ ...prev, industry: '' }));
+    setErrors((prev) => ({ ...prev, industry: "" }));
   };
 
   const handleLocationSelect = (location) => {
     setFormData((prev) => ({ ...prev, location: location.LocationName || "" }));
     setShowDropdownLocation(false);
     setSearchTermLocation("");
-    setErrors((prev) => ({ ...prev, location: '' }));
+    setErrors((prev) => ({ ...prev, location: "" }));
   };
 
   const handleRoleSelect = (role) => {
     setFormData((prev) => ({ ...prev, currentRole: role.RoleName || "" }));
     setShowDropdownCurrentRole(false);
     setSearchTermCurrentRole("");
-    setErrors((prev) => ({ ...prev, currentRole: '' }));
+    setErrors((prev) => ({ ...prev, currentRole: "" }));
   };
 
   const toggleCurrentRole = () =>
@@ -304,25 +306,25 @@ const EditAdvacedDetails = ({
   // Filter dropdown options
   const filteredIndustries = Array.isArray(industries)
     ? industries.filter((industry) =>
-      industry?.IndustryName?.toLowerCase()?.includes(
-        searchTermIndustry.toLowerCase() || ""
+        industry?.IndustryName?.toLowerCase()?.includes(
+          searchTermIndustry.toLowerCase() || ""
+        )
       )
-    )
     : [];
   const filteredLocations = Array.isArray(locations)
     ? locations.filter((location) =>
-      location?.LocationName?.toLowerCase()?.includes(
-        searchTermLocation.toLowerCase() || ""
+        location?.LocationName?.toLowerCase()?.includes(
+          searchTermLocation.toLowerCase() || ""
+        )
       )
-    )
     : [];
 
   const filteredCurrentRoles = Array.isArray(currentRoles)
     ? currentRoles.filter((role) =>
-      role?.RoleName?.toLowerCase()?.includes(
-        searchTermCurrentRole.toLowerCase() || ""
+        role?.RoleName?.toLowerCase()?.includes(
+          searchTermCurrentRole.toLowerCase() || ""
+        )
       )
-    )
     : [];
 
   // Handle input changes for text fields
@@ -455,7 +457,6 @@ const EditAdvacedDetails = ({
                     autoComplete="off"
                     onClick={() =>
                       setShowDropdownIndustry(!showDropdownIndustry)
-                      
                     }
                     className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
                     readOnly

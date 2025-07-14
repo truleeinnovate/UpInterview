@@ -1521,25 +1521,29 @@ const OutsourceInterviewers = () => {
 
   // Table Columns
   const tableColumns = [
-    ...(superAdminPermissions?.InterviewRequest?.View
-      ? [
-          {
-            key: "interviewerNo",
-            header: "Interviewer ID",
-            render: (vale, row) => (
-              <span
-                className="text-sm font-medium text-custom-blue cursor-pointer"
-                onClick={() => {
-                  handleOpenPopup(row);
-                  setIsPopupOpen(true);
-                }}
-              >
-                {row?.interviewerNo ? row?.interviewerNo : "N/A"}
-              </span>
-            ),
-          },
-        ]
-      : []),
+    {
+      key: "interviewerNo",
+      header: "Interviewer ID",
+      render: (vale, row) => (
+        <span
+          className={`font-medium ${
+            superAdminPermissions.OutsourceInterviewerRequest.View
+              ? "text-custom-blue cursor-pointer"
+              : "text-gray-900"
+          }`}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevents row-level handlers (if any)
+            if (superAdminPermissions.OutsourceInterviewerRequest.View && row) {
+              handleOpenPopup(row);
+              setIsPopupOpen(true);
+            }
+          }}
+        >
+          {row?.interviewerNo ? row?.interviewerNo : "N/A"}
+        </span>
+      ),
+    },
+
     {
       key: "name",
       header: "Name",
@@ -1594,7 +1598,7 @@ const OutsourceInterviewers = () => {
 
   // Table Actions Configuration
   const tableActions = [
-    ...(superAdminPermissions?.InterviewRequest?.View
+    ...(superAdminPermissions?.OutsourceInterviewerRequest?.View
       ? [
           {
             key: "view",
@@ -1614,7 +1618,7 @@ const OutsourceInterviewers = () => {
     //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
     // },
 
-    ...(superAdminPermissions?.InterviewRequest?.Edit
+    ...(superAdminPermissions?.OutsourceInterviewerRequest?.Edit
       ? [
           {
             key: "edit",
@@ -1654,7 +1658,7 @@ const OutsourceInterviewers = () => {
 
   // Shared Actions Configuration for Table and Kanban
   const actions = [
-    ...(superAdminPermissions?.InterviewRequest?.View
+    ...(superAdminPermissions?.OutsourceInterviewerRequest?.View
       ? [
           {
             key: "view",
@@ -1668,7 +1672,7 @@ const OutsourceInterviewers = () => {
         ]
       : []),
 
-    ...(superAdminPermissions?.InterviewRequest?.Edit
+    ...(superAdminPermissions?.OutsourceInterviewerRequest?.Edit
       ? [
           {
             key: "edit",
@@ -1833,6 +1837,7 @@ const OutsourceInterviewers = () => {
                         ? `${interview?.contactId.firstName} ${interview?.contactId.lastName}`
                         : "N/A",
                   }))}
+                  outsourceInterviewers={outsource}
                   columns={kanbanColumns}
                   loading={isLoading}
                   renderActions={renderKanbanActions}

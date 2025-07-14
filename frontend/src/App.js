@@ -610,7 +610,10 @@ const MainAppRoutes = ({
               {/* Assessment_Template */}
               {hasPermission("Assessment_Template") && (
                 <>
-                  <Route path="/assessments-template" element={<Assessment />} />
+                  <Route
+                    path="/assessments-template"
+                    element={<Assessment />}
+                  />
                   {hasPermission("Assessment_Template", "Create") && (
                     <Route
                       path="/assessments-template/new"
@@ -790,7 +793,9 @@ const MainAppRoutes = ({
                 {hasPermission("Users") && (
                   <Route path="users" element={<UsersLayout />}>
                     {hasPermission("Users", "Create") && (
+
                       <Route path="new" element={<UserForm mode="create" />} />
+
                     )}
                     {hasPermission("Users", "Edit") && (
                       <Route
@@ -1069,9 +1074,17 @@ const MainAppRoutes = ({
                   )}
                 </>
               )}
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/internal-logs" element={<InternalLogsPage />} />
-              <Route path="/integrations" element={<IntegrationsPage />} />
+
+              {hasPermission("Settings") && (
+                <Route path="/settings" element={<SettingsPage />} />
+              )}
+              {hasPermission("InternalLogs") && (
+                <Route path="/internal-logs" element={<InternalLogsPage />} />
+              )}
+              {hasPermission("IntegrationLogs") && (
+                <Route path="/integrations" element={<IntegrationsPage />} />
+              )}
+
               <Route
                 path="/contact-profile-details"
                 element={

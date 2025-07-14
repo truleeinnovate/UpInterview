@@ -546,6 +546,7 @@ const Contact = ({ organizationId, viewMode }) => {
                       status: contact.status || "N/A",
                       name: contact.firstName,
                     }))}
+                    contacts={contacts}
                     renderActions={renderKanbanActions}
                     columns={kanbanColumns}
                     emptyState="No Contacts found."

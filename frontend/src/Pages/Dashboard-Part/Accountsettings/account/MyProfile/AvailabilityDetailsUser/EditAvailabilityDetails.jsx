@@ -163,7 +163,8 @@ const EditAvailabilityDetails = ({ from,usersId, setAvailabilityEditOpen, onSucc
      setAvailabilityEditOpen(false);
    
     } else {
-      navigate('/account-settings/my-profile/availability');
+      // navigate('/account-settings/my-profile/availability');
+      navigate(-1); // Added by Ashok
     }
 
   }

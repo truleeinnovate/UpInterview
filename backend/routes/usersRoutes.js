@@ -8,15 +8,15 @@ const {
   getUsersByTenant,
   getUniqueUserByOwnerId,
   getPlatformUsers, // SUPER ADMIN added by Ashok
-  getSuperAdminUsers
+  getSuperAdminUsers,
 } = require("../controllers/usersController.js");
 
 // routes/userRoutes.js
-const Users = require('../models/Users');
+const Users = require("../models/Users");
 // const RolesPermissionObject = require('../models/RolesPermissionObject');
-const RoleOverrides = require('../models/roleOverrides.js');
-const Tenant = require('../models/Tenant');
-const { permissionMiddleware } = require('../middleware/permissionMiddleware');
+const RoleOverrides = require("../models/roleOverrides.js");
+const Tenant = require("../models/Tenant");
+const { permissionMiddleware } = require("../middleware/permissionMiddleware");
 
 router.get('/permissions', async (req, res) => {
   try {
@@ -71,18 +71,22 @@ router.get('/permissions', async (req, res) => {
       });
       
       res.json(response);
-    });
 
+    });
   } catch (error) {
     console.error('[Permissions Endpoint] Error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.get('/super-admins', (req, res, next) => {
-  console.log('Hit /users/super-admins route');
+router.get("/super-admins", (req, res, next) => {
+  console.log("Hit /users/super-admins route");
   getSuperAdminUsers(req, res, next);
 });
+
+//  SUPER ADMIN added by Ashok ====================================>
+router.get("/platform-users", getPlatformUsers);
+// =================================================================>
 
 // Define the route for fetching users
 router.get("/", getUsers);
@@ -99,9 +103,4 @@ router.get("/interviewers/:tenantId", getInterviewers);
 // UpdateUser
 router.patch("/:id/status", UpdateUser);
 
-//  SUPER ADMIN added by Ashok ====================================>
-router.get("/platform-users", getPlatformUsers);
-// =================================================================>
-// Super admin users route (must be before dynamic routes)
-
-module.exports = router;  
+module.exports = router;

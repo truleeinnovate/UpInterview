@@ -10,7 +10,7 @@ import { isEmptyObject, validateInterviewForm } from '../../../../../../utils/My
 import { ReactComponent as Technology } from '../../../../../../icons/technology.svg';
 import { ReactComponent as SkillIcon } from '../../../../../../icons/Skills.svg';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
-import { useNavigate, useParams } from 'react-router-dom';
+import { redirect, useNavigate, useParams } from 'react-router-dom';
 import { config } from '../../../../../../config';
 import { useMasterData } from '../../../../../../apiHooks/useMasterData';
 import { useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers';
@@ -290,7 +290,8 @@ const EditInterviewDetails = ({ from, usersId, setInterviewEditOpen, onSuccess }
     if (from === 'users') {
       setInterviewEditOpen(false)
     } else {
-      navigate('/account-settings/my-profile/interview', { replace: true })
+      // navigate('/account-settings/my-profile/interview', { replace: true })
+      navigate(-1) // Added by Ashok
     }
 
   }

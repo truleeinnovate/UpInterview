@@ -1,12 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  Expand,
-  Minimize,
-  X,
-  ChevronDown,
-  Camera,
-  Trash,
-} from "lucide-react";
+import { Expand, Minimize, X, ChevronDown, Camera, Trash } from "lucide-react";
 
 import classNames from "classnames";
 import Modal from "react-modal";
@@ -46,10 +39,10 @@ const BasicDetailsEditPage = ({
   usersId,
   setBasicEditOpen,
   onSuccess,
-  basePath
+  basePath,
 }) => {
-    const { data: organizationRoles } = useRolesQuery();
-  
+  const { data: organizationRoles } = useRolesQuery();
+
   // const { usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -308,7 +301,8 @@ const BasicDetailsEditPage = ({
     if (from === "users") {
       setBasicEditOpen(false);
     } else {
-      navigate(`${basePath}/my-profile/basic`, { replace: true });
+      // navigate(`${basePath}/my-profile/basic`, { replace: true });
+      navigate(-1); // Added by Ashok
     }
   };
 
@@ -394,7 +388,6 @@ const BasicDetailsEditPage = ({
 
         const res = await requestEmailChange.mutateAsync(emailChangePayload);
 
-
         if (res.data.success) {
           toast.success("Verification email sent to your new email address");
 
@@ -403,25 +396,25 @@ const BasicDetailsEditPage = ({
             newEmail: formData.email.trim(),
           };
 
-          const response =  await updateContactDetail.mutateAsync({
+          const response = await updateContactDetail.mutateAsync({
             resolvedId,
             data: dataWithNewEmail,
           });
 
           // if (usersId) onSuccess();
           // handleCloseModal();
-            if (response.status === 200) {
-          if (usersId) onSuccess();
-          setLoading(false);
-          handleCloseModal();
-        } else {
-          console.log("falied to save changes");
-          
-          setErrors((prev) => ({
-            ...prev,
-            form: "Failed to save changes",
-          }));
-        }
+          if (response.status === 200) {
+            if (usersId) onSuccess();
+            setLoading(false);
+            handleCloseModal();
+          } else {
+            console.log("falied to save changes");
+
+            setErrors((prev) => ({
+              ...prev,
+              form: "Failed to save changes",
+            }));
+          }
         } else {
           setErrors((prev) => ({
             ...prev,

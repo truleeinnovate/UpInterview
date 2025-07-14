@@ -1,17 +1,18 @@
 import { motion } from "framer-motion";
-import { format, isValid, parseISO } from "date-fns";
+// import { format, isValid, parseISO } from "date-fns";
 
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  const date = parseISO(dateString);
-  return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
-};
+// const formatDate = (dateString) => {
+//   if (!dateString) return "N/A";
+//   const date = parseISO(dateString);
+//   return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
+// };
 
 const capitalizeFirstLetter = (str) =>
   str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
 const KanbanView = ({
   data = [],
+  contacts = [],
   columns = [],
   loading = false,
   renderActions = () => null,
@@ -29,13 +30,13 @@ const KanbanView = ({
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-gray-800">All Contacts</h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-            {data?.length || 0} Contacts
+            {contacts?.length || 0} Contacts
           </span>
         </div>
 
         {loading ? (
           <div className="text-center py-10 text-gray-500">Loading...</div>
-        ) : data?.length === 0 ? (
+        ) : contacts?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
           <div

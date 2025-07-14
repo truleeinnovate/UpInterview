@@ -264,3 +264,56 @@ exports.getAssignedCandidates = async (req, res) => {
     });
   }
 };
+
+// SUPER ADMIN
+exports.getAllAssessments = async (req, res) => {
+  try {
+    const now = new Date();
+
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    // Total active assessments
+    const totalAssessments = await Assessment.countDocuments({
+      status: "Active",
+    });
+
+    // Active assessments created this month
+    const thisMonth = await Assessment.countDocuments({
+      status: "Active",
+      createdAt: { $gte: startOfCurrentMonth },
+    });
+
+    // Active assessments created last month
+    const lastMonth = await Assessment.countDocuments({
+      status: "Active",
+      createdAt: { $gte: startOfLastMonth, $lt: startOfCurrentMonth },
+    });
+
+    // Trend calculation
+    let trend = "neutral";
+    let trendValue = "0%";
+
+    if (lastMonth > 0) {
+      const change = ((thisMonth - lastMonth) / lastMonth) * 100;
+      trend = change > 0 ? "up" : change < 0 ? "down" : "neutral";
+      trendValue = `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
+    } else if (thisMonth > 0) {
+      trend = "up";
+      trendValue = "+100%";
+    }
+
+    return res.status(200).json({
+      metric: {
+        title: "Active Assessments",
+        value: totalAssessments.toLocaleString(),
+        description: "Live assessment sessions",
+        trend,
+        trendValue,
+      },
+    });
+  } catch (error) {
+    console.log("Error in get assessments:", error.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

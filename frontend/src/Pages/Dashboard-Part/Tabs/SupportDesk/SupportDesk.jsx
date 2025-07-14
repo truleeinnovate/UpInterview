@@ -305,7 +305,7 @@ function SupportDesk() {
 
   return (
     <div className="bg-background h-screen">
-      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+      <div className="fixed md:mt-6 sm:mt-4 top-12 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
             <Header
