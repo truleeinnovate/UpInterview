@@ -12,6 +12,7 @@ import { config } from "../config.js";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { uploadFile } from "../apiHooks/imageApis.js";
+import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
 
 const CustomContext = createContext();
 
@@ -162,7 +163,6 @@ const CustomProvider = ({ children }) => {
 
   const fetchGroupsData = useCallback(async () => {
     if (!tenantId) {
-      console.error("No tenantId found in cookies");
       setGroups([]);
       setLoading(false);
       return;
@@ -273,40 +273,25 @@ const CustomProvider = ({ children }) => {
     fetchContactsData();
   }, []);
 
-  const [singlecontact, setsingleContact] = useState([]);
-
-  useEffect(() => {
-    const fetchContacts = async (usersId = null) => {
-      try {
-        const res = await axios.get(
-          `${config.REACT_APP_API_URL}/users/owner/${userId}`
-        );
-        setsingleContact(res.data);
-      } catch (err) {
-        console.error("Error fetching user contacts:", err);
-      }
-    };
-
-    fetchContacts();
-  }, [userId]);
+  // Removed singlecontact logic - now using useSingleContact hook from apiHooks
 
   // fetching super admin
-  const [superAdminProfile, setSuperAdminProfile] = useState([]);
-  useEffect(() => {
-    const fetchContacts = async (usersId = null) => {
-      try {
-        const res = await axios.get(
-          `${config.REACT_APP_API_URL}/users/owner/${impersonatedUserId}`
-        );
-        setSuperAdminProfile(res.data);
-        // console.log("SUPER ADMIN USER: ", res.data);
-      } catch (err) {
-        console.error("Error fetching user contacts:", err);
-      }
-    };
+  // const [superAdminProfile, setSuperAdminProfile] = useState([]);
+  // useEffect(() => {
+  //   const fetchContacts = async (usersId = null) => {
+  //     try {
+  //       const res = await axios.get(
+  //         `${config.REACT_APP_API_URL}/users/owner/${impersonatedUserId}`
+  //       );
+  //       setSuperAdminProfile(res.data);
+  //       // console.log("SUPER ADMIN USER: ", res.data);
+  //     } catch (err) {
+  //       console.error("Error fetching user contacts:", err);
+  //     }
+  //   };
 
-    fetchContacts();
-  }, [impersonatedUserId]);
+  //   fetchContacts();
+  // }, [impersonatedUserId]);
 
   // getting interviewers and showing it in the home (available interviewers) and interviewers
   const [interviewers, setInterviewers] = useState([]);
@@ -737,7 +722,7 @@ const {
         fetchContactsData,
         contacts,
         setContacts,
-        singlecontact,
+        // singlecontact - now using useSingleContact hook from apiHooks
         // fetchContacts,
 
         interviewers,
@@ -750,7 +735,7 @@ const {
 
         interviewRounds,
         fetchInterviewRounds,
-        superAdminProfile,
+        // superAdminProfile,
       }}
     >
       {children}

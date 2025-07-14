@@ -47,14 +47,26 @@ const initializeApp = async (setUserProfile, setUserRole, setSharingSettings, se
     const matchedUser = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
     setUserProfile(matchedUser.data);
     if (matchedUser.data && matchedUser.data.Name) {
-      Cookies.set("userName", matchedUser.data.Name);
+      Cookies.set("userName", matchedUser.data.Name, {
+        sameSite: 'None',
+        secure: true,
+        path: '/',
+      });
     }
     if (matchedUser.data && matchedUser.data.organizationId) {
       setOrganization(true);
-      Cookies.set("organization", "true");
+      Cookies.set("organization", "true", {
+        sameSite: 'None',
+        secure: true,
+        path: '/',
+      });
     } else {
       setOrganization(false);
-      Cookies.set("organization", "false");
+      Cookies.set("organization", "false", {
+        sameSite: 'None',
+        secure: true,
+        path: '/',
+      });
     }
     if (matchedUser.data && matchedUser.data.isFreelancer === 'yes') {
       setFreelancer(true);

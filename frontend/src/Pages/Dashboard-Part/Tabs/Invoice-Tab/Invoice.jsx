@@ -343,7 +343,7 @@ const InvoiceTab = () => {
             <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background w-full">
                 <div className="w-full overflow-auto">
                     {loading ? (
-                        <Loading />
+                        <Loading message="Loading Invoices..."/>
                     ) : (
                         <motion.div className="w-full">
                             <div className="relative w-full">
@@ -463,6 +463,7 @@ const InvoiceTab = () => {
                                             value={amountRange.min}
                                             onChange={(e) => handleAmountChange('min', e.target.value)}
                                             placeholder="Min"
+                                            min={0}
                                             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
                                     </div>
@@ -473,6 +474,7 @@ const InvoiceTab = () => {
                                             value={amountRange.max}
                                             onChange={(e) => handleAmountChange('max', e.target.value)}
                                             placeholder="Max"
+                                            min={0}
                                             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
                                     </div>

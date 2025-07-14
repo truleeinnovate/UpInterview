@@ -1,8 +1,17 @@
 import { BellIcon, CheckIcon, CreditCardIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import { recentNotifications,notificationPreferences } from '../mockData/notificationsData'
-
+import { usePermissions } from '../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../utils/permissionUtils';
 
 const NotificationsDetails = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("NotificationsSettings")) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Notifications</h2>

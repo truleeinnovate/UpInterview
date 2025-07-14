@@ -16,43 +16,27 @@ import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeybo
 import { useCustomContext } from "../../../../Context/Contextfetch";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
+import { usePermissionCheck } from "../../../../utils/permissionUtils";
 
 function SupportDesk() {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions, superAdminPermissions, impersonatedUser_roleName, effectivePermissions_RoleName } = usePermissions();
   const { tickets, isLoading } = useSupportTickets();
-
-  console.log("tickets-------", tickets);
-
   const impersonationToken = Cookies.get("impersonationToken");
-  const impersonationPayload = impersonationToken
-    ? decodeJwt(impersonationToken)
-    : null;
-  //console.log("impersonationPayload", impersonationPayload.impersonatedUserId);
-
+  const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   const { userRole } = useCustomContext();
-  const {
-    effectivePermissions,
-    superAdminPermissions,
-    impersonatedUser_roleName,
-    effectivePermissions_RoleName,
-  } = usePermissions();
-  console.log("effectivePermissions", effectivePermissions);
-  console.log("superAdminPermissions", superAdminPermissions);
-  console.log("impersonatedUser_roleName", impersonatedUser_roleName);
-  console.log("effectivePermissions_RoleName", effectivePermissions_RoleName);
-
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const currentUserId = tokenPayload?.userId;
-
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage] = useState(10);
-  const [selectedFilters, setSelectedFilters] = useState({
-    status: [],
-  });
+  const [selectedFilters, setSelectedFilters] = useState({ status: [] });
   const [viewMode, setViewMode] = useState("table");
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
 
@@ -64,6 +48,11 @@ function SupportDesk() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("SupportDesk")) {
+    return null;
+  }
 
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
@@ -299,9 +288,6 @@ function SupportDesk() {
         ]
       : []),
   ];
-
-  const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState([]);
 
   const statusOptions = ["New", "Assigned", "Inprogress", "Resolved", "Close"];
 

@@ -261,13 +261,13 @@ const AssessmentKanban = ({
                             </motion.div>
 
                             <div className="space-y-2 text-sm text-gray-600">
-                              {assessment.Position && (
+                              {assessment.AssessmentCode && (
                                 <motion.div 
                                   className="flex items-center gap-2"
                                   whileHover={{ x: 2 }}
                                 >
                                   <UserIcon className="w-4 h-4" />
-                                  {assessment.Position}
+                                  {assessment.AssessmentCode}
                                 </motion.div>
                               )}
                               <motion.div 

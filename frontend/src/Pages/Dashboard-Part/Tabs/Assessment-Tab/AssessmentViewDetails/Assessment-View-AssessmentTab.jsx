@@ -16,11 +16,12 @@ function AssessmentsTab({ assessment }) {
 
 
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
-  useEffect(() => {
-    if (assessment) {
-      console.log('assessment', assessment);
-    }
-  }, [assessment]);
+  // Remove console.log to prevent loops
+  // useEffect(() => {
+  //   if (assessment) {
+  //     console.log('assessment', assessment);
+  //   }
+  // }, [assessment]);
 
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
@@ -206,7 +207,7 @@ function AssessmentsTab({ assessment }) {
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
               <UserPlusIcon className="h-6 w-6 text-gray-400" />
             </div>
-            <h3 className="text-base font-medium text-gray-900 mb-2">No assessments scheduled</h3>
+            <h3 className="text-base font-medium text-gray-900 mb-2">No Assessments Scheduled</h3>
             <p className="text-sm text-gray-500 mb-4">
               Get started by sharing this assessment with candidates
             </p>

@@ -8,6 +8,7 @@ import {
   validatePage1,
 } from "../../../../utils/mockinterviewValidation.js";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
+import { useSingleContact } from "../../../../apiHooks/useUsers";
 import {
   X,
   Users,
@@ -165,7 +166,7 @@ const formatToCustomDateTime = (date) => {
 };
 
 const MockSchedulelater = () => {
-  const { singlecontact } = useCustomContext();
+  const { singleContact } = useSingleContact();
   const { qualifications, technologies, skills, currentRoles, contacts } =
     useMasterData();
   const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } =
@@ -236,10 +237,10 @@ const MockSchedulelater = () => {
     skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Populate formData for new interview from singlecontact
+  // Populate formData for new interview from singleContact
   useEffect(() => {
-    if (!id && singlecontact?.length > 0) {
-      const contact = singlecontact[0];
+    if (!id && singleContact) {
+      const contact = singleContact;
       setFormData((prev) => ({
         ...prev,
         candidateName: `${contact.firstName || ""} ${
@@ -252,7 +253,7 @@ const MockSchedulelater = () => {
         skills: contact.skills || [],
       }));
     }
-  }, [singlecontact, id]);
+  }, [singleContact, id]);
 
   // Populate formData for edit mode
   useEffect(() => {

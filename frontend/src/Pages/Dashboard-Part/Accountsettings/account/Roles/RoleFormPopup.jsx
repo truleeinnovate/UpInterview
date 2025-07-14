@@ -553,13 +553,15 @@ import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
 
 import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils.js';
+import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
 
-const RoleFormPopup = ({ onSave, onClose, type }) => {
-  const { data: organizationRoles, isLoading, isError, error } = useRolesQuery(type);
+const RoleFormPopup = ({ onSave, onClose }) => {
+  const { data: organizationRoles, isLoading, isError, error } = useRolesQuery();
+  const userType = AuthCookieManager.getUserType();
 
   const { effectivePermissions, superAdminPermissions } = usePermissions();
-  const permissions = type === 'superAdmin' ? superAdminPermissions : effectivePermissions;
-  const permissionKey = type === 'superAdmin' ? 'SuperAdminRole' : 'Roles';
+  const permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
+  const permissionKey = 'Roles';
   const navigate = useNavigate();
   const { id } = useParams();
   const editMode = !!id;
@@ -577,7 +579,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
     level: 0,
     inherits: [],
     tenantId: tenantId,
-    roleType: type === 'superAdmin' ? 'internal' : 'organization',
+    roleType: userType === 'superAdmin' ? 'internal' : 'organization',
   });
 
   const [roles, setRoles] = useState([]);
@@ -591,12 +593,12 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
   const initialFormDataRef = useRef(null);
 
   useEffect(() => {
-    if (editMode && !permissions[permissionKey]?.Edit) {
-      navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles');
+    if (editMode && !permissions?.[permissionKey]?.Edit) {
+      navigate('/account-settings/roles');
       return;
     }
-    if (!editMode && !permissions[permissionKey]?.Create) {
-      navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles');
+    if (!editMode && !permissions?.[permissionKey]?.Create) {
+      navigate('/account-settings/roles');
       return;
     }
 
@@ -650,7 +652,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
           let inherits = role.inherits || [];
           let level = role.level ?? 0;
 
-          if (type !== 'superAdmin') {
+          if (userType !== 'superAdmin') {
             const overrideResponse = await axios.get(
               `${config.REACT_APP_API_URL}/role-overrides?tenantId=${tenantId}&roleName=${role.roleName}`
             );
@@ -702,7 +704,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
           initialFormDataRef.current = JSON.parse(JSON.stringify(formData));
         } else {
           // For new roles, include all objects as suggestions for super admins
-          if (type === 'superAdmin') {
+          if (userType === 'superAdmin') {
             setFormData((prev) => ({
               ...prev,
               objects: Object.entries(permissionsMap).map(([objectName, data]) => ({
@@ -720,10 +722,10 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
       }
     };
     fetchData();
-  }, [tenantId, id, editMode, type, permissions, permissionKey, navigate]);
+  }, [tenantId, id, editMode, userType, permissions, permissionKey, navigate]);
 
   const handleLabelChange = (e) => {
-    if (type !== 'superAdmin') return; // Only super admins can edit label
+    if (userType !== 'superAdmin') return; // Only super admins can edit label
     const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, '');
     setFormData({
       ...formData,
@@ -732,7 +734,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
   };
 
   const handleRoleNameChange = (e) => {
-    if (type !== 'superAdmin') return; // Only super admins can edit roleName
+    if (userType !== 'superAdmin') return; // Only super admins can edit roleName
     const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_]/g, '');
     setFormData({
       ...formData,
@@ -760,8 +762,8 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
         updatedObjects.push({
           objectName,
           permissions: value === true ? [permission] : [],
-          visibility: type === 'superAdmin' ? 'super_admin_only' : 'view_all',
-          type: type === 'superAdmin' ? 'internal' : 'organization',
+          visibility: userType === 'superAdmin' ? 'super_admin_only' : 'view_all',
+          type: userType === 'superAdmin' ? 'internal' : 'organization',
         });
       }
 
@@ -770,7 +772,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
   };
 
   const handleDeletePermission = (objectName, permission) => {
-    if (type !== 'superAdmin') return; // Only super admins can delete permissions
+    if (userType !== 'superAdmin') return; // Only super admins can delete permissions
     setFormData((prev) => ({
       ...prev,
       objects: prev.objects.map((obj) =>
@@ -860,7 +862,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
   };
 
   const handleDeleteObject = (objectName) => {
-    if (type !== 'superAdmin') return; // Only super admins can delete objects
+    if (userType !== 'superAdmin') return; // Only super admins can delete objects
     setFormData((prev) => ({
       ...prev,
       objects: prev.objects.filter((obj) => obj.objectName !== objectName),
@@ -875,7 +877,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
   };
 
   const handleUpdateObject = (objectName, field, value) => {
-    if (type !== 'superAdmin') return; // Only super admins can edit object fields
+    if (userType !== 'superAdmin') return; // Only super admins can edit object fields
     setFormData((prev) => ({
       ...prev,
       objects: prev.objects.map((obj) =>
@@ -896,7 +898,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
     console.log('Submitting form data:', formData);
 
     try {
-      if (type === 'superAdmin') {
+      if (userType === 'superAdmin') {
         const roleData = {
           label: formData.label,
           roleName: formData.roleName,
@@ -993,7 +995,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
         }
       }
 
-      navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles');
+      navigate('/account-settings/roles');
     } catch (error) {
       console.error('Error saving role:', error);
       if (error.response) {
@@ -1022,13 +1024,13 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
 
   const visibleObjects = Object.keys(availablePermissions).filter((objectName) => {
     const visibility = formData.objects.find((o) => o.objectName === objectName)?.visibility || availablePermissions[objectName]?.visibility || 'view_all';
-    return type === 'superAdmin' ? true : visibility === 'view_all';
+    return userType === 'superAdmin' ? true : visibility === 'view_all';
   });
 
   return (
     <Modal
       isOpen={true}
-      onRequestClose={() => navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles')}
+      onRequestClose={() => navigate('/account-settings/roles')}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
@@ -1052,7 +1054,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
                 )}
               </button>
               <button
-                onClick={() => navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles')}
+                onClick={() => navigate('/account-settings/roles')}
                 className="sm:hidden"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -1064,7 +1066,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
             <div className="mb-8">
               <h3 className="text-base sm:text-lg font-medium mb-4">Basic Information</h3>
               <div className="space-y-4">
-                {type === 'superAdmin' && (
+                {userType === 'superAdmin' && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1093,7 +1095,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
                     </div>
                   </>
                 )}
-                {type !== 'superAdmin' && editMode && (
+                {userType !== 'superAdmin' && editMode && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1154,7 +1156,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
               </div>
             </div>
 
-            {type !== 'superAdmin' && (
+            {userType !== 'superAdmin' && (
               <div className="mb-8 border-b pb-6">
                 <h3 className="text-base sm:text-lg font-medium mb-4">Role Hierarchy</h3>
                 <div className="mb-6">
@@ -1182,7 +1184,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
               </div>
             )}
 
-            {type === 'superAdmin' && (
+            {userType === 'superAdmin' && (
               <div className="mb-8 border-b pb-6">
                 <h3 className="text-base sm:text-lg font-medium mb-4">Add New Object</h3>
                 <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
@@ -1303,7 +1305,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
                       <div className="flex justify-between items-center">
                         <div>
                           <h5 className="font-medium text-gray-800">{formatWithSpaces(objectName)}</h5>
-                          {type === 'superAdmin' && (
+                          {userType === 'superAdmin' && (
                             <div className="space-y-2 mt-2">
                               <div>
                                 <label className="block text-xs font-medium text-gray-600">
@@ -1344,7 +1346,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
                             </div>
                           )}
                         </div>
-                        {type === 'superAdmin' && (
+                        {userType === 'superAdmin' && (
                           <button
                             type="button"
                             onClick={() => handleDeleteObject(objectName)}
@@ -1369,7 +1371,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
                               />
                               <span className="text-sm text-gray-700">{formatWithSpaces(perm)}</span>
                             </label>
-                            {type === 'superAdmin' && (
+                            {userType === 'superAdmin' && (
                               <button
                                 type="button"
                                 onClick={() => handleDeletePermission(objectName, perm)}
@@ -1390,7 +1392,7 @@ const RoleFormPopup = ({ onSave, onClose, type }) => {
             <div className="flex justify-end py-2 mt-10">
               <button
                 type="button"
-                onClick={() => navigate(type === 'superAdmin' ? '/super-admin-account-settings/roles' : '/account-settings/roles')}
+                onClick={() => navigate('/account-settings/roles')}
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200"
               >
                 Cancel

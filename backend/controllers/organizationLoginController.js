@@ -288,23 +288,35 @@ const organizationUserCreation = async (req, res) => {
 
 const loginOrganization = async (req, res) => {
   try {
+    console.log('[loginOrganization] Login request received');
+    console.log('[loginOrganization] Request body:', req.body);
+
     let { email, password } = req.body;
     email = email?.trim().toLowerCase();
     password = password?.trim();
 
+    console.log('[loginOrganization] Processed credentials:', { email: email ? '***' : 'missing', password: password ? '***' : 'missing' });
+
     if (!email || !password) {
+      console.log('[loginOrganization] Missing email or password');
       return res
         .status(400)
         .json({ success: false, message: "Email and password are required" });
     }
 
+    console.log('[loginOrganization] Looking up user by email:', email);
     const user = await Users.findOne({ email }).select("+password");
     if (!user) {
+      console.log('[loginOrganization] User not found for email:', email);
       return res
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
+
+    console.log('[loginOrganization] User found:', { userId: user._id, isEmailVerified: user.isEmailVerified });
+
     if (!user.isEmailVerified) {
+      console.log('[loginOrganization] Email not verified for user:', user._id);
       return res.status(403).json({
         success: false,
         message: "Email not verified",
@@ -316,26 +328,36 @@ const loginOrganization = async (req, res) => {
     let roleName = null;
     let roleType = null;
     if (user.roleId) {
+      console.log('[loginOrganization] Looking up role for user:', user.roleId);
       const role = await RolesPermissionObject.findById(user.roleId);
       roleName = role?.roleName;
       roleType = role?.roleType;
+      console.log('[loginOrganization] Role found:', { roleName, roleType });
     }
 
+    console.log('[loginOrganization] Verifying password...');
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log('[loginOrganization] Invalid password for user:', user._id);
       return res
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
+    console.log('[loginOrganization] Password verified successfully');
 
     // For internal roleType (super admin)
     if (roleType === "internal") {
+      console.log('[loginOrganization] Processing internal user login');
       const payload = {
         impersonatedUserId: user._id.toString(),
         // role: 'superadmin',
         timestamp: new Date().toISOString(),
       };
       const impersonationToken = generateToken(payload, { expiresIn: "7h" });
+
+      // Set impersonation token cookie
+      res.cookie('impersonationToken', impersonationToken, getAuthCookieOptions());
+      console.log('[loginOrganization] Set impersonation token cookie');
 
       return res.status(200).json({
         success: true,
@@ -349,18 +371,28 @@ const loginOrganization = async (req, res) => {
     }
 
     // For non-internal users, proceed with tenant checks
+    console.log('[loginOrganization] Processing regular user login, checking tenant:', user.tenantId);
     const organization = await Tenant.findOne({ _id: user.tenantId });
     if (!organization || organization.status === "inactive") {
+      console.log('[loginOrganization] Organization not found or inactive:', {
+        found: !!organization,
+        status: organization?.status
+      });
       return res.status(403).json({
         success: false,
         message: "Account not active",
         status: organization?.status || "not found",
       });
     }
+    console.log('[loginOrganization] Organization found and active:', {
+      orgId: organization._id,
+      status: organization.status
+    });
 
     // Fetch contactId where ownerId matches user._id
     const contact = await Contacts.findOne({ ownerId: user._id });
     const contactEmailFromOrg = contact?.email || null;
+    console.log('[loginOrganization] Contact found:', { contactId: contact?._id, email: contactEmailFromOrg });
 
     // Generate JWT for non-internal users
     const payload = {
@@ -371,7 +403,11 @@ const loginOrganization = async (req, res) => {
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
 
-    res.status(200).json({
+    // Set auth token cookie
+    res.cookie('authToken', authToken, getAuthCookieOptions());
+    console.log('[loginOrganization] Set auth token cookie');
+
+    const responseData = {
       success: true,
       message: "Login successful",
       ownerId: user._id.toString(),
@@ -382,9 +418,19 @@ const loginOrganization = async (req, res) => {
       contactEmailFromOrg,
       isEmailVerified: user.isEmailVerified,
       status: organization.status,
+    };
+
+    console.log('[loginOrganization] Sending successful response:', {
+      success: responseData.success,
+      ownerId: responseData.ownerId,
+      tenantId: responseData.tenantId,
+      status: responseData.status,
+      isProfileCompleted: responseData.isProfileCompleted
     });
+
+    res.status(200).json(responseData);
   } catch (error) {
-    console.error("Error during login:", error);
+    console.error("[loginOrganization] Error during login:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
@@ -1001,11 +1047,13 @@ const getAllOrganizations = async (req, res) => {
           userCount: { $sum: 1 },
         },
       },
-    ]);
+    ]).exec();
 
     const userCountMap = {};
     userCounts.forEach(({ _id, userCount }) => {
-      userCountMap[_id?.toString()] = userCount;
+      if (_id) {
+        userCountMap[_id.toString()] = userCount;
+      }
     });
 
     // Active user count per tenant
@@ -1019,15 +1067,17 @@ const getAllOrganizations = async (req, res) => {
           activeUserCount: { $sum: 1 },
         },
       },
-    ]);
+    ]).exec();
 
     const activeUserCountMap = {};
     activeUserCounts.forEach(({ _id, activeUserCount }) => {
-      activeUserCountMap[_id?.toString()] = activeUserCount;
+      if (_id) {
+        activeUserCountMap[_id.toString()] = activeUserCount;
+      }
     });
 
     // Fetch all tenants
-    const organizations = await Tenant.find();
+    const organizations = await Tenant.find().lean(); // Use lean for performance
 
     // Fetch latest subscription per tenant
     const subscriptions = await CustomerSubscription.aggregate([
@@ -1038,21 +1088,22 @@ const getAllOrganizations = async (req, res) => {
           latestSubscription: { $first: "$$ROOT" },
         },
       },
-    ]);
+    ]).exec();
 
     const subscriptionMap = {};
     subscriptions.forEach(({ _id, latestSubscription }) => {
-      subscriptionMap[_id] = latestSubscription;
+      if (_id) {
+        subscriptionMap[_id.toString()] = latestSubscription;
+      }
     });
 
     // Fetch one contact per tenant
-    const contacts = await Contacts.find(); // or add projection if needed
+    const contacts = await Contacts.find().lean(); // Use lean for performance
 
     const contactsMap = {};
     contacts.forEach((contact) => {
-      const tenantId = contact.tenantId?.toString();
-      if (tenantId) {
-        contactsMap[tenantId] = contact; // store a single contact object, not an array
+      if (contact.tenantId) {
+        contactsMap[contact.tenantId.toString()] = contact;
       }
     });
 
@@ -1060,24 +1111,24 @@ const getAllOrganizations = async (req, res) => {
     const enrichedOrganizations = organizations.map((org) => {
       const orgId = org._id.toString();
       return {
-        ...org.toObject(),
+        ...org,
         usersCount: userCountMap[orgId] || 0,
         activeUsersCount: activeUserCountMap[orgId] || 0,
         subscription: subscriptionMap[orgId] || null,
-        contact: contactsMap[orgId] || [],
+        contact: contactsMap[orgId] || null, // Return null instead of empty array
       };
     });
 
     return res.status(200).json({
       organizations: enrichedOrganizations,
-      totalOrganizations: organizations.length,  
+      totalOrganizations: organizations.length,
       status: true,
     });
   } catch (error) {
-    console.error("Error in getAllOrganizations:", error.message);
+    console.error("Error in getAllOrganizations:", error.stack); // Log full stack trace
     return res
       .status(500)
-      .json({ message: "Internal server error", status: false });
+      .json({ message: "Internal server error", error: error.message, status: false });
   }
 };
 
@@ -1366,7 +1417,7 @@ const registerOrganization = async (req, res) => {
     //   maxAge: 24 * 60 * 60 * 1000, // 1 day
     // });
 
-// Set auth token cookie with consistent settings
+    // Set auth token cookie with consistent settings
     res.cookie('authToken', token, getAuthCookieOptions());
 
     console.log("Organization registration completed successfully");

@@ -103,16 +103,16 @@ const TemplateDetail = () => {
 
     // Days ago (up to 30 days)
     if (diffDays < 30) {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      return `${diffDays} Day${diffDays > 1 ? 's' : ''} ago`;
     }
 
     // Months ago (up to 12 months)
     if (diffMonths < 12) {
-      return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+      return `${diffMonths} Month${diffMonths > 1 ? 's' : ''} ago`;
     }
 
     // Years ago
-    return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
+    return `${diffYears} Year${diffYears > 1 ? 's' : ''} ago`;
   };
 
 
@@ -177,7 +177,7 @@ const TemplateDetail = () => {
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              <span className="text-sm sm:text-base">Back to templates</span>
+              <span className="text-sm sm:text-base">Back to Templates</span>
             </button>
             {/* <div className="flex items-center gap-3">
               <button
@@ -360,7 +360,7 @@ const TemplateDetail = () => {
               </div>
             ) : (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <p className="text-gray-500">No rounds added yet.</p>
+                <p className="text-gray-500">No Rounds added yet.</p>
 
                 <button
                   onClick={handleAddRound}

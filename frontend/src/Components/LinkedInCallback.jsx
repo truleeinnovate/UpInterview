@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { config } from '../config.js';
-import { setAuthCookies } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { setAuthCookies, clearAllAuth } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 import Loading from '../Components/Loading.js';
 import { useIndividualLogin } from '../apiHooks/useIndividualLogin';
 
@@ -174,9 +174,13 @@ const LinkedInCallback = () => {
 
         const { existingUser, token, email } = response.data;
 
+        // Clear all cookies and localStorage before setting new ones
+        clearAllAuth();
+        console.log('✅ Cleared all cookies and localStorage for individual login');
+
         // Set the authToken cookie
         if (token) {
-          Cookies.set('authToken', token, { expires: 7, secure: true, sameSite: 'strict' });
+          Cookies.set('authToken', token, { expires: 7, secure: true, sameSite: 'None' });
         }
 
         if (existingUser) {

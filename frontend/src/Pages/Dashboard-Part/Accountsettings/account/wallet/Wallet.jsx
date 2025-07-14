@@ -4,13 +4,14 @@ import { ViewDetailsButton, EditButton } from '../../common/Buttons'
 import axios from 'axios'
 import Cookies from "js-cookie";
 import { Outlet } from 'react-router-dom'
-// Removed useCustomContext import as we're fetching data directly
 import WalletBalancePopup from './WalletBalancePopup';
 import WalletTransactionPopup from './WalletTransactionPopup';
 import { WalletTopupPopup } from './WalletTopupPopup'
 import { BankAccountsPopup } from './BankAccountsPopup'
-import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
 import './topupAnimation.css';
+import { usePermissions } from '../../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../../utils/permissionUtils';
 
 export const getTransactionTypeStyle = (type) => {
   switch (type) {
@@ -39,15 +40,11 @@ export const calculatePendingBalance = (walletBalance) => {
 
 
 const Wallet = () => {
-  // Remove unused navigate - fixing lint error
-  // const navigate = useNavigate();
-
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const authToken = Cookies.get("authToken");
-    const tokenPayload = decodeJwt(authToken);
-    
-    
-    const userId = tokenPayload?.userId;
-
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
   const [walletBalance, setWalletBalance] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -56,15 +53,15 @@ const Wallet = () => {
   const [isBankAccountsOpen, setIsBankAccountsOpen] = useState(false);
   const [animateTopUp, setAnimateTopUp] = useState(true);
   const topUpButtonRef = useRef(null);
-  
+
   // Function to fetch wallet data directly
-  const fetchWalletData = async () => {
+  async function fetchWalletData() {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       if (!userId) {
         console.error('User ID not found');
         setIsLoading(false);
-        return
+        return;
       }
 
       console.log('Fetching wallet data for user:', userId);
@@ -84,19 +81,12 @@ const Wallet = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  // Get wallet transactions from the fetched data
-  const walletTransactions = walletBalance?.transactions || [];
+  }
 
-  // Fetch wallet data on component mount
   useEffect(() => {
     fetchWalletData();
   }, []);
-  
-  console.log("walletBalance ", walletBalance);
-  
-  // Start animation on page load and stop after 20 seconds
+
   useEffect(() => {
     setAnimateTopUp(true);
     const animationTimer = setTimeout(() => {
@@ -105,6 +95,33 @@ const Wallet = () => {
     
     return () => clearTimeout(animationTimer);
   }, []);
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Wallet")) {
+    return null;
+  }
+
+
+  
+  // Get wallet transactions from the fetched data
+  const walletTransactions = walletBalance?.transactions || [];
+
+  // Fetch wallet data on component mount
+  // useEffect(() => {
+  //   fetchWalletData();
+  // }, []);
+  
+  console.log("walletBalance ", walletBalance);
+  
+  // Start animation on page load and stop after 20 seconds
+  // useEffect(() => {
+  //   setAnimateTopUp(true);
+  //   const animationTimer = setTimeout(() => {
+  //     setAnimateTopUp(false);
+  //   }, 20000);
+    
+  //   return () => clearTimeout(animationTimer);
+  // }, []);
  
   const pendingBalance = calculatePendingBalance(walletBalance);
 
@@ -139,7 +156,7 @@ const Wallet = () => {
       <div className="flex justify-center items-center w-full h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading wallet data...</p>
+          <p className="text-gray-600">Loading Wallet...</p>
         </div>
       </div>
     );

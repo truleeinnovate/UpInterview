@@ -31,7 +31,7 @@ const AssessmentTest = () => {
       console.log('Fetching assessment questions for ID:', assessment.assessmentId._id);
       axios.get(`${config.REACT_APP_API_URL}/assessment-questions/list/${assessment.assessmentId._id}`)
         .then(response => {
-          console.log('API Response:', response.data);
+          // console.log('API Response:', response.data);
           if (response.data.success) {
             setAssessmentQuestions(response.data.data);
           } else {
@@ -87,25 +87,25 @@ const AssessmentTest = () => {
       return null;
     }
 
-    console.log('Calculating scores:', {
-      passScoreBy: assessment.assessmentId.passScoreBy,
-      passScoreType: assessment.assessmentId.passScoreType,
-      assessment: assessment.assessmentId,
-      questions: assessmentQuestions.sections,
-    });
+    // console.log('Calculating scores:', {
+    //   passScoreBy: assessment.assessmentId.passScoreBy,
+    //   passScoreType: assessment.assessmentId.passScoreType,
+    //   assessment: assessment.assessmentId,
+    //   questions: assessmentQuestions.sections,
+    // });
 
     if (assessment.assessmentId.passScoreBy === "Overall") {
-      console.log('Using Overall scores');
+      // console.log('Using Overall scores');
       return {
         passScore: assessment.assessmentId.passScore,
         totalScore: assessment.assessmentId.totalScore,
         showPercentage: assessment.assessmentId.passScoreType === "Percentage",
       };
     } else {
-      console.log('Calculating scores for Each Section');
+      // console.log('Calculating scores for Each Section');
       const totalPassScore = assessmentQuestions.sections.reduce((sum, section) => sum + (section?.passScore || 0), 0);
       const totalScore = assessmentQuestions.sections.reduce((sum, section) => sum + (section?.totalScore || 0), 0);
-      console.log('Calculated scores:', { totalPassScore, totalScore });
+      // console.log('Calculated scores:', { totalPassScore, totalScore });
       return {
         passScore: totalPassScore,
         totalScore: totalScore,
@@ -116,10 +116,10 @@ const AssessmentTest = () => {
 
   useEffect(() => {
     if (assessment && assessmentQuestions) {
-      console.log('Calculating scores for assessment:', assessment?.assessmentId?._id);
+      // console.log('Calculating scores for assessment:', assessment?.assessmentId?._id);
       const scores = calculateTotalScores(assessment, assessmentQuestions);
       if (scores) {
-        console.log('Scores calculated:', scores);
+        // console.log('Scores calculated:', scores);
         setCalculatedScores(scores);
       } else {
         setError('Failed to calculate scores.');
@@ -141,7 +141,7 @@ const AssessmentTest = () => {
         setCandidateAssessmentId(decryptedId);
 
         const { candidateId, scheduledAssessmentId, expiryAt } = await getCandidateAssessmentDetails(decryptedId);
-        console.log("candidateId, scheduledAssessmentId, expiryAt", candidateId, scheduledAssessmentId, expiryAt);
+        // console.log("candidateId, scheduledAssessmentId, expiryAt", candidateId, scheduledAssessmentId, expiryAt);
 
         // Check if the link has expired
         if (new Date(expiryAt) < new Date()) {

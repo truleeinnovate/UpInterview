@@ -68,18 +68,18 @@ exports.newAssessment = async (req, res) => {
 
     let nextNumber = 1;
     if (lastAssessment?.AssessmentCode) {
-      const match = lastAssessment.AssessmentCode.match(/ASMT-(\d+)/);
+      const match = lastAssessment.AssessmentCode.match(/ASMT-TPL-(\d+)/);
       if (match) {
         nextNumber = parseInt(match[1], 10) + 1;
       }
     }
 
-    const assessmentCode = `ASMT-${String(nextNumber).padStart(5, "0")}`;
+    const assessmentCode = `ASMT-TPL-${String(nextNumber).padStart(5, "0")}`;
     newAssessmentData.AssessmentCode = assessmentCode;
 
     const assessment = new Assessment(newAssessmentData);
     await assessment.save();
-    res.status(201).json(assessment);
+    res.status(201).json({ success: true, data: assessment });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -103,7 +103,7 @@ exports.updateAssessment = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "Updated successfully.", data: updatedAssessment });
+      .json({ success: true, message: "Updated successfully.", data: updatedAssessment });
   } catch (error) {
     console.error("Error updating assessment:", error);
     res.status(500).json({ error: error.message });
@@ -197,7 +197,7 @@ exports.getAssessmentResults = async (req, res) => {
       })
     );
 
-    res.status(200).json(results);
+    res.status(200).json({ success: true, data: results });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

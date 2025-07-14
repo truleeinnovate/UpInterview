@@ -50,7 +50,7 @@ const NewAssessment = () => {
   const [showMessage, setShowMessage] = useState(false);
   const [errors, setErrors] = useState("");
   const [showDropdownAssessment, setShowDropdownAssessment] = useState(false);
-  const [selectedDuration, setSelectedDuration] = useState("60 minutes");
+  const [selectedDuration, setSelectedDuration] = useState("60 Minutes");
   const [showDropdownDuration, setShowDropdownDuration] = useState(false);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
@@ -60,7 +60,7 @@ const NewAssessment = () => {
   const sidebarRefAddQuestion = useRef(null);
   const [toggleStates, setToggleStates] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState("");
-  console.log('selectedPosition----',selectedPosition);
+  // console.log('selectedPosition----',selectedPosition);
 
   const [value, setValue] = useState("");
 
@@ -95,7 +95,7 @@ const NewAssessment = () => {
   const [formData, setFormData] = useState({
     AssessmentTitle: "",
     Position: "",
-    Duration: "60 minutes",
+    Duration: "60 Minutes",
     DifficultyLevel: "",
     NumberOfQuestions: "",
     ExpiryDate: new Date(),
@@ -127,7 +127,7 @@ const NewAssessment = () => {
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",
         DifficultyLevel: assessment.DifficultyLevel || "",
-        Duration: assessment.Duration || "60 minutes",
+        Duration: assessment.Duration || "60 Minutes",
         NumberOfQuestions: assessment.NumberOfQuestions || "",
         ExpiryDate: assessment.ExpiryDate ? new Date(assessment.ExpiryDate) : new Date(),
         status: assessment.status || "Active",
@@ -168,14 +168,14 @@ const NewAssessment = () => {
   // Load assessment questions and section-specific scores
   useEffect(() => {
     if (isEditing && assessment && id) {
-      console.log("Fetching assessment questions for ID:", id);
+      // console.log("Fetching assessment questions for ID:", id);
       axios
         .get(`${config.REACT_APP_API_URL}/assessment-questions/list/${id}`)
         .then((response) => {
-          console.log("API Response:", response.data);
+          // console.log("API Response:", response.data);
           if (response.data.success) {
             const data = response.data.data;
-            console.log("Received assessment questions data:", data);
+            // console.log("Received assessment questions data:", data);
 
             // Transform the API data to match the addedSections structure
             const formattedSections = data.sections.map((section) => ({
@@ -404,17 +404,17 @@ const NewAssessment = () => {
 
   const handleSave = async (event, currentTab, actionType) => {
     event.preventDefault();
-    console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
+    // console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
 
     const { errors, assessmentData } = validateAndPrepareData(currentTab);
 
     if (errors) {
-      console.warn('❗ Validation failed:', errors);
+      // console.warn('❗ Validation failed:', errors);
       setErrors(errors);
       return;
     }
 
-    console.log('✅ Validation passed. Prepared assessment data:', assessmentData);
+    // console.log('✅ Validation passed. Prepared assessment data:', assessmentData);
 
     try {
       const response = await addOrUpdateAssessment({
@@ -435,7 +435,7 @@ const NewAssessment = () => {
         const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
 
         if (!assessmentId) {
-          console.error('❌ Missing assessmentId before saving questions.');
+          // console.error('❌ Missing assessmentId before saving questions.');
           return;
         }
 
@@ -444,10 +444,10 @@ const NewAssessment = () => {
           assessmentId
         );
 
-        console.log('📦 Prepared questions data:', assessmentQuestionsData);
+        // console.log('📦 Prepared questions data:', assessmentQuestionsData);
 
         if (!assessmentQuestionsData.sections?.length) {
-          console.error('❌ Sections array is empty. Cannot proceed.');
+          // console.error('❌ Sections array is empty. Cannot proceed.');
           return;
         }
 
@@ -455,12 +455,12 @@ const NewAssessment = () => {
           assessmentQuestionsData
         );
 
-        console.log('✅ Questions saved successfully:', questionsResponse.message);
+        // console.log('✅ Questions saved successfully:', questionsResponse.message);
       }
 
       // 🧠 Action after save
       if (actionType === 'close') {
-        console.log('🛑 Closing form after save');
+        // console.log('🛑 Closing form after save');
         navigate('/assessments');
       } else if (actionType === 'next') {
         const tabOrder = ['Basicdetails', 'Details', 'Questions', 'Candidates'];
@@ -468,10 +468,10 @@ const NewAssessment = () => {
         const nextTab = tabOrder[currentIndex + 1];
 
         if (nextTab) {
-          console.log(`➡️ Navigating to next tab: ${nextTab}`);
+          // console.log(`➡️ Navigating to next tab: ${nextTab}`);
           setActiveTab(nextTab);
         } else {
-          console.log('🚫 No next tab found');
+          // console.log('🚫 No next tab found');
         }
       }
     } catch (error) {
@@ -656,7 +656,7 @@ const NewAssessment = () => {
     setShowDropdownAssessment(!showDropdownAssessment);
   };
 
-  const durations = ["30 minutes", "45 minutes", "60 minutes", "90 minutes"];
+  const durations = ["30 Minutes", "45 Minutes", "60 Minutes", "90 Minutes"];
 
   const toggleDropdownDuration = () => {
     setShowDropdownDuration(!showDropdownDuration);
@@ -667,7 +667,7 @@ const NewAssessment = () => {
   };
 
   const handleDurationSelect = (duration) => {
-    if (duration === "60 minutes" || duration === "90 minutes") {
+    if (duration === "60 Minutes" || duration === "90 Minutes") {
       setShowUpgradePopup(true);
       setShowDropdownDuration(false);
     } else {
@@ -1217,6 +1217,7 @@ const NewAssessment = () => {
                           handleChange={handleChange}
                           handleIconClick={handleIconClick}
                           showMessage={showMessage}
+                          setShowMessage={setShowMessage}
                           selectedPosition={selectedPosition}
                           showDropdownPosition={showDropdownPosition}
                           difficultyLevels={difficultyLevels}

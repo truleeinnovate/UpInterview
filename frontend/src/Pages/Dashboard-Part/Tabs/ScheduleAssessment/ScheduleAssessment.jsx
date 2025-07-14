@@ -34,7 +34,10 @@ const ScheduleAssessment = () => {
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [statusOptions] = useState(['Scheduled', 'Completed', 'Cancelled']);
+  // Applied filters
   const [selectedStatus, setSelectedStatus] = useState([]);
+  // Draft filters edited inside popup (not applied until Apply is clicked)
+  const [tempSelectedStatus, setTempSelectedStatus] = useState([]);
   const [isStatusOpen, setIsStatusOpen] = useState(true);
 
   // Derived pagination
@@ -76,7 +79,7 @@ const ScheduleAssessment = () => {
 
   // Handlers
   const handleStatusToggle = (status) => {
-    setSelectedStatus((prev) => {
+    setTempSelectedStatus((prev) => {
       if (prev.includes(status)) {
         return prev.filter((s) => s !== status);
       }
@@ -85,7 +88,8 @@ const ScheduleAssessment = () => {
   };
 
   const handleApplyFilters = () => {
-    setIsFilterActive(selectedStatus.length > 0);
+    setSelectedStatus(tempSelectedStatus);
+    setIsFilterActive(true);
     setFilterPopupOpen(false);
     setCurrentPage(0);
   };
@@ -97,8 +101,12 @@ const ScheduleAssessment = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (filteredSchedules.length === 0) return;
-    setFilterPopupOpen((prev) => !prev);
+    const willOpen = !isFilterPopupOpen;
+    setFilterPopupOpen(willOpen);
+    if (willOpen) {
+      // sync draft state with applied state when opening popup
+      setTempSelectedStatus(selectedStatus);
+    }
   };
 
   // Handlers
@@ -115,17 +123,67 @@ const ScheduleAssessment = () => {
 
   const handleView = (schedule) => {
     // Adjust route when details page exists
-    navigate(`/schedule-assessment/${schedule._id}`);
+    navigate(`/assessment/${schedule._id}`, { state: { schedule } });
   };
-  const handleEdit = (schedule) => {
-    navigate(`/schedule-assessment/edit/${schedule._id}`);
-  };
+  // const handleEdit = (schedule) => {
+  //   navigate(`/schedule-assessment/edit/${schedule._id}`);
+  // };
 
   // Table definitions
   const tableColumns = [
+    // Assessment Template ID
+    {
+      key: 'assessmentId',
+      header: 'Assessment Template ID',
+      render: (value, row) => {
+        // Determine Assessment object (it may come populated or we find it in assessmentData)
+        let assessmentObj = null;
+        if (value) {
+          if (typeof value === 'object') {
+            assessmentObj = value;
+          } else {
+            assessmentObj = (assessmentData || []).find((a) => a._id === value);
+          }
+        }
+        const code = assessmentObj?.AssessmentCode || assessmentObj?._id || 'Not Provided';
+        return (
+          <div
+            className="text-sm font-medium text-custom-blue cursor-pointer"
+            onClick={() => handleView(row)}
+          >
+            {code}
+          </div>
+        );
+      },
+    },
+    // Assessment Template Name
+    {
+      key: 'assessmentTemplateName',
+      header: 'Assessment Template Name',
+      render: (_, row) => {
+        const value = row.assessmentId;
+        let assessmentObj = null;
+        if (value) {
+          if (typeof value === 'object') {
+            assessmentObj = value;
+          } else {
+            assessmentObj = (assessmentData || []).find((a) => a._id === value);
+          }
+        }
+        const title = assessmentObj?.AssessmentTitle || 'Not Provided';
+        return (
+          <div
+            className="text-sm font-medium text-custom-blue cursor-pointer"
+            onClick={() => handleView(row)}
+          >
+            {title.charAt ? title.charAt(0).toUpperCase() + title.slice(1) : title}
+          </div>
+        );
+      },
+    },
     {
       key: 'scheduledAssessmentCode',
-      header: 'Schedule ID',
+      header: 'Assessment ID',
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
@@ -135,11 +193,11 @@ const ScheduleAssessment = () => {
         </div>
       ),
     },
-    {
-      key: 'order',
-      header: 'ORDER',
-      render: (v) => v || 'Not Provided',
-    },
+    // {
+    //   key: 'order',
+    //   header: 'ORDER',
+    //   render: (v) => v || 'Not Provided',
+    // },
     {
       key: 'expiryAt',
       header: 'Expiry Date',
@@ -169,7 +227,7 @@ const ScheduleAssessment = () => {
             key: 'edit',
             label: 'Edit',
             icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: handleEdit,
+            //onClick: handleEdit,
           },
         ]
       : []),
@@ -193,7 +251,7 @@ const ScheduleAssessment = () => {
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={filteredSchedules.length}
+              dataLength={(Array.isArray(scheduleData) ? scheduleData.length : 0)}
               searchPlaceholder="Search Assessments..."
               filterIconRef={filterIconRef}
             />
@@ -216,9 +274,10 @@ const ScheduleAssessment = () => {
             ) : (
               <ScheduleAssessmentKanban
                 schedules={currentRows}
+                assessments={assessmentData}
                 loading={isLoading}
                 onView={handleView}
-                onEdit={handleEdit}
+                //onEdit={handleEdit}
               />
             )}
             <FilterPopup
@@ -247,7 +306,7 @@ const ScheduleAssessment = () => {
                         <label key={option} className="flex items-center space-x-2">
                           <input
                             type="checkbox"
-                            checked={selectedStatus.includes(option)}
+                            checked={tempSelectedStatus.includes(option)}
                             onChange={() => handleStatusToggle(option)}
                             className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
                           />

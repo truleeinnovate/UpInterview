@@ -87,7 +87,7 @@ return (
                   ))
                 ) : (
                   <div className="py-10 text-center text-gray-500 text-sm">
-                    No questions added
+                    No Questions added
                   </div>
                 )}
               </div>
@@ -96,7 +96,7 @@ return (
         ))
       ) : (
         <div className="py-20 text-center text-gray-500 text-base">
-          No sections added
+          No Sections added
         </div>
       )}
     </div>

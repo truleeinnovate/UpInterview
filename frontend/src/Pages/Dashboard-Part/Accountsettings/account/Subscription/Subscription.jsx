@@ -7,26 +7,22 @@ import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from "js-cookie";
 import "./subscription-animations.css";
 import LoadingButton from "../../../../../Components/LoadingButton";
+import Loading from "../../../../../Components/Loading";
 import { usePositions } from '../../../../../apiHooks/usePositions';
+import { usePermissions } from '../../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../../utils/permissionUtils';
 
 const Subscription = () => {
-  console.log('subscription plan')
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
-
   const { isMutationLoading } = usePositions();
-
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  console.log("tokenPayload ----", tokenPayload);
-
-  // Extract user details from token payload
   const userId = tokenPayload?.userId;
   const organization = tokenPayload?.organization;
-  console.log("organization ----", organization);
   const orgId = tokenPayload?.tenantId;
-
-
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
@@ -35,17 +31,13 @@ const Subscription = () => {
     tenantId: orgId,
     ownerId: userId,
   });
-
-
   const navigate = useNavigate();
-
   const toggleBilling = () => setIsAnnual(!isAnnual);
   const [subscriptionData, setSubscriptionData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
-
 
   // Fetch subscription data
   useEffect(() => {
@@ -342,6 +334,11 @@ const Subscription = () => {
 
   const isHighlighted = (plan) =>
     hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
+
+
+  if (loading) {
+    return <Loading message="Loading Subscription..." />;
+  }
 
   return (
     <>

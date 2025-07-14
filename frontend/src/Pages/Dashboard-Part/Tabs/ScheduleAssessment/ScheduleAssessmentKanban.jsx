@@ -3,8 +3,10 @@ import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import {
   EyeIcon,
-  PencilSquareIcon,
+  //PencilSquareIcon,
   CalendarIcon,
+  ClipboardDocumentListIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline';
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
@@ -15,6 +17,7 @@ import { format } from 'date-fns';
  */
 const ScheduleAssessmentKanban = ({
   schedules,
+  assessments = [],
   onView,
   onEdit,
   loading = false,
@@ -142,6 +145,41 @@ const ScheduleAssessmentKanban = ({
                               {schedule.order}
                             </h3>
 
+                            {/* Assessment Template ID */}
+                            <div className="text-sm text-gray-600">
+                            <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-2" /> {(() => {
+                                const val = schedule.assessmentId;
+                                let obj = null;
+                                if (val) {
+                                  if (typeof val === 'object') {
+                                    obj = val;
+                                  } else {
+                                    obj = (assessments || []).find((a) => a._id === val);
+                                  }
+                                }
+                                return obj?.AssessmentCode || obj?._id || 'Not Provided';
+                              })()}
+                            </div>
+
+                            {/* Assessment Template Name */}
+                            <div className="text-sm text-gray-600">
+                            <BookOpenIcon className="w-5 h-5 inline-block mr-2" /> {(() => {
+                                const val = schedule.assessmentId;
+                                let obj = null;
+                                if (val) {
+                                  if (typeof val === 'object') {
+                                    obj = val;
+                                  } else {
+                                    obj = (assessments || []).find((a) => a._id === val);
+                                  }
+                                }
+                                const title = obj?.AssessmentTitle || 'Not Provided';
+                                return title.charAt ? title.charAt(0).toUpperCase() + title.slice(1) : title;
+                              })()}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                            <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-2" /> {schedule.scheduledAssessmentCode ? schedule.scheduledAssessmentCode : 'Not Provided'}
+                            </div>
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <CalendarIcon className="w-4 h-4" />
                               <span>
@@ -160,7 +198,10 @@ const ScheduleAssessmentKanban = ({
                         )}
                       </Draggable>
                     ))}
-                    {provided.placeholder}
+                    {column.items.length === 0 && (
+                        <div className="py-4 text-sm text-center text-gray-500">No {column.title} Assessments</div>
+                      )}
+                      {provided.placeholder}
                   </div>
                 )}
               </Droppable>
@@ -182,12 +223,14 @@ ScheduleAssessmentKanban.propTypes = {
       expiryAt: PropTypes.string,
     })
   ).isRequired,
+  assessments: PropTypes.array,
   onView: PropTypes.func.isRequired,
-  onEdit: PropTypes.func.isRequired,
+  onEdit: PropTypes.func,
   loading: PropTypes.bool,
 };
 
 ScheduleAssessmentKanban.defaultProps = {
+  assessments: [],
   loading: false,
 };
 

@@ -273,11 +273,9 @@ const UserForm = ({ type, mode }) => {
   };
 
   const handleClose = () => {
-    if(type === 'superAdmin') {
-      navigate("/super-admin-account-settings/users");
-    } else {
+    
       navigate("/account-settings/users");
-    };
+
   };
 
   const modalClass = classNames(

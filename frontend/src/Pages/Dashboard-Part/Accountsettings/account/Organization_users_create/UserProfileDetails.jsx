@@ -276,7 +276,7 @@ const UserProfileDetails = ({type}) => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">
-                    {userData.firstName} {userData.lastName}
+                    {userData.firstName ? userData.firstName.charAt(0).toUpperCase()+userData.firstName.slice(1) : ""} {userData.lastName ? userData.lastName.charAt(0).toUpperCase()+userData.lastName.slice(1) : ""}
                   </h3>
                   <p className="text-gray-600">
                     {userData.currentRole || userData.label || "N/A"}

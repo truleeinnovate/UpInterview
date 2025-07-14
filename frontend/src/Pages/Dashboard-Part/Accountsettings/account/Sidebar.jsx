@@ -80,7 +80,24 @@ import {
   UsersIcon
 } from '@heroicons/react/24/outline';
 
-const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeTab, filteredNavigation, type, permissions }) => {
+const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeTab, filteredNavigation, userType, permissions: originalPermissions }) => {
+  // Fallback for super admin when permissions are null
+  let permissions = originalPermissions;
+  // if (userType === 'superAdmin' && !originalPermissions) {
+  //   console.log('🔍 Super admin permissions not loaded, using fallback permissions');
+  //   permissions = {
+  //     SuperAdminMyProfile: {
+  //       ViewTab: true
+  //     },
+  //     SuperAdminRole: {
+  //       ViewTab: true
+  //     },
+  //     SuperAdminUser: {
+  //       ViewTab: true
+  //     }
+  //   };
+  // }
+
   // Define tabs for super admin explicitly
   const superAdminTabs = [
     { name: 'My Profile', icon: UserIcon, id: 'my-profile' },
@@ -116,16 +133,20 @@ const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeT
           </div>
           <div className="flex-grow overflow-y-auto">
             <nav className="mt-2 pb-4">
-              {type === 'superAdmin' ? (
+              {userType === 'superAdmin' ? (
                 // Render only My Profile, Roles, and Users for super admins
                 <div className="py-2">
                   <h2 className="px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Account
                   </h2>
-                  {superAdminTabs.map((item) => (
-                    (item.id === 'my-profile' && permissions.SuperAdminMyProfile?.ViewTab) ||
-                    (item.id === 'roles' && permissions.SuperAdminRole?.ViewTab) ||
-                    (item.id === 'users' && permissions.SuperAdminUser?.ViewTab) ? (
+                  {superAdminTabs.map((item) => {
+                    // Default to true for super admin if permissions are not loaded yet
+                    const hasPermission = 
+                      (item.id === 'my-profile' && (permissions?.MyProfile?.ViewTab ?? true)) ||
+                      (item.id === 'roles' && (permissions?.Roles?.ViewTab ?? true)) ||
+                      (item.id === 'users' && (permissions?.Users?.ViewTab ?? true));
+                    
+                    return hasPermission ? (
                       <button
                         key={item.id}
                         onClick={() => {
@@ -142,8 +163,8 @@ const SidebarProfile = ({ isSidebarOpen, toggleSidebar, handleTabChange, activeT
                         <item.icon className="h-5 w-5 mr-3" />
                         <span>{item.name}</span>
                       </button>
-                    ) : null
-                  ))}
+                    ) : null;
+                  })}
                 </div>
               ) : (
                 // Render filtered navigation for effective users

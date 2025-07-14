@@ -17,7 +17,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
       const nextSlot = availability.days?.[0]?.timeSlots?.[0];
       return {
         id: availability._id,
-        name: contact.Name || 'Unknown',
+        name: contact.Name ? contact.Name.charAt(0).toUpperCase()+contact.Name.charAt(1).toLowerCase() : 'Unknown',
         role: contact.CurrentRole || 'N/A',
         image: contact.ImageData?.path
           ? `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`
@@ -55,7 +55,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-800">Outsource Interviewers</h2>
-          <p className="text-sm text-gray-500">Expert interviewers ready to help</p>
+          <p className="text-sm text-gray-500">Expert Interviewers ready to help</p>
         </div>
         <button
           onClick={() => setShowOutsourcePopup(true)}
@@ -69,7 +69,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
       <div className="relative h-[160px] overflow-hidden">
         {displayInterviewers.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-gray-500">No interviewers available.</p>
+            <p className="text-gray-500">No Outsource Interviewers available.</p>
           </div>
         ) : (
           displayInterviewers.map((interviewer, index) => (
@@ -133,7 +133,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                     </div>
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500">
                       <Briefcase size={14} />
-                      <span>{interviewer.completedInterviews} interviews</span>
+                      <span>{interviewer.completedInterviews} Interviews</span>
                     </div>
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500 -ml-6">
                       <Calendar size={14} />

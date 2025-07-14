@@ -5,7 +5,7 @@ import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 
-export const useAssessments = () => {
+export const useAssessments = (filters = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Assessment_Template?.View;
@@ -16,8 +16,9 @@ export const useAssessments = () => {
     isLoading: isQueryLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ['Assessment_Template'],
+    queryKey: ['Assessment_Template', filters],
     queryFn: async () => {
       const data = await fetchFilterData('assessment');
       return data.map(assessment => ({
@@ -27,126 +28,121 @@ export const useAssessments = () => {
     },
     enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
+    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
-  console.log("assessmentData---", assessmentData);
+  const isLoading = isQueryLoading;
 
-  // Add/Update assessment mutation
   const addOrUpdateAssessment = useMutation({
     mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
-      let response;
-
       if (isEditing) {
-        response = await axios.patch(
+        const { data } = await axios.patch(
           `${config.REACT_APP_API_URL}/assessments/update/${id}`,
-          assessmentData
+          assessmentData,
         );
-      } else {
-        if (!tabsSubmitStatus?.["Basicdetails"]) {
-          response = await axios.post(
-            `${config.REACT_APP_API_URL}/assessments/new-assessment`,
-            assessmentData
+        return data;
+      }
+      const { data } = await axios.post(
+        `${config.REACT_APP_API_URL}/assessments/new-assessment`,
+        assessmentData,
+      );
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['Assessment_Template', filters], (oldData) => {
+        if (!oldData) return oldData;
+        
+        if (variables.isEditing) {
+          // Update existing assessment
+          return oldData.map(assessment => 
+            assessment._id === variables.id 
+              ? { ...assessment, ...data.data }
+              : assessment
           );
         } else {
-          response = await axios.patch(
-            `${config.REACT_APP_API_URL}/assessments/update/${tabsSubmitStatus.responseId}`,
-            assessmentData
-          );
+          // Add new assessment
+          return [data.data, ...oldData];
         }
-      }
-      return response.data;
+      });
+      
+      // Invalidate to ensure consistency
+      queryClient.invalidateQueries(['Assessment_Template']);
+    },
+    onError: (err) => {
+      console.error('Assessment save error:', err.message);
+    },
+  });
+
+  const upsertAssessmentQuestions = useMutation({
+    mutationFn: async (assessmentQuestionsData) => {
+      const { data } = await axios.post(
+        `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
+        assessmentQuestionsData,
+      );
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['Assessment_Template']);
     },
-    onError: (error) => {
-      console.error('Assessment save error:', error.message);
-    }
-  });
-
-  // Questions upsert mutation
-  const upsertAssessmentQuestions = useMutation({
-    mutationFn: async (questionsData) => {
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/assessment-questions/upsert`,
-        questionsData
-      );
-      return response.data;
+    onError: (err) => {
+      console.error('Assessment questions save error:', err.message);
     },
-    onError: (error) => {
-      console.error('Questions upsert error:', error.message);
-    }
   });
 
-  // Fetch assessment questions by assessment ID
   const fetchAssessmentQuestions = async (assessmentId) => {
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/assessment-questions/list/${assessmentId}`
       );
       if (response.data.success) {
-        return {
-          data: response.data.data,
-          error: null
-        };
+        return { data: response.data.data, error: null };
       } else {
-        throw new Error('Failed to fetch assessment questions');
+        return { data: null, error: response.data.message };
       }
     } catch (error) {
-      console.error('Error fetching assessment questions:', error.message);
-      return {
-        data: null,
-        error: error.message
-      };
+      console.error('Error fetching assessment questions:', error);
+      return { data: null, error: error.message };
     }
   };
 
+  const fetchAssessmentResults = async (assessmentId) => {
+    try {
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/assessments/${assessmentId}/results`
+      );
+      if (response.data.success) {
+        return { data: response.data.data, error: null };
+      } else {
+        return { data: null, error: response.data.message };
+      }
+    } catch (error) {
+      console.error('Error fetching assessment results:', error);
+      return { data: null, error: error.message };
+    }
+  };
 
-  // Fetch results for a specific assessment
-const fetchAssessmentResults = async (assessmentId) => {
-  try {
-    const response = await axios.get(
-      `${config.REACT_APP_API_URL}/assessments/${assessmentId}/results`
-    );
-    return {
-      data: response.data,
-      error: null
-    };
-  } catch (error) {
-    console.error('Error fetching assessment results:', error.message);
-    return {
-      data: [],
-      error: error.message
-    };
-  }
-};
+  const fetchScheduledAssessments = async (assessmentId) => {
+    try {
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
+      );
+      if (response.data.success) {
+        return { data: response.data.data, error: null };
+      } else {
+        return { data: null, error: response.data.message };
+      }
+    } catch (error) {
+      console.error('Error fetching scheduled assessments:', error);
+      return { data: null, error: error.message };
+    }
+  };
 
-
-// Fetch scheduled assessments for a specific assessment
-const fetchScheduledAssessments = async (assessmentId) => {
-  try {
-    const response = await axios.get(
-      `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
-    );
-    return {
-      data: response.data,
-      error: null
-    };
-  } catch (error) {
-    console.error('Error fetching scheduled assessments:', error.message);
-    return {
-      data: [],
-      error: error.message
-    };
-  }
-};
-
-
-
-  // Calculate loading states
   const isMutationLoading = addOrUpdateAssessment.isPending || upsertAssessmentQuestions.isPending;
-  const isLoading = isQueryLoading || isMutationLoading;
 
   // Controlled logging
   useEffect(() => {
@@ -177,6 +173,7 @@ const fetchScheduledAssessments = async (assessmentId) => {
     upsertAssessmentQuestions: upsertAssessmentQuestions.mutateAsync,
     fetchAssessmentQuestions, // assessment questions getting 
     fetchAssessmentResults,
-    fetchScheduledAssessments
+    fetchScheduledAssessments,
+    refetch,
   };
 };
