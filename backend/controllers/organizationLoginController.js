@@ -1080,20 +1080,17 @@ const getAllOrganizations = async (req, res) => {
     const organizations = await Tenant.find().lean(); // Use lean for performance
 
     // Fetch latest subscription per tenant
-    const subscriptions = await CustomerSubscription.aggregate([
-      { $sort: { createdAt: -1 } },
-      {
-        $group: {
-          _id: "$tenantId",
-          latestSubscription: { $first: "$$ROOT" },
-        },
-      },
-    ]).exec();
-
+    // Use find() with sort instead of aggregate to avoid Azure Cosmos DB index issues
+    const allSubscriptions = await CustomerSubscription.find().sort({ createdAt: -1 }).lean();
+    
+    // Group by tenantId and get the latest subscription for each
     const subscriptionMap = {};
-    subscriptions.forEach(({ _id, latestSubscription }) => {
-      if (_id) {
-        subscriptionMap[_id.toString()] = latestSubscription;
+    allSubscriptions.forEach((subscription) => {
+      if (subscription.tenantId) {
+        const tenantIdStr = subscription.tenantId.toString();
+        if (!subscriptionMap[tenantIdStr]) {
+          subscriptionMap[tenantIdStr] = subscription;
+        }
       }
     });
 
@@ -1146,8 +1143,6 @@ const getOrganizationById = async (req, res) => {
 
     // Fetch subscription data for the given tenant
     const subscription = await CustomerSubscription.findOne({ tenantId: id })
-      .sort({ createdAt: -1 }) // optional: get the latest if multiple
-      .lean();
 
     // Fetch full subscription plan details using subscriptionPlanId
     let subscriptionPlan = null;

@@ -21,9 +21,31 @@ import { validateFile } from "../../../../../utils/FileValidation/FileValidation
 import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
 import Loading from "../../../../../Components/Loading.js";
+import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 
-const UserForm = ({ type, mode }) => {
-  const { data: organizationRoles } = useRolesQuery(type);
+const UserForm = ({ mode }) => {
+
+  // Fetch all roles and filter based on user type
+  const { data: allRoles, isLoading: rolesLoading } = useRolesQuery({ fetchAllRoles: true });
+  const userType = AuthCookieManager.getUserType();
+  
+  console.log('UserForm - userType:', userType);
+  console.log('UserForm - allRoles:', allRoles);
+  
+  // Filter roles based on user type
+  const organizationRoles = allRoles ? (() => {
+    if (userType === 'superAdmin') {
+      // For superAdmin, show roles with roleType 'internal'
+      const filteredRoles = allRoles.filter(role => role.roleType === 'internal');
+      console.log('SuperAdmin - Filtered roles (internal):', filteredRoles);
+      return filteredRoles;
+    } else {
+      // For regular users, show roles with roleType 'organization'
+      const filteredRoles = allRoles.filter(role => role.roleType === 'organization');
+      console.log('Regular user - Filtered roles (organization):', filteredRoles);
+      return filteredRoles;
+    }
+  })() : [];
   const { addOrUpdateUser } = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,7 +53,7 @@ const UserForm = ({ type, mode }) => {
   const editMode = mode === "edit";
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-  const tenantId = type === 'superAdmin' ? null : tokenPayload.tenantId; // Set tenantId to null for super admins
+  const tenantId = userType === 'superAdmin' ? null : tokenPayload.tenantId; // Set tenantId to null for super admins
   const fileInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const emailTimeoutRef = useRef(null);
@@ -53,7 +75,7 @@ const UserForm = ({ type, mode }) => {
     imageData: "",
     countryCode: "+91",
     status: "active",
-    type, // Include type in userData
+    userType, // Include type in userData
   });
 
   // Role dropdown state
@@ -74,11 +96,11 @@ const UserForm = ({ type, mode }) => {
       email: "",
       phone: "",
       roleId: "",
-      tenantId: type === 'superAdmin' ? null : tenantId,
+      tenantId: userType === 'superAdmin' ? null : tenantId,
       imageData: "",
       countryCode: "+91",
       status: "active",
-      type,
+      userType,
     });
     setFile(null);
     setFilePreview(null);
@@ -129,11 +151,11 @@ const UserForm = ({ type, mode }) => {
   };
 
   useEffect(() => {
-    if (organizationRoles) {
-      console.log(`Roles loaded for type=${type}:`, organizationRoles);
+    if (organizationRoles && !rolesLoading) {
+      console.log(`Roles loaded for type=${userType}, userType=${userType}:`, organizationRoles);
       setCurrentRole(organizationRoles);
     }
-  }, [organizationRoles, type]);
+  }, [organizationRoles, userType, userType, rolesLoading]);
 
   // Initialize form data for edit mode
   useEffect(() => {
@@ -146,17 +168,22 @@ const UserForm = ({ type, mode }) => {
         email: initialUserData.email || "",
         phone: initialUserData.phone || "",
         roleId: initialUserData.roleId || "",
-        tenantId: type === 'superAdmin' ? null : tenantId,
+        tenantId: userType === 'superAdmin' ? null : tenantId,
         countryCode: initialUserData.countryCode || "+91",
         status: initialUserData.status || "active",
         contactId: initialUserData.contactId || "",
-        type,
+        userType,
       });
-      setSelectedCurrentRole(initialUserData.label || "");
+      // Find the role to get its level for display
+      const selectedRole = organizationRoles?.find(role => role._id === initialUserData.roleId);
+      const roleDisplayText = selectedRole 
+        ? `${selectedRole.label} (Level ${selectedRole.level ?? 0})`
+        : initialUserData.label || "";
+      setSelectedCurrentRole(roleDisplayText);
       setSelectedCurrentRoleId(initialUserData.roleId || "");
       setFilePreview(initialUserData?.imageData?.path);
     }
-  }, [editMode, initialUserData, tenantId, type]);
+  }, [editMode, initialUserData, tenantId, userType]);
 
   // Clean up timeouts
   useEffect(() => {
@@ -200,7 +227,7 @@ const UserForm = ({ type, mode }) => {
   // Role selection
   const handleRoleSelect = (role) => {
     console.log(`Selected role: ${role.label} (ID: ${role._id})`);
-    setSelectedCurrentRole(role.label);
+    setSelectedCurrentRole(`${role.label} (Level ${role.level ?? 0})`);
     setSelectedCurrentRoleId(role._id);
     setUserData((prev) => ({ ...prev, roleId: role._id }));
     setShowDropdownRole(false);
@@ -226,10 +253,12 @@ const UserForm = ({ type, mode }) => {
     setShowDropdownRole((prev) => !prev);
   };
 
-  // Filter roles based on search
-  const filteredCurrentRoles = currentRole.filter((role) =>
-    role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
-  );
+  // Filter roles based on search and sort by level
+  const filteredCurrentRoles = currentRole
+    .filter((role) =>
+      role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
+    )
+    .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
 
   // Form submission
   const handleSubmit = async (e) => {
@@ -285,6 +314,11 @@ const UserForm = ({ type, mode }) => {
       "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
+
+  // Show loading state while roles are being fetched
+  if (rolesLoading) {
+    return <Loading message="Loading roles..." />;
+  }
 
   return (
     <Modal
@@ -536,6 +570,11 @@ const UserForm = ({ type, mode }) => {
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
                       Role <span className="text-red-500">*</span>
+                      {selectedCurrentRoleId && (
+                        <span className="ml-2 text-xs text-gray-500">
+                          (Select from dropdown below)
+                        </span>
+                      )}
                     </label>
                     <div className="relative">
                       <input
@@ -572,9 +611,19 @@ const UserForm = ({ type, mode }) => {
                                 <div
                                   key={role._id}
                                   onClick={() => handleRoleSelect(role)}
-                                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
                                 >
-                                  {role.label}
+                                  <div className="flex justify-between items-center">
+                                    <div>
+                                      <div className="font-medium">{role.label}</div>
+                                      {role.description && (
+                                        <div className="text-xs text-gray-500 mt-1">{role.description}</div>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                      Level {role.level ?? 0}
+                                    </span>
+                                  </div>
                                 </div>
                               ))
                             ) : (

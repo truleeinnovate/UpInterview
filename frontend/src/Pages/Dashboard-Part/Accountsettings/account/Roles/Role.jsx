@@ -250,8 +250,8 @@ const Role = () => {
   const permissionKey = 'Roles';
   
   // const { data: organizationRoles, isLoading, isError, error } = useRolesQuery();
-  const { data: allRoles, isLoading, isError, error } = useRolesQuery({ fetchAllRoles: true });
-  console.log('allRoles', allRoles);
+  const { data: filteredRoles, isLoading, isError, error } = useRolesQuery({ fetchAllRoles: true });
+  console.log('filteredRoles', filteredRoles);
   
   const [roles, setRoles] = useState([]);
   const navigate = useNavigate();
@@ -260,12 +260,12 @@ const Role = () => {
   const tenantId = tokenPayload.tenantId;
 
   useEffect(() => {
-    if (!allRoles) return;
+    if (!filteredRoles) return;
 
     const fetchRoleOverrides = async () => {
       try {
         const rolesWithOverrides = await Promise.all(
-          allRoles.map(async (role) => {
+          filteredRoles.map(async (role) => {
             if (userType === 'superAdmin') {
               return {
                 ...role,
@@ -334,7 +334,7 @@ const Role = () => {
     };
 
     fetchRoleOverrides();
-  }, [allRoles, tenantId, userType]);
+  }, [filteredRoles, tenantId, userType]);
 
   const renderRoleCard = (role) => {
     const isAdmin = permissions?.[permissionKey]?.RoleName === 'Admin' && role.roleName === 'Admin';
@@ -353,9 +353,13 @@ const Role = () => {
         <div className="bg-white p-5 rounded-lg shadow">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h3 className="text-lg font-medium">{role.label}</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-medium">{role.label}</h3>
+                <span className="text-xs bg-custom-blue text-white px-2 py-1 rounded-full">
+                  Level {role.level ?? 0}
+                </span>
+              </div>
               <p className="text-gray-600 text-sm">{role.description || 'No description available'}</p>
-              <p className="text-sm text-gray-500 mt-1">Level: {role.level}</p>
             </div>
             {(userType === 'superAdmin' ? permissions?.Roles?.Edit : permissions?.Roles?.Edit && !isAdminRole) && !isAdmin && (
               <EditButton
@@ -448,11 +452,24 @@ const Role = () => {
         </div>
 
         <div className="bg-white px-3 rounded-lg shadow py-3 mx-3">
-          <h3 className="text-lg font-medium mb-4">Role Hierarchy</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Role Hierarchy</h3>
+            <div className="text-sm text-gray-600">
+              {roles.length} roles • Levels {Math.min(...roles.map(r => r.level ?? 0))} - {Math.max(...roles.map(r => r.level ?? 0))}
+            </div>
+          </div>
           <div className="space-y-2">
             {roles
               .sort((a, b) => (a.level ?? 0) - (b.level ?? 0))
-              .map((role) => renderRoleCard(role))}
+              .map((role, index) => (
+                <div key={role._id} className="relative">
+                  {/* Level indicator line */}
+                  {index > 0 && (
+                    <div className="absolute left-6 top-0 w-0.5 h-4 bg-gray-300"></div>
+                  )}
+                  {renderRoleCard(role)}
+                </div>
+              ))}
           </div>
         </div>
       </div>
