@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
 
-import InvoiceDetailsModal from "./InvoiceDetailsModal";
+// import InvoiceDetailsModal from "./InvoiceDetailsModal";
 
 // import Header from "../../Shared/Header/Header.jsx";
 import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
@@ -14,8 +14,8 @@ import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/SuperAdminComponents/Billing/Invoice/Kanban.jsx";
 import {
   Eye,
-  Mail,
-  UserCircle,
+  // Mail,
+  // UserCircle,
   Pencil,
   ChevronUp,
   ChevronDown,
@@ -34,14 +34,18 @@ import {
 //   AiOutlineMail,
 //   AiOutlineEdit,
 // } from "react-icons/ai";
-import axios from "axios";
-import { config } from "../../../config.js";
+// import axios from "axios";
+// import { config } from "../../../config.js";
 import AddInvoiceForm from "./Invoice/AddInvoiceForm.jsx";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
+import {
+  useInvoices,
+  useInvoiceById,
+} from "../../../apiHooks/superAdmin/useInvoices.js";
 
 function InvoicesTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
-  const [selectedInvoice, setSelectedInvoice] = useState();
+  // const [selectedInvoice, setSelectedInvoice] = useState();
   // const [selectInvoiceView, setSelectInvoiceView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeOn, setEditModeOn] = useState(false);
@@ -56,10 +60,12 @@ function InvoicesTable({ organizationId, viewMode }) {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
-  const [invoices, setInvoices] = useState([]);
+  // const [invoices, setInvoices] = useState([]);
+  const { invoices, isLoading } = useInvoices(organizationId); // from apiHooks
+  const { invoice: selectedInvoice } = useInvoiceById(selectedInvoiceId); // from apiHooks
 
   // Kanban view setter
   useEffect(() => {
@@ -120,45 +126,45 @@ function InvoicesTable({ organizationId, viewMode }) {
   };
 
   // Invoices API Call
-  useEffect(() => {
-    const getInvoices = async () => {
-      try {
-        setIsLoading(true);
-        const endpoint = organizationId
-          ? `${config.REACT_APP_API_URL}/invoices/${organizationId}`
-          : `${config.REACT_APP_API_URL}/invoices`;
+  // useEffect(() => {
+  //   const getInvoices = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const endpoint = organizationId
+  //         ? `${config.REACT_APP_API_URL}/invoices/${organizationId}`
+  //         : `${config.REACT_APP_API_URL}/invoices`;
 
-        const response = await axios.get(endpoint);
-        setInvoices(response.data.invoices);
-      } catch (error) {
-        console.error("Error fetching invoices:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //       const response = await axios.get(endpoint);
+  //       setInvoices(response.data.invoices);
+  //     } catch (error) {
+  //       console.error("Error fetching invoices:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getInvoices();
-  }, [organizationId]);
+  //   getInvoices();
+  // }, [organizationId]);
 
   // Get invoice by ID
-  useEffect(() => {
-    const getInvoice = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/invoices/invoice/${selectedInvoiceId}`
-        );
-        setSelectedInvoice(response.data);
-      } catch (error) {
-        console.error("Error fetching invoice:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (selectedInvoiceId) {
-      getInvoice();
-    }
-  }, [selectedInvoiceId]);
+  // useEffect(() => {
+  //   const getInvoice = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/invoices/invoice/${selectedInvoiceId}`
+  //       );
+  //       setSelectedInvoice(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching invoice:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   if (selectedInvoiceId) {
+  //     getInvoice();
+  //   }
+  // }, [selectedInvoiceId]);
 
   // useEffect(() => {
   //   if (isTablet) {
@@ -532,9 +538,9 @@ function InvoicesTable({ organizationId, viewMode }) {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="text-sm font-medium text-gray-500">
+                          {/* <h4 className="text-sm font-medium text-gray-500">
                             Invoice Information
-                          </h4>
+                          </h4> */}
                           <div className="mt-2 space-y-2">
                             <div className="flex justify-between">
                               <span className="text-gray-600">Type</span>
@@ -599,9 +605,9 @@ function InvoicesTable({ organizationId, viewMode }) {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="text-sm font-medium text-gray-900 mb-4">
+                          {/* <h4 className="text-sm font-medium text-gray-900 mb-4">
                             Payment Summary
-                          </h4>
+                          </h4> */}
                           <div className="space-y-3">
                             <div className="flex justify-between">
                               <span className="text-gray-600">
@@ -834,7 +840,7 @@ function InvoicesTable({ organizationId, viewMode }) {
           isOpen={showAddForm}
           onClose={() => {
             setShowAddForm(false);
-            setSelectedInvoice(null);
+            setSelectedInvoiceId(null);
             setEditModeOn(false);
           }}
           selectedInvoice={selectedInvoice}

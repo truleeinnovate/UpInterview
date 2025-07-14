@@ -19,13 +19,16 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import axios from "axios";
-import { config } from "../../config.js";
+// import axios from "axios";
+// import { config } from "../../config.js";
 import { usePermissions } from "../../Context/PermissionsContext";
-import { useQuery } from "@tanstack/react-query";
+// import { useQuery } from "@tanstack/react-query";
+import { useTenants } from "../../apiHooks/superAdmin/useTenants.js";
 
 function TenantsPage() {
   const { superAdminPermissions, isInitialized } = usePermissions();
+  const { tenants, isLoading, isError, error, refetch } = useTenants();
+
   const [view, setView] = useState("table");
   // const [selectedTenant, setSelectedTenant] = useState(null);
   // const [selectTenantView, setSelectTenantView] = useState(false);
@@ -41,29 +44,29 @@ function TenantsPage() {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [user, setUser] = useState("Admin");
+  // const [user, setUser] = useState("Admin");
 
   const [selectedType, setSelectedType] = useState("all");
 
   // Use React Query for data fetching with proper dependency on permissions
-  const {
-    data: tenants = [],
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['tenants'],
-    queryFn: async () => {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/Organization/all-organizations`
-      );
-      return response.data.organizations || [];
-    },
-    enabled: isInitialized && !!superAdminPermissions, // Only fetch when permissions are initialized
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 15, // 15 minutes
-    retry: 1,
-  });
+  // const {
+  //   data: tenants = [],
+  //   isLoading,
+  //   error,
+  //   refetch,
+  // } = useQuery({
+  //   queryKey: ["tenants"],
+  //   queryFn: async () => {
+  //     const response = await axios.get(
+  //       `${config.REACT_APP_API_URL}/Organization/all-organizations`
+  //     );
+  //     return response.data.organizations || [];
+  //   },
+  //   enabled: isInitialized && !!superAdminPermissions, // Only fetch when permissions are initialized
+  //   staleTime: 1000 * 60 * 5, // 5 minutes
+  //   cacheTime: 1000 * 60 * 15, // 15 minutes
+  //   retry: 1,
+  // });
 
   useEffect(() => {
     const handleResize = () => {
@@ -141,32 +144,6 @@ function TenantsPage() {
     }
   };
 
-  // const FilteredData = () => {
-  //   if (!Array.isArray(dataToUse)) return [];
-  //   return dataToUse.filter((organization) => {
-  //     const fieldsToSearch = [
-  //       organization.firstName,
-  //       organization.lastName,
-  //       organization.Email,
-  //       organization.Phone,
-  //       organization.company,
-  //       organization.status,
-  //     ].filter((field) => field !== null && field !== undefined);
-
-  //     const matchesStatus =
-  //       selectedFilters?.status.length === 0 ||
-  //       selectedFilters.status.includes(organization.status);
-
-  //     const matchesSearchQuery = fieldsToSearch.some((field) =>
-  //       field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-  //     );
-
-  //     return matchesSearchQuery && matchesStatus;
-  //   });
-  // };
-
-  // Pagination
-
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
 
@@ -222,6 +199,7 @@ function TenantsPage() {
   if (!isInitialized || isLoading) {
     return <Loading />;
   }
+
 
 
   const formatDate = (dateString) => {

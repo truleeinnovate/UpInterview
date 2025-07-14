@@ -13,16 +13,20 @@ import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../Pages/SuperAdmin-Part/IntegrationLogs/Kanban.jsx";
 import {
   Eye,
-  Mail,
-  UserCircle,
+  // Mail,
+  // UserCircle,
   Pencil,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import axios from "axios";
-import { config } from "../../config.js";
+// import axios from "axios";
+// import { config } from "../../config.js";
 import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
 import { usePermissions } from "../../Context/PermissionsContext.js";
+import {
+  useIntegrationLogs,
+  useIntegrationLogById,
+} from "../../apiHooks/superAdmin/useIntegrationLogs";
 
 function IntegrationsPage() {
   const { superAdminPermissions } = usePermissions();
@@ -42,15 +46,18 @@ function IntegrationsPage() {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Integration Logs | Admin Portal";
   }, []);
 
-  const [selectedLog, setSelectedLog] = useState(null);
+  // const [selectedLog, setSelectedLog] = useState(null);
   const [selectedLogId, setSelectedLogId] = useState(null);
-  const [integrations, setIntegrations] = useState([]);
+  // const [integrations, setIntegrations] = useState([]);
+
+  const { integrations, isLoading } = useIntegrationLogs(); // from apiHooks
+  const { selectedLog } = useIntegrationLogById(selectedLogId); // from apiHooks
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -101,44 +108,44 @@ function IntegrationsPage() {
   };
 
   // Get Internal logs API
-  useEffect(() => {
-    const getIntegrations = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/integration-logs`
-        );
-        setIntegrations(response.data);
-      } catch (error) {
-        console.error("Error fetching internal logs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getIntegrations = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/integration-logs`
+  //       );
+  //       setIntegrations(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching internal logs:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getIntegrations();
-  }, []);
+  //   getIntegrations();
+  // }, []);
 
   // Get Internal log by ID API
-  useEffect(() => {
-    const getIntegrationLogById = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/integration-logs/${selectedLogId}`
-        );
-        setSelectedLog(response.data);
-      } catch (error) {
-        console.error("Error fetching internal logs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getIntegrationLogById = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/integration-logs/${selectedLogId}`
+  //       );
+  //       setSelectedLog(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching internal logs:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    if (selectedLogId) {
-      getIntegrationLogById();
-    }
-  }, [selectedLogId]);
+  //   if (selectedLogId) {
+  //     getIntegrationLogById();
+  //   }
+  // }, [selectedLogId]);
 
   // Kanban view setter
   useEffect(() => {
@@ -219,32 +226,6 @@ function IntegrationsPage() {
     };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
-
-  // const getStatusDisplay = (status) => {
-  //   switch (status) {
-  //     case "success":
-  //       return "success";
-  //     case "error":
-  //       return "error";
-  //     case "warning":
-  //       return "warning";
-  //     default:
-  //       return "neutral";
-  //   }
-  // };
-
-  // const getSeverityDisplay = (severity) => {
-  //   switch (severity) {
-  //     case "high":
-  //       return "error";
-  //     case "medium":
-  //       return "warning";
-  //     case "low":
-  //       return "success";
-  //     default:
-  //       return "neutral";
-  //   }
-  // };
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);

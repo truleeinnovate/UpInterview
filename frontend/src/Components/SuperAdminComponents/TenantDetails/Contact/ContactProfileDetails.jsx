@@ -15,14 +15,14 @@ import {
   FaUserTie,
   FaClock,
   FaLanguage,
-  FaExternalLinkAlt,
+  // FaExternalLinkAlt,
   FaMapMarkerAlt,
   FaInfoCircle,
   FaTransgender,
 } from "react-icons/fa";
 import { GiCancel } from "react-icons/gi";
 import { IoIosCopy } from "react-icons/io";
-import { IoArrowBack } from "react-icons/io5";
+// import { IoArrowBack } from "react-icons/io5";
 import { useLocation } from "react-router-dom";
 import SidebarPopup from "../../SidebarPopup/SidebarPopup";
 
@@ -30,9 +30,8 @@ const ContactProfileDetails = () => {
   const location = useLocation();
   const contactData = location.state?.contactData;
   const [contact] = useState(contactData);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  // const [isFullScreen, setIsFullScreen] = useState(false);
   const [activeTab, setActiveTab] = useState("Basic-Details");
-  console.log("CONTACTS DATA =================================> ", contactData);
 
   const handleNavigate = () => {
     navigate(-1);
@@ -41,9 +40,9 @@ const ContactProfileDetails = () => {
     setActiveTab(tab);
   };
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
-  };
+  // const toggleFullScreen = () => {
+  //   setIsFullScreen(!isFullScreen);
+  // };
 
   // const location = useLocation();
   useEffect(() => {

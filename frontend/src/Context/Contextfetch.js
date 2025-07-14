@@ -138,8 +138,8 @@ const CustomProvider = ({ children }) => {
   const queryClient = useQueryClient();
 
   // outsource interviewers
-  const [Outsourceinterviewers, setOutsourceInterviewers] = useState([]);
-  const fetchoutsourceInterviewers = useCallback(async () => {
+  const [outsourceInterviewers, setOutsourceInterviewers] = useState([]);
+  const fetchOutsourceInterviewers = useCallback(async () => {
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/outsourceInterviewers`
@@ -152,8 +152,8 @@ const CustomProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    fetchoutsourceInterviewers();
-  }, [fetchoutsourceInterviewers]);
+    fetchOutsourceInterviewers();
+  }, [fetchOutsourceInterviewers]);
 
   // notifications
   const [notificationsData] = useState([]);
@@ -688,8 +688,8 @@ const {
         // fetchTeamsData,
 
         // outsource interviewers
-        Outsourceinterviewers,
-        fetchoutsourceInterviewers,
+        outsourceInterviewers,
+        fetchOutsourceInterviewers,
 
         // master data
         // skills,
