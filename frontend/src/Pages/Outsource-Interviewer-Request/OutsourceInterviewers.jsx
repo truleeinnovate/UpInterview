@@ -1321,10 +1321,11 @@ import KanbanView from "../../Pages/Outsource-Interviewer-Request/Kanban/KanbanV
 // import { config } from "../../config.js";
 // import axios from "axios";
 import { usePermissions } from "../../Context/PermissionsContext.js";
+import { useOutsourceInterviewers } from "../../apiHooks/superAdmin/useOutsourceInterviewers";
 
 const OutsourceInterviewers = () => {
   const { superAdminPermissions } = usePermissions();
-  const { Outsourceinterviewers: outsource, loading } = useCustomContext();
+  // const { outsourceInterviewers } = useCustomContext();
 
   const [view, setView] = useState("table");
   // const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -1341,13 +1342,15 @@ const OutsourceInterviewers = () => {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   // const [user, setUser] = useState("Admin");
 
   const [selectedInterviewerId, setSelectedInterviewerId] = useState(null);
   const [selectedInterviewer, setSelectedInterviewer] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [interviewers, setInterviewers] = useState([]);
+
+  const { outsourceInterviewers, isLoading, isError, error, refetch } = useOutsourceInterviewers();
 
   // Fetch interview requests
   // useEffect(() => {
@@ -1369,20 +1372,20 @@ const OutsourceInterviewers = () => {
   // }, [selectedInterviewerId]);
 
   useEffect(() => {
-    if (selectedInterviewerId && outsource?.length) {
-      const foundUser = outsource.find(
+    if (selectedInterviewerId && outsourceInterviewers?.length) {
+      const foundUser = outsourceInterviewers.find(
         (user) => user._id === selectedInterviewerId
       );
       setSelectedInterviewer(foundUser || null);
     }
-  }, [selectedInterviewerId, outsource]);
+  }, [selectedInterviewerId, outsourceInterviewers]);
 
   useEffect(() => {
-    if (outsource) {
-      setIsLoading(false);
-      setInterviewers(outsource);
+    if (outsourceInterviewers) {
+      // setIsLoading(false);
+      setInterviewers(outsourceInterviewers);
     }
-  }, [outsource]);
+  }, [outsourceInterviewers]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1837,7 +1840,7 @@ const OutsourceInterviewers = () => {
                         ? `${interview?.contactId.firstName} ${interview?.contactId.lastName}`
                         : "N/A",
                   }))}
-                  outsourceInterviewers={outsource}
+                  outsourceInterviewers={outsourceInterviewers}
                   columns={kanbanColumns}
                   loading={isLoading}
                   renderActions={renderKanbanActions}

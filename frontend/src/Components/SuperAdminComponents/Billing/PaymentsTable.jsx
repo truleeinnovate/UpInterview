@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
-import PaymentDetailsModal from "./PaymentDetailsModal";
+// import PaymentDetailsModal from "./PaymentDetailsModal";
 
 import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Shared/FilterPopup/FilterPopup.jsx";
-import Loading from "../Loading/Loading.jsx";
+// import Loading from "../Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/SuperAdminComponents/Billing/Payment/Kanban.jsx";
 import {
   Eye,
-  Mail,
-  UserCircle,
+  // Mail,
+  // UserCircle,
   Pencil,
   ChevronUp,
   ChevronDown,
@@ -27,9 +27,13 @@ import {
   AiOutlineKey,
   AiOutlineShop,
 } from "react-icons/ai";
-import axios from "axios";
-import { config } from "../../../config.js";
+// import axios from "axios";
+// import { config } from "../../../config.js";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
+import {
+  usePayments,
+  usePaymentById,
+} from "../../../apiHooks/superAdmin/usePayments.js";
 
 function PaymentsTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
@@ -45,13 +49,16 @@ function PaymentsTable({ organizationId, viewMode }) {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
-  const [selectedPayment, setSelectedPayment] = useState(null);
+  // const [selectedPayment, setSelectedPayment] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  const [payments, setPayments] = useState([]);
+  // const [payments, setPayments] = useState([]);
+
+    const { payments, isLoading } = usePayments(organizationId); // from apiHooks
+    const { payment: selectedPayment } = usePaymentById(selectedPaymentId); // from apiHooks
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -101,47 +108,47 @@ function PaymentsTable({ organizationId, viewMode }) {
   };
 
   // Payments API Call
-  useEffect(() => {
-    const getPaymentsSummary = async () => {
-      try {
-        setIsLoading(true);
+  // useEffect(() => {
+  //   const getPaymentsSummary = async () => {
+  //     try {
+  //       setIsLoading(true);
 
-        const endpoint = organizationId
-          ? `${config.REACT_APP_API_URL}/payments/${organizationId}`
-          : `${config.REACT_APP_API_URL}/payments`;
+  //       const endpoint = organizationId
+  //         ? `${config.REACT_APP_API_URL}/payments/${organizationId}`
+  //         : `${config.REACT_APP_API_URL}/payments`;
 
-        const response = await axios.get(endpoint);
-        setPayments(response.data.payments);
-      } catch (error) {
-        console.error("Error fetching payments:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //       const response = await axios.get(endpoint);
+  //       setPayments(response.data.payments);
+  //     } catch (error) {
+  //       console.error("Error fetching payments:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getPaymentsSummary();
-  }, [organizationId]);
+  //   getPaymentsSummary();
+  // }, [organizationId]);
 
   // Get payment by ID
-  useEffect(() => {
-    const getPaymentById = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/payments/payment/${selectedPaymentId}`
-        );
-        setSelectedPayment(response.data);
-        console.log("SELECTED PAYMENT RESPONSE: ", response.data);
-      } catch (error) {
-        console.error("Error fetching internal logs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (selectedPaymentId) {
-      getPaymentById();
-    }
-  }, [selectedPaymentId]);
+  // useEffect(() => {
+  //   const getPaymentById = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/payments/payment/${selectedPaymentId}`
+  //       );
+  //       setSelectedPayment(response.data);
+  //       console.log("SELECTED PAYMENT RESPONSE: ", response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching internal logs:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   if (selectedPaymentId) {
+  //     getPaymentById();
+  //   }
+  // }, [selectedPaymentId]);
 
   // Kanban view setter
   useEffect(() => {
@@ -234,20 +241,20 @@ function PaymentsTable({ organizationId, viewMode }) {
     return new Date(dateString).toLocaleString();
   };
 
-  const getStatusDisplay = (status) => {
-    switch (status) {
-      case "captured":
-        return "success";
-      case "pending":
-        return "warning";
-      case "failed":
-        return "error";
-      case "refunded":
-        return "neutral";
-      default:
-        return "neutral";
-    }
-  };
+  // const getStatusDisplay = (status) => {
+  //   switch (status) {
+  //     case "captured":
+  //       return "success";
+  //     case "pending":
+  //       return "warning";
+  //     case "failed":
+  //       return "error";
+  //     case "refunded":
+  //       return "neutral";
+  //     default:
+  //       return "neutral";
+  //   }
+  // };
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
