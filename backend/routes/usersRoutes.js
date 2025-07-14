@@ -20,9 +20,6 @@ const { permissionMiddleware } = require("../middleware/permissionMiddleware");
 
 router.get('/permissions', async (req, res) => {
   try {
-    console.log('[Permissions Endpoint] Request received');
-    console.log('[Permissions Endpoint] Cookies:', req.cookies);
-    
     // Check if we have any tokens
     const authToken = req.cookies.authToken;
     const impersonationToken = req.cookies.impersonationToken;
@@ -31,7 +28,6 @@ router.get('/permissions', async (req, res) => {
     const hasAnyToken = authToken || impersonationToken;
     
     if (!hasAnyToken) {
-      console.log('[Permissions Endpoint] No tokens found, returning empty permissions');
       return res.json({
         effectivePermissions: {},
         superAdminPermissions: null,
@@ -46,7 +42,6 @@ router.get('/permissions', async (req, res) => {
     }
 
     // If we have at least one token, use the permission middleware to get permissions
-    console.log('[Permissions Endpoint] Tokens found, using permission middleware');
     return permissionMiddleware(req, res, () => {
       const response = {
         effectivePermissions: res.locals.effectivePermissions,
@@ -60,18 +55,7 @@ router.get('/permissions', async (req, res) => {
         impersonatedUser_roleName: res.locals.impersonatedUser_roleName
       };
       
-      console.log('[Permissions Endpoint] Response:', {
-        hasSuperAdminPermissions: !!response.superAdminPermissions,
-        superAdminPermissionKeys: response.superAdminPermissions ? Object.keys(response.superAdminPermissions) : [],
-        hasEffectivePermissions: !!response.effectivePermissions,
-        effectivePermissionKeys: response.effectivePermissions ? Object.keys(response.effectivePermissions) : [],
-        isImpersonating: response.isImpersonating,
-        roleType: response.effectivePermissions_RoleType,
-        roleName: response.effectivePermissions_RoleName
-      });
-      
       res.json(response);
-
     });
   } catch (error) {
     console.error('[Permissions Endpoint] Error:', error);

@@ -34,68 +34,45 @@ class AuthCookieManager {
     }
   }
 
-  // Set auth token (effective user)
+  // Set auth token
   static setAuthToken(token) {
-    console.log('🔑 setAuthToken called with token:', {
-      hasToken: !!token,
-      tokenLength: token ? token.length : 0,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'null'
-    });
-    
     try {
-      console.log('🍪 Setting cookie with key:', AUTH_TOKEN_KEY);
-      Cookies.set(AUTH_TOKEN_KEY, token, { 
+      // Set the token in cookies
+      Cookies.set('authToken', token, { 
         expires: 7, // 7 days
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         sameSite: 'strict'
       });
       
-      // User type is now determined directly from token state
-      console.log('✅ Auth token set - user type will be determined from tokens');
+      // Update user type when auth token changes
+      this.updateUserType();
       
-      // Verify the cookie was set
-      const savedToken = Cookies.get(AUTH_TOKEN_KEY);
-      console.log('✅ Auth token set successfully. Verification:', {
-        cookieExists: !!savedToken,
-        tokenMatches: savedToken === token
-      });
+      console.log('✅ Auth token set successfully');
     } catch (error) {
       console.error('❌ Error setting auth token:', error);
     }
   }
 
-  // Set impersonation token (super admin)
+  // Set impersonation token
   static setImpersonationToken(token, userData = null) {
-    console.log('👤 setImpersonationToken called with:', {
-      hasToken: !!token,
-      tokenLength: token ? token.length : 0,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'null',
-      hasUserData: !!userData,
-      userData: userData
-    });
-    
     try {
-      console.log('🍪 Setting impersonation cookie with key:', IMPERSONATION_TOKEN_KEY);
-      Cookies.set(IMPERSONATION_TOKEN_KEY, token, {
-        expires: 1, // 1 day for impersonation
-        secure: process.env.NODE_ENV === 'production',
+      // Set the token in cookies
+      Cookies.set('impersonationToken', token, { 
+        expires: 7, // 7 days
+        secure: true,
         sameSite: 'strict'
       });
       
+      // Store impersonated user data if provided
       if (userData) {
-        console.log('💾 Storing user data in localStorage');
         localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
+        console.log('✅ Impersonated user data stored:', userData);
       }
       
-      // User type is now determined directly from token state
-      console.log('✅ Impersonation token set - user type will be determined from tokens');
+      // Update user type when impersonation token changes
+      this.updateUserType();
       
-      // Verify the cookie was set
-      const savedToken = Cookies.get(IMPERSONATION_TOKEN_KEY);
-      console.log('✅ Impersonation token set successfully. Verification:', {
-        cookieExists: !!savedToken,
-        tokenMatches: savedToken === token
-      });
+      console.log('✅ Impersonation token set successfully');
     } catch (error) {
       console.error('❌ Error setting impersonation token:', error);
     }
@@ -108,21 +85,32 @@ class AuthCookieManager {
       const impersonationToken = this.getImpersonationToken();
       
       // Determine user type directly from token state
+      let userType = null;
+      
       if (authToken && impersonationToken) {
         // Check if impersonation token has impersonatedUserId (super admin) or userId (effective user)
         const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
         if (impersonationPayload?.impersonatedUserId) {
-          return 'effective'; // super admin logged in as user
+          userType = 'effective'; // super admin logged in as user
         } else {
-          return 'effective'; // both tokens but no impersonatedUserId (shouldn't happen)
+          userType = 'effective'; // both tokens but no impersonatedUserId (shouldn't happen)
         }
       } else if (authToken && !impersonationToken) {
-        return 'effective'; // direct effective user login
+        userType = 'effective'; // direct effective user login
       } else if (!authToken && impersonationToken) {
-        return 'superAdmin'; // super admin with impersonatedUserId
+        userType = 'superAdmin'; // super admin with impersonatedUserId
       } else {
-        return null; // not authenticated
+        userType = null; // not authenticated
       }
+
+      // Update localStorage to keep it in sync
+      const storedUserType = this.getStoredUserType();
+      if (userType !== storedUserType) {
+        this.setUserType(userType);
+        console.log(`🔄 User type updated in localStorage: ${storedUserType} → ${userType}`);
+      }
+      
+      return userType;
     } catch (error) {
       console.warn('Error getting user type:', error);
       return null;
@@ -196,6 +184,25 @@ class AuthCookieManager {
     console.log(`👤 User type stored in localStorage: ${userType}`);
     
     return userType;
+  }
+
+  /**
+   * Check if user type needs to be synced with localStorage
+   * This ensures localStorage is always up to date with current token state
+   * 
+   * @returns {boolean} True if user type was updated, false if already in sync
+   */
+  static syncUserType() {
+    const currentUserType = this.getUserType(); // Get from token state
+    const storedUserType = this.getStoredUserType(); // Get from localStorage
+    
+    if (currentUserType !== storedUserType) {
+      this.setUserType(currentUserType);
+      console.log(`🔄 User type synced: ${storedUserType} → ${currentUserType}`);
+      return true;
+    }
+    
+    return false;
   }
 
   // Check if user has any valid authentication
@@ -362,9 +369,33 @@ class AuthCookieManager {
   }
 
   /**
+   * Clear all permission caches from localStorage
+   * This includes both old and new cache keys
+   */
+  static clearAllPermissionCaches() {
+    try {
+      // Clear old permission cache keys
+      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
+      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
+      localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
+      localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
+      localStorage.removeItem('app_permissions_cache');
+      localStorage.removeItem('app_permissions_timestamp');
+      
+      // Clear new permission cache keys
+      localStorage.removeItem('permissions_effective');
+      localStorage.removeItem('permissions_superAdmin');
+      
+      console.log('✅ All permission caches cleared');
+    } catch (error) {
+      console.warn('Error clearing permission caches:', error);
+    }
+  }
+
+  /**
    * Clear permissions for a specific user type
    * 
-   * @param {string} userType - 'effective' or 'superAdmin'
+   * @param {string} userType - The user type to clear permissions for ('effective' or 'superAdmin')
    */
   static clearPermissions(userType) {
     try {
@@ -538,8 +569,7 @@ class AuthCookieManager {
         localStorage.removeItem(IMPERSONATED_USER_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
         AuthCookieManager.clearPermissions('superAdmin');
-        localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
-        localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
+        AuthCookieManager.clearAllPermissionCaches();
         navigate("/organization-login");
       } else if (authToken && !impersonationToken) {
         // Scenario 2: Only auth token exists (effective user)
@@ -548,10 +578,7 @@ class AuthCookieManager {
         clearCookie(AUTH_TOKEN_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
         AuthCookieManager.clearPermissions('effective');
-        localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-        localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
-        localStorage.removeItem('app_permissions_cache');
-        localStorage.removeItem('app_permissions_timestamp');
+        AuthCookieManager.clearAllPermissionCaches();
         navigate("/organization-login");
       } else if (authToken && impersonationToken) {
         // Scenario 3: Both tokens exist (super admin logged in as user)
@@ -559,10 +586,8 @@ class AuthCookieManager {
         // Clear effective user data, keep super admin data
         clearCookie(AUTH_TOKEN_KEY);
         AuthCookieManager.clearPermissions('effective');
-        localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-        localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
-        localStorage.removeItem('app_permissions_cache');
-        localStorage.removeItem('app_permissions_timestamp');
+        AuthCookieManager.clearAllPermissionCaches();
+        localStorage.removeItem(USER_TYPE_KEY);
         navigate("/admin-dashboard");
       } else {
         // No tokens exist, just navigate to organization login
@@ -676,6 +701,10 @@ class AuthCookieManager {
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         }
       });
+      
+      // Clear user type from localStorage
+      localStorage.removeItem(USER_TYPE_KEY);
+      console.log('✅ User type cleared from localStorage');
       
       console.log('📋 Current cookies after clearing:', document.cookie);
       console.log('✅ All auth data cleared');
@@ -801,6 +830,7 @@ export const loginAsUser = AuthCookieManager.loginAsUser;
 export const getUserType = AuthCookieManager.getUserType;
 export const getCurrentUserId = AuthCookieManager.getCurrentUserId;
 export const updateUserType = AuthCookieManager.updateUserType;
+export const syncUserType = AuthCookieManager.syncUserType;
 export const getCurrentPermissions = AuthCookieManager.getCurrentPermissions;
 export const getEffectivePermissions = AuthCookieManager.getEffectivePermissions;
 export const setEffectivePermissions = AuthCookieManager.setEffectivePermissions;
@@ -808,5 +838,6 @@ export const getSuperAdminPermissions = AuthCookieManager.getSuperAdminPermissio
 export const setSuperAdminPermissions = AuthCookieManager.setSuperAdminPermissions;
 export const setCurrentPermissions = AuthCookieManager.setCurrentPermissions;
 export const clearPermissions = AuthCookieManager.clearPermissions;
+export const clearAllPermissionCaches = AuthCookieManager.clearAllPermissionCaches;
 
 export default AuthCookieManager;
