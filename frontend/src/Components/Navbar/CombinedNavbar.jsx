@@ -104,29 +104,9 @@ const CombinedNavbar = () => {
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
-  // Enhanced permission check with fallback for super admin
+  // Enhanced permission check - use dynamic permissions only
   const enhancedCheckPermission = (permissionKey) => {
-    const hasPermission = checkPermission(permissionKey);
-    
-    // For super admin users, provide fallback permissions while loading
-    if (userType === 'superAdmin' && !isInitialized) {
-      const fallbackPermissions = {
-        'Tenants': true,
-        'InterviewRequest': true,
-        'OutsourceInterviewerRequest': true,
-        'SupportDesk': true,
-        'Billing': true,
-        'InternalLogs': true,
-        'IntegrationLogs': true
-      };
-      
-      if (fallbackPermissions[permissionKey]) {
-        console.log(`🔄 Using fallback permission for ${permissionKey} while loading`);
-        return true;
-      }
-    }
-    
-    return hasPermission;
+    return checkPermission(permissionKey);
   };
 
   // Utility function to close all dropdowns

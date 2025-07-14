@@ -223,24 +223,6 @@ function TenantsPage() {
     return <Loading />;
   }
 
-  // Show error if there's an error fetching data
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="text-red-600 text-lg font-semibold mb-2">
-            Error loading tenants
-          </div>
-          <button
-            onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };

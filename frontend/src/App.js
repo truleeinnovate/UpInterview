@@ -24,6 +24,7 @@ import { DocumentsSection } from "./Pages/Dashboard-Part/Accountsettings/account
 import SessionExpiration from "./Components/SessionExpiration.jsx";
 import Loading from "./Components/Loading.js";
 import UserDataLoader from "./Components/UserDataLoader.jsx";
+import { preloadPermissions, hasValidCachedPermissions } from "./utils/permissionPreloader";
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
@@ -1043,7 +1044,7 @@ const MainAppRoutes = ({
               )}
 
               {/* SuperAdmin Support Desk */}
-              {hasPermission("SupportDesk") && (
+              {/* {hasPermission("SupportDesk") && (
                 <>
                   <Route
                     exact
@@ -1073,7 +1074,7 @@ const MainAppRoutes = ({
                     </>
                   )}
                 </>
-              )}
+              )} */}
 
               {hasPermission("Settings") && (
                 <Route path="/settings" element={<SettingsPage />} />
@@ -1149,6 +1150,19 @@ const App = () => {
     ],
     []
   );
+
+  // Preload permissions on app startup if user is authenticated
+  useEffect(() => {
+    if (authToken && !hasValidCachedPermissions()) {
+      // Preload permissions in the background
+      preloadPermissions().catch(console.warn);
+    }
+    
+    // Sync user type with localStorage to ensure consistency
+    if (authToken) {
+      AuthCookieManager.syncUserType();
+    }
+  }, [authToken]);
 
   useEffect(() => {
     const emitter = getActivityEmitter();

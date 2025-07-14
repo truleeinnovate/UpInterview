@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, Pencil, ChevronUp, ChevronDown } from "lucide-react";
@@ -133,13 +133,15 @@ const PositionTab = () => {
     setCurrentPage(0);
   };
 
-  const uniqueLocations = [
+  // Memoize unique locations to prevent recalculation on every render
+  const uniqueLocations = useMemo(() => [
     ...new Set(
       positionData?.map((position) => position.Location).filter(Boolean)
     ),
-  ];
+  ], [positionData]);
 
-  const FilteredData = () => {
+  // Memoize filtered data to prevent recalculation on every render
+  const FilteredData = useMemo(() => {
     if (!Array.isArray(positionData)) return [];
     return positionData.filter((position) => {
       const fieldsToSearch = [
@@ -172,12 +174,12 @@ const PositionTab = () => {
         matchesExperience
       );
     });
-  };
+  }, [positionData, selectedFilters, searchQuery]);
 
   const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+  const totalPages = Math.ceil(FilteredData.length / rowsPerPage);
   const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
+    if ((currentPage + 1) * rowsPerPage < FilteredData.length) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
@@ -188,8 +190,8 @@ const PositionTab = () => {
   };
 
   const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData.length);
+  const currentFilteredRows = FilteredData.slice(startIndex, endIndex);
 
   const handleView = (position) => {
     if (effectivePermissions.Positions?.View) {
