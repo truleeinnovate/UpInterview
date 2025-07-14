@@ -12,8 +12,8 @@ import TableView from "../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../../Components/SuperAdminComponents/Billing/Receipt/Kanban.jsx";
 import {
   Eye,
-  Mail,
-  UserCircle,
+  // Mail,
+  // UserCircle,
   Pencil,
   ChevronUp,
   ChevronDown,
@@ -27,9 +27,13 @@ import {
   // AiOutlineKey,
   // AiOutlineShop,
 } from "react-icons/ai";
-import axios from "axios";
-import { config } from "../../../config.js";
+// import axios from "axios";
+// import { config } from "../../../config.js";
 import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
+import {
+  useReceipts,
+  useReceiptById,
+} from "../../../apiHooks/superAdmin/useReceipts";
 
 function ReceiptsTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
@@ -48,11 +52,14 @@ function ReceiptsTable({ organizationId, viewMode }) {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
-  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  // const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedReceiptId, setSelectedReceiptId] = useState(null);
-  const [receipts, setReceipts] = useState([]);
+  // const [receipts, setReceipts] = useState([]);
+
+  const { receipts, isLoading } = useReceipts(organizationId); // from apiHooks
+  const { receipt: selectedReceipt } = useReceiptById(selectedReceiptId); // from apiHooks
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -103,48 +110,46 @@ function ReceiptsTable({ organizationId, viewMode }) {
   };
 
   // Get Receipts API
-  useEffect(() => {
-    const getReceiptsSummary = async () => {
-      try {
-        setIsLoading(true);
+  // useEffect(() => {
+  //   const getReceiptsSummary = async () => {
+  //     try {
+  //       setIsLoading(true);
 
-        const endpoint = organizationId
-          ? `${config.REACT_APP_API_URL}/receipts/${organizationId}`
-          : `${config.REACT_APP_API_URL}/receipts`;
+  //       const endpoint = organizationId
+  //         ? `${config.REACT_APP_API_URL}/receipts/${organizationId}`
+  //         : `${config.REACT_APP_API_URL}/receipts`;
 
-        const response = await axios.get(endpoint);
-        setReceipts(response.data.receipts);
-      } catch (error) {
-        console.error("Error fetching receipts:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //       const response = await axios.get(endpoint);
+  //       setReceipts(response.data.receipts);
+  //     } catch (error) {
+  //       console.error("Error fetching receipts:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getReceiptsSummary();
-  }, [organizationId]);
+  //   getReceiptsSummary();
+  // }, [organizationId]);
 
   // Get Receipt by ID
-  useEffect(() => {
-    const getPaymentById = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/receipts/receipt/${selectedReceiptId}`
-        );
-        setSelectedReceipt(response.data);
-      } catch (error) {
-        console.error("Error fetching internal logs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (selectedReceiptId) {
-      getPaymentById();
-    }
-  }, [selectedReceiptId]);
-
-  console.log("RECEIPTS TODAY: ", receipts);
+  // useEffect(() => {
+  //   const getPaymentById = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/receipts/receipt/${selectedReceiptId}`
+  //       );
+  //       setSelectedReceipt(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching internal logs:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   if (selectedReceiptId) {
+  //     getPaymentById();
+  //   }
+  // }, [selectedReceiptId]);
 
   // Kanban view setter
   useEffect(() => {
