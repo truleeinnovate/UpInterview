@@ -14,20 +14,21 @@ export const useRolesQuery = ({ filters = {}, fetchAllRoles = false } = {}) => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/getAllRoles`);
       const allRoles = response.data;
 
-      // If fetchAllRoles is true, return unfiltered roles (with optional filters applied)
-      if (fetchAllRoles) {
-        if (filters && Object.keys(filters).length > 0) {
-          return allRoles.filter(role =>
-            Object.entries(filters).every(([key, value]) => role[key] === value)
-          );
-        }
-        return allRoles;
-      }
+
 
       // Apply userType-based filtering
       let filteredRoles;
       if (userType === 'superAdmin') {
-        filteredRoles = allRoles.filter(role => role.roleType === 'internal');
+        // If fetchAllRoles is true, return unfiltered roles (with optional filters applied)
+        if (fetchAllRoles) {
+          if (filters && Object.keys(filters).length > 0) {
+            return allRoles.filter(role =>
+              Object.entries(filters).every(([key, value]) => role[key] === value)
+            );
+          }
+          return allRoles;
+        }
+        filteredRoles = allRoles;
       } else {
         filteredRoles = allRoles.filter(role => role.roleType === 'organization');
       }
