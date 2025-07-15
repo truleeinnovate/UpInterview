@@ -200,7 +200,7 @@ const OrganizationLogin = () => {
 
     setIsLoading(true);
     const loginStartTime = new Date().toISOString();
-    console.log(`[OrganizationLogin][${loginStartTime}] Starting enhanced login process...`);
+    console.log(`[OrganizationLogin][${loginStartTime}] Starting login process...`);
 
     try {
       // Step 1: Clear all existing cookies
@@ -250,8 +250,14 @@ const OrganizationLogin = () => {
 
       // Step 3: Handle internal users (admin dashboard)
       if (roleType === 'internal') {
-        console.log(`[OrganizationLogin][${loginStartTime}] Internal user detected, redirecting to admin dashboard`);
+        console.log(`[OrganizationLogin][${loginStartTime}] Internal user detected, navigating to admin dashboard`);
         setAuthCookies({ impersonationToken, impersonatedUserId });
+        
+        // Refresh permissions for super admin
+        console.log(`[OrganizationLogin][${loginStartTime}] Refreshing permissions for super admin...`);
+        await refreshPermissions();
+        
+        console.log(`[OrganizationLogin][${loginStartTime}] Navigating to admin dashboard`);
         navigate('/admin-dashboard');
         return;
       }
@@ -299,13 +305,7 @@ const OrganizationLogin = () => {
 
           const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
 
-          console.log(`[OrganizationLogin][${loginStartTime}] Setting subdomain URL with path:`, targetUrl);
-
-          // Wait for 2 seconds to ensure cookies are properly set and data is ready
-          console.log(`[OrganizationLogin][${loginStartTime}] Waiting 2 seconds before subdomain redirect...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-
-          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subdomain with path:`, targetUrl);
+          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subdomain:`, targetUrl);
           window.location.href = targetUrl;
           return;
         } else {
@@ -315,11 +315,11 @@ const OrganizationLogin = () => {
         console.log(`[OrganizationLogin][${loginStartTime}] No active subdomain found:`, { subdomain, subdomainStatus });
       }
 
-      // Step 7: Refresh permissions and prepare for navigation (only for non-subdomain cases)
+      // Step 7: Refresh permissions for non-subdomain cases
       console.log(`[OrganizationLogin][${loginStartTime}] Refreshing permissions...`);
       await refreshPermissions();
 
-      // Step 8: Handle navigation based on user status with proper timing (only for non-subdomain cases)
+      // Step 8: Handle navigation based on user status (immediate navigation)
       console.log(`[OrganizationLogin][${loginStartTime}] Determining navigation route...`);
 
       switch (status) {
@@ -336,14 +336,7 @@ const OrganizationLogin = () => {
               state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
             });
           } else {
-            // Enhanced home navigation with data loading preparation
-            console.log(`[OrganizationLogin][${loginStartTime}] Preparing for home navigation with data loading...`);
-
-            // Wait for 2 seconds to ensure backend data is ready and cookies are properly set
-            console.log(`[OrganizationLogin][${loginStartTime}] Waiting 2 seconds for data preparation...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to home with prepared data`);
+            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to home`);
             navigate('/home');
           }
           break;
@@ -388,7 +381,7 @@ const OrganizationLogin = () => {
       }
     } finally {
       setIsLoading(false);
-      console.log(`[OrganizationLogin][${loginStartTime}] Enhanced login process completed`);
+      console.log(`[OrganizationLogin][${loginStartTime}] Login process completed`);
     }
   };
 

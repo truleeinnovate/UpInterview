@@ -1019,27 +1019,33 @@ const getAllOrganizations = async (req, res) => {
     });
 
     // Fetch all tenants
-    const organizations = await Tenant.find().lean(); // Use lean for performance
+    const organizations = await Tenant.find().lean();
 
-    // Fetch latest subscription per tenant
-    // Use find() with sort instead of aggregate to avoid Azure Cosmos DB index issues
-    const allSubscriptions = await CustomerSubscription.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    // Fetch latest subscription per tenant using aggregation
+    const allSubscriptions = await CustomerSubscription.aggregate([
+      {
+        $sort: { createdAt: -1 }, // Sort within aggregation
+      },
+      {
+        $group: {
+          _id: "$tenantId",
+          latestSubscription: { $first: "$$ROOT" },
+        },
+      },
+      {
+        $replaceRoot: { newRoot: "$latestSubscription" },
+      },
+    ]).exec();
 
-    // Group by tenantId and get the latest subscription for each
     const subscriptionMap = {};
     allSubscriptions.forEach((subscription) => {
       if (subscription.tenantId) {
-        const tenantIdStr = subscription.tenantId.toString();
-        if (!subscriptionMap[tenantIdStr]) {
-          subscriptionMap[tenantIdStr] = subscription;
-        }
+        subscriptionMap[subscription.tenantId.toString()] = subscription;
       }
     });
 
     // Fetch one contact per tenant
-    const contacts = await Contacts.find().lean(); // Use lean for performance
+    const contacts = await Contacts.find().lean();
 
     const contactsMap = {};
     contacts.forEach((contact) => {
@@ -1056,7 +1062,7 @@ const getAllOrganizations = async (req, res) => {
         usersCount: userCountMap[orgId] || 0,
         activeUsersCount: activeUserCountMap[orgId] || 0,
         subscription: subscriptionMap[orgId] || null,
-        contact: contactsMap[orgId] || null, // Return null instead of empty array
+        contact: contactsMap[orgId] || null,
       };
     });
 
@@ -1066,12 +1072,17 @@ const getAllOrganizations = async (req, res) => {
       status: true,
     });
   } catch (error) {
-    console.error("Error in getAllOrganizations:", error.stack); // Log full stack trace
-    return res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-      status: false,
+
+    console.error("Error in getAllOrganizations:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      details: error.details,
     });
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message, status: false });
+
   }
 };
 

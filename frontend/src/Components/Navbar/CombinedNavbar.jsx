@@ -23,6 +23,8 @@ import { usePermissions } from "../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../utils/permissionUtils";
 import AuthCookieManager from "../../utils/AuthCookieManager/AuthCookieManager";
 import { useSingleContact } from "../../apiHooks/useUsers";
+import Loading from "../Loading.js";
+
 
 const CombinedNavbar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
@@ -208,9 +210,11 @@ const CombinedNavbar = () => {
     navigate("/account-settings");
   };
 
-  const handleLogout = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogout = async () => {
     closeAllDropdowns();
-    smartLogout(navigate);
+    await smartLogout(navigate, setIsLoading);
   };
 
   // Check if a nav item or icon is active
@@ -473,13 +477,21 @@ const CombinedNavbar = () => {
           Settings
         </button>
         <button
-          className="text-custom-blue hover:text-blue-500"
+          className="text-custom-blue hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
             closeAllDropdowns();
             handleLogout();
           }}
+          disabled={isLoading}
         >
-          Log Out
+          {isLoading ? (
+            <div className="flex items-center">
+              <Loading size="small" />
+              <span className="ml-2">Logging out...</span>
+            </div>
+          ) : (
+            "Log Out"
+          )}
         </button>
       </div>
       <div

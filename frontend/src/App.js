@@ -389,7 +389,7 @@ const MainAppRoutes = ({
   showLogoPaths,
   noNavbarPaths,
 }) => {
-  const { effectivePermissions, superAdminPermissions } = usePermissions();
+  const { effectivePermissions, superAdminPermissions, loading, isInitialized } = usePermissions();
   const userType = AuthCookieManager.getUserType();
 
   // Combine permissions into a single object
@@ -400,6 +400,17 @@ const MainAppRoutes = ({
 
   const showLogo = showLogoPaths.includes(location.pathname);
   const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);
+
+  // Show loading when permissions are being loaded and not initialized
+  if (loading || !isInitialized) {
+    return (
+      <Loading 
+        message="Loading permissions..." 
+        size="large"
+        className="fixed inset-0 z-50 bg-white"
+      />
+    );
+  }
 
   // Permission check function
   const hasPermission = (objectName, permissionType = "ViewTab") => {

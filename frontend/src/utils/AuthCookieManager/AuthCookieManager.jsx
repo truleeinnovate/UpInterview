@@ -521,8 +521,15 @@ class AuthCookieManager {
 
 
   // Smart logout based on current authentication state
-  static smartLogout(navigate) {
+  static async smartLogout(navigate, setLoading = null) {
     try {
+      console.log('🚪 Smart logout initiated with loading state');
+      
+      // Set loading state if provided
+      if (setLoading) {
+        setLoading(true);
+      }
+
       // Reset permission preload flag
       resetPermissionPreload();
       
@@ -534,6 +541,9 @@ class AuthCookieManager {
         hasAuthToken: !!authToken,
         hasImpersonationToken: !!impersonationToken
       });
+
+      // Simulate backend processing time for cookie clearing
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Helper function to clear cookies using multiple methods
       const clearCookie = (cookieName) => {
@@ -577,7 +587,9 @@ class AuthCookieManager {
         localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
         localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
         // Always redirect to main domain
-        window.location.href = "https://app.upinterview.io/organization-login";
+        // window.location.href = "https://app.upinterview.io/organization-login";
+        navigate("/organization-login");
+
 
       } else if (authToken && !impersonationToken) {
         // Scenario 2: Only auth token exists (effective user)
@@ -591,7 +603,9 @@ class AuthCookieManager {
         localStorage.removeItem('app_permissions_cache');
         localStorage.removeItem('app_permissions_timestamp');
         // Always redirect to main domain
-        window.location.href = "https://app.upinterview.io/organization-login";
+        // window.location.href = "https://app.upinterview.io/organization-login";
+        navigate("/organization-login");
+
       } else if (authToken && impersonationToken) {
         // Scenario 3: Both tokens exist (super admin logged in as user)
         console.log('🔄 Clearing effective user data, keeping super admin data, navigating to admin dashboard');
@@ -604,7 +618,9 @@ class AuthCookieManager {
       } else {
         // No tokens exist, just navigate to main domain organization login
         console.log('⚠️ No tokens found, navigating to main domain organization login');
-        window.location.href = "https://app.upinterview.io/organization-login";
+        // window.location.href = "https://app.upinterview.io/organization-login";
+        navigate("/organization-login");
+
       }
 
       // Wait a moment for cookies to be cleared, then verify
@@ -652,8 +668,14 @@ class AuthCookieManager {
 
     } catch (error) {
       console.error('Error during smart logout:', error);
+      // Ensure loading is turned off even if there's an error
+      if (setLoading) {
+        setLoading(false);
+      }
       // Fallback to main domain organization login
-      window.location.href = "https://app.upinterview.io/organization-login";
+      // window.location.href = "https://app.upinterview.io/organization-login";
+      navigate("/organization-login");
+
     }
   }
 
