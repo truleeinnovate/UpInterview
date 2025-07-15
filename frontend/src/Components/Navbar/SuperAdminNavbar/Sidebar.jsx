@@ -42,7 +42,7 @@ function Sidebar({ open, onClose }) {
     },
     {
       name: "Support Desk",
-      href: "/super-admin-desk",
+      href: "/support-desk",
       icon: AiOutlineCustomerService,
       permissionKey: "SuperAdminSupportDesk.ViewTab",
     },
