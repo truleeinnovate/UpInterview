@@ -1,14 +1,16 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import InterviewStatusIndicator from "./InterviewStatusIndicator";
 import FeedbackStatusChangeModal from "./FeedbackStatusChangeModal";
 import maleImage from "../../Pages/Dashboard-Part/Images/man.png";
 import Availability from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/Availability";
-import axios from "axios";
-import { config } from "../../config";
+// import axios from "axios";
+// import { config } from "../../config";
 import { Minimize, Expand, X } from "lucide-react";
+import { useOutsourceInterviewers } from "../../apiHooks/superAdmin/useOutsourceInterviewers";
 
 const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
   const interviewer = selectedInterviewersData.contactId;
+  const { outsourceInterviewers, isLoading } = useOutsourceInterviewers();
 
   const [timeZone] = useState(interviewer?.timeZone || "Not Provided");
   const [selectedDuration, setSelectedDuration] = useState(
@@ -19,7 +21,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     interviewer?.IsReadyForMockInterviews === "yes"
   );
 
-  const [feedbackData, setFeedbackData] = useState([]);
+  // const [feedbackData, setFeedbackData] = useState([]);
 
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -27,73 +29,15 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     setIsExpanded(!isExpanded);
   };
 
-  // const fetchInterviewers = useCallback(async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       `${config.REACT_APP_API_URL}/outsourceInterviewers`
-  //     );
+  // fetching feedback
+  const interviewerId = interviewer?._id;
+  const feedbackData = useMemo(() => {
+    if (!interviewerId || !outsourceInterviewers?.length) return [];
 
-  //     console.log("response:", response.data);
-
-  //     if (!interviewer || !interviewer._id) {
-  //       console.error("No valid interviewer selected");
-  //       return;
-  //     }
-
-  //     const interviewerId = interviewer._id;
-
-  //     console.log("Interviewer._id:", interviewerId);
-
-  //     // Filter data where contactId matches the selected interviewer's _id
-  //     const filteredData = response.data.filter(
-  //       (item) => item.contactId._id === interviewerId
-  //     );
-
-  //     console.log("filteredData:", filteredData);
-  //     if (filteredData.length > 0) {
-  //       setFeedbackData(filteredData || []);
-  //     } else {
-  //       setFeedbackData([]);
-  //     }
-  //   } catch (err) {
-  //     console.error("Error fetching interviewers:", err);
-  //   }
-  // }, [interviewer]);
-
-  const fetchInterviewers = useCallback(async () => {
-    if (!interviewer || !interviewer._id) {
-      console.error("No valid interviewer selected");
-      setFeedbackData([]);
-      return;
-    }
-
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/outsourceInterviewers`
-      );
-
-      console.log("response:", response.data);
-
-      const interviewerId = interviewer._id;
-
-      console.log("Interviewer._id:", interviewerId);
-
-      // Filter data where contactId matches the selected interviewer's _id
-      const filteredData = response.data.filter(
-        (item) => item.contactId?._id === interviewerId
-      );
-
-      console.log("filteredData:", filteredData);
-
-      setFeedbackData(filteredData);
-    } catch (err) {
-      console.error("Error fetching interviewers:", err);
-    }
-  }, [interviewer]);
-
-  useEffect(() => {
-    fetchInterviewers();
-  }, [fetchInterviewers]);
+    return outsourceInterviewers
+      .filter((item) => item.contactId?._id === interviewerId)
+      .reverse();
+  }, [interviewerId, outsourceInterviewers]);
 
   const getMappedPolicy = (policy) => {
     switch (policy) {
@@ -211,7 +155,6 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
     setShowStatusModal(true);
   };
 
-
   const options = [
     { label: "Charge 25% without rescheduling", value: "25-no-reschedule" },
     { label: "Charge 50% without rescheduling", value: "50-no-reschedule" },
@@ -281,7 +224,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
             <div
               className={`flex p-6 border border-gray-200 rounded-lg ${
                 isExpanded
-                  ? "flex-row items-start"
+                  ? "flex-row items-start gap-6"
                   : "mb-[72px] lg:flex-col xl:flex-col 2xl:flex-col lg:items-center xl:items-center 2xl:items-center"
               }`}
             >
@@ -294,13 +237,13 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
               />
 
               <div
-                className={`sm:ml-6 md:ml-6 lg:ml-6 xl:ml-6 2xl:ml-6 ${
+                className={`${
                   isExpanded
-                    ? "text-left ml-6"
+                    ? "text-left"
                     : "lg:text-center xl:text-center 2xl:text-center"
                 }`}
               >
-                <h2 className="text-2xl font-medium text-custom-blue mb-1 font-serif">
+                <h2 className="text-xl font-medium text-custom-blue mb-1 font-serif">
                   {interviewer?.firstName || "N/A"}
                 </h2>
                 <p className="text-gray-700 font-medium mb-1">
