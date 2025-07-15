@@ -292,18 +292,13 @@ const OrganizationLogin = () => {
           console.log(`[OrganizationLogin][${loginStartTime}] Redirecting to subdomain...`);
 
           const protocol = window.location.protocol;
+          const targetUrl = `${protocol}//${targetDomain}/home`;
 
-          // Determine the target path based on user status
-          let targetPath = '/';
-          if (status === 'active' && isProfileCompleted !== false) {
-            targetPath = '/home';
-          } else if (status === 'submitted' || status === 'payment_pending') {
-            targetPath = '/subscription-plans';
-          } else if (isProfileCompleted === false && roleName) {
-            targetPath = '/complete-profile';
-          }
+          console.log(`[OrganizationLogin][${loginStartTime}] Setting subdomain URL:`, targetUrl);
 
-          const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
+          // Wait for 3-4 seconds to ensure data is loaded in the home page
+          console.log(`[OrganizationLogin][${loginStartTime}] Waiting 4 seconds for data preparation...`);
+          await new Promise(resolve => setTimeout(resolve, 4000));
 
           console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subdomain:`, targetUrl);
           window.location.href = targetUrl;
@@ -336,7 +331,15 @@ const OrganizationLogin = () => {
               state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
             });
           } else {
-            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to home`);
+
+            // Enhanced home navigation with data loading preparation
+            console.log(`[OrganizationLogin][${loginStartTime}] Preparing for home navigation with data loading...`);
+
+            // Wait for 4 seconds to ensure backend data is ready and cookies are properly set
+            console.log(`[OrganizationLogin][${loginStartTime}] Waiting 4 seconds for data preparation...`);
+            await new Promise(resolve => setTimeout(resolve, 4000));
+
+            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to home with prepared data`);
             navigate('/home');
           }
           break;

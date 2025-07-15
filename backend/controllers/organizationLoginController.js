@@ -376,19 +376,15 @@ const loginOrganization = async (req, res) => {
       };
       const impersonationToken = generateToken(payload, { expiresIn: "7h" });
 
-      // Set impersonation token cookie
-      res.cookie(
-        "impersonationToken",
-        impersonationToken,
-        getAuthCookieOptions()
-      );
-      console.log("[loginOrganization] Set impersonation token cookie");
+      // Note: Impersonation token will be set by frontend using setAuthCookies()
+      // Backend only returns the token in response, frontend handles cookie setting
+      console.log('[loginOrganization] Impersonation token generated, will be set by frontend');
 
       return res.status(200).json({
         success: true,
         message: "Login successful",
         impersonatedUserId: user._id.toString(),
-        impersonationToken,
+        impersonationToken, 
         roleType,
         isEmailVerified: user.isEmailVerified,
         redirect: "/admin-dashboard",
@@ -434,9 +430,9 @@ const loginOrganization = async (req, res) => {
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
 
-    // Set auth token cookie
-    res.cookie("authToken", authToken, getAuthCookieOptions());
-    console.log("[loginOrganization] Set auth token cookie");
+    // Note: Auth token will be set by frontend using setAuthCookies()
+    // Backend only returns the token in response, frontend handles cookie setting
+    console.log('[loginOrganization] Auth token generated, will be set by frontend');
 
     const responseData = {
       success: true,
@@ -1037,6 +1033,11 @@ const getAllOrganizations = async (req, res) => {
       },
     ]).exec();
 
+    // Fetch latest subscription per tenant
+    // Use find() with sort instead of aggregate to avoid Azure Cosmos DB index issues
+    const allSubscriptions = await CustomerSubscription.find().sort({ createdAt: -1 }).lean();
+
+    // Group by tenantId and get the latest subscription for each
     const subscriptionMap = {};
     allSubscriptions.forEach((subscription) => {
       if (subscription.tenantId) {
