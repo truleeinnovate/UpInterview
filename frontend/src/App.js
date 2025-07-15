@@ -948,6 +948,7 @@ const MainAppRoutes = ({
                     />
                   )}
                   {hasPermission("SupportDesk", "View") && (
+                    <>
                     <Route
                       path="/support-desk/:id"
                       element={
@@ -957,6 +958,16 @@ const MainAppRoutes = ({
                         </>
                       }
                     />
+                    <Route
+                        path="/support-desk/view/:id"
+                        element={
+                          <>
+                            <SuperSupportDetails />
+                            <SupportDesk />
+                          </>
+                        }
+                      />
+                    </>
                   )}
                 </>
               )}

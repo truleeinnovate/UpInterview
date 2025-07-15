@@ -112,7 +112,7 @@ function Header() {
       // role: "super_admin",
     },
     {
-      path: "/super-admin-desk",
+      path: "/support-desk",
       label: "Support Desk",
       permissionKey: "SuperAdminSupportDesk.ViewTab",
       // role: "super_admin",
