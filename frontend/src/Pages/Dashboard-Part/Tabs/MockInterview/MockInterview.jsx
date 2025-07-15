@@ -16,10 +16,10 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
-import { usePermissionCheck } from "../../../../utils/permissionUtils";
+import { useDynamicPermissionCheck } from "../../../../utils/dynamicPermissions.js";
 
 const MockInterview = () => {
-  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { checkPermission, isInitialized } = useDynamicPermissionCheck();
   const { effectivePermissions } = usePermissions();
   const { 
     mockinterviewData, 
@@ -274,6 +274,7 @@ const MockInterview = () => {
               title="Mock Interviews"
               onAddClick={() => navigate('/mockinterview-create')}
               addButtonText="Add Interview"
+              canCreate={checkPermission("MockInterviews")}
             />
             <Toolbar
               view={viewMode}
