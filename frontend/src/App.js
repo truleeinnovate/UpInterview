@@ -865,13 +865,6 @@ const MainAppRoutes = ({
                 <Route path="hrms-ats" element={<HrmsAtsApi />} />
               </Route>
 
-              {/* Billing Invoice */}
-              {hasPermission("Billing") && (
-                <Route path="/billing" element={<InvoiceTab />}>
-                  <Route index element={null} />
-                  <Route path="details/:id" element={<UserInvoiceDetails />} />
-                </Route>
-              )}
 
               {/* Interview Templates */}
               {hasPermission("InterviewTemplates") && (

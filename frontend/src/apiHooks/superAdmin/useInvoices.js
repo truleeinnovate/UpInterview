@@ -24,8 +24,8 @@ export const useInvoices = (organizationId) => {
       return response.data?.invoices || [];
     },
     enabled: isInitialized && !!hasViewPermission,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -61,8 +61,8 @@ export const useInvoiceById = (invoiceId) => {
       return response.data || null;
     },
     enabled: isInitialized && !!hasViewPermission && !!invoiceId,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,

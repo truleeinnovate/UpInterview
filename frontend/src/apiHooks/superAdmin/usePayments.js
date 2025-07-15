@@ -24,8 +24,8 @@ export const usePayments = (organizationId) => {
       return response.data?.payments || [];
     },
     enabled: isInitialized && !!hasViewPermission,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -61,8 +61,8 @@ export const usePaymentById = (paymentId) => {
       return response.data || null;
     },
     enabled: isInitialized && !!hasViewPermission && !!paymentId,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,

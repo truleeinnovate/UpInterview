@@ -37,18 +37,28 @@ class AuthCookieManager {
 
   // Set auth token
   static setAuthToken(token) {
+    console.log('🔑 setAuthToken called with token:', {
+      hasToken: !!token,
+      tokenLength: token ? token.length : 0,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'null'
+    });
+
     try {
-      // Set the token in cookies
-      Cookies.set('authToken', token, { 
+      console.log('🍪 Setting cookie with key:', AUTH_TOKEN_KEY);
+      Cookies.set(AUTH_TOKEN_KEY, token, {
         expires: 7, // 7 days
         secure: true,
         sameSite: 'strict'
       });
-      
-      // Update user type when auth token changes
-      this.updateUserType();
-      
-      console.log('✅ Auth token set successfully');
+      // User type is now determined directly from token state
+      console.log('✅ Auth token set - user type will be determined from tokens');
+
+      // Verify the cookie was set
+      const savedToken = Cookies.get(AUTH_TOKEN_KEY);
+      console.log('✅ Auth token set successfully. Verification:', {
+        cookieExists: !!savedToken,
+        tokenMatches: savedToken === token
+      });
     } catch (error) {
       console.error('❌ Error setting auth token:', error);
     }
@@ -56,6 +66,14 @@ class AuthCookieManager {
 
   // Set impersonation token
   static setImpersonationToken(token, userData = null) {
+    console.log('👤 setImpersonationToken called with:', {
+      hasToken: !!token,
+      tokenLength: token ? token.length : 0,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'null',
+      hasUserData: !!userData,
+      userData: userData
+    });
+
     try {
       // Set the token in cookies
       Cookies.set('impersonationToken', token, { 
@@ -64,16 +82,21 @@ class AuthCookieManager {
         sameSite: 'strict'
       });
       
-      // Store impersonated user data if provided
       if (userData) {
         localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
         console.log('✅ Impersonated user data stored:', userData);
       }
-      
-      // Update user type when impersonation token changes
-      this.updateUserType();
-      
-      console.log('✅ Impersonation token set successfully');
+
+      // User type is now determined directly from token state
+      console.log('✅ Impersonation token set - user type will be determined from tokens');
+
+      // Verify the cookie was set
+      const savedToken = Cookies.get(IMPERSONATION_TOKEN_KEY);
+      console.log('✅ Impersonation token set successfully. Verification:', {
+        cookieExists: !!savedToken,
+        tokenMatches: savedToken === token
+      });
+
     } catch (error) {
       console.error('❌ Error setting impersonation token:', error);
     }
@@ -84,7 +107,7 @@ class AuthCookieManager {
     try {
       const authToken = this.getAuthToken();
       const impersonationToken = this.getImpersonationToken();
-      
+
       // Determine user type directly from token state
       let userType = null;
       
@@ -179,11 +202,11 @@ class AuthCookieManager {
    */
   static updateUserType() {
     const userType = this.getUserType(); // Get from token state
-    
+
     // Store in localStorage for legacy compatibility
     this.setUserType(userType);
     console.log(`👤 User type stored in localStorage: ${userType}`);
-    
+
     return userType;
   }
 
@@ -241,7 +264,7 @@ class AuthCookieManager {
    */
   static getCurrentUserId() {
     const userType = this.getUserType();
-    
+
     if (userType === 'effective') {
       // For effective users, get user ID from auth token
       const authToken = this.getAuthToken();
@@ -270,7 +293,7 @@ class AuthCookieManager {
         }
       }
     }
-    
+
     console.log('⚠️ No user ID found for user type:', userType);
     return null;
   }
@@ -282,13 +305,13 @@ class AuthCookieManager {
    */
   static getCurrentPermissions() {
     const userType = this.getUserType();
-    
+
     if (userType === 'effective') {
       return this.getEffectivePermissions();
     } else if (userType === 'superAdmin') {
       return this.getSuperAdminPermissions();
     }
-    
+
     return null;
   }
 
@@ -359,7 +382,7 @@ class AuthCookieManager {
    */
   static setCurrentPermissions(permissions) {
     const userType = this.getUserType();
-    
+
     if (userType === 'effective') {
       this.setEffectivePermissions(permissions);
     } else if (userType === 'superAdmin') {
@@ -420,17 +443,17 @@ class AuthCookieManager {
   //     // Clear impersonation token and related data
   //     Cookies.remove(IMPERSONATION_TOKEN_KEY);
   //     localStorage.removeItem(IMPERSONATED_USER_KEY);
-      
+
   //     // Clear effective user permissions
   //     this.clearPermissions('effective');
-      
+
   //     // Also clear the old legacy cache keys for backward compatibility
   //     localStorage.removeItem('app_permissions_cache');
   //     localStorage.removeItem('app_permissions_timestamp');
-      
+
   //     // Update user type based on current state
   //     AuthCookieManager.updateUserType();
-      
+
   //     console.log('✅ Effective user data cleared, returning to super admin');
   //   } catch (error) {
   //     console.error('Error clearing effective user data:', error);
@@ -474,26 +497,27 @@ class AuthCookieManager {
   static loginAsUser(authToken, userData) {
     try {
       console.log('🔄 Login as user - keeping super admin session and adding user auth token');
-      
+
       // Store the current super admin impersonation token
       const currentImpersonationToken = AuthCookieManager.getImpersonationToken();
       console.log('👤 Current super admin impersonation token exists:', !!currentImpersonationToken);
-      
+
       // Set the user's auth token as the auth token (effective user session)
       console.log('🔑 Setting user token as auth token');
       AuthCookieManager.setAuthToken(authToken);
-      
+
       // Restore the super admin's impersonation token
       if (currentImpersonationToken) {
         console.log('👤 Restoring super admin impersonation token');
         AuthCookieManager.setImpersonationToken(currentImpersonationToken);
       }
-      
+
       console.log('✅ Login as user completed successfully - both super admin and effective user sessions active');
     } catch (error) {
       console.error('❌ Error during login as user:', error);
     }
   }
+
 
 
   // Smart logout based on current authentication state
@@ -505,62 +529,69 @@ class AuthCookieManager {
       // Get current authentication state
       const authToken = AuthCookieManager.getAuthToken();
       const impersonationToken = AuthCookieManager.getImpersonationToken();
-      
+
       console.log('🚪 Smart logout initiated with state:', {
         hasAuthToken: !!authToken,
         hasImpersonationToken: !!impersonationToken
       });
-      
+
       // Helper function to clear cookies using multiple methods
       const clearCookie = (cookieName) => {
         console.log(`🧹 Clearing cookie: ${cookieName}`);
         console.log(`🔍 Before clearing - Cookie ${cookieName}:`, Cookies.get(cookieName));
-        
+
         // Method 1: Set with expired date
-        Cookies.set(cookieName, '', { 
+        Cookies.set(cookieName, '', {
           expires: new Date(0),
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict'
         });
         console.log(`📝 After Method 1 - Cookie ${cookieName}:`, Cookies.get(cookieName));
-        
+
         // Method 2: Remove using js-cookie
         Cookies.remove(cookieName);
         console.log(`📝 After Method 2 - Cookie ${cookieName}:`, Cookies.get(cookieName));
-        
+
         // Method 3: Manual document.cookie approach
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure; samesite=strict`;
         console.log(`📝 After Method 3 - Cookie ${cookieName}:`, Cookies.get(cookieName));
-        
+
         // Method 4: Try without secure and sameSite in development
         if (process.env.NODE_ENV !== 'production') {
           Cookies.set(cookieName, '', { expires: new Date(0) });
           console.log(`📝 After Method 4 (dev) - Cookie ${cookieName}:`, Cookies.get(cookieName));
         }
-        
+
         console.log(`✅ Cookie ${cookieName} cleared using multiple methods`);
       };
-      
+
       if (impersonationToken && !authToken) {
         // Scenario 1: Only impersonation token exists (super admin)
-        console.log('👤 Clearing super admin data and navigating to organization login');
+        console.log('👤 Clearing super admin data and navigating to main domain organization login');
         // Clear super admin related data
         clearCookie(IMPERSONATION_TOKEN_KEY);
         localStorage.removeItem(IMPERSONATED_USER_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
         AuthCookieManager.clearPermissions('superAdmin');
-        AuthCookieManager.clearAllPermissionCaches();
-        navigate("/organization-login");
+        localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
+        localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
+        // Always redirect to main domain
+        window.location.href = "https://app.upinterview.io/organization-login";
+
       } else if (authToken && !impersonationToken) {
         // Scenario 2: Only auth token exists (effective user)
-        console.log('🔑 Clearing effective user data and navigating to organization login');
+        console.log('🔑 Clearing effective user data and navigating to main domain organization login');
         // Clear effective user related data
         clearCookie(AUTH_TOKEN_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
         AuthCookieManager.clearPermissions('effective');
-        AuthCookieManager.clearAllPermissionCaches();
-        navigate("/organization-login");
+        localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
+        localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
+        localStorage.removeItem('app_permissions_cache');
+        localStorage.removeItem('app_permissions_timestamp');
+        // Always redirect to main domain
+        window.location.href = "https://app.upinterview.io/organization-login";
       } else if (authToken && impersonationToken) {
         // Scenario 3: Both tokens exist (super admin logged in as user)
         console.log('🔄 Clearing effective user data, keeping super admin data, navigating to admin dashboard');
@@ -571,11 +602,11 @@ class AuthCookieManager {
         localStorage.removeItem(USER_TYPE_KEY);
         navigate("/admin-dashboard");
       } else {
-        // No tokens exist, just navigate to organization login
-        console.log('⚠️ No tokens found, navigating to organization login');
-        navigate("/organization-login");
+        // No tokens exist, just navigate to main domain organization login
+        console.log('⚠️ No tokens found, navigating to main domain organization login');
+        window.location.href = "https://app.upinterview.io/organization-login";
       }
-      
+
       // Wait a moment for cookies to be cleared, then verify
       setTimeout(() => {
         // Verify that cookies and localStorage were cleared
@@ -583,7 +614,7 @@ class AuthCookieManager {
         const verifyImpersonationToken = AuthCookieManager.getImpersonationToken();
         const verifyEffectivePermissions = localStorage.getItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
         const verifySuperAdminPermissions = localStorage.getItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
-        
+
         console.log('🔍 Verification after logout:', {
           authTokenCleared: !verifyAuthToken,
           impersonationTokenCleared: !verifyImpersonationToken,
@@ -591,12 +622,12 @@ class AuthCookieManager {
           superAdminPermissionsCleared: !verifySuperAdminPermissions,
           allCookies: document.cookie
         });
-        
+
         // Only use aggressive fallback if we're not in the "both tokens" scenario
         // In the "both tokens" scenario, we expect the authToken to be cleared but impersonationToken to remain
         const originalAuthToken = authToken;
         const originalImpersonationToken = impersonationToken;
-        
+
         if (originalAuthToken && originalImpersonationToken) {
           // Scenario 3: Both tokens existed - only authToken should be cleared
           if (verifyAuthToken && !verifyImpersonationToken) {
@@ -615,14 +646,14 @@ class AuthCookieManager {
             AuthCookieManager.clearAllAuth();
           }
         }
-        
+
         console.log('✅ Smart logout completed');
       }, 100);
-      
+
     } catch (error) {
       console.error('Error during smart logout:', error);
-      // Fallback to organization login
-      navigate("/organization-login");
+      // Fallback to main domain organization login
+      window.location.href = "https://app.upinterview.io/organization-login";
     }
   }
 
@@ -654,30 +685,30 @@ class AuthCookieManager {
       
       console.log('🧹 clearAllAuth called');
       console.log('📋 Current cookies before clearing:', document.cookie);
-      
+
       // Clear localStorage
       localStorage.clear();
       console.log('✅ localStorage cleared');
-      
+
       // Clear specific auth cookies with proper options
-      Cookies.set(AUTH_TOKEN_KEY, '', { 
+      Cookies.set(AUTH_TOKEN_KEY, '', {
         expires: new Date(0),
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict'
       });
-      
-      Cookies.set(IMPERSONATION_TOKEN_KEY, '', { 
+
+      Cookies.set(IMPERSONATION_TOKEN_KEY, '', {
         expires: new Date(0),
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict'
       });
-      
+
       // Also try without secure and sameSite for development
       if (process.env.NODE_ENV !== 'production') {
         Cookies.set(AUTH_TOKEN_KEY, '', { expires: new Date(0) });
         Cookies.set(IMPERSONATION_TOKEN_KEY, '', { expires: new Date(0) });
       }
-      
+
       // Generic cookie clearing as fallback
       document.cookie.split(";").forEach((c) => {
         const cookieName = c.trim().split("=")[0];
@@ -685,11 +716,7 @@ class AuthCookieManager {
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         }
       });
-      
-      // Clear user type from localStorage
-      localStorage.removeItem(USER_TYPE_KEY);
-      console.log('✅ User type cleared from localStorage');
-      
+
       console.log('📋 Current cookies after clearing:', document.cookie);
       console.log('✅ All auth data cleared');
     } catch (error) {
@@ -719,7 +746,7 @@ class AuthCookieManager {
       tenantId: data.tenantId,
       organization: data.organization
     });
-    
+
     try {
       // Step 1: Set auth token (effective user token) if provided
       if (data.authToken) {
@@ -729,7 +756,7 @@ class AuthCookieManager {
       } else {
         console.log('⚠️ No auth token provided');
       }
-      
+
       // Step 2: Set impersonation token (super admin token) if provided
       if (data.impersonationToken) {
         console.log('👤 Setting impersonation token (super admin)...');
@@ -738,22 +765,22 @@ class AuthCookieManager {
       } else {
         console.log('⚠️ No impersonation token provided');
       }
-      
+
       // Step 3: Update user type based on current token state
       console.log('🔄 Updating user type...');
       AuthCookieManager.updateUserType();
-      
+
       // Step 4: Verify final state
       const finalAuthToken = AuthCookieManager.getAuthToken();
       const finalImpersonationToken = AuthCookieManager.getImpersonationToken();
       const finalUserType = AuthCookieManager.getUserType();
-      
+
       console.log('🔍 Final authentication state:', {
         hasAuthToken: !!finalAuthToken,
         hasImpersonationToken: !!finalImpersonationToken,
         userType: finalUserType
       });
-      
+
       console.log('✅ Auth cookies set successfully');
     } catch (error) {
       console.error('❌ Error setting auth cookies:', error);
@@ -784,7 +811,7 @@ class AuthCookieManager {
       const impersonationToken = AuthCookieManager.getImpersonationToken();
       const authTokenFromDocument = document.cookie.split(';').find(cookie => cookie.trim().startsWith('authToken='));
       const impersonationTokenFromDocument = document.cookie.split(';').find(cookie => cookie.trim().startsWith('impersonationToken='));
-      
+
       return {
         authToken: !!authToken,
         impersonationToken: !!impersonationToken,
