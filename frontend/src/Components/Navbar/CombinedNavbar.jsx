@@ -45,26 +45,26 @@ const CombinedNavbar = () => {
     hasAuthToken: !!authToken
   });
 
-  // Debug permission checks
-  const debugPermissions = () => {
-    const permissions = [
-      'Candidates', 'Positions', 'Interviews', 'MockInterviews',
-      'InterviewTemplates', 'Assessments', 'Analytics', 'SupportDesk',
-      'QuestionBank', 'Billing', 'Wallet'
-    ];
+  // // Debug permission checks
+  // const debugPermissions = () => {
+  //   const permissions = [
+  //     'Candidates', 'Positions', 'Interviews', 'MockInterviews',
+  //     'InterviewTemplates', 'Assessments', 'Analytics', 'SupportDesk',
+  //     'QuestionBank', 'Billing', 'Wallet'
+  //   ];
 
-    console.log('🔍 Permission check results:');
-    permissions.forEach(permission => {
-      const hasPermission = checkPermission(permission);
-      console.log(`  ${permission}: ${hasPermission ? '✅' : '❌'}`);
-    });
-  };
+  //   console.log('🔍 Permission check results:');
+  //   permissions.forEach(permission => {
+  //     const hasPermission = checkPermission(permission);
+  //     console.log(`  ${permission}: ${hasPermission ? '✅' : '❌'}`);
+  //   });
+  // };
 
-  // Debug permissions on mount and when permissions change
-  useEffect(() => {
-    console.log('🔄 CombinedNavbar permissions changed, debugging...');
-    debugPermissions();
-  }, [isInitialized, loading]);
+  // // Debug permissions on mount and when permissions change
+  // useEffect(() => {
+  //   console.log('🔄 CombinedNavbar permissions changed, debugging...');
+  //   debugPermissions();
+  // }, [isInitialized, loading]);
 
   // Format name to capitalize first letter of first and last names
   const formatName = (name) => {
@@ -345,20 +345,20 @@ const CombinedNavbar = () => {
     }
   };
 
-  // Debug specific permission checks
-  const candidatesPermission = checkPermission("Candidates");
-  const positionsPermission = checkPermission("Positions");
-  const interviewsPermission = checkPermission("Interviews");
-  const mockInterviewsPermission = checkPermission("MockInterviews");
-  const interviewTemplatesPermission = checkPermission("InterviewTemplates");
+  // // Debug specific permission checks
+  // const candidatesPermission = checkPermission("Candidates");
+  // const positionsPermission = checkPermission("Positions");
+  // const interviewsPermission = checkPermission("Interviews");
+  // const mockInterviewsPermission = checkPermission("MockInterviews");
+  // const interviewTemplatesPermission = checkPermission("InterviewTemplates");
 
-  console.log('🎯 Specific permission checks:', {
-    candidatesPermission,
-    positionsPermission,
-    interviewsPermission,
-    mockInterviewsPermission,
-    interviewTemplatesPermission
-  });
+  // console.log('🎯 Specific permission checks:', {
+  //   candidatesPermission,
+  //   positionsPermission,
+  //   interviewsPermission,
+  //   mockInterviewsPermission,
+  //   interviewTemplatesPermission
+  // });
 
   const outlineDropdownContent = (
     <div className="absolute top-12 w-80 text-sm rounded-md bg-white border right-7 z-30 -mr-20">

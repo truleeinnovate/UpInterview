@@ -2,9 +2,17 @@ import axios from 'axios';
 import { config } from '../config';
 import AuthCookieManager from './AuthCookieManager/AuthCookieManager';
 
+// Track if permissions have been preloaded to prevent multiple loads
+let permissionsPreloaded = false;
+
 // Preload permissions to improve performance
 export const preloadPermissions = async () => {
   try {
+    // Prevent multiple preloads
+    if (permissionsPreloaded) {
+      return null;
+    }
+
     const activeToken = AuthCookieManager.getActiveToken();
     if (!activeToken) {
       return null;
@@ -12,6 +20,8 @@ export const preloadPermissions = async () => {
 
     const userType = AuthCookieManager.getUserType();
     const permissionsUrl = `${config.REACT_APP_API_URL}/users/permissions`;
+
+    console.log('🔄 Preloading permissions for user type:', userType);
 
     const response = await axios.get(permissionsUrl, {
       withCredentials: true,
@@ -30,6 +40,11 @@ export const preloadPermissions = async () => {
     };
 
     localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+    
+    // Mark as preloaded
+    permissionsPreloaded = true;
+    
+    console.log('✅ Permissions preloaded and cached successfully');
     
     return permissionData;
   } catch (error) {
@@ -57,8 +72,22 @@ export const hasValidCachedPermissions = () => {
     const age = Date.now() - timestamp;
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-    return age < CACHE_DURATION;
+    const isValid = age < CACHE_DURATION;
+    
+    if (isValid) {
+      console.log('✅ Valid cached permissions found');
+    } else {
+      console.log('❌ Cached permissions expired');
+    }
+    
+    return isValid;
   } catch (error) {
+    console.warn('Error checking cached permissions:', error);
     return false;
   }
+};
+
+// Reset preload flag (useful for testing or logout)
+export const resetPermissionPreload = () => {
+  permissionsPreloaded = false;
 }; 

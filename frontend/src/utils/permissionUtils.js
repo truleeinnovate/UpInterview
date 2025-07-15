@@ -3,29 +3,66 @@ import { usePermissions } from '../Context/PermissionsContext';
 /**
  * Custom hook for optimized permission checking
  * This hook provides cached permission checking to prevent unnecessary re-renders
+ * and better UX during loading states
  */
 export const usePermissionCheck = () => {
-    const { hasPermission, isInitialized, loading } = usePermissions();
+    const { hasPermission, isInitialized, loading, effectivePermissions, superAdminPermissions } = usePermissions();
 
     const checkPermission = (objectName, permissionType = "ViewTab") => {
-        if (!isInitialized || loading) return false;
-        return hasPermission(objectName, permissionType);
+        // If we have any permissions data available, use it immediately
+        const hasAnyPermissions = effectivePermissions && Object.keys(effectivePermissions).length > 0;
+        const hasAnySuperAdminPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+        
+        if (hasAnyPermissions || hasAnySuperAdminPermissions) {
+            // Use available permissions even if still loading
+            return hasPermission(objectName, permissionType);
+        }
+        
+        // Only return false if we have no permissions data at all
+        if (!isInitialized && !loading) {
+            return false;
+        }
+        
+        // During initial loading with no cached data, return false
+        return false;
     };
 
     const checkMultiplePermissions = (permissions) => {
-        if (!isInitialized || loading) return false;
+        // If we have any permissions data available, use it immediately
+        const hasAnyPermissions = effectivePermissions && Object.keys(effectivePermissions).length > 0;
+        const hasAnySuperAdminPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+        
+        if (hasAnyPermissions || hasAnySuperAdminPermissions) {
+            return permissions.every(({ objectName, permissionType = "ViewTab" }) =>
+                hasPermission(objectName, permissionType)
+            );
+        }
 
-        return permissions.every(({ objectName, permissionType = "ViewTab" }) =>
-            hasPermission(objectName, permissionType)
-        );
+        // Only return false if we have no permissions data at all
+        if (!isInitialized && !loading) {
+            return false;
+        }
+        
+        return false;
     };
 
     const checkAnyPermission = (permissions) => {
-        if (!isInitialized || loading) return false;
+        // If we have any permissions data available, use it immediately
+        const hasAnyPermissions = effectivePermissions && Object.keys(effectivePermissions).length > 0;
+        const hasAnySuperAdminPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+        
+        if (hasAnyPermissions || hasAnySuperAdminPermissions) {
+            return permissions.some(({ objectName, permissionType = "ViewTab" }) =>
+                hasPermission(objectName, permissionType)
+            );
+        }
 
-        return permissions.some(({ objectName, permissionType = "ViewTab" }) =>
-            hasPermission(objectName, permissionType)
-        );
+        // Only return false if we have no permissions data at all
+        if (!isInitialized && !loading) {
+            return false;
+        }
+        
+        return false;
     };
 
     return {

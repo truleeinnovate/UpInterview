@@ -9,6 +9,10 @@ export const useTenants = () => {
   const { superAdminPermissions, isInitialized } = usePermissions();
 
   const hasViewPermission = superAdminPermissions?.Tenants?.View;
+  const hasAnyPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+
+  // Simple enabled logic - enable if we have permissions or if initialized
+  const isEnabled = Boolean(hasAnyPermissions || isInitialized);
 
   const {
     data: tenants = [],
@@ -24,7 +28,7 @@ export const useTenants = () => {
       );
       return response.data.organizations || [];
     },
-    enabled: isInitialized && !!hasViewPermission,
+    enabled: isEnabled,
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 15,
     retry: 1,
@@ -74,6 +78,10 @@ export const useTenants = () => {
 export const useTenantById = (id) => {
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasViewPermission = superAdminPermissions?.Tenants?.View;
+  const hasAnyPermissions = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
+
+  // Simple enabled logic - enable if we have permissions or if initialized, and have an ID
+  const isEnabled = Boolean((hasAnyPermissions || isInitialized) && id);
 
   const {
     data: tenant = null,
@@ -89,7 +97,7 @@ export const useTenantById = (id) => {
       );
       return response.data?.organization || null;
     },
-    enabled: isInitialized && !!hasViewPermission && !!id,
+    enabled: isEnabled,
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 15,
     retry: 1,
