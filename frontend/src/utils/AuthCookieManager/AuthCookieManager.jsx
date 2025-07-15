@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import { decodeJwt } from './jwtDecode';
+import { resetPermissionPreload } from "../permissionPreloader";
 
 // Token keys
 const AUTH_TOKEN_KEY = 'authToken';
@@ -517,33 +518,14 @@ class AuthCookieManager {
     }
   }
 
-  // Return to super admin (clear effective user session, keep super admin session)
-  static returnToSuperAdmin() {
-    try {
-      console.log('🔄 Returning to super admin mode');
-
-      // Clear the auth token (effective user session)
-      Cookies.remove(AUTH_TOKEN_KEY);
-      console.log('🔑 Cleared auth token (effective user session)');
-
-      // Clear effective user permissions
-      AuthCookieManager.clearPermissions('effective');
-      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
-      localStorage.removeItem('app_permissions_cache');
-      localStorage.removeItem('app_permissions_timestamp');
-
-      console.log('✅ Returned to super admin mode - effective user session cleared');
-    } catch (error) {
-      console.error('❌ Error returning to super admin:', error);
-    }
-  }
-
 
 
   // Smart logout based on current authentication state
   static smartLogout(navigate) {
     try {
+      // Reset permission preload flag
+      resetPermissionPreload();
+      
       // Get current authentication state
       const authToken = AuthCookieManager.getAuthToken();
       const impersonationToken = AuthCookieManager.getImpersonationToken();
@@ -698,6 +680,9 @@ class AuthCookieManager {
   // Clear all authentication data
   static clearAllAuth() {
     try {
+      // Reset permission preload flag
+      resetPermissionPreload();
+      
       console.log('🧹 clearAllAuth called');
       console.log('📋 Current cookies before clearing:', document.cookie);
 

@@ -1147,7 +1147,7 @@ const App = () => {
   // Preload permissions on app startup if user is authenticated
   useEffect(() => {
     if (authToken && !hasValidCachedPermissions()) {
-      // Preload permissions in the background
+      // Preload permissions in the background only if not cached
       preloadPermissions().catch(console.warn);
     }
     
@@ -1155,7 +1155,7 @@ const App = () => {
     if (authToken) {
       AuthCookieManager.syncUserType();
     }
-  }, [authToken]);
+  }, [authToken]); // Only run when authToken changes (login/logout)
 
   useEffect(() => {
     const emitter = getActivityEmitter();

@@ -16,9 +16,11 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { usePermissions } from "../../../../Context/PermissionsContext";
+import { useDynamicPermissionCheck } from "../../../../utils/dynamicPermissions";
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const { effectivePermissions } = usePermissions();
+  const { checkPermission, isInitialized } = useDynamicPermissionCheck();
   const [view, setView] = useState("table");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -216,7 +218,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
           <div className="ml-3">
             <div
               className="text-sm font-medium text-custom-blue cursor-pointer"
-              onClick={() => effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)}
+                              onClick={() => checkPermission("Candidates", "View") && navigate(`view-details/${row._id}`)}
             >
               {(row?.FirstName.charAt(0).toUpperCase() + row.FirstName.slice(1) || "") + " " + (row.LastName.charAt(0).toUpperCase() + row.LastName.slice(1) || "")}
             </div>
@@ -274,7 +276,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   // Table Actions Configuration
   const tableActions = [
-    ...(effectivePermissions.Candidates?.View
+            ...(checkPermission("Candidates", "View")
       ? [
           {
             key: "view",
@@ -305,7 +307,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             icon: <Rotate3d size={24} className="text-custom-blue" />,
             onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
           },
-          ...(effectivePermissions.Candidates?.Edit
+          ...(checkPermission("Candidates", "Edit")
             ? [
                 {
                   key: "edit",
@@ -333,7 +335,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
     <div className="flex items-center gap-1">
-      {effectivePermissions.Candidates?.View && (
+              {checkPermission("Candidates", "View") && (
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -357,7 +359,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
           >
             <CircleUser className="w-4 h-4" />
           </button>
-          {effectivePermissions.Candidates?.Edit && (
+          {checkPermission("Candidates", "Edit") && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -403,7 +405,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   title="Candidates"
                   onAddClick={() => navigate("new")}
                   addButtonText="Add Candidate"
-                  canCreate={effectivePermissions.Candidates?.Create}
+                  canCreate={checkPermission("Candidates", "Create")}
                 />
                 <Toolbar
                   view={view}
