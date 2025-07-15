@@ -228,40 +228,42 @@ import IntegrationsTab from "../../Components/SuperAdminComponents/TenantDetails
 import BillingPage from "../SuperAdmin-Part/BillingPage";
 import ContactTab from "../../Components/SuperAdminComponents/TenantDetails/Contact/Contact";
 
-import { config } from "../../config";
-import axios from "axios";
-import Loading from "../../Components/Loading";
+// import { config } from "../../config";
+// import axios from "axios";
+// import Loading from "../../Components/Loading";
+import { useTenantById } from "../../apiHooks/superAdmin/useTenants";
 
 function TenantDetailsPage() {
   const { id } = useParams();
+  const { tenant, isLoading } = useTenantById(id);
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [tenant, setTenant] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // const [tenant, setTenant] = useState(null);
+  // const [loading, setLoading] = useState(true);
 
   const [viewMode, setViewMode] = useState("collapsed"); // 'collapsed' or 'expanded'
   const toggleViewMode = () =>
     setViewMode((prev) => (prev === "expanded" ? "collapsed" : "expanded"));
 
-  useEffect(() => {
-    const getTenant = async () => {
-      try {
-        setLoading(true);
-        const apiUrl = `${config.REACT_APP_API_URL}/Organization/${id}`;
-        const response = await axios.get(apiUrl);
-        if (response.status === 200) {
-          setTenant(response.data.organization);
-        }
-      } catch (error) {
-        console.error("Error fetching tenant data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getTenant = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const apiUrl = `${config.REACT_APP_API_URL}/Organization/${id}`;
+  //       const response = await axios.get(apiUrl);
+  //       if (response.status === 200) {
+  //         setTenant(response.data.organization);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching tenant data:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    if (id) getTenant();
-  }, [id]);
+  //   if (id) getTenant();
+  // }, [id]);
 
   // if (loading) {
   //   return (

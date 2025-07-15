@@ -28,10 +28,12 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import { config } from "../../../../config.js";
+// import { config } from "../../../../config.js";
 // import SidebarPopup from "../../../SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
+import { useContacts } from "../../../../apiHooks/superAdmin/useContacts.js";
 
 const Contact = ({ organizationId, viewMode }) => {
+  const { contacts, isLoading, isError, error, refetch } = useContacts(organizationId);
   const [view, setView] = useState("table");
   // const [selectedContact, setSelectedContact] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,11 +47,11 @@ const Contact = ({ organizationId, viewMode }) => {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   // const [user, setUser] = useState("Admin");
 
   const [selectedContactId, setSelectedContactId] = useState(null);
-  const [contacts, setContacts] = useState([]);
+  // const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -134,21 +136,21 @@ const Contact = ({ organizationId, viewMode }) => {
 
   // Function to fetch contacts
 
-  useEffect(() => {
-    const fetchContacts = async () => {
-      setIsLoading(true);
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/contacts/organization/${organizationId}`
-        );
-        setContacts(response.data);
-      } catch (error) {
-        console.error("Error fetching contacts data:", error);
-      }
-      setIsLoading(false);
-    };
-    fetchContacts();
-  }, [organizationId]);
+  // useEffect(() => {
+  //   const fetchContacts = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/contacts/organization/${organizationId}`
+  //       );
+  //       setContacts(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching contacts data:", error);
+  //     }
+  //     setIsLoading(false);
+  //   };
+  //   fetchContacts();
+  // }, [organizationId]);
 
   // get user by ID
   useEffect(() => {
@@ -226,7 +228,7 @@ const Contact = ({ organizationId, viewMode }) => {
   // if (!contacts || contacts.length === 0) {
   //   return <div className="text-center mt-20">No Contacts found.</div>;
   // }
-  
+
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
@@ -546,6 +548,7 @@ const Contact = ({ organizationId, viewMode }) => {
                       status: contact.status || "N/A",
                       name: contact.firstName,
                     }))}
+                    contacts={contacts}
                     renderActions={renderKanbanActions}
                     columns={kanbanColumns}
                     emptyState="No Contacts found."

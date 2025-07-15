@@ -37,6 +37,8 @@ const FeedbackStatusChangeModal = ({
         }
       );
 
+      console.log("STATUS RESPONSE: ", response);
+
       console.log("Feedback updated successfully", response.data);
       toast.success("Feedback Updated Successfully!");
       onClose();
@@ -62,7 +64,7 @@ const FeedbackStatusChangeModal = ({
           </div>
 
           {/* Form */}
-          <form className="p-6 h-full" onSubmit={handleFormSubmit}>
+          <form className="p-6 h-full">
             <div className="flex items-center mb-4">
               <label className="block text-sm font-medium text-gray-700 w-[50%]">
                 Select New Status <span className="text-red-500">*</span>

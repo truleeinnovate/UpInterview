@@ -218,7 +218,7 @@ function InterviewList() {
       header: 'Interview ID',
       render: (value, row) => (
         <div className="flex items-center">
-          <div className="ml-3">
+          <div>
             <div
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => effectivePermissions.Interviews?.View && handleViewInterview(row)}

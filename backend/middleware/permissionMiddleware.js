@@ -10,12 +10,6 @@ const permissionMiddleware = async (req, res, next) => {
     const authToken = req.cookies.authToken;
     const impersonationToken = req.cookies.impersonationToken;
 
-    // Debug logging for cookie issues
-    console.log('[permissionMiddleware] Request cookies:', req.cookies);
-    console.log('[permissionMiddleware] Auth token exists:', !!authToken);
-    console.log('[permissionMiddleware] Impersonation token exists:', !!impersonationToken);
-    // console.log('[permissionMiddleware] Request headers:', req.headers);
-
     // Initialize payload variables
     let authPayload = null;
     let impersonationPayload = null;
@@ -25,7 +19,6 @@ const permissionMiddleware = async (req, res, next) => {
       authPayload = authToken ? jwt.decode(authToken) : null;
       impersonationPayload = impersonationToken ? jwt.decode(impersonationToken) : null;
     } catch (err) {
-      console.log('Token decoding error (non-critical):', err.message);
       // Continue with null payloads
     }
 
@@ -33,10 +26,6 @@ const permissionMiddleware = async (req, res, next) => {
     let userId = authPayload?.userId || null;
     let tenantId = authPayload?.tenantId || null;
     const impersonatedUserId = impersonationPayload?.impersonatedUserId || null;
-
-    console.log('[permissionMiddleware] Extracted userId:', userId);
-    console.log('[permissionMiddleware] Extracted tenantId:', tenantId);
-    console.log('[permissionMiddleware] Extracted impersonatedUserId:', impersonatedUserId);
 
     let currentUser = null;
     let isImpersonating = false;
@@ -53,6 +42,7 @@ const permissionMiddleware = async (req, res, next) => {
     if (userId && tenantId) {
       try {
         currentUser = await Users.findById(userId).populate('roleId');
+        
         if (!currentUser) {
           console.error(`[permissionMiddleware] User not found for userId: ${userId}`);
           // Don't return error, just continue with default permissions

@@ -104,29 +104,9 @@ const CombinedNavbar = () => {
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
-  // Enhanced permission check with fallback for super admin
+  // Enhanced permission check - use dynamic permissions only
   const enhancedCheckPermission = (permissionKey) => {
-    const hasPermission = checkPermission(permissionKey);
-    
-    // For super admin users, provide fallback permissions while loading
-    if (userType === 'superAdmin' && !isInitialized) {
-      const fallbackPermissions = {
-        'Tenants': true,
-        'InterviewRequest': true,
-        'OutsourceInterviewerRequest': true,
-        'SupportDesk': true,
-        'Billing': true,
-        'InternalLogs': true,
-        'IntegrationLogs': true
-      };
-      
-      if (fallbackPermissions[permissionKey]) {
-        console.log(`🔄 Using fallback permission for ${permissionKey} while loading`);
-        return true;
-      }
-    }
-    
-    return hasPermission;
+    return checkPermission(permissionKey);
   };
 
   // Utility function to close all dropdowns
@@ -513,7 +493,7 @@ const CombinedNavbar = () => {
           ...(checkPermission("Billing")
             ? [
               {
-                to: "/account-settings/billing-details",
+                to: "/billing-details",
                 label: "Billing",
                 icon: <CiCreditCard1 />,
               },
@@ -522,7 +502,7 @@ const CombinedNavbar = () => {
           ...(checkPermission("Wallet")
             ? [
               {
-                to: "/account-settings/wallet",
+                to: "/wallet",
                 label: "My Wallet",
                 icon: <LiaWalletSolid />,
               },
@@ -531,7 +511,7 @@ const CombinedNavbar = () => {
         ].map(({ to, label, icon }, index) => (
           <NavLink
             key={index}
-            className="flex items-center py-2 text-black hover:bg-gray-200 hover:text-custom-blue rounded-md"
+            className="flex items-center py-2 px-1 text-black hover:bg-gray-200 hover:text-custom-blue rounded-md"
             to={to}
             onClick={() => closeAllDropdowns()}
           >

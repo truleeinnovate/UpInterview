@@ -1536,10 +1536,14 @@ import { GiDuration } from "react-icons/gi";
 import { CiSquareQuestion } from "react-icons/ci";
 import { GrStatusGoodSmall } from "react-icons/gr";
 
-import axios from "axios";
-import { config } from "../../config.js";
+// import axios from "axios";
+// import { config } from "../../config.js";
 import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
 import { usePermissions } from "../../Context/PermissionsContext.js";
+import {
+  useInterviewRequests,
+  useInterviewRequestById,
+} from "../../apiHooks/superAdmin/useInterviewRequests.js";
 
 const InternalRequest = () => {
   const { superAdminPermissions } = usePermissions();
@@ -1556,9 +1560,9 @@ const InternalRequest = () => {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
-  const [interviewRequests, setInterviewRequests] = useState([]);
+  // const [interviewRequests, setInterviewRequests] = useState([]);
 
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
@@ -1566,7 +1570,10 @@ const InternalRequest = () => {
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState(null);
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  // const [selectedRequest, setSelectedRequest] = useState(null);
+
+  const { interviewRequests, isLoading } = useInterviewRequests(); // from apiHooks
+  const { interviewRequest } = useInterviewRequestById(selectedRequestId); // from apiHooks
 
   useEffect(() => {
     const handleResize = () => {
@@ -1634,52 +1641,52 @@ const InternalRequest = () => {
   }, [isTablet]);
 
   // Fetch interview requests
-  useEffect(() => {
-    const getInterviewRequests = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/interviewrequest`
-        );
-        setInterviewRequests(response.data);
-      } catch (error) {
-        console.error("Error fetching Interview requests:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getInterviewRequests = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/interviewrequest`
+  //       );
+  //       setInterviewRequests(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching Interview requests:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getInterviewRequests();
-  }, []);
+  //   getInterviewRequests();
+  // }, []);
 
   // Fetch interview request
-  useEffect(() => {
-    const getInterviewRequests = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/interviewrequest/${selectedRequestId}`
-        );
-        setSelectedRequest(response.data);
-      } catch (error) {
-        console.error("Error fetching Interviewer request:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getInterviewRequests = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/interviewrequest/${selectedRequestId}`
+  //       );
+  //       setSelectedRequest(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching Interviewer request:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getInterviewRequests();
-  }, [selectedRequestId]);
+  //   getInterviewRequests();
+  // }, [selectedRequestId]);
 
   // get user by ID
-  useEffect(() => {
-    if (selectedRequestId && interviewRequests?.length) {
-      const foundRequest = interviewRequests.find(
-        (request) => request._id === selectedRequestId
-      );
-      setSelectedRequest(foundRequest || null);
-    }
-  }, [selectedRequestId, interviewRequests]);
+  // useEffect(() => {
+  //   if (selectedRequestId && interviewRequests?.length) {
+  //     const foundRequest = interviewRequests.find(
+  //       (request) => request._id === selectedRequestId
+  //     );
+  //     setSelectedRequest(foundRequest || null);
+  //   }
+  // }, [selectedRequestId, interviewRequests]);
 
   const dataToUse = interviewRequests;
 
@@ -1761,10 +1768,17 @@ const InternalRequest = () => {
       header: "Interviewer ID",
       render: (vale, row) => (
         <span
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => {
-            setSelectedRequestId(row._id);
-            setIsPopupOpen(true);
+          className={`font-medium ${
+            superAdminPermissions?.InterviewRequest?.View
+              ? "text-custom-blue cursor-pointer"
+              : "text-gray-900"
+          }`}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevents row-level handlers (if any)
+            if (superAdminPermissions?.InterviewRequest?.View && row?._id) {
+              setSelectedRequestId(row._id);
+              setIsPopupOpen(true);
+            }
           }}
         >
           {row?.interviewRequestCode ? row.interviewRequestCode : "N/A"}
@@ -1865,21 +1879,30 @@ const InternalRequest = () => {
 
   // Shared Actions Configuration for Table and Kanban
   const actions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (row) => {
-        setSelectedRequestId(row._id);
-        setIsPopupOpen(true);
-      },
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
-    },
+    ...(superAdminPermissions?.InterviewRequest?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => {
+              setSelectedRequestId(row._id);
+              setIsPopupOpen(true);
+            },
+          },
+        ]
+      : []),
+
+    ...(superAdminPermissions?.InterviewRequest?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => navigate(`edit/${row._id}`),
+          },
+        ]
+      : []),
     // {
     //   key: "login-as-user",
     //   label: "Login as User",
@@ -2143,6 +2166,7 @@ const InternalRequest = () => {
                     title: interview.interviewRequestCode || "N/A",
                     subtitle: formatDate(interview?.requestedAt) || "N/A",
                   }))}
+                  interviewRequests={interviewRequests}
                   columns={kanbanColumns}
                   loading={isLoading}
                   renderActions={renderKanbanActions}
@@ -2166,9 +2190,9 @@ const InternalRequest = () => {
       </div>
 
       <div>
-        {isPopupOpen && selectedRequest && (
+        {isPopupOpen && interviewRequest && (
           <SidebarPopup title="Interview" onClose={() => setIsPopupOpen(false)}>
-            {renderPopupContent(selectedRequest)}
+            {renderPopupContent(interviewRequest)}
           </SidebarPopup>
         )}
       </div>

@@ -69,7 +69,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
       <div className="relative h-[160px] overflow-hidden">
         {displayInterviewers.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-gray-500">No Outsource Interviewers available.</p>
+            <p className="text-gray-500">No Outsource Interviewers Available.</p>
           </div>
         ) : (
           displayInterviewers.map((interviewer, index) => (

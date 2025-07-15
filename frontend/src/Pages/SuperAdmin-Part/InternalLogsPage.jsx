@@ -13,17 +13,21 @@ import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../Pages/SuperAdmin-Part/InternalLogs/Kanban.jsx";
 import {
   Eye,
-  Mail,
+  // Mail,
   UserCircle,
   Pencil,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
 // import { AiOutlineDownload, AiOutlineMail } from "react-icons/ai";
-import axios from "axios";
-import { config } from "../../config.js";
+// import axios from "axios";
+// import { config } from "../../config.js";
 import SidebarPopup from "../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup.jsx";
 import { usePermissions } from "../../Context/PermissionsContext.js";
+import {
+  useInternalLogs,
+  useInternalLogById,
+} from "../../apiHooks/superAdmin/useInternalLogs";
 
 function InternalLogsPage() {
   const { superAdminPermissions } = usePermissions();
@@ -42,15 +46,18 @@ function InternalLogsPage() {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null); // Ref for filter icon
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Internal Logs | Admin Portal";
   }, []);
 
-  const [selectedLog, setSelectedLog] = useState(null);
+  // const [selectedLog, setSelectedLog] = useState(null);
   const [selectedLogId, setSelectedLogId] = useState(null);
-  const [logs, setLogs] = useState([]);
+  // const [logs, setLogs] = useState([]);
+
+  const { logs, isLoading } = useInternalLogs(); // from apiHooks
+  const { log: selectedLog } = useInternalLogById(selectedLogId); // from apiHooks
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -101,44 +108,44 @@ function InternalLogsPage() {
   };
 
   // Get Internal logs API
-  useEffect(() => {
-    const getInternalLogs = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/internal-logs`
-        );
-        setLogs(response.data.data);
-      } catch (error) {
-        console.error("Error fetching internal logs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getInternalLogs = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/internal-logs`
+  //       );
+  //       setLogs(response.data.data);
+  //     } catch (error) {
+  //       console.error("Error fetching internal logs:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getInternalLogs();
-  }, []);
+  //   getInternalLogs();
+  // }, []);
 
   // Get Internal log by ID API
-  useEffect(() => {
-    const getInternalLogById = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/internal-logs/${selectedLogId}`
-        );
-        setSelectedLog(response.data);
-      } catch (error) {
-        console.error("Error fetching internal logs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getInternalLogById = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.get(
+  //         `${config.REACT_APP_API_URL}/internal-logs/${selectedLogId}`
+  //       );
+  //       setSelectedLog(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching internal logs:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    if (selectedLogId) {
-      getInternalLogById();
-    }
-  }, [selectedLogId]);
+  //   if (selectedLogId) {
+  //     getInternalLogById();
+  //   }
+  // }, [selectedLogId]);
 
   // Kanban view setter
   useEffect(() => {
@@ -239,12 +246,12 @@ function InternalLogsPage() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
+  // const formatCurrency = (amount) => {
+  //   return new Intl.NumberFormat("en-US", {
+  //     style: "currency",
+  //     currency: "USD",
+  //   }).format(amount);
+  // };
 
   // const getStatusDisplay = (status) => {
   //   switch (status) {
@@ -751,53 +758,50 @@ function InternalLogsPage() {
         {/* New table log */}
         <main>
           <div className="sm:px-0">
-            {logs?.length === 0 ? (
-              <Loading />
-            ) : (
-              <motion.div className="bg-white">
-                <div className="relative w-full">
-                  {view === "table" ? (
-                    <div className="w-full">
-                      <TableView
-                        data={currentFilteredRows}
-                        columns={tableColumns}
-                        loading={isLoading}
-                        actions={tableActions}
-                        emptyState="No logs found."
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full">
-                      <KanbanView
-                        data={currentFilteredRows.map((log) => ({
-                          ...log,
-                          id: log?._id,
-                          title: log?.logId ? log?.logId : "N/A",
-                          subtitle: log?.timeStamp
-                            ? formatDate(log?.timeStamp)
-                            : "N/A",
-                        }))}
-                        columns={kanbanColumns}
-                        loading={isLoading}
-                        renderActions={renderKanbanActions}
-                        emptyState="No logs found."
-                      />
-                    </div>
-                  )}
+            <motion.div className="bg-white">
+              <div className="relative w-full">
+                {view === "table" ? (
+                  <div className="w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={isLoading}
+                      actions={tableActions}
+                      emptyState="No logs found."
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <KanbanView
+                      data={currentFilteredRows.map((log) => ({
+                        ...log,
+                        id: log?._id,
+                        title: log?.logId ? log?.logId : "N/A",
+                        subtitle: log?.timeStamp
+                          ? formatDate(log?.timeStamp)
+                          : "N/A",
+                      }))}
+                      logs={logs}
+                      columns={kanbanColumns}
+                      loading={isLoading}
+                      renderActions={renderKanbanActions}
+                      emptyState="No logs found."
+                    />
+                  </div>
+                )}
 
-                  {/* Render FilterPopup */}
-                  <FilterPopup
-                    isOpen={isFilterPopupOpen}
-                    onClose={() => setFilterPopupOpen(false)}
-                    onApply={handleApplyFilters}
-                    onClearAll={handleClearAll}
-                    filterIconRef={filterIconRef}
-                  >
-                    {renderFilterContent()}
-                  </FilterPopup>
-                </div>
-              </motion.div>
-            )}
+                {/* Render FilterPopup */}
+                <FilterPopup
+                  isOpen={isFilterPopupOpen}
+                  onClose={() => setFilterPopupOpen(false)}
+                  onApply={handleApplyFilters}
+                  onClearAll={handleClearAll}
+                  filterIconRef={filterIconRef}
+                >
+                  {renderFilterContent()}
+                </FilterPopup>
+              </div>
+            </motion.div>
           </div>
         </main>
       </div>

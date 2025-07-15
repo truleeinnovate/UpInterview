@@ -5,6 +5,7 @@ const capitalizeFirstLetter = (str) =>
 
 const KanbanView = ({
   data = [],
+  outsourceInterviewers = [],
   columns = [],
   loading = false,
   renderActions = () => null,
@@ -23,13 +24,13 @@ const KanbanView = ({
             All Outsource Interviewers
           </h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-            {data?.length || 0} Outsource Interviewers
+            {outsourceInterviewers?.length || 0} Outsource Interviewers
           </span>
         </div>
 
         {loading ? (
           <div className="text-center py-10 text-gray-500">Loading...</div>
-        ) : data?.length === 0 ? (
+        ) : outsourceInterviewers?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
           <div className="overflow-y-auto max-h-[calc(100vh-260px)] pb-8 pr-1">

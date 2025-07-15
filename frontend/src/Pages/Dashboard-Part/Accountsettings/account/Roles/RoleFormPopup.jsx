@@ -539,7 +539,7 @@
 
 // export default RoleFormPopup;
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -550,16 +550,16 @@ import { X } from 'lucide-react';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { config } from '../../../../../config';
 import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
-
 import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils.js';
 import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
+import PermissionLoadingState from '../../../../../Components/LoadingStates/PermissionLoadingState';
 
 const RoleFormPopup = ({ onSave, onClose }) => {
   const { data: organizationRoles, isLoading, isError, error } = useRolesQuery();
   const userType = AuthCookieManager.getUserType();
 
-  const { effectivePermissions, superAdminPermissions } = usePermissions();
+  const { effectivePermissions, superAdminPermissions, isInitialized, loading: permissionsLoading } = usePermissions();
   const permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
   const permissionKey = 'Roles';
   const navigate = useNavigate();
@@ -592,12 +592,27 @@ const RoleFormPopup = ({ onSave, onClose }) => {
   const [newObjectType, setNewObjectType] = useState('internal');
   const initialFormDataRef = useRef(null);
 
+  // Memoize dependencies to prevent unnecessary re-renders
+  const memoizedTenantId = useMemo(() => tenantId, [tenantId]);
+  const memoizedId = useMemo(() => id, [id]);
+  const memoizedEditMode = useMemo(() => editMode, [editMode]);
+  const memoizedUserType = useMemo(() => userType, [userType]);
+  const memoizedPermissionKey = useMemo(() => permissionKey, [permissionKey]);
+  
+  // Memoize permissions check to prevent unnecessary re-renders
+  const hasEditPermission = useMemo(() => 
+    permissions?.[permissionKey]?.Edit, [permissions, permissionKey]
+  );
+  const hasCreatePermission = useMemo(() => 
+    permissions?.[permissionKey]?.Create, [permissions, permissionKey]
+  );
+
   useEffect(() => {
-    if (editMode && !permissions?.[permissionKey]?.Edit) {
+    if (editMode && !hasEditPermission) {
       navigate('/account-settings/roles');
       return;
     }
-    if (!editMode && !permissions?.[permissionKey]?.Create) {
+    if (!editMode && !hasCreatePermission) {
       navigate('/account-settings/roles');
       return;
     }
@@ -722,27 +737,27 @@ const RoleFormPopup = ({ onSave, onClose }) => {
       }
     };
     fetchData();
-  }, [tenantId, id, editMode, userType, permissions, permissionKey, navigate]);
+  }, [memoizedTenantId, memoizedId, memoizedEditMode, memoizedUserType, hasEditPermission, hasCreatePermission, organizationRoles]);
 
-  const handleLabelChange = (e) => {
+  const handleLabelChange = useCallback((e) => {
     if (userType !== 'superAdmin') return; // Only super admins can edit label
     const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, '');
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       label: sanitizedValue,
-    });
-  };
+    }));
+  }, [userType]);
 
-  const handleRoleNameChange = (e) => {
+  const handleRoleNameChange = useCallback((e) => {
     if (userType !== 'superAdmin') return; // Only super admins can edit roleName
     const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_]/g, '');
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       roleName: sanitizedValue,
-    });
-  };
+    }));
+  }, [userType]);
 
-  const handlePermissionChange = (objectName, permission, value) => {
+  const handlePermissionChange = useCallback((objectName, permission, value) => {
     setFormData((prev) => {
       const updatedObjects = prev.objects.map((obj) => {
         if (obj.objectName === objectName) {
@@ -769,9 +784,9 @@ const RoleFormPopup = ({ onSave, onClose }) => {
 
       return { ...prev, objects: updatedObjects };
     });
-  };
+  }, [userType]);
 
-  const handleDeletePermission = (objectName, permission) => {
+  const handleDeletePermission = useCallback((objectName, permission) => {
     if (userType !== 'superAdmin') return; // Only super admins can delete permissions
     setFormData((prev) => ({
       ...prev,
@@ -788,16 +803,16 @@ const RoleFormPopup = ({ onSave, onClose }) => {
         permissions: prev[objectName].permissions.filter((p) => p !== permission),
       },
     }));
-  };
+  }, [userType]);
 
-  const handleInheritChange = (roleId) => {
+  const handleInheritChange = useCallback((roleId) => {
     setFormData((prev) => {
       const updatedInherits = prev.inherits.includes(roleId)
         ? prev.inherits.filter((id) => id !== roleId)
         : [...prev.inherits, roleId];
       return { ...prev, inherits: updatedInherits };
     });
-  };
+  }, []);
 
   const handleAddNewObject = () => {
     if (!newObjectName || newObjectName.trim() === '') return;
@@ -892,6 +907,24 @@ const RoleFormPopup = ({ onSave, onClose }) => {
       },
     }));
   };
+
+  // Show loading state if permissions or roles are still loading
+  if (permissionsLoading || isLoading || !isInitialized) {
+    return (
+      <Modal
+        isOpen={true}
+        onRequestClose={() => navigate('/account-settings/roles')}
+        className="fixed inset-0 bg-white shadow-2xl border-l border-gray-200 overflow-y-auto"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+      >
+        <div className="h-full flex items-center justify-center">
+          <PermissionLoadingState 
+            message={permissionsLoading ? "Loading permissions..." : "Loading roles..."} 
+          />
+        </div>
+      </Modal>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

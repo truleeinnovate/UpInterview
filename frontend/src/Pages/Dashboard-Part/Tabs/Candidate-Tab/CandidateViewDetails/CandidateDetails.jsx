@@ -271,7 +271,9 @@ const CandidateDetails = ({ mode }) => {
                           <School className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">University/College</p>
+                          <p className="text-sm text-gray-500">
+                            University/College
+                          </p>
                           <p className="text-gray-700">
                             {candidate?.UniversityCollege || "N/A"}{" "}
                           </p>
@@ -306,9 +308,8 @@ const CandidateDetails = ({ mode }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2">
+                  {/* <div className="grid grid-cols-2">
                     <div className="flex items-center justify-between gap-3 w-full">
-
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-custom-bg rounded-lg">
                           <GrDocumentText className="w-5 h-5" />
@@ -334,6 +335,35 @@ const CandidateDetails = ({ mode }) => {
                           <Eye className="w-4 h-4" />
                         </button>
                       )}
+                    </div>
+                  </div> */}
+                  <div className="grid grid-cols-2">
+                    <div className="flex items-center justify-between gap-3 w-full">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-custom-bg rounded-lg">
+                          <GrDocumentText className="w-5 h-5" />
+                        </div>
+
+                        <div>
+                          <p className="text-sm text-gray-500">Resume</p>
+
+                          {candidate?.resume?.path ? (
+                            <a
+                              href={candidate.resume.path}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="View Resume"
+                              className="text-blue-600 hover:underline break-all"
+                            >
+                              {candidate.resume.filename}
+                            </a>
+                          ) : (
+                            <p className="text-gray-700 break-all">
+                              Not Provided
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

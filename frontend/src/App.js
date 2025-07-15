@@ -24,6 +24,7 @@ import { DocumentsSection } from "./Pages/Dashboard-Part/Accountsettings/account
 import SessionExpiration from "./Components/SessionExpiration.jsx";
 import Loading from "./Components/Loading.js";
 import UserDataLoader from "./Components/UserDataLoader.jsx";
+import { preloadPermissions, hasValidCachedPermissions } from "./utils/permissionPreloader";
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
@@ -610,7 +611,10 @@ const MainAppRoutes = ({
               {/* Assessment_Template */}
               {hasPermission("Assessment_Template") && (
                 <>
-                  <Route path="/assessments-template" element={<Assessment />} />
+                  <Route
+                    path="/assessments-template"
+                    element={<Assessment />}
+                  />
                   {hasPermission("Assessment_Template", "Create") && (
                     <Route
                       path="/assessments-template/new"
@@ -790,7 +794,9 @@ const MainAppRoutes = ({
                 {hasPermission("Users") && (
                   <Route path="users" element={<UsersLayout />}>
                     {hasPermission("Users", "Create") && (
+
                       <Route path="new" element={<UserForm mode="create" />} />
+
                     )}
                     {hasPermission("Users", "Edit") && (
                       <Route
@@ -859,13 +865,6 @@ const MainAppRoutes = ({
                 <Route path="hrms-ats" element={<HrmsAtsApi />} />
               </Route>
 
-              {/* Billing Invoice */}
-              {hasPermission("Billing") && (
-                <Route path="/billing" element={<InvoiceTab />}>
-                  <Route index element={null} />
-                  <Route path="details/:id" element={<UserInvoiceDetails />} />
-                </Route>
-              )}
 
               {/* Interview Templates */}
               {hasPermission("InterviewTemplates") && (
@@ -1038,7 +1037,7 @@ const MainAppRoutes = ({
               )}
 
               {/* SuperAdmin Support Desk */}
-              {hasPermission("SupportDesk") && (
+              {/* {hasPermission("SupportDesk") && (
                 <>
                   <Route
                     exact
@@ -1068,10 +1067,18 @@ const MainAppRoutes = ({
                     </>
                   )}
                 </>
+              )} */}
+
+              {hasPermission("Settings") && (
+                <Route path="/settings" element={<SettingsPage />} />
               )}
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/internal-logs" element={<InternalLogsPage />} />
-              <Route path="/integrations" element={<IntegrationsPage />} />
+              {hasPermission("InternalLogs") && (
+                <Route path="/internal-logs" element={<InternalLogsPage />} />
+              )}
+              {hasPermission("IntegrationLogs") && (
+                <Route path="/integrations" element={<IntegrationsPage />} />
+              )}
+
               <Route
                 path="/contact-profile-details"
                 element={
@@ -1136,6 +1143,19 @@ const App = () => {
     ],
     []
   );
+
+  // Preload permissions on app startup if user is authenticated
+  useEffect(() => {
+    if (authToken && !hasValidCachedPermissions()) {
+      // Preload permissions in the background
+      preloadPermissions().catch(console.warn);
+    }
+    
+    // Sync user type with localStorage to ensure consistency
+    if (authToken) {
+      AuthCookieManager.syncUserType();
+    }
+  }, [authToken]);
 
   useEffect(() => {
     const emitter = getActivityEmitter();
