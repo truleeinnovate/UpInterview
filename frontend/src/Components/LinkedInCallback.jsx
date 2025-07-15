@@ -178,9 +178,9 @@ const LinkedInCallback = () => {
         clearAllAuth();
         console.log('✅ Cleared all cookies and localStorage for individual login');
 
-        // Set the authToken cookie
+        // Set the authToken cookie using the consistent method
         if (token) {
-          Cookies.set('authToken', token, { expires: 7, secure: true, sameSite: 'None' });
+          setAuthCookies({ authToken: token });
         }
 
         if (existingUser) {
