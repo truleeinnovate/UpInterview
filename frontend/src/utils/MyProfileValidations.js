@@ -83,7 +83,7 @@ export const validateAdvancedForm = (formData) => {
   
     // Experience validation
     if (!formData.experience?.trim()) {
-      errors.experience = "Years of experience is required";
+      errors.experience = "Years of Experience is required";
     } else if (!/^\d+$/.test(formData.experience.trim())) {
       errors.experience = "Please enter a valid number";
     }
