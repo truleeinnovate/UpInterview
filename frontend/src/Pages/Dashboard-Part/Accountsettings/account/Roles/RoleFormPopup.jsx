@@ -919,7 +919,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
       >
         <div className="h-full flex items-center justify-center">
           <Loading 
-            message={permissionsLoading ? "Loading permissions..." : "Loading roles..."} 
+            message={permissionsLoading ? "Loading..." : "Loading roles..."} 
             size="large"
           />
         </div>

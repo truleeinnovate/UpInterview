@@ -402,15 +402,15 @@ const MainAppRoutes = ({
   const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);
 
   // Show loading when permissions are being loaded and not initialized
-  if (loading || !isInitialized) {
-    return (
-      <Loading 
-        message="Loading permissions..." 
-        size="large"
-        className="fixed inset-0 z-50 bg-white"
-      />
-    );
-  }
+  // if (loading || !isInitialized) {
+  //   return (
+  //     <Loading 
+  //       message="Loading permissions..." 
+  //       size="large"
+  //       className="fixed inset-0 z-50 bg-white"
+  //     />
+  //   );
+  // }
 
   // Permission check function
   const hasPermission = (objectName, permissionType = "ViewTab") => {
