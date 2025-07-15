@@ -493,7 +493,7 @@ const CombinedNavbar = () => {
           ...(checkPermission("Billing")
             ? [
               {
-                to: "/account-settings/billing-details",
+                to: "/billing-details",
                 label: "Billing",
                 icon: <CiCreditCard1 />,
               },
@@ -502,7 +502,7 @@ const CombinedNavbar = () => {
           ...(checkPermission("Wallet")
             ? [
               {
-                to: "/account-settings/wallet",
+                to: "/wallet",
                 label: "My Wallet",
                 icon: <LiaWalletSolid />,
               },
@@ -511,7 +511,7 @@ const CombinedNavbar = () => {
         ].map(({ to, label, icon }, index) => (
           <NavLink
             key={index}
-            className="flex items-center py-2 text-black hover:bg-gray-200 hover:text-custom-blue rounded-md"
+            className="flex items-center py-2 px-1 text-black hover:bg-gray-200 hover:text-custom-blue rounded-md"
             to={to}
             onClick={() => closeAllDropdowns()}
           >

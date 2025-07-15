@@ -996,8 +996,8 @@ const PositionForm = ({ mode }) => {
                                   if (minExp !== "" && formData.maxexperience && minExp > formData.maxexperience) {
                                     setErrors(prev => ({
                                       ...prev,
-                                      minexperience: "Min experience cannot be greater than max",
-                                      maxexperience: "Max experience cannot be less than min"
+                                      minexperience: "Min Experience cannot be greater than Max",
+                                      maxexperience: "Max Experience cannot be less than Min"
                                     }));
                                   } else {
                                     setErrors(prev => ({ ...prev, minexperience: "", maxexperience: "" }));
@@ -1037,8 +1037,8 @@ const PositionForm = ({ mode }) => {
                                   if (maxExp !== "" && formData.minexperience && maxExp < formData.minexperience) {
                                     setErrors(prev => ({
                                       ...prev,
-                                      maxexperience: "Max experience cannot be less than min",
-                                      minexperience: "Min experience cannot be greater than max"
+                                      maxexperience: "Max Experience cannot be less than Min",
+                                      minexperience: "Min Experience cannot be greater than Max"
                                     }));
                                   } else {
                                     setErrors(prev => ({ ...prev, maxexperience: "", minexperience: "" }));
@@ -1087,8 +1087,8 @@ const PositionForm = ({ mode }) => {
                                     if (minSalary !== "" && formData.maxSalary && parseInt(minSalary) > parseInt(formData.maxSalary)) {
                                       setErrors(prev => ({
                                         ...prev,
-                                        minsalary: "Min salary cannot be greater than max",
-                                        maxsalary: "Max salary cannot be less than min"
+                                        minsalary: "Min Salary cannot be greater than Max",
+                                        maxsalary: "Max Salary cannot be less than Min"
                                       }));
                                     } else {
                                       setErrors(prev => ({ ...prev, minsalary: "", maxsalary: "" }));
@@ -1130,8 +1130,8 @@ const PositionForm = ({ mode }) => {
                                     if (maxSalary !== "" && formData.minSalary && parseInt(maxSalary) < parseInt(formData.minSalary)) {
                                       setErrors(prev => ({
                                         ...prev,
-                                        maxsalary: "Max salary cannot be less than min",
-                                        minsalary: "Min salary cannot be greater than max"
+                                        maxsalary: "Max Salary cannot be less than Min",
+                                        minsalary: "Min Salary cannot be greater than Max"
                                       }));
                                     } else {
                                       setErrors(prev => ({ ...prev, maxsalary: "", minsalary: "" }));

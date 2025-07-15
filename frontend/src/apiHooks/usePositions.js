@@ -80,7 +80,7 @@ export const usePositions = (filters = {}) => {
         if (!oldData) return oldData;
         return oldData.map(position => 
           position._id === variables.positionId 
-            ? { ...position, rounds: [...(position.rounds || []), ...data.data] }
+            ? { ...position, rounds: [...(position.rounds || []), ...(Array.isArray(data.data) ? data.data : [data.data])] }
             : position
         );
       });

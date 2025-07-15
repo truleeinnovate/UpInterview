@@ -121,7 +121,7 @@ const TaskList = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
           </div>
         ) : filterTasks().length === 0 ? (
-          <p className="text-center p-3 text-gray-500">No tasks available.</p>
+          <p className="text-center p-3 text-gray-500">No Tasks Available.</p>
         ) : (
           filterTasks().slice(0, 2).map((task) => (
             <motion.div

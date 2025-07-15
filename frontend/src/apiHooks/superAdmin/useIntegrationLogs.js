@@ -23,8 +23,8 @@ export const useIntegrationLogs = () => {
       return response.data || [];
     },
     enabled: isInitialized && !!hasViewPermission,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -60,8 +60,8 @@ export const useIntegrationLogById = (logId) => {
       return response.data || null;
     },
     enabled: isInitialized && !!hasViewPermission && !!logId,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
