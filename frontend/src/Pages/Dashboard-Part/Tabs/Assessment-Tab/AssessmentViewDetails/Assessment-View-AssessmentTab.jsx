@@ -36,8 +36,10 @@ function AssessmentsTab({ assessment }) {
       if (assessment?._id) {
         const { data, error } = await fetchScheduledAssessments(assessment._id);
         if (!error) {
-          setScheduledAssessments(data);
-          const initialOpenState = data.reduce((acc, schedule) => {
+          // Ensure we always work with an array, even if the API returns null or a non-array value
+          const schedulesArray = Array.isArray(data) ? data : [];
+          setScheduledAssessments(schedulesArray);
+          const initialOpenState = schedulesArray.reduce((acc, schedule) => {
             acc[schedule._id] = false;
             return acc;
           }, {});
@@ -107,8 +109,7 @@ function AssessmentsTab({ assessment }) {
   if (loading) return <div className="p-4 text-gray-600">Loading assessments...</div>;
 
   const formattedCandidates = (candidates) =>
-
-    candidates.map((candidate) => ({
+    (Array.isArray(candidates) ? candidates : []).map((candidate) => ({
       id: candidate._id,
       _id: candidate.candidateId._id,
       FirstName: candidate.candidateId?.FirstName || 'Unknown',
@@ -151,7 +152,7 @@ function AssessmentsTab({ assessment }) {
       </div>
 
       <div className="space-y-4">
-        {scheduledAssessments.length > 0 ? (
+        {Array.isArray(scheduledAssessments) && scheduledAssessments.length > 0 ? (
           scheduledAssessments.map((schedule) => (
             <div key={schedule._id} className="bg-white rounded-xl shadow-md overflow-hidden">
               <div
