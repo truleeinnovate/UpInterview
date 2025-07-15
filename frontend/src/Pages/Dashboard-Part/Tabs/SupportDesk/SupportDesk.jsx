@@ -170,10 +170,10 @@ function SupportDesk() {
                 : row.assignedToId ===
                     impersonationPayload.impersonatedUserId &&
                   impersonatedUser_roleName === "Support_Team"
-                ? `/super-admin-desk/view/${row._id}`
+                ? `/support-desk/view/${row._id}`
                 : impersonatedUser_roleName === "Super_Admin"
-                ? `/super-admin-desk/view/${row._id}`
-                : `/super-admin-desk/${row._id}`;
+                ? `/support-desk/view/${row._id}`
+                : `/support-desk/${row._id}`;
             navigate(path, { state: { ticketData: row } });
           }}
         >
