@@ -12,9 +12,11 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { usePermissions } from "../../../../Context/PermissionsContext";
+import { useDynamicPermissionCheck } from "../../../../utils/dynamicPermissions";
 
 const PositionTab = () => {
   const { effectivePermissions } = usePermissions();
+  const { checkPermission, isInitialized } = useDynamicPermissionCheck();
   const { skills } = useMasterData();
   const { positionData, isLoading } = usePositions();
   const navigate = useNavigate();
@@ -194,7 +196,7 @@ const PositionTab = () => {
   const currentFilteredRows = FilteredData.slice(startIndex, endIndex);
 
   const handleView = (position) => {
-    if (effectivePermissions.Positions?.View) {
+    if (checkPermission("Positions", "View")) {
       navigate(`/position/view-details/${position._id}`, {
         state: { from: location.pathname },
       });

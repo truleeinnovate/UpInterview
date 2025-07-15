@@ -106,7 +106,7 @@ function AssessmentsTab({ assessment }) {
     }
   }, [assessment]);
 
-  if (loading) return <div className="p-4 text-gray-600">Loading assessments...</div>;
+  if (loading) return <div className="p-4 text-gray-600">Loading Assessments...</div>;
 
   const formattedCandidates = (candidates) =>
     (Array.isArray(candidates) ? candidates : []).map((candidate) => ({
