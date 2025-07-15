@@ -553,7 +553,7 @@ import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
 import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils.js';
 import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
-import PermissionLoadingState from '../../../../../Components/LoadingStates/PermissionLoadingState';
+import Loading from '../../../../../Components/Loading';
 
 const RoleFormPopup = ({ onSave, onClose }) => {
   const { data: organizationRoles, isLoading, isError, error } = useRolesQuery();
@@ -918,8 +918,9 @@ const RoleFormPopup = ({ onSave, onClose }) => {
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
       >
         <div className="h-full flex items-center justify-center">
-          <PermissionLoadingState 
+          <Loading 
             message={permissionsLoading ? "Loading permissions..." : "Loading roles..."} 
+            size="large"
           />
         </div>
       </Modal>

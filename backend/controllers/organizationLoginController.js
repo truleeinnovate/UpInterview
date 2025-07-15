@@ -3,7 +3,10 @@ const Tenant = require("../models/Tenant");
 const { Users } = require("../models/Users");
 const { Contacts } = require("../models/Contacts");
 const CustomerSubscription = require("../models/CustomerSubscriptionmodels.js");
-const { getAuthCookieOptions, clearAuthCookies } = require("../utils/cookieUtils");
+const {
+  getAuthCookieOptions,
+  clearAuthCookies,
+} = require("../utils/cookieUtils");
 const SubscriptionPlan = require("../models/Subscriptionmodels.js");
 const SharingSettings = require("../models/SharingSettings");
 const Profile = require("../models/Profile");
@@ -12,6 +15,7 @@ const Tabs = require("../models/Tabs");
 const Objects = require("../models/Objects");
 const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require("../models/rolesPermissionObject");
+const RecentActivity = require("../models/recentActivity.js");
 const {
   generateToken,
   generateEmailVerificationToken,
@@ -162,6 +166,17 @@ const organizationUserCreation = async (req, res) => {
         contactId: savedContact._id.toString(),
       });
 
+      // Recent Activity for tracking
+      await RecentActivity.create({
+        userId: res.locals.userId,
+        user: `${res.locals.effectivePermissions_RoleName || "System User"}`,
+        action: "create_user",
+        details: `Created new user ${firstName} ${lastName}`,
+        entityId: savedUserId,
+        entityType: "Users",
+        tenantId: isSuperAdmin ? null : tenantId,
+      });
+
       console.log("--- organizationUserCreation END ---");
       return res.status(201).json({
         message: "User and Contact created successfully",
@@ -288,35 +303,41 @@ const organizationUserCreation = async (req, res) => {
 
 const loginOrganization = async (req, res) => {
   try {
-    console.log('[loginOrganization] Login request received');
-    console.log('[loginOrganization] Request body:', req.body);
+    console.log("[loginOrganization] Login request received");
+    console.log("[loginOrganization] Request body:", req.body);
 
     let { email, password } = req.body;
     email = email?.trim().toLowerCase();
     password = password?.trim();
 
-    console.log('[loginOrganization] Processed credentials:', { email: email ? '***' : 'missing', password: password ? '***' : 'missing' });
+    console.log("[loginOrganization] Processed credentials:", {
+      email: email ? "***" : "missing",
+      password: password ? "***" : "missing",
+    });
 
     if (!email || !password) {
-      console.log('[loginOrganization] Missing email or password');
+      console.log("[loginOrganization] Missing email or password");
       return res
         .status(400)
         .json({ success: false, message: "Email and password are required" });
     }
 
-    console.log('[loginOrganization] Looking up user by email:', email);
+    console.log("[loginOrganization] Looking up user by email:", email);
     const user = await Users.findOne({ email }).select("+password");
     if (!user) {
-      console.log('[loginOrganization] User not found for email:', email);
+      console.log("[loginOrganization] User not found for email:", email);
       return res
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
 
-    console.log('[loginOrganization] User found:', { userId: user._id, isEmailVerified: user.isEmailVerified });
+    console.log("[loginOrganization] User found:", {
+      userId: user._id,
+      isEmailVerified: user.isEmailVerified,
+    });
 
     if (!user.isEmailVerified) {
-      console.log('[loginOrganization] Email not verified for user:', user._id);
+      console.log("[loginOrganization] Email not verified for user:", user._id);
       return res.status(403).json({
         success: false,
         message: "Email not verified",
@@ -328,26 +349,26 @@ const loginOrganization = async (req, res) => {
     let roleName = null;
     let roleType = null;
     if (user.roleId) {
-      console.log('[loginOrganization] Looking up role for user:', user.roleId);
+      console.log("[loginOrganization] Looking up role for user:", user.roleId);
       const role = await RolesPermissionObject.findById(user.roleId);
       roleName = role?.roleName;
       roleType = role?.roleType;
-      console.log('[loginOrganization] Role found:', { roleName, roleType });
+      console.log("[loginOrganization] Role found:", { roleName, roleType });
     }
 
-    console.log('[loginOrganization] Verifying password...');
+    console.log("[loginOrganization] Verifying password...");
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      console.log('[loginOrganization] Invalid password for user:', user._id);
+      console.log("[loginOrganization] Invalid password for user:", user._id);
       return res
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
-    console.log('[loginOrganization] Password verified successfully');
+    console.log("[loginOrganization] Password verified successfully");
 
     // For internal roleType (super admin)
     if (roleType === "internal") {
-      console.log('[loginOrganization] Processing internal user login');
+      console.log("[loginOrganization] Processing internal user login");
       const payload = {
         impersonatedUserId: user._id.toString(),
         // role: 'superadmin',
@@ -371,12 +392,15 @@ const loginOrganization = async (req, res) => {
     }
 
     // For non-internal users, proceed with tenant checks
-    console.log('[loginOrganization] Processing regular user login, checking tenant:', user.tenantId);
+    console.log(
+      "[loginOrganization] Processing regular user login, checking tenant:",
+      user.tenantId
+    );
     const organization = await Tenant.findOne({ _id: user.tenantId });
     if (!organization || organization.status === "inactive") {
-      console.log('[loginOrganization] Organization not found or inactive:', {
+      console.log("[loginOrganization] Organization not found or inactive:", {
         found: !!organization,
-        status: organization?.status
+        status: organization?.status,
       });
       return res.status(403).json({
         success: false,
@@ -384,15 +408,18 @@ const loginOrganization = async (req, res) => {
         status: organization?.status || "not found",
       });
     }
-    console.log('[loginOrganization] Organization found and active:', {
+    console.log("[loginOrganization] Organization found and active:", {
       orgId: organization._id,
-      status: organization.status
+      status: organization.status,
     });
 
     // Fetch contactId where ownerId matches user._id
     const contact = await Contacts.findOne({ ownerId: user._id });
     const contactEmailFromOrg = contact?.email || null;
-    console.log('[loginOrganization] Contact found:', { contactId: contact?._id, email: contactEmailFromOrg });
+    console.log("[loginOrganization] Contact found:", {
+      contactId: contact?._id,
+      email: contactEmailFromOrg,
+    });
 
     // Generate JWT for non-internal users
     const payload = {
@@ -423,12 +450,12 @@ const loginOrganization = async (req, res) => {
       subdomainStatus: organization.subdomainStatus || null,
     };
 
-    console.log('[loginOrganization] Sending successful response:', {
+    console.log("[loginOrganization] Sending successful response:", {
       success: responseData.success,
       ownerId: responseData.ownerId,
       tenantId: responseData.tenantId,
       status: responseData.status,
-      isProfileCompleted: responseData.isProfileCompleted
+      isProfileCompleted: responseData.isProfileCompleted,
     });
 
     res.status(200).json(responseData);
@@ -948,98 +975,6 @@ const verifyEmailChange = async (req, res) => {
   }
 };
 
-// SUPER ADMIN added by Ashok ---------------------------------------------------->
-
-// const getAllOrganizations = async (req, res) => {
-//   try {
-//     // Existing total user count per tenant
-//     const userCounts = await Users.aggregate([
-//       {
-//         $group: {
-//           _id: "$tenantId",
-//           userCount: { $sum: 1 },
-//         },
-//       },
-//     ]);
-
-//     const userCountMap = {};
-//     userCounts.forEach(({ _id, userCount }) => {
-//       userCountMap[_id?.toString()] = userCount;
-//     });
-
-//     // New: Active user count per tenant
-//     const activeUserCounts = await Users.aggregate([
-//       {
-//         $match: {
-//           status: "active",
-//         },
-//       },
-//       {
-//         $group: {
-//           _id: "$tenantId",
-//           activeUserCount: { $sum: 1 },
-//         },
-//       },
-//     ]);
-
-//     const activeUserCountMap = {};
-//     activeUserCounts.forEach(({ _id, activeUserCount }) => {
-//       activeUserCountMap[_id?.toString()] = activeUserCount;
-//     });
-
-//     const organizations = await Tenant.find();
-
-//     // const enrichedOrganizations = organizations.map((org) => {
-//     //   const orgId = org._id.toString();
-//     //   return {
-//     //     ...org.toObject(),
-//     //     usersCount: userCountMap[orgId] || 0,
-//     //     activeUsersCount: activeUserCountMap[orgId] || 0, // Add active candidates count
-//     //   };
-//     // });
-
-//     // Fetch latest subscription per tenant (assuming latest by createdAt or startDate)
-//     const subscriptions = await CustomerSubscription.aggregate([
-//       {
-//         $sort: { createdAt: -1 }, // or startDate if you prefer
-//       },
-//       {
-//         $group: {
-//           _id: "$tenantId",
-//           latestSubscription: { $first: "$$ROOT" },
-//         },
-//       },
-//     ]);
-
-//     const subscriptionMap = {};
-//     subscriptions.forEach(({ _id, latestSubscription }) => {
-//       subscriptionMap[_id] = latestSubscription;
-//     });
-
-//     // Combine all data
-//     const enrichedOrganizations = organizations.map((org) => {
-//       const orgId = org._id.toString();
-//       return {
-//         ...org.toObject(),
-//         usersCount: userCountMap[orgId] || 0,
-//         activeUsersCount: activeUserCountMap[orgId] || 0,
-//         subscription: subscriptionMap[orgId] || null, // Add latest subscription data
-//       };
-//     });
-
-//     return res.status(200).json({
-//       organizations: enrichedOrganizations,
-//       totalOrganizations: organizations.length,
-//       status: true,
-//     });
-//   } catch (error) {
-//     console.log("Error in get organizations controller:", error.message);
-//     return res
-//       .status(500)
-//       .json({ message: "Internal server error", status: false });
-//   }
-// };
-
 const getAllOrganizations = async (req, res) => {
   try {
     // Total user count per tenant
@@ -1080,7 +1015,23 @@ const getAllOrganizations = async (req, res) => {
     });
 
     // Fetch all tenants
-    const organizations = await Tenant.find().lean(); // Use lean for performance
+    const organizations = await Tenant.find().lean();
+
+    // Fetch latest subscription per tenant using aggregation
+    const allSubscriptions = await CustomerSubscription.aggregate([
+      {
+        $sort: { createdAt: -1 }, // Sort within aggregation
+      },
+      {
+        $group: {
+          _id: "$tenantId",
+          latestSubscription: { $first: "$$ROOT" },
+        },
+      },
+      {
+        $replaceRoot: { newRoot: "$latestSubscription" },
+      },
+    ]).exec();
 
     // Fetch latest subscription per tenant
     // Use find() with sort instead of aggregate to avoid Azure Cosmos DB index issues
@@ -1090,15 +1041,12 @@ const getAllOrganizations = async (req, res) => {
     const subscriptionMap = {};
     allSubscriptions.forEach((subscription) => {
       if (subscription.tenantId) {
-        const tenantIdStr = subscription.tenantId.toString();
-        if (!subscriptionMap[tenantIdStr]) {
-          subscriptionMap[tenantIdStr] = subscription;
-        }
+        subscriptionMap[subscription.tenantId.toString()] = subscription;
       }
     });
 
     // Fetch one contact per tenant
-    const contacts = await Contacts.find().lean(); // Use lean for performance
+    const contacts = await Contacts.find().lean();
 
     const contactsMap = {};
     contacts.forEach((contact) => {
@@ -1115,7 +1063,7 @@ const getAllOrganizations = async (req, res) => {
         usersCount: userCountMap[orgId] || 0,
         activeUsersCount: activeUserCountMap[orgId] || 0,
         subscription: subscriptionMap[orgId] || null,
-        contact: contactsMap[orgId] || null, // Return null instead of empty array
+        contact: contactsMap[orgId] || null,
       };
     });
 
@@ -1125,10 +1073,17 @@ const getAllOrganizations = async (req, res) => {
       status: true,
     });
   } catch (error) {
-    console.error("Error in getAllOrganizations:", error.stack); // Log full stack trace
+
+    console.error("Error in getAllOrganizations:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      details: error.details,
+    });
     return res
       .status(500)
       .json({ message: "Internal server error", error: error.message, status: false });
+
   }
 };
 
@@ -1145,7 +1100,7 @@ const getOrganizationById = async (req, res) => {
     const organization = await Tenant.findById(id);
 
     // Fetch subscription data for the given tenant
-    const subscription = await CustomerSubscription.findOne({ tenantId: id })
+    const subscription = await CustomerSubscription.findOne({ tenantId: id });
 
     // Fetch full subscription plan details using subscriptionPlanId
     let subscriptionPlan = null;
@@ -1184,11 +1139,32 @@ const getOrganizationById = async (req, res) => {
       })
     );
 
+    // Fetch recent activity
+    const recentActivityRaw = await RecentActivity.find({ tenantId: id })
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .lean();
+
+    // Map contact data to each activity's userId
+    // Map contact data to each activity's entityId
+    const recentActivityWithContact = recentActivityRaw.map((activity) => {
+      const contact = allContacts.find(
+        (contact) =>
+          contact.ownerId?.toString() === activity.entityId?.toString()
+      );
+
+      return {
+        ...activity,
+        contact,
+      };
+    });
+
     const tenant = {
       tenant: {
         ...organization.toObject(),
         ...subscription,
         subscriptionPlan,
+        recentActivity: recentActivityWithContact,
       },
       users: usersWithRoleAndContact,
     };
@@ -1416,7 +1392,7 @@ const registerOrganization = async (req, res) => {
     // });
 
     // Set auth token cookie with consistent settings
-    res.cookie('authToken', token, getAuthCookieOptions());
+    res.cookie("authToken", token, getAuthCookieOptions());
 
     console.log("Organization registration completed successfully");
     res.status(201).json({

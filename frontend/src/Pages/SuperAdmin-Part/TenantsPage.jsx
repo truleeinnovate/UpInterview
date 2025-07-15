@@ -200,34 +200,12 @@ function TenantsPage() {
     return <Loading />;
   }
 
-  // Show error state if there's an error
-  if (isError) {
-    return (
-      <div className="text-center py-32">
-        <div className="text-xl text-gray-600">Failed to load tenants</div>
-        <button 
-          onClick={() => refetch()} 
-          className="mt-4 px-4 py-2 bg-custom-blue text-white rounded hover:bg-blue-700"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
 
   // Show content even if permissions are still loading but we have data
   if (tenants && tenants.length > 0) {
     // Continue with rendering
   }
 
-  // If no tenants and not loading, show empty state
-  if (!isLoading && (!tenants || tenants.length === 0)) {
-    return (
-      <div className="text-center py-32">
-        <div className="text-xl text-gray-600">No tenants found</div>
-      </div>
-    );
-  }
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
