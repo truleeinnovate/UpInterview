@@ -19,27 +19,27 @@ const ProtectedRoute = ({ children }) => {
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   const { usersData } = useCustomContext() || {};
   const { isInitialized } = usePermissions() || { isInitialized: false };
-  
+
   console.log('[ProtectedRoute] Component render - tokens from getAuthToken/getImpersonationToken:', {
     authToken: authToken ? 'EXISTS' : 'MISSING',
     impersonationToken: impersonationToken ? 'EXISTS' : 'MISSING',
     pathname: location.pathname
   });
-  
+
   useEffect(() => {
     console.log('ProtectedRoute: starting activity tracking');
     // Start activity tracking
     const cleanupActivityTracker = startActivityTracking();
-    
+
     // Listen for logout events
     const emitter = getActivityEmitter();
     const handleLogout = () => {
       // Clear auth token
       Cookies.remove('authToken', { path: '/' });
     };
-    
+
     emitter.on('logout', handleLogout);
-    
+
     return () => {
       cleanupActivityTracker();
       emitter.off('logout', handleLogout);
@@ -89,7 +89,7 @@ const ProtectedRoute = ({ children }) => {
 
         // SIMPLE CHECK: If we have any token at all, allow access
         const hasAnyToken = authToken || impersonationToken;
-        
+
         if (hasAnyToken) {
           console.log('[ProtectedRoute] Token found, allowing access');
           setIsChecking(false);
@@ -115,55 +115,59 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-const ProtectedContent = ({ children }) => {
-  const { usersData } = useCustomContext() || {};
+  const ProtectedContent = ({ children }) => {
+    const { usersData } = useCustomContext() || {};
 
-  const authToken = getAuthToken();
-  const impersonationToken = getImpersonationToken();
-  const tokenPayload = authToken ? decodeJwt(authToken) : null;
-  const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
-  
-  // Determine which token to use for user data
-  const effectiveTokenPayload = impersonationPayload?.impersonatedUserId ? impersonationPayload : tokenPayload;
-  const userId = effectiveTokenPayload?.userId || effectiveTokenPayload?.impersonatedUserId;
-  const currentUserData = usersData?.find(user => user._id === userId);
+    const authToken = getAuthToken();
+    const impersonationToken = getImpersonationToken();
+    const tokenPayload = authToken ? decodeJwt(authToken) : null;
+    const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
 
-  const organization = currentUserData?.tenantId;
+    // Determine which token to use for user data
+    const effectiveTokenPayload = impersonationPayload?.impersonatedUserId ? impersonationPayload : tokenPayload;
+    const userId = effectiveTokenPayload?.userId || effectiveTokenPayload?.impersonatedUserId;
+    const currentUserData = usersData?.find(user => user._id === userId);
 
-  const currentDomain = window.location.hostname;
-  let targetDomain;
+    const organization = currentUserData?.tenantId;
 
-  console.log('[ProtectedContent] Checking subdomain redirect...');
-  console.log('[ProtectedContent] Current domain:', currentDomain);
-  console.log('[ProtectedContent] Auth token exists:', !!authToken);
-  console.log('[ProtectedContent] Impersonation token exists:', !!impersonationToken);
-  console.log('[ProtectedContent] Effective token payload:', effectiveTokenPayload);
-  console.log('[ProtectedContent] User ID:', userId);
-  console.log('[ProtectedContent] Organization:', organization);
+    const currentDomain = window.location.hostname;
+    let targetDomain;
 
-  // Only check for subdomain redirect if we have organization data and it's a regular user (not super admin)
-  if (authToken && tokenPayload?.organization === true && organization?.subdomain) {
-    targetDomain = `${organization.subdomain}.app.upinterview.io`;
-  } else {
-    targetDomain = 'app.upinterview.io';
-  }
+    console.log('[ProtectedContent] Checking subdomain redirect...');
+    console.log('[ProtectedContent] Current domain:', currentDomain);
+    console.log('[ProtectedContent] Auth token exists:', !!authToken);
+    console.log('[ProtectedContent] Impersonation token exists:', !!impersonationToken);
+    console.log('[ProtectedContent] Effective token payload:', effectiveTokenPayload);
+    console.log('[ProtectedContent] User ID:', userId);
+    console.log('[ProtectedContent] Organization:', organization);
 
-  console.log('[ProtectedContent] Target domain:', targetDomain);
+    // Only check for subdomain redirect if we have organization data and it's a regular user (not super admin)
+    if (authToken && tokenPayload?.organization === true && organization?.subdomain) {
+      targetDomain = `${organization.subdomain}.app.upinterview.io`;
+    } else {
+      targetDomain = 'app.upinterview.io';
+    }
 
-  // Only redirect for subdomain if NOT localhost
-  const isLocalhost = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
-  console.log('[ProtectedContent] Is localhost:', isLocalhost);
-  
-  if (!isLocalhost && !currentDomain.includes(targetDomain)) {
-    console.log('[ProtectedContent] Redirecting to subdomain:', targetDomain);
-    const protocol = window.location.protocol;
-    window.location.href = `${protocol}//${targetDomain}${location.pathname}`;
-    return null;
-  }
+    console.log('[ProtectedContent] Target domain:', targetDomain);
 
-  console.log('[ProtectedContent] No redirect needed, rendering children');
-  return children;
-};
+    // Only redirect for subdomain if NOT localhost
+    const isLocalhost = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
+    console.log('[ProtectedContent] Is localhost:', isLocalhost);
+
+    // Skip subdomain redirect if we're already on a subdomain and the organization data might not be loaded yet
+    const isOnSubdomain = currentDomain.includes('.app.upinterview.io') && currentDomain !== 'app.upinterview.io';
+    const shouldSkipRedirect = isOnSubdomain && !organization?.subdomain;
+
+    if (!isLocalhost && !currentDomain.includes(targetDomain) && !shouldSkipRedirect) {
+      console.log('[ProtectedContent] Redirecting to subdomain:', targetDomain);
+      const protocol = window.location.protocol;
+      window.location.href = `${protocol}//${targetDomain}${location.pathname}`;
+      return null;
+    }
+
+    console.log('[ProtectedContent] No redirect needed, rendering children');
+    return children;
+  };
 
   return (
     <PermissionsProvider>

@@ -197,20 +197,20 @@ const OrganizationLogin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateLogin()) return;
-  
+
     setIsLoading(true);
     const loginStartTime = new Date().toISOString();
-    console.log(`[OrganizationLogin][${loginStartTime}] Starting login process...`);
-  
+    console.log(`[OrganizationLogin][${loginStartTime}] Starting enhanced login process...`);
+
     try {
-      // Step 1: Clear cookies
+      // Step 1: Clear all existing cookies
       await clearAllAuth();
       console.log(`[OrganizationLogin][${loginStartTime}] Cleared all cookies`);
-  
-      // Step 2: Make login request
+
+      // Step 2: Authenticate user with email and password
       const loginURL = `${config.REACT_APP_API_URL}/Organization/Login`;
-      console.log(`[OrganizationLogin][${loginStartTime}] Making login request to:`, loginURL);
-      
+      console.log(`[OrganizationLogin][${loginStartTime}] Authenticating user...`);
+
       const response = await axios.post(
         loginURL,
         {
@@ -219,10 +219,9 @@ const OrganizationLogin = () => {
         },
         { withCredentials: true }
       );
-  
-      // Step 3: Handle login response
-      console.log(`[OrganizationLogin][${loginStartTime}] Login response received:`, response.data);
-  
+
+      console.log(`[OrganizationLogin][${loginStartTime}] Authentication successful`);
+
       const {
         authToken,
         impersonationToken,
@@ -235,120 +234,134 @@ const OrganizationLogin = () => {
         roleName,
         contactEmailFromOrg,
         roleType,
+        subdomain,
+        fullDomain,
+        subdomainStatus,
       } = response.data;
-  
-      console.log(`[OrganizationLogin][${loginStartTime}] Extracted data:`, {
-        hasAuthToken: !!authToken,
-        hasImpersonationToken: !!impersonationToken,
+
+      console.log(`[OrganizationLogin][${loginStartTime}] User data extracted:`, {
         roleType,
         status,
         isEmailVerified,
-        isProfileCompleted
+        isProfileCompleted,
+        subdomain,
+        subdomainStatus
       });
-  
-      // Step 4: Handle user type
+
+      // Step 3: Handle internal users (admin dashboard)
       if (roleType === 'internal') {
-        console.log(`[OrganizationLogin][${loginStartTime}] Internal user detected, setting impersonation cookies`);
+        console.log(`[OrganizationLogin][${loginStartTime}] Internal user detected, redirecting to admin dashboard`);
         setAuthCookies({ impersonationToken, impersonatedUserId });
         navigate('/admin-dashboard');
-      } else {
-        console.log(`[OrganizationLogin][${loginStartTime}] Regular user detected, setting auth cookies`);
-        
-        // Test cookie functionality first
-        const cookieTest = testCookieFunctionality();
-        console.log(`[OrganizationLogin][${loginStartTime}] Cookie functionality test:`, cookieTest);
-        
-        setAuthCookies({ authToken, userId: ownerId, tenantId, organization: true });
-  
-        // Add a longer delay to ensure cookies are set before navigation
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log(`[OrganizationLogin][${loginStartTime}] Cookies set, verifying...`);
-        
-        // Verify cookies were set properly
-        const authTokenFromCookies = Cookies.get('authToken');
-        const authTokenFromDocument = document.cookie.split(';').find(cookie => cookie.trim().startsWith('authToken='));
-        
-        // Try to decode tokens if they exist
-        const decodedAuthTokenFromCookies = authTokenFromCookies ? (() => {
-          try {
-            return decodeURIComponent(authTokenFromCookies);
-          } catch (error) {
-            return authTokenFromCookies;
-          }
-        })() : null;
-        
-        const decodedAuthTokenFromDocument = authTokenFromDocument ? (() => {
-          try {
-            return decodeURIComponent(authTokenFromDocument.split('=')[1]);
-          } catch (error) {
-            return authTokenFromDocument.split('=')[1];
-          }
-        })() : null;
-        
-        console.log(`[OrganizationLogin][${loginStartTime}] AuthToken verification:`, {
-          fromCookies: decodedAuthTokenFromCookies ? 'EXISTS' : 'MISSING',
-          fromDocument: decodedAuthTokenFromDocument ? 'EXISTS' : 'MISSING'
-        });
-        
-        // Debug all token sources
-        debugTokenSources();
-        
-        // If cookies are still not set, try setting them again
-        if (!decodedAuthTokenFromCookies && !decodedAuthTokenFromDocument) {
-          console.log(`[OrganizationLogin][${loginStartTime}] Cookies not set properly, retrying...`);
-          setAuthCookies({ authToken, userId: ownerId, tenantId, organization: true });
-          await new Promise(resolve => setTimeout(resolve, 200));
-          
-          // Debug again after retry
-          debugTokenSources();
-        }
-  
-        // Step 5: Handle unverified email
-        if (!isEmailVerified) {
-          console.log(`[OrganizationLogin][${loginStartTime}] Email not verified, showing verification screen`);
-          setIsEmailVerified(false);
-          await handleResendVerification();
-          setCountdown(60);
-          return;
-        }
-  
-        // Step 6: Refresh permissions and route based on status
-        console.log(`[OrganizationLogin][${loginStartTime}] Refreshing permissions...`);
-        await refreshPermissions();
-  
-        console.log(`[OrganizationLogin][${loginStartTime}] Navigating based on status:`, status);
-  
-        switch (status) {
-          case 'submitted':
-          case 'payment_pending':
-            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to /subscription-plans`);
-            navigate('/subscription-plans');
-            break;
-          case 'active':
-            if (isProfileCompleted === false && roleName) {
-              console.log(`[OrganizationLogin][${loginStartTime}] Navigating to /complete-profile`);
-              navigate('/complete-profile', {
-                state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
-              });
-            } else {
-              console.log(`[OrganizationLogin][${loginStartTime}] Navigating to /home`);
-              navigate('/home');
-            }
-            break;
-          default:
-            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to default route '/'`);
-            navigate('/');
-        }
+        return;
       }
+
+      // Step 4: Set authentication cookies for regular users
+      console.log(`[OrganizationLogin][${loginStartTime}] Setting authentication cookies...`);
+      setAuthCookies({ authToken, userId: ownerId, tenantId, organization: true });
+
+      // Step 5: Handle email verification
+      if (!isEmailVerified) {
+        console.log(`[OrganizationLogin][${loginStartTime}] Email not verified, showing verification screen`);
+        setIsEmailVerified(false);
+        await handleResendVerification();
+        setCountdown(60);
+        return;
+      }
+
+      // Step 6: Check subdomain and handle subdomain routing
+      console.log(`[OrganizationLogin][${loginStartTime}] Checking subdomain configuration...`);
+
+      if (subdomain && subdomainStatus === 'active') {
+        console.log(`[OrganizationLogin][${loginStartTime}] Active subdomain found:`, subdomain);
+
+        const currentDomain = window.location.hostname;
+        const targetDomain = `${subdomain}.app.upinterview.io`;
+
+        console.log(`[OrganizationLogin][${loginStartTime}] Current domain:`, currentDomain);
+        console.log(`[OrganizationLogin][${loginStartTime}] Target subdomain:`, targetDomain);
+
+        // Check if we need to redirect to subdomain
+        if (!currentDomain.includes(subdomain)) {
+          console.log(`[OrganizationLogin][${loginStartTime}] Redirecting to subdomain...`);
+
+          const protocol = window.location.protocol;
+
+          // Determine the target path based on user status
+          let targetPath = '/';
+          if (status === 'active' && isProfileCompleted !== false) {
+            targetPath = '/home';
+          } else if (status === 'submitted' || status === 'payment_pending') {
+            targetPath = '/subscription-plans';
+          } else if (isProfileCompleted === false && roleName) {
+            targetPath = '/complete-profile';
+          }
+
+          const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
+
+          console.log(`[OrganizationLogin][${loginStartTime}] Setting subdomain URL with path:`, targetUrl);
+
+          // Wait for 2 seconds to ensure cookies are properly set and data is ready
+          console.log(`[OrganizationLogin][${loginStartTime}] Waiting 2 seconds before subdomain redirect...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subdomain with path:`, targetUrl);
+          window.location.href = targetUrl;
+          return;
+        } else {
+          console.log(`[OrganizationLogin][${loginStartTime}] Already on correct subdomain`);
+        }
+      } else {
+        console.log(`[OrganizationLogin][${loginStartTime}] No active subdomain found:`, { subdomain, subdomainStatus });
+      }
+
+      // Step 7: Refresh permissions and prepare for navigation (only for non-subdomain cases)
+      console.log(`[OrganizationLogin][${loginStartTime}] Refreshing permissions...`);
+      await refreshPermissions();
+
+      // Step 8: Handle navigation based on user status with proper timing (only for non-subdomain cases)
+      console.log(`[OrganizationLogin][${loginStartTime}] Determining navigation route...`);
+
+      switch (status) {
+        case 'submitted':
+        case 'payment_pending':
+          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subscription plans`);
+          navigate('/subscription-plans');
+          break;
+
+        case 'active':
+          if (isProfileCompleted === false && roleName) {
+            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to complete profile`);
+            navigate('/complete-profile', {
+              state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
+            });
+          } else {
+            // Enhanced home navigation with data loading preparation
+            console.log(`[OrganizationLogin][${loginStartTime}] Preparing for home navigation with data loading...`);
+
+            // Wait for 2 seconds to ensure backend data is ready and cookies are properly set
+            console.log(`[OrganizationLogin][${loginStartTime}] Waiting 2 seconds for data preparation...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to home with prepared data`);
+            navigate('/home');
+          }
+          break;
+
+        default:
+          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to default route`);
+          navigate('/');
+      }
+
     } catch (error) {
       console.error(`[OrganizationLogin][${loginStartTime}] Login error:`, error);
       setIsLoading(false);
       setErrors({ email: '', password: '' });
-  
+
       if (error.response) {
         const { status, data } = error.response;
         console.log(`[OrganizationLogin][${loginStartTime}] Error response:`, { status, data });
-  
+
         if (status === 400) {
           if (data.fields) {
             setErrors(data.fields);
@@ -375,7 +388,7 @@ const OrganizationLogin = () => {
       }
     } finally {
       setIsLoading(false);
-      console.log(`[OrganizationLogin][${loginStartTime}] Login process ended`);
+      console.log(`[OrganizationLogin][${loginStartTime}] Enhanced login process completed`);
     }
   };
 

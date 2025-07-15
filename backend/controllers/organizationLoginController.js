@@ -418,6 +418,9 @@ const loginOrganization = async (req, res) => {
       contactEmailFromOrg,
       isEmailVerified: user.isEmailVerified,
       status: organization.status,
+      subdomain: organization.subdomain || null,
+      fullDomain: organization.fullDomain || null,
+      subdomainStatus: organization.subdomainStatus || null,
     };
 
     console.log('[loginOrganization] Sending successful response:', {
