@@ -286,26 +286,15 @@ const OrganizationLogin = () => {
           console.log(`[OrganizationLogin][${loginStartTime}] Redirecting to subdomain...`);
 
           const protocol = window.location.protocol;
+          const targetUrl = `${protocol}//${targetDomain}/home`;
 
-          // Determine the target path based on user status
-          let targetPath = '/';
-          if (status === 'active' && isProfileCompleted !== false) {
-            targetPath = '/home';
-          } else if (status === 'submitted' || status === 'payment_pending') {
-            targetPath = '/subscription-plans';
-          } else if (isProfileCompleted === false && roleName) {
-            targetPath = '/complete-profile';
-          }
+          console.log(`[OrganizationLogin][${loginStartTime}] Setting subdomain URL:`, targetUrl);
 
-          const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
+          // Wait for 3-4 seconds to ensure data is loaded in the home page
+          console.log(`[OrganizationLogin][${loginStartTime}] Waiting 4 seconds for data preparation...`);
+          await new Promise(resolve => setTimeout(resolve, 4000));
 
-          console.log(`[OrganizationLogin][${loginStartTime}] Setting subdomain URL with path:`, targetUrl);
-
-          // Wait for 2 seconds to ensure cookies are properly set and data is ready
-          console.log(`[OrganizationLogin][${loginStartTime}] Waiting 2 seconds before subdomain redirect...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-
-          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subdomain with path:`, targetUrl);
+          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subdomain:`, targetUrl);
           window.location.href = targetUrl;
           return;
         } else {
@@ -339,9 +328,9 @@ const OrganizationLogin = () => {
             // Enhanced home navigation with data loading preparation
             console.log(`[OrganizationLogin][${loginStartTime}] Preparing for home navigation with data loading...`);
 
-            // Wait for 2 seconds to ensure backend data is ready and cookies are properly set
-            console.log(`[OrganizationLogin][${loginStartTime}] Waiting 2 seconds for data preparation...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Wait for 4 seconds to ensure backend data is ready and cookies are properly set
+            console.log(`[OrganizationLogin][${loginStartTime}] Waiting 4 seconds for data preparation...`);
+            await new Promise(resolve => setTimeout(resolve, 4000));
 
             console.log(`[OrganizationLogin][${loginStartTime}] Navigating to home with prepared data`);
             navigate('/home');

@@ -141,8 +141,8 @@ exports.individualLogin = async (req, res) => {
     const token = generateToken(payload);
     // console.log('[individualLogin] Step 9: Generated token');
 
-    // Set auth token cookie
-    res.cookie('authToken', token, getAuthCookieOptions());
+    // Note: Auth token will be set by frontend using setAuthCookies()
+    // Backend only returns the token in response, frontend handles cookie setting
 
     res.status(200).json({
       success: true,
