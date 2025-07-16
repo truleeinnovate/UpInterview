@@ -16,6 +16,7 @@ import {useMockInterviews} from "../../../../apiHooks/useMockInterviews.js";
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
+import LoadingButton from "../../../../Components/LoadingButton.jsx";
 
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -40,7 +41,7 @@ const TaskForm = ({
   const { assessmentData} = useAssessments();
   const {interviewData} = useInterviews();
   const {mockInterviewData} = useMockInterviews();
-  console.log("mockInterviewData:",mockInterviewData)
+  //console.log("mockInterviewData:",mockInterviewData)
 
 
   const {usersRes} = useCustomContext();
@@ -216,6 +217,7 @@ const TaskForm = ({
       ...prevFormData,
       [field]: value,
     }));
+
     setErrors((prevErrors) => ({
       ...prevErrors,
       [field]: "", // Clear the error for the specific field
@@ -312,7 +314,8 @@ const TaskForm = ({
       }
       
       onTaskAdded();
-      handleClose();
+      onClose();
+      
     } catch (error) {
       console.error("Error saving task:", error);
       setError(error.response?.data?.message || error.message || "Failed to save task");
@@ -363,9 +366,7 @@ const TaskForm = ({
     }
   }, [taskId, initialData]);
 
-  const handleClose = () => {
-      navigate('/task');
-    };
+  
   
     const modalClass = classNames(
         'fixed bg-white shadow-2xl border-l border-gray-200',
@@ -382,7 +383,7 @@ const TaskForm = ({
   return (
     <Modal
             isOpen={true}
-            // onRequestClose={onClose}
+            onRequestClose={onClose}
             className={modalClass}
             overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
           >
@@ -406,7 +407,7 @@ const TaskForm = ({
                       )}
                     </button>
                     <button
-                      onClick={handleClose}
+                      onClick={onClose}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <X className="w-4 h-4" />
@@ -444,6 +445,11 @@ const TaskForm = ({
                       ...prev,
                       assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
                       assignedToId: selectedUserId
+                    }));
+
+                    setErrors((prevErrors) => ({
+                      ...prevErrors,
+                      assignedTo: "",
                     }));
                   }}
                   className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
@@ -613,7 +619,13 @@ const TaskForm = ({
               name="scheduledDate"
               placeholder="DD-MM-YYYY"
               value={taskId && formData.dueDate && !isNaN(new Date(formData.dueDate).getTime()) ? new Date(formData.dueDate).toISOString().slice(0, 16) : scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
+              onChange={(e) => {
+                 setScheduledDate(e.target.value)
+                 setErrors((prevErrors) => ({
+                  ...prevErrors,
+                  dueDate: "",
+                }));
+              }}
               min={new Date().toISOString().slice(0, 16)}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />         
@@ -636,17 +648,19 @@ const TaskForm = ({
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
-              onClick={handleClose}
+              onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Cancel
             </button>
-            <button
+            <LoadingButton
               onClick={handleSubmit}
-              className="px-4 py-2 text-sm font-medium text-white bg-custom-blue border border-transparent rounded-md hover:bg-custom-blue/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {taskId ? 'Update Task' : 'Create Task'}
-            </button>
+              isLoading={isMutationLoading}
+              loadingText="Creating..."
+              >
+                {taskId ? 'Update Task' : 'Create Task'}
+            </LoadingButton>
+            
           </div>
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>} 
           </div>

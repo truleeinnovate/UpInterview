@@ -23,7 +23,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
   //console.log('impersonationPayload:', impersonationPayload.impersonatedUserId);
 
   const { superAdminProfile } = useCustomContext();
-  //console.log(superAdminProfile.firstName)
+  //console.log("superAdminProfile",superAdminProfile.firstName)
 
   const [newStatus, setNewStatus] = useState("");
   const [comment, setComment] = useState("");
@@ -98,7 +98,8 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
     onClose,
     onStatusUpdate,
     impersonationPayload.impersonatedUserId,
-    superAdminProfile[0]?.ownerId?.firstName,
+    //superAdminProfile[0]?.ownerId?.firstName,
+    superAdminProfile?.firstName,
   ]);
 
   const handleSubmit = useCallback(() => {

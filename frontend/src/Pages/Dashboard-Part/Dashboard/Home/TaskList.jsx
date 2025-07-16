@@ -63,7 +63,7 @@ const TaskList = () => {
         (selectedTimeFilter === 'next-week' && isNextWeek(taskDate));
 
       const matchesStatusFilter = selectedStatusFilter === 'all' ||
-        task.status.toLowerCase() === selectedStatusFilter;
+        task.status.toLowerCase() === selectedStatusFilter
 
       return matchesTimeFilter && matchesStatusFilter;
     });
@@ -109,9 +109,10 @@ const TaskList = () => {
           className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="in-progress">In Progress</option>
+          <option value="new">New</option>
+          <option value="in progress">In Progress</option>
           <option value="completed">Completed</option>
+          <option value="no response">No Response</option>
         </select>
       </div>
 
@@ -165,14 +166,14 @@ const TaskList = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center space-x-1">
+                {/* <div className="flex items-center space-x-1">
                   <button className="p-1 text-gray-400 hover:text-green-600 transition-colors duration-300">
                     <CheckCircle size={16} />
                   </button>
                   <button className="p-1 text-gray-400 hover:text-red-600 transition-colors duration-300">
                     <AlertCircle size={16} />
                   </button>
-                </div>
+                </div> */}
               </div>
             </motion.div>
           ))
