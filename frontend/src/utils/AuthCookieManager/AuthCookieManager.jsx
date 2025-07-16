@@ -57,11 +57,9 @@ class AuthCookieManager {
         path: '/', // Ensure cookie is available on all paths
       };
       
-      // Only set domain for production (not localhost)
-      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
-        cookieOptions.domain = '.upinterview.io'; // Use wildcard domain
-        console.log('🌐 Setting cookie domain to .upinterview.io');
-      }
+      // Don't set domain for cross-origin requests
+      // The backend is on Azure, so we need to let the browser handle the domain
+      console.log('🌐 Not setting domain for cross-origin compatibility');
       
       Cookies.set(AUTH_TOKEN_KEY, token, cookieOptions);
       
@@ -102,11 +100,9 @@ class AuthCookieManager {
         path: '/', // Ensure cookie is available on all paths
       };
       
-      // Only set domain for production (not localhost)
-      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
-        cookieOptions.domain = '.upinterview.io'; // Use wildcard domain
-        console.log('🌐 Setting cookie domain to .upinterview.io');
-      }
+      // Don't set domain for cross-origin requests
+      // The backend is on Azure, so we need to let the browser handle the domain
+      console.log('🌐 Not setting domain for cross-origin compatibility');
       
       // Set the token in cookies
       Cookies.set('impersonationToken', token, cookieOptions);
@@ -746,11 +742,8 @@ class AuthCookieManager {
         path: '/'
       };
       
-      // Only set domain for production (not localhost)
-      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
-        clearOptions.domain = '.upinterview.io';
-        console.log('🌐 Clearing cookies with domain .upinterview.io');
-      }
+      // Don't set domain for cross-origin requests
+      console.log('🌐 Not setting domain for cross-origin compatibility');
 
       // Clear specific auth cookies with proper options
       Cookies.set(AUTH_TOKEN_KEY, '', clearOptions);
@@ -773,9 +766,6 @@ class AuthCookieManager {
         const cookieName = c.trim().split("=")[0];
         if (cookieName) {
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-          if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.upinterview.io;`;
-          }
         }
       });
 
