@@ -141,11 +141,23 @@ export const PermissionsProvider = ({ children }) => {
       const userType = AuthCookieManager.getUserType();
       const permissionsUrl = `${config.REACT_APP_API_URL}/users/permissions`;
 
+      console.log('[PermissionsContext] Fetching permissions with token:', {
+        hasToken: !!activeToken,
+        tokenLength: activeToken ? activeToken.length : 0,
+        userType
+      });
+
       const response = await axios.get(permissionsUrl, {
         withCredentials: true,
         headers: {
           'Authorization': `Bearer ${activeToken}`
         }
+      });
+
+      console.log('[PermissionsContext] Permissions response received:', {
+        status: response.status,
+        hasData: !!response.data,
+        dataKeys: response.data ? Object.keys(response.data) : []
       });
 
       const permissionData = response.data;

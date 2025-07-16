@@ -78,7 +78,7 @@ const ProtectedRoute = ({ children }) => {
   // Show loading while checking
   if (isChecking) {
     return (
-      <Loading message="Loading your workspace..." />
+      <Loading message="Loading..." />
     );
   }
 

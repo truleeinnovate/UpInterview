@@ -51,9 +51,9 @@ const UserDataLoader = ({ children }) => {
   if (isLoading) {
     return (
       <Loading 
-        message="Loading your profile..." 
-        size="large"
-        className="fixed inset-0 z-50 bg-white"
+        message="Loading..." 
+        // size="large"
+        // className="fixed inset-0 z-50 bg-white"
       />
     );
   }
