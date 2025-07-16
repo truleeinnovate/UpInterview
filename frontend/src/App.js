@@ -25,6 +25,7 @@ import SessionExpiration from "./Components/SessionExpiration.jsx";
 import Loading from "./Components/Loading.js";
 import UserDataLoader from "./Components/UserDataLoader.jsx";
 import { preloadPermissions, hasValidCachedPermissions } from "./utils/permissionPreloader";
+import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
@@ -441,6 +442,7 @@ const MainAppRoutes = ({
               element={<OrganizationSignUp />}
             />
             <Route path="/organization-login" element={<OrganizationLogin />} />
+            <Route path="/welcome-page-upinterview-individual" element={<WelcomePageUpinterviewIndividual />} />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route
               path="/payment-details"
@@ -471,6 +473,7 @@ const MainAppRoutes = ({
             <Route path="/resetPassword" element={<ResetPassword />} />
             <Route path="/forgetPassword" element={<ForgetPassword />} />
             <Route path="/assessmenttest" element={<AssessmentTest />} />
+
 
             {/* Protected Routes */}
             <Route
@@ -1133,6 +1136,7 @@ const App = () => {
     () => [
       "/organization-signup",
       "/organization-login",
+      "/welcome-page-upinterview-individual",
       "/select-user-type",
       "/select-profession",
       "/complete-profile",
@@ -1155,6 +1159,7 @@ const App = () => {
       "/assessmentsubmit",
       "/candidatevc",
       "/organization-login",
+      "/welcome-page-upinterview-individual",
       "/organization-signup",
       "/callback",
       "/jitsimeetingstart",
