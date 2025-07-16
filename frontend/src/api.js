@@ -3,8 +3,6 @@ import axios from 'axios';
 import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
 import { config } from './config';
 
-// Set global axios defaults for credentials
-axios.defaults.withCredentials = true;
 
 export const fetchFilterData = async (endpoint, effectivePermissions = {}) => {
   // console.log("Sending X-Permissions header:", JSON.stringify(effectivePermissions));

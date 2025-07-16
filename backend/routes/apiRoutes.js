@@ -387,7 +387,18 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
   console.log('--- STARTING REQUEST PROCESSING ---');
   try {
     const { model } = req.params;
-    const authToken = req.cookies.authToken;
+    
+    // Try to get token from cookies first, then from Authorization header
+    let authToken = req.cookies.authToken;
+    
+    // If not in cookies, check Authorization header
+    if (!authToken) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        authToken = authHeader.substring(7);
+        console.log('[1.1] Got token from Authorization header');
+      }
+    }
 
     console.log('[1] Request received for model:', model);
     console.log('[2] Auth token exists:', !!authToken);
