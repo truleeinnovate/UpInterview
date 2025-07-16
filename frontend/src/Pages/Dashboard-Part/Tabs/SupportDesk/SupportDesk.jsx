@@ -353,7 +353,7 @@ function SupportDesk() {
                 tickets={tickets}
                 effectivePermissions_RoleName={effectivePermissions_RoleName}
                 impersonatedUser_roleName={impersonatedUser_roleName}
-                impersonationPayloadID={impersonationPayload.impersonatedUserId}
+                impersonationPayloadID={impersonationPayload?.impersonatedUserId}
                 loading={isLoading}
                 currentUserId={currentUserId}
               />
