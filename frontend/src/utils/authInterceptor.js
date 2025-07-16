@@ -28,12 +28,20 @@ api.interceptors.response.use(
     // If there's a new token in the response, update the stored token
     const newToken = response.headers['x-new-token'];
     if (newToken) {
-      Cookies.set('authToken', newToken, {
+      const cookieOptions = {
         expires: 2 / 24, // 2 hours
         sameSite: 'None', // Required for cross-origin requests
         secure: true, // Required when sameSite is 'None'
         path: '/',
-      });
+      };
+      
+      // Only set domain for production (not localhost)
+      const currentDomain = window.location.hostname;
+      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+        cookieOptions.domain = '.upinterview.io';
+      }
+      
+      Cookies.set('authToken', newToken, cookieOptions);
     }
     return response;
   },

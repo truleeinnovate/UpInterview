@@ -45,11 +45,26 @@ class AuthCookieManager {
 
     try {
       console.log('🍪 Setting cookie with key:', AUTH_TOKEN_KEY);
-      Cookies.set(AUTH_TOKEN_KEY, token, {
+      
+      // Get current domain for proper cookie setting
+      const currentDomain = window.location.hostname;
+      console.log('🌐 Current domain:', currentDomain);
+      
+      const cookieOptions = {
         expires: 7, // 7 days
         secure: true,
-        sameSite: 'strict'
-      });
+        sameSite: 'None', // Required for cross-origin
+        path: '/', // Ensure cookie is available on all paths
+      };
+      
+      // Only set domain for production (not localhost)
+      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+        cookieOptions.domain = '.upinterview.io'; // Use wildcard domain
+        console.log('🌐 Setting cookie domain to .upinterview.io');
+      }
+      
+      Cookies.set(AUTH_TOKEN_KEY, token, cookieOptions);
+      
       // User type is now determined directly from token state
       console.log('✅ Auth token set - user type will be determined from tokens');
 
@@ -57,7 +72,8 @@ class AuthCookieManager {
       const savedToken = Cookies.get(AUTH_TOKEN_KEY);
       console.log('✅ Auth token set successfully. Verification:', {
         cookieExists: !!savedToken,
-        tokenMatches: savedToken === token
+        tokenMatches: savedToken === token,
+        allCookies: document.cookie
       });
     } catch (error) {
       console.error('❌ Error setting auth token:', error);
@@ -75,12 +91,25 @@ class AuthCookieManager {
     });
 
     try {
-      // Set the token in cookies
-      Cookies.set('impersonationToken', token, { 
+      // Get current domain for proper cookie setting
+      const currentDomain = window.location.hostname;
+      console.log('🌐 Current domain:', currentDomain);
+      
+      const cookieOptions = {
         expires: 7, // 7 days
         secure: true,
-        sameSite: 'strict'
-      });
+        sameSite: 'None', // Required for cross-origin
+        path: '/', // Ensure cookie is available on all paths
+      };
+      
+      // Only set domain for production (not localhost)
+      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+        cookieOptions.domain = '.upinterview.io'; // Use wildcard domain
+        console.log('🌐 Setting cookie domain to .upinterview.io');
+      }
+      
+      // Set the token in cookies
+      Cookies.set('impersonationToken', token, cookieOptions);
       
       if (userData) {
         localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
@@ -94,7 +123,8 @@ class AuthCookieManager {
       const savedToken = Cookies.get(IMPERSONATION_TOKEN_KEY);
       console.log('✅ Impersonation token set successfully. Verification:', {
         cookieExists: !!savedToken,
-        tokenMatches: savedToken === token
+        tokenMatches: savedToken === token,
+        allCookies: document.cookie
       });
 
     } catch (error) {
@@ -546,34 +576,26 @@ class AuthCookieManager {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Helper function to clear cookies using multiple methods
-      const clearCookie = (cookieName) => {
-        console.log(`🧹 Clearing cookie: ${cookieName}`);
-        console.log(`🔍 Before clearing - Cookie ${cookieName}:`, Cookies.get(cookieName));
-
-        // Method 1: Set with expired date
-        Cookies.set(cookieName, '', {
-          expires: new Date(0),
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict'
-        });
-        console.log(`📝 After Method 1 - Cookie ${cookieName}:`, Cookies.get(cookieName));
-
-        // Method 2: Remove using js-cookie
-        Cookies.remove(cookieName);
-        console.log(`📝 After Method 2 - Cookie ${cookieName}:`, Cookies.get(cookieName));
-
-        // Method 3: Manual document.cookie approach
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure; samesite=strict`;
-        console.log(`📝 After Method 3 - Cookie ${cookieName}:`, Cookies.get(cookieName));
-
-        // Method 4: Try without secure and sameSite in development
-        if (process.env.NODE_ENV !== 'production') {
-          Cookies.set(cookieName, '', { expires: new Date(0) });
-          console.log(`📝 After Method 4 (dev) - Cookie ${cookieName}:`, Cookies.get(cookieName));
+      const clearCookie = (name) => {
+        try {
+          const currentDomain = window.location.hostname;
+          console.log(`🧹 Clearing cookie: ${name} on domain: ${currentDomain}`);
+          
+          const clearOptions = {
+            expires: new Date(0),
+            path: '/'
+          };
+          
+          // Only set domain for production (not localhost)
+          if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+            clearOptions.domain = '.upinterview.io';
+          }
+          
+          Cookies.set(name, '', clearOptions);
+          console.log(`✅ Cookie ${name} cleared`);
+        } catch (error) {
+          console.error(`Error clearing cookie ${name}:`, error);
         }
-
-        console.log(`✅ Cookie ${cookieName} cleared using multiple methods`);
       };
 
       if (impersonationToken && !authToken) {
@@ -713,23 +735,37 @@ class AuthCookieManager {
       localStorage.clear();
       console.log('✅ localStorage cleared');
 
+      // Get current domain for proper cookie clearing
+      const currentDomain = window.location.hostname;
+      console.log('🌐 Current domain for cookie clearing:', currentDomain);
+      
+      const clearOptions = {
+        expires: new Date(0),
+        secure: true,
+        sameSite: 'None',
+        path: '/'
+      };
+      
+      // Only set domain for production (not localhost)
+      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+        clearOptions.domain = '.upinterview.io';
+        console.log('🌐 Clearing cookies with domain .upinterview.io');
+      }
+
       // Clear specific auth cookies with proper options
-      Cookies.set(AUTH_TOKEN_KEY, '', {
-        expires: new Date(0),
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      });
+      Cookies.set(AUTH_TOKEN_KEY, '', clearOptions);
+      Cookies.set(IMPERSONATION_TOKEN_KEY, '', clearOptions);
 
-      Cookies.set(IMPERSONATION_TOKEN_KEY, '', {
-        expires: new Date(0),
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      });
-
-      // Also try without secure and sameSite for development
-      if (process.env.NODE_ENV !== 'production') {
-        Cookies.set(AUTH_TOKEN_KEY, '', { expires: new Date(0) });
-        Cookies.set(IMPERSONATION_TOKEN_KEY, '', { expires: new Date(0) });
+      // Also try without domain for development
+      if (currentDomain === 'localhost' || currentDomain.includes('127.0.0.1')) {
+        Cookies.set(AUTH_TOKEN_KEY, '', { 
+          expires: new Date(0),
+          path: '/'
+        });
+        Cookies.set(IMPERSONATION_TOKEN_KEY, '', { 
+          expires: new Date(0),
+          path: '/'
+        });
       }
 
       // Generic cookie clearing as fallback
@@ -737,6 +773,9 @@ class AuthCookieManager {
         const cookieName = c.trim().split("=")[0];
         if (cookieName) {
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.upinterview.io;`;
+          }
         }
       });
 
@@ -903,31 +942,102 @@ class AuthCookieManager {
     }
   }
 
+  /**
+   * Debug function to check cookie state and help identify issues
+   */
+  static debugCookieState() {
+    try {
+      const currentDomain = window.location.hostname;
+      const authToken = this.getAuthToken();
+      const impersonationToken = this.getImpersonationToken();
+      
+      // Count cookies in document.cookie
+      const allCookies = document.cookie.split(';').map(c => c.trim());
+      const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
+      const impersonationTokenCount = allCookies.filter(c => c.startsWith('impersonationToken=')).length;
+      
+      console.log('🔍 Cookie State Debug:', {
+        currentDomain,
+        authToken: {
+          exists: !!authToken,
+          length: authToken ? authToken.length : 0,
+          count: authTokenCount,
+          preview: authToken ? `${authToken.substring(0, 20)}...` : 'null'
+        },
+        impersonationToken: {
+          exists: !!impersonationToken,
+          length: impersonationToken ? impersonationToken.length : 0,
+          count: impersonationTokenCount,
+          preview: impersonationToken ? `${impersonationToken.substring(0, 20)}...` : 'null'
+        },
+        totalCookies: allCookies.length,
+        allCookieNames: allCookies.map(c => c.split('=')[0]),
+        documentCookie: document.cookie
+      });
+
+      // Check for duplicate cookies
+      if (authTokenCount > 1) {
+        console.warn('⚠️ Multiple authToken cookies detected:', authTokenCount);
+      }
+      if (impersonationTokenCount > 1) {
+        console.warn('⚠️ Multiple impersonationToken cookies detected:', impersonationTokenCount);
+      }
+
+      return {
+        currentDomain,
+        authToken: !!authToken,
+        impersonationToken: !!impersonationToken,
+        authTokenCount,
+        impersonationTokenCount,
+        hasDuplicates: authTokenCount > 1 || impersonationTokenCount > 1,
+        totalCookies: allCookies.length
+      };
+    } catch (error) {
+      console.error('Error debugging cookie state:', error);
+      return { error: error.message };
+    }
+  }
+
 
 }
 
 // Named exports for backward compatibility
-export const clearAllAuth = AuthCookieManager.clearAllAuth;
-// export const logout = AuthCookieManager.logout;
-export const smartLogout = AuthCookieManager.smartLogout;
 export const setAuthCookies = AuthCookieManager.setAuthCookies;
-export const testCookieFunctionality = AuthCookieManager.testCookieFunctionality;
+export const clearAllAuth = AuthCookieManager.clearAllAuth;
 export const debugTokenSources = AuthCookieManager.debugTokenSources;
+export const testCookieFunctionality = AuthCookieManager.testCookieFunctionality;
+export const verifyCookieState = AuthCookieManager.verifyCookieState;
+export const debugCookieState = AuthCookieManager.debugCookieState;
+
+// Token getters
 export const getAuthToken = AuthCookieManager.getAuthToken;
 export const getImpersonationToken = AuthCookieManager.getImpersonationToken;
-export const loginAsUser = AuthCookieManager.loginAsUser;
-export const getUserType = AuthCookieManager.getUserType;
+export const getActiveToken = AuthCookieManager.getActiveToken;
+export const getActiveUserData = AuthCookieManager.getActiveUserData;
 export const getCurrentUserId = AuthCookieManager.getCurrentUserId;
+export const getCurrentTenantId = AuthCookieManager.getCurrentTenantId;
+
+// User type management
+export const getUserType = AuthCookieManager.getUserType;
+export const setUserType = AuthCookieManager.setUserType;
 export const updateUserType = AuthCookieManager.updateUserType;
 export const syncUserType = AuthCookieManager.syncUserType;
-export const getCurrentPermissions = AuthCookieManager.getCurrentPermissions;
-export const getEffectivePermissions = AuthCookieManager.getEffectivePermissions;
-export const setEffectivePermissions = AuthCookieManager.setEffectivePermissions;
-export const getSuperAdminPermissions = AuthCookieManager.getSuperAdminPermissions;
-export const setSuperAdminPermissions = AuthCookieManager.setSuperAdminPermissions;
-export const setCurrentPermissions = AuthCookieManager.setCurrentPermissions;
+
+// Authentication status
+export const isAuthenticated = AuthCookieManager.isAuthenticated;
+export const isSuperAdminOnly = AuthCookieManager.isSuperAdminOnly;
+export const isEffectiveUserOnly = AuthCookieManager.isEffectiveUserOnly;
+export const getAuthStatus = AuthCookieManager.getAuthStatus;
+
+// Impersonation
+export const getImpersonatedUser = AuthCookieManager.getImpersonatedUser;
+export const loginAsUser = AuthCookieManager.loginAsUser;
+
+// Permissions
 export const clearPermissions = AuthCookieManager.clearPermissions;
 export const clearAllPermissionCaches = AuthCookieManager.clearAllPermissionCaches;
-export const verifyCookieState = AuthCookieManager.verifyCookieState;
+
+// Smart logout
+export const smartLogout = AuthCookieManager.smartLogout;
 
 export default AuthCookieManager;

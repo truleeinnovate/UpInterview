@@ -21,6 +21,16 @@ app.set('trust proxy', 1);
 // ✅ Parse cookies
 app.use(cookieParser());
 
+// Debug middleware to track cookie issues
+app.use((req, res, next) => {
+  console.log(`[Cookie Debug] Request URL: ${req.url}`);
+  console.log(`[Cookie Debug] Request cookies:`, req.cookies);
+  console.log(`[Cookie Debug] Raw cookie header:`, req.headers.cookie);
+  console.log(`[Cookie Debug] Origin:`, req.headers.origin);
+  console.log(`[Cookie Debug] Referer:`, req.headers.referer);
+  next();
+});
+
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('Origin:', origin);

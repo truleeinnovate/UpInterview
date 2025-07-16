@@ -6,7 +6,7 @@ import { CustomProvider, useCustomContext } from '../Context/Contextfetch';
 import { PermissionsProvider, usePermissions } from '../Context/PermissionsContext';
 import { startActivityTracking } from '../utils/activityTracker';
 import { getActivityEmitter } from '../utils/activityTracker';
-import { debugTokenSources, getAuthToken, getImpersonationToken } from '../utils/AuthCookieManager/AuthCookieManager';
+import { debugTokenSources, getAuthToken, getImpersonationToken, debugCookieState } from '../utils/AuthCookieManager/AuthCookieManager';
 import Loading from './Loading';
 
 const ProtectedRoute = ({ children }) => {
@@ -81,6 +81,10 @@ const ProtectedRoute = ({ children }) => {
         try {
           const debugResult = debugTokenSources();
           console.log('[ProtectedRoute] Token debug result:', debugResult);
+          
+          // Add cookie state debug
+          const cookieDebugResult = debugCookieState();
+          console.log('[ProtectedRoute] Cookie debug result:', cookieDebugResult);
         } catch (error) {
           console.error('[ProtectedRoute] Error in debugTokenSources:', error);
         }
