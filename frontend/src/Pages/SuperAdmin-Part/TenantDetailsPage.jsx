@@ -19,16 +19,17 @@ import ContactTab from "../../Components/SuperAdminComponents/TenantDetails/Cont
 
 // import { config } from "../../config";
 // import axios from "axios";
-// import Loading from "../../Components/Loading";
+import Loading from "../../Components/Loading";
 import { useTenantById } from "../../apiHooks/superAdmin/useTenants";
 // import { usePermissions } from "../../Context/PermissionsContext";
 // import Loading from "../../Components/Loading";
 
 function TenantDetailsPage() {
   const { id } = useParams();
-  const { tenant, isLoading, isError, error, refetch } = useTenantById(id);
+  const { tenant, isLoading, isError, error, refetch } = useTenantById(
+    id?.toString()
+  );
   const navigate = useNavigate();
-
   const [activeTab, setActiveTab] = useState("overview");
   // const [tenant, setTenant] = useState(null);
   // const [loading, setLoading] = useState(true);
@@ -38,17 +39,20 @@ function TenantDetailsPage() {
     setViewMode((prev) => (prev === "expanded" ? "collapsed" : "expanded"));
 
   // Simple loading state - only show loading if we have no data and are loading
-  // if (isLoading && !tenant) {
-  //   return <Loading message="Loading tenant details..." />;
-  // }
+  if (isLoading && !tenant) {
+    return <Loading message="Loading tenant details..." />;
+  }
+
 
   // Show error state if there's an error
   if (isError) {
     return (
       <div className="text-center py-32">
-        <div className="text-xl text-gray-600">Failed to load tenant details</div>
-        <button 
-          onClick={() => refetch()} 
+        <div className="text-xl text-gray-600">
+          Failed to load tenant details
+        </div>
+        <button
+          onClick={() => refetch()}
           className="mt-4 px-4 py-2 bg-custom-blue text-white rounded hover:bg-blue-700"
         >
           Try Again
@@ -72,14 +76,13 @@ function TenantDetailsPage() {
     );
   }
 
-
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-25 backdrop-blur-sm">
       <div
-        className={`absolute top-0 right-0 h-full bg-white z-50 overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`absolute top-0 right-0 h-full bg-white z-50 overflow-hidden ${
           viewMode === "collapsed" ? "w-[50vw]" : "w-full"
         }`}
       >
@@ -163,10 +166,7 @@ function TenantDetailsPage() {
             {/* Tab Content */}
             <div className="relative w-full pt-4">
               {activeTab === "overview" && (
-                <OverviewTab
-                  tenant={tenant?.tenant}
-                  viewMode={viewMode}
-                />
+                <OverviewTab tenant={tenant?.tenant} viewMode={viewMode} />
               )}
               {activeTab === "users" && (
                 <UsersTab users={tenant?.users || []} viewMode={viewMode} />
