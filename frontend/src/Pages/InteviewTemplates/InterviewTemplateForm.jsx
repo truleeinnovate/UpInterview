@@ -1,3 +1,4 @@
+// v1.0.0  -  Mansoor  -  removed required for description
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
@@ -309,25 +310,32 @@ const InterviewSlideover = ({ mode }) => {
 
                                 <div>
                                     <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                                        Description <span className="text-red-500">*</span>
+                                        {/* <------ v1.0.0 */}
+                                        Description
+                                        {/* v1.0.0 ------> */}
                                     </label>
                                     <textarea
                                         id="description"
                                         name="description"
-                                        placeholder="Describe the purpose and structure of this interview template. (Minimum 20 characters required)"
+                                        // <------ v1.0.0
+                                        placeholder="Describe the purpose and structure of this interview template."
+                                        // v1.0.0 ------> 
                                         value={newTemplate.description}
                                         onChange={handleDescriptionChange}
                                         onBlur={() => handleBlur('description')}
                                         rows={4}
                                         maxLength={300}
-                                        className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none ${touched.description && errors.description ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-teal-500 focus:border-teal-500'
-                                            } focus:ring-1`}
+                                        // <------ v1.0.0
+                                        className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500`}
+                                        // v1.0.0 ------> 
                                     />
                                     {/* {touched.description && errors.description && (
                                         <p className="mt-1 text-sm text-red-500">{errors.description}</p>
                                     )} */}
-                                    <div className="flex justify-between items-center ">
-                                        <span className="text-sm text-gray-500">
+                                    <div className="flex justify-between items-center">
+                                       {/* <------ v1.0.0 */}
+                                        <p></p>
+                                        {/* <span className="text-sm text-gray-500">
                                             {errors.description ? (
                                                 <p className="text-red-500 text-sm ">{errors.description}</p>
                                             ) : newTemplate.description.length > 0 && newTemplate.description.length < 20 ? (
@@ -335,7 +343,8 @@ const InterviewSlideover = ({ mode }) => {
                                                     Minimum {20 - newTemplate.description.length} more characters needed
                                                 </p>
                                             ) : null}
-                                        </span>
+                                        </span> */}
+                                        {/* v1.0.0 ------> */}
                                         <p className="text-sm text-gray-500">{newTemplate.description.length}/20</p>
                                     </div>
                                 </div>
@@ -373,13 +382,15 @@ const InterviewSlideover = ({ mode }) => {
                         </div>
 
                         <div className="flex-shrink-0 px-4 py-4 flex justify-end items-end gap-3">
-                            <button
+                           {/* <------ v1.0.0 */}
+                            {/* <button
                                 type="button"
                                 onClick={onClose}
                                 className="py-2.5 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
                                 Cancel
-                            </button>
+                            </button> */}
+                            {/* v1.0.0 ------> */}
                             {/* <button
                                 type="submit"
                                 form="new-template-form"
