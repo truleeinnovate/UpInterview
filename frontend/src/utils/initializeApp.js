@@ -47,26 +47,50 @@ const initializeApp = async (setUserProfile, setUserRole, setSharingSettings, se
     const matchedUser = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${userId}`);
     setUserProfile(matchedUser.data);
     if (matchedUser.data && matchedUser.data.Name) {
-      Cookies.set("userName", matchedUser.data.Name, {
+      const cookieOptions = {
         sameSite: 'None',
         secure: true,
         path: '/',
-      });
+      };
+      
+      // Only set domain for production (not localhost)
+      const currentDomain = window.location.hostname;
+      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+        cookieOptions.domain = '.upinterview.io';
+      }
+      
+      Cookies.set("userName", matchedUser.data.Name, cookieOptions);
     }
     if (matchedUser.data && matchedUser.data.organizationId) {
       setOrganization(true);
-      Cookies.set("organization", "true", {
+      const cookieOptions = {
         sameSite: 'None',
         secure: true,
         path: '/',
-      });
+      };
+      
+      // Only set domain for production (not localhost)
+      const currentDomain = window.location.hostname;
+      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+        cookieOptions.domain = '.upinterview.io';
+      }
+      
+      Cookies.set("organization", "true", cookieOptions);
     } else {
       setOrganization(false);
-      Cookies.set("organization", "false", {
+      const cookieOptions = {
         sameSite: 'None',
         secure: true,
         path: '/',
-      });
+      };
+      
+      // Only set domain for production (not localhost)
+      const currentDomain = window.location.hostname;
+      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+        cookieOptions.domain = '.upinterview.io';
+      }
+      
+      Cookies.set("organization", "false", cookieOptions);
     }
     if (matchedUser.data && matchedUser.data.isFreelancer === 'yes') {
       setFreelancer(true);
