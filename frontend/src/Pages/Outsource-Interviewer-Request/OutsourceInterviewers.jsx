@@ -39,7 +39,6 @@ const OutsourceInterviewers = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
-    experience: { min: "", max: "" },
   });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
@@ -52,7 +51,8 @@ const OutsourceInterviewers = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [interviewers, setInterviewers] = useState([]);
 
-  const { outsourceInterviewers, isLoading, isError, error, refetch } = useOutsourceInterviewers();
+  const { outsourceInterviewers, isLoading, isError, error, refetch } =
+    useOutsourceInterviewers();
 
   useEffect(() => {
     if (selectedInterviewerId && outsourceInterviewers?.length) {
@@ -147,14 +147,17 @@ const OutsourceInterviewers = () => {
 
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((organization) => {
-      const fieldsToSearch = [organization.status].filter(
-        (field) => field !== null && field !== undefined
-      );
+    return dataToUse.filter((interviewer) => {
+      const fieldsToSearch = [
+        interviewer?.status,
+        interviewer?.interviewerNo,
+        interviewer?.contactId?.firstName,
+        interviewer?.contactId?.lastName,
+      ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(organization.status);
+        selectedFilters.status.includes(interviewer?.status);
 
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
@@ -397,7 +400,14 @@ const OutsourceInterviewers = () => {
   // Render Filter Content
   const renderFilterContent = () => {
     // filters options
-    const statusOptions = ["new", "accepted"];
+    const statusOptions = [
+      "new",
+      "contacted",
+      "inprogress",
+      "active",
+      "inactive",
+      "blacklisted",
+    ];
 
     return (
       <div className="space-y-3">

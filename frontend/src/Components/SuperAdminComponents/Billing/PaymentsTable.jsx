@@ -57,8 +57,8 @@ function PaymentsTable({ organizationId, viewMode }) {
 
   // const [payments, setPayments] = useState([]);
 
-    const { payments, isLoading } = usePayments(organizationId); // from apiHooks
-    const { payment: selectedPayment } = usePaymentById(selectedPaymentId); // from apiHooks
+  const { payments, isLoading } = usePayments(organizationId); // from apiHooks
+  const { payment: selectedPayment } = usePaymentById(selectedPaymentId); // from apiHooks
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -191,9 +191,10 @@ function PaymentsTable({ organizationId, viewMode }) {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((payment) => {
-      const fieldsToSearch = [payment.id ? payment.id : payment._id].filter(
-        (field) => field !== null && field !== undefined
-      );
+      const fieldsToSearch = [
+        payment?.paymentCode ? payment?.paymentCode : payment?.paymentCode,
+        payment?.status ? payment?.status : payment?.status,
+      ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||

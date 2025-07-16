@@ -192,9 +192,10 @@ function ReceiptsTable({ organizationId, viewMode }) {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((receipt) => {
-      const fieldsToSearch = [receipt.id ? receipt.id : receipt._id].filter(
-        (field) => field !== null && field !== undefined
-      );
+      const fieldsToSearch = [
+        receipt?.receiptCode ? receipt?.receiptCode : receipt?.receiptCode,
+        receipt?.status ? receipt?.status : receipt?.status,
+      ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
@@ -410,7 +411,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
   // Render Filter Content
   const renderFilterContent = () => {
     // filters options
-    const statusOptions = ["success", "pending", "captured", "charged"];
+    const statusOptions = ["success", "pending", "failed"];
 
     return (
       <div className="space-y-3">

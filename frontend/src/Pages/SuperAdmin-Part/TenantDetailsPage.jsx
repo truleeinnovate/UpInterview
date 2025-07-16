@@ -21,14 +21,13 @@ import ContactTab from "../../Components/SuperAdminComponents/TenantDetails/Cont
 // import axios from "axios";
 // import Loading from "../../Components/Loading";
 import { useTenantById } from "../../apiHooks/superAdmin/useTenants";
-import { usePermissions } from "../../Context/PermissionsContext";
-import Loading from "../../Components/Loading";
+// import { usePermissions } from "../../Context/PermissionsContext";
+// import Loading from "../../Components/Loading";
 
 function TenantDetailsPage() {
   const { id } = useParams();
   const { tenant, isLoading, isError, error, refetch } = useTenantById(id);
   const navigate = useNavigate();
-  console.log("CURRENT TENANT ==================> ", tenant);
 
   const [activeTab, setActiveTab] = useState("overview");
   // const [tenant, setTenant] = useState(null);
@@ -39,9 +38,9 @@ function TenantDetailsPage() {
     setViewMode((prev) => (prev === "expanded" ? "collapsed" : "expanded"));
 
   // Simple loading state - only show loading if we have no data and are loading
-  if (isLoading && !tenant) {
-    return <Loading message="Loading tenant details..." />;
-  }
+  // if (isLoading && !tenant) {
+  //   return <Loading message="Loading tenant details..." />;
+  // }
 
   // Show error state if there's an error
   if (isError) {

@@ -45,8 +45,6 @@ import {
 
 function InvoicesTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
-  // const [selectedInvoice, setSelectedInvoice] = useState();
-  // const [selectInvoiceView, setSelectInvoiceView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModeOn, setEditModeOn] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -197,9 +195,10 @@ function InvoicesTable({ organizationId, viewMode }) {
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((invoice) => {
-      const fieldsToSearch = [invoice.id ? invoice.id : invoice._id].filter(
-        (field) => field !== null && field !== undefined
-      );
+      const fieldsToSearch = [
+        invoice?.invoiceCode ? invoice?.invoiceCode : invoice?.invoiceCode,
+        invoice?.status ? invoice?.status : invoice?.status,
+      ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||

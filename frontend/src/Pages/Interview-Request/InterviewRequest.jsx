@@ -1700,12 +1700,9 @@ const InternalRequest = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((request) => {
       const fieldsToSearch = [
-        request?.firstName,
-        request?.lastName,
-        request?.Email,
-        request?.Phone,
-        request?.company,
         request?.status,
+        request?.interviewRequestCode,
+        request?.interviewerType,
       ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
@@ -1932,7 +1929,13 @@ const InternalRequest = () => {
 
   // Render Filter Content
   const renderFilterContent = () => {
-    const statusOptions = ["accepted", "inprogress"];
+    const statusOptions = [
+      "inprogress",
+      "accepted",
+      "declined",
+      "expired",
+      "cancelled",
+    ];
 
     return (
       <div className="space-y-3">
@@ -2000,7 +2003,11 @@ const InternalRequest = () => {
                   </h3>
 
                   <p className="text-gray-600 mt-1">
-                    {formatDate(request?.dateTime ? request?.dateTime : "N/A")}
+                    {formatDate(
+                      request?.requestedAt
+                        ? request?.requestedAt
+                        : "Not Provided"
+                    )}
                   </p>
                 </div>
               </div>
