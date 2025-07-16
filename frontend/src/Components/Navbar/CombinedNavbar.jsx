@@ -542,12 +542,12 @@ const CombinedNavbar = () => {
       ref: null,
       content: (
         <NavLink
-          to="/home"
+          to= {userType === 'superAdmin' ?  "/admin-dashboard": "/home"}
           className="text-black"
           onClick={() => closeAllDropdowns()}
         >
           <IoHome
-            className={isActive("/home") ? "text-custom-blue" : "text-black"}
+            className={isActive((userType === 'superAdmin' ?"/admin-dashboard":"/home")) ? "text-custom-blue" : "text-black"}
           />
         </NavLink>
       ),
