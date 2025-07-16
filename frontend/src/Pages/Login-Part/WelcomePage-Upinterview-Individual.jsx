@@ -32,22 +32,22 @@ const WelcomePageUpinterviewIndividual = () => {
                 <div>
                     <Slideshow />
                 </div>
-                <div className="flex text-sm flex-col sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]">
+                <div className="flex text-sm flex-col items-center sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]">
                     <p className="text-2xl mb-7 text-center">
                         Welcome to Upinterview,
                         <br />
                         Individual Interviewer!
                     </p>
-                    <p className="text-lg mb-7 text-center">
+                    <p className="text-sm mb-7 text-gray-500 text-center">
                         Enhance Your Interviewing journey with structured,
                         <br />
                         seamless scheduling and evaluation.
                     </p>
-                    {selectedOption === "individual" && (
+                    {/* {selectedOption === "individual" && ( */}
                         <button
                             onClick={handleLinkedInLogin}
                             disabled={isLoading}
-                            className={`bg-custom-blue text-white py-2 rounded-full transition w-full flex items-center justify-center ${isLoading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-custom-blue/80'}`}
+                            className={`bg-custom-blue text-white py-2 rounded-full transition w-[300px] flex items-center justify-center ${isLoading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-custom-blue/80'}`}
                         >
                             {isLoading ? (
                                 <>
@@ -61,7 +61,7 @@ const WelcomePageUpinterviewIndividual = () => {
                                 'Sign Up with LinkedIn'
                             )}
                         </button>
-                    )}
+                    {/* )} */}
                 </div>
             </div>
         </div>
