@@ -708,15 +708,15 @@ const CombinedNavbar = () => {
 
                     {enhancedCheckPermission("SupportDesk") && (
                       <NavLink
-                        to="/super-admin-desk"
-                        className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative' : 'h-full flex items-center relative px-1'} ${isActive("/super-admin-desk")
+                        to="/support-desk"
+                        className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative' : 'h-full flex items-center relative px-1'} ${isActive("support-desk")
                           ? "text-custom-blue font-bold"
                           : "text-gray-600 hover:text-custom-blue"
                           }`}
                         onClick={() => closeAllDropdowns()}
                       >
                         Support Desk
-                        {isActive("/super-admin-desk") && (
+                        {isActive("/support-desk") && (
                           <div className={`absolute ${userType === 'superAdmin' ? 'bottom-0 left-0 right-0 h-[1px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
                         )}
                       </NavLink>
@@ -1086,8 +1086,8 @@ const CombinedNavbar = () => {
 
                     {enhancedCheckPermission("SupportDesk") && (
                       <NavLink
-                        to="/super-admin-desk"
-                        className={`block px-4 py-3 rounded-md ${isActive("/super-admin-desk")
+                        to="/support-desk"
+                        className={`block px-4 py-3 rounded-md ${isActive("/support-desk")
                           ? "bg-gray-100 text-custom-blue font-bold"
                           : "text-gray-600 hover:bg-gray-100"
                           }`}

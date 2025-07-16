@@ -166,7 +166,6 @@ function TenantDetailsPage() {
               {activeTab === "overview" && (
                 <OverviewTab
                   tenant={tenant?.tenant}
-                  users={tenant?.users}
                   viewMode={viewMode}
                 />
               )}
