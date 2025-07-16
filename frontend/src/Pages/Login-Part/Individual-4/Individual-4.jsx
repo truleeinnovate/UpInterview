@@ -552,7 +552,7 @@ const MultiStepForm = () => {
         clearAllAuth();
         console.log('✅ Cleared all cookies and localStorage for individual signup');
         
-        setAuthCookies(response.data.token);
+        setAuthCookies({ authToken: response.data.token });
 
         // CUSTOM PROFILE PIC OR LINKEDIN PROFILE PIC
         if (

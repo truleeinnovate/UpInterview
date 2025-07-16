@@ -122,8 +122,9 @@ router.post("/check-user", async (req, res) => {
       };
       const token = generateToken(payload);
 
-      // Set auth token cookie
-      res.cookie('authToken', token, getAuthCookieOptions());
+      // Note: Auth token will be set by frontend using setAuthCookies()
+      // Backend only returns the token in response, frontend handles cookie setting
+      // res.cookie('authToken', token, getAuthCookieOptions());
 
       return res.json({
         existingUser: true,
@@ -214,8 +215,9 @@ router.post("/check-user", async (req, res) => {
         freelancer: newUser.isFreelancer,
       });
 
-      // Set auth token cookie
-      res.cookie('authToken', token, getAuthCookieOptions());
+      // Note: Auth token will be set by frontend using setAuthCookies()
+      // Backend only returns the token in response, frontend handles cookie setting
+      // res.cookie('authToken', token, getAuthCookieOptions());
 
       return res.json({
         existingUser: false,

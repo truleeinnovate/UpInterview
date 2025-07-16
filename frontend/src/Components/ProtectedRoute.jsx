@@ -81,12 +81,16 @@ const ProtectedRoute = ({ children }) => {
         try {
           const debugResult = debugTokenSources();
           console.log('[ProtectedRoute] Token debug result:', debugResult);
-          
-          // Add cookie state debug
+        } catch (error) {
+          console.error('[ProtectedRoute] Error in debugTokenSources:', error);
+        }
+        
+        // Add cookie state debug
+        try {
           const cookieDebugResult = debugCookieState();
           console.log('[ProtectedRoute] Cookie debug result:', cookieDebugResult);
         } catch (error) {
-          console.error('[ProtectedRoute] Error in debugTokenSources:', error);
+          console.error('Error debugging cookie state:', error);
         }
 
         // SIMPLE CHECK: If we have any token at all, allow access
