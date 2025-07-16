@@ -723,7 +723,7 @@ const AddCandidateForm = ({ mode }) => {
                 <p className="mt-2 text-sm font-medium text-gray-700">
                   Profile Photo
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 text-center">
                   Maximum file size: 100KB, (200×200 recommended).
                 </p>
                 <p className="text-xs text-red-500 font-medium text-center mt-1">
@@ -811,8 +811,8 @@ const AddCandidateForm = ({ mode }) => {
                   )}
                 </div>
 
-                <p className="mt-2 text-sm font-medium text-gray-700">Resume</p>
-                <p className="text-xs text-gray-500">Maximum file size: 4MB</p>
+                <p className="mt-2 text-sm font-medium text-gray-700 text-center">Resume</p>
+                <p className="text-xs text-gray-500 text-center">Maximum file size: 4MB</p>
                 <p className="text-xs text-red-500 font-medium text-center">
                   {resumeError}
                 </p>
