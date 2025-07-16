@@ -11,7 +11,6 @@ const validatePhoneNumber = (phone) => {
 
 
 const getErrorMessage = (field, value, formData) => {
-// const getErrorMessage = (field, value, entries, formData) => {
     const messages = {
         LastName: "Last Name is required",
         Email: "Email is required",
@@ -41,34 +40,42 @@ const getErrorMessage = (field, value, formData) => {
         return messages.invalidPhone;
     }
 
+    // Validate RelevantExperience against CurrentExperience
+    // Validate RelevantExperience against CurrentExperience
     if (field === "RelevantExperience" && formData && formData.CurrentExperience) {
-        const currentExp = parseInt(formData.CurrentExperience);
-        const relevantExp = parseInt(value);
+        const currentExp = parseInt(formData.CurrentExperience, 10);
+        const relevantExp = parseInt(value, 10);
         if (relevantExp > currentExp) {
             return messages.RelevantExperienceGreater;
         }
     }
 
+
     return "";
 };
 
+// Validate candidate form. Ensures all field-level errors are caught, including
+// the cross-field constraint that RelevantExperience must not exceed CurrentExperience.
+// Returns { formIsValid, newErrors }
 const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
     let formIsValid = true;
     const newErrors = { ...errors };
 
+    // Validate each field
     Object.keys(formData).forEach((field) => {
-        const errorMessage = getErrorMessage(field, formData[field], entries, formData);
+        const errorMessage = getErrorMessage(field, formData[field], formData);
         if (errorMessage) {
             newErrors[field] = errorMessage;
             formIsValid = false;
         }
     });
 
+    // Additional validations
     if (!selectedPosition || selectedPosition.length === 0) {
-        newErrors.Position = getErrorMessage("Position", null, entries, formData);
+        newErrors.Position = getErrorMessage("Position", null, formData);
         formIsValid = false;
     }
-    
+
     if (entries.length === 0) {
         newErrors.skills = getErrorMessage("skills", entries.length, entries, formData);
         formIsValid = false;

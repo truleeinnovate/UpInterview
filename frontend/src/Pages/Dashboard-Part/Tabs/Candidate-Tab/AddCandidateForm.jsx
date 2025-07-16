@@ -488,6 +488,35 @@ const AddCandidateForm = ({ mode }) => {
     }));
   };
 
+  const resetFormData = () => {
+    setFormData({
+      FirstName: "",
+      LastName: "",
+      Email: "",
+      Phone: "",
+      Date_Of_Birth: "",
+      Gender: "",
+      HigherQualification: "",
+      UniversityCollege: "",
+      CurrentExperience: "",
+      RelevantExperience: "",
+      skills: [],
+      CurrentRole: "",
+      CountryCode: "",
+    });
+
+    setErrors({});
+    setEntries([]);
+    setSelectedSkill("");
+    setSelectedExp("");
+    setSelectedLevel("");
+    setEditingIndex(null);
+    setCurrentStep(0);
+    removeImage();
+    removeResume();
+    setAllSelectedSkills([]);
+  };
+
   const handleClose = () => {
     resetFormData();
     // onClose();
@@ -562,7 +591,9 @@ const AddCandidateForm = ({ mode }) => {
         isProfilePicRemoved,
         isResumeRemoved,
       });
+
       resetFormData();
+
       if (!isAddCandidate) {
         setTimeout(() => {
           switch (mode) {
@@ -583,34 +614,7 @@ const AddCandidateForm = ({ mode }) => {
     }
   };
 
-  const resetFormData = () => {
-    setFormData({
-      FirstName: "",
-      LastName: "",
-      Email: "",
-      Phone: "",
-      Date_Of_Birth: "",
-      Gender: "",
-      HigherQualification: "",
-      UniversityCollege: "",
-      CurrentExperience: "",
-      RelevantExperience: "",
-      skills: [],
-      CurrentRole: "",
-      CountryCode: "",
-    });
-
-    setErrors({});
-    setEntries([]);
-    setSelectedSkill("");
-    setSelectedExp("");
-    setSelectedLevel("");
-    setEditingIndex(null);
-    setCurrentStep(0);
-    removeImage();
-    removeResume();
-    setAllSelectedSkills([]);
-  };
+  
 
   const modalClass = classNames(
     "fixed bg-white shadow-2xl border-l border-gray-200",

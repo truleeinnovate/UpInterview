@@ -1,8 +1,96 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
 import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
 import { ReactComponent as FaTimes } from '../../../../icons/FaTimes.svg';
+import { ChevronDown, Search } from 'lucide-react';
+
+// Lightweight searchable dropdown copied from AddCandidateForm.jsx
+const CustomDropdown = ({
+  name,
+  value,
+  options,
+  onChange,
+  placeholder,
+  optionKey,
+  optionValue,
+  disableSearch = false,
+}) => {
+  const [show, setShow] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShow(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (option) => {
+    const selectedValue = optionValue ? option[optionValue] : option;
+    onChange({ target: { name, value: selectedValue } });
+    setShow(false);
+    setSearchTerm('');
+  };
+
+  const filteredOptions = options?.filter((option) => {
+    const display = optionKey ? option[optionKey] : option;
+    return display.toString().toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <input
+        type="text"
+        name={name}
+        readOnly
+        placeholder={placeholder}
+        value={value}
+        onClick={() => setShow(!show)}
+        className="block w-full px-3 py-2 h-8 text-gray-900 border rounded focus:outline-none focus:ring-1"
+      />
+      <ChevronDown
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 cursor-pointer"
+        onClick={() => setShow(!show)}
+      />
+      {show && (
+        <div className="absolute bg-white border mt-1 w-full max-h-56 overflow-y-auto z-10 text-xs">
+          {!disableSearch && (
+            <div className="border-b p-2">
+              <div className="relative">
+                <Search className="absolute left-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500" />
+                <input
+                  type="text"
+                  className="pl-5 w-full text-xs focus:outline-none"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          {filteredOptions?.length ? (
+            filteredOptions.map((option, idx) => (
+              <div
+                key={option._id || idx}
+                className="p-2 hover:bg-gray-200 cursor-pointer"
+                onClick={() => handleSelect(option)}
+              >
+                {optionKey ? option[optionKey] : option}
+              </div>
+            ))
+          ) : (
+            <div className="p-2 text-gray-500">No options</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SkillsField = ({
   entries,
@@ -51,6 +139,10 @@ const SkillsField = ({
     setEditingIndex(index);
     onEditSkill(index);
   };
+
+  const availableSkills = skills.filter(
+    (skill) => !allSelectedSkills.includes(skill.SkillName) || selectedSkill === skill.SkillName
+  );
 
   const handleAddClick = () => {
     onAddSkill(setEditingIndex); // Pass setEditingIndex to the parent's onAddSkill
@@ -104,46 +196,35 @@ const SkillsField = ({
               <>
                 <div className="flex justify-between border bg-white rounded w-full p-2 mr-3">
                   <div className="w-1/3 px-1">
-                    <select
+                    <CustomDropdown
+                      name="skill"
                       value={selectedSkill}
+                      options={availableSkills}
                       onChange={(e) => setSelectedSkill(e.target.value)}
-                      className="w-full border p-1 rounded focus:outline-none"
-                    >
-                      <option value="">Select Skill</option>
-                      {skills.map(skill => (
-                        <option 
-                          key={skill._id} 
-                          value={skill.SkillName}
-                          disabled={allSelectedSkills.includes(skill.SkillName) && selectedSkill !== skill.SkillName}
-                        >
-                          {skill.SkillName}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select Skill"
+                      optionKey="SkillName"
+                      optionValue="SkillName"
+                    />
                   </div>
                   <div className="w-1/3 px-1">
-                    <select
+                    <CustomDropdown
+                      name="experience"
                       value={selectedExp}
+                      options={experienceOptions}
                       onChange={(e) => setSelectedExp(e.target.value)}
-                      className="w-full border p-1 rounded focus:outline-none"
-                    >
-                      <option value="">Select Experience</option>
-                      {experienceOptions.map(exp => (
-                        <option key={exp} value={exp}>{exp}</option>
-                      ))}
-                    </select>
+                      placeholder="Select Experience"
+                      disableSearch={true}
+                    />
                   </div>
                   <div className="w-1/3 px-1">
-                    <select
+                    <CustomDropdown
+                      name="expertise"
                       value={selectedLevel}
+                      options={expertiseOptions}
                       onChange={(e) => setSelectedLevel(e.target.value)}
-                      className="w-full border p-1 rounded focus:outline-none"
-                    >
-                      <option value="">Select Expertise</option>
-                      {expertiseOptions.map(level => (
-                        <option key={level} value={level}>{level}</option>
-                      ))}
-                    </select>
+                      placeholder="Select Expertise"
+                      disableSearch={true}
+                    />
                   </div>
                 </div>
                 <div className="flex space-x-2">
