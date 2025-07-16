@@ -1526,8 +1526,8 @@ const registerOrganization = async (req, res) => {
     //   maxAge: 24 * 60 * 60 * 1000, // 1 day
     // });
 
-    // Set auth token cookie with consistent settings
-    res.cookie("authToken", token, getAuthCookieOptions());
+    // Note: Auth token will be set by frontend using setAuthCookies()
+    // Backend only returns the token in response, frontend handles cookie setting
 
     console.log("Organization registration completed successfully");
     res.status(201).json({

@@ -7,8 +7,31 @@ const RoleOverrides = require('../models/roleOverrides');
 const permissionMiddleware = async (req, res, next) => {
   try {
     // Get tokens from cookies (they might be undefined)
-    const authToken = req.cookies.authToken;
-    const impersonationToken = req.cookies.impersonationToken;
+    let authToken = req.cookies.authToken;
+    let impersonationToken = req.cookies.impersonationToken;
+
+    // If not in cookies, check Authorization header
+    if (!authToken && !impersonationToken) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        // Try to determine which type of token this is by decoding it
+        try {
+          const decoded = jwt.decode(token);
+          if (decoded) {
+            if (decoded.impersonatedUserId) {
+              // This is an impersonation token
+              impersonationToken = token;
+            } else if (decoded.userId && decoded.tenantId) {
+              // This is an auth token
+              authToken = token;
+            }
+          }
+        } catch (err) {
+          console.warn('[permissionMiddleware] Failed to decode token from Authorization header:', err.message);
+        }
+      }
+    }
 
     // Initialize payload variables
     let authPayload = null;
@@ -37,6 +60,14 @@ const permissionMiddleware = async (req, res, next) => {
     let effectivePermissions_RoleName = null;
     let impersonatedUser_roleType = null;
     let impersonatedUser_roleName = null;
+
+    console.log('[permissionMiddleware] Processing permissions:', {
+      hasAuthToken: !!authToken,
+      hasImpersonationToken: !!impersonationToken,
+      userId,
+      tenantId,
+      impersonatedUserId
+    });
 
     // Only process user if we have both userId and tenantId
     if (userId && tenantId) {
@@ -129,6 +160,15 @@ const permissionMiddleware = async (req, res, next) => {
       impersonatedUser_roleType,
       impersonatedUser_roleName,
     };
+
+    console.log('[permissionMiddleware] Final permissions result:', {
+      effectivePermissionsCount: Object.keys(permissionsObject).length,
+      hasSuperAdminPermissions: !!superAdminPermissions,
+      isImpersonating,
+      roleType: effectivePermissions_RoleType,
+      roleName: effectivePermissions_RoleName,
+      userId: res.locals.userId
+    });
 
     next();
   } catch (error) {

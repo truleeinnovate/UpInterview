@@ -134,7 +134,7 @@ const conditionalPermissionMiddleware = (req, res, next) => {
     '/Individual/Signup',
     '/linkedin/auth',
     '/linkedin/callback',
-    '/users/permissions', // Add permissions endpoint to excluded routes
+    // Remove /users/permissions from excluded routes - it needs permission middleware
   ];
 
   const isAuthRoute = authRoutes.some(route => req.path.includes(route));

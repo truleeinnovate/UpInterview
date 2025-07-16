@@ -852,8 +852,8 @@ class AuthCookieManager {
   // Test cookie functionality (legacy function)
   static testCookieFunctionality() {
     try {
-      const authToken = this.getAuthToken();
-      const impersonationToken = this.getImpersonationToken();
+      const authToken = AuthCookieManager.getAuthToken();
+      const impersonationToken = AuthCookieManager.getImpersonationToken();
       return {
         authToken: !!authToken,
         impersonationToken: !!impersonationToken,
@@ -892,9 +892,9 @@ class AuthCookieManager {
    */
   static verifyCookieState() {
     try {
-      const authToken = this.getAuthToken();
-      const impersonationToken = this.getImpersonationToken();
-      const userType = this.getUserType();
+      const authToken = AuthCookieManager.getAuthToken();
+      const impersonationToken = AuthCookieManager.getImpersonationToken();
+      const userType = AuthCookieManager.getUserType();
       
       // Count cookies in document.cookie
       const allCookies = document.cookie.split(';').map(c => c.trim());
@@ -947,8 +947,8 @@ class AuthCookieManager {
   static debugCookieState() {
     try {
       const currentDomain = window.location.hostname;
-      const authToken = this.getAuthToken();
-      const impersonationToken = this.getImpersonationToken();
+      const authToken = AuthCookieManager.getAuthToken();
+      const impersonationToken = AuthCookieManager.getImpersonationToken();
       
       // Count cookies in document.cookie
       const allCookies = document.cookie.split(';').map(c => c.trim());
