@@ -27,7 +27,8 @@ import { useTenants } from "../../apiHooks/superAdmin/useTenants.js";
 
 function TenantsPage() {
   const { superAdminPermissions, isInitialized } = usePermissions();
-  const { tenants, isLoading, isError, error, refetch } = useTenants();
+  const { tenants, isLoading } = useTenants();
+  console.log("ALL TENANTS =============> ", tenants);
 
   const [view, setView] = useState("table");
   // const [selectedTenant, setSelectedTenant] = useState(null);
@@ -200,12 +201,10 @@ function TenantsPage() {
     return <Loading />;
   }
 
-
   // Show content even if permissions are still loading but we have data
   if (tenants && tenants.length > 0) {
     // Continue with rendering
   }
-
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
@@ -262,9 +261,7 @@ function TenantsPage() {
       header: "Plan",
       render: (value, row) => (
         <span>
-          {row?.subscription?.selectedBillingCycle
-            ? row.subscription.selectedBillingCycle
-            : "N/A"}
+          {row?.subscriptionPlan?.name ? row.subscriptionPlan.name : "N/A"}
         </span>
       ),
     },
