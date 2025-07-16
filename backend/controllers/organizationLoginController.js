@@ -1136,10 +1136,12 @@ const getAllOrganizations = async (req, res) => {
     // Fetch all tenants
     const organizations = await Tenant.find().lean();
 
+
     // Fetch all subscriptions and get latest per tenant (sorted by createdAt descending)
     const allSubscriptions = await CustomerSubscription.find()
       .sort({ _id: -1 })
       .lean();
+
 
     // Map latest subscription by tenantId
     const subscriptionMap = {};
