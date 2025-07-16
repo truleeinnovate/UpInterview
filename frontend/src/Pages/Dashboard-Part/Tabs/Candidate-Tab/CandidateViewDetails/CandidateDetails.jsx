@@ -377,12 +377,14 @@ const CandidateDetails = ({ mode }) => {
               <div className="flex flex-wrap gap-2">
                 {candidate?.skills ? (
                   candidate.skills.map((skill, index) => (
+                    <>
                     <span
                       key={index}
                       className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
                     >
-                      {skill.skill}
+                      {skill.skill}{' '}{skill.experience}{' '}{skill.expertise}
                     </span>
+                    </>
                   ))
                 ) : (
                   <span>No skills found</span>

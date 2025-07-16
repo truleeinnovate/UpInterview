@@ -376,13 +376,11 @@ const loginOrganization = async (req, res) => {
       };
       const impersonationToken = generateToken(payload, { expiresIn: "7h" });
 
-      // Set impersonation token cookie
-      res.cookie(
-        "impersonationToken",
-        impersonationToken,
-        getAuthCookieOptions()
+      // Note: Impersonation token will be set by frontend using setAuthCookies()
+      // Backend only returns the token in response, frontend handles cookie setting
+      console.log(
+        "[loginOrganization] Impersonation token generated, will be set by frontend"
       );
-      console.log("[loginOrganization] Set impersonation token cookie");
 
       return res.status(200).json({
         success: true,
@@ -434,9 +432,11 @@ const loginOrganization = async (req, res) => {
     };
     const authToken = generateToken(payload, { expiresIn: "7h" });
 
-    // Set auth token cookie
-    res.cookie("authToken", authToken, getAuthCookieOptions());
-    console.log("[loginOrganization] Set auth token cookie");
+    // Note: Auth token will be set by frontend using setAuthCookies()
+    // Backend only returns the token in response, frontend handles cookie setting
+    console.log(
+      "[loginOrganization] Auth token generated, will be set by frontend"
+    );
 
     const responseData = {
       success: true,
@@ -979,6 +979,123 @@ const verifyEmailChange = async (req, res) => {
   }
 };
 
+// const getAllOrganizations = async (req, res) => {
+//   try {
+//     // Total user count per tenant
+//     const userCounts = await Users.aggregate([
+//       {
+//         $group: {
+//           _id: "$tenantId",
+//           userCount: { $sum: 1 },
+//         },
+//       },
+//     ]).exec();
+
+//     const userCountMap = {};
+//     userCounts.forEach(({ _id, userCount }) => {
+//       if (_id) {
+//         userCountMap[_id.toString()] = userCount;
+//       }
+//     });
+
+//     // Active user count per tenant
+//     const activeUserCounts = await Users.aggregate([
+//       {
+//         $match: { status: "active" },
+//       },
+//       {
+//         $group: {
+//           _id: "$tenantId",
+//           activeUserCount: { $sum: 1 },
+//         },
+//       },
+//     ]).exec();
+
+//     const activeUserCountMap = {};
+//     activeUserCounts.forEach(({ _id, activeUserCount }) => {
+//       if (_id) {
+//         activeUserCountMap[_id.toString()] = activeUserCount;
+//       }
+//     });
+
+//     // Fetch all tenants
+//     const organizations = await Tenant.find().lean();
+
+//     // Fetch latest subscription per tenant using aggregation
+//     // const allSubscriptions = await CustomerSubscription.aggregate([
+//     //   {
+//     //     $sort: { createdAt: -1 }, // Sort within aggregation
+//     //   },
+//     //   {
+//     //     $group: {
+//     //       _id: "$tenantId",
+//     //       latestSubscription: { $first: "$$ROOT" },
+//     //     },
+//     //   },
+//     //   {
+//     //     $replaceRoot: { newRoot: "$latestSubscription" },
+//     //   },
+//     // ]).exec();
+
+//     // Fetch latest subscription per tenant
+//     // Use find() with sort instead of aggregate to avoid Azure Cosmos DB index issues
+//     const allSubscriptions = await CustomerSubscription.find()
+//       .sort({ createdAt: -1 })
+//       .lean();
+
+//     // Group by tenantId and get the latest subscription for each
+//     const subscriptionMap = {};
+//     allSubscriptions.forEach((subscription) => {
+//       const tenantId = subscription.tenantId?.toString();
+//       if (tenantId && !subscriptionMap[tenantId]) {
+//         subscriptionMap[tenantId] = subscription;
+//       }
+//     });
+
+//     // Fetch one contact per tenant
+//     const contacts = await Contacts.find().lean();
+
+//     const contactsMap = {};
+//     contacts.forEach((contact) => {
+//       if (contact.tenantId) {
+//         contactsMap[contact.tenantId.toString()] = contact;
+//       }
+//     });
+
+//     // Combine all data
+//     const enrichedOrganizations = organizations.map((org) => {
+//       const orgId = org._id.toString();
+//       return {
+//         ...org,
+//         usersCount: userCountMap[orgId] || 0,
+//         activeUsersCount: activeUserCountMap[orgId] || 0,
+//         subscription: subscriptionMap[orgId] || null,
+//         contact: contactsMap[orgId] || null,
+//       };
+//     });
+
+//     return res.status(200).json({
+//       organizations: enrichedOrganizations,
+//       totalOrganizations: organizations.length,
+//       status: true,
+//     });
+//   } catch (error) {
+//     console.error("Error in getAllOrganizations:", {
+//       message: error.message,
+//       stack: error.stack,
+//       code: error.code,
+//       details: error.details,
+//     });
+//     return res
+//       .status(500)
+//       .json({
+//         message: "Internal server error",
+//         error: error.message,
+//         status: false,
+//       });
+//   }
+// };
+
 const getAllOrganizations = async (req, res) => {
   try {
     // Total user count per tenant
@@ -1000,9 +1117,7 @@ const getAllOrganizations = async (req, res) => {
 
     // Active user count per tenant
     const activeUserCounts = await Users.aggregate([
-      {
-        $match: { status: "active" },
-      },
+      { $match: { status: "active" } },
       {
         $group: {
           _id: "$tenantId",
@@ -1021,32 +1136,24 @@ const getAllOrganizations = async (req, res) => {
     // Fetch all tenants
     const organizations = await Tenant.find().lean();
 
-    // Fetch latest subscription per tenant using aggregation
-    const allSubscriptions = await CustomerSubscription.aggregate([
-      {
-        $sort: { createdAt: -1 }, // Sort within aggregation
-      },
-      {
-        $group: {
-          _id: "$tenantId",
-          latestSubscription: { $first: "$$ROOT" },
-        },
-      },
-      {
-        $replaceRoot: { newRoot: "$latestSubscription" },
-      },
-    ]).exec();
 
+    // Fetch all subscriptions and get latest per tenant (sorted by createdAt descending)
+    const allSubscriptions = await CustomerSubscription.find()
+      .sort({ _id: -1 })
+      .lean();
+
+
+    // Map latest subscription by tenantId
     const subscriptionMap = {};
     allSubscriptions.forEach((subscription) => {
-      if (subscription.tenantId) {
-        subscriptionMap[subscription.tenantId.toString()] = subscription;
+      const tenantId = subscription.tenantId?.toString();
+      if (tenantId && !subscriptionMap[tenantId]) {
+        subscriptionMap[tenantId] = subscription;
       }
     });
 
-    // Fetch one contact per tenant
+    // Fetch all contacts
     const contacts = await Contacts.find().lean();
-
     const contactsMap = {};
     contacts.forEach((contact) => {
       if (contact.tenantId) {
@@ -1054,14 +1161,41 @@ const getAllOrganizations = async (req, res) => {
       }
     });
 
+    // Get all unique subscriptionPlanIds from subscriptions
+    const subscriptionPlanIds = [
+      ...new Set(
+        Object.values(subscriptionMap)
+          .map((sub) => sub.subscriptionPlanId?.toString())
+          .filter(Boolean)
+      ),
+    ];
+
+    // Fetch all subscription plans in one query
+    const subscriptionPlans = await SubscriptionPlan.find({
+      _id: { $in: subscriptionPlanIds },
+    }).lean();
+
+    const subscriptionPlanMap = {};
+    subscriptionPlans.forEach((plan) => {
+      subscriptionPlanMap[plan._id.toString()] = plan;
+    });
+
     // Combine all data
     const enrichedOrganizations = organizations.map((org) => {
       const orgId = org._id.toString();
+      const subscription = subscriptionMap[orgId] || null;
+      const plan =
+        subscription?.subscriptionPlanId &&
+        subscriptionPlanMap[subscription.subscriptionPlanId.toString()]
+          ? subscriptionPlanMap[subscription.subscriptionPlanId.toString()]
+          : null;
+
       return {
         ...org,
         usersCount: userCountMap[orgId] || 0,
         activeUsersCount: activeUserCountMap[orgId] || 0,
-        subscription: subscriptionMap[orgId] || null,
+        subscription,
+        subscriptionPlan: plan,
         contact: contactsMap[orgId] || null,
       };
     });
@@ -1072,7 +1206,6 @@ const getAllOrganizations = async (req, res) => {
       status: true,
     });
   } catch (error) {
-
     console.error("Error in getAllOrganizations:", {
       message: error.message,
       stack: error.stack,
@@ -1081,8 +1214,11 @@ const getAllOrganizations = async (req, res) => {
     });
     return res
       .status(500)
-      .json({ message: "Internal server error", error: error.message, status: false });
-
+      .json({
+        message: "Internal server error",
+        error: error.message,
+        status: false,
+      });
   }
 };
 

@@ -166,14 +166,14 @@ function SupportDesk() {
           onClick={() => {
             const path =
               effectivePermissions_RoleName === "Admin"
-                ? `/support-desk/${row._id}`
+                ? `/support-desk/${row?._id}`
                 : row.assignedToId ===
                     impersonationPayload.impersonatedUserId &&
                   impersonatedUser_roleName === "Support_Team"
-                ? `/support-desk/view/${row._id}`
+                ? `/support-desk/view/${row?._id}`
                 : impersonatedUser_roleName === "Super_Admin"
-                ? `/support-desk/view/${row._id}`
-                : `/support-desk/${row._id}`;
+                ? `/support-desk/view/${row?._id}`
+                : `/support-desk/${row?._id}`;
             navigate(path, { state: { ticketData: row } });
           }}
         >
@@ -265,10 +265,10 @@ function SupportDesk() {
             ? `/support-desk/${row._id}`
             : row.assignedToId === impersonationPayload.impersonatedUserId &&
               impersonatedUser_roleName === "Support_Team"
-            ? `/super-admin-desk/view/${row._id}`
+            ? `/support-desk/view/${row._id}`
             : impersonatedUser_roleName === "Super_Admin"
-            ? `/super-admin-desk/view/${row._id}`
-            : `/super-admin-desk/${row._id}`;
+            ? `/support-desk/view/${row._id}`
+            : `/support-desk/${row._id}`;
         navigate(path, { state: { ticketData: row } });
       },
       //disabled: (row) => !hasActionAccess(row),

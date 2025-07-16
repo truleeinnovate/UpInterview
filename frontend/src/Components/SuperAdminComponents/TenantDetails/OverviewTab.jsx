@@ -1,6 +1,6 @@
 import { formatDate } from "../../../utils/dateUtils";
 
-function OverviewTab({ tenant, users, viewMode = "expanded" }) {
+function OverviewTab({ tenant, viewMode = "expanded" }) {
   console.log("OVERVIEW TENANT ==========================> ", tenant);
   const cardBase = "card";
   const textSize = viewMode === "collapsed" ? "text-sm" : "text-base";
@@ -50,12 +50,12 @@ function OverviewTab({ tenant, users, viewMode = "expanded" }) {
             <div>
               <span className="text-sm text-gray-500">Plan</span>
               <p className="font-medium">
-                {tenant?.selectedBillingCycle || ""}
+                {tenant?.subscriptionPlan?.name || "Not Provided"}
               </p>
             </div>
             <div>
               <span className="text-sm text-gray-500">Billing Email</span>
-              <p className="font-medium">{tenant?.billingEmail || ""}</p>
+              <p className="font-medium">{tenant?.billingEmail || "Not Provided"}</p>
             </div>
             <div>
               <span className="text-sm text-gray-500">Renewal Date</span>
