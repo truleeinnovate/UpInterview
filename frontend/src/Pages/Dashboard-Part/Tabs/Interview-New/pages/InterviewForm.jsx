@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import Cookies from "js-cookie";
@@ -10,6 +9,75 @@ import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
 import LoadingButton from '../../../../../Components/LoadingButton';
 import { useInterviewTemplates } from '../../../../../apiHooks/useInterviewTemplates.js';
 import { usePositions } from '../../../../../apiHooks/usePositions.js';
+
+// Custom Dropdown Component
+const CustomDropdown = ({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+  error = false,
+  placeholder = "Select an option",
+  className = "",
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const dropdownClass = `relative mt-1 block w-full ${className}`;
+  const buttonClass = `w-full pl-3 pr-10 py-2 text-base border ${
+    error ? 'border-red-500' : disabled ? 'border-gray-200' : 'border-gray-300'
+  } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md ${disabled ? 'bg-gray-50 cursor-not-allowed' : ''} text-left`;
+
+  return (
+    <div className={dropdownClass}>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {error && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={buttonClass}
+          disabled={disabled}
+        >
+          {value ? 
+            options.find(opt => opt.value === value)?.label || value : 
+            placeholder
+          }
+          <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </span>
+        </button>
+
+        {isOpen && (
+          <div className="absolute z-50 mt-1 w-full rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+            <ul className="py-1 text-base text-gray-900 h-48 overflow-y-auto z-50">
+              {options.map((option) => (
+                <li
+                  key={option.value}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${
+                    value === option.value ? 'bg-gray-100' : ''
+                  }`}
+                >
+                  {option.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+};
+
 // Reusable Modal Component
 const ConfirmationModal = ({ isOpen, onClose, onProceed, message }) => {
   if (!isOpen) return null;
@@ -180,7 +248,7 @@ const handleSubmit = async (e) => {
               : [{ label: 'New Interview', path: '' }])
           ]} />
 
-          <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="mt-4 bg-white shadow overflow sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
                 {isEditing ? 'Edit Interview' : 'Create New Interview'}
@@ -196,56 +264,58 @@ const handleSubmit = async (e) => {
 
                 <div className="space-y-6">
                   <div>
-                    <label htmlFor="candidate" className="block text-sm font-medium text-gray-700">Candidate <span className="text-red-500">*</span></label>
-                    <select
+                    <CustomDropdown
                       id="candidate"
+                      label="Candidate"
                       value={candidateId}
-                      onChange={(e) => {
-                        setCandidateId(e.target.value);
+                      onChange={(value) => {
+                        setCandidateId(value);
                         setCandidateError('');
                       }}
-                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${candidateError ? 'border-red-500' : 'border-gray-300'
-                        } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
-                    >
-                      <option value="" hidden>Select a Candidate</option>
-                      {(candidateData ?? []).map(candidate => (
-                        <option key={candidate._id} value={candidate._id}>{candidate.LastName} ({candidate.Email})</option>
-                      ))}
-                    </select>
-                    {candidateError && <p className="mt-2 text-sm text-red-600">{candidateError}</p>}
+                      options={candidateData.map(candidate => ({
+                        value: candidate._id,
+                        label: `${candidate.LastName} (${candidate.Email})`
+                      }))}
+                      error={candidateError}
+                      placeholder="Select a Candidate"
+                    />
                   </div>
 
                   <div>
-                    <label htmlFor="position" className="block text-sm font-medium text-gray-700">Position <span className="text-red-500">*</span></label>
-                    <select
+                    <CustomDropdown
                       id="position"
+                      label="Position"
                       value={positionId}
-                      onChange={(e) => {
-                        setPositionId(e.target.value);
+                      onChange={(value) => {
+                        setPositionId(value);
                         setPositionError('');
                       }}
-                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${positionError ? 'border-red-500' : 'border-gray-300'
-                        } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
-                    >
-                      <option value="" hidden>Select a Position</option>
-                      {(positionData ?? []).map(position => (
-                        <option key={position._id} value={position._id}>{position.title}</option>
-                      ))}
-                    </select>
-                    {positionError && <p className="mt-2 text-sm text-red-600">{positionError}</p>}
+                      options={positionData.map(position => ({
+                        value: position._id,
+                        label: position.title
+                      }))}
+                      error={positionError}
+                      placeholder="Select a Position"
+                    />
                   </div>
 
                   <div>
-                    <label htmlFor="template" className="block text-sm font-medium text-gray-700">Interview Template</label>
-                    <select id="template" value={templateId} onChange={handleTemplateChange}
+                    <CustomDropdown
+                      id="template"
+                      label="Interview Template"
+                      value={templateId}
+                      onChange={handleTemplateChange}
+                      options={
+                        (templatesData ?? [])
+                          .filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active')
+                          .map(template => ({
+                            value: template._id,
+                            label: template.templateName
+                          }))
+                      }
                       disabled={!positionId}
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                      <option value="" hidden>Select a Template</option>
-                      {(templatesData ?? []).filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active')
-                      .map((template) => (
-                        <option key={template._id} value={template._id}>{template.templateName}</option>
-                      ))}
-                    </select>
+                      placeholder="Select a Template"
+                    />
                   </div>
 
                   <div className="flex justify-end space-x-3">
