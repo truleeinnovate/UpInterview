@@ -41,6 +41,7 @@ function InternalLogsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
+    severity: [],
     currentStatus: "",
   });
   const navigate = useNavigate();
@@ -72,21 +73,36 @@ function InternalLogsPage() {
   const [selectedCurrentStatus, setCurrentStatus] = useState("active");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  const [isSeverityOpen, setIsSeverityOpen] = useState(false);
+  const [selectedSeverity, setSelectedSeverity] = useState([]);
+
+  const handleSeverityToggle = (severity) => {
+    setSelectedSeverity((prev) =>
+      prev.includes(severity)
+        ? prev.filter((s) => s !== severity)
+        : [...prev, severity]
+    );
+  };
+
   // Reset filters when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
       setSelectedStatus(selectedFilters.status);
+      setSelectedSeverity(selectedFilters.severity);
       setCurrentStatus(selectedFilters.currentStatus);
       setIsCurrentStatusOpen(false);
+      setIsSeverityOpen(false);
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
+      severity: [],
       currentStatus: "",
     };
     setSelectedStatus([]);
+    setSelectedSeverity([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
@@ -97,12 +113,15 @@ function InternalLogsPage() {
   const handleApplyFilters = () => {
     const filters = {
       status: selectedStatus,
+      severity: selectedSeverity,
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
     setIsFilterActive(
-      filters.status.length > 0 || filters.currentStatus.length > 0
+      filters.status.length > 0 ||
+        filters.severity.length > 0 ||
+        filters.currentStatus.length > 0
     );
     setFilterPopupOpen(false);
   };
@@ -165,17 +184,6 @@ function InternalLogsPage() {
     }
   }, [isTablet]);
 
-  // const handleFilterChange = (filters) => {
-  //   setSelectedFilters(filters);
-  //   setCurrentPage(0);
-  //   setIsFilterActive(
-  //     filters.status.length > 0 ||
-  //       filters.tech.length > 0 ||
-  //       filters.experience.min ||
-  //       filters.experience.max
-  //   );
-  // };
-
   const dataToUse = logs;
 
   const handleFilterIconClick = () => {
@@ -186,19 +194,27 @@ function InternalLogsPage() {
 
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
+
     return dataToUse.filter((log) => {
-      const fieldsToSearch = [log.logId ? log.logId : log._id].filter(
-        (field) => field !== null && field !== undefined
-      );
+      const fieldsToSearch = [
+        log?.logId ? log?.logId : log?._id,
+        log?.status,
+        log?.severity,
+      ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
         selectedFilters?.status.length === 0 ||
         selectedFilters.status.includes(log.status);
+
+      const matchesSeverity =
+        selectedFilters?.severity.length === 0 ||
+        selectedFilters.severity.includes(log.severity);
+
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesStatus;
+      return matchesSearchQuery && matchesStatus && matchesSeverity;
     });
   };
 
@@ -224,15 +240,6 @@ function InternalLogsPage() {
     setSearchQuery(e.target.value);
     setCurrentPage(0); // Reset to first page on search
   };
-
-  // const handleStatusChange = (requestId, newStatus) => {
-  //   setRequests(
-  //     requests.map((request) =>
-  //       request.id === requestId ? { ...request, status: newStatus } : request
-  //     )
-  //   );
-  //   setSelectedRequest(null);
-  // };
 
   const formatDate = (dateString) => {
     const options = {
@@ -352,16 +359,16 @@ function InternalLogsPage() {
         ]
       : []),
 
-    ...(superAdminPermissions?.InternalLogs?.View
-      ? [
-          {
-            key: "360-view",
-            label: "360° View",
-            icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-            onClick: (row) => setSelectedLogId(row._id),
-          },
-        ]
-      : []),
+    // ...(superAdminPermissions?.InternalLogs?.View
+    //   ? [
+    //       {
+    //         key: "360-view",
+    //         label: "360° View",
+    //         icon: <UserCircle className="w-4 h-4 text-purple-600" />,
+    //         onClick: (row) => setSelectedLogId(row._id),
+    //       },
+    //     ]
+    //   : []),
   ];
 
   // Kanban Columns Configuration
@@ -438,8 +445,8 @@ function InternalLogsPage() {
   );
 
   const renderFilterContent = () => {
-    // filters options
-    const statusOptions = ["success", "pending", "captured", "charged"];
+    const statusOptions = ["success", "error", "warning"];
+    const severityOptions = ["low", "medium", "high"];
 
     return (
       <div className="space-y-3">
@@ -450,34 +457,53 @@ function InternalLogsPage() {
             onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
           >
             <span className="font-medium text-gray-700">Current Status</span>
-            {isCurrentStatusOpen ? (
-              <ChevronUp className="text-xl text-gray-700" />
-            ) : (
-              <ChevronDown className="text-xl text-gray-700" />
-            )}
+            {isCurrentStatusOpen ? <ChevronUp /> : <ChevronDown />}
           </div>
           {isCurrentStatusOpen && (
-            <div className="mt-1 space-y-2 pl-2">
-              <div className="flex items-center space-x-3">
-                <div className="flex-1">
-                  <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
-                    {statusOptions.map((status) => (
-                      <label
-                        key={status}
-                        className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedStatus.includes(status)}
-                          onChange={() => handleCurrentStatusToggle(status)}
-                          className="accent-custom-blue"
-                        />
-                        <span>{status}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+              {statusOptions.map((status) => (
+                <label
+                  key={status}
+                  className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedStatus.includes(status)}
+                    onChange={() => handleCurrentStatusToggle(status)}
+                    className="accent-custom-blue"
+                  />
+                  <span>{status}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Severity Section */}
+        <div>
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setIsSeverityOpen(!isSeverityOpen)}
+          >
+            <span className="font-medium text-gray-700">Severity</span>
+            {isSeverityOpen ? <ChevronUp /> : <ChevronDown />}
+          </div>
+          {isSeverityOpen && (
+            <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+              {severityOptions.map((severity) => (
+                <label
+                  key={severity}
+                  className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedSeverity.includes(severity)}
+                    onChange={() => handleSeverityToggle(severity)}
+                    className="accent-custom-blue"
+                  />
+                  <span>{severity}</span>
+                </label>
+              ))}
             </div>
           )}
         </div>
@@ -485,7 +511,6 @@ function InternalLogsPage() {
     );
   };
 
-  // Render Popup content
   const renderPopupContent = (log) => {
     return (
       <div className="px-4">

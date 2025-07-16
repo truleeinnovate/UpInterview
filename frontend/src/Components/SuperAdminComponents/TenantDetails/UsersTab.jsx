@@ -26,6 +26,8 @@ import {
   Briefcase,
   User,
   Calendar,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TableView from "../../Shared/Table/TableView.jsx";
@@ -35,7 +37,7 @@ import { LiaGenderlessSolid } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa";
 import { config } from "../../../config.js";
 import {
-  setAuthCookies,
+  // setAuthCookies,
   getImpersonationToken,
   getAuthToken,
   loginAsUser,
@@ -54,17 +56,16 @@ function UsersTab({ users, viewMode }) {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [selectedFilters, setSelectedFilters] = useState({
-    status: [],
-    tech: [],
-    experience: { min: "", max: "" },
-  });
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [tempSelectedStatus, setTempSelectedStatus] = useState([]);
 
   // Get user by ID
   useEffect(() => {
@@ -83,15 +84,6 @@ function UsersTab({ users, viewMode }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Set view based on device
-  // useEffect(() => {
-  //   if (isTablet) {
-  //     setView("kanban");
-  //   } else {
-  //     setView("table");
-  //   }
-  // }, [isTablet]);
-
   useEffect(() => {
     if (viewMode === "collapsed") {
       setView("kanban");
@@ -104,48 +96,54 @@ function UsersTab({ users, viewMode }) {
     }
   }, [viewMode, isTablet]);
 
-  const handleFilterChange = (filters) => {
-    setSelectedFilters(filters);
+  const handleFilterChange = () => {
+    const filters = { status: tempSelectedStatus };
+    setSelectedStatus(filters.status);
     setCurrentPage(0);
-    setIsFilterActive(
-      filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        filters.experience.max
-    );
+    setIsFilterActive(filters.status.length > 0);
+    setFilterPopupOpen(false);
   };
 
   const dataToUse = users;
 
   const handleFilterIconClick = () => {
     if (dataToUse?.length !== 0) {
+      setTempSelectedStatus([...selectedStatus]);
       setFilterPopupOpen((prev) => !prev);
     }
   };
 
+  const handleCurrentStatusToggle = (status) => {
+    setTempSelectedStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
-    return dataToUse.filter((organization) => {
-      const fieldsToSearch = [
-        organization.lastName,
-        organization.email,
-        organization.phone,
-      ].filter((field) => field !== null && field !== undefined);
+
+    return dataToUse.filter((user) => {
+      const matchesSearch = [user.firstName, user.lastName, user.email]
+        .filter(Boolean)
+        .some((field) =>
+          field.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
       const matchesStatus =
-        selectedFilters?.status.length === 0 ||
-        selectedFilters.status.includes(organization.HigherQualification);
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        organization.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.skill)
-        );
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
+        selectedStatus.length === 0 || selectedStatus.includes(user.status);
 
-      return matchesSearchQuery && matchesStatus && matchesTech;
+      return matchesSearch && matchesStatus;
     });
+  };
+
+  const handleClearAll = () => {
+    setSelectedStatus([]);
+    setTempSelectedStatus([]);
+    setCurrentPage(0);
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
   };
 
   const rowsPerPage = 10;
@@ -173,11 +171,12 @@ function UsersTab({ users, viewMode }) {
   // Common function for Login as User API call
   const handleLoginAsUser = async (userId) => {
     console.log("🚀 Starting login as user process for userId:", userId);
-    
+    setIsLoading(true);
+
     try {
       const impersonationToken = getImpersonationToken();
       console.log("🔑 Impersonation token check:", !!impersonationToken);
-      
+
       if (!impersonationToken) {
         console.error("❌ No impersonation token found");
         toast.error("Super admin session expired. Please log in again.");
@@ -186,10 +185,16 @@ function UsersTab({ users, viewMode }) {
       }
 
       console.log("📡 Making API request to login-as-user endpoint");
-      console.log("🌐 API URL:", `${config.REACT_APP_API_URL}/Organization/login-as-user`);
-      console.log("🔑 Using impersonation token:", impersonationToken ? "EXISTS" : "MISSING");
+      console.log(
+        "🌐 API URL:",
+        `${config.REACT_APP_API_URL}/Organization/login-as-user`
+      );
+      console.log(
+        "🔑 Using impersonation token:",
+        impersonationToken ? "EXISTS" : "MISSING"
+      );
       console.log("📦 Request body:", { userId });
-      
+
       const response = await fetch(
         `${config.REACT_APP_API_URL}/Organization/login-as-user`,
         {
@@ -204,22 +209,28 @@ function UsersTab({ users, viewMode }) {
       );
       console.log("📥 Login as user response status:", response.status);
       console.log("📥 Login as user response:", response);
-      console.log("📥 Response headers:", Object.fromEntries(response.headers.entries()));
+      console.log(
+        "📥 Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
 
       const data = await response.json();
       console.log("📋 Response data:", data);
       console.log("📋 Response data keys:", Object.keys(data));
-      
+
       if (data.success) {
-        console.log("✅ Login successful, authToken received:", !!data.authToken);
+        console.log(
+          "✅ Login successful, authToken received:",
+          !!data.authToken
+        );
         console.log("🔑 AuthToken details:", {
           hasToken: !!data.authToken,
           tokenLength: data.authToken ? data.authToken.length : 0,
           userId: data.userId,
           tenantId: data.tenantId,
-          isOrganization: data.isOrganization
+          isOrganization: data.isOrganization,
         });
-        
+
         console.log("🍪 Setting auth cookies with data:", {
           authToken: !!data.authToken,
           authTokenLength: data.authToken ? data.authToken.length : 0,
@@ -227,7 +238,7 @@ function UsersTab({ users, viewMode }) {
           tenantId: data.tenantId,
           organization: data.isOrganization,
         });
-        
+
         console.log("🔧 Calling loginAsUser function...");
         loginAsUser(data.authToken, {
           userId: data.userId,
@@ -235,14 +246,20 @@ function UsersTab({ users, viewMode }) {
           organization: data.isOrganization,
         });
         console.log("✅ loginAsUser function completed");
-        
+
         // Verify cookies were set
         console.log("🔍 Verifying cookies after setting:");
         const verifyAuthToken = getAuthToken();
         const verifyImpersonationToken = getImpersonationToken();
-        console.log("🔍 Auth token after setting:", verifyAuthToken ? "EXISTS" : "MISSING");
-        console.log("🔍 Impersonation token after setting:", verifyImpersonationToken ? "EXISTS" : "MISSING");
-        
+        console.log(
+          "🔍 Auth token after setting:",
+          verifyAuthToken ? "EXISTS" : "MISSING"
+        );
+        console.log(
+          "🔍 Impersonation token after setting:",
+          verifyImpersonationToken ? "EXISTS" : "MISSING"
+        );
+
         console.log("🔄 Refreshing permissions");
         await refreshPermissions();
         console.log("🏠 Navigating to home page");
@@ -254,6 +271,8 @@ function UsersTab({ users, viewMode }) {
     } catch (error) {
       console.error("💥 Error during login as user:", error);
       toast.error("An error occurred during login");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -308,7 +327,7 @@ function UsersTab({ users, viewMode }) {
         console.log("🖱️ Login as User button clicked for user:", {
           userId: row._id,
           userName: row.firstName,
-          userEmail: row.email
+          userEmail: row.email,
         });
         handleLoginAsUser(row._id);
       },
@@ -701,6 +720,54 @@ function UsersTab({ users, viewMode }) {
     );
   };
 
+  const renderFilterContent = () => {
+    // filter options
+    const statusOptions = ["active", "inactive"];
+
+    return (
+      <div className="space-y-3">
+        {/* Current Status Section */}
+        <div>
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setIsCurrentStatusOpen(!isCurrentStatusOpen)}
+          >
+            <span className="font-medium text-gray-700">Current Status</span>
+            {isCurrentStatusOpen ? (
+              <ChevronUp className="text-xl text-gray-700" />
+            ) : (
+              <ChevronDown className="text-xl text-gray-700" />
+            )}
+          </div>
+          {isCurrentStatusOpen && (
+            <div className="mt-1 space-y-2 pl-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="mt-2 border border-gray-200 rounded-md p-2 space-y-2">
+                    {statusOptions.map((status) => (
+                      <label
+                        key={status}
+                        className="flex items-center space-x-2 cursor-pointer text-sm capitalize"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={tempSelectedStatus.includes(status)}
+                          onChange={() => handleCurrentStatusToggle(status)}
+                          className="accent-custom-blue"
+                        />
+                        <span>{status}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 min-h-screen">
       <div className="absolute md:mt-0 sm:mt-0 top-0 left-0 right-0 bg-background">
@@ -772,9 +839,11 @@ function UsersTab({ users, viewMode }) {
                   isOpen={isFilterPopupOpen}
                   onClose={() => setFilterPopupOpen(false)}
                   onApply={handleFilterChange}
-                  initialFilters={selectedFilters}
+                  onClearAll={handleClearAll}
                   filterIconRef={filterIconRef}
-                />
+                >
+                  {renderFilterContent()}
+                </FilterPopup>
               </div>
             </motion.div>
           </div>
@@ -824,11 +893,14 @@ function UsersTab({ users, viewMode }) {
                   <button
                     className="w-full btn-primary flex items-center justify-center space-x-2"
                     onClick={() => {
-                      console.log("🖱️ Modal Login as User button clicked for user:", {
-                        userId: selectedUser._id,
-                        userName: selectedUser.name,
-                        userEmail: selectedUser.email
-                      });
+                      console.log(
+                        "🖱️ Modal Login as User button clicked for user:",
+                        {
+                          userId: selectedUser._id,
+                          userName: selectedUser.name,
+                          userEmail: selectedUser.email,
+                        }
+                      );
                       handleLoginAsUser(selectedUser._id);
                     }}
                   >

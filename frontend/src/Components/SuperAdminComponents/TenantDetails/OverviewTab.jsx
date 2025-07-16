@@ -1,7 +1,6 @@
 import { formatDate } from "../../../utils/dateUtils";
 
 function OverviewTab({ tenant, viewMode = "expanded" }) {
-  console.log("OVERVIEW TENANT ==========================> ", tenant);
   const cardBase = "card";
   const textSize = viewMode === "collapsed" ? "text-sm" : "text-base";
   const gridCols =
@@ -55,19 +54,21 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
             </div>
             <div>
               <span className="text-sm text-gray-500">Billing Email</span>
-              <p className="font-medium">{tenant?.billingEmail || "Not Provided"}</p>
+              <p className="font-medium">
+                {tenant?.billingEmail || "Not Provided"}
+              </p>
             </div>
             <div>
               <span className="text-sm text-gray-500">Renewal Date</span>
               <p className="font-medium">
                 {tenant?.nextBillingDate
                   ? formatDate(tenant?.nextBillingDate)
-                  : ""}
+                  : "Not Provided"}
               </p>
             </div>
             <div>
               <span className="text-sm text-gray-500">Licensed Users</span>
-              <p className="font-medium">{tenant?.users || 0}</p>
+              <p className="font-medium">{tenant?.users || "Not Provided"}</p>
             </div>
           </div>
         </div>
@@ -122,7 +123,7 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
                   />
                 ) : (
                   <span className="text-gray-600 text-xs">
-                    {(activity.user || "")
+                    {(activity.user || "Not Provided")
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
@@ -131,13 +132,13 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
               </div>
               <div>
                 <div className="flex items-center">
-                  <span className="font-medium">{activity?.user || ""}</span>
+                  <span className="font-medium">{activity?.user || "Not Provided"}</span>
                   <span className="mx-2 text-gray-300">•</span>
                   <span className="text-sm text-gray-500">
-                    {activity?.timestamp ? formatDate(activity?.timestamp) : ""}
+                    {activity?.timestamp ? formatDate(activity?.timestamp) : "Not Provided"}
                   </span>
                 </div>
-                <p className="text-gray-700">{activity.details || ""}</p>
+                <p className="text-gray-700">{activity.details || "Not Provided"}</p>
               </div>
             </div>
           ))}
