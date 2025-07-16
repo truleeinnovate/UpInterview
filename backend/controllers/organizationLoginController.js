@@ -1033,6 +1033,7 @@ const getAllOrganizations = async (req, res) => {
       },
     ]).exec();
 
+
     // Fetch latest subscription per tenant
     // Use find() with sort instead of aggregate to avoid Azure Cosmos DB index issues
     // const allSubscriptions = await CustomerSubscription.find().sort({ _id: -1 }).lean();
