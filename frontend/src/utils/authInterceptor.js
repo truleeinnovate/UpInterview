@@ -35,11 +35,8 @@ api.interceptors.response.use(
         path: '/',
       };
       
-      // Only set domain for production (not localhost)
-      const currentDomain = window.location.hostname;
-      if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
-        cookieOptions.domain = '.upinterview.io';
-      }
+      // Don't set domain for cross-origin requests
+      // This allows cookies to be sent to the backend domain
       
       Cookies.set('authToken', newToken, cookieOptions);
     }

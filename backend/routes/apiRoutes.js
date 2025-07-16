@@ -389,13 +389,42 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     const { model } = req.params;
 
     console.log('[1] Request received for model:', model);
+    console.log('[1.1] Cookies received:', req.cookies);
+    console.log('[1.2] Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
 
     // Get user information from res.locals (set by permissionMiddleware)
-    const { userId, tenantId } = res.locals;
+    let { userId, tenantId } = res.locals;
     console.log('[2] User info from res.locals:', { userId, tenantId });
 
+    // If res.locals doesn't have user info, try to extract from token directly
     if (!userId || !tenantId) {
-      console.log('[3] Missing userId or tenantId from res.locals - returning 401');
+      console.log('[2.1] No user info in res.locals, trying direct token extraction');
+      
+      // Try to get token from cookies first, then from Authorization header
+      let authToken = req.cookies.authToken;
+      
+      if (!authToken) {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          authToken = authHeader.substring(7);
+          console.log('[2.2] Got token from Authorization header');
+        }
+      }
+
+      if (authToken) {
+        try {
+          const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+          userId = decoded.userId;
+          tenantId = decoded.tenantId;
+          console.log('[2.3] Extracted user info from token:', { userId, tenantId });
+        } catch (err) {
+          console.error('[2.4] JWT verification failed:', err.message);
+        }
+      }
+    }
+
+    if (!userId || !tenantId) {
+      console.log('[3] Missing userId or tenantId - returning 401');
       return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
 
