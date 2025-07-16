@@ -587,8 +587,8 @@ class AuthCookieManager {
         localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
         localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
         // Always redirect to main domain
-        // window.location.href = "https://app.upinterview.io/organization-login";
-        navigate("/organization-login");
+        window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "https://localhost:3000/organization-login";
+        // navigate("/organization-login");
 
 
       } else if (authToken && !impersonationToken) {
@@ -601,10 +601,11 @@ class AuthCookieManager {
         localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
         localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
         localStorage.removeItem('app_permissions_cache');
+        localStorage.removeItem('permissions_effective');
         localStorage.removeItem('app_permissions_timestamp');
         // Always redirect to main domain
-        // window.location.href = "https://app.upinterview.io/organization-login";
-        navigate("/organization-login");
+        window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "https://localhost:3000/organization-login";
+        // navigate("/organization-login");
 
       } else if (authToken && impersonationToken) {
         // Scenario 3: Both tokens exist (super admin logged in as user)
@@ -618,8 +619,8 @@ class AuthCookieManager {
       } else {
         // No tokens exist, just navigate to main domain organization login
         console.log('⚠️ No tokens found, navigating to main domain organization login');
-        // window.location.href = "https://app.upinterview.io/organization-login";
-        navigate("/organization-login");
+        window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "https://localhost:3000/organization-login";
+        // navigate("/organization-login");
 
       }
 
@@ -673,8 +674,8 @@ class AuthCookieManager {
         setLoading(false);
       }
       // Fallback to main domain organization login
-      // window.location.href = "https://app.upinterview.io/organization-login";
-      navigate("/organization-login");
+      window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "https://localhost:3000/organization-login";
+      // navigate("/organization-login");
 
     }
   }

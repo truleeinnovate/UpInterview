@@ -252,11 +252,11 @@ const OrganizationLogin = () => {
       if (roleType === 'internal') {
         console.log(`[OrganizationLogin][${loginStartTime}] Internal user detected, navigating to admin dashboard`);
         setAuthCookies({ impersonationToken, impersonatedUserId });
-        
+
         // Refresh permissions for super admin
         console.log(`[OrganizationLogin][${loginStartTime}] Refreshing permissions for super admin...`);
         await refreshPermissions();
-        
+
         console.log(`[OrganizationLogin][${loginStartTime}] Navigating to admin dashboard`);
         navigate('/admin-dashboard');
         return;
@@ -292,9 +292,20 @@ const OrganizationLogin = () => {
           console.log(`[OrganizationLogin][${loginStartTime}] Redirecting to subdomain...`);
 
           const protocol = window.location.protocol;
-          const targetUrl = `${protocol}//${targetDomain}/home`;
 
-          console.log(`[OrganizationLogin][${loginStartTime}] Setting subdomain URL:`, targetUrl);
+          // Determine the target path based on user status
+          let targetPath = '/';
+          if (status === 'active' && isProfileCompleted !== false) {
+            targetPath = '/home';
+          } else if (status === 'submitted' || status === 'payment_pending') {
+            targetPath = '/subscription-plans';
+          } else if (isProfileCompleted === false && roleName) {
+            targetPath = '/complete-profile';
+          }
+
+          const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
+
+          console.log(`[OrganizationLogin][${loginStartTime}] Setting subdomain URL with path:`, targetUrl);
 
           // Wait for 3-4 seconds to ensure data is loaded in the home page
           console.log(`[OrganizationLogin][${loginStartTime}] Waiting 4 seconds for data preparation...`);
