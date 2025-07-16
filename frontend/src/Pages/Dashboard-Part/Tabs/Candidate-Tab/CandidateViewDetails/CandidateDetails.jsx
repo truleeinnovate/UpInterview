@@ -378,12 +378,28 @@ const CandidateDetails = ({ mode }) => {
                 {candidate?.skills ? (
                   candidate.skills.map((skill, index) => (
                     <>
+                    <div
+                    className="px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100"
+                    >
                     <span
                       key={index}
-                      className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
+                      className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
-                      {skill.skill}{' '}{skill.experience}{' '}{skill.expertise}
+                      {skill.skill}
                     </span>
+                    <span
+                      key={index}
+                      className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                    >
+                      {skill.experience}
+                    </span>
+                    <span
+                      key={index}
+                      className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                    >
+                      {skill.expertise}
+                    </span>
+                    </div>
                     </>
                   ))
                 ) : (

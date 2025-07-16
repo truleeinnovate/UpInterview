@@ -21,6 +21,7 @@ import { usePermissionCheck } from "../../../../utils/permissionUtils";
 function SupportDesk() {
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { effectivePermissions, superAdminPermissions, impersonatedUser_roleName, effectivePermissions_RoleName } = usePermissions();
+  console.log("impersonatedUser_roleName",impersonatedUser_roleName)
   const { tickets, isLoading } = useSupportTickets();
   const impersonationToken = Cookies.get("impersonationToken");
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
