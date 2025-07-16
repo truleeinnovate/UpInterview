@@ -847,6 +847,61 @@ class AuthCookieManager {
     }
   }
 
+  /**
+   * Verify cookie state and log detailed information for debugging
+   * This helps identify if cookies are being set multiple times
+   */
+  static verifyCookieState() {
+    try {
+      const authToken = this.getAuthToken();
+      const impersonationToken = this.getImpersonationToken();
+      const userType = this.getUserType();
+      
+      // Count cookies in document.cookie
+      const allCookies = document.cookie.split(';').map(c => c.trim());
+      const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
+      const impersonationTokenCount = allCookies.filter(c => c.startsWith('impersonationToken=')).length;
+      
+      console.log('🔍 Cookie State Verification:', {
+        authToken: {
+          exists: !!authToken,
+          length: authToken ? authToken.length : 0,
+          count: authTokenCount,
+          preview: authToken ? `${authToken.substring(0, 20)}...` : 'null'
+        },
+        impersonationToken: {
+          exists: !!impersonationToken,
+          length: impersonationToken ? impersonationToken.length : 0,
+          count: impersonationTokenCount,
+          preview: impersonationToken ? `${impersonationToken.substring(0, 20)}...` : 'null'
+        },
+        userType,
+        totalCookies: allCookies.length,
+        allCookieNames: allCookies.map(c => c.split('=')[0])
+      });
+
+      // Check for duplicate cookies
+      if (authTokenCount > 1) {
+        console.warn('⚠️ Multiple authToken cookies detected:', authTokenCount);
+      }
+      if (impersonationTokenCount > 1) {
+        console.warn('⚠️ Multiple impersonationToken cookies detected:', impersonationTokenCount);
+      }
+
+      return {
+        authToken: !!authToken,
+        impersonationToken: !!impersonationToken,
+        userType,
+        authTokenCount,
+        impersonationTokenCount,
+        hasDuplicates: authTokenCount > 1 || impersonationTokenCount > 1
+      };
+    } catch (error) {
+      console.error('Error verifying cookie state:', error);
+      return { error: error.message };
+    }
+  }
+
 
 }
 
@@ -872,5 +927,6 @@ export const setSuperAdminPermissions = AuthCookieManager.setSuperAdminPermissio
 export const setCurrentPermissions = AuthCookieManager.setCurrentPermissions;
 export const clearPermissions = AuthCookieManager.clearPermissions;
 export const clearAllPermissionCaches = AuthCookieManager.clearAllPermissionCaches;
+export const verifyCookieState = AuthCookieManager.verifyCookieState;
 
 export default AuthCookieManager;

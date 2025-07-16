@@ -22,8 +22,8 @@ export const useUserProfile = () => {
 
       return response.data || null;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes - data stays fresh for 5 minutes
-    cacheTime: 1000 * 60 * 15, // 15 minutes - keep in cache longer
+    staleTime: 1000 * 60 * 30, // 30 minutes - data stays fresh for 30 minutes
+    cacheTime: 1000 * 60 * 60, // 60 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
     refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
@@ -49,8 +49,8 @@ export const useSingleContact = () => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${currentUser}`);
       return response.data || null;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    cacheTime: 1000 * 60 * 60, // 60 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
