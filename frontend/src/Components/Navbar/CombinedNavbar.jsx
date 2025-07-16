@@ -495,11 +495,8 @@ const CombinedNavbar = () => {
         </button>
       </div>
       <div
-        className={`px-2 py-1 ${checkPermission("Billing") &&
-          checkPermission("Wallet")
-          ? "border-t"
-          : ""
-          }`}
+        className="px-2 py-2 border-t"
+  
       >
         {[
           ...(checkPermission("Billing")
