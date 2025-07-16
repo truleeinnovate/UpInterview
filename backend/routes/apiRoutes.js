@@ -387,46 +387,15 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
   console.log('--- STARTING REQUEST PROCESSING ---');
   try {
     const { model } = req.params;
-    
-    // Try to get token from cookies first, then from Authorization header
-    let authToken = req.cookies.authToken;
-    
-    // If not in cookies, check Authorization header
-    if (!authToken) {
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        authToken = authHeader.substring(7);
-        console.log('[1.1] Got token from Authorization header');
-      }
-    }
 
     console.log('[1] Request received for model:', model);
-    console.log('[2] Auth token exists:', !!authToken);
 
-    if (!authToken) {
-      console.log('[3] No auth token - returning 401');
-      return res.status(401).json({ error: 'Unauthorized: Missing auth token' });
-    }
-
-    let decoded;
-    try {
-      decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-      console.log('[4] JWT decoded successfully');
-      console.log('[5] Decoded JWT contents:', {
-        userId: decoded.userId,
-        tenantId: decoded.tenantId,
-        // Don't log entire token for security
-      });
-    } catch (err) {
-      console.error('[6] JWT verification failed:', err.message);
-      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
-    }
-
-    const { userId, tenantId } = decoded;
-    console.log('[7] User ID:', userId, 'Tenant ID:', tenantId);
+    // Get user information from res.locals (set by permissionMiddleware)
+    const { userId, tenantId } = res.locals;
+    console.log('[2] User info from res.locals:', { userId, tenantId });
 
     if (!userId || !tenantId) {
-      console.log('[8] Missing userId or tenantId - returning 401');
+      console.log('[3] Missing userId or tenantId from res.locals - returning 401');
       return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
 
@@ -437,7 +406,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       effectivePermissions_RoleName,
     } = res.locals;
 
-    console.log('[9] Permission data from res.locals:', {
+    console.log('[4] Permission data from res.locals:', {
       roleType: effectivePermissions_RoleType,
       roleName: effectivePermissions_RoleName,
       inheritedRoleIds: inheritedRoleIds?.length || 0,
@@ -445,45 +414,45 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     });
 
     if (!effectivePermissions) {
-      console.log('[10] No effective permissions found - returning 403');
+      console.log('[5] No effective permissions found - returning 403');
       return res.status(403).json({ error: 'Forbidden: No permissions available' });
     }
 
     const modelMapping = getModelMapping(effectivePermissions);
-    console.log('[11] Model mapping for request:', Object.keys(modelMapping));
+    console.log('[6] Model mapping for request:', Object.keys(modelMapping));
     
     const modelConfig = modelMapping[model.toLowerCase()];
-    console.log('[12] Model config for', model, ':', {
+    console.log('[7] Model config for', model, ':', {
       hasModelConfig: !!modelConfig,
       hasViewPermission: modelConfig?.hasViewPermission,
       modelName: modelConfig?.model?.modelName
     });
 
     if (!modelConfig) {
-      console.log('[13] Invalid model requested - returning 400');
+      console.log('[8] Invalid model requested - returning 400');
       return res.status(400).json({ message: `Invalid model: ${model}` });
     }
 
     const { model: DataModel, hasViewPermission } = modelConfig;
 
     // if (!hasViewPermission) {
-    //   console.log('[14] User lacks view permission for model - returning 403');
+    //   console.log('[9] User lacks view permission for model - returning 403');
     //   return res.status(403).json({ error: 'Forbidden: No view permission for this resource' });
     // }
 
     if (!DataModel || typeof DataModel.find !== 'function') {
-      console.error('[15] Invalid DataModel configuration - returning 500');
+      console.error('[10] Invalid DataModel configuration - returning 500');
       return res.status(500).json({ error: `Invalid model configuration for ${model}` });
     }
 
     // Base query - always enforce tenant boundary
     let query = model.toLowerCase() === 'scheduleassessment' ? { organizationId: tenantId } : { tenantId };
-    console.log('[16] Initial query with tenantId:', query);
+    console.log('[11] Initial query with tenantId:', query);
 
     const roleType = effectivePermissions_RoleType;
     const roleName = effectivePermissions_RoleName;
 
-    console.log('[17] User role details:', {
+    console.log('[12] User role details:', {
       roleType,
       roleName,
       isOrganizationAdmin: roleType === 'organization' && roleName === 'Admin'
@@ -491,29 +460,29 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
     if (roleType === 'individual' && model.toLowerCase() !== 'scheduleassessment') {
       query.ownerId = userId;
-      console.log('[18] Individual user - adding ownerId filter:', query);
+      console.log('[13] Individual user - adding ownerId filter:', query);
     } else if (roleType === 'organization' && roleName !== 'Admin') {
       if(model.toLowerCase() === 'scheduleassessment') {
         // For scheduled assessments, organization non-admin can see all under same organization
       }
       if (inheritedRoleIds?.length > 0) {
-        console.log('[19] Non-admin org user with inherited roles:', inheritedRoleIds);
+        console.log('[14] Non-admin org user with inherited roles:', inheritedRoleIds);
         const accessibleUsers = await Users.find({
           tenantId,
           roleId: { $in: inheritedRoleIds },
         }).select('_id');
         
         const userIds = accessibleUsers.map(user => user._id);
-        console.log('[20] Accessible user IDs from inherited roles:', userIds);
+        console.log('[15] Accessible user IDs from inherited roles:', userIds);
         
         query.ownerId = { $in: userIds };
       } else {
-        console.log('[21] Non-admin org user with no inherited roles - using own userId');
+        console.log('[16] Non-admin org user with no inherited roles - using own userId');
         query.ownerId = userId;
       }
-      console.log('[22] Final query after org user processing:', query);
+      console.log('[17] Final query after org user processing:', query);
     } else {
-      console.log('[23] Organization Admin - only tenantId filter applied');
+      console.log('[18] Organization Admin - only tenantId filter applied');
     // Ensure scheduled assessments are not restricted by ownerId
     if(model.toLowerCase() === 'scheduleassessment') {
       delete query.ownerId;
@@ -523,7 +492,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     let data;
     switch (model.toLowerCase()) {
       case 'mockinterview':
-        console.log('[24] Processing MockInterview model');
+        console.log('[19] Processing MockInterview model');
         data = await DataModel.find(query)
           .populate({
             path: 'rounds.interviewers',
@@ -531,16 +500,16 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             select: 'firstName lastName email',
           })
           .lean();
-        console.log('[25] Found', data.length, 'MockInterview records');
+        console.log('[20] Found', data.length, 'MockInterview records');
         break;
 
       case 'tenantquestions':
-        console.log('[26] Processing TenantQuestions model');
+        console.log('[21] Processing TenantQuestions model');
         const lists = await TenantQuestionsListNames.find(query).lean();
-        console.log('[27] Found', lists.length, 'question lists');
+        console.log('[22] Found', lists.length, 'question lists');
         
         const listIds = lists.map((list) => list._id);
-        console.log('[28] List IDs to filter questions:', listIds);
+        console.log('[23] List IDs to filter questions:', listIds);
 
         const questions = await TenantQuestions.find({
           ...query,
@@ -557,7 +526,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           })
           .lean();
 
-        console.log('[29] Found', questions.length, 'questions matching lists');
+        console.log('[24] Found', questions.length, 'questions matching lists');
 
         const groupedQuestions = lists.reduce((acc, list) => {
           acc[list.label] = [];
@@ -578,20 +547,20 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         });
 
         data = groupedQuestions;
-        console.log('[30] Grouped questions by', Object.keys(groupedQuestions).length, 'categories');
+        console.log('[25] Grouped questions by', Object.keys(groupedQuestions).length, 'categories');
         break;
 
       case 'interview':
-        console.log('[31] Processing Interview model');
+        console.log('[26] Processing Interview model');
         const interviews = await DataModel.find(query)
           .populate({ path: 'candidateId', model: 'Candidate' })
           .populate({ path: 'positionId', model: 'Position' })
           .populate({ path: 'templateId', model: 'InterviewTemplate' })
           .lean();
 
-        console.log('[32] Found', interviews.length, 'interviews');
+        console.log('[27] Found', interviews.length, 'interviews');
         const interviewIds = interviews.map((interview) => interview._id);
-        console.log('[33] Interview IDs for related data:', interviewIds);
+        console.log('[28] Interview IDs for related data:', interviewIds);
 
         const roundsData = await InterviewRounds.find({ 
           interviewId: { $in: interviewIds },
@@ -604,7 +573,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           })
           .lean();
 
-        console.log('[34] Found', roundsData.length, 'interview rounds');
+        console.log('[29] Found', roundsData.length, 'interview rounds');
 
         const interviewQuestions = await InterviewQuestions.find({
           interviewId: { $in: interviewIds },
@@ -613,7 +582,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .select('roundId snapshot')
           .lean();
 
-        console.log('[35] Found', interviewQuestions.length, 'interview questions');
+        console.log('[30] Found', interviewQuestions.length, 'interview questions');
 
         const roundsWithQuestions = roundsData.map((round) => ({
           ...round,
@@ -624,19 +593,19 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           ...interview,
           rounds: roundsWithQuestions.filter((round) => round.interviewId.equals(interview._id)),
         }));
-        console.log('[36] Final interview data with rounds and questions prepared');
+        console.log('[31] Final interview data with rounds and questions prepared');
         break;
 
       default:
-        console.log('[37] Processing generic model:', model);
+        console.log('[32] Processing generic model:', model);
         data = await DataModel.find(query).lean();
-        console.log('[38] Found', data.length, 'records for model', model);
+        console.log('[33] Found', data.length, 'records for model', model);
     }
 
-    console.log('[39] Sending response with data');
+    console.log('[34] Sending response with data');
     res.status(200).json({ data });
   } catch (error) {
-    console.error('[40] Error in request processing:', {
+    console.error('[35] Error in request processing:', {
       error: error.message,
       stack: error.stack,
       model: req.params.model,
