@@ -198,7 +198,7 @@ function TenantsPage() {
 
   // Simple loading state - only show loading if we have no data and are loading
   if (isLoading && (!tenants || tenants.length === 0)) {
-    return <Loading />;
+    return <Loading message="Loading tenants..." />;
   }
 
   // Show content even if permissions are still loading but we have data

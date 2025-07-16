@@ -1136,12 +1136,10 @@ const getAllOrganizations = async (req, res) => {
     // Fetch all tenants
     const organizations = await Tenant.find().lean();
 
-
     // Fetch all subscriptions and get latest per tenant (sorted by createdAt descending)
     const allSubscriptions = await CustomerSubscription.find()
       .sort({ _id: -1 })
       .lean();
-
 
     // Map latest subscription by tenantId
     const subscriptionMap = {};
@@ -1212,32 +1210,119 @@ const getAllOrganizations = async (req, res) => {
       code: error.code,
       details: error.details,
     });
-    return res
-      .status(500)
-      .json({
-        message: "Internal server error",
-        error: error.message,
-        status: false,
-      });
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+      status: false,
+    });
   }
 };
+
+// const getOrganizationById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     if (!id || typeof id !== "string") {
+//       return res.status(400).json({ message: "Invalid organization ID" });
+//     }
+
+//     const users = await Users.find({ tenantId: id }).select("-password");
+
+//     const organization = await Tenant.findOne({ _id: id }).lean();
+
+//     // Fetch subscription data for the given tenant
+//     const subscription = await CustomerSubscription.findOne({ tenantId: id });
+
+//     // Fetch full subscription plan details using subscriptionPlanId
+//     let subscriptionPlan = null;
+//     if (subscription?.subscriptionPlanId) {
+//       subscriptionPlan = await SubscriptionPlan.findById(
+//         subscription.subscriptionPlanId
+//       ).lean();
+//     }
+
+//     // Fetch contacts for all users under this tenant
+//     const allContacts = await Contacts.find({ tenantId: id }).lean();
+
+//     const usersWithRoleAndContact = await Promise.all(
+//       users.map(async (user) => {
+//         let roleName = null;
+
+//         if (user.roleId) {
+//           const role = await RolesPermissionObject.findById(user.roleId).select(
+//             "roleName"
+//           );
+//           if (role) {
+//             roleName = role.roleName;
+//           }
+//         }
+
+//         // Find contact for this user
+//         const contact = allContacts.find(
+//           (contact) => contact.ownerId?.toString() === user._id.toString()
+//         );
+
+//         return {
+//           ...user,
+//           roleName,
+//           contact, // attach the contact object if available
+//         };
+//       })
+//     );
+
+//     // Fetch recent activity
+//     const recentActivityRaw = await RecentActivity.find({ tenantId: id })
+//       .sort({ timestamp: -1 })
+//       .limit(10)
+//       .lean();
+
+//     // Map contact data to each activity's userId
+//     // Map contact data to each activity's entityId
+//     const recentActivityWithContact = recentActivityRaw.map((activity) => {
+//       const contact = allContacts.find(
+//         (contact) =>
+//           contact.ownerId?.toString() === activity.entityId?.toString()
+//       );
+
+//       return {
+//         ...activity,
+//         contact,
+//       };
+//     });
+
+//     const tenant = {
+//       tenant: {
+//         ...(organization || {}),
+//         ...(subscription || {}),
+//         subscriptionPlan,
+//         recentActivity: recentActivityWithContact,
+//       },
+//       users: usersWithRoleAndContact,
+//     };
+
+//     return res.status(200).json({ organization: tenant });
+//   } catch (error) {
+//     console.log("Error fetching organization:", error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+//ashraf
 
 const getOrganizationById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id || typeof id !== "string") {
       return res.status(400).json({ message: "Invalid organization ID" });
     }
 
-    const users = await Users.find({ tenantId: id }).select("-password");
+    const users = await Users.find({ tenantId: id }).select("-password").lean();
+    const organization = await Tenant.findOne({ _id: id }).lean();
+    const subscription = await CustomerSubscription.findOne({
+      tenantId: id,
+    }).lean();
 
-    const organization = await Tenant.findById(id);
-
-    // Fetch subscription data for the given tenant
-    const subscription = await CustomerSubscription.findOne({ tenantId: id });
-
-    // Fetch full subscription plan details using subscriptionPlanId
     let subscriptionPlan = null;
     if (subscription?.subscriptionPlanId) {
       subscriptionPlan = await SubscriptionPlan.findById(
@@ -1245,7 +1330,6 @@ const getOrganizationById = async (req, res) => {
       ).lean();
     }
 
-    // Fetch contacts for all users under this tenant
     const allContacts = await Contacts.find({ tenantId: id }).lean();
 
     const usersWithRoleAndContact = await Promise.all(
@@ -1253,41 +1337,36 @@ const getOrganizationById = async (req, res) => {
         let roleName = null;
 
         if (user.roleId) {
-          const role = await RolesPermissionObject.findById(user.roleId).select(
-            "roleName"
-          );
+          const role = await RolesPermissionObject.findById(user.roleId)
+            .select("roleName")
+            .lean();
           if (role) {
             roleName = role.roleName;
           }
         }
 
-        // Find contact for this user
         const contact = allContacts.find(
           (contact) => contact.ownerId?.toString() === user._id.toString()
         );
 
         return {
-          ...user.toObject(),
+          ...user,
           roleName,
-          contact, // attach the contact object if available
+          contact,
         };
       })
     );
 
-    // Fetch recent activity
     const recentActivityRaw = await RecentActivity.find({ tenantId: id })
       .sort({ timestamp: -1 })
       .limit(10)
       .lean();
 
-    // Map contact data to each activity's userId
-    // Map contact data to each activity's entityId
     const recentActivityWithContact = recentActivityRaw.map((activity) => {
       const contact = allContacts.find(
         (contact) =>
           contact.ownerId?.toString() === activity.entityId?.toString()
       );
-
       return {
         ...activity,
         contact,
@@ -1296,8 +1375,8 @@ const getOrganizationById = async (req, res) => {
 
     const tenant = {
       tenant: {
-        ...organization.toObject(),
-        ...subscription,
+        ...(organization || {}),
+        ...(subscription || {}),
         subscriptionPlan,
         recentActivity: recentActivityWithContact,
       },
@@ -1306,12 +1385,10 @@ const getOrganizationById = async (req, res) => {
 
     return res.status(200).json({ organization: tenant });
   } catch (error) {
-    console.log("Error fetching organization:", error);
+    console.error("Error fetching organization:", error.message, error.stack);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
-//ashraf
 
 const superAdminLoginAsUser = async (req, res) => {
   try {
