@@ -6,8 +6,8 @@ export const validateQuestionBankData = (formData, mcqOptions,section) => {
         questionType: "Question Type is required",
         skill: "Skill is required",
         difficultyLevel: "Difficulty Level is required",
-        minexperience: "Min experience is required",
-        maxexperience: "Max experience is required",
+        minexperience: "Min Experience is required",
+        maxexperience: "Max Experience is required",
         // score: "Score is required",
         ...(section==="assessmet" && {score:"score is required"}),
         correctAnswer: "Answer is required",
@@ -30,7 +30,7 @@ export const validateQuestionBankData = (formData, mcqOptions,section) => {
         const minExp = parseInt(formData.minexperience, 10);
         const maxExp = parseInt(formData.maxexperience, 10);
         if (!isNaN(minExp) && !isNaN(maxExp) && maxExp <= minExp) {
-            errors.maxexperience = "Max experience must be greater than Min experience";
+            errors.maxexperience = "Max Experience must be greater than Min Experience";
         }
     }
 
