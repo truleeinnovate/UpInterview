@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  assessment template id not getting issues,on save or save next 2 button loading issues.only load wich button u have clicked
+// v1.0.1  -  Ashraf  -  assessment file name changed
 import React, {
   useState,
   useRef,
@@ -18,7 +19,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import BasicDetailsTab from "./BasicDetailsTab.jsx";
 import AssessmentTestDetailsTab from "./AssessmentTestDetailsTab.jsx";
 import AssessmentQuestionsTab from "./AssessmentQuestionsTab.jsx";
-import AssessmentsTab from '../AssessmentViewDetails/Assessment-View-AssessmentTab.jsx';
+// <---------------------- v1.0.1
+import AssessmentsTab from '../AssessmentViewDetails/AssessmentViewAssessmentTab.jsx';
+// <---------------------- v1.0.1 >
 import PassScore from "./PassScore.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from "../../../../../config.js";

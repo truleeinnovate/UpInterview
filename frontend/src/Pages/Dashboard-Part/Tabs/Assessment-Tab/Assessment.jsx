@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  assessment template id not getting issues
+// v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -161,17 +162,19 @@ const Assessment = () => {
   };
 
   // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
   const handleView = (assessment) => {
-    if (effectivePermissions.Assessment_Template?.View) {
+    if (effectivePermissions.AssessmentTemplates?.View) {
       navigate(`/assessments-template-details/${assessment._id}`);
     }
   };
 
   const handleEdit = (assessment) => {
-    if (effectivePermissions.Assessment_Template?.Edit) {
+    if (effectivePermissions.AssessmentTemplates?.Edit) {
       navigate(`/assessments-template/edit/${assessment._id}`);
     }
   };
+  // <---------------------- v1.0.1 >
 
   const handleShareClick = (assessment) => {
     if ((assessmentSections[assessment._id] ?? 0) > 0) {
@@ -244,8 +247,9 @@ const Assessment = () => {
     },
   ];
   // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
   const tableActions = [
-    ...(effectivePermissions.Assessment_Template?.View
+    ...(effectivePermissions.AssessmentTemplates?.View
       ? [
           {
             key: "view",
@@ -255,8 +259,9 @@ const Assessment = () => {
           },
         ]
       : []),
-    ...(effectivePermissions.Assessment_Template?.Edit
+    ...(effectivePermissions.AssessmentTemplates?.Edit
       // <---------------------- v1.0.0
+      // <---------------------- v1.0.1
       ? [
           {
             key: "edit",
@@ -311,7 +316,9 @@ const Assessment = () => {
               title="Assessment Templates"
               onAddClick={() => navigate("/assessments-template/new")}
               addButtonText="New Template"
-              canCreate={effectivePermissions.Assessment_Template?.Create}
+              // <---------------------- v1.0.1
+              canCreate={effectivePermissions.AssessmentTemplates?.Create}
+              // <---------------------- v1.0.1 >
             />
             <Toolbar
               view={viewMode}

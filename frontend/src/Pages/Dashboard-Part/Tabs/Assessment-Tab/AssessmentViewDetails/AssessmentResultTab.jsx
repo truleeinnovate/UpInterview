@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  reduce error solved
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ChevronUpIcon, ChevronDownIcon, UserPlusIcon } from '@heroicons/react/24/outline';
@@ -42,13 +43,14 @@ useEffect(() => {
     setSelectedCandidate(null);
     setSelectedSchedule(null);
   };
-
+// <---------------------- v1.0.0
   // Calculate statistics
-  const totalCandidates = results.reduce((sum, schedule) => sum + schedule.candidates.length, 0);
-  const passedCandidates = results.reduce(
-    (sum, schedule) => sum + schedule.candidates.filter((c) => c.result === 'pass').length,
+  const totalCandidates = results?.reduce((sum, schedule) => sum + (schedule.candidates?.length || 0), 0) || 0;
+  const passedCandidates = results?.reduce(
+    (sum, schedule) => sum + (schedule.candidates?.filter((c) => c.result === 'pass')?.length || 0),
     0
-  );
+  ) || 0;
+  // <---------------------- v1.0.0 >
   const failedCandidates = totalCandidates - passedCandidates;
 
   if (loading) return <div className="p-4">Loading results...</div>;
@@ -87,7 +89,7 @@ useEffect(() => {
       </div>
 
       <div className="space-y-4">
-        {results.length > 0 ? (
+        {results && results.length > 0 ? (
           results.map((schedule, index) => (
             <div key={schedule.scheduleId} className="bg-white rounded-xl shadow-md overflow-hidden">
               <div
@@ -153,7 +155,7 @@ useEffect(() => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {schedule.candidates.length > 0 ? (
+                        {schedule.candidates && schedule.candidates.length > 0 ? (
                           schedule.candidates.map((candidate) => (
                             <tr key={candidate.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">

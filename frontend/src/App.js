@@ -1,4 +1,5 @@
 // v1.0.0  -  mansoor  -  removed unnecessary comments from this file
+//v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -622,26 +623,26 @@ const MainAppRoutes = ({
                 <Route path="/questionBank" element={<QuestionBank />} />
               )}
 
-              {/* Assessment_Template */}
-              {hasPermission("Assessment_Template") && (
+              {/* AssessmentTemplates */}
+              {hasPermission("AssessmentTemplates") && (
                 <>
                   <Route
                     path="/assessments-template"
                     element={<Assessment />}
                   />
-                  {hasPermission("Assessment_Template", "Create") && (
+                  {hasPermission("AssessmentTemplates", "Create") && (
                     <Route
                       path="/assessments-template/new"
                       element={<AssessmentForm />}
                     />
                   )}
-                  {hasPermission("Assessment_Template", "View") && (
+                  {hasPermission("AssessmentTemplates", "View") && (
                     <Route
                       path="/assessments-template-details"
                       element={<AssessmentDetails />}
                     />
                   )}
-                  {hasPermission("Assessment_Template", "Edit") && (
+                  {hasPermission("AssessmentTemplates", "Edit") && (
                     <Route
                       path="/assessments-template/edit/:id"
                       element={<AssessmentForm />}
@@ -661,8 +662,10 @@ const MainAppRoutes = ({
                       path="candidate-details/:id"
                       element={<CandidateDetails mode="Assessment" />}
                     />
-                    {hasPermission("Assessment_Template", "Edit") && (
-                      <Route
+                    {/* // <---------------------- v1.0.1 */}
+                    {hasPermission("AssessmentTemplates", "Edit") && (
+                      // v1.0.1---------------------- >
+                                            <Route
                         path="assessments-template/edit/:id"
                         element={<AssessmentForm />}
                       />

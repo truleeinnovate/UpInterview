@@ -1,8 +1,11 @@
+// v1.0.0  -  Ashraf  -  assessment view name changed
 import { useState, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import { Minimize, Expand, X } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import AssessmentsTab from './Assessment-View-AssessmentTab.jsx';
+// <---------------------- v1.0.0
+import AssessmentsTab from './AssessmentViewAssessmentTab.jsx';
+// <---------------------- v1.0.0 >
 import AssessmentResultsTab from './AssessmentResultTab.jsx';
 import DetailsTab from './AssessmentDetailTab.jsx';
 import QuestionsTab from './AsseessmentQuestionsTab.jsx';
