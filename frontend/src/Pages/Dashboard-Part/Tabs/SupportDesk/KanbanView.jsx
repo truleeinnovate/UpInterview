@@ -1,4 +1,7 @@
 /* eslint-disable react/prop-types */
+
+// version 0.0.0-----Venkatesh---in kanban view 4 cards shown in 2xl grid
+
 import { motion } from 'framer-motion';
 import { FaEye, FaPencilAlt } from 'react-icons/fa';
 import { format, isValid, parseISO } from 'date-fns';
@@ -143,7 +146,9 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
             {tickets?.length} Tickets
           </motion.span>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full pb-20">
+        {/*version 0.0.0----- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5 w-full pb-20">
+          {/*version 0.0.0----- */}
           {currentTickets.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
               <Briefcase className="w-16 h-16 text-gray-300 mb-4" />

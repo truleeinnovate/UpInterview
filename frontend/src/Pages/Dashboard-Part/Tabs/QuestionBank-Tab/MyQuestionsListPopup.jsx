@@ -1,3 +1,6 @@
+// version 0.0.0 ------ Venkatesh------ I’ve set both “Save” buttons inside to type="button", preventing them from triggering the parent <form> submit.Now, when you create or update a Question List, the main form’s validation won’t fire unexpectedly.
+
+
 import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
 import Cookies from 'js-cookie';
@@ -265,7 +268,7 @@ const MyQuestionsList1 = forwardRef(
                         }
                       }}
                     />
-                    {list.label.charAt(0).toUpperCase() + list.label.slice(1)}
+                    {list.label ?list.label.charAt(0).toUpperCase() + list.label.slice(1) : ""}
                   </label>
                 ))
               )}
@@ -273,6 +276,8 @@ const MyQuestionsList1 = forwardRef(
 
             <div className="border-t mt-2 flex justify-end p-2">
               <LoadingButton
+              // version 0.0.0-------
+                type="button"
                 onClick={handleAddToList}
                 isLoading={addQuestionToListLoading}
                 loadingText="Updating..."
@@ -477,6 +482,8 @@ const MyQuestionsList1 = forwardRef(
               </div>
               <div className="flex justify-end border-t p-3 rounded-b-md text-sm">
                 <LoadingButton
+                // version 0.0.0-------
+                  type="button"
                   onClick={handleSave}
                   isLoading={saveOrUpdateListLoading}
                   loadingText={isEditing ? 'Updating...' : 'Saving...'}

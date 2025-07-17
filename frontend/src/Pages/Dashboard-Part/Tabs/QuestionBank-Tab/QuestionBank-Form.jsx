@@ -1,3 +1,5 @@
+// version 0.0.0 ----- Venkatesh ---min experience and max experience validation added
+
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -1068,12 +1070,9 @@ useEffect(() => {
                               onClick={toggleDropdownMinExperience}
                               readOnly
                             />
-                            {errors.minexperience && (
-                              <p className="text-red-500 text-sm -mt-4">
-                                {errors.minexperience}
-                              </p>
-                            )}
+                            
                           </div>
+
                           {showDropdownMinExperience && (
                             <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg">
                               {minExperienceOptions.map((option) => (
@@ -1089,9 +1088,20 @@ useEffect(() => {
                               ))}
                             </div>
                           )}
+                          
                         </div>
+
                       </div>
+                      {errors.minexperience && (
+                        // version 0.0.0 ----- 
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.minexperience}
+                              </p>
+                        // version 0.0.0 ----- 
+                            )}
                     </div>
+                    
+                    
 
                     {/* Max Experience */}
                     <div >
@@ -1117,11 +1127,7 @@ useEffect(() => {
                               onClick={toggleDropdownMaxExperience}
                               readOnly
                             />
-                            {errors.maxexperience && (
-                              <p className="text-red-500 text-sm -mt-4">
-                                {errors.maxexperience}
-                              </p>
-                            )}
+                            
                           </div>
                           {showDropdownMaxExperience && (
                             <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg">
@@ -1139,7 +1145,13 @@ useEffect(() => {
                           )}
                         </div>
                       </div>
+                      {errors.maxexperience && (
+                        // version 0.0.0 ----- 
+                        <p className="text-red-500 text-xs mt-1">{errors.maxexperience}</p>
+                        // version 0.0.0 ----- 
+                      )}
                     </div>
+                    
                   </div>
                   {/* </div> */}
 
