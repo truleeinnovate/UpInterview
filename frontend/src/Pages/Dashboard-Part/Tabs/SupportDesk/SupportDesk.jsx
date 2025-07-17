@@ -1,4 +1,6 @@
 /* eslint-disable react/prop-types */
+//<---------------------- v1.0.0----Venkatesh----in header add padding at top
+
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Plus } from "lucide-react";
@@ -307,7 +309,9 @@ function SupportDesk() {
   return (
     <div className="bg-background h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-12 left-0 right-0 bg-background">
-        <main className="px-6">
+        {/*<-------v1.0.0------- */}
+        <main className="px-6 pt-6">
+          {/*-------v1.0.0-------> */}
           <div className="sm:px-0">
             <Header
               title="Support Desk"
