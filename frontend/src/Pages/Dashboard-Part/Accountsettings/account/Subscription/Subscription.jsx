@@ -1,3 +1,5 @@
+// ----- v1.0.0 ----- Venkatesh----update LoadingButton colors
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -455,50 +457,51 @@ const Subscription = () => {
                   </p>
                 </div>
                 <LoadingButton
-                  onClick={() => submitPlans(plan)}
-                  isLoading={isMutationLoading}
-                  loadingText="Processing..."
-                  className={`w-full font-semibold py-2 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm md:text-base lg:text-lg mt-4 transition-all duration-200   shadow-lg border
-
-                    ${isHighlighted(plan) ? "bg-white hover:bg-white text-black " : "text-black bg-white hover:bg-white shadow-slate-50"}
-                    ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}
-                    ${(() => {
-                      // Check if this is an upgrade button
-                      if (subscriptionData.subscriptionPlanId) {
-                        const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
-                        const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
-                        if (currentPlanIndex !== -1 && thisPlanIndex > currentPlanIndex &&
-                          subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly")) {
-                          return "upgrade-button-animation";
-                        }
-                      }
-                      return "";
-                    })()}`}
-                  disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"}
-                >
-                  {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"
-                    ? "Subscribed"
-                    : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "created"
-                      ? "Continue to Payment"
-                      : (() => {
-                        // Determine if this plan is higher or lower than current plan
-                        if (subscriptionData.subscriptionPlanId) {
-                          const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
-                          const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
-
-                          // Only compare plans when viewing the same billing cycle as the current subscription
-                          if (subscriptionData.selectedBillingCycle !== (isAnnual ? "annual" : "monthly")) {
-                            return "Choose";
-                          }
-
-                          // If current plan index exists and this plan index exists
-                          if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
-                            return thisPlanIndex > currentPlanIndex ? "Upgrade" : "Choose";
-                          }
-                        }
-                        return "Choose";
-                      })()}
-                </LoadingButton>
+                onClick={() => submitPlans(plan)}
+                isLoading={isMutationLoading}
+                loadingText="Processing..."
+                // <----- v1.0.0 -----
+                className={`w-full font-semibold py-2 mt-4 rounded-lg text-xs
+                ${isHighlighted(plan) ? "bg-[#bcedf6] text-black hover:bg-[#bcedf6] hover:text-black" : "bg-custom-blue text-white hover:bg-custom-blue hover:text-white"}
+                ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}
+                ${(() => {
+                  // Check if this is an upgrade button
+                  if (subscriptionData.subscriptionPlanId) {
+                    const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
+                    const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
+                    if (currentPlanIndex !== -1 && thisPlanIndex > currentPlanIndex && 
+                        subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly")) {
+                      return "upgrade-button-animation";
+                    }
+                  }
+                  return "";
+                })()}`}
+                // ----- v1.0.0----->
+                disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"}
+              >
+                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"
+              ? "Subscribed"
+              : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "created"
+              ? "Continue to Payment"
+              : (() => {
+                  // Determine if this plan is higher or lower than current plan
+                  if (subscriptionData.subscriptionPlanId) {
+                    const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
+                    const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
+                    
+                    // Only compare plans when viewing the same billing cycle as the current subscription
+                    if (subscriptionData.selectedBillingCycle !== (isAnnual ? "annual" : "monthly")) {
+                      return "Choose";
+                    }
+                    
+                    // If current plan index exists and this plan index exists
+                    if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
+                      return thisPlanIndex > currentPlanIndex ? "Upgrade" : "Choose";
+                    }
+                  }
+                  return "Choose";
+                })()}
+              </LoadingButton>
 
               </div>
             ))}

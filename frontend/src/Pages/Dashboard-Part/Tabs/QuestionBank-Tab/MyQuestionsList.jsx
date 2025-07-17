@@ -1,3 +1,6 @@
+// v1.0.0 ------ Venkatesh--- check list name using ternary operator
+
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
 import { ReactComponent as IoIosArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
@@ -628,7 +631,9 @@ const selectedLabelId = useMemo(() => {
                       title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
                     >
                       <div className="flex justify-between items-center">
-                        <span className="truncate">{listName.charAt(0).toUpperCase() + listName.slice(1)}</span>
+                        {/*<-------v1.0.0------ */}
+                        <span className="truncate">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</span>
+                        {/*-------v1.0.0------>*/}
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${
                             groupedQuestions[listName].length === 0

@@ -1,4 +1,7 @@
 /* eslint-disable react/prop-types */
+
+// v1.0.0 ------ Venkatesh---changes in full screen mode icons and remove footer border-top
+
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -317,25 +320,27 @@ const SupportForm = () => {
             <h2 className="text-2xl font-semibold text-custom-blue">
               {editMode ? "Edit Support Ticket" : "New Support Ticket"}
             </h2>
+            {/* <------v1.0.0-----*/}
             <div className="flex items-center gap-2">
-              <button
-                onClick={toggleFullWidth}
-                className="focus:outline-none hover:bg-opacity-10 hover:bg-white rounded-full p-1 transition-all duration-200"
-                title={isFullWidth ? "Exit Full Screen" : "Full Screen"}
-              >
-                {isFullWidth ? (
-                  <Minimize className="text-2xl" />
-                ) : (
-                  <Expand className="text-2xl" />
-                )}
-              </button>
-              <button
-                onClick={() => navigate("/support-desk")}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+                <button
+                  onClick={toggleFullWidth}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+                  title={isFullWidth ? "Exit Full Screen" : "Full Screen"}
+                >
+                  {isFullWidth ? (
+                    <Minimize className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <Expand className="w-5 h-5 text-gray-500" />
+                  )}
+                </button>
+                <button
+                  onClick={() => navigate("/support-desk")}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* -----v1.0.0----->*/}
           </div>
         </div>
 
@@ -508,7 +513,9 @@ const SupportForm = () => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 p-5 bg-white border-t">
+          {/* <-----v1.0.0 ------ */}
+          <div className="flex justify-end gap-3 p-5 bg-white">
+            {/* -----v1.0.0 ------> */}
             <button
               type="button"
               onClick={() => navigate("/support-desk")}
