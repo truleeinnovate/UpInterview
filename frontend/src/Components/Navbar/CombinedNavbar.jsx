@@ -1,3 +1,4 @@
+// v1.0.0 - Mansoor - adjust the height of navbar (superadmin and normal user) for removing the gap below the navbar and home content and account settings
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -635,9 +636,11 @@ const CombinedNavbar = () => {
 
   return (
     <>
-      <div className={`bg-white fixed top-0 left-0 right-0 z-50 shadow-sm ${userType === 'superAdmin' ? 'border-b border-gray-200 h-[52px]' : ''}`}>
-        <div className={`mx-auto relative ${userType === 'superAdmin' ? 'h-full' : ''}`}>
-          <div className={`flex justify-between items-center ${userType === 'superAdmin' ? 'px-2 h-full' : 'border-gray-100 p-2 sm:px-4'}`}>
+    {/* <------------------------------- v1.0.0 */}
+      <div className={`bg-white fixed top-0 left-0 right-0 z-50 shadow-sm ${userType === 'superAdmin' ? 'border-b border-gray-200' : ''}`}>
+        <div className='mx-auto relative'>
+          <div className={`flex justify-between items-center ${userType === 'superAdmin' ? 'px-2 py-1' : 'border-gray-100 p-3 sm:px-4'}`}>
+            {/* v1.0.0  ----------------------> */}
             {/* Mobile menu button and logo */}
             <div className="flex items-center">
               <button
