@@ -1,3 +1,4 @@
+// v1.0.0  -  Mansoor  -  removed required for description
 export const validateInterviewTemplate = (templateData) => {
   const errors = {};
   let isValid = true;
@@ -20,17 +21,19 @@ export const validateInterviewTemplate = (templateData) => {
     isValid = false;
   }
 
-  // Validate description
-  if (!templateData.description || !templateData.description.trim()) {
-    errors.description = 'Description is required';
-    isValid = false;
-  } else if (templateData.description.trim().length < 20) {
-    errors.description = `Description must be at least 20 characters (currently ${templateData.description.trim().length}/20)`;
-    isValid = false;
-  } else if (templateData.description.trim().length > 300) {
-    errors.description = 'Description cannot exceed 300 characters';
-    isValid = false;
-  }
+  // <---------------------- v1.0.0
+  // // Validate description
+  // if (!templateData.description || !templateData.description.trim()) {
+  //   errors.description = 'Description is required';
+  //   isValid = false;
+  // } else if (templateData.description.trim().length < 20) {
+  //   errors.description = `Description must be at least 20 characters (currently ${templateData.description.trim().length}/20)`;
+  //   isValid = false;
+  // } else if (templateData.description.trim().length > 300) {
+  //   errors.description = 'Description cannot exceed 300 characters';
+  //   isValid = false;
+  // }
+  // v1.0.0 ---------------------->
 
   // Validate rounds (if provided)
   if (templateData.rounds && templateData.rounds.length > 0) {

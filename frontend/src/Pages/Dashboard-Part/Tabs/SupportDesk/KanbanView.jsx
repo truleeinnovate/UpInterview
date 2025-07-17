@@ -5,9 +5,13 @@ import { format, isValid, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase } from "lucide-react";
 
-
-const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading = false }) => {
+const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, effectivePermissions_RoleName, impersonatedUser_roleName, impersonationPayloadID }) => {
   const navigate = useNavigate();
+
+  // Determine effective role based on impersonation
+  const effectiveRole = effectivePermissions_RoleName;
+  console.log("userRole===",effectiveRole)
+  console.log("impersonatedUser_roleName==",impersonatedUser_roleName)
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -46,11 +50,11 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
   };
 
   const hasActionAccess = (ticket) => {
-    if (userRole === 'SuperAdmin') {
+    if (impersonatedUser_roleName === 'Super_Admin') {
       return true;
-    } else if (userRole === 'Support Team') {
+    } else if (impersonatedUser_roleName === 'Support_Team') {
       return ticket.assignedToId === currentUserId || ticket.owner === currentUserId;
-    } else if (userRole === 'Admin') {
+    } else if (effectiveRole === 'Admin') {
       return true;
     } else {
       return ticket.assignedToId === currentUserId;
@@ -164,7 +168,7 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
                     className="flex-1 min-w-0 cursor-pointer"
                     onClick={() =>
                       navigate(
-                        userRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
+                        effectiveRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
                         { state: { ticketData: ticket } }
                       )
                     }
@@ -173,11 +177,11 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
                     <h4
                       className="text-xl font-medium text-custom-blue truncate"
                       onClick={() => {
-                        if (userRole === 'Admin') {
+                        if (effectiveRole === 'Admin') {
                           navigate(`/support-desk/${ticket._id}`, {
                             state: { ticketData: ticket },
                           });
-                        } else if (userRole === 'SuperAdmin' || userRole === 'Support Team') {
+                        } else if (effectiveRole === 'SuperAdmin' || effectiveRole === 'Support Team') {
                           navigate(`/support-desk/view/${ticket._id}`, {
                             state: { ticketData: ticket },
                           });
@@ -196,16 +200,16 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
                           whileTap={{ scale: 0.9 }}
                           onClick={() =>
                             navigate(
-                              userRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
+                              effectiveRole === 'Admin' ? `/support-desk/${ticket._id}` : (impersonatedUser_roleName === "Support_Team" && ticket.assignedToId === impersonationPayloadID ) ? `/support-desk/view/${ticket._id}`:  impersonatedUser_roleName === "Super_Admin" ? `/support-desk/view/${ticket._id}`: `/support-desk/${ticket._id}`,
                               { state: { ticketData: ticket } }
                             )
                           }
                           title="View Details"
-                          className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                         >
                           <FaEye className="w-4 h-4" />
                         </motion.button>
-                        {userRole === 'Admin' && (
+                        {effectiveRole === 'Admin' && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -250,7 +254,7 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
                         {ticket.status || 'N/A'}
                       </span>
                     </motion.div>
-                    {(userRole === 'SuperAdmin' || userRole === 'Support Team') && (
+                    {(impersonatedUser_roleName === 'Super_Admin' || impersonatedUser_roleName === 'Support_Team') && (
                       <motion.div
                         className="flex items-center gap-1.5"
                         whileHover={{ scale: 1.05 }}
@@ -261,7 +265,7 @@ const KanbanView = ({ userRole, currentTickets, tickets, currentUserId, loading 
                       </motion.div>
                     )}
                   </div>
-                  {userRole === 'SuperAdmin' && (
+                  {impersonatedUser_roleName === 'Super_Admin' && (
                     <div className="grid grid-cols-2 gap-2">
                       <motion.div
                         className="flex items-center gap-1.5 text-gray-600"

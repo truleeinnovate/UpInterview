@@ -351,7 +351,9 @@ function SupportDesk() {
               <KanbanView
                 currentTickets={currentFilteredRows}
                 tickets={tickets}
-                userRole={userRole}
+                effectivePermissions_RoleName={effectivePermissions_RoleName}
+                impersonatedUser_roleName={impersonatedUser_roleName}
+                impersonationPayloadID={impersonationPayload?.impersonatedUserId}
                 loading={isLoading}
                 currentUserId={currentUserId}
               />

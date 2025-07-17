@@ -1,3 +1,7 @@
+/* v1.0.0 - Ashok - Fixed an error occurring when clicking the 'Add Candidate' button. 
+   The candidate was saved successfully the first time, but an error occurred on the second attempt
+*/
+
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
 import Modal from "react-modal";
@@ -458,6 +462,16 @@ const AddCandidateForm = ({ mode }) => {
     setIsProfilePicRemoved(true);
   };
 
+  // v1.0.0 <-------------------------------------------------------------------
+  const resetImage = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.value = ""; // Reset input value Added by Ashok
+    }
+    // setImageFile(null);
+    setImagePreview(null);
+    setSelectedImage(null);
+  };
+  // -------------------------------------------------------------------------->
   const removeResume = () => {
     // setResumeFile(null);
     if (resumeInputRef.current) {
@@ -466,7 +480,15 @@ const AddCandidateForm = ({ mode }) => {
     setSelectedResume(null);
     setIsResumeRemoved(true);
   };
-
+  // v1.0.0 <-------------------------------------------------------------------
+  const resetResume = () => {
+    // setResumeFile(null);
+    if (resumeInputRef.current) {
+      resumeInputRef.current.value = ""; // Reset input value Added by Ashok
+    }
+    setSelectedResume(null);
+  };
+  // -------------------------------------------------------------------------->
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -513,8 +535,12 @@ const AddCandidateForm = ({ mode }) => {
     setSelectedLevel("");
     setEditingIndex(null);
     setCurrentStep(0);
-    removeImage();
-    removeResume();
+    // v1.0.0 <------------------------------------------------------------------
+    // removeImage();
+    // removeResume();
+    resetImage();
+    resetResume();
+    // -------------------------------------------------------------------------->
     setAllSelectedSkills([]);
   };
 
@@ -624,8 +650,6 @@ const AddCandidateForm = ({ mode }) => {
     }
   };
 
-  
-
   const modalClass = classNames(
     "fixed bg-white shadow-2xl border-l border-gray-200",
     {
@@ -733,7 +757,7 @@ const AddCandidateForm = ({ mode }) => {
                 <p className="mt-2 text-sm font-medium text-gray-700">
                   Profile Photo
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 text-center">
                   Maximum file size: 100KB, (200×200 recommended).
                 </p>
                 <p className="text-xs text-red-500 font-medium text-center mt-1">
@@ -821,8 +845,12 @@ const AddCandidateForm = ({ mode }) => {
                   )}
                 </div>
 
-                <p className="mt-2 text-sm font-medium text-gray-700">Resume</p>
-                <p className="text-xs text-gray-500">Maximum file size: 4MB</p>
+                <p className="mt-2 text-sm font-medium text-gray-700 text-center">
+                  Resume
+                </p>
+                <p className="text-xs text-gray-500 text-center">
+                  Maximum file size: 4MB
+                </p>
                 <p className="text-xs text-red-500 font-medium text-center">
                   {resumeError}
                 </p>

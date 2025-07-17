@@ -1,3 +1,4 @@
+// v1.0.0  -  mansoor  -  removed total comments from this file
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -19,12 +20,7 @@ const ProtectedRoute = ({ children }) => {
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   const { usersData } = useCustomContext() || {};
   const { isInitialized } = usePermissions() || { isInitialized: false };
-
-  console.log('[ProtectedRoute] Component render - tokens from getAuthToken/getImpersonationToken:', {
-    authToken: authToken ? 'EXISTS' : 'MISSING',
-    impersonationToken: impersonationToken ? 'EXISTS' : 'MISSING',
-    pathname: location.pathname
-  });
+  // <---------------------------- v1.0.0
 
   useEffect(() => {
     // Start activity tracking
@@ -70,43 +66,20 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        // console.log('[ProtectedRoute] Checking authentication...');
-        // console.log('[ProtectedRoute] Current pathname:', location.pathname);
-        // console.log('[ProtectedRoute] Auth token exists:', authToken, !!authToken);
-        // console.log('[ProtectedRoute] Impersonation token exists:', !!impersonationToken);
-        // console.log('[ProtectedRoute] All cookies:', document.cookie);
-
-        // Debug all token sources
-        try {
-          const debugResult = debugTokenSources();
-          console.log('[ProtectedRoute] Token debug result:', debugResult);
-        } catch (error) {
-          console.error('[ProtectedRoute] Error in debugTokenSources:', error);
-        }
-        
-        // Add cookie state debug
-        try {
-          const cookieDebugResult = debugCookieState();
-          console.log('[ProtectedRoute] Cookie debug result:', cookieDebugResult);
-        } catch (error) {
-          console.error('Error debugging cookie state:', error);
-        }
 
         // SIMPLE CHECK: If we have any token at all, allow access
         const hasAnyToken = authToken || impersonationToken;
 
         if (hasAnyToken) {
-          console.log('[ProtectedRoute] Token found, allowing access');
+
           setIsChecking(false);
           return;
         }
 
         // If no tokens at all, redirect to login
-        console.log('[ProtectedRoute] No tokens found, redirecting to login');
-        console.error('[ProtectedRoute] No tokens found, redirecting to login');
+        // No tokens found, redirecting to login
         navigate('/organization-login');
       } catch (error) {
-        console.error('[ProtectedRoute] Auth check failed:', error);
         navigate('/organization-login');
       }
     };
@@ -139,14 +112,6 @@ const ProtectedRoute = ({ children }) => {
     const currentDomain = window.location.hostname;
     let targetDomain;
 
-    // console.log('[ProtectedContent] Checking subdomain redirect...');
-    // console.log('[ProtectedContent] Current domain:', currentDomain);
-    // console.log('[ProtectedContent] Auth token exists:', !!authToken);
-    // console.log('[ProtectedContent] Impersonation token exists:', !!impersonationToken);
-    // console.log('[ProtectedContent] Effective token payload:', effectiveTokenPayload);
-    // console.log('[ProtectedContent] User ID:', userId);
-    // console.log('[ProtectedContent] Organization:', organization);
-
     // Only check for subdomain redirect if we have organization data and it's a regular user (not super admin)
     if (authToken && tokenPayload?.organization === true && organization?.subdomain) {
       targetDomain = `${organization.subdomain}.app.upinterview.io`;
@@ -172,6 +137,7 @@ const ProtectedRoute = ({ children }) => {
     }
 
 
+    // v1.0.0 ---------------------->
     return children;
   };
 

@@ -323,7 +323,7 @@ const InterviewDetail = () => {
                           )}
                         </div>
                         <div>
-                          <div className="font-medium">{candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1) || 'Unknown'}</div>
+                          <div className="font-medium">{candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : 'Unknown'}</div>
                           <div className="text-xs text-gray-500 mt-1">
                             {candidate?.Email} • {candidate?.Phone}
                           </div>
@@ -364,7 +364,7 @@ const InterviewDetail = () => {
                       Position
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      <div className="font-medium">{position?.title.charAt(0).toUpperCase() + position?.title.slice(1) || 'Unknown'}</div>
+                      <div className="font-medium">{position?.title ? position.title.charAt(0).toUpperCase() + position.title.slice(1) : 'Unknown'}</div>
                       <div className="text-xs text-gray-500 mt-1">
                         {position?.companyname} • {position?.Location}
                       </div>
@@ -397,7 +397,7 @@ const InterviewDetail = () => {
                       Template
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      <div className="font-medium">{template?.templateName.charAt(0).toUpperCase() + template?.templateName.slice(1) || 'Not selected any template'}</div>
+                      <div className="font-medium">{template?.templateName ? template.templateName.charAt(0).toUpperCase() + template.templateName.slice(1) : 'Not selected any template'}</div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {template && (
                           <>
