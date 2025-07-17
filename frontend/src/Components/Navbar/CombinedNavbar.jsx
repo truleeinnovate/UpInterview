@@ -41,7 +41,6 @@ const CombinedNavbar = () => {
   // Get user type
   const userType = AuthCookieManager.getUserType();
 
-
   // // Debug permission checks
   // const debugPermissions = () => {
   //   const permissions = [

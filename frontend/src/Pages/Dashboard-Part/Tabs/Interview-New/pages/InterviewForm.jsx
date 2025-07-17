@@ -1,3 +1,4 @@
+// v1.0.0  -  mansoor  -  when we select the interview template then error is getting that is solved now
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import Cookies from "js-cookie";
@@ -25,14 +26,16 @@ const CustomDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const dropdownClass = `relative mt-1 block w-full ${className}`;
-  const buttonClass = `w-full pl-3 pr-10 py-2 text-base border ${
-    error ? 'border-red-500' : disabled ? 'border-gray-200' : 'border-gray-300'
-  } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md ${disabled ? 'bg-gray-50 cursor-not-allowed' : ''} text-left`;
-
+  // <-------------------- v1.0.0
+  const buttonClass = `w-full pl-3 pr-10 py-2 text-base border ${error ? 'border-red-500' : disabled ? 'border-gray-200' : 'border-gray-300'
+    } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md ${disabled ? 'bg-gray-50 cursor-not-allowed' : ''} text-left`;
+// v1.0.0 ---------------------------->
   return (
     <div className={dropdownClass}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {error && <span className="text-red-500">*</span>}
+       {/* <-------------------- v1.0.0 */}
+        {label} <span className="text-red-500">*</span>
+        {/* v1.0.0 ----------------------------> */}
       </label>
       <div className="relative">
         <button
@@ -41,10 +44,12 @@ const CustomDropdown = ({
           className={buttonClass}
           disabled={disabled}
         >
-          {value ? 
-            options.find(opt => opt.value === value)?.label || value : 
+          {/* <-------------------- v1.0.0 */}
+          {value ?
+            options.find(opt => opt.value === value)?.label || value :
             placeholder
           }
+          {/* v1.0.0 ----------------------------> */}
           <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -62,9 +67,9 @@ const CustomDropdown = ({
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${
-                    value === option.value ? 'bg-gray-100' : ''
-                  }`}
+
+                  className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${value === option.value ? 'bg-gray-100' : ''
+                    }`}
                 >
                   {option.label}
                 </li>
@@ -157,12 +162,11 @@ const InterviewForm = () => {
     }
   }, [positionId]);
 
-  const handleTemplateChange = (e) => {
-    const newTemplateId = e.target.value;
-
+  // <-------------------- v1.0.0
+  const handleTemplateChange = (newTemplateId) => {
+    // v1.0.0 ---------------------------->
     if (!positionId) {
       toast.error("Please select a position first.", { autoClose: 3000 });
-      e.target.value = ''; 
       return;
     }
 
@@ -176,8 +180,6 @@ const InterviewForm = () => {
         setTemplateId(newTemplateId);
       }
     }
-
-    
   };
 
   const handleProceed = () => {
@@ -190,51 +192,53 @@ const InterviewForm = () => {
     setShowModal(false);
   };
 
-const handleSubmit = async (e) => {
-  if (e) e.preventDefault();
-  setError(null);
+  // <-------------------- v1.0.0
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setError(null);
 
-  // Reset errors
-  setCandidateError('');
-  setPositionError('');
+    // Reset errors
+    setCandidateError('');
+    setPositionError('');
 
-  let hasError = false;
+    let hasError = false;
 
-  if (!candidateId) {
-    setCandidateError('Candidate is required');
-    hasError = true;
-  }
-
-  if (!positionId) {
-    setPositionError('Position is required');
-    hasError = true;
-  }
-
-  if (hasError) {
-    return;
-  }
-
-  try {
-    const selectedTemplate = templateId ? templatesData.find(template => template._id === templateId) : null;
-
-    if (templateId && !selectedTemplate) {
-      throw new Error('Selected template not found');
+    if (!candidateId) {
+      setCandidateError('Candidate is required');
+      hasError = true;
     }
 
-    // Use createInterview mutation from useInterviews hook
-    await createInterview({
-      candidateId,
-      positionId,
-      orgId,
-      userId,
-      templateId,
-      id, // interviewId
-    });
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'An unknown error occurred');
-  } finally {
-  }
-};
+    if (!positionId) {
+      setPositionError('Position is required');
+      hasError = true;
+    }
+
+    if (hasError) {
+      return;
+    }
+
+    try {
+      const selectedTemplate = templateId ? templatesData.find(template => template._id === templateId) : null;
+
+      if (templateId && !selectedTemplate) {
+        throw new Error('Selected template not found');
+      }
+
+      // Use createInterview mutation from useInterviews hook
+      await createInterview({
+        candidateId,
+        positionId,
+        orgId,
+        userId,
+        templateId,
+        id, // interviewId
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
+    }
+  };
+  // v1.0.0 ---------------------------->
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -335,7 +339,7 @@ const handleSubmit = async (e) => {
                     >
                       {isEditing ? "Update Interview" : "Create Interview"}
                     </LoadingButton>
-                    
+
                   </div>
                 </div>
               </form>
