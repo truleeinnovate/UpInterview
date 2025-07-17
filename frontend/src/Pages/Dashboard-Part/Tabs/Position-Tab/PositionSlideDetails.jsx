@@ -16,8 +16,8 @@ import Modal from 'react-modal';
 import InterviewProgress from '../Interview-New/components/InterviewProgress';
 import SingleRoundViewPosition from './PositionRound/SingleRoundViewPosition';
 import VerticalRoundsViewPosition from './PositionRound/VerticalRoundsViewPosition';
-import Cookies from "js-cookie";
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+// import Cookies from "js-cookie";
+// import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Activity from '../../Tabs/CommonCode-AllTabs/Activity';
 import Loading from '../../../../Components/Loading';
 import { usePositions } from '../../../../apiHooks/usePositions';
@@ -43,10 +43,10 @@ const PositionSlideDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
-  const tenantId = tokenPayload?.tenantId;
+  // const authToken = Cookies.get("authToken");
+  // const tokenPayload = decodeJwt(authToken);
+  // const userId = tokenPayload?.userId;
+  // const tenantId = tokenPayload?.tenantId;
 
   useEffect(() => {
     const fetchPosition = async () => {
@@ -93,9 +93,9 @@ const PositionSlideDetails = () => {
   };
 
   // Calculate progress percentage
-  const completedRounds = rounds?.filter(round => round.status === 'Completed').length || 0;
-  const totalRounds = rounds?.length || 0;
-  const progressPercentage = totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
+  // const completedRounds = rounds?.filter(round => round.status === 'Completed').length || 0;
+  // const totalRounds = rounds?.length || 0;
+  // const progressPercentage = totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
 
   const tabs = [
     { id: 'Details', name: 'Details', icon: '📋' },

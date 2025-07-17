@@ -1,6 +1,6 @@
-// v1.0.0  -  Ashraf  -  popup position alignmet issue solved
-import React, { useState, useEffect, useRef } from 'react';
-import Popup from "reactjs-popup";
+// v1.0.0  -  Ashraf  -  popup position alignmet issue solved (mansoor: it got issues in the online that is not solved correctly)
+// v1.0.1  -  mansoor  -  popup position alignmet issue solved
+import React, { useState } from 'react';
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank";
 import { ReactComponent as MdMoreVert } from "../../../../../icons/MdMoreVert.svg";
 import {
@@ -11,7 +11,6 @@ import {
   PlusIcon,
   CheckCircleIcon,
   PencilIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { X } from "lucide-react";
 
@@ -55,68 +54,71 @@ const AssessmentQuestionsTab = ({
   const [isQuestionPopup, setIsQuestionPopup] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
 
-  const addSectionRef = useRef(null);
-  const [sectionPopupPosition, setSectionPopupPosition] = useState({ top: 0, left: 0 });
-  const [questionPopupPosition, setQuestionPopupPosition] = useState({ top: 0, left: 0 });
+  // const addSectionRef = useRef(null);
+  const [activeMenu, setActiveMenu] = useState(null);
 
   // Click outside handler for Add Section popup
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (addSectionRef.current && !addSectionRef.current.contains(event.target)) {
-        setIsAddQuestionModalOpen(false);
-      }
-    };
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (addSectionRef.current && !addSectionRef.current.contains(event.target)) {
+  //       setIsAddQuestionModalOpen(false);
+  //     }
+  //   };
 
-    if (isAddQuestionModalOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+  //   if (isAddQuestionModalOpen) {
+  //     document.addEventListener('mousedown', handleClickOutside);
+  //   }
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isAddQuestionModalOpen, setIsAddQuestionModalOpen]);
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleClickOutside);
+  //   };
+  // }, [isAddQuestionModalOpen, setIsAddQuestionModalOpen]);
   // ---------------------- v1.0.0 >
+  // v1.0.1 ---------------------->
 
   const handlePopupToggle = (section = null) => {
     setIsQuestionPopup(!isQuestionPopup);
     setSelectedSection(section);
   };
 
+  //   // <---------------------- v1.0.1
+  const toggleActionMenu = (type, sectionIndex, questionIndex, e) => {
+    e.stopPropagation();
 
-  // Toggle action menu for sections and questions
-  const toggleActionMenu = (type, sectionIndex, questionIndex = null, event = null) => {
-    if (
-      actionViewMore?.type === type &&
-      actionViewMore?.index === sectionIndex &&
-      (!questionIndex || actionViewMore?.questionIndex === questionIndex)
-    ) {
-      setActionViewMore(null);
-    } else {
-      // Calculate popup position based on button click
-      if (event) {
-        const rect = event.currentTarget.getBoundingClientRect();
-        if (type === "section") {
-          setSectionPopupPosition({
-            top: rect.bottom + window.scrollY - 3,
-            left: rect.right - 192 // w-48 = 12rem = 192px
-          });
-        } else if (type === "question") {
-          setQuestionPopupPosition({
-            top: rect.bottom + window.scrollY - 3,
-            left: rect.right - 160 // w-40 = 10rem = 160px
-          });
-        }
-      }
-      
+    const menuKey = type === 'section'
+      ? `section-${sectionIndex}`
+      : `question-${sectionIndex}-${questionIndex}`;
+
+    setActiveMenu(activeMenu === menuKey ? null : menuKey);
+
+    if (type === 'section') {
+      setActionViewMore({ type, index: sectionIndex });
+    } else if (type === 'question') {
       setActionViewMore({
         type,
-        index: sectionIndex,
-        ...(questionIndex !== null && { questionIndex }),
-        ...(type === "question" && { sectionName: addedSections[sectionIndex].SectionName }),
+        sectionIndex,
+        questionIndex,
+        sectionName: addedSections[sectionIndex].SectionName
       });
+    } else {
+      setActionViewMore(null);
     }
   };
+  // v1.0.1 ---------------------->
+
+  // Close menu when clicking outside
+  // useEffect(() => {
+  //   const handleClickOutside = (e) => {
+  //     if (activeMenu && !e.target.closest('.action-menu-container')) {
+  //       setActiveMenu(null);
+  //     }
+  //   };
+
+  //   document.addEventListener('mousedown', handleClickOutside);
+  //   return () => document.removeEventListener('mousedown', handleClickOutside);
+  // }, [activeMenu]);
 
   // Calculate total questions and question score for "Overall" type
   const totalQuestions = addedSections.reduce(
@@ -166,7 +168,7 @@ const AssessmentQuestionsTab = ({
           </div>
           <div className="flex gap-2">
             {/* <---------------------- v1.0.0 */}
-            <div className="relative" ref={addSectionRef}>
+            <div className="relative">
               <button
                 className="flex items-center gap-2 rounded-lg px-4 py-2 bg-custom-blue text-white text-sm font-medium hover:bg-custom-blue/90 transition-colors shadow-sm"
                 onClick={() => setIsAddQuestionModalOpen(!isAddQuestionModalOpen)}
@@ -174,14 +176,14 @@ const AssessmentQuestionsTab = ({
                 <PlusIcon className="w-4 h-4" />
                 Add Section
               </button>
-              
+
               {isAddQuestionModalOpen && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center">
                   <div className="absolute inset-0 bg-black bg-opacity-25" onClick={() => setIsAddQuestionModalOpen(false)}></div>
-                  <div className="relative w-72 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+                  <div className="relative w-[35%] bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
                     <div className="p-5">
                       <h3 className="font-medium text-gray-800 mb-3">Create New Section</h3>
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <div>
                           <label htmlFor="assessment-section-name" className="block text-sm font-medium text-gray-700 mb-1">
                             Section Name
@@ -305,6 +307,7 @@ const AssessmentQuestionsTab = ({
                         </div>
                       </div>
                     )}                    */}
+
                   </div>
 
                   <div className="flex items-center space-x-4">
@@ -325,14 +328,17 @@ const AssessmentQuestionsTab = ({
                     )}
 
                     {/* Section Actions */}
-                    <div className="relative">
+                    <div className="relative action-menu-container">
                       <button
                         onClick={(e) => toggleActionMenu("section", sectionIndex, null, e)}
                         className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
                       >
                         <MdMoreVert className="text-xl" />
                       </button>
+
                     </div>
+
+
 
                     <button
                       className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
@@ -346,6 +352,36 @@ const AssessmentQuestionsTab = ({
                     </button>
                   </div>
                 </div>
+
+                {/* <---------------------- v1.0.1 */}
+                {/* Section Actions popup */}
+                {activeMenu === `section-${sectionIndex}` && (
+                  <div className="absolute right-[115px] z-10 w-48 -mt-3 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden">
+                    <button
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      onClick={() => {
+                        openEditSection(sectionIndex, addedSections[sectionIndex].SectionName);
+                        setActiveMenu(null);
+                      }}
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                      Edit Section
+                    </button>
+                    <button
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+                      onClick={() => {
+                        openDeleteConfirmation("section", sectionIndex);
+                        setActiveMenu(null);
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete Section
+                    </button>
+                  </div>
+                )}
+                {/* v1.0.1 ----------------------> */}
 
                 {/* Questions List */}
                 {toggleStates[sectionIndex] && (
@@ -407,16 +443,40 @@ const AssessmentQuestionsTab = ({
 
                           {/* Question Actions */}
                           <div className="flex items-center gap-4 ml-2">
-                            <div className="relative">
+                            <div className="relative action-menu-container">
                               <button
                                 onClick={(e) => toggleActionMenu("question", sectionIndex, questionIndex, e)}
                                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                               >
                                 <MdMoreVert className="text-xl" />
                               </button>
+
+
                             </div>
                           </div>
                         </div>
+                        {/* <---------------------- v1.0.1 */}
+                        {activeMenu === `question-${sectionIndex}-${questionIndex}` && (
+                          <div className="absolute right-[70px] z-10 w-40 -mt-2 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden">
+                            <button
+                              className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+                              onClick={() => {
+                                openDeleteConfirmation(
+                                  "question",
+                                  questionIndex,
+                                  section.SectionName
+                                );
+                                setActiveMenu(null);
+                              }}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                        {/* v1.0.1 ----------------------> */}
                       </div>
                     ))}
                   </div>
@@ -456,60 +516,7 @@ const AssessmentQuestionsTab = ({
           </div>
         </div>
       )}
-  {/* // <---------------------- v1.0.0 */}
-
-
-      {/* Action Menu Popups - Rendered outside cards to avoid overflow clipping */}
-      {actionViewMore?.type === "section" && (
-        <div className="fixed z-[9998] w-48 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden" style={{
-          top: `${sectionPopupPosition.top}px`,
-          left: `${sectionPopupPosition.left}px`
-        }}>
-          <button
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-            onClick={() => {
-              openEditSection(actionViewMore.index, addedSections[actionViewMore.index].SectionName);
-              setActionViewMore(null);
-            }}
-          >
-            <PencilIcon className="w-4 h-4" />
-            Edit Section
-          </button>
-          <button
-            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-            onClick={() => {
-              openDeleteConfirmation("section", actionViewMore.index);
-              setActionViewMore(null);
-            }}
-          >
-            <TrashIcon className="w-4 h-4" />
-            Delete Section
-          </button>
-        </div>
-      )}
-
-      {actionViewMore?.type === "question" && (
-        <div className="fixed z-[9998] w-40 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden" style={{
-          top: `${questionPopupPosition.top}px`,
-          left: `${questionPopupPosition.left}px`
-        }}>
-          <button
-            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-            onClick={() => {
-              openDeleteConfirmation(
-                "question",
-                actionViewMore.questionIndex,
-                actionViewMore.sectionName
-              );
-              setActionViewMore(null);
-            }}
-          >
-            <TrashIcon className="w-4 h-4" />
-            Delete
-          </button>
-        </div>
-      )}
-      {/* ---------------------- v1.0.0 > */}
+      {/* // <---------------------- v1.0.0 */}
 
     </div>
   );
