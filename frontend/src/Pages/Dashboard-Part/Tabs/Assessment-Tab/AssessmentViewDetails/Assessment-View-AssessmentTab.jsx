@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  commented expiry date because we dont have expiry date in schedule assessment
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { UserPlusIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
@@ -164,12 +165,14 @@ function AssessmentsTab({ assessment }) {
                     {schedule.order}
                   </h4>
                   <div className="flex items-center mt-2 space-x-4">
-                    <span className="text-sm text-gray-600">
+                    {/* // <---------------------- v1.0.0 */}
+                    {/* <span className="text-sm text-gray-600">
                       <span className="font-medium">Expiry:</span>{' '}
                       {schedule.expiryAt
                         ? format(new Date(schedule.expiryAt), 'MMM dd, yyyy')
                         : 'N/A'}
-                    </span>
+                    </span> */}
+                    {/* //<---------------------- v1.0.0 */}
                     <span
                       className={`px-2.5 py-1 text-xs font-medium rounded-full ${schedule.status === 'scheduled'
                           ? 'bg-green-100 text-green-800'

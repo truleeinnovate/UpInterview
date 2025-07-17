@@ -75,7 +75,7 @@ export const hasValidCachedPermissions = () => {
     const isValid = age < CACHE_DURATION;
     
     if (isValid) {
-      console.log('✅ Valid cached permissions found');
+      // console.log('✅ Valid cached permissions found');
     } else {
       console.log('❌ Cached permissions expired');
     }

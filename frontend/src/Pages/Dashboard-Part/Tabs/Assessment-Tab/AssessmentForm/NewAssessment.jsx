@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  assessment template id not getting issues,on save or save next 2 button loading issues.only load wich button u have clicked
 import React, {
   useState,
   useRef,
@@ -221,16 +222,46 @@ const NewAssessment = () => {
 
   // shashank - [10/01/2025]
   const [tabsSubmitStatus, setTabsSubmitStatus] = useState({
-    responseId: "",
-    responseData: "",
+    // <---------------------- v1.0.0
+    responseId: null,
+    responseData: null,
+    // <---------------------- v1.0.0
     Basicdetails: false,
     Details: false,
     Questions: false,
     Candidates: false
   });
+  // <---------------------- v1.0.0
+  const [isSaving, setIsSaving] = useState(false);
+  // Add activeButton state to track which button was clicked
+  const [activeButton, setActiveButton] = useState(null); // 'save', 'next', or null
   console.log("Tabs Submit Status:", tabsSubmitStatus);
+  console.log("🔍 Current State Debug:", {
+    isEditing,
+    id,
+    responseId: tabsSubmitStatus.responseId,
+    hasResponseId: !!tabsSubmitStatus.responseId,
+    responseIdType: typeof tabsSubmitStatus.responseId,
+    activeTab,
+    currentDateTime: new Date().toISOString()
+  });
 
+  // Track state changes
+  useEffect(() => {
+    console.log("🔄 tabsSubmitStatus changed:", tabsSubmitStatus);
+  }, [tabsSubmitStatus]);
 
+  // Preserve state on component mount
+  useEffect(() => {
+    console.log("🏠 Component mounted/remounted. Current state:", {
+      isEditing,
+      id,
+      tabsSubmitStatus,
+      activeTab
+    });
+  }, []);
+
+  // <---------------------- v1.0.0
   const handleIconClick = (e) => {
     if (e) {
       e.stopPropagation();
@@ -401,53 +432,116 @@ const NewAssessment = () => {
   //   }
   // };
 
-
+  // <---------------------- v1.0.0
   const handleSave = async (event, currentTab, actionType) => {
     event.preventDefault();
-    // console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
+    
+    // Prevent multiple simultaneous saves
+    if (isSaving) {
+      console.log('⏳ Already saving, skipping...');
+      return;
+    }
+    
+    // Set which button was clicked
+    setActiveButton(actionType === 'close' ? 'save' : 'next');
+    setIsSaving(true);
+    console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
 
     const { errors, assessmentData } = validateAndPrepareData(currentTab);
 
     if (errors) {
-      // console.warn('❗ Validation failed:', errors);
+      console.warn('❗ Validation failed:', errors);
       setErrors(errors);
+      setActiveButton(null); // Reset active button on validation failure
+      setIsSaving(false);
       return;
     }
 
-    // console.log('✅ Validation passed. Prepared assessment data:', assessmentData);
+    console.log('✅ Validation passed. Prepared assessment data:', assessmentData);
 
     try {
-      const response = await addOrUpdateAssessment({
-        isEditing,
-        id: isEditing ? id : tabsSubmitStatus.responseId,
+      // Determine if we should be in editing mode
+      const hasExistingAssessment = tabsSubmitStatus.responseId && tabsSubmitStatus.responseId !== null && tabsSubmitStatus.responseId !== "";
+      const shouldEdit = isEditing || hasExistingAssessment;
+      
+      // Get the correct assessment ID
+      const assessmentId = isEditing ? id : (hasExistingAssessment ? tabsSubmitStatus.responseId : null);
+      
+      console.log('📋 Current assessment ID:', assessmentId);
+      console.log('📋 Is editing (URL):', isEditing);
+      console.log('📋 Has existing assessment:', hasExistingAssessment);
+      console.log('📋 Should edit:', shouldEdit);
+      console.log('📋 URL ID:', id);
+      console.log('📋 Tabs response ID:', tabsSubmitStatus.responseId);
+
+      // Validate that we have a valid ID when editing from URL
+      if (isEditing && !id) {
+        console.error('❌ Editing mode but no valid ID found');
+        setErrors({ general: 'Invalid assessment ID for editing' });
+        setActiveButton(null);
+        setIsSaving(false);
+        return;
+      }
+
+      // Validate that we have a valid ID when updating existing assessment
+      if (shouldEdit && !assessmentId) {
+        console.error('❌ Should edit but no valid assessment ID found');
+        setErrors({ general: 'Invalid assessment ID for updating' });
+        setActiveButton(null);
+        setIsSaving(false);
+        return;
+      }
+
+      const mutationParams = {
+        isEditing: shouldEdit,
+        id: assessmentId || null, // Use null for new assessments to be explicit
         assessmentData,
         tabsSubmitStatus,
+      };
+      
+      console.log('🚀 Calling mutation with params:', mutationParams);
+      
+      const response = await addOrUpdateAssessment(mutationParams);
+
+      console.log('📦 API Response:', response);
+      console.log('📦 Response data:', response?.data);
+      console.log('📦 Response data._id:', response?.data?._id);
+
+      // Extract the correct ID from response
+      const newAssessmentId = shouldEdit ? (isEditing ? id : assessmentId) : response?.data?._id;
+      
+      console.log('🆔 New/Updated assessment ID:', newAssessmentId);
+
+      // Update tabs submit status with the correct ID
+      setTabsSubmitStatus((prev) => {
+        const updated = {
+          ...prev,
+          [currentTab]: true,
+          responseId: newAssessmentId,
+          responseData: response?.data || response,
+        };
+        console.log('🔄 Updated tabs submit status:', updated);
+        return updated;
       });
 
-      setTabsSubmitStatus((prev) => ({
-        ...prev,
-        [currentTab]: true,
-        responseId: isEditing ? id : response?._id || prev.responseId,
-        responseData: response,
-      }));
-
       if (currentTab === 'Questions') {
-        const assessmentId = isEditing ? id : tabsSubmitStatus.responseId;
+        // Use the updated assessment ID for questions
+        const questionsAssessmentId = shouldEdit ? (isEditing ? id : assessmentId) : newAssessmentId;
 
-        if (!assessmentId) {
-          // console.error('❌ Missing assessmentId before saving questions.');
+        if (!questionsAssessmentId) {
+          console.error('❌ Missing assessmentId before saving questions.');
           return;
         }
 
         const assessmentQuestionsData = prepareAssessmentQuestionsData(
           addedSections,
-          assessmentId
+          questionsAssessmentId
         );
 
-        // console.log('📦 Prepared questions data:', assessmentQuestionsData);
+        console.log('📦 Prepared questions data:', assessmentQuestionsData);
 
         if (!assessmentQuestionsData.sections?.length) {
-          // console.error('❌ Sections array is empty. Cannot proceed.');
+          console.error('❌ Sections array is empty. Cannot proceed.');
           return;
         }
 
@@ -455,23 +549,23 @@ const NewAssessment = () => {
           assessmentQuestionsData
         );
 
-        // console.log('✅ Questions saved successfully:', questionsResponse.message);
+        console.log('✅ Questions saved successfully:', questionsResponse);
       }
 
       // 🧠 Action after save
       if (actionType === 'close') {
-        // console.log('🛑 Closing form after save');
-        navigate('/assessments');
+        console.log('🛑 Closing form after save');
+        navigate('/assessments-template');
       } else if (actionType === 'next') {
         const tabOrder = ['Basicdetails', 'Details', 'Questions', 'Candidates'];
         const currentIndex = tabOrder.indexOf(currentTab);
         const nextTab = tabOrder[currentIndex + 1];
 
         if (nextTab) {
-          // console.log(`➡️ Navigating to next tab: ${nextTab}`);
+          console.log(`➡️ Navigating to next tab: ${nextTab}`);
           setActiveTab(nextTab);
         } else {
-          // console.log('🚫 No next tab found');
+          console.log('🚫 No next tab found');
         }
       }
     } catch (error) {
@@ -480,9 +574,12 @@ const NewAssessment = () => {
         response: error.response?.data,
         stack: error.stack,
       });
+    } finally {
+      setIsSaving(false);
+      setActiveButton(null); // Reset active button regardless of success or failure
     }
   };
-
+  // <---------------------- v1.0.0
   const gatherDataUpToCurrentTab = (currentTab) => {
     let assessmentData = {};
 
@@ -1104,10 +1201,12 @@ const NewAssessment = () => {
 
               {isPassScoreSubmitted ? (
                 <>
-
                   <LoadingButton
                     onClick={(e) => handleSave(e, "Questions", "close")}
-                    isLoading={isMutationLoading}
+                   // <---------------------- v1.0.0
+
+                    isLoading={isMutationLoading && activeButton === 'save'}
+                    // ---------------------- v1.0.0 >
                     loadingText={id ? "Updating..." : "Saving..."}
                   >
                     {isEditing ? "Update" : "Save"}
@@ -1115,7 +1214,10 @@ const NewAssessment = () => {
 
                   <LoadingButton
                     onClick={(e) => handleSave(e, "Questions", "next")}
-                    isLoading={isMutationLoading}
+  // <---------------------- v1.0.0
+
+                    isLoading={isMutationLoading && activeButton === 'next'}
+                    // ---------------------- v1.0.0 >
                     loadingText={id ? "Updating..." : "Saving..."}
                   >
                     {isEditing ? "Update & Next" : "Save & Create Assessment"}
@@ -1143,10 +1245,11 @@ const NewAssessment = () => {
             </>
           ) : (
             <>
-
               <LoadingButton
                 onClick={(e) => handleSave(e, currentTab, "close")}
-                isLoading={isMutationLoading}
+  // <---------------------- v1.0.0
+
+                isLoading={isMutationLoading && activeButton === 'save'}
                 loadingText={id ? "Updating..." : "Saving..."}
               >
                 {isEditing ? "Update" : "Save"}
@@ -1155,7 +1258,8 @@ const NewAssessment = () => {
               {getNextTab() && (
                 <LoadingButton
                   onClick={(e) => handleSave(e, currentTab, "next")}
-                  isLoading={isMutationLoading}
+                  isLoading={isMutationLoading && activeButton === 'next'}
+  // <---------------------- v1.0.0
                   loadingText={id ? "Updating..." : "Saving..."}
                 >
                   {isEditing ? "Update & Next" : "Save & Next"}
@@ -1171,9 +1275,9 @@ const NewAssessment = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-        <main className="max-w-[90%] mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+        <main className=" mx-auto py-4 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
           <div className="sm:px-0">
-            <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div className="mt-4 bg-white shadow overflow-hidden rounded-lg">
               <div className="flex justify-between px-12 py-4 sm:px-6">
                 <div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -1186,12 +1290,12 @@ const NewAssessment = () => {
                 </p>
                 </div>
                 <div>
-                <button
-                  onClick={() => navigate(-1)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X/>
-                </button>
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X/>
+                  </button>
                 </div>
               </div>
 

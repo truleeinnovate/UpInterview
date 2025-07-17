@@ -1,3 +1,5 @@
+// v1.0.0  -  Ashraf  -  removed expity date
+
 import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
 import '../styles/tabs.scss';
@@ -18,7 +20,7 @@ import { useAssessments } from '../../../../apiHooks/useAssessments.js';
 
 const ScheduleAssessment = () => {
   const { effectivePermissions } = usePermissions();
-  const { assessmentData} = useAssessments();
+  const { assessmentData } = useAssessments();
   const { scheduleData, isLoading } = useScheduleAssessments();
   const navigate = useNavigate();
 
@@ -189,20 +191,23 @@ const ScheduleAssessment = () => {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => handleView(row)}
         >
-          {value || row._id?.slice(-6)}
+          {value || "Not Provided"}
+
         </div>
       ),
     },
+    // <---------------------- v1.0.0
     // {
     //   key: 'order',
     //   header: 'ORDER',
     //   render: (v) => v || 'Not Provided',
     // },
-    {
-      key: 'expiryAt',
-      header: 'Expiry Date',
-      render: (v) => (v ? format(new Date(v), 'MMM dd, yyyy') : 'Not Provided'),
-    },
+    // {
+    //   key: 'expiryAt',
+    //   header: 'Expiry Date',
+    //   render: (v) => (v ? format(new Date(v), 'MMM dd, yyyy') : 'Not Provided'),
+    // },
+    // <---------------------- v1.0.0
     {
       key: 'status',
       header: 'Status',
@@ -213,23 +218,23 @@ const ScheduleAssessment = () => {
   const tableActions = [
     ...(effectivePermissions.Assessments?.View
       ? [
-          {
-            key: 'view',
-            label: 'View',
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: handleView,
-          },
-        ]
+        {
+          key: 'view',
+          label: 'View',
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: handleView,
+        },
+      ]
       : []),
     ...(effectivePermissions.Assessments?.Edit
       ? [
-          {
-            key: 'edit',
-            label: 'Edit',
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            //onClick: handleEdit,
-          },
-        ]
+        {
+          key: 'edit',
+          label: 'Edit',
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          //onClick: handleEdit,
+        },
+      ]
       : []),
   ];
 
@@ -277,7 +282,7 @@ const ScheduleAssessment = () => {
                 assessments={assessmentData}
                 loading={isLoading}
                 onView={handleView}
-                //onEdit={handleEdit}
+              //onEdit={handleEdit}
               />
             )}
             <FilterPopup

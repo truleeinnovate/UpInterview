@@ -298,7 +298,6 @@ class AuthCookieManager {
         try {
           const decoded = decodeJwt(authToken);
           const userId = decoded.userId || decoded.id;
-          console.log('👤 Effective user ID from auth token:', userId);
           return userId;
         } catch (error) {
           console.warn('Error decoding auth token for user ID:', error);
