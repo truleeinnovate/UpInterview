@@ -1,3 +1,4 @@
+// v1.0.0  -  mansoor  -  aligned the left content and right content in the center in all the scrrens responsively
 import { useState, useEffect } from 'react';
 import { TrendingUp, AlertCircle, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -53,21 +54,27 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-white">
-      <main className="sm:pt-28 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-6 xl:px-8 2xl:px-12 max-w-[1600px] mx-auto">
+      {/* <---------v1.0.0 */}
+      <main className="pb-8 px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto" style={{ maxWidth: '1400px' }}>
+      {/* v1.0.0 -----------> */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-6 sm:space-y-8"
+          // <---------v1.0.0
+          className="space-y-6 lg:space-y-8"
+          // v1.0.0 ----------->
         >
           <WelcomeSection selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row sm:gap-8 gap-6 mt-6">
+
+        <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row gap-6 lg:gap-8">
           {/* Main Content Area */}
-          <div className='flex flex-col gap-6'>
-          <div className="flex-grow space-y-6 sm:space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6">
+          {/* <---------v1.0.0 */}
+          <div className="flex-1 space-y-6 lg:space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 lg:gap-6">
+              {/* v1.0.0 -----------> */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -120,24 +127,25 @@ const Home = () => {
             </motion.div>
 
             <FeedbackList />
-            
+            <NotificationSection />
           </div>
-          <NotificationSection />
-          </div>
+
           {/* Right Sidebar */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:w-[400px] xl:w-[400px] 2xl:w-[500px] flex-shrink-0 space-y-6 sm:space-y-8"
+            // <---------v1.0.0
+            className="lg:w-96 xl:w-[420px] 2xl:w-[450px] flex-shrink-0 space-y-6 lg:space-y-8"
+          // v1.0.0 ----------->
           >
             <TaskList />
             <InterviewerSchedule />
 
             {isOrganization && <DashboardOutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />}
-            
+
             {isOrganization && <DashboardInternalInterviewers setInternalInterviews={setInternalInterviews} />}
-            
+
           </motion.div>
         </div>
       </main>
