@@ -1,5 +1,5 @@
 // v1.0.0  -  Ashraf  -  while editing assessment id not getting issues
-
+//v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useRef } from 'react';
@@ -10,7 +10,9 @@ import { usePermissions } from '../Context/PermissionsContext';
 export const useAssessments = (filters = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
-  const hasViewPermission = effectivePermissions?.Assessment_Template?.View;
+  // <---------------------- v1.0.1
+  const hasViewPermission = effectivePermissions?.AssessmentTemplates?.View;
+  // ---------------------- v1.0.1 >
   const initialLoad = useRef(true);
 
   const {
@@ -20,7 +22,9 @@ export const useAssessments = (filters = {}) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['Assessment_Template', filters],
+    // <---------------------- v1.0.1
+    queryKey: ['AssessmentTemplates', filters],
+    // ---------------------- v1.0.1 >
     queryFn: async () => {
       const data = await fetchFilterData('assessment');
       return data.map(assessment => ({
@@ -62,7 +66,9 @@ export const useAssessments = (filters = {}) => {
     },
     onSuccess: (data, variables) => {
       // Optimistically update the cache
-      queryClient.setQueryData(['Assessment_Template', filters], (oldData) => {
+      // <---------------------- v1.0.1
+      queryClient.setQueryData(['AssessmentTemplates', filters], (oldData) => {
+      // ---------------------- v1.0.1 >
         if (!oldData) return oldData;
         
         if (variables.isEditing && variables.id && variables.id !== '' && variables.id !== null && variables.id !== undefined) {
@@ -80,7 +86,9 @@ export const useAssessments = (filters = {}) => {
       });
       
       // Invalidate to ensure consistency
-      queryClient.invalidateQueries(['Assessment_Template']);
+      // <---------------------- v1.0.1
+      queryClient.invalidateQueries(['AssessmentTemplates']);
+      // ---------------------- v1.0.1 >
     },
     onError: (err) => {
       console.error('Assessment save error:', err.message);
@@ -96,7 +104,9 @@ export const useAssessments = (filters = {}) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['Assessment_Template']);
+      // <---------------------- v1.0.1
+      queryClient.invalidateQueries(['AssessmentTemplates']);
+      // ---------------------- v1.0.1 >
     },
     onError: (err) => {
       console.error('Assessment questions save error:', err.message);
