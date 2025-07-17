@@ -1,3 +1,4 @@
+// v1.0.0  -  mansoor  -  removed unnecessary comments from this file
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -422,7 +423,6 @@ const MainAppRoutes = ({
     return combinedPermissions[objectName][permissionType] ?? false;
   };
 
-  console.log("hasPermission", hasPermission);
 
   return (
     <>
@@ -1174,8 +1174,9 @@ const App = () => {
   // Preload permissions on app startup if user is authenticated
   useEffect(() => {
     if (authToken && !hasValidCachedPermissions()) {
-      // Preload permissions in the background only if not cached
-      preloadPermissions().catch(console.warn);
+      // <--------------------- v1.0.0
+      preloadPermissions().catch(() => {});
+      // v1.0.0 --------------------->
     }
     
     // Sync user type with localStorage to ensure consistency
