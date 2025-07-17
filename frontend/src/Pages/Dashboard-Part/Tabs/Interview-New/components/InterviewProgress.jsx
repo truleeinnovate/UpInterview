@@ -1,5 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { CheckCircle, Clock, XCircle, Circle, ThumbsDown } from 'lucide-react';
 
 const InterviewProgress = ({ 
@@ -7,7 +7,7 @@ const InterviewProgress = ({
   interviewId,
   currentRoundId,
   viewMode = 'horizontal',
-  onSelectRound
+  // onSelectRound
 }) => {
   
   // Sort rounds by sequence
@@ -59,7 +59,7 @@ const InterviewProgress = ({
           return (
             <React.Fragment key={round._id}>
               <button 
-                onClick={() => onSelectRound(round._id)}
+                // onClick={() => onSelectRound(round._id)}
                 className={`flex items-center px-3 py-2 rounded-md border ${getStatusColor(round, isCurrent)} transition-colors duration-200 hover:bg-opacity-80`}
               >
                 <div className="flex items-center">

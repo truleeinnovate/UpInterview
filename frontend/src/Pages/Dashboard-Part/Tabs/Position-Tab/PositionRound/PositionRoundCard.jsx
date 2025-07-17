@@ -307,22 +307,22 @@ const PositionRoundCard = ({
                         {internalInterviewers.length > 0 && (
                           <div >
                             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2 mt-1">
-                             <span className ='flex items-center'>
-                              <User className="h-3 w-3 mr-1" />
-                              <span>
-                               
-                                {/* Internal ({round?.interviewers.length}) */}
-                                {round?.interviewers.length} Interviewer{round?.interviewers.length !== 1 ? 's' : ''}
+                              <span className='flex items-center'>
+                                <User className="h-3 w-3 mr-1" />
+                                <span>
+
+                                  {/* Internal ({round?.interviewers.length}) */}
+                                  {round?.interviewers.length} Interviewer{round?.interviewers.length !== 1 ? 's' : ''}
+                                </span>
                               </span>
-                              </span>
-                                    {round?.interviewerGroupName &&
-                              <div className="flex items-center   gap-1 text-xs text-gray-500 ">
-                                <span>Group Name: </span>
-                                <span className='text-black '>{round?.interviewerGroupName ? round?.interviewerGroupName : ""}</span>
-                              </div>
-                            }
+                              {round?.interviewerGroupName &&
+                                <div className="flex items-center   gap-1 text-xs text-gray-500 ">
+                                  <span>Group Name: </span>
+                                  <span className='text-black '>{round?.interviewerGroupName ? round?.interviewerGroupName : ""}</span>
+                                </div>
+                              }
                             </div>
-                      
+
                             {showInterviewers && round.interviewers && (
                               <div className="flex flex-wrap gap-2">
                                 {round?.interviewers.map((interviewer, index) => (

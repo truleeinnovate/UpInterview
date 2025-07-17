@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import PositionRoundCard from './PositionRoundCard';
 
-
 const SingleRoundViewPosition = ({
   rounds,
   interviewId,

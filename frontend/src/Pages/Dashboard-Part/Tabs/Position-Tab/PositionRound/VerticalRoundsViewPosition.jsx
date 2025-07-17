@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-
+// import PropTypes from 'prop-types';
 import {
-  Edit,
+  // Edit,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
 import PositionRoundCard from './PositionRoundCard';
-import { Button } from '../../CommonCode-AllTabs/ui/button';
+// import { Button } from '../../CommonCode-AllTabs/ui/button';
 
 const VerticalRoundsViewPosition = ({
   rounds,
