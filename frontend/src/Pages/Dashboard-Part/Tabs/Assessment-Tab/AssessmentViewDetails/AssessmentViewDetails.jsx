@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  assessment view name changed
+// v1.0.1  -  Ashraf  -  assessment top border removed
 import { useState, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import { Minimize, Expand, X } from 'lucide-react';
@@ -134,7 +135,9 @@ function AssessmentView() {
           >
             <div className="w-full relative">
               <div className="h-full bg-white shadow-xl flex flex-col">
-                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                {/* <------------------------------- v1.0.1  */}
+                <div className="px-6 py-4 flex items-center justify-between">
+                {/* ------------------------------ v1.0.1 > */}
                   <h3 className="text-lg font-medium text-gray-900">Assessment Template Details</h3>
                   <div className="flex items-center space-x-2">
                     <button

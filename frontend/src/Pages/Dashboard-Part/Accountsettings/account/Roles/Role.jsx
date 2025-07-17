@@ -263,9 +263,6 @@ const Role = () => {
               .map((role, index) => (
                 <div key={role._id} className="relative">
                   {/* Level indicator line */}
-                  {index > 0 && (
-                    <div className="absolute left-6 top-0 w-0.5 h-4 bg-gray-300"></div>
-                  )}
                   {renderRoleCard(role)}
                 </div>
               ))}
