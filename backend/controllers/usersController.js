@@ -1,4 +1,4 @@
-
+// v1.0.0  -  Ashraf  - fixed internal interviews getting issue
 const { Users } = require('../models/Users');
 const Role = require('../models/RolesData');
 const { Contacts } = require('../models/Contacts');
@@ -286,18 +286,21 @@ const getInterviewers = async (req, res) => {
     const externalUsers = await Users.find({ isFreelancer: true }).lean();
     // console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
 
-
+// <------------------------------- v1.0.0 
     const internalRoles = await RolesPermissionObject.find({
-      roleName: 'Internal_Interviewer',
+      roleType: 'organization',
       // tenantId,
     }).select('_id label').lean();
-
+// ------------------------------ v1.0.0 >
 
     const internalRoleIds = internalRoles.map((role) => role._id.toString());
 
     // Fetch internal interviewers
     const internalUsers = await Users.find({
       roleId: internalRoleIds,
+      // <------------------------------- v1.0.0 
+      tenantId,
+      // ------------------------------ v1.0.0 >
     }).populate({ path: 'roleId', select: 'label' }).lean();
     // console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length); //internal
 

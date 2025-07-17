@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  - fixed base path issues
 import { useEffect, useState } from 'react'
 import Cookies from "js-cookie";
 import { useNavigate } from 'react-router-dom';
@@ -5,7 +6,7 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 
-const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, basePath }) => {
+const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
   console.log("type in AdvancedDetails", type);
   
   // const { usersRes } = useCustomContext();
@@ -58,15 +59,17 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type, basePath }) 
   return (
     <div>
       <div className={`flex items-center justify-end ${mode !== 'users' ? 'py-2' : ''}`}>
+        {/* <------------------------------- v1.0.0  */}
         <button
           onClick={
             () => {
               mode === 'users' ?
                 setAdvacedEditOpen(true)
                 :
-                navigate(`${basePath}/my-profile/advanced-edit/${contactData?._id}`)
+                navigate(`/account-settings/my-profile/advanced-edit/${contactData?._id}`)
             }
           }
+          // ------------------------------ v1.0.0 >
           // onClick={() => setIsBasicModalOpen(true)}
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
         >

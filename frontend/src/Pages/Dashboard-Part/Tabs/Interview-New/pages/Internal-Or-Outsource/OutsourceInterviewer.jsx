@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  header border-b removed
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Star, ExternalLink, ChevronDown, ChevronUp, Search, Minimize, Info, Clock, Users, Expand } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -367,7 +368,9 @@ function OutsourcedInterviewerModal({
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
         >
           {/* Fixed Header */}
-          <div className="flex justify-between items-center px-5 py-4 border-b border-gray-200 bg-white z-10">
+          {/* <------------------------------- v1.0.0  */}
+          <div className="flex justify-between items-center px-5 py-4 bg-white z-10">
+          {/* ------------------------------ v1.0.0 > */}
             <div>
               <h2 className="text-2xl font-semibold text-custom-blue">Select Outsourced Interviewers</h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -397,7 +400,9 @@ function OutsourcedInterviewerModal({
           </div>
 
           {/* Fixed Search and Info Section */}
-          <div className="px-6 py-4 bg-white border-b border-gray-200 z-10">
+          {/* <------------------------------- v1.0.0  */}
+          <div className="px-6 py-4 bg-white z-10">
+          {/* ------------------------------ v1.0.0 > */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <div className="flex items-start space-x-3 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                 <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />

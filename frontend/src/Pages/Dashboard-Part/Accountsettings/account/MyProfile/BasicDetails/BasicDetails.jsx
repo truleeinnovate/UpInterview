@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  - fixed base path issues
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -11,7 +12,7 @@ import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 import { toast } from 'react-hot-toast';
 
 
-const BasicDetails = ({ mode, usersId, setBasicEditOpen, type,basePath }) => {
+const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
   console.log("type in BasicDetails", type);
 
   // const { usersRes } = useCustomContext();
@@ -116,16 +117,18 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type,basePath }) => {
             )}
           </div>
         )}
+        {/* <------------------------------- v1.0.0  */}
         <button
           onClick={() => {
             mode === 'users'
               ? setBasicEditOpen(true)
-              : navigate(`${basePath}/my-profile/basic-edit/${contactData?._id}`);
+              : navigate(`/account-settings/my-profile/basic-edit/${contactData?._id}`);
           }}
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 transition-colors"
         >
           Edit
         </button>
+        {/* ------------------------------ v1.0.0 > */}
       </div>
 
       {/* Pending Verification Banner */}

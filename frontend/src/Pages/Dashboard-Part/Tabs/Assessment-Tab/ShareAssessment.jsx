@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  - fixed add candidate click navigate to add form
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { shareAssessmentAPI } from './AssessmentShareAPI.jsx';
@@ -11,6 +12,10 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from '../../../../config.js';
 import { useCandidates } from '../../../../apiHooks/useCandidates';
 import Loading from '../../../../Components/Loading.js';
+// <------------------------------- v1.0.0 
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+// ------------------------------ v1.0.0 >
 
 const ShareAssessment = ({
   isOpen,
@@ -18,7 +23,9 @@ const ShareAssessment = ({
   assessment
 }) => {
   const { candidateData, loading } = useCandidates();
-
+  // <------------------------------- v1.0.0 
+  const navigate = useNavigate();
+  // ------------------------------ v1.0.0 >
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const organizationId = tokenPayload?.tenantId;
   const userId = tokenPayload?.userId;
@@ -28,7 +35,6 @@ const ShareAssessment = ({
   const [isSuccess, setIsSuccess] = useState(false);
   const [assignedCandidates, setAssignedCandidates] = useState([]);
   const [showMainContent, setShowMainContent] = useState(true);
-  const [showNewCandidateContent, setShowNewCandidateContent] = useState(false);
   const [filteredCandidates, setFilteredCandidates] = useState([]);
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [candidateInput, setCandidateInput] = useState('');
@@ -158,10 +164,12 @@ const ShareAssessment = ({
   const handleClearAllCandidates = () => {
     setSelectedCandidates([]);
   };
-
+//
   const handleAddNewCandidateClick = () => {
     setShowMainContent(false);
-    setShowNewCandidateContent(true);
+    // <------------------------------- v1.0.0 
+    navigate('/candidate/new');
+    // ------------------------------ v1.0.0 >
   };
 
   const handleShareClick = async () => {
@@ -228,12 +236,13 @@ const ShareAssessment = ({
             </div>
           </div>
         )}
+        {/* <------------------------------- v1.0.0  */}
+        {showMainContent && (
 
-        {showMainContent ? (
           <>
-            <div className="sticky top-0 p-4 rounded-t-lg flex justify-between items-center z-10 border-b">
+            <div className="sticky top-0 p-4 rounded-t-lg flex justify-between items-center z-10">
               <div>
-                <h2 className="text-xl font-semibold">Share Assessment</h2>
+                <h2 className="text-xl font-bold">Share Assessment</h2>
               </div>
               <button
                 className=" transition-colors p-1 rounded-full"
@@ -247,7 +256,7 @@ const ShareAssessment = ({
               <p className='font-semibold mb-2'>Assessment Template Title: <span className="text-sm text-custom-blue">{assessment.AssessmentTitle}</span></p>
 
               <div className="mb-6">
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center justify-between mb-2">
                   <label
                     htmlFor="Candidate"
                     className="block text-sm font-medium text-gray-700"
@@ -256,9 +265,9 @@ const ShareAssessment = ({
                   </label>
                   <button
                     onClick={handleAddNewCandidateClick}
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                    className="flex items-center text-sm text-custom-blue hover:text-custom-blue/90"
                   >
-                    <IoIosAddCircle className="mr-1" />
+                    <Plus className="mr-1 w-5 h-5"/>
                     Add New Candidate
                   </button>
                 </div>
@@ -446,9 +455,8 @@ const ShareAssessment = ({
               </button>
             </div>
           </>
-        ) : (
-          <>{showNewCandidateContent && <div>{/* Add New Candidate Form */}</div>}</>
         )}
+        {/* ------------------------------ v1.0.0 > */}
       </div>
     </div>
   );

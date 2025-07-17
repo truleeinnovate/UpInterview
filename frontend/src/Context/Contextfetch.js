@@ -295,7 +295,6 @@ const CustomProvider = ({ children }) => {
 
   // getting interviewers and showing it in the home (available interviewers) and interviewers
   const [interviewers, setInterviewers] = useState([]);
-  // console.log("interviewers data :", interviewers);
   const [loadingInterviewer, setLoadingInterviewer] = useState(false);
 
   const fetchInterviewers = useCallback(async () => {

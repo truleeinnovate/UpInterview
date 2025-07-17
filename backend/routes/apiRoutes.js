@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  Assessment_Template permission name changed to AssessmentTemplates
+// v1.0.1  -  Ashraf  -  fixed postion and interviews rounds and questions no populates
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -85,10 +86,10 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     // If res.locals doesn't have user info, try to extract from token directly
     if (!userId || !tenantId) {
       console.log('[2.1] No user info in res.locals, trying direct token extraction');
-      
+
       // Try to get token from cookies first, then from Authorization header
       let authToken = req.cookies.authToken;
-      
+
       if (!authToken) {
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -135,7 +136,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
     const modelMapping = getModelMapping(effectivePermissions);
     console.log('[6] Model mapping for request:', Object.keys(modelMapping));
-    
+
     const modelConfig = modelMapping[model.toLowerCase()];
     console.log('[7] Model config for', model, ':', {
       hasModelConfig: !!modelConfig,
@@ -186,10 +187,10 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           tenantId,
           roleId: { $in: inheritedRoleIds },
         }).select('_id');
-        
+
         const userIds = accessibleUsers.map(user => user._id);
         console.log('[15] Accessible user IDs from inherited roles:', userIds);
-        
+
         query.ownerId = { $in: userIds };
       } else {
         console.log('[16] Non-admin org user with no inherited roles - using own userId');
@@ -198,12 +199,12 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       console.log('[17] Final query after org user processing:', query);
     } else {
       console.log('[18] Organization Admin - only tenantId filter applied');
-    // Ensure scheduled assessments are not restricted by ownerId
-    if(model.toLowerCase() === 'scheduleassessment') {
-      delete query.ownerId;
+      // Ensure scheduled assessments are not restricted by ownerId
+      if(model.toLowerCase() === 'scheduleassessment') {
+        delete query.ownerId;
+      }
     }
-    }
- 
+
     let data;
     switch (model.toLowerCase()) {
       case 'mockinterview':
@@ -222,7 +223,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         console.log('[21] Processing TenantQuestions model');
         const lists = await TenantQuestionsListNames.find(query).lean();
         console.log('[22] Found', lists.length, 'question lists');
-        
+
         const listIds = lists.map((list) => list._id);
         console.log('[23] List IDs to filter questions:', listIds);
 
@@ -265,6 +266,8 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         console.log('[25] Grouped questions by', Object.keys(groupedQuestions).length, 'categories');
         break;
 
+
+
       case 'interview':
         console.log('[26] Processing Interview model');
         const interviews = await DataModel.find(query)
@@ -276,10 +279,10 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         console.log('[27] Found', interviews.length, 'interviews');
         const interviewIds = interviews.map((interview) => interview._id);
         console.log('[28] Interview IDs for related data:', interviewIds);
-
-        const roundsData = await InterviewRounds.find({ 
+// <------------------------------- v1.0.1 
+        const roundsData = await InterviewRounds.find({
           interviewId: { $in: interviewIds },
-          tenantId
+// ------------------------------ v1.0.1 >
         })
           .populate({
             path: 'interviewers',
@@ -292,7 +295,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
         const interviewQuestions = await InterviewQuestions.find({
           interviewId: { $in: interviewIds },
-          tenantId
+// <------------------------------- v1.0.1 
         })
           .select('roundId snapshot')
           .lean();
@@ -311,22 +314,35 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         console.log('[31] Final interview data with rounds and questions prepared');
         break;
 
+      case 'position':
+        console.log('[32] Processing Position model');
+        data = await DataModel.find(query)
+          .populate({
+            path: 'rounds.interviewers',
+            model: 'Contacts',
+            select: 'firstName lastName email',
+          })
+          .lean();
+        console.log('[33] Found', data.length, 'Position records');
+        break;
+      // ------------------------------ v1.0.1 >
+
       default:
-        console.log('[32] Processing generic model:', model);
+        console.log('[34] Processing generic model:', model);
         data = await DataModel.find(query).lean();
-        console.log('[33] Found', data.length, 'records for model', model);
+        console.log('[35] Found', data.length, 'records for model', model);
     }
 
-    console.log('[34] Sending response with data');
+    console.log('[36] Sending response with data');
     res.status(200).json({ data });
   } catch (error) {
-    console.error('[35] Error in request processing:', {
+    console.error('[37] Error in request processing:', {
       error: error.message,
       stack: error.stack,
       model: req.params.model,
       timestamp: new Date().toISOString()
     });
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
       message: error.message,
       requestId: req.id // If you have request ID tracking

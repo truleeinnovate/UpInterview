@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  fixed internal interviews get based on tenantid,border-b removed for header
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, X, ChevronDown, ChevronUp, Minimize, Expand } from 'lucide-react';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
@@ -69,11 +70,17 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
       const interviewersArray = interviewers?.data && Array.isArray(interviewers.data) ? interviewers.data : [];
       return interviewersArray
         .filter((interviewer) => {
+          // <------------------------------- v1.0.0 
+          // Filter by internal type
+          if (interviewer.type !== 'internal') {
+            return false;
+          }
+  
           // Filter by selected role
           if (selectedRole !== 'all' && interviewer.roleName !== selectedRole) {
             return false;
           }
-
+  
           // Filter by search query
           const contact = interviewer.contact || {};
           const matchesSearch = [contact.firstName, contact.lastName, contact.email, contact.phone].some(
@@ -86,40 +93,29 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
           ...interviewer.contact,
           contactId: interviewer.contact?._id || null,
           type: interviewer.type,
-          roleName: interviewer.roleName, // Include roleName in the mapped data
+          roleName: interviewer.roleName,
           availability: interviewer.availability,
           name: interviewer.firstName + interviewer.lastName
         }));
     } else {
-      // Groups filtering remains the same
-      
-       return Array.isArray(groups)
-      ? groups.filter((group) => {
-          // Filter by search query
-          const matchesSearch = [group.name, group.description].some(
-            (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-          
-          // For editing - check if this group matches the selected group name
-        
-           const isSelectedGroup = selectedGroupName 
+      // Groups filtering remains unchanged
+      return Array.isArray(groups)
+        ? groups.filter((group) => {
+            // Filter by search query
+            const matchesSearch = [group.name, group.description].some(
+              (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+  
+            // For editing - check if this group matches the selected group name
+            const isSelectedGroup = selectedGroupName
               ? group.name === selectedGroupName
               : selectedInterviewersProp.some(selected => selected._id === group._id);
-            
-          
-          return matchesSearch || isSelectedGroup;
-        })
-      : [];
-      
-      // return Array.isArray(groups)
-      //   ? groups.filter((group) =>
-      //     [group.name, group.description,].some(
-      //       (field) => field && field.toLowerCase().includes(searchQuery.toLowerCase())
-      //     )
-      //   )
-      //   : [];
+  
+            return matchesSearch || isSelectedGroup;
+          })
+        : [];
     }
-  }, [interviewers, groups, searchQuery, viewType, selectedRole,selectedGroupName]); // Added selectedRole to dependencies
+  }, [interviewers, groups, searchQuery, viewType, selectedRole, selectedGroupName]); // Added selectedRole to dependencies
 
 
   useEffect(() => {
@@ -212,8 +208,10 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
         ref={modalRef}
         className={`bg-white h-full shadow-xl flex flex-col ${isFullscreen ? 'w-full' : 'w-full md:w-2/3 lg:w-1/2 xl:w-1/2 2xl:w-1/2'}`}
       >
+        {/* <------------------------------- v1.0.0  */}
         {/* Fixed Header */}
-        <div className="flex justify-between items-center px-5 py-4 border-b border-gray-200 bg-white z-10">
+        <div className="flex justify-between items-center px-5 py-4 bg-white z-10">
+        {/* ------------------------------ v1.0.0 > */}
           <div>
             <h2 className="text-2xl font-semibold text-custom-blue">
               Select Internal {viewType === 'individuals' ? 'Individuals' : 'Groups'}
@@ -242,7 +240,10 @@ const InternalInterviews = ({ onClose, onSelectCandidates, navigatedfrom, select
         </div>
 
         {/* Fixed Dropdown and Search Section */}
-        <div className="px-6 bg-white border-b border-gray-200 z-10">
+
+        {/* <------------------------------- v1.0.0  */}
+        <div className="px-6 bg-white z-10">
+        {/* ------------------------------ v1.0.0 > */}
           <div className="flex gap-x-4 md:flex-row md:items-end md:space-x-4 md:space-y-0 justify-between my-5">
             {/* View Type Dropdown */}
             <div className="w-[25%] relative" ref={dropdownRef}>
