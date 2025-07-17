@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 
-// version 0.0.0 ------ Venkatesh---changes in full screen mode icons and remove footer border-top
+// v1.0.0 ------ Venkatesh---changes in full screen mode icons and remove footer border-top
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
@@ -320,7 +320,7 @@ const SupportForm = () => {
             <h2 className="text-2xl font-semibold text-custom-blue">
               {editMode ? "Edit Support Ticket" : "New Support Ticket"}
             </h2>
-            {/* version 0.0.0-----*/}
+            {/* <------v1.0.0-----*/}
             <div className="flex items-center gap-2">
                 <button
                   onClick={toggleFullWidth}
@@ -340,7 +340,7 @@ const SupportForm = () => {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              {/* version 0.0.0-----*/}
+              {/* -----v1.0.0----->*/}
           </div>
         </div>
 
@@ -513,8 +513,9 @@ const SupportForm = () => {
           </div>
 
           {/* Footer */}
-          {/* version 0.0.0 ------ */}
+          {/* <-----v1.0.0 ------ */}
           <div className="flex justify-end gap-3 p-5 bg-white">
+            {/* -----v1.0.0 ------> */}
             <button
               type="button"
               onClick={() => navigate("/support-desk")}

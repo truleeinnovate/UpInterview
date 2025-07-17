@@ -1,4 +1,4 @@
-// ----- version 0.0.0 ----- Venkatesh----improve dropdown styles and placeholder text in small devices shown in ellipsis and border border-gray-300 added
+// ----- v1.0.0 ----- Venkatesh----improve dropdown styles and placeholder text in small devices shown in ellipsis and border border-gray-300 added
 
 import { useState, useRef, useEffect } from 'react';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
@@ -53,14 +53,10 @@ const CustomDropdown = ({
         placeholder={placeholder}
         value={value}
         onClick={() => setShow(!show)}
-        className="block w-full px-3 py-2 h-8 text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1"
-        // ----- version 0.0.0 ----- 
-        style={{
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-        }}
-        // ----- version 0.0.0 ----- 
+        // <-----v1.0.0--
+        className="block w-full px-3 py-2 h-8 text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 whitespace-nowrap overflow-ellipsis"
+        // -----v1.0.0---> 
+        
       />
       <ChevronDown
         className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 cursor-pointer"

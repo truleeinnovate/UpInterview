@@ -1,4 +1,4 @@
-// version 0.0.0 ----- Venkatesh ---min experience and max experience validation added
+// v1.0.0 ----- Venkatesh ---min experience and max experience validation added
 
 import React from "react";
 import { useState, useEffect, useRef } from "react";
@@ -1093,11 +1093,11 @@ useEffect(() => {
 
                       </div>
                       {errors.minexperience && (
-                        // version 0.0.0 ----- 
+                        // <----v1.0.0----- 
                               <p className="text-red-500 text-xs mt-1">
                                 {errors.minexperience}
                               </p>
-                        // version 0.0.0 ----- 
+                        // ------v1.0.0----->
                             )}
                     </div>
                     
@@ -1146,9 +1146,9 @@ useEffect(() => {
                         </div>
                       </div>
                       {errors.maxexperience && (
-                        // version 0.0.0 ----- 
+                        // <-----v1.0.0 ----- 
                         <p className="text-red-500 text-xs mt-1">{errors.maxexperience}</p>
-                        // version 0.0.0 ----- 
+                        // ------v1.0.0 ----->
                       )}
                     </div>
                     

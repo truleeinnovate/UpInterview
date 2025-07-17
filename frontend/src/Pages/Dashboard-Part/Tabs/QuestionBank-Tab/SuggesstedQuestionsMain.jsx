@@ -1,4 +1,4 @@
-// version 0.0.0 ------ Venkatesh--- added loading state and skeleton loader
+// v1.0.0 ------ Venkatesh--- added loading state and skeleton loader
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
@@ -384,8 +384,9 @@ const SuggestedQuestionsComponent = ({
         </div>
     );
 
-    // version 0.0.0 -----
+    // <-------v1.0.0 -----
     if (isLoading) return <SkeletonLoader />;
+    // ------v1.0.0 ----->
 
     if (!suggestedQuestions || suggestedQuestions.length === 0) {
         return (

@@ -1,4 +1,4 @@
-// ----- version 0.0.0 ----- Venkatesh----update LoadingButton colors
+// ----- v1.0.0 ----- Venkatesh----update LoadingButton colors
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -460,7 +460,7 @@ const Subscription = () => {
                 onClick={() => submitPlans(plan)}
                 isLoading={isMutationLoading}
                 loadingText="Processing..."
-                // ----- version 0.0.0 -----
+                // <----- v1.0.0 -----
                 className={`w-full font-semibold py-2 mt-4 rounded-lg text-xs
                 ${isHighlighted(plan) ? "bg-[#bcedf6] text-black hover:bg-[#bcedf6] hover:text-black" : "bg-custom-blue text-white hover:bg-custom-blue hover:text-white"}
                 ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}
@@ -476,7 +476,7 @@ const Subscription = () => {
                   }
                   return "";
                 })()}`}
-                // ----- version 0.0.0 -----
+                // ----- v1.0.0----->
                 disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"}
               >
                 {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"
