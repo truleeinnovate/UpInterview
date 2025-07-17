@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+// v1.0.0  -  Ashraf  - forwarderror solved
+import React, { useState, useEffect, useMemo, useRef, forwardRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { validatePassScoreData } from "../../../../../utils/passScoreValidation";
+  // <---------------------- v1.0.0
 
-const PassScore = ({
+const PassScore = forwardRef(({
+  // ---------------------- v1.0.0 >
   setAddedSections,
   addedSections,
   setFormData,
@@ -17,7 +20,7 @@ const PassScore = ({
   setTotalScores,
   setTotalScore,
   setPassScore,
-}) => {
+}, ref) => {
   const [selectedScore, setSelectedScore] = useState(formData.passScoreType || "Number");
   const [selectedPassScoreBy, setSelectedPassScoreBy] = useState(formData.passScoreBy || "Overall");
   const [localTotalScore, setLocalTotalScore] = useState(initialTotalScore || "");
@@ -522,6 +525,6 @@ const PassScore = ({
       </div>
     </div>
   );
-};
+});
 
 export default PassScore;

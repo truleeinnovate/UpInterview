@@ -1,3 +1,5 @@
+// v1.0.0  -  Ashraf  -  removed consoles
+
 // this is new
 require('dotenv').config();
 
@@ -21,15 +23,7 @@ app.set('trust proxy', 1);
 // ✅ Parse cookies
 app.use(cookieParser());
 
-// Debug middleware to track cookie issues
-app.use((req, res, next) => {
-  console.log(`[Cookie Debug] Request URL: ${req.url}`);
-  console.log(`[Cookie Debug] Request cookies:`, req.cookies);
-  console.log(`[Cookie Debug] Raw cookie header:`, req.headers.cookie);
-  console.log(`[Cookie Debug] Origin:`, req.headers.origin);
-  console.log(`[Cookie Debug] Referer:`, req.headers.referer);
-  next();
-});
+
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -86,15 +80,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-// Add cookie debugging middleware AFTER CORS
-app.use((req, res, next) => {
-  console.log('[Cookie Debug] Request URL:', req.url);
-  console.log('[Cookie Debug] Request cookies:', req.cookies);
-  console.log('[Cookie Debug] Raw cookie header:', req.headers.cookie);
-  console.log('[Cookie Debug] Origin:', req.headers.origin);
-  console.log('[Cookie Debug] Referer:', req.headers.referer);
-  next();
-});
+
 
 mongoose
   .connect(process.env.MONGODB_URI, {})
@@ -140,7 +126,6 @@ const conditionalPermissionMiddleware = (req, res, next) => {
   const isAuthRoute = authRoutes.some(route => req.path.includes(route));
   
   if (isAuthRoute) {
-    console.log(`[Permission Middleware] Skipping permission check for auth route: ${req.path}`);
     return next();
   }
 
@@ -274,9 +259,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-// app.listen(port, () => {
-//   console.log(`Server is running on http://localhost:${port}`);
-// });
+
 
 
 // this is common code for datautils
@@ -1005,3 +988,4 @@ app.use("/receipts", ReceiptsRoute);
 // <================ getting the availability by contact id to show in the account settings user profile ==============>
 const interviewAvailabilityRoutes = require("./routes/interviewAvailabilityRoutes");
 app.use("/interview-availability", interviewAvailabilityRoutes);
+ // v1.0.0 ---------------------->

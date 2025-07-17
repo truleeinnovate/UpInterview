@@ -1,3 +1,5 @@
+// v1.0.0  -  Ashraf  -  while editing assessment id not getting issues
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useRef } from 'react';
@@ -37,15 +39,21 @@ export const useAssessments = (filters = {}) => {
 
   const isLoading = isQueryLoading;
 
+  // <---------------------- v1.0.0
+
   const addOrUpdateAssessment = useMutation({
     mutationFn: async ({ isEditing, id, assessmentData, tabsSubmitStatus }) => {
-      if (isEditing) {
+      
+      if (isEditing && id && id !== '' && id !== null && id !== undefined) {
+        
         const { data } = await axios.patch(
           `${config.REACT_APP_API_URL}/assessments/update/${id}`,
           assessmentData,
         );
         return data;
       }
+      
+      
       const { data } = await axios.post(
         `${config.REACT_APP_API_URL}/assessments/new-assessment`,
         assessmentData,
@@ -57,7 +65,8 @@ export const useAssessments = (filters = {}) => {
       queryClient.setQueryData(['Assessment_Template', filters], (oldData) => {
         if (!oldData) return oldData;
         
-        if (variables.isEditing) {
+        if (variables.isEditing && variables.id && variables.id !== '' && variables.id !== null && variables.id !== undefined) {
+          // <---------------------- v1.0.0
           // Update existing assessment
           return oldData.map(assessment => 
             assessment._id === variables.id 

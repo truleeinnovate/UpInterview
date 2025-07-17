@@ -422,7 +422,6 @@ const MainAppRoutes = ({
     return combinedPermissions[objectName][permissionType] ?? false;
   };
 
-  console.log("hasPermission", hasPermission);
 
   return (
     <>
