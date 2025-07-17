@@ -40,13 +40,13 @@ const CombinedNavbar = () => {
   // Get user type
   const userType = AuthCookieManager.getUserType();
 
-  console.log('🧭 CombinedNavbar render:', {
-    userType,
-    isInitialized,
-    loading,
-    location: location.pathname,
-    hasAuthToken: !!authToken
-  });
+  // console.log('🧭 CombinedNavbar render:', {
+  //   userType,
+  //   isInitialized,
+  //   loading,
+  //   location: location.pathname,
+  //   hasAuthToken: !!authToken
+  // });
 
   // // Debug permission checks
   // const debugPermissions = () => {
