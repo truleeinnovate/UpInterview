@@ -1,14 +1,16 @@
+// v1.0.0 - mansoor - removed unnecessary comments
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
-import { setAuthCookies, clearAllAuth, debugTokenSources, testCookieFunctionality } from '../../utils/AuthCookieManager/AuthCookieManager';
+// <------------------- v1.0.0
+import { setAuthCookies, clearAllAuth } from '../../utils/AuthCookieManager/AuthCookieManager';
+// v1.0.0 ---------------------->
 import { config } from "../../config";
 import { validateWorkEmail } from '../../utils/workEmailValidation.js';
 import toast from "react-hot-toast";
 import { usePermissions } from '../../Context/PermissionsContext';
-import Cookies from 'js-cookie';
 
 const OrganizationLogin = () => {
   const { refreshPermissions } = usePermissions();
@@ -194,23 +196,20 @@ const OrganizationLogin = () => {
 
 
 
+  // <------------------- v1.0.0 - removed consoles in this total function
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateLogin()) return;
 
     setIsLoading(true);
     const loginStartTime = new Date().toISOString();
-    console.log(`[OrganizationLogin][${loginStartTime}] Starting login process...`);
 
     try {
       // Step 1: Clear all existing cookies
       await clearAllAuth();
-      console.log(`[OrganizationLogin][${loginStartTime}] Cleared all cookies`);
 
       // Step 2: Authenticate user with email and password
       const loginURL = `${config.REACT_APP_API_URL}/Organization/Login`;
-      console.log(`[OrganizationLogin][${loginStartTime}] Authenticating user...`);
-
       const response = await axios.post(
         loginURL,
         {
@@ -219,8 +218,6 @@ const OrganizationLogin = () => {
         },
         { withCredentials: true }
       );
-
-      console.log(`[OrganizationLogin][${loginStartTime}] Authentication successful`);
 
       const {
         authToken,
@@ -239,36 +236,24 @@ const OrganizationLogin = () => {
         subdomainStatus,
       } = response.data;
 
-      console.log(`[OrganizationLogin][${loginStartTime}] User data extracted:`, {
-        roleType,
-        status,
-        isEmailVerified,
-        isProfileCompleted,
-        subdomain,
-        subdomainStatus
-      });
-
       // Step 3: Handle internal users (admin dashboard)
       if (roleType === 'internal') {
-        console.log(`[OrganizationLogin][${loginStartTime}] Internal user detected, navigating to admin dashboard`);
         setAuthCookies({ impersonationToken, impersonatedUserId });
-
-        // Refresh permissions for super admin
-        console.log(`[OrganizationLogin][${loginStartTime}] Refreshing permissions for super admin...`);
         await refreshPermissions();
-
-        console.log(`[OrganizationLogin][${loginStartTime}] Navigating to admin dashboard`);
         navigate('/admin-dashboard');
         return;
       }
 
       // Step 4: Set authentication cookies for regular users
-      console.log(`[OrganizationLogin][${loginStartTime}] Setting authentication cookies...`);
-      setAuthCookies({ authToken, userId: ownerId, tenantId, organization: true });
+      const setCookiesResult = await setAuthCookies({ 
+        authToken, 
+        userId: ownerId, 
+        tenantId, 
+        organization: true 
+      });
 
       // Step 5: Handle email verification
       if (!isEmailVerified) {
-        console.log(`[OrganizationLogin][${loginStartTime}] Email not verified, showing verification screen`);
         setIsEmailVerified(false);
         await handleResendVerification();
         setCountdown(60);
@@ -276,21 +261,12 @@ const OrganizationLogin = () => {
       }
 
       // Step 6: Check subdomain and handle subdomain routing
-      console.log(`[OrganizationLogin][${loginStartTime}] Checking subdomain configuration...`);
-
       if (subdomain && subdomainStatus === 'active') {
-        console.log(`[OrganizationLogin][${loginStartTime}] Active subdomain found:`, subdomain);
-
         const currentDomain = window.location.hostname;
         const targetDomain = `${subdomain}.app.upinterview.io`;
 
-        console.log(`[OrganizationLogin][${loginStartTime}] Current domain:`, currentDomain);
-        console.log(`[OrganizationLogin][${loginStartTime}] Target subdomain:`, targetDomain);
-
         // Check if we need to redirect to subdomain
         if (!currentDomain.includes(subdomain)) {
-          console.log(`[OrganizationLogin][${loginStartTime}] Redirecting to subdomain...`);
-
           const protocol = window.location.protocol;
 
           // Determine the target path based on user status
@@ -305,69 +281,45 @@ const OrganizationLogin = () => {
 
           const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
 
-          console.log(`[OrganizationLogin][${loginStartTime}] Setting subdomain URL with path:`, targetUrl);
-
-          // Wait for 3-4 seconds to ensure data is loaded in the home page
-          console.log(`[OrganizationLogin][${loginStartTime}] Waiting 4 seconds for data preparation...`);
+          // Wait for data to be loaded in the home page
           await new Promise(resolve => setTimeout(resolve, 4000));
-
-          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subdomain:`, targetUrl);
           window.location.href = targetUrl;
           return;
-        } else {
-          console.log(`[OrganizationLogin][${loginStartTime}] Already on correct subdomain`);
         }
-      } else {
-        console.log(`[OrganizationLogin][${loginStartTime}] No active subdomain found:`, { subdomain, subdomainStatus });
       }
 
       // Step 7: Refresh permissions for non-subdomain cases
-      console.log(`[OrganizationLogin][${loginStartTime}] Refreshing permissions...`);
       await refreshPermissions();
 
       // Step 8: Handle navigation based on user status (immediate navigation)
-      console.log(`[OrganizationLogin][${loginStartTime}] Determining navigation route...`);
-
       switch (status) {
         case 'submitted':
         case 'payment_pending':
-          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to subscription plans`);
           navigate('/subscription-plans');
           break;
 
         case 'active':
           if (isProfileCompleted === false && roleName) {
-            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to complete profile`);
             navigate('/complete-profile', {
               state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
             });
           } else {
-
-            // Enhanced home navigation with data loading preparation
-            console.log(`[OrganizationLogin][${loginStartTime}] Preparing for home navigation with data loading...`);
-
-            // Wait for 4 seconds to ensure backend data is ready and cookies are properly set
-            console.log(`[OrganizationLogin][${loginStartTime}] Waiting 4 seconds for data preparation...`);
+            // Wait for data to be ready before navigating to home
             await new Promise(resolve => setTimeout(resolve, 4000));
-
-            console.log(`[OrganizationLogin][${loginStartTime}] Navigating to home with prepared data`);
             navigate('/home');
           }
           break;
 
         default:
-          console.log(`[OrganizationLogin][${loginStartTime}] Navigating to default route`);
           navigate('/');
       }
 
     } catch (error) {
-      console.error(`[OrganizationLogin][${loginStartTime}] Login error:`, error);
       setIsLoading(false);
       setErrors({ email: '', password: '' });
 
       if (error.response) {
         const { status, data } = error.response;
-        console.log(`[OrganizationLogin][${loginStartTime}] Error response:`, { status, data });
 
         if (status === 400) {
           if (data.fields) {
@@ -380,7 +332,6 @@ const OrganizationLogin = () => {
           }
         } else if (status === 403) {
           if (data.isEmailVerified === false) {
-            console.log(`[OrganizationLogin][${loginStartTime}] Email not verified (403), showing verification screen`);
             setIsEmailVerified(false);
             await handleResendVerification();
             setCountdown(60);
@@ -395,9 +346,9 @@ const OrganizationLogin = () => {
       }
     } finally {
       setIsLoading(false);
-      console.log(`[OrganizationLogin][${loginStartTime}] Login process completed`);
     }
   };
+  // v1.0.0 ----------------------->
 
   return (
     <div>
