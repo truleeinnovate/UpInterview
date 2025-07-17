@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -16,11 +17,11 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { usePermissions } from "../../../../Context/PermissionsContext";
-import { useDynamicPermissionCheck } from "../../../../utils/dynamicPermissions";
 
 function Candidate({ candidates, onResendLink, isAssessmentView }) {
-  const { effectivePermissions } = usePermissions();
-  const { checkPermission, isInitialized } = useDynamicPermissionCheck();
+  // <---------------------- v1.0.0
+  // All hooks at the top
+  const { effectivePermissions, isInitialized } = usePermissions();
   const [view, setView] = useState("table");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
@@ -42,9 +43,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   const [selectedTech, setSelectedTech] = useState([]);
   const [experience, setExperience] = useState({ min: "", max: "" });
   const { skills, qualifications } = useMasterData();
-
   const { candidateData, isLoading } = useCandidates();
-
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null);
@@ -59,6 +58,20 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
       setIsExperienceOpen(false);
     }
   }, [isFilterPopupOpen, selectedFilters]);
+
+  useEffect(() => {
+    // Only run on isTablet change
+    if (isTablet) {
+      setView("kanban");
+    } else {
+      setView("table");
+    }
+  }, [isTablet]);
+
+  // Only after all hooks
+  if (!isInitialized) {
+    return null;
+  }
 
   const handleStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -96,14 +109,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
-
-  useEffect(() => {
-    if (isTablet) {
-      setView("kanban");
-    } else {
-      setView("table");
-    }
-  }, [isTablet]);
 
   const dataToUse = isAssessmentView ? candidates : candidateData;
 
@@ -216,10 +221,10 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             )}
           </div>
           <div className="ml-3">
-            <div
-              className="text-sm font-medium text-custom-blue cursor-pointer"
-                              onClick={() => checkPermission("Candidates", "View") && navigate(`view-details/${row._id}`)}
-            >
+                          <div
+                className="text-sm font-medium text-custom-blue cursor-pointer"
+                onClick={() => effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)}
+              >
               {(row?.FirstName.charAt(0).toUpperCase() + row.FirstName.slice(1) || "") + " " + (row.LastName.charAt(0).toUpperCase() + row.LastName.slice(1) || "")}
             </div>
           </div>
@@ -276,7 +281,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   // Table Actions Configuration
   const tableActions = [
-            ...(checkPermission("Candidates", "View")
+            ...(effectivePermissions.Candidates?.View
       ? [
           {
             key: "view",
@@ -307,7 +312,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             icon: <Rotate3d size={24} className="text-custom-blue" />,
             onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
           },
-          ...(checkPermission("Candidates", "Edit")
+          ...(effectivePermissions.Candidates?.Edit
             ? [
                 {
                   key: "edit",
@@ -335,7 +340,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
     <div className="flex items-center gap-1">
-              {checkPermission("Candidates", "View") && (
+              {effectivePermissions.Candidates?.View && (
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -359,7 +364,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
           >
             <CircleUser className="w-4 h-4" />
           </button>
-          {checkPermission("Candidates", "Edit") && (
+          {effectivePermissions.Candidates?.Edit && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -405,8 +410,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                   title="Candidates"
                   onAddClick={() => navigate("new")}
                   addButtonText="Add Candidate"
-                  canCreate={checkPermission("Candidates", "Create")}
+                  canCreate={effectivePermissions.Candidates?.Create}
                 />
+                {/* // <---------------------- v1.0.0 */}
                 <Toolbar
                   view={view}
                   setView={setView}

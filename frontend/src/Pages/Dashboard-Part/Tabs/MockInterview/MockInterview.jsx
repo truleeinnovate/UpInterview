@@ -1,3 +1,5 @@
+// v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
+
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -16,11 +18,9 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
-import { useDynamicPermissionCheck } from "../../../../utils/dynamicPermissions.js";
 
 const MockInterview = () => {
-  const { checkPermission, isInitialized } = useDynamicPermissionCheck();
-  const { effectivePermissions } = usePermissions();
+  const { effectivePermissions, isInitialized } = usePermissions();
   const { 
     mockinterviewData, 
     isLoading, 
@@ -51,11 +51,16 @@ const MockInterview = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Permission check after all hooks
-  if (!isInitialized || !checkPermission("MockInterviews")) {
+  // Don't render until permissions are initialized
+  if (!isInitialized) {
     return null;
   }
 
+  // Check if user has access to MockInterviews
+  if (!effectivePermissions.MockInterviews?.ViewTab) {
+    return null;
+  }
+  // <---------------------- v1.0.0
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
@@ -274,8 +279,9 @@ const MockInterview = () => {
               title="Mock Interviews"
               onAddClick={() => navigate('/mockinterview-create')}
               addButtonText="Add Interview"
-              canCreate={checkPermission("MockInterviews")}
+              canCreate={effectivePermissions.MockInterviews?.Create}
             />
+            {/* // <---------------------- v1.0.0 */}
             <Toolbar
               view={viewMode}
               setView={setViewMode}

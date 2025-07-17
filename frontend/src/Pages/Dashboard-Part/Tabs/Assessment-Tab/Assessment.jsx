@@ -1,3 +1,5 @@
+// v1.0.0  -  Ashraf  -  assessment template id not getting issues
+// v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -20,7 +22,8 @@ import { useAssessments } from '../../../../apiHooks/useAssessments.js';
 import { usePermissions } from "../../../../Context/PermissionsContext";
 
 const Assessment = () => {
-  const { effectivePermissions } = usePermissions();
+  // All hooks at the top
+  const { effectivePermissions, isInitialized } = usePermissions();
   const { assessmentData, isLoading } = useAssessments();
   const navigate = useNavigate();
   const [assessmentSections, setAssessmentSections] = useState({});
@@ -35,13 +38,12 @@ const Assessment = () => {
   });
   const [isShareOpen, setIsShareOpen] = useState(false);
   const filterIconRef = useRef(null);
-
-  const rowsPerPage = 10;
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const currentAssessments = assessmentData?.slice(startIndex, endIndex) || [];
-
+  // <---------------------- v1.0.0
+  const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
+  const [isDurationOpen, setIsDurationOpen] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState([]);
+  const [selectedDuration, setSelectedDuration] = useState([]);
+  // <---------------------- v1.0.0
   useEffect(() => {
     document.title = "Assessment Template";
     const handleResize = () => {
@@ -53,31 +55,38 @@ const Assessment = () => {
   }, []);
 
   useEffect(() => {
-    if (currentAssessments.length > 0) {
-      const fetchSections = async () => {
-        try {
-          const sectionPromises = currentAssessments.map(async (assessment) => {
-            const response = await axios.get(
-              `${config.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`
-            );
-            const sections = response.data.exists === false
-              ? 0
-              : response.data.data?.sections?.length || 0;
-            return { id: assessment._id, sections };
-          });
-          const results = await Promise.all(sectionPromises);
-          const newSections = results.reduce((acc, curr) => {
-            acc[curr.id] = curr.sections;
-            return acc;
-          }, {});
-          setAssessmentSections((prev) => ({ ...prev, ...newSections }));
-        } catch (error) {
-          console.error("Error fetching sections:", error);
-        }
-      };
-      fetchSections();
-    }
-  }, []);
+    // Only run if assessmentData is loaded and not empty
+    // <---------------------- v1.0.0
+    if (!assessmentData || assessmentData.length === 0) return;
+    const fetchSections = async () => {
+      try {
+        const sectionPromises = assessmentData.map(async (assessment) => {
+          // <---------------------- v1.0.0
+          const response = await axios.get(
+            `${config.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`
+          );
+          const sections = response.data.exists === false
+            ? 0
+            : response.data.data?.sections?.length || 0;
+          return { id: assessment._id, sections };
+        });
+        const results = await Promise.all(sectionPromises);
+        const newSections = results.reduce((acc, curr) => {
+          acc[curr.id] = curr.sections;
+          return acc;
+        }, {});
+        setAssessmentSections((prev) => ({ ...prev, ...newSections }));
+      } catch (error) {
+        console.error("Error fetching sections:", error);
+      }
+    };
+    fetchSections();
+  }, [assessmentData]);
+
+  // Only after all hooks
+  if (!isInitialized) {
+    return null;
+  }
 
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
@@ -131,8 +140,13 @@ const Assessment = () => {
       return matchesSearchQuery && matchesDifficultyLevel && matchesDuration;
     });
   };
+  // <---------------------- v1.0.0
+  const rowsPerPage = 10;
 
   const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+  const startIndex = currentPage * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  // <---------------------- v1.0.0
   const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
   const nextPage = () => {
@@ -147,20 +161,24 @@ const Assessment = () => {
     }
   };
 
+  // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
   const handleView = (assessment) => {
-    if (effectivePermissions.Assessments?.View) {
+    if (effectivePermissions.AssessmentTemplates?.View) {
       navigate(`/assessments-template-details/${assessment._id}`);
     }
   };
 
   const handleEdit = (assessment) => {
-    if (effectivePermissions.Assessments?.Edit) {
+    if (effectivePermissions.AssessmentTemplates?.Edit) {
       navigate(`/assessments-template/edit/${assessment._id}`);
     }
   };
+  // <---------------------- v1.0.1 >
 
   const handleShareClick = (assessment) => {
-    if (effectivePermissions.Assessments?.Share && (assessmentSections[assessment._id] ?? 0) > 0) {
+    if ((assessmentSections[assessment._id] ?? 0) > 0) {
+      // <---------------------- v1.0.0
       setIsShareOpen(assessment);
     } else if ((assessmentSections[assessment._id] ?? 0) === 0) {
       toast.error("No questions added to this assessment.");
@@ -228,9 +246,10 @@ const Assessment = () => {
       render: (value) => value || "Not Provided",
     },
   ];
-
+  // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
   const tableActions = [
-    ...(effectivePermissions.Assessments?.View
+    ...(effectivePermissions.AssessmentTemplates?.View
       ? [
           {
             key: "view",
@@ -240,7 +259,9 @@ const Assessment = () => {
           },
         ]
       : []),
-    ...(effectivePermissions.Assessments?.Edit
+    ...(effectivePermissions.AssessmentTemplates?.Edit
+      // <---------------------- v1.0.0
+      // <---------------------- v1.0.1
       ? [
           {
             key: "edit",
@@ -250,23 +271,15 @@ const Assessment = () => {
           },
         ]
       : []),
-    ...(effectivePermissions.Assessments?.Share
-      ? [
-          {
-            key: "share",
-            label: "Share",
-            icon: <Share2 className="w-4 h-4 text-green-600" />,
-            onClick: handleShareClick,
-            disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
-          },
-        ]
-      : []),
+    {
+      key: "share",
+      label: "Share",
+      icon: <Share2 className="w-4 h-4 text-green-600" />,
+      onClick: handleShareClick,
+      disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
+    },
   ];
 
-  const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
-  const [isDurationOpen, setIsDurationOpen] = useState(false);
-  const [selectedDifficulty, setSelectedDifficulty] = useState([]);
-  const [selectedDuration, setSelectedDuration] = useState([]);
 
   const difficultyOptions = ["Easy", "Medium", "Hard"];
   const durationOptions = ["30 minutes", "60 minutes"];
@@ -303,7 +316,9 @@ const Assessment = () => {
               title="Assessment Templates"
               onAddClick={() => navigate("/assessments-template/new")}
               addButtonText="New Template"
-              canCreate={effectivePermissions.Assessment_Template?.Create}
+              // <---------------------- v1.0.1
+              canCreate={effectivePermissions.AssessmentTemplates?.Create}
+              // <---------------------- v1.0.1 >
             />
             <Toolbar
               view={viewMode}

@@ -10,6 +10,7 @@ import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCirc
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from '../../../../config.js';
 import { useCandidates } from '../../../../apiHooks/useCandidates';
+import Loading from '../../../../Components/Loading.js';
 
 const ShareAssessment = ({
   isOpen,
@@ -42,17 +43,27 @@ const ShareAssessment = ({
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedules`
       );
-      const assigned = response.data.flatMap((schedule) =>
-        schedule.candidates.map((candidate) => ({
-          candidateId: candidate.candidateId._id.toString(),
-          scheduleOrder: schedule.order,
-        }))
-      );
-      setAssignedCandidates(assigned);
+      
+      // Check if response has the expected structure
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        const assigned = response.data.data.flatMap((schedule) =>
+          schedule.candidates.map((candidate) => ({
+            candidateId: candidate.candidateId._id.toString(),
+            scheduleOrder: schedule.order,
+          }))
+        );
+        setAssignedCandidates(assigned);
+      } else {
+        // Handle case where no schedules exist or different response structure
+        setAssignedCandidates([]);
+      }
     } catch (error) {
       console.error('Error fetching assigned candidates:', error);
+      setAssignedCandidates([]);
     }
   };
+
+  
 
   useEffect(() => {
     if (assessment._id) {
@@ -188,12 +199,7 @@ const ShareAssessment = ({
         onClick={(e) => e.stopPropagation()}
       >
         {isLoading && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 rounded-lg">
-            <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-              <p className="text-lg font-medium">Sending emails...</p>
-            </div>
-          </div>
+            <Loading message='Sending emails...' />
         )}
 
         {isSuccess && (

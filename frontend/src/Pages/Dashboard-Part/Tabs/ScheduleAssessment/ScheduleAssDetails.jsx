@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  removed expity date
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
@@ -92,11 +93,13 @@ function ScheduleAssDetails() {
             <div className="px-4 pt-4 sm:p-6 flex justify-between items-center bg-white z-50">
             <div>
             <h2 className="text-lg font-semibold text-custom-blue">Schedule — {schedule.order || schedule.scheduledAssessmentCode}</h2>
-            {schedule.expiryAt && (
+            {/* // <---------------------- v1.0.0 */}
+            {/* {schedule.expiryAt && (
               <p className="text-sm text-gray-500">
                 Expiry: {format(new Date(schedule.expiryAt), 'MMM dd, yyyy')}
               </p>
-            )}
+            )} */}
+            {/* // <---------------------- v1.0.0 */}
           </div>
               <div className="flex items-center space-x-2">
                 <button

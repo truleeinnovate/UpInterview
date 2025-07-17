@@ -23,7 +23,6 @@ const ProtectedRoute = ({ children }) => {
   // <---------------------------- v1.0.0
 
   useEffect(() => {
-
     // Start activity tracking
     const cleanupActivityTracker = startActivityTracking();
 
@@ -67,7 +66,6 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        // Token and cookie state verification happens silently
 
         // SIMPLE CHECK: If we have any token at all, allow access
         const hasAnyToken = authToken || impersonationToken;

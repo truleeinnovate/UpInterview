@@ -1,3 +1,4 @@
+
 /* Subscription animations CSS */
 
 /* Pulsing glow animation for upgrade buttons */
@@ -32,8 +33,8 @@
 /* Apply animation to upgrade buttons */
 .upgrade-button-animation {
   animation: upgradeGlow 2s infinite, gradientShift 3s infinite alternate;
-  background: linear-gradient(45deg, #217989, ) !important;
-  color: #217989 !important;
+  background: linear-gradient(45deg, #cee8ed, #fafbf8) !important;
+  color: black !important;
   font-weight: 600 !important;
   letter-spacing: 0.5px;
   border: none;

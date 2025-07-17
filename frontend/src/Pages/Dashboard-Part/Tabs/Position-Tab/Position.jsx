@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -12,11 +13,11 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { usePermissions } from "../../../../Context/PermissionsContext";
-import { useDynamicPermissionCheck } from "../../../../utils/dynamicPermissions";
 
 const PositionTab = () => {
-  const { effectivePermissions } = usePermissions();
-  const { checkPermission, isInitialized } = useDynamicPermissionCheck();
+  // <---------------------- v1.0.0
+  // All hooks at the top
+  const { effectivePermissions, isInitialized } = usePermissions();
   const { skills } = useMasterData();
   const { positionData, isLoading } = usePositions();
   const navigate = useNavigate();
@@ -43,6 +44,52 @@ const PositionTab = () => {
   const [experience, setExperience] = useState({ min: "", max: "" });
   const filterIconRef = useRef(null);
 
+  // Memoize unique locations to prevent recalculation on every render
+  const uniqueLocations = useMemo(() => {
+    if (!Array.isArray(positionData)) return [];
+    return [
+      ...new Set(
+        positionData.map((position) => position.Location).filter(Boolean)
+      ),
+    ];
+  }, [positionData]);
+
+  // Memoize filtered data to prevent recalculation on every render
+  const FilteredData = useMemo(() => {
+    if (!Array.isArray(positionData)) return [];
+    return positionData.filter((position) => {
+      const fieldsToSearch = [
+        position.title,
+        position.companyname,
+        position.Location,
+      ].filter((field) => field !== null && field !== undefined);
+
+      const matchesLocation =
+        selectedFilters.location.length === 0 ||
+        selectedFilters.location.includes(position.Location);
+      const matchesTech =
+        selectedFilters.tech.length === 0 ||
+        position.skills?.some((skill) =>
+          selectedFilters.tech.includes(skill.skill)
+        );
+      const matchesExperience =
+        (!selectedFilters.experience.min ||
+          position.minexperience >= selectedFilters.experience.min) &&
+        (!selectedFilters.experience.max ||
+          position.maxexperience <= selectedFilters.experience.max);
+      const matchesSearchQuery = fieldsToSearch.some((field) =>
+        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return (
+        matchesSearchQuery &&
+        matchesLocation &&
+        matchesTech &&
+        matchesExperience
+      );
+    });
+  }, [positionData, selectedFilters, searchQuery]);
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
@@ -66,6 +113,11 @@ const PositionTab = () => {
       setIsExperienceOpen(false);
     }
   }, [isFilterPopupOpen, selectedFilters]);
+
+  // Only after all hooks
+  if (!isInitialized) {
+    return null;
+  }
 
   const handleLocationToggle = (location) => {
     setSelectedLocation((prev) =>
@@ -135,49 +187,6 @@ const PositionTab = () => {
     setCurrentPage(0);
   };
 
-  // Memoize unique locations to prevent recalculation on every render
-  const uniqueLocations = useMemo(() => [
-    ...new Set(
-      positionData?.map((position) => position.Location).filter(Boolean)
-    ),
-  ], [positionData]);
-
-  // Memoize filtered data to prevent recalculation on every render
-  const FilteredData = useMemo(() => {
-    if (!Array.isArray(positionData)) return [];
-    return positionData.filter((position) => {
-      const fieldsToSearch = [
-        position.title,
-        position.companyname,
-        position.Location,
-      ].filter((field) => field !== null && field !== undefined);
-
-      const matchesLocation =
-        selectedFilters.location.length === 0 ||
-        selectedFilters.location.includes(position.Location);
-      const matchesTech =
-        selectedFilters.tech.length === 0 ||
-        position.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.skill)
-        );
-      const matchesExperience =
-        (!selectedFilters.experience.min ||
-          position.minexperience >= selectedFilters.experience.min) &&
-        (!selectedFilters.experience.max ||
-          position.maxexperience <= selectedFilters.experience.max);
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      return (
-        matchesSearchQuery &&
-        matchesLocation &&
-        matchesTech &&
-        matchesExperience
-      );
-    });
-  }, [positionData, selectedFilters, searchQuery]);
-
   const rowsPerPage = 10;
   const totalPages = Math.ceil(FilteredData.length / rowsPerPage);
   const nextPage = () => {
@@ -196,13 +205,13 @@ const PositionTab = () => {
   const currentFilteredRows = FilteredData.slice(startIndex, endIndex);
 
   const handleView = (position) => {
-    if (checkPermission("Positions", "View")) {
+    if (effectivePermissions.Positions?.View) {
       navigate(`/position/view-details/${position._id}`, {
         state: { from: location.pathname },
       });
     }
   };
-
+  // <---------------------- v1.0.0
   const handleEdit = (position) => {
     if (effectivePermissions.Positions?.Edit) {
       navigate(`/position/edit-position/${position._id}`);

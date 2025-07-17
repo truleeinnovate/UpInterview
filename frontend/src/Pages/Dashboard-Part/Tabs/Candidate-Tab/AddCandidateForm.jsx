@@ -225,6 +225,7 @@ const AddCandidateForm = ({ mode }) => {
   const [isResumeRemoved, setIsResumeRemoved] = useState(false);
   const [fileError, setFileError] = useState("");
   const [resumeError, setResumeError] = useState("");
+  const [activeButton, setActiveButton] = useState(null); // 'save' or 'add' or null
 
   // const authToken = Cookies.get("authToken");
   // const tokenPayload = decodeJwt(authToken);
@@ -563,6 +564,10 @@ const AddCandidateForm = ({ mode }) => {
   const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
     console.log("Starting submit process...");
+    
+    // Set which button was clicked
+    setActiveButton(isAddCandidate ? 'add' : 'save');
+    
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries,
@@ -572,6 +577,8 @@ const AddCandidateForm = ({ mode }) => {
     if (!formIsValid) {
       console.log("Form validation failed:", newErrors);
       setErrors(newErrors);
+      // Reset active button on validation failure
+      setActiveButton(null);
       return;
     }
 
@@ -637,6 +644,9 @@ const AddCandidateForm = ({ mode }) => {
     } catch (error) {
       console.error("Error adding candidate:", error);
       setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
+    } finally {
+      // Reset active button regardless of success or failure
+      setActiveButton(null);
     }
   };
 
@@ -1217,7 +1227,7 @@ const AddCandidateForm = ({ mode }) => {
 
                 <LoadingButton
                   onClick={handleSubmit}
-                  isLoading={isMutationLoading}
+                  isLoading={isMutationLoading && activeButton === 'save'}
                   loadingText={id ? "Updating..." : "Saving..."}
                 >
                   {id ? "Update" : "Save"}
@@ -1226,7 +1236,7 @@ const AddCandidateForm = ({ mode }) => {
                 {!id && (
                   <LoadingButton
                     onClick={(e) => handleSubmit(e, true)}
-                    isLoading={isMutationLoading}
+                    isLoading={isMutationLoading && activeButton === 'add'}
                     loadingText="Adding..."
                   >
                     <FaPlus className="w-5 h-5 mr-1" /> Add Candidate

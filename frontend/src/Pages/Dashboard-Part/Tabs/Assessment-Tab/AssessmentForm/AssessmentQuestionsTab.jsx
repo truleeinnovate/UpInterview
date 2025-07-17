@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// v1.0.0  -  Ashraf  -  popup position alignmet issue solved
+import React, { useState, useEffect, useRef } from 'react';
 import Popup from "reactjs-popup";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank";
 import { ReactComponent as MdMoreVert } from "../../../../../icons/MdMoreVert.svg";
@@ -53,6 +54,30 @@ const AssessmentQuestionsTab = ({
 }) => {
   const [isQuestionPopup, setIsQuestionPopup] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
+  // <---------------------- v1.0.0
+
+  const addSectionRef = useRef(null);
+  const [sectionPopupPosition, setSectionPopupPosition] = useState({ top: 0, left: 0 });
+  const [questionPopupPosition, setQuestionPopupPosition] = useState({ top: 0, left: 0 });
+
+  // Click outside handler for Add Section popup
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (addSectionRef.current && !addSectionRef.current.contains(event.target)) {
+        setIsAddQuestionModalOpen(false);
+      }
+    };
+
+    if (isAddQuestionModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isAddQuestionModalOpen, setIsAddQuestionModalOpen]);
+  // ---------------------- v1.0.0 >
+
   const handlePopupToggle = (section = null) => {
     setIsQuestionPopup(!isQuestionPopup);
     setSelectedSection(section);
@@ -60,7 +85,7 @@ const AssessmentQuestionsTab = ({
 
 
   // Toggle action menu for sections and questions
-  const toggleActionMenu = (type, sectionIndex, questionIndex = null) => {
+  const toggleActionMenu = (type, sectionIndex, questionIndex = null, event = null) => {
     if (
       actionViewMore?.type === type &&
       actionViewMore?.index === sectionIndex &&
@@ -68,6 +93,22 @@ const AssessmentQuestionsTab = ({
     ) {
       setActionViewMore(null);
     } else {
+      // Calculate popup position based on button click
+      if (event) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        if (type === "section") {
+          setSectionPopupPosition({
+            top: rect.bottom + window.scrollY - 3,
+            left: rect.right - 192 // w-48 = 12rem = 192px
+          });
+        } else if (type === "question") {
+          setQuestionPopupPosition({
+            top: rect.bottom + window.scrollY - 3,
+            left: rect.right - 160 // w-40 = 10rem = 160px
+          });
+        }
+      }
+      
       setActionViewMore({
         type,
         index: sectionIndex,
@@ -124,62 +165,64 @@ const AssessmentQuestionsTab = ({
             <p className="text-sm text-gray-500 mt-1">Manage sections and questions</p>
           </div>
           <div className="flex gap-2">
-            <Popup
-              trigger={
-                <button
-                  className="flex items-center gap-2 rounded-lg px-4 py-2 bg-custom-blue text-white text-sm font-medium hover:bg-custom-blue/90 transition-colors shadow-sm"
-                  onClick={toggleSidebarForSection}
-                >
-                  <PlusIcon className="w-4 h-4" />
-                  Add Section
-                </button>
-              }
-              onClose={() => setIsAlreadyExistingSection("")}
-              offsetX={-50}
-              position="bottom right"
-            >
-              {(closeAddSectionPopup) => (
-                <div className="bg-white rounded-xl shadow-lg p-5 w-72 z-50">
-                  <h3 className="font-medium text-gray-800 mb-3">Create New Section</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="assessment-section-name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Section Name
-                      </label>
-                      <input
-                        value={sectionNameProp}
-                        id="assessment-section-name"
-                        type="text"
-                        placeholder="e.g. Technical Skills"
-                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none"
-                        onChange={(e) => {
-                          setSectionName(e.target.value);
-                          setIsAlreadyExistingSection("");
-                        }}
-                        autoComplete="off"
-                      />
-                      {isAlreadyExistingSection && (
-                        <p className="text-red-500 text-xs mt-1">{isAlreadyExistingSection}</p>
-                      )}
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        className="px-4 py-2 text-sm font-medium text-gray-700 border border-custom-blue hover:bg-gray-100 rounded-lg transition-colors"
-                        onClick={closeAddSectionPopup}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-custom-blue text-sm font-medium text-white hover:bg-custom-blue/90 rounded-lg transition-colors"
-                        onClick={() => handleAddSection(closeAddSectionPopup)}
-                      >
-                        Create Section
-                      </button>
+            {/* <---------------------- v1.0.0 */}
+            <div className="relative" ref={addSectionRef}>
+              <button
+                className="flex items-center gap-2 rounded-lg px-4 py-2 bg-custom-blue text-white text-sm font-medium hover:bg-custom-blue/90 transition-colors shadow-sm"
+                onClick={() => setIsAddQuestionModalOpen(!isAddQuestionModalOpen)}
+              >
+                <PlusIcon className="w-4 h-4" />
+                Add Section
+              </button>
+              
+              {isAddQuestionModalOpen && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black bg-opacity-25" onClick={() => setIsAddQuestionModalOpen(false)}></div>
+                  <div className="relative w-72 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div className="p-5">
+                      <h3 className="font-medium text-gray-800 mb-3">Create New Section</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label htmlFor="assessment-section-name" className="block text-sm font-medium text-gray-700 mb-1">
+                            Section Name
+                          </label>
+                          <input
+                            value={sectionNameProp}
+                            id="assessment-section-name"
+                            type="text"
+                            placeholder="e.g. Technical Skills"
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none"
+                            onChange={(e) => {
+                              setSectionName(e.target.value);
+                              setIsAlreadyExistingSection("");
+                            }}
+                            autoComplete="off"
+                          />
+                          {isAlreadyExistingSection && (
+                            <p className="text-red-500 text-xs mt-1">{isAlreadyExistingSection}</p>
+                          )}
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            className="px-4 py-2 text-sm font-medium text-gray-700 border border-custom-blue hover:bg-gray-100 rounded-lg transition-colors"
+                            onClick={() => setIsAddQuestionModalOpen(false)}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="px-4 py-2 bg-custom-blue text-sm font-medium text-white hover:bg-custom-blue/90 rounded-lg transition-colors"
+                            onClick={() => handleAddSection(() => setIsAddQuestionModalOpen(false))}
+                          >
+                            Create Section
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
-            </Popup>
+            </div>
+            {/* ---------------------- v1.0.0 > */}
             {isPassScoreSubmitted && (
               <button
                 onClick={() => setSidebarOpen(true)}
@@ -284,36 +327,11 @@ const AssessmentQuestionsTab = ({
                     {/* Section Actions */}
                     <div className="relative">
                       <button
-                        onClick={() => toggleActionMenu("section", sectionIndex)}
+                        onClick={(e) => toggleActionMenu("section", sectionIndex, null, e)}
                         className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
                       >
                         <MdMoreVert className="text-xl" />
                       </button>
-
-                      {actionViewMore?.type === "section" && actionViewMore.index === sectionIndex && (
-                        <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg shadow-md bg-white border border-gray-200 overflow-hidden">
-                          <button
-                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            onClick={() => {
-                              openEditSection(sectionIndex, section.SectionName);
-                              setActionViewMore(null);
-                            }}
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                            Edit Section
-                          </button>
-                          <button
-                            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-                            onClick={() => {
-                              openDeleteConfirmation("section", sectionIndex);
-                              setActionViewMore(null);
-                            }}
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                            Delete Section
-                          </button>
-                        </div>
-                      )}
                     </div>
 
                     <button
@@ -391,31 +409,11 @@ const AssessmentQuestionsTab = ({
                           <div className="flex items-center gap-4 ml-2">
                             <div className="relative">
                               <button
-                                onClick={() => toggleActionMenu("question", sectionIndex, questionIndex)}
+                                onClick={(e) => toggleActionMenu("question", sectionIndex, questionIndex, e)}
                                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                               >
                                 <MdMoreVert className="text-xl" />
                               </button>
-                              {actionViewMore?.type === "question" &&
-                                actionViewMore.index === sectionIndex &&
-                                actionViewMore.questionIndex === questionIndex && (
-                                  <div className="absolute right-0 z-50 mt-2 w-40 rounded-lg shadow-md bg-white border border-gray-200 overflow-hidden">
-                                    <button
-                                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-                                      onClick={() => {
-                                        openDeleteConfirmation(
-                                          "question",
-                                          questionIndex,
-                                          section.SectionName
-                                        );
-                                        setActionViewMore(null);
-                                      }}
-                                    >
-                                      <TrashIcon className="w-4 h-4" />
-                                      Delete
-                                    </button>
-                                  </div>
-                                )}
                             </div>
                           </div>
                         </div>
@@ -458,6 +456,60 @@ const AssessmentQuestionsTab = ({
           </div>
         </div>
       )}
+  {/* // <---------------------- v1.0.0 */}
+
+
+      {/* Action Menu Popups - Rendered outside cards to avoid overflow clipping */}
+      {actionViewMore?.type === "section" && (
+        <div className="fixed z-[9998] w-48 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden" style={{
+          top: `${sectionPopupPosition.top}px`,
+          left: `${sectionPopupPosition.left}px`
+        }}>
+          <button
+            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+            onClick={() => {
+              openEditSection(actionViewMore.index, addedSections[actionViewMore.index].SectionName);
+              setActionViewMore(null);
+            }}
+          >
+            <PencilIcon className="w-4 h-4" />
+            Edit Section
+          </button>
+          <button
+            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+            onClick={() => {
+              openDeleteConfirmation("section", actionViewMore.index);
+              setActionViewMore(null);
+            }}
+          >
+            <TrashIcon className="w-4 h-4" />
+            Delete Section
+          </button>
+        </div>
+      )}
+
+      {actionViewMore?.type === "question" && (
+        <div className="fixed z-[9998] w-40 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden" style={{
+          top: `${questionPopupPosition.top}px`,
+          left: `${questionPopupPosition.left}px`
+        }}>
+          <button
+            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+            onClick={() => {
+              openDeleteConfirmation(
+                "question",
+                actionViewMore.questionIndex,
+                actionViewMore.sectionName
+              );
+              setActionViewMore(null);
+            }}
+          >
+            <TrashIcon className="w-4 h-4" />
+            Delete
+          </button>
+        </div>
+      )}
+      {/* ---------------------- v1.0.0 > */}
 
     </div>
   );

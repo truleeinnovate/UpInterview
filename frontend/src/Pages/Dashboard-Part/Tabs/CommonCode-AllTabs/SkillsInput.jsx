@@ -1,3 +1,5 @@
+// ----- v1.0.0 ----- Venkatesh----improve dropdown styles and placeholder text in small devices shown in ellipsis and border border-gray-300 added
+
 import { useState, useRef, useEffect } from 'react';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
@@ -51,7 +53,10 @@ const CustomDropdown = ({
         placeholder={placeholder}
         value={value}
         onClick={() => setShow(!show)}
-        className="block w-full px-3 py-2 h-8 text-gray-900 border rounded focus:outline-none focus:ring-1"
+        // <-----v1.0.0--
+        className="block w-full px-3 py-2 h-8 text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 whitespace-nowrap overflow-ellipsis"
+        // -----v1.0.0---> 
+        
       />
       <ChevronDown
         className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 cursor-pointer"
@@ -194,7 +199,7 @@ const SkillsField = ({
             { editingIndex === index || editingIndex === 'all' ? (
               // EDIT MODE
               <>
-                <div className="flex justify-between border bg-white rounded w-full p-2 mr-3">
+                <div className="flex justify-between border border-gray-300 bg-white rounded w-full p-2 mr-3">
                   <div className="w-1/3 px-1">
                     <CustomDropdown
                       name="skill"
@@ -252,7 +257,7 @@ const SkillsField = ({
             ) : (
               // DISPLAY MODE
               <>
-                <div className="flex justify-between border bg-white rounded w-full mr-3">
+                <div className="flex justify-between border border-gray-300 bg-white rounded w-full mr-3">
                   <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
                     {entry.skill}
                   </div>

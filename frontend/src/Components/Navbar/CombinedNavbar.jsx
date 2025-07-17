@@ -1,4 +1,5 @@
 // v1.0.0 - Mansoor - adjust the height of navbar (superadmin and normal user) for removing the gap below the navbar and home content and account settings
+// v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -39,14 +40,6 @@ const CombinedNavbar = () => {
 
   // Get user type
   const userType = AuthCookieManager.getUserType();
-
-  // console.log('🧭 CombinedNavbar render:', {
-  //   userType,
-  //   isInitialized,
-  //   loading,
-  //   location: location.pathname,
-  //   hasAuthToken: !!authToken
-  // });
 
   // // Debug permission checks
   // const debugPermissions = () => {
@@ -303,7 +296,9 @@ const CombinedNavbar = () => {
         {
           path: "/assessments-template",
           label: "Assessment Templates",
-          permissionKey: "Assessment_Template.ViewTab",
+          // <---------------------- v1.0.1
+          permissionKey: "AssessmentTemplates.ViewTab",
+          // ---------------------- v1.0.1 >
         },
         {
           path: "/assessments",
@@ -891,9 +886,10 @@ const CombinedNavbar = () => {
                           )}
                         </div>
                       )}
-
-                    {(enhancedCheckPermission("Assessment_Template") ||
+                    {/* // <---------------------- v1.0.1 */}
+                    {(enhancedCheckPermission("AssessmentTemplates") ||
                       enhancedCheckPermission("Assessments")) && (
+                        // v1.0.1---------------------- >
                         <div
                           className="relative h-full flex items-center"
                           ref={assessmentRef}
@@ -919,8 +915,11 @@ const CombinedNavbar = () => {
                           {dropdownState.assessmentDropdown && (
                             <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                               <div className="space-y-1">
+                            {/* // <---------------------- v1.0.1 */}
                                 {[
-                                  ...(enhancedCheckPermission("Assessment_Template")
+                                  ...(enhancedCheckPermission("AssessmentTemplates")
+// v1.0.1---------------------- >
+                           
                                     ? [{ to: "/assessments-template", label: "Assessment Templates" }]
                                     : []),
                                   ...(enhancedCheckPermission("Assessments")
@@ -1215,9 +1214,11 @@ const CombinedNavbar = () => {
                           )}
                         </div>
                       )}
-
-                    {(enhancedCheckPermission("Assessment_Template") ||
-                      enhancedCheckPermission("Assessments")) && (
+  {/* // <---------------------- v1.0.1 */}
+                    {(enhancedCheckPermission("AssessmentTemplates") ||
+                      enhancedCheckPermission
+                      // v1.0.1---------------------- >
+                      ("Assessments")) && (
                         <div className="relative" ref={assessmentRef}>
                           <button
                             className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/assessments") ||
@@ -1236,9 +1237,11 @@ const CombinedNavbar = () => {
                           </button>
                           {dropdownState.assessmentDropdown && (
                             <div className="mt-1 ml-4 space-y-1">
+                            {/* // <---------------------- v1.0.1 */}
                               {[
-                                ...(enhancedCheckPermission("Assessment_Template")
-                                  ? [
+                                ...(enhancedCheckPermission("AssessmentTemplates")
+                                // v1.0.1---------------------- >
+                                ? [
                                     {
                                       to: "/assessments-template",
                                       label: "Assessment Templates",

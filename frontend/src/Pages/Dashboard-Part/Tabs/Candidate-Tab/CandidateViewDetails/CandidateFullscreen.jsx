@@ -1,3 +1,4 @@
+// v1.0.0 ------ Venkatesh--- added skills width to full and skills added in column wise
 
 import Modal from 'react-modal';
 import { Phone, GraduationCap, School, Mail, X, Briefcase, Calendar, User } from 'lucide-react';
@@ -222,35 +223,38 @@ const CandidateFullscreen = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <h4 className="text-lg font-semibold text-gray-800 mb-4">Skills</h4>
               <div className="flex flex-wrap gap-2">
-
                 {candidate?.skills ? (
                   candidate.skills.map((skill, index) => (
+                    <>
+                    {/* <------v1.0.0 ------*/}
                     <div
-                    className="px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100"
+                    className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100"
                     >
                     <span
                       key={index}
-                      className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.skill}
                     </span>
                     <span
                       key={index}
-                      className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.experience}
                     </span>
                     <span
                       key={index}
-                      className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.expertise}
                     </span>
                     </div>
-                  )))
-                  : (
-                    <span>No skills found</span>
-                  )}
+                    {/* v1.0.0 ------->*/}
+                    </>
+                  ))
+                ) : (
+                  <span>No skills found</span>
+                )}
               </div>
             </div>
 

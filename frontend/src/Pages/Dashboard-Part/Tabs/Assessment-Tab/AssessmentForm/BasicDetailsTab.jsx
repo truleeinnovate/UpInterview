@@ -191,91 +191,72 @@ const BasicDetailsTab = ({
               </div>
             </div>
 
-            {/* Assessment Type */}
-            {/* <div ref={assessmentTypeRef}>
-        <label
-          htmlFor="AssessmentType"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Assessment Type <span className="text-red-500">*</span>
-        </label>
-        <div className="relative mt-1">
-          <div
-            className={`flex items-center justify-between border ${errors.AssessmentType ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-            onClick={modifiedToggleAssessment}
-          >
-            <div className="flex flex-wrap gap-1">
-              {Array.isArray(selectedAssessmentType) &&
-                selectedAssessmentType.map((type) => (
-                  <div
-                    key={type}
-                    className="flex items-center bg-gray-200 rounded text-xs px-2 py-1"
-                  >
-                    {type}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveAssessmentType(type);
-                      }}
-                      className="ml-1 text-gray-500 hover:text-gray-700"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              {selectedAssessmentType?.length === 0 && (
-                <span className="text-gray-400">Select assessment type</span>
-              )}
-            </div>
-            <div className="flex items-center">
-              {selectedAssessmentType?.length > 0 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedAssessmentType([]);
-                    setFormData((prevData) => ({
-                      ...prevData,
-                      AssessmentType: [],
-                    }));
-                  }}
-                  className="text-gray-500 hover:text-gray-700 mr-2"
-                >
-                  ×
-                </button>
-              )}
-              <MdArrowDropDown className="text-gray-500 text-lg" />
-            </div>
-          </div>
-          {showDropdownAssessment && (
-            <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-60 overflow-y-auto">
-              {assessmentTypes.map((questionType) => (
+            {/* Assessment Type - Commented out for now */}
+            {/* 
+            <div ref={assessmentTypeRef}>
+              <label
+                htmlFor="AssessmentType"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Assessment Type <span className="text-red-500">*</span>
+              </label>
+              <div className="relative mt-1">
                 <div
-                  key={questionType}
-                  className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm"
-                  onClick={() => {
-                    handleAssessmentTypeSelect(questionType);
-                    setShowDropdownAssessment(false);
-                  }}
+                  className={`flex items-center justify-between border ${errors.AssessmentType ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  onClick={modifiedToggleAssessment}
                 >
-                  {questionType}
+                  <div className="flex flex-wrap gap-1">
+                    {Array.isArray(selectedAssessmentType) &&
+                      selectedAssessmentType.map((type) => (
+                        <div
+                          key={type}
+                          className="flex items-center bg-gray-200 rounded text-xs px-2 py-1"
+                        >
+                          {type}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveAssessmentType(type);
+                            }}
+                            className="ml-1 text-gray-500 hover:text-gray-700"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    {selectedAssessmentType?.length === 0 && (
+                      <span className="text-gray-400">Select assessment type</span>
+                    )}
+                  </div>
+                  <div className="flex items-center">
+                    {selectedAssessmentType?.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAssessmentType([]);
+                          setFormData((prevData) => ({
+                            ...prevData,
+                            AssessmentType: [],
+                          }));
+                        }}
+                        className="text-gray-500 hover:text-gray-700 mr-2"
+                      >
+                        ×
+                      </button>
+                    )}
+                    <MdArrowDropDown className="text-gray-500 text-lg" />
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
-          {errors.AssessmentType && (
-            <p className="text-red-500 text-sm mt-1">{errors.AssessmentType}</p>
-          )}
-        </div>
-      </div> */}
+            */}
           </div>
 
           {/* No. of Questions and Assessment Status */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
-
-
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Assessment Status
@@ -305,7 +286,6 @@ const BasicDetailsTab = ({
                 </span>
               </div>
             </div>
-
           </div>
 
           <div className="font-semibold text-xl mb-5">Additional Details:</div>
