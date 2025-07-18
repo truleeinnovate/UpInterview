@@ -1,3 +1,4 @@
+// v1.0.0 - mansoor - changed the colors of timezone select and duplicate button to custom blue
 import React, { useState, useEffect, useCallback } from 'react';
 import TimezoneSelect from 'react-timezone-select';
 import Availability from '../../Dashboard-Part/Tabs/CommonCode-AllTabs/Availability';

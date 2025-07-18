@@ -1,3 +1,4 @@
+// v1.0.0  -  mansoor  -  changes to save the mock interview
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useRef } from "react";
@@ -70,6 +71,7 @@ export const useMockInterviews = () => {
       const status =
         formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
     
+        // <----------------------------- v1.0.0
       // Ensure rounds is always an array
       const rounds = Array.isArray(formData.rounds) 
         ? formData.rounds 
@@ -120,7 +122,8 @@ export const useMockInterviews = () => {
       };
   
       console.log('Sending payload:', JSON.stringify(payload, null, 2));
-      
+      // v1.0.0 ----------------------------->
+
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
         : `${config.REACT_APP_API_URL}/mockinterview`;
