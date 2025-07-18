@@ -1,6 +1,8 @@
+// v1.0.0 - Ashok - fixed an  unique "key" prop at recent activity
 import { formatDate } from "../../../utils/dateUtils";
 
 function OverviewTab({ tenant, viewMode = "expanded" }) {
+  console.log('OVERVIEW TAB TENANT =================> : ', tenant);
   const cardBase = "card";
   const textSize = viewMode === "collapsed" ? "text-sm" : "text-base";
   const gridCols =
@@ -113,7 +115,9 @@ function OverviewTab({ tenant, viewMode = "expanded" }) {
         </h3>
         <div className="space-y-4">
           {(tenant?.recentActivity || []).map((activity) => (
-            <div key={activity?.id} className="flex">
+            // v1.0.0 <----------------------------------------------------------------------------------------------------
+            <div key={activity?._id} className="flex">
+            {/* v1.0.0 ---------------------------------------------------------------------------------------------------> */}
               <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center mr-3 overflow-hidden">
                 {activity?.contact?.imageData?.path ? (
                   <img
