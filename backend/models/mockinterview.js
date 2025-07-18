@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  fixed mock interview code unique issue
 const mongoose = require("mongoose");
 
 const formatDateTime = () => {
@@ -17,8 +18,9 @@ const formatDateTime = () => {
 const mockInterviewSchema = new mongoose.Schema(
   {
     // title: String,
-    mockInterviewCode: { type: String, unique: true },
-
+    // <------------------------------- v1.0.0 
+    mockInterviewCode: { type: String },
+    // ------------------------------ v1.0.0 >
     skills: [
       {
         skill: String,

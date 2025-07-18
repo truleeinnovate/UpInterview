@@ -1,8 +1,11 @@
+// v1.0.0  -  Ashraf  -  fixed scheduled assessment code unique issue
 const mongoose = require("mongoose");
 
 const ScheduledAssessmentSchema = new mongoose.Schema(
   {
-    scheduledAssessmentCode: { type: String, unique: true },
+    // <------------------------------- v1.0.0 
+    scheduledAssessmentCode: { type: String },
+    // ------------------------------ v1.0.0 >
     assessmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "assessment",
