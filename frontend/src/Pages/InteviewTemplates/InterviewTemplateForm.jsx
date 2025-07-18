@@ -1,4 +1,5 @@
 // v1.0.0  -  Mansoor  -  removed required for description
+// v1.0.1  -  Ashraf  -  on saving both getting load 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
@@ -31,6 +32,9 @@ const InterviewSlideover = ({ mode }) => {
     const [touched, setTouched] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     // const [isCreatingRound, setIsCreatingRound] = useState(false);
+    // ------------------------------ v1.0.1 >
+    // Add activeButton state to track which button was clicked
+    const [activeButton, setActiveButton] = useState(null); // 'save' or 'add' or null
 
     useEffect(() => {
         if (templatesData) {
@@ -134,6 +138,10 @@ const InterviewSlideover = ({ mode }) => {
     const handleSubmit = async (e, isTemplate = false) => {
         e.preventDefault();
         setIsSubmitted(true);
+        // ------------------------------ v1.0.1 >
+
+        // Set which button was clicked
+        setActiveButton(isTemplate ? 'add' : 'save');
 
         // Mark all fields as touched
         const allFieldsTouched = {
@@ -156,6 +164,9 @@ const InterviewSlideover = ({ mode }) => {
                 firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 firstErrorElement.focus({ preventScroll: true });
             }
+            // ------------------------------ v1.0.1 >
+            // Reset active button on validation failure
+            setActiveButton(null);
             return;
         }
 
@@ -207,6 +218,9 @@ const InterviewSlideover = ({ mode }) => {
         } catch (error) {
             console.error('Error saving template:', error);
             alert(error.response?.data?.message || 'Failed to save template. Please try again.');
+        } finally {
+            // Reset active button regardless of success or failure
+            setActiveButton(null);
         }
     };
 
@@ -415,7 +429,8 @@ const InterviewSlideover = ({ mode }) => {
 
                             <LoadingButton
                                 onClick={handleSubmit}
-                                isLoading={isMutationLoading}
+                                // ------------------------------ v1.0.1 >
+                                isLoading={isMutationLoading && activeButton === 'save'}
                                 loadingText={id ? "Updating..." : "Saving..."}
                             >
                                 {isEditMode ? "Update" : "Save"}
@@ -424,9 +439,10 @@ const InterviewSlideover = ({ mode }) => {
                             {!isEditMode && (
                                 <LoadingButton
                                     onClick={(e) => handleSubmit(e, true)}
-                                    isLoading={isMutationLoading}
+                                    isLoading={isMutationLoading && activeButton === 'add'}
                                     loadingText="Adding..."
                                 >
+                                {/* ------------------------------ v1.0.1 > */}
                                     <FaPlus className="w-5 h-5 mr-1" /> Add Round
                                 </LoadingButton>
                             )}

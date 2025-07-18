@@ -1,5 +1,5 @@
-
-import { useState, useEffect, useRef } from "react";
+// v1.0.0  -  Ashraf  -  getting form in loop,fprm scroll issue 
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Camera,
   ChevronDown,
@@ -31,9 +31,12 @@ const UserForm = ({ mode }) => {
   
   console.log('UserForm - userType:', userType);
   console.log('UserForm - allRoles:', allRoles);
-  
+  // ------------------------------ v1.0.0 >
   // Filter roles based on user type
-  const organizationRoles = allRoles ? (() => {
+  const organizationRoles = useMemo(() => {
+    if (!allRoles) return [];
+    // <---------------------- v1.0.0
+    
     if (userType === 'superAdmin') {
       // For superAdmin, show roles with roleType 'internal'
       const filteredRoles = allRoles.filter(role => role.roleType === 'internal');
@@ -45,7 +48,9 @@ const UserForm = ({ mode }) => {
       console.log('Regular user - Filtered roles (organization):', filteredRoles);
       return filteredRoles;
     }
-  })() : [];
+    // ------------------------------ v1.0.0 >
+  }, [allRoles, userType]);
+  // ------------------------------ v1.0.0 >
   const { addOrUpdateUser } = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -152,10 +157,11 @@ const UserForm = ({ mode }) => {
 
   useEffect(() => {
     if (organizationRoles && !rolesLoading) {
-      console.log(`Roles loaded for type=${userType}, userType=${userType}:`, organizationRoles);
       setCurrentRole(organizationRoles);
     }
-  }, [organizationRoles, userType, userType, rolesLoading]);
+    // ------------------------------ v1.0.0 >
+  }, [organizationRoles, userType, rolesLoading]);
+  // ------------------------------ v1.0.0 >
 
   // Initialize form data for edit mode
   useEffect(() => {
@@ -183,7 +189,9 @@ const UserForm = ({ mode }) => {
       setSelectedCurrentRoleId(initialUserData.roleId || "");
       setFilePreview(initialUserData?.imageData?.path);
     }
-  }, [editMode, initialUserData, tenantId, userType]);
+    // ------------------------------ v1.0.0 >
+  }, [editMode, initialUserData, tenantId, userType, organizationRoles]);
+  // ------------------------------ v1.0.0 >
 
   // Clean up timeouts
   useEffect(() => {
@@ -278,21 +286,17 @@ const UserForm = ({ mode }) => {
         setIsLoading(false);
         return;
       }
-
+      // ------------------------------ v1.0.0 >
       // Proceed with form submission
-      await addOrUpdateUser.mutateAsync(
-        { userData, file, isFileRemoved, editMode },
-        {
-          onSuccess: () => {
-            console.log("User saved successfully");
-            navigate("/account-settings/users");
-          },
-          onError: (error) => {
-            console.error("Error adding/updating user:", error);
-            setErrors({ form: "Failed to save user. Please try again." });
-          },
-        }
-      );
+      const result = await addOrUpdateUser.mutateAsync({
+        userData,
+        file,
+        isFileRemoved,
+        editMode
+      });
+      
+      console.log("User saved successfully");
+      navigate("/account-settings/users");
     } catch (error) {
       console.error("Submission error:", error);
       setErrors({ form: "An unexpected error occurred. Please try again." });
@@ -303,7 +307,7 @@ const UserForm = ({ mode }) => {
 
   const handleClose = () => {
     
-      navigate("/account-settings/users");
+      navigate("/account-settings/users");  
 
   };
 
@@ -332,17 +336,21 @@ const UserForm = ({ mode }) => {
           "max-w-6xl mx-auto px-6": isFullScreen,
         })}
       >
+        {/* ------------------------------ v1.0.0 > */}
         {isLoading && <Loading message="Loading..." />}
-        <div className="p-3">
-          <div className="flex justify-between items-center mb-6 mt-2">
-            <h2 className="text-2xl font-bold text-custom-blue">
+        
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold text-custom-blue">
               {editMode ? "Edit User" : "New User"}
             </h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleFullWidth}
-                className="p-1 rounded-full hover:bg-white/10"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
+
+                {/* ------------------------------ v1.0.0 > */}
                 {isFullScreen ? (
                   <ArrowsPointingInIcon className="h-5 w-5" />
                 ) : (
@@ -355,297 +363,294 @@ const UserForm = ({ mode }) => {
             </div>
           </div>
 
-          <div className="flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4">
-              <form id="user-form" onSubmit={handleSubmit}>
-                {errors.form && (
-                  <p className="text-red-500 text-sm mb-6 text-center">
-                    {errors.form}
-                  </p>
+          <form id="user-form" onSubmit={handleSubmit}>
+            {errors.form && (
+              <p className="text-red-500 text-sm mb-6 text-center">
+                {errors.form}
+              </p>
+            )}
+            <div className="flex flex-col justify-center items-center mb-4">
+              <div className="relative">
+                <div
+                  className="relative group w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
+                  onClick={() =>
+                    !isLoading && fileInputRef.current?.click()
+                  }
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isLoading}
+                  />
+                  {filePreview ? (
+                    <img
+                      src={filePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 pointer-events-none">
+                      <Camera className="text-4xl text-gray-400" />
+                      <span className="text-sm text-gray-500 mt-2">
+                        Upload Photo
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
+                    {/* Icon placeholder */}
+                  </div>
+                </div>
+                {filePreview && (
+                  <button
+                    title="Remove Image"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteImage();
+                    }}
+                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                    disabled={isLoading}
+                  >
+                    <Trash className="w-3 h-3" />
+                  </button>
                 )}
-                <div className="flex flex-col justify-center items-center mb-4">
-                  <div className="relative">
-                    <div
-                      className="relative group w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
-                      onClick={() =>
-                        !isLoading && fileInputRef.current?.click()
-                      }
-                    >
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        accept="image/*"
-                        className="hidden"
-                        disabled={isLoading}
-                      />
-                      {filePreview ? (
-                        <img
-                          src={filePreview}
-                          alt="Preview"
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 pointer-events-none">
-                          <Camera className="text-4xl text-gray-400" />
-                          <span className="text-sm text-gray-500 mt-2">
-                            Upload Photo
-                          </span>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                        {/* Icon placeholder */}
-                      </div>
-                    </div>
-                    {filePreview && (
-                      <button
-                        title="Remove Image"
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteImage();
-                        }}
-                        className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                        disabled={isLoading}
-                      >
-                        <Trash className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="mt-2 text-center">
-                    <p className="text-xs text-gray-500 text-center mb-1">
-                      File must be less than 100KB (200 x 200 recommended)
-                    </p>
-                    <p className="text-red-500 text-sm mb-4 font-medium text-center">
-                      {fileError}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-x-6 gap-y-4">
-                  <div className="col-span-2 flex justify-between items-center">
-                    <h1 className="font-medium text-lg">Personal Details:</h1>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="firstName"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      First Name
-                    </label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      id="firstName"
-                      placeholder="First Name"
-                      value={userData.firstName}
-                      onChange={handleChange}
-                      className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${
-                        isLoading ? "opacity-50" : ""
-                      }`}
-                      disabled={isLoading}
-                    />
-                    {errors.firstName && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.firstName}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="lastName"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      id="lastName"
-                      placeholder="Last Name"
-                      value={userData.lastName}
-                      onChange={handleChange}
-                      className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                        errors.lastName ? "border-red-500" : "border-gray-300"
-                      } focus:border-custom-blue ${
-                        isLoading ? "opacity-50" : ""
-                      }`}
-                      disabled={isLoading}
-                    />
-                    {errors.lastName && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.lastName}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Work Email <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        ref={emailInputRef}
-                        name="email"
-                        type="text"
-                        id="email"
-                        value={userData.email}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                          errors.email ? "border-red-500" : "border-gray-300"
-                        } focus:border-custom-blue ${
-                          isLoading ? "opacity-50" : ""
-                        }`}
-                        placeholder="your.email@example.com"
-                        autoComplete="email"
-                        disabled={isLoading}
-                      />
-                      {isCheckingEmail && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                        </div>
-                      )}
-                    </div>
-                    {errors.email && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.email}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Phone <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex">
-                      <select
-                        name="countryCode"
-                        value={userData.countryCode}
-                        placeholder="Country Code"
-                        onChange={handleCountryCodeChange}
-                        className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${
-                          errors.phone ? "border-red-500" : "border-gray-300"
-                        } focus:border-custom-blue w-1/4 mr-2 ${
-                          isLoading ? "opacity-50" : ""
-                        }`}
-                        disabled={isLoading}
-                      >
-                        <option value="+91">+91 (IN)</option>
-                        <option value="+1">+1 (US)</option>
-                        <option value="+44">+44 (UK)</option>
-                      </select>
-                      <input
-                        type="tel"
-                        name="phone"
-                        id="phone"
-                        value={userData.phone}
-                        placeholder="Enter Phone Number"
-                        onChange={handlePhoneInput}
-                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                          errors.phone ? "border-red-500" : "border-gray-300"
-                        } focus:border-custom-blue ${
-                          isLoading ? "opacity-50" : ""
-                        }`}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {errors.phone && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.phone}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="role"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Role <span className="text-red-500">*</span>
-                      {selectedCurrentRoleId && (
-                        <span className="ml-2 text-xs text-gray-500">
-                          (Select from dropdown below)
-                        </span>
-                      )}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        readOnly
-                        value={selectedCurrentRole}
-                        placeholder="Select Role"
-                        onClick={toggleDropdownRole}
-                        className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                          errors.roleId ? "border-red-500" : "border-gray-300"
-                        } focus:border-custom-blue cursor-pointer ${
-                          isLoading ? "opacity-50" : ""
-                        }`}
-                        disabled={isLoading}
-                      />
-                      <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
-                      {showDropdownRole && (
-                        <div className="absolute z-50 text-sm mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-                          <div className="p-2 border-b">
-                            <input
-                              type="text"
-                              placeholder="Search roles..."
-                              value={searchTermRole}
-                              onChange={(e) =>
-                                setSearchTermRole(e.target.value)
-                              }
-                              className="w-full px-2 py-1 border rounded"
-                              disabled={isLoading}
-                            />
-                          </div>
-                          <div className="max-h-60 overflow-y-auto">
-                            {filteredCurrentRoles.length > 0 ? (
-                              filteredCurrentRoles.map((role) => (
-                                <div
-                                  key={role._id}
-                                  onClick={() => handleRoleSelect(role)}
-                                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                >
-                                  <div className="flex justify-between items-center">
-                                    <div>
-                                      <div className="font-medium">{role.label}</div>
-                                      {role.description && (
-                                        <div className="text-xs text-gray-500 mt-1">{role.description}</div>
-                                      )}
-                                    </div>
-                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                      Level {role.level ?? 0}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="px-3 py-2 text-gray-500">
-                                No roles available
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {errors.roleId && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.roleId}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </form>
+              </div>
+              <div className="mt-2 text-center">
+                <p className="text-xs text-gray-500 text-center mb-1">
+                  File must be less than 100KB (200 x 200 recommended)
+                </p>
+                <p className="text-red-500 text-sm mb-4 font-medium text-center">
+                  {fileError}
+                </p>
+              </div>
             </div>
 
-            <div className="flex justify-end py-2 mt-10 px-4">
+            <div className="grid sm:grid-cols-1 grid-cols-2 gap-x-6 gap-y-4">
+              <div className="col-span-2 flex justify-between items-center">
+                <h1 className="font-medium text-lg">Personal Details:</h1>
+              </div>
+              <div>
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  id="firstName"
+                  placeholder="First Name"
+                  value={userData.firstName}
+                  onChange={handleChange}
+                  className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${
+                    isLoading ? "opacity-50" : ""
+                  }`}
+                  disabled={isLoading}
+                />
+                {errors.firstName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.firstName}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Last Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  id="lastName"
+                  placeholder="Last Name"
+                  value={userData.lastName}
+                  onChange={handleChange}
+                  className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                    errors.lastName ? "border-red-500" : "border-gray-300"
+                  } focus:border-custom-blue ${
+                    isLoading ? "opacity-50" : ""
+                  }`}
+                  disabled={isLoading}
+                />
+                {errors.lastName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.lastName}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Work Email <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    ref={emailInputRef}
+                    name="email"
+                    type="text"
+                    id="email"
+                    value={userData.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    } focus:border-custom-blue ${
+                      isLoading ? "opacity-50" : ""
+                    }`}
+                    placeholder="your.email@example.com"
+                    autoComplete="email"
+                    disabled={isLoading}
+                  />
+                  {isCheckingEmail && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
+                </div>
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Phone <span className="text-red-500">*</span>
+                </label>
+                <div className="flex">
+                  <select
+                    name="countryCode"
+                    value={userData.countryCode}
+                    placeholder="Country Code"
+                    onChange={handleCountryCodeChange}
+                    className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${
+                      errors.phone ? "border-red-500" : "border-gray-300"
+                    } focus:border-custom-blue w-1/4 mr-2 ${
+                      isLoading ? "opacity-50" : ""
+                    }`}
+                    disabled={isLoading}
+                  >
+                    <option value="+91">+91 (IN)</option>
+                    <option value="+1">+1 (US)</option>
+                    <option value="+44">+44 (UK)</option>
+                  </select>
+                  <input
+                    type="tel"
+                    name="phone"
+                    id="phone"
+                    value={userData.phone}
+                    placeholder="Enter Phone Number"
+                    onChange={handlePhoneInput}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                      errors.phone ? "border-red-500" : "border-gray-300"
+                    } focus:border-custom-blue ${
+                      isLoading ? "opacity-50" : ""
+                    }`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Role <span className="text-red-500">*</span>
+                  {selectedCurrentRoleId && (
+                    <span className="ml-2 text-xs text-gray-500">
+                      (Select from dropdown below)
+                    </span>
+                  )}
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    readOnly
+                    value={selectedCurrentRole}
+                    placeholder="Select Role"
+                    onClick={toggleDropdownRole}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                      errors.roleId ? "border-red-500" : "border-gray-300"
+                    } focus:border-custom-blue cursor-pointer ${
+                      isLoading ? "opacity-50" : ""
+                    }`}
+                    disabled={isLoading}
+                  />
+                  <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
+                  {showDropdownRole && (
+                    <div className="absolute z-50 text-sm mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                      <div className="p-2 border-b">
+                        <input
+                          type="text"
+                          placeholder="Search roles..."
+                          value={searchTermRole}
+                          onChange={(e) =>
+                            setSearchTermRole(e.target.value)
+                          }
+                          className="w-full px-2 py-1 border rounded"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredCurrentRoles.length > 0 ? (
+                          filteredCurrentRoles.map((role) => (
+                            <div
+                              key={role._id}
+                              onClick={() => handleRoleSelect(role)}
+                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <div className="font-medium">{role.label}</div>
+                                  {role.description && (
+                                    <div className="text-xs text-gray-500 mt-1">{role.description}</div>
+                                  )}
+                                </div>
+                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                  Level {role.level ?? 0}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-gray-500">
+                            No roles available
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {errors.roleId && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.roleId}
+                  </p>
+                )}
+              </div>
+            </div>
+//
+            {/* ------------------------------ v1.0.0 > */}
+            <div className="flex justify-end gap-3 pt-6">
               <button
                 type="button"
                 onClick={handleClose}
@@ -665,7 +670,8 @@ const UserForm = ({ mode }) => {
                 {editMode ? "Save Changes" : "Save"}
               </button>
             </div>
-          </div>
+          </form>
+            {/* ------------------------------ v1.0.0 > */}
         </div>
       </div>
     </Modal>

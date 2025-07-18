@@ -281,7 +281,7 @@ const getInterviewers = async (req, res) => {
     if (!mongoose.isValidObjectId(tenantId)) {
       return res.status(400).json({ error: "Invalid Tenant ID format" });
     }
-
+  
     // Fetch external interviewers
     const externalUsers = await Users.find({ isFreelancer: true }).lean();
     // console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);

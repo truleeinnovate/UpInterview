@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - getting tenant by id is not working on online
+  // v1.0.1  -  Ashraf  -  removed recent activity code
 const bcrypt = require("bcrypt");
 const Tenant = require("../models/Tenant");
 const { Users } = require("../models/Users");
@@ -16,7 +17,6 @@ const Tabs = require("../models/Tabs");
 const Objects = require("../models/Objects");
 const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require("../models/rolesPermissionObject");
-const RecentActivity = require("../models/recentActivity.js");
 const {
   generateToken,
   generateEmailVerificationToken,
@@ -165,17 +165,6 @@ const organizationUserCreation = async (req, res) => {
       const savedContact = await newContact.save();
       console.log(`Contact created for user: ${savedUser.email}`, {
         contactId: savedContact._id.toString(),
-      });
-
-      // Recent Activity for tracking
-      await RecentActivity.create({
-        userId: res.locals.userId,
-        user: `${res.locals.effectivePermissions_RoleName || "System User"}`,
-        action: "create_user",
-        details: `Created new user ${firstName} ${lastName}`,
-        entityId: savedUserId,
-        entityType: "Users",
-        tenantId: isSuperAdmin ? null : tenantId,
       });
 
       console.log("--- organizationUserCreation END ---");
@@ -1360,48 +1349,12 @@ const getOrganizationById = async (req, res) => {
         };
       })
     );
+    const tenant = {
+      tenant: {
+        ...(organization || {}),
+        ...(subscription || {}),
+        subscriptionPlan,
 
-    const recentActivityRaw = await RecentActivity.find({ tenantId: id })
-      .sort({ timestamp: -1 })
-      .limit(10)
-      .lean();
-
-    const recentActivityWithContact = recentActivityRaw.map((activity) => {
-      const contact = allContacts.find(
-        (contact) =>
-          contact.ownerId?.toString() === activity.entityId?.toString()
-      );
-      return {
-        ...activity,
-        contact,
-      };
-    });
-    // v1.0.0 <----------------------------------------------------------------------------------------
-    // const tenant = {
-    //   tenant: {
-    //     ...(organization || {}),
-    //     ...(subscription || {}),
-    //     subscriptionPlan,
-    //     recentActivity: recentActivityWithContact,
-    //   },
-    //   users: usersWithRoleAndContact,
-    // };
-    
-    console.log("1. SUPER ADMIN ORGANIZATION ===================================> :", organization);
-    console.log("2. SUPER ADMIN USERS ==========================================> :", users.length);
-    console.log("3. SUPER ADMIN CONTACTS =======================================> :", allContacts.length);
-
-    // return res.status(200).json({ organization: tenant });
-
-    return res.status(200).json({
-      organization: {
-        tenant: {
-          ...(organization || {}),
-          ...(subscription || {}),
-          subscriptionPlan,
-          recentActivity: recentActivityWithContact,
-        },
-        users: usersWithRoleAndContact,
       },
     });
     // v1.0.0 ---------------------------------------------------------------------------------------->

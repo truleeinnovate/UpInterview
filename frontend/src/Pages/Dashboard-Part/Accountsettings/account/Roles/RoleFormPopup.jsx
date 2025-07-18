@@ -539,6 +539,9 @@
 
 // export default RoleFormPopup;
 
+// v1.0.0  -  Ashraf  -  edit is not working
+
+
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -554,6 +557,9 @@ import { usePermissions } from '../../../../../Context/PermissionsContext.js';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils.js';
 import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
 import Loading from '../../../../../Components/Loading';
+
+// Set app element for accessibility
+Modal.setAppElement('#root');
 
 const RoleFormPopup = ({ onSave, onClose }) => {
   const { data: organizationRoles, isLoading, isError, error } = useRolesQuery();
@@ -619,11 +625,18 @@ const RoleFormPopup = ({ onSave, onClose }) => {
 
     const fetchData = async () => {
       try {
+        // ------------------------------ v1.0.0 >
+        if (!organizationRoles) {
+          setRoles([]);
+          return;
+        }
         setRoles(organizationRoles);
 
         // Build available permissions from all roles
+        // ------------------------------ v1.0.0 >
         const permissionsMap = {};
-        organizationRoles.forEach((role) => {
+        (organizationRoles || []).forEach((role) => {
+          // ------------------------------ v1.0.0 >
           role.objects.forEach((obj) => {
             if (!permissionsMap[obj.objectName]) {
               permissionsMap[obj.objectName] = {
@@ -883,12 +896,14 @@ const RoleFormPopup = ({ onSave, onClose }) => {
       objects: prev.objects.filter((obj) => obj.objectName !== objectName),
     }));
     setAvailablePermissions((prev) => {
+      // ------------------------------ v1.0.0 >
       const updated = { ...prev };
-      if (!roles.some((role) => role.objects.some((obj) => obj.objectName === objectName))) {
+      if (!(roles || []).some((role) => role.objects.some((obj) => obj.objectName === objectName))) {
         delete updated[objectName];
       }
       return updated;
     });
+    // ------------------------------ v1.0.0 >
   };
 
   const handleUpdateObject = (objectName, field, value) => {
@@ -1196,7 +1211,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                 <div className="mb-6">
                   <h4 className="font-medium mb-2">Inherits Permissions From</h4>
                   <div className="space-y-2 max-h-48 overflow-y-auto p-2 border rounded-lg">
-                    {roles
+                    {(roles || [])
                       .filter((role) => role.level > formData.level)
                       .sort((a, b) => (a.level ?? 0) - (b.level ?? 0))
                       .map((role) => (
