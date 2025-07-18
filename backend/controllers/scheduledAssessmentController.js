@@ -46,8 +46,7 @@ exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
         assessmentId,
         isActive: true,
       })
-      .select("_id order expiryAt status createdAt")
-      .sort({ _id: -1 }); // Sort by creation date to maintain order
+      .select("_id order expiryAt status createdAt");
 
     if (!scheduledAssessments.length) {
       return res.status(200).json([]);
@@ -59,8 +58,7 @@ exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
       scheduledAssessmentId: { $in: scheduledIds },
       isActive: true,
     })
-      .populate("candidateId")
-      .sort({ _id: -1 });
+      .populate("candidateId");
 
     // Group candidate assessments by scheduledAssessmentId
     const schedulesWithCandidates = scheduledAssessments.map((schedule) => {
@@ -102,7 +100,6 @@ exports.createScheduledAssessment = async (req, res) => {
 
     // Generate custom code like ASMT-TPL-00001
     const lastScheduled = await scheduledAssessmentsSchema.findOne({ })
-      .sort({ _id: -1 })
       .select("scheduledAssessmentCode")
       .lean();
 
