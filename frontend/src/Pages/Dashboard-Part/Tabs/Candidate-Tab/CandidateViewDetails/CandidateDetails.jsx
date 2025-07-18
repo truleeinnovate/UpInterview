@@ -386,19 +386,19 @@ const CandidateDetails = ({ mode }) => {
                     >
                     <span
                       key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.skill}
                     </span>
                     <span
                       key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.experience}
                     </span>
                     <span
                       key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.expertise}
                     </span>
