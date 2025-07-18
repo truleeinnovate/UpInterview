@@ -50,10 +50,10 @@ const UserDataLoader = ({ children }) => {
   // If data is loading, show loading screen (only for protected routes)
   if (isLoading) {
     return (
-      <Loading 
-        message="Loading..." 
-        // size="large"
-        // className="fixed inset-0 z-50 bg-white"
+      <Loading
+        message="Loading..."
+      // size="large"
+      // className="fixed inset-0 z-50 bg-white"
       />
     );
   }

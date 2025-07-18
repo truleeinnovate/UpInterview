@@ -8,7 +8,6 @@ import { FiX } from 'react-icons/fi';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
-import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from '../../../../config.js';
 import { useCandidates } from '../../../../apiHooks/useCandidates';

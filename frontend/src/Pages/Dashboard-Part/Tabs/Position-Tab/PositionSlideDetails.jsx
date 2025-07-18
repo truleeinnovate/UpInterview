@@ -1,3 +1,4 @@
+// v1.0.0  - mansoor - added the path in the top to go back
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -10,7 +11,8 @@ import {
   LayoutList,
   LayoutGrid,
   Edit,
-  Users
+  Users,
+  ArrowLeft
 } from 'lucide-react';
 import Modal from 'react-modal';
 import InterviewProgress from '../Interview-New/components/InterviewProgress';
@@ -21,6 +23,7 @@ import VerticalRoundsViewPosition from './PositionRound/VerticalRoundsViewPositi
 import Activity from '../../Tabs/CommonCode-AllTabs/Activity';
 import Loading from '../../../../Components/Loading';
 import { usePositions } from '../../../../apiHooks/usePositions';
+import Breadcrumb from '../../Tabs/CommonCode-AllTabs/Breadcrumb';
 
 
 Modal.setAppElement('#root');
@@ -76,6 +79,21 @@ const PositionSlideDetails = () => {
     navigate(`/position/view-details/${id}/rounds/${round._id}`);
   };
 
+  // <-----------------------v1.0.0
+  // Create breadcrumb items with status
+  const breadcrumbItems = [
+    {
+      label: 'Positions',
+      path: '/position'
+    },
+    {
+      label: position?.title || 'Position',
+      path: `/position/view-details/${id}`,
+      status: position?.status
+    }
+  ];
+  // v1.0.0--------------------------->
+
   const canEditRound = (round) => {
     return round.status !== 'Completed';
   };
@@ -107,17 +125,19 @@ const PositionSlideDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
-        <div className="top-0 bg-white mt-5 flex justify-between items-center z-10">
-          <h2 className="text-xl font-bold text-gray-800">Position Details</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/position')}
-              className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-red-400" />
-            </button>
-          </div>
+      {/* <-------------------------v1.0.0  */}
+        {/* Header */}
+        <div className="flex flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8 p-6">
+          <button
+            onClick={() => navigate('/position')}
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            <span className="text-sm sm:text-base">Back to Positions</span>
+          </button>
         </div>
+
+        <Breadcrumb items={breadcrumbItems} />
 
         {/* Tabs Navigation */}
         <div className="border-b border-gray-200">
@@ -127,8 +147,8 @@ const PositionSlideDetails = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`${activeTab === tab.id
-                    ? 'border-custom-blue text-custom-blue'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-custom-blue text-custom-blue'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
               >
                 <span className="mr-2">{tab.icon}</span>
@@ -137,6 +157,8 @@ const PositionSlideDetails = () => {
             ))}
           </nav>
         </div>
+
+        {/* v1.0.0---------------------------> */}
 
         {/* Tab Content */}
         {activeTab === 'Details' && (

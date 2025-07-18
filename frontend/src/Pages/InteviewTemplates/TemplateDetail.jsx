@@ -1,5 +1,5 @@
+// v1.0.0  -  mansoor  -  navbar is not showing in this page now it is showing
 import { useState, useEffect } from 'react';
-
 import { Plus, ArrowLeft, Calendar, Layers, LayoutGrid, LayoutList } from 'lucide-react';
 import { useParams, useNavigate, Outlet } from 'react-router-dom';
 import Breadcrumb from '../Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
@@ -166,7 +166,9 @@ const TemplateDetail = () => {
   console.log("template", template, template?.status);
 
   return (
-    <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+    //  <----------v1.0.0
+    <div className="fixed inset-0 bg-white z-50 overflow-y-auto" style={{ top: '56px' }}>
+      {/* v1.0.0 ----------------> */}
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
 
         <div className="max-w-6xl sm:max-w-5xl md:max-w-4xl lg:max-w-5xl mx-auto py-6">
