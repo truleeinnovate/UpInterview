@@ -1,7 +1,6 @@
 // v1.0.0  -  mansoor  -  removed unnecessary comments from this file
 //v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
-// v1.0.2  -  mansoor  -  removed the suspance loading to check the 2 loading issue is fixed or not
-import React, { lazy, useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
 import ErrorBoundary from "./Components/ErrorBoundary";
@@ -379,6 +378,11 @@ const ContactProfileDetails = lazy(() =>
   )
 );
 
+// Custom Suspense component
+const SuspenseWithLoading = ({ fallback, children }) => (
+  <Suspense fallback={<Loading />}>{children}</Suspense>
+);
+
 // Move all logic that uses usePermissions into this component
 const MainAppRoutes = ({
   location,
@@ -661,7 +665,7 @@ const MainAppRoutes = ({
                     {/* // <---------------------- v1.0.1 */}
                     {hasPermission("AssessmentTemplates", "Edit") && (
                       // v1.0.1---------------------- >
-                      <Route
+                                            <Route
                         path="assessments-template/edit/:id"
                         element={<AssessmentForm />}
                       />
@@ -673,17 +677,17 @@ const MainAppRoutes = ({
               {/* Assessment */}
               {hasPermission("Assessments") && (
                 <>
-                  <Route path="/assessments" element={<ScheduleAssessment />} />
-
-                  {hasPermission("Assessments", "View") && (
-                    <Route
-                      path="assessment/:id"
-                      element={<><ScheduleAssDetails /> <ScheduleAssessment /></>}
-                    />
-                  )}
+                <Route path="/assessments" element={<ScheduleAssessment />} />
+                
+                {hasPermission("Assessments", "View") && (
+                  <Route
+                    path="assessment/:id"
+                    element={<><ScheduleAssDetails /> <ScheduleAssessment /></>}
+                  />
+                )}
                 </>
               )}
-
+              
 
               {/* Wallet */}
               {hasPermission("Wallet") && (
@@ -705,14 +709,14 @@ const MainAppRoutes = ({
 
 
               {hasPermission("Billing") && (
-                <Route path="billing-details" element={<BillingSubtabs />}>
-                  <Route index element={null} />
-                  <Route
-                    path="details/:id"
-                    element={<UserInvoiceDetails />}
-                  />
-                </Route>
-              )}
+                  <Route path="billing-details" element={<BillingSubtabs />}>
+                    <Route index element={null} />
+                    <Route
+                      path="details/:id"
+                      element={<UserInvoiceDetails />}
+                    />
+                  </Route>
+                )}
 
               {/* Account Settings Routes from effective user */}
 
@@ -951,16 +955,16 @@ const MainAppRoutes = ({
                   )}
                   {hasPermission("SupportDesk", "View") && (
                     <>
-                      <Route
-                        path="/support-desk/:id"
-                        element={
-                          <>
-                            <SupportViewPage />
-                            <SupportDesk />
-                          </>
-                        }
-                      />
-                      <Route
+                    <Route
+                      path="/support-desk/:id"
+                      element={
+                        <>
+                          <SupportViewPage />
+                          <SupportDesk />
+                        </>
+                      }
+                    />
+                    <Route
                         path="/support-desk/view/:id"
                         element={
                           <>
@@ -1174,10 +1178,10 @@ const App = () => {
   useEffect(() => {
     if (authToken && !hasValidCachedPermissions()) {
       // <--------------------- v1.0.0
-      preloadPermissions().catch(() => { });
+      preloadPermissions().catch(() => {});
       // v1.0.0 --------------------->
     }
-
+    
     // Sync user type with localStorage to ensure consistency
     if (authToken) {
       AuthCookieManager.syncUserType();
@@ -1200,22 +1204,22 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      {/* <------------ v1.0.2 */}
-      <CustomProvider>
-        <PermissionsProvider>
-          <UserDataLoader>
-            <MainAppRoutes
-              location={location}
-              organization={organization}
-              sessionExpired={sessionExpired}
-              setSessionExpired={setSessionExpired}
-              showLogoPaths={showLogoPaths}
-              noNavbarPaths={noNavbarPaths}
-            />
-          </UserDataLoader>
-        </PermissionsProvider>
-      </CustomProvider>
-      {/* v1.0.2 --------------> */}
+      <SuspenseWithLoading>
+        <CustomProvider>
+          <PermissionsProvider>
+            <UserDataLoader>
+              <MainAppRoutes
+                location={location}
+                organization={organization}
+                sessionExpired={sessionExpired}
+                setSessionExpired={setSessionExpired}
+                showLogoPaths={showLogoPaths}
+                noNavbarPaths={noNavbarPaths}
+              />
+            </UserDataLoader>
+          </PermissionsProvider>
+        </CustomProvider>
+      </SuspenseWithLoading>
     </ErrorBoundary>
   );
 };
