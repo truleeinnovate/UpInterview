@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  assessment template id not getting issues,on save or save next 2 button loading issues.only load wich button u have clicked
 // v1.0.1  -  Ashraf  -  assessment file name changed
+// v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 import React, {
   useState,
   useRef,
@@ -34,7 +35,7 @@ import { X } from "lucide-react";
 
 
 const NewAssessment = () => {
-  const { assessmentData, addOrUpdateAssessment, upsertAssessmentQuestions, isMutationLoading } = useAssessments();
+  const { assessmentData, addOrUpdateAssessment, upsertAssessmentQuestions, isMutationLoading, fetchAssessmentQuestions } = useAssessments();
   const { positionData } = usePositions();
 
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
@@ -173,16 +174,22 @@ const NewAssessment = () => {
   useEffect(() => {
     if (isEditing && assessment && id) {
       // console.log("Fetching assessment questions for ID:", id);
-      axios
-        .get(`${config.REACT_APP_API_URL}/assessment-questions/list/${id}`)
-        .then((response) => {
-          // console.log("API Response:", response.data);
-          if (response.data.success) {
-            const data = response.data.data;
-            // console.log("Received assessment questions data:", data);
+      // <---------------------- v1.0.2
+      const loadAssessmentQuestions = async () => {
+        try {
+          const { data, error } = await fetchAssessmentQuestions(id);
+          
+          if (error) {
+            console.error("Error fetching assessment questions:", error);
+            return;
+          }
+          
+          if (data && data.sections) {
+            const responseData = data;
+            // console.log("Received assessment questions data:", responseData);
 
             // Transform the API data to match the addedSections structure
-            const formattedSections = data.sections.map((section) => ({
+            const formattedSections = responseData.sections.map((section) => ({
               SectionName: section.sectionName,
               passScore: section.passScore || 0, // Ensure passScore is set
               totalScore: section.totalScore || 0, // Ensure totalScore is set
@@ -215,14 +222,16 @@ const NewAssessment = () => {
               setOverallPassScore(0);
             }
           }
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error("Error fetching assessment questions:", error);
           console.error("Error details:", error.response?.data || error.message);
-        });
+        }
+      };
+      
+      loadAssessmentQuestions();
     }
-  }, [id, isEditing, assessment]);
-
+  }, [id, isEditing, assessment, fetchAssessmentQuestions]);
+  // <---------------------- v1.0.2 >
   // shashank - [10/01/2025]
   const [tabsSubmitStatus, setTabsSubmitStatus] = useState({
     // <---------------------- v1.0.0
@@ -1304,7 +1313,7 @@ const NewAssessment = () => {
 
               {/* Content */}
               <div>
-                <div className="border-t border-gray-200 py-5 sm:px-6">
+                <div className="py-5 sm:px-6">
                   <div>
                     {/* basic details tab content */}
                     {activeTab === "Basicdetails" && (

@@ -1,5 +1,5 @@
 // v1.0.0  -  Ashraf  -  adding assessment code while sending email we will create schedule assessment and candidate assessment
-
+// v1.0.1  -  Ashraf  -  azure getting error while sending email
 
 
 const { CandidateAssessment } = require("../../models/candidateAssessment");
@@ -324,30 +324,32 @@ exports.shareAssessment = async (req, res) => {
      // <---------------------- v1.0.0
 
     // Generate assessment ID and create schedule assessment without session
-    const lastScheduled = await ScheduleAssessment.findOne({ 
+    // Use a simpler approach that doesn't require sorting by scheduledAssessmentCode
+    // <---------------------- v1.0.1
+    const scheduleCount = await ScheduleAssessment.countDocuments({ 
       organizationId,
       scheduledAssessmentCode: { $exists: true, $ne: null }
-    })
-      .sort({ scheduledAssessmentCode: -1 })
-      .select("scheduledAssessmentCode")
-      .lean();
-
-    let nextNumber = 1;
+    });
     
-    if (lastScheduled?.scheduledAssessmentCode) {
-      // Extract the number from the last code (e.g., "ASMT-00001" -> 1)
-      const match = lastScheduled.scheduledAssessmentCode.match(/ASMT-(\d+)/);
-      if (match) {
-        nextNumber = parseInt(match[1], 10) + 1;
-      }
-    }
+    // Generate the new code with 5-digit padding based on count
+    const nextNumber = scheduleCount + 1;
+    let scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(5, '0')}`;
 
-    // Generate the new code with 5-digit padding
-    const scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(5, '0')}`;
+    // Check if this code already exists (in case of concurrent requests)
+    const existingCode = await ScheduleAssessment.findOne({ 
+      organizationId,
+      scheduledAssessmentCode 
+    });
+    
+    if (existingCode) {
+      // If code exists, try with a higher number
+      const newNextNumber = nextNumber + 1;
+      scheduledAssessmentCode = `ASMT-${String(newNextNumber).padStart(5, '0')}`;
+    }
+    // <---------------------- v1.0.1
 
      // <---------------------- v1.0.0
 
-    const scheduleCount = await ScheduleAssessment.countDocuments({ assessmentId });
     const scheduleAssessment = new ScheduleAssessment({
       scheduledAssessmentCode,
       assessmentId,
@@ -355,7 +357,7 @@ exports.shareAssessment = async (req, res) => {
       status: 'scheduled',
       proctoringEnabled: true,
       createdBy: userId,
-      order: `Assessment ${scheduleCount + 1}`,
+      order: `Assessment ${nextNumber}`,
     });
     await scheduleAssessment.save();
 

@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  - fixed add candidate click navigate to add form
+// v1.0.1  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code),added dropdown to show assessment when user is from shedule assessment true. STOPPED LOOPS: Replaced bulk section fetching with lazy loading to prevent performance issues
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { shareAssessmentAPI } from './AssessmentShareAPI.jsx';
@@ -16,13 +17,22 @@ import Loading from '../../../../Components/Loading.js';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 // ------------------------------ v1.0.0 >
+// <---------------------- v1.0.1
+import { useAssessments } from '../../../../apiHooks/useAssessments.js';
+// <---------------------- v1.0.1 >
+
 
 const ShareAssessment = ({
   isOpen,
   onCloseshare,
-  assessment
+  assessment,
+  fromscheduleAssessment
 }) => {
-  const { candidateData, loading } = useCandidates();
+  // <---------------------- v1.0.1
+  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { candidateData, loading, refetch: refetchCandidates } = useCandidates();
+  // <---------------------- v1.0.1 >
+
   // <------------------------------- v1.0.0 
   const navigate = useNavigate();
   // ------------------------------ v1.0.0 >
@@ -42,12 +52,27 @@ const ShareAssessment = ({
   const [errors, setErrors] = useState({});
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
+  // <---------------------- v1.0.1 >
+
+  // Assessment selection state for fromscheduleAssessment
+  const [selectedAssessment, setSelectedAssessment] = useState(fromscheduleAssessment ? null : assessment);
+  const [assessmentInput, setAssessmentInput] = useState('');
+  const [showDropdownAssessment, setShowDropdownAssessment] = useState(false);
+  const [filteredAssessments, setFilteredAssessments] = useState([]);
+  const assessmentDropdownRef = useRef(null);
+  const assessmentInputRef = useRef(null);
+
+  // Assessment sections state - LAZY LOADING APPROACH
+  const [assessmentSections, setAssessmentSections] = useState({});
+  const [sectionsLoading, setSectionsLoading] = useState({});
+  const [sectionsCache, setSectionsCache] = useState({});
 
   // Fetch assigned candidates
-  const fetchAssignedCandidates = async () => {
+  const fetchAssignedCandidates = async (assessmentId) => {
+    // <---------------------- v1.0.1
     try {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedules`
+        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
       );
       
       // Check if response has the expected structure
@@ -69,18 +94,80 @@ const ShareAssessment = ({
     }
   };
 
-  
+  // <---------------------- v1.0.1 >
 
-  useEffect(() => {
-    if (assessment._id) {
-      fetchAssignedCandidates();
+  // LAZY LOADING: Fetch sections for a specific assessment only when needed
+  const fetchAssessmentSections = async (assessmentId) => {
+    // Check if already cached
+    if (sectionsCache[assessmentId] !== undefined) {
+      return sectionsCache[assessmentId];
     }
-  }, [assessment._id]);
+
+    // Check if already loading
+    if (sectionsLoading[assessmentId]) {
+      return;
+    }
+
+    setSectionsLoading(prev => ({ ...prev, [assessmentId]: true }));
+
+    try {
+      const { data, error } = await fetchAssessmentQuestions(assessmentId);
+      
+      let sections = 0;
+      if (!error && data && data.sections) {
+        sections = data.sections.length || 0;
+      }
+      
+      const result = { id: assessmentId, sections };
+      
+      // Cache the result
+      setSectionsCache(prev => ({ ...prev, [assessmentId]: result }));
+      setAssessmentSections(prev => ({ ...prev, [assessmentId]: sections }));
+      
+      return result;
+    } catch (error) {
+      console.error("Error fetching sections for assessment:", assessmentId, error);
+      const result = { id: assessmentId, sections: 0 };
+      setSectionsCache(prev => ({ ...prev, [assessmentId]: result }));
+      setAssessmentSections(prev => ({ ...prev, [assessmentId]: 0 }));
+      return result;
+    } finally {
+      setSectionsLoading(prev => ({ ...prev, [assessmentId]: false }));
+    }
+  };
+
+//
+  useEffect(() => {
+    if (fromscheduleAssessment) {
+      // When fromscheduleAssessment is true, we don't have an assessment initially
+      setSelectedAssessment(null);
+      setAssignedCandidates([]);
+    } else if (assessment._id) {
+      // When fromscheduleAssessment is false, we have an assessment
+      setSelectedAssessment(assessment);
+      fetchAssignedCandidates(assessment._id);
+      // Pre-fetch sections for the current assessment
+      fetchAssessmentSections(assessment._id);
+    }
+  }, [assessment._id, fromscheduleAssessment]);
+
+  // Load candidates when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      // Refetch candidates to ensure we have the latest data
+      refetchCandidates();
+    }
+  }, [isOpen, refetchCandidates]);
+
+  // REMOVED: The problematic bulk section fetching useEffect that was causing performance issues
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdownCandidate(false);
+      }
+      if (assessmentDropdownRef.current && !assessmentDropdownRef.current.contains(event.target)) {
+        setShowDropdownAssessment(false);
       }
     };
 
@@ -89,6 +176,88 @@ const ShareAssessment = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Assessment selection handlers
+  const handleAssessmentInputChange = (e) => {
+    const inputValue = e.target.value;
+    setAssessmentInput(inputValue);
+
+    // LAZY LOADING: Only filter based on cached data or fetch as needed
+    const filterAssessments = async () => {
+      const filtered = [];
+      
+      for (const assessment of assessmentData) {
+        const hasSections = assessmentSections[assessment._id] ?? 0;
+        const matchesInput = assessment.AssessmentTitle.toLowerCase().includes(inputValue.toLowerCase());
+        
+        if (matchesInput) {
+          if (hasSections > 0) {
+            filtered.push(assessment);
+          } else if (sectionsCache[assessment._id] === undefined && !sectionsLoading[assessment._id]) {
+            // Fetch sections for this assessment if not cached
+            const result = await fetchAssessmentSections(assessment._id);
+            if (result.sections > 0) {
+              filtered.push(assessment);
+            }
+          }
+        }
+      }
+      
+      setFilteredAssessments(filtered);
+    };
+
+    filterAssessments();
+    setShowDropdownAssessment(true);
+  };
+
+  const handleAssessmentDropdownToggle = () => {
+    if (showDropdownAssessment) {
+      setShowDropdownAssessment(false);
+    } else {
+      setShowDropdownAssessment(true);
+      if (!assessmentInput) {
+        // LAZY LOADING: Filter assessments with sections using cached data
+        const filterAssessmentsWithSections = async () => {
+          const filteredAssessmentsWithSections = [];
+          
+          for (const assessment of assessmentData) {
+            const sectionCount = assessmentSections[assessment._id] ?? 0;
+            if (sectionCount > 0) {
+              filteredAssessmentsWithSections.push(assessment);
+            } else if (sectionsCache[assessment._id] === undefined && !sectionsLoading[assessment._id]) {
+              // Fetch sections if not cached
+              const result = await fetchAssessmentSections(assessment._id);
+              if (result.sections > 0) {
+                filteredAssessmentsWithSections.push(assessment);
+              }
+            }
+          }
+          
+          setFilteredAssessments(filteredAssessmentsWithSections);
+        };
+
+        filterAssessmentsWithSections();
+      }
+      // Focus input when dropdown is opened
+      setTimeout(() => {
+        if (assessmentInputRef.current) assessmentInputRef.current.focus();
+      }, 0);
+    }
+  };
+
+  const handleAssessmentSelect = (assessment) => {
+    if (assessment) {
+      setSelectedAssessment(assessment);
+      setAssessmentInput(assessment.AssessmentTitle);
+      setErrors({ ...errors, Assessment: '' });
+      // Fetch assigned candidates for the selected assessment
+      fetchAssignedCandidates(assessment._id);
+      // Pre-fetch sections for the selected assessment
+      fetchAssessmentSections(assessment._id);
+    }
+    setShowDropdownAssessment(false);
+  };
+  // <---------------------- v1.0.1 >
 
   const handleCandidateInputChange = (e) => {
     const inputValue = e.target.value;
@@ -109,7 +278,9 @@ const ShareAssessment = ({
     } else {
       setShowDropdownCandidate(true);
       if (!candidateInput) {
-        setFilteredCandidates(candidateData);
+        // <---------------------- v1.0.1
+        // Use already loaded candidate data
+        setFilteredCandidates(candidateData || []);
       }
       // Focus input when dropdown is opened
       setTimeout(() => {
@@ -171,8 +342,14 @@ const ShareAssessment = ({
     navigate('/candidate/new');
     // ------------------------------ v1.0.0 >
   };
-
+  // <---------------------- v1.0.1 >
   const handleShareClick = async () => {
+    // Validate assessment selection when fromscheduleAssessment is true
+    if (fromscheduleAssessment && !selectedAssessment) {
+      setErrors({ ...errors, Assessment: 'Please select an assessment template.' });
+      return;
+    }
+
     if (selectedCandidates.length === 0) {
       setErrors({ ...errors, Candidate: 'Please select at least one candidate.' });
       return;
@@ -180,7 +357,7 @@ const ShareAssessment = ({
 
     setIsLoading(true);
     const result = await shareAssessmentAPI({
-      assessmentId: assessment._id,
+      assessmentId: fromscheduleAssessment ? selectedAssessment._id : assessment._id,
       selectedCandidates,
       linkExpiryDays,
       onClose: onCloseshare,
@@ -191,7 +368,8 @@ const ShareAssessment = ({
     });
 
     if (result.success) {
-      await fetchAssignedCandidates();
+      await fetchAssignedCandidates(fromscheduleAssessment ? selectedAssessment._id : assessment._id);
+      // <---------------------- v1.0.1
     } else {
       toast.error(result.message || 'Failed to schedule assessment');
     }
@@ -253,8 +431,103 @@ const ShareAssessment = ({
             </div>
 
             <div className="p-4">
-              <p className='font-semibold mb-2'>Assessment Template Title: <span className="text-sm text-custom-blue">{assessment.AssessmentTitle}</span></p>
+              {/* <---------------------- v1.0.1 */}
+              {/* Assessment Template Selection */}
+              {fromscheduleAssessment ? (
+                <div className="mb-6">
+                  <label
+                    htmlFor="Assessment"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Assessment Template <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative" ref={assessmentDropdownRef}>
+                    <div
+                      className={`flex items-center border rounded-lg px-3 py-2 ${errors.Assessment ? 'border-red-500' : 'border-gray-300'
+                        } focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors`}
+                      onClick={() => setShowDropdownAssessment(true)}
+                    >
+                      <input
+                        ref={assessmentInputRef}
+                        type="text"
+                        className="flex-grow outline-none text-sm bg-transparent"
+                        value={assessmentInput}
+                        onChange={handleAssessmentInputChange}
+                        onFocus={() => {
+                          setShowDropdownAssessment(true);
+                          if (!assessmentInput) {
+                            // LAZY LOADING: Filter assessments with sections using cached data
+                            const filterAssessmentsWithSections = async () => {
+                              const filteredAssessmentsWithSections = [];
+                              
+                              for (const assessment of assessmentData) {
+                                const sectionCount = assessmentSections[assessment._id] ?? 0;
+                                if (sectionCount > 0) {
+                                  filteredAssessmentsWithSections.push(assessment);
+                                } else if (sectionsCache[assessment._id] === undefined && !sectionsLoading[assessment._id]) {
+                                  // Fetch sections if not cached
+                                  const result = await fetchAssessmentSections(assessment._id);
+                                  if (result.sections > 0) {
+                                    filteredAssessmentsWithSections.push(assessment);
+                                  }
+                                }
+                              }
+                              
+                              setFilteredAssessments(filteredAssessmentsWithSections);
+                            };
 
+                            filterAssessmentsWithSections();
+                          }
+                        }}
+                        placeholder="Search assessment templates..."
+                        autoComplete="off"
+                      />
+                      <MdArrowDropDown
+                        onClick={handleAssessmentDropdownToggle}
+                        className={`text-gray-500 hover:text-gray-700 cursor-pointer transition-transform ${showDropdownAssessment ? 'transform rotate-180' : ''
+                          }`}
+                      />
+                    </div>
+
+                    {errors.Assessment && (
+                      <p className="mt-1 text-sm text-red-500">{errors.Assessment}</p>
+                    )}
+
+                    {showDropdownAssessment && (
+                      <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                        <div className="sticky top-0 p-2 border-b border-gray-200 bg-gray-50">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Available Assessment Templates ({filteredAssessments.length})
+                          </p>
+                        </div>
+                        <ul className="divide-y divide-gray-100">
+                          {filteredAssessments.length > 0 ? (
+                            filteredAssessments.map((assessment) => (
+                              <li
+                                key={assessment._id}
+                                className="px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                                onClick={() => handleAssessmentSelect(assessment)}
+                              >
+                                <span className="text-sm font-medium text-gray-900">
+                                  {assessment.AssessmentTitle}
+                                </span>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-4 py-2 text-sm text-gray-500">
+                              No matching assessment templates found
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                
+                <p className='font-semibold mb-2'>Assessment Template Title: <span className="text-sm text-custom-blue">{assessment.AssessmentTitle}</span></p>
+              )}
+         {/* <---------------------- v1.0.1 > */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
                   <label
@@ -287,8 +560,12 @@ const ShareAssessment = ({
                       onFocus={() => {
                         setShowDropdownCandidate(true);
                         if (!candidateInput) {
-                          setFilteredCandidates(candidateData);
+                        // <---------------------- v1.0.1
+                          
+                          // Use already loaded candidate data
+                          setFilteredCandidates(candidateData || []);
                         }
+                        // <---------------------- v1.0.1 >
                       }}
                       placeholder="Search by name or email..."
                       autoComplete="off"
@@ -423,7 +700,9 @@ const ShareAssessment = ({
               <button
                 onClick={handleShareClick}
                 className="px-6 py-2 bg-custom-blue hover:bg-custom-blue/90 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-                disabled={isLoading || selectedCandidates.length === 0}
+                // <---------------------- v1.0.1
+                disabled={isLoading || selectedCandidates.length === 0 || (fromscheduleAssessment && !selectedAssessment)}
+                // <---------------------- v1.0.1 >
               >
                 {isLoading ? (
                   <span className="flex items-center">

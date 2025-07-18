@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  removed expity date
+// v1.0.1  -  Ashraf  -  added new assessment button
 
 import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
@@ -17,16 +18,20 @@ import ScheduleAssessmentKanban from './ScheduleAssessmentKanban.jsx';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useAssessments } from '../../../../apiHooks/useAssessments.js';
+// <---------------------- v1.0.1
+import ShareAssessment from "../Assessment-Tab/ShareAssessment.jsx";
+// <---------------------- v1.0.1 >
 
 const ScheduleAssessment = () => {
   const { effectivePermissions } = usePermissions();
   const { assessmentData } = useAssessments();
   const { scheduleData, isLoading } = useScheduleAssessments();
   const navigate = useNavigate();
+  // <---------------------- v1.0.1
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  // <---------------------- v1.0.1 >
 
   const assessmentIds = assessmentData?.map((a) => a._id) || [];
-  //console.log("assessmentIds---", assessmentIds);
-  // UI state
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -127,10 +132,15 @@ const ScheduleAssessment = () => {
     // Adjust route when details page exists
     navigate(`/assessment/${schedule._id}`, { state: { schedule } });
   };
-  // const handleEdit = (schedule) => {
-  //   navigate(`/schedule-assessment/edit/${schedule._id}`);
-  // };
 
+  // <---------------------- v1.0.1
+  const handleShareClick = () => {
+      setIsShareOpen(true);
+  };
+  const handleCloseShare = () => {
+    setIsShareOpen(false);
+  };
+  // <---------------------- v1.0.1 >
   // Table definitions
   const tableColumns = [
     // Assessment Template ID
@@ -243,7 +253,12 @@ const ScheduleAssessment = () => {
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
-            <Header title="Assessments" canCreate={false} />
+            {/* <---------------------- v1.0.1 */}
+            <Header title="Assessments"
+            addButtonText="Add Assessment"
+            onAddClick={() => handleShareClick()}
+             canCreate={effectivePermissions.Assessments?.Create} />
+             {/* <---------------------- v1.0.1 > */}
             <Toolbar
               view={viewMode}
               setView={setViewMode}
@@ -326,6 +341,16 @@ const ScheduleAssessment = () => {
           </motion.div>
         </div>
       </main>
+      {/* <---------------------- v1.0.1 */}
+      {isShareOpen && (
+        <ShareAssessment
+          isOpen={isShareOpen}
+          onCloseshare={handleCloseShare}
+          assessment={isShareOpen}
+          fromscheduleAssessment={true}
+        />
+      )}
+      {/* <---------------------- v1.0.1 > */}
     </div>
   );
 };

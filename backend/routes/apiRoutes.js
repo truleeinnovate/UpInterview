@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  Assessment_Template permission name changed to AssessmentTemplates
 // v1.0.1  -  Ashraf  -  fixed postion and interviews rounds and questions no populates
 // v1.0.2  -  Ashraf  -  fixed interview questions and rounds filter issue
+// v1.0.3  -  Ashraf  -  fixed interview template model populate issues
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -316,6 +317,20 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         // ------------------------------ v1.0.2 >
         console.log('[31] Final interview data with rounds and questions prepared');
         break;
+
+// <------------------------------- v1.0.3 
+        case 'interviewtemplate':
+          console.log('[34] Processing InterviewTemplate model');
+          data = await DataModel.find(query)
+            .populate({
+              path: 'rounds.interviewers',
+              model: 'Contacts',
+              select: 'firstName lastName email',
+            })
+            .lean();
+          console.log('[35] Found', data.length, 'InterviewTemplate records');
+          break;
+
 
       case 'position':
         console.log('[32] Processing Position model');

@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 import axios from "axios";
 import CryptoJS from 'crypto-js';
 import React, { useState, useEffect } from "react";
@@ -8,9 +9,14 @@ import AssessmentExamStart from './Components/AssessmentExamStart.jsx';
 import toast from 'react-hot-toast';
 import logo from "../../../Dashboard-Part/Images/upinterviewLogo.webp";
 import { config } from "../../../../config.js";
+// <---------------------- v1.0.0
+import { useAssessments } from '../../../../apiHooks/useAssessments.js';
 
 
 const AssessmentTest = () => {
+  const { fetchAssessmentQuestions } = useAssessments();
+  // <---------------------- v1.0.0
+
   const [isVerified, setIsVerified] = useState(false);
   const [assessment, setAssessment] = useState(null);
   const [assessmentQuestions, setAssessmentQuestions] = useState(null);
@@ -29,23 +35,34 @@ const AssessmentTest = () => {
   useEffect(() => {
     if (assessment?.assessmentId?._id) {
       console.log('Fetching assessment questions for ID:', assessment.assessmentId._id);
-      axios.get(`${config.REACT_APP_API_URL}/assessment-questions/list/${assessment.assessmentId._id}`)
-        .then(response => {
-          // console.log('API Response:', response.data);
-          if (response.data.success) {
-            setAssessmentQuestions(response.data.data);
+      
+      const loadAssessmentQuestions = async () => {
+        try {
+          const { data, error } = await fetchAssessmentQuestions(assessment.assessmentId._id);
+          
+          if (error) {
+            toast.error('Failed to load assessment questions.');
+            setError('Failed to load assessment questions.');
+            return;
+          }
+          
+          if (data && data.sections) {
+            setAssessmentQuestions(data);
           } else {
             toast.error('Failed to load assessment questions.');
             setError('Failed to load assessment questions.');
           }
-        })
-        .catch(error => {
+        } catch (error) {
           console.error('Error fetching assessment questions:', error);
           toast.error('Error loading assessment questions.');
           setError('Error loading assessment questions.');
-        });
+        }
+      };
+      
+      loadAssessmentQuestions();
     }
-  }, [assessment]);
+  }, [assessment, fetchAssessmentQuestions]);
+  // <---------------------- v1.0.0 >
 
   const getCandidateAssessmentDetails = async (candidateAssessmentId) => {
     try {

@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  assessment template id not getting issues
 // v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
+// v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -24,7 +25,9 @@ import { usePermissions } from "../../../../Context/PermissionsContext";
 const Assessment = () => {
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
-  const { assessmentData, isLoading } = useAssessments();
+  // <---------------------- v1.0.2
+  const { assessmentData, isLoading, fetchAssessmentQuestions } = useAssessments();
+  // <---------------------- v1.0.2 >
   const navigate = useNavigate();
   const [assessmentSections, setAssessmentSections] = useState({});
   const [viewMode, setViewMode] = useState("table");
@@ -58,30 +61,48 @@ const Assessment = () => {
     // Only run if assessmentData is loaded and not empty
     // <---------------------- v1.0.0
     if (!assessmentData || assessmentData.length === 0) return;
-    const fetchSections = async () => {
-      try {
-        const sectionPromises = assessmentData.map(async (assessment) => {
-          // <---------------------- v1.0.0
-          const response = await axios.get(
-            `${config.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`
-          );
-          const sections = response.data.exists === false
-            ? 0
-            : response.data.data?.sections?.length || 0;
-          return { id: assessment._id, sections };
-        });
-        const results = await Promise.all(sectionPromises);
-        const newSections = results.reduce((acc, curr) => {
-          acc[curr.id] = curr.sections;
-          return acc;
-        }, {});
-        setAssessmentSections((prev) => ({ ...prev, ...newSections }));
-      } catch (error) {
-        console.error("Error fetching sections:", error);
+    
+    const fetchSectionsInBatches = async () => {
+      const batchSize = 5; // Process 5 assessments at a time
+      const sectionsCache = {};
+      
+      for (let i = 0; i < assessmentData.length; i += batchSize) {
+        const batch = assessmentData.slice(i, i + batchSize);
+        
+        try {
+          const batchPromises = batch.map(async (assessment) => {
+            const { data, error } = await fetchAssessmentQuestions(assessment._id);
+            
+            let sections = 0;
+            if (!error && data && data.sections) {
+              sections = data.sections.length || 0;
+            }
+            
+            return { id: assessment._id, sections };
+          });
+          
+          const batchResults = await Promise.all(batchPromises);
+          
+          // Update state incrementally
+          batchResults.forEach(result => {
+            sectionsCache[result.id] = result.sections;
+          });
+          
+          setAssessmentSections(prev => ({ ...prev, ...sectionsCache }));
+          
+          // Small delay between batches to prevent overwhelming the server
+          if (i + batchSize < assessmentData.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        } catch (error) {
+          console.error("Error fetching sections batch:", error);
+        }
       }
     };
-    fetchSections();
-  }, [assessmentData]);
+    
+    fetchSectionsInBatches();
+  }, [assessmentData, fetchAssessmentQuestions]);
+  // <---------------------- v1.0.2 >
 
   // Only after all hooks
   if (!isInitialized) {
