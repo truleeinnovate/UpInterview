@@ -1,5 +1,5 @@
-// v1.0.0  -  Ashraf  -  removed recent activity code
-
+// v1.0.0 - Ashok - getting tenant by id is not working on online
+  // v1.0.1  -  Ashraf  -  removed recent activity code
 const bcrypt = require("bcrypt");
 const Tenant = require("../models/Tenant");
 const { Users } = require("../models/Users");
@@ -1299,13 +1299,16 @@ const getAllOrganizations = async (req, res) => {
 
 //ashraf
 
+
+
+// v1.0.0 <--------------------------------------------------------------------------
 const getOrganizationById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!id || typeof id !== "string") {
-      return res.status(400).json({ message: "Invalid organization ID" });
-    }
+    // if (!mongoose.Types.ObjectId.isValid(id)) {
+    //   return res.status(400).json({ message: "Invalid organization ID" });
+    // }
 
     const users = await Users.find({ tenantId: id }).select("-password").lean();
     const organization = await Tenant.findOne({ _id: id }).lean();
@@ -1346,23 +1349,21 @@ const getOrganizationById = async (req, res) => {
         };
       })
     );
-
     const tenant = {
       tenant: {
         ...(organization || {}),
         ...(subscription || {}),
         subscriptionPlan,
-      },
-      users: usersWithRoleAndContact,
-    };
 
-    return res.status(200).json({ organization: tenant });
+      },
+    });
+    // v1.0.0 ---------------------------------------------------------------------------------------->
   } catch (error) {
     console.error("Error fetching organization:", error.message, error.stack);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
+// v1.0.0 -------------------------------------------------------------------------------------------->
 const superAdminLoginAsUser = async (req, res) => {
   try {
     const { userId } = req.body;

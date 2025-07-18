@@ -1,4 +1,5 @@
 // v1.0.0  -  mansoor  -  when we select the interview template then error is getting that is solved now
+// v1.0.1  -  mansoor  -  fixed dropdown alignments of candidate and position
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import Cookies from "js-cookie";
@@ -29,18 +30,32 @@ const CustomDropdown = ({
   // <-------------------- v1.0.0
   const buttonClass = `w-full pl-3 pr-10 py-2 text-base border ${error ? 'border-red-500' : disabled ? 'border-gray-200' : 'border-gray-300'
     } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md ${disabled ? 'bg-gray-50 cursor-not-allowed' : ''} text-left`;
-// v1.0.0 ---------------------------->
+  // v1.0.0 ---------------------------->
+
+  // <-------------------- v1.0.1
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isOpen && !event.target.closest(`[data-dropdown="${id}"]`)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, id]);
+//  v1.0.1---------------------->
   return (
-    <div className={dropdownClass}>
+    <div className={dropdownClass} data-dropdown={id}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
-       {/* <-------------------- v1.0.0 */}
+        {/* <-------------------- v1.0.0 */}
         {label} <span className="text-red-500">*</span>
         {/* v1.0.0 ----------------------------> */}
       </label>
       <div className="relative">
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
           className={buttonClass}
           disabled={disabled}
         >
@@ -51,30 +66,44 @@ const CustomDropdown = ({
           }
           {/* v1.0.0 ----------------------------> */}
           <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <svg className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </span>
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-full rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-            <ul className="py-1 text-base text-gray-900 h-48 overflow-y-auto z-50">
-              {options.map((option) => (
-                <li
-                  key={option.value}
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-
-                  className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${value === option.value ? 'bg-gray-100' : ''
-                    }`}
-                >
-                  {option.label}
-                </li>
-              ))}
-            </ul>
+          <div className="absolute z-50 mt-1 w-full rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 border border-gray-200">
+            {/* <--------------------v1.0.1 */}
+            {options.length === 0 ? (
+              // Empty state - minimal height
+              <div className="py-3 px-4 text-sm text-gray-500 text-center">
+                No data found
+              </div>
+            ) : (
+              // Options list with controlled height
+              <ul className="py-1 text-base text-gray-900 max-h-48 overflow-y-auto">
+                {options.map((option) => (
+                  <li
+                    key={option.value}
+                    onClick={() => {
+                      // Prevent selection of loading items
+                      if (option.value === 'loading') return;
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }}
+                    className={`px-4 py-2 cursor-pointer transition-colors duration-150 ${option.value === 'loading'
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'hover:bg-gray-100'
+                      } ${value === option.value ? 'bg-custom-blue/10 text-custom-blue' : ''
+                      }`}
+                  >
+                    {option.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {/* v1.0.1------------------> */}
           </div>
         )}
       </div>
@@ -119,14 +148,14 @@ const InterviewForm = () => {
   const userId = tokenPayload?.userId;
   const { id } = useParams();
   const navigate = useNavigate();
-  const { positionData } = usePositions();
-  const { templatesData } = useInterviewTemplates();
+  const { positionData, isLoading: positionsLoading } = usePositions();
+  const { templatesData, isLoading: templatesLoading } = useInterviewTemplates();
   const {
     interviewData,
     isMutationLoading,
     createInterview,
   } = useInterviews();
-  const { candidateData } = useCandidates();
+  const { candidateData, isLoading: candidatesLoading } = useCandidates();
 
   const [candidateId, setCandidateId] = useState('');
   const [positionId, setPositionId] = useState('');
@@ -276,13 +305,22 @@ const InterviewForm = () => {
                         setCandidateId(value);
                         setCandidateError('');
                       }}
-                      options={candidateData.map(candidate => ({
-                        value: candidate._id,
-                        label: `${candidate.LastName} (${candidate.Email})`
-                      }))}
+                      // <-------------v1.0.1
+                      options={
+                        candidatesLoading
+                          ? [{ value: 'loading', label: 'Loading candidates...' }]
+                          : candidateData?.length > 0
+                            ? candidateData.map(candidate => ({
+                              value: candidate._id,
+                              label: `${candidate.LastName} (${candidate.Email})`
+                            }))
+                            : []
+                      }
                       error={candidateError}
-                      placeholder="Select a Candidate"
+                      placeholder={candidatesLoading ? "Loading..." : "Select a Candidate"}
+                      disabled={candidatesLoading}
                     />
+                    {/* v1.0.1-------------> */}
                   </div>
 
                   <div>
@@ -294,13 +332,22 @@ const InterviewForm = () => {
                         setPositionId(value);
                         setPositionError('');
                       }}
-                      options={positionData.map(position => ({
-                        value: position._id,
-                        label: position.title
-                      }))}
+                      // <----------------v1.0.1
+                      options={
+                        positionsLoading
+                          ? [{ value: 'loading', label: 'Loading positions...' }]
+                          : positionData?.length > 0
+                            ? positionData.map(position => ({
+                              value: position._id,
+                              label: position.title
+                            }))
+                            : []
+                      }
                       error={positionError}
-                      placeholder="Select a Position"
+                      placeholder={positionsLoading ? "Loading..." : "Select a Position"}
+                      disabled={positionsLoading}
                     />
+                    {/* v1.0.1-----------------> */}
                   </div>
 
                   <div>
@@ -309,17 +356,34 @@ const InterviewForm = () => {
                       label="Interview Template"
                       value={templateId}
                       onChange={handleTemplateChange}
+                      // <----------v1.0.1
                       options={
-                        (templatesData ?? [])
-                          .filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active')
-                          .map(template => ({
-                            value: template._id,
-                            label: template.templateName
-                          }))
+                        templatesLoading
+                          ? [{ value: 'loading', label: 'Loading templates...' }]
+                          : (templatesData ?? [])
+                            .filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active')
+                            .map(template => ({
+                              value: template._id,
+                              label: template.templateName
+                            }))
                       }
-                      disabled={!positionId}
-                      placeholder="Select a Template"
+                      disabled={!positionId || templatesLoading}
+                      placeholder={templatesLoading ? "Loading..." : "Select a Template"}
                     />
+                    {!templatesLoading && positionId && templatesData && (
+                      <div className="mt-2">
+                        {templatesData.filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active').length === 0 ? (
+                          <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded-md">
+                            ⚠️ No active templates with rounds found. Please create or activate a template first.
+                          </p>
+                        ) : (
+                          <p className="text-sm text-gray-500">
+                            Showing {templatesData.filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active').length} active template(s)
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {/* v1.0.1 -------------------> */}
                   </div>
 
                   <div className="flex justify-end space-x-3">

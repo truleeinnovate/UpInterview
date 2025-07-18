@@ -65,6 +65,7 @@ const Assessment = () => {
     // Only run if assessmentData is loaded and not empty
     // <---------------------- v1.0.0
     if (!assessmentData || assessmentData.length === 0) return;
+    
     // ------------------------------ v1.0.3 >
     // Prevent running if we already have sections data for all assessments
     const hasAllSections = assessmentData.every(assessment => 

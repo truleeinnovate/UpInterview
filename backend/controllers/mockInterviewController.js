@@ -1,3 +1,4 @@
+// v1.0.0  - mansoor - removed the sort by createdAt in the mock interview controller to save the mockinterview in the online
 // controllers/mockInterviewController.js
 const { MockInterview } = require("../models/mockinterview");
 
@@ -22,7 +23,9 @@ exports.createMockInterview = async (req, res) => {
 
     // ✅ Generate custom mockInterviewCode like MINT-00001
     const lastMockInterview = await MockInterview.findOne({})
-      .sort({ createdAt: -1 })
+      // <---------------- v1.0.0
+      // .sort({ createdAt: -1 })
+      // v1.0.0------------------->
       .select("mockInterviewCode")
       .lean();
 

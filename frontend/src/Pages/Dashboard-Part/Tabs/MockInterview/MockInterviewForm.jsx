@@ -1,3 +1,4 @@
+// v1.0.0  - mansoor - improved the error message
 import { useState, useRef, useEffect, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import Cookies from "js-cookie";
@@ -478,14 +479,26 @@ const MockSchedulelater = () => {
           setSelectedInterviewType(null);
           console.groupEnd();
         },
+        //  <------------------  v1.0.0
         onError: (error) => {
           console.error("Error saving mock interview:", error);
+
+          // More specific error message based on the error type
+          let errorMessage = "Failed to save interview. Please try again.";
+
+          if (error.response?.status === 500) {
+            errorMessage = "Server error. Please try again later or contact support.";
+          } else if (error.response?.status === 400) {
+            errorMessage = "Invalid data. Please check your input and try again.";
+          }
+
           setErrors((prev) => ({
             ...prev,
-            submit: "Failed to save interview. Please try again.",
+            submit: errorMessage,
           }));
           console.groupEnd();
         },
+        // v1.0.0--------------------------->
       }
     );
   };
