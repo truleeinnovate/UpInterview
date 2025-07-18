@@ -1,3 +1,5 @@
+// v1.0.0  -  Ashraf  -  fixed loops issues
+
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
@@ -193,22 +195,44 @@ function RoundFormTemplates() {
   useEffect(() => {
     const filterAssessmentsWithQuestions = async () => {
       if (hasFiltered || !template) return;
+      // <---------------------- v1.0.0
 
-      const results = await Promise.all(
-        assessmentData.map(async (assessment) => {
-          if (!assessment?._id) return null;
 
-          const { data } = await fetchAssessmentQuestions(assessment._id);
+      const batchSize = 3; // Process 3 assessments at a time
+      const validAssessments = [];
 
-          if (Array.isArray(data?.sections) && data.sections.length > 0) {
-            return assessment;
+      for (let i = 0; i < assessmentData.length; i += batchSize) {
+        const batch = assessmentData.slice(i, i + batchSize);
+        
+        try {
+          const batchPromises = batch.map(async (assessment) => {
+            if (!assessment?._id) return null;
+// <---------------------- v1.0.0 >
+            const { data } = await fetchAssessmentQuestions(assessment._id);
+
+            if (Array.isArray(data?.sections) && data.sections.length > 0) {
+              return assessment;
+            }
+
+            return null;
+          });
+
+          const batchResults = await Promise.all(batchPromises);
+          const validBatchResults = batchResults.filter(Boolean);
+          validAssessments.push(...validBatchResults);
+
+          // Update state incrementally
+          setFilteredAssessments([...validAssessments]);
+
+          // Small delay between batches to prevent overwhelming the server
+          if (i + batchSize < assessmentData.length) {
+            await new Promise(resolve => setTimeout(resolve, 150));
           }
+        } catch (error) {
+          console.error("Error filtering assessments batch:", error);
+        }
+      }
 
-          return null;
-        })
-      );
-
-      setFilteredAssessments(results.filter(Boolean));
       setHasFiltered(true);
     };
 

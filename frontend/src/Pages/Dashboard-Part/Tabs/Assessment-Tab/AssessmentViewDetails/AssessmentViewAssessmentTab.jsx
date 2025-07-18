@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  commented expiry date because we dont have expiry date in schedule assessment
+// v1.0.1  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { UserPlusIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
@@ -13,8 +14,7 @@ import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 
 function AssessmentsTab({ assessment }) {
   
-  const { fetchScheduledAssessments } = useAssessments();
-
+  const { fetchScheduledAssessments, fetchAssessmentQuestions } = useAssessments();
 
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   // Remove console.log to prevent loops
@@ -31,6 +31,34 @@ function AssessmentsTab({ assessment }) {
   const [loading, setLoading] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [openSchedules, setOpenSchedules] = useState({});
+  // <---------------------- v1.0.1
+  const [hasSections, setHasSections] = useState(false);
+  const [checkingSections, setCheckingSections] = useState(false);
+
+  // Check if assessment has sections
+  useEffect(() => {
+    const checkAssessmentSections = async () => {
+      if (assessment?._id) {
+        setCheckingSections(true);
+        try {
+          const { data, error } = await fetchAssessmentQuestions(assessment._id);
+          if (!error && data && data.sections) {
+            setHasSections(data.sections.length > 0);
+          } else {
+            setHasSections(false);
+          }
+        } catch (error) {
+          console.error('Error checking assessment sections:', error);
+          setHasSections(false);
+        } finally {
+          setCheckingSections(false);
+        }
+      }
+    };
+
+    checkAssessmentSections();
+  }, [assessment?._id, fetchAssessmentQuestions]);
+  // <---------------------- v1.0.1 >
 
   useEffect(() => {
     const fetchData = async () => {
@@ -140,18 +168,20 @@ function AssessmentsTab({ assessment }) {
 
   return (
     <>
+    {/* <---------------------- v1.0.1 */}
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-900">Assessments</h3>
-        <button
-          onClick={() => setIsShareOpen(true)}
-          className="flex items-center px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/90 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          <UserPlusIcon className="w-5 h-5 mr-2" />
-          New Assessment
-        </button>
+      <div className="flex justify-end items-center">
+        {hasSections && (
+          <button
+            onClick={() => setIsShareOpen(true)}
+            className="flex items-center px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/90 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            <UserPlusIcon className="w-5 h-5 mr-2" />
+            New Assessment
+          </button>
+        )}
       </div>
-
+      {/* <---------------------- v1.0.1 > */}
       <div className="space-y-4">
         {Array.isArray(scheduledAssessments) && scheduledAssessments.length > 0 ? (
           scheduledAssessments.map((schedule) => (

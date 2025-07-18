@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  while editing assessment id not getting issues
 //v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
+//v1.0.2  -  Ashraf  -  assessment question api data get when exist is true
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useRef } from 'react';
@@ -119,6 +120,12 @@ export const useAssessments = (filters = {}) => {
         `${config.REACT_APP_API_URL}/assessment-questions/list/${assessmentId}`
       );
       if (response.data.success) {
+        // <---------------------- v1.0.2
+        // If exists is false, the data might be empty or have empty sections
+        if (response.data.exists === false) {
+          return { data: { sections: [] }, error: null };
+        }
+        
         return { data: response.data.data, error: null };
       } else {
         return { data: null, error: response.data.message };
