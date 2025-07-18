@@ -77,14 +77,14 @@ const AppliedPositions = ({ positions, onViewDetails }) => {
                     <p className="text-sm font-medium text-gray-600">Application Stage</p>
                     <div className="flex items-center gap-2">
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '60%' }}></div>
+                        <div className="bg-custom-blue h-2 rounded-full" style={{ width: '60%' }}></div>
                       </div>
                       <span className="text-sm text-gray-600">2/3</span>
                     </div>
                   </div>
                   <button
                     onClick={() => onViewDetails(position)}
-                    className="px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
+                    className="px-3 py-1.5 text-custom-blue hover:bg-custom-blue/20 rounded-lg transition-colors text-sm font-medium"
                   >
                     View Details
                   </button>

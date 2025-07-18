@@ -290,7 +290,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
           <div className="flex items-center justify-between p-4 bg-gray-50">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Building className="w-5 h-5 text-blue-600" />
+                <Building className="w-5 h-5 text-custom-blue" />
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800">{interviews?.positionId?.companyname || "N/A"}</h4>
@@ -300,7 +300,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onViewDetails(interviews)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                 title="View Details"
               >
                 <Eye className="w-4 h-4" />
@@ -323,7 +323,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
               <div className="flex gap-4 mb-4 border-b border-gray-200">
                 <button
                   className={`pb-2 px-1 text-sm font-medium transition-colors relative ${activeTab === 'details'
-                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      ? 'text-custom-blue border-b-2 border-custom-blue'
                       : 'text-gray-600 hover:text-gray-800'
                     }`}
                   onClick={() => setActiveTab('details')}
@@ -332,7 +332,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
                 </button>
                 <button
                   className={`pb-2 px-1 text-sm font-medium transition-colors relative ${activeTab === 'feedback'
-                      ? 'text-blue-600 border-b-2 '
+                      ? 'text-custom-blue border-b-2 '
                       : 'text-gray-600 hover:text-gray-800'
                     }`}
                   onClick={() => setActiveTab('feedback')}
@@ -346,7 +346,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
                   {interviews?.rounds.map((round, index) => (
                     <div
                       key={index}
-                      className="border-l-4 border-blue-500 pl-4 py-2"
+                      className="border-l-4 border-custom-blue pl-4 py-2"
                     >
                       <div className="flex justify-between items-start">
                         <div>
@@ -385,7 +385,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
                             </span>
                             <button
                               onClick={() => handleViewRound(interviews, round)}
-                              className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="p-1 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                               title="View Round Details"
                             >
                               <Eye className="w-4 h-4" />
@@ -415,7 +415,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
                                 </button>
                                 <button
                                   // onClick={() => downloadFeedback(interview, round)}
-                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                                   title="Download Feedback"
                                 >
                                   <Download className="w-4 h-4" />

@@ -124,7 +124,7 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
               </div>
 
               <div className="flex items-center">
-                <Building2 className="text-blue-600 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
+                <Building2 className="text-custom-blue mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
                 <div className="min-w-0 flex-1  pb-2 pt-2">
                   <span className="block truncate text-sm">
                     {candidate?.UniversityCollege || "?"}
