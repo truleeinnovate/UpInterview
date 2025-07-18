@@ -3,7 +3,6 @@ import { useNavigate, Outlet } from "react-router-dom";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import { useMediaQuery } from "react-responsive";
-// import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 // import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";

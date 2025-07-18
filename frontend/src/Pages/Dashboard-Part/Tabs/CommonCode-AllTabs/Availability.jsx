@@ -335,7 +335,7 @@ const Availability = ({
                           : [...prev, value]
                       );
                     }}
-                    className="mr-2 h-4 w-4 text-blue-600 rounded"
+                    className="mr-2 h-4 w-4 text-custom-blue rounded"
                   />
                   <span className="text-sm">{dayOption}</span>
                 </label>
@@ -345,14 +345,14 @@ const Availability = ({
               <button
                 type="button"
                 onClick={() => setShowPopup(false)}
-                className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                className="px-4 py-2 text-sm border border-custom-blue rounded hover:bg-custom-blue/10"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handlePaste}
-                className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 text-sm bg-custom-blue text-white rounded hover:bg-custom-blue/90"
                 disabled={selectedDays?.length === 0}
               >
                 Duplicate

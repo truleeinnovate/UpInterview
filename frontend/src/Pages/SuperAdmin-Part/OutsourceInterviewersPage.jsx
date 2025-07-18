@@ -6,7 +6,7 @@ import Header from "../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
-import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
+import Loading from "../../Components/Loading.js";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
