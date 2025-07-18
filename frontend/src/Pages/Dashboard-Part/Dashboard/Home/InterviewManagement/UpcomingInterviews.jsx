@@ -1,3 +1,5 @@
+// v1.0.0----------Venkatesh----------changes in candidate name and position first letter capital
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Clock, CheckCircle, XCircle, Calendar, User, Briefcase, Hash } from 'lucide-react';
@@ -123,9 +125,11 @@ const InterviewerSchedule = () => {
             const statusDetails = getStatusDetails(statusToShow);
             const interviewCode = round.interviewCode || 'no interview';
             const candidateName = round.candidateId
-              ? `${round.candidateId.FirstName || ''} ${round.candidateId.LastName || ''}`.trim() || 'Unknown Candidate'
+            // <------v1.0.0----------Venkatesh----------
+              ? `${round.candidateId.FirstName && round.candidateId.FirstName.charAt(0).toUpperCase() + round.candidateId.FirstName.slice(1)} ${round.candidateId.LastName && round.candidateId.LastName.charAt(0).toUpperCase() + round.candidateId.LastName.slice(1)}` || 'Unknown Candidate'
               : 'Unknown Candidate';
-            const positionTitle = round.positionId?.title || 'Unknown Position';
+            const positionTitle = round.positionId?.title ? round.positionId?.title.charAt(0).toUpperCase() + round.positionId?.title.slice(1) : 'Unknown Position';
+            // ------v1.0.0----------Venkatesh---------->
             const companyName = round.positionId?.companyname || '';
             const candidateEmail = round.candidateId?.Email || 'no email provided';
 

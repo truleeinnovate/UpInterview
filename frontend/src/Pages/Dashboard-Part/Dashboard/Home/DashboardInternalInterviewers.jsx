@@ -116,10 +116,10 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-y-2 mb-3">
+                                    <div className="grid grid-cols-2 gap-y-2 gap-x-6 mb-3">
                                         <div className="flex items-center space-x-[2px] text-xs text-gray-500">
                                             <Building size={14} />
-                                            <span>{interviewer.department || interviewer.company}</span>
+                                            <span className="truncate">{interviewer.department || interviewer.company}</span>
                                         </div>
                                         <div className="flex items-center space-x-[2px] text-xs text-gray-500 -ml-6">
                                             <MapPin size={14} />
@@ -127,7 +127,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                                         </div>
                                         <div className="flex items-center space-x-[2px] text-xs text-gray-500">
                                             <Briefcase size={14} />
-                                            <span>{interviewer.completedInterviews} Interviews</span>
+                                            <span>{interviewer.completedInterviews} {interviewer.completedInterviews > 1 ? 'Interviews' : 'Interview'}</span>
                                         </div>
                                     </div>
 
