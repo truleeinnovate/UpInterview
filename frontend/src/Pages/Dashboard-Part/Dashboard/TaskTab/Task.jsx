@@ -1,3 +1,6 @@
+
+//<---------------------- v1.0.0----Venkatesh----in task tab add filter with owner id
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -82,18 +85,20 @@ const Task = () => {
   const fetchTasks = useCallback(async () => {
     try {
       const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
-      let filteredTasks = response.data;
-      if (organization === true) {
-      //   filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
-      // } else {
-        filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
-      }
+      // <--------------v1.0.0---------
+      const filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
+      // --------------v1.0.0--------->
+      // if (organization === true) {
+      // //   filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
+      // // } else {
+      //   filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
+      // }
       
       setTaskData(filteredTasks);
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
-  }, [currentUserId, organization]);
+  }, [currentUserId]);
 
   useEffect(() => {
     fetchTasks();

@@ -19,8 +19,12 @@ import { useCustomContext } from "../../../../Context/Contextfetch";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
+import AuthCookieManager from "../../../../utils/AuthCookieManager/AuthCookieManager";
 
 function SupportDesk() {
+  const userType = AuthCookieManager.getUserType();
+  //console.log("userType===",userType)
+
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { effectivePermissions, superAdminPermissions, impersonatedUser_roleName, effectivePermissions_RoleName } = usePermissions();
   console.log("impersonatedUser_roleName",impersonatedUser_roleName)
@@ -168,7 +172,7 @@ function SupportDesk() {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => {
             const path =
-              effectivePermissions_RoleName === "Admin"
+              effectivePermissions_RoleName === "Admin" || userType === "effective"
                 ? `/support-desk/${row?._id}`
                 : row.assignedToId ===
                     impersonationPayload.impersonatedUserId &&
@@ -264,7 +268,7 @@ function SupportDesk() {
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         const path =
-          effectivePermissions_RoleName === "Admin"
+          effectivePermissions_RoleName === "Admin" || userType === "effective"
             ? `/support-desk/${row._id}`
             : row.assignedToId === impersonationPayload.impersonatedUserId &&
               impersonatedUser_roleName === "Support_Team"
@@ -276,7 +280,7 @@ function SupportDesk() {
       },
       //disabled: (row) => !hasActionAccess(row),
     },
-    ...(effectivePermissions_RoleName === "Admin"
+    ...(effectivePermissions_RoleName === "Admin" || userType === "effective"
       ? [
           {
             key: "edit",

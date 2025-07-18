@@ -1,15 +1,17 @@
 /* eslint-disable react/prop-types */
 
-// v1.0.0-----Venkatesh---in kanban view 4 cards shown in 2xl grid
+// v1.0.0-----Venkatesh---in kanban view 4 cards shown in 2xl grid and add userType === "effective"
 
 import { motion } from 'framer-motion';
 import { FaEye, FaPencilAlt } from 'react-icons/fa';
 import { format, isValid, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase } from "lucide-react";
+import AuthCookieManager from "../../../../utils/AuthCookieManager/AuthCookieManager";
 
 const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, effectivePermissions_RoleName, impersonatedUser_roleName, impersonationPayloadID }) => {
   const navigate = useNavigate();
+  const userType = AuthCookieManager.getUserType();
 
   // Determine effective role based on impersonation
   const effectiveRole = effectivePermissions_RoleName;
@@ -57,7 +59,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
       return true;
     } else if (impersonatedUser_roleName === 'Support_Team') {
       return ticket.assignedToId === currentUserId || ticket.owner === currentUserId;
-    } else if (effectiveRole === 'Admin') {
+    } else if (effectiveRole === 'Admin' || userType === "effective") {
       return true;
     } else {
       return ticket.assignedToId === currentUserId;
@@ -173,7 +175,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                     className="flex-1 min-w-0 cursor-pointer"
                     onClick={() =>
                       navigate(
-                        effectiveRole === 'Admin' ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
+                        effectiveRole === 'Admin' || userType === "effective" ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
                         { state: { ticketData: ticket } }
                       )
                     }
@@ -182,7 +184,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                     <h4
                       className="text-xl font-medium text-custom-blue truncate"
                       onClick={() => {
-                        if (effectiveRole === 'Admin') {
+                        if (effectiveRole === 'Admin' || userType === "effective") {
                           navigate(`/support-desk/${ticket._id}`, {
                             state: { ticketData: ticket },
                           });
@@ -205,7 +207,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                           whileTap={{ scale: 0.9 }}
                           onClick={() =>
                             navigate(
-                              effectiveRole === 'Admin' ? `/support-desk/${ticket._id}` : (impersonatedUser_roleName === "Support_Team" && ticket.assignedToId === impersonationPayloadID ) ? `/support-desk/view/${ticket._id}`:  impersonatedUser_roleName === "Super_Admin" ? `/support-desk/view/${ticket._id}`: `/support-desk/${ticket._id}`,
+                              effectiveRole === 'Admin' || userType === "effective" ? `/support-desk/${ticket._id}` : (impersonatedUser_roleName === "Support_Team" && ticket.assignedToId === impersonationPayloadID ) ? `/support-desk/view/${ticket._id}`:  impersonatedUser_roleName === "Super_Admin" ? `/support-desk/view/${ticket._id}`: `/support-desk/${ticket._id}`,
                               { state: { ticketData: ticket } }
                             )
                           }
@@ -214,7 +216,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                         >
                           <FaEye className="w-4 h-4" />
                         </motion.button>
-                        {effectiveRole === 'Admin' && (
+                        {(effectiveRole === 'Admin' || userType === "effective") && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}

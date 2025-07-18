@@ -1158,11 +1158,11 @@ useEffect(() => {
                 </div>
               </div>
               {/* Difficulty Level */}
-              <div className="flex flex-col gap-5 mb-4">
+              <div className="flex flex-col gap-5 mb-3">
                 <div>
                   <label
                     htmlFor="DifficultyLevel"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="block text-sm font-medium text-gray-700 "
                   >
                     Difficulty Level <span className="text-red-500">*</span>
                   </label>

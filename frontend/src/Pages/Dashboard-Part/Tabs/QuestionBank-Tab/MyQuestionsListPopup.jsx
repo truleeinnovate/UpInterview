@@ -1,5 +1,5 @@
 // v1.0.0 ------ Venkatesh------ I’ve set both “Save” buttons inside to type="button", preventing them from triggering the parent <form> submit.Now, when you create or update a Question List, the main form’s validation won’t fire unexpectedly.
-
+//<---------------------- v1.0.0------Venkatesh------Simple check to ensure the list label and name are unique (case-insensitive)
 
 import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
@@ -98,6 +98,33 @@ const MyQuestionsList1 = forwardRef(
         setInputError('Name is required.');
         return;
       }
+
+      // Simple check to ensure the list label and name are unique (case-insensitive)
+      //<---------------------- v1.0.0------
+      const duplicateLabel = createdLists.some(
+        (list) =>
+          list.label &&
+          list.label.toLowerCase() === newListName.trim().toLowerCase() &&
+          (!isEditing || list._id !== editingSectionId)
+      );
+      if (duplicateLabel) {
+        setInputError('A list with this label already exists.');
+        return;
+      }
+
+      const duplicateName = createdLists.some(
+        (list) =>
+          list.name &&
+          list.name.toLowerCase() === newListNameForName.trim().toLowerCase() &&
+          (!isEditing || list._id !== editingSectionId)
+      );
+      if (duplicateName) {
+        setInputError('A list with this name already exists.');
+        return;
+      }
+
+      //---------- v1.0.0------>
+
       setInputError('');
       try {
         const result = await saveOrUpdateList({

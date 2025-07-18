@@ -743,7 +743,7 @@ const selectedLabelId = useMemo(() => {
                     <div className="flex items-baseline gap-3">
                       <h3 className="font-semibold truncate max-w-xs text-custom-blue ml-1">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</h3>
                       <span className="bg-white bg-opacity-20 rounded-full px-2.5 py-0.5 text-xs font-medium">
-                        {items.length} Questions
+                        {items.length} {items.length > 1 ? "Questions" : "Question"}
                       </span>
                     </div>
                     <div className="flex items-center">
