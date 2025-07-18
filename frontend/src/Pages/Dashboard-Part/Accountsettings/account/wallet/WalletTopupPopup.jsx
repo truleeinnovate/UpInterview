@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline'
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from '../../../../../apiHooks/useUsers.js';
+import logo from '../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp'
 
 export function WalletTopupPopup({ onClose, onTopup }) {
   const navigate = useNavigate();
@@ -92,6 +93,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         amount: parseFloat(amount) * 100, // Amount in paisa
         currency: 'USD',
         name: 'UpInterview',
+        image: logo,
         description: 'Wallet Top-up',
         order_id: orderId,
         handler: async function (response) {

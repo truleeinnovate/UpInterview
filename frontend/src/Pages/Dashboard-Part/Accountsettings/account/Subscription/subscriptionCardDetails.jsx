@@ -10,6 +10,8 @@ import { handleMembershipChange } from "../../../../../utils/PaymentpageValidati
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
 import Loading from '../../../../../Components/Loading.js';
+import logo from '../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp'
+
 
 // Simple function to load Razorpay script
 const loadRazorpayScript = () => {
@@ -270,7 +272,7 @@ const SubscriptionCardDetails = () => {
                             currency: 'INR',//orderResponse.data.currency || 
                             name: "UpInterview",
                             description: `${cardDetails.membershipType} Subscription for ${planDetails.name} - ₹${(orderResponse.data.amount / 100).toFixed(2)}`,
-                            image: "https://upinterview.io/logo.png",
+                            image: logo,
                             prefill: {
                                 name: userProfileData?.name || "",
                                 email: userProfileData?.email || "",
