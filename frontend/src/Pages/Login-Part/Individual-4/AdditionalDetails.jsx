@@ -1,3 +1,4 @@
+// v1.0.0 - mansoor - change resume and cover letter buttons color to custom blue
 import React, { useEffect, useRef, useState } from "react";
 import InfoBox from "./InfoBox.jsx";
 import { ChevronDown } from "lucide-react";
@@ -485,7 +486,9 @@ const AdditionalDetails = ({
                     onChange={(e) => handleFileUpload(e, "resume")}
                   />
                   <div
-                    className="bg-blue-500 text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
+                  // <-------------------------v1.0.0
+                    className="bg-custom-blue text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
+                  // v1.0.0-------------------------->
                     onClick={() => resumeInputRef.current.click()} // Trigger file input click
                   >
                     {resumeName ? "Uploaded" : "Upload File"}
@@ -530,7 +533,9 @@ const AdditionalDetails = ({
                     onChange={(e) => handleCoverLetterUpload(e, "coverLetter")}
                   />
                   <div
-                    className="bg-blue-500 text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
+                  // <-------------------------v1.0.0
+                    className="bg-custom-blue text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
+                  // v1.0.0-------------------------->
                     onClick={() => coverLetterInputRef.current.click()} // Trigger file input click
                   >
                     {coverLetterName ? "Uploaded" : "Upload File"}

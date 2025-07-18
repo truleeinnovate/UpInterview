@@ -15,7 +15,7 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 
 const InvoiceTab = () => {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [billingData, setBillingData] = useState([]);
 
     const authToken = Cookies.get("authToken");
@@ -340,7 +340,8 @@ const InvoiceTab = () => {
                     </div>
                 </main>
             </div>
-            <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background w-full">
+            {/* <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background w-full"> */}
+            <main className="fixed inset-0 flex items-center justify-center bg-background w-full h-[calc(100vh-13rem)]">
                 <div className="w-full overflow-auto">
                     {loading ? (
                         <Loading message="Loading Invoices..."/>

@@ -13,12 +13,10 @@ import { FaLinkedin } from "react-icons/fa";
 import Header from "../../Shared/Header/Header.jsx";
 import Toolbar from "../../Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
-import Loading from "../../SuperAdminComponents/Loading/Loading.jsx";
 import { FilterPopup } from "../../Shared/FilterPopup/FilterPopup.jsx";
 import {
   Eye,
   Mail,
-  UserCircle,
   Pencil,
   Phone,
   GraduationCap,

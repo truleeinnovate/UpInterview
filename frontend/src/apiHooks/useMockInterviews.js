@@ -57,8 +57,6 @@ export const useMockInterviews = () => {
   // }, [mockinterviewData]);
 
   // Add/Update mock interview mutation
-  // Add/Update mock interview mutation
-  // Add/Update mock interview mutation
   const addOrUpdateMockInterview = useMutation({
     mutationFn: async ({
       formData,
@@ -71,7 +69,31 @@ export const useMockInterviews = () => {
     }) => {
       const status =
         formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
-
+    
+      // Ensure rounds is always an array
+      const rounds = Array.isArray(formData.rounds) 
+        ? formData.rounds 
+        : [formData.rounds];
+  
+      // Format the dateTime properly for the backend
+      const formatDateTime = (dateTimeStr) => {
+        if (!dateTimeStr) return new Date().toISOString();
+        
+        try {
+          // Parse the date string (format: "18-07-2025 03:47 PM - 04:17")
+          const [datePart, timePart] = dateTimeStr.split(' ');
+          const [day, month, year] = datePart.split('-');
+          
+          // Format as ISO string (backend expects this format)
+          return new Date(
+            `${year}-${month}-${day}T${timePart}:00.000Z`
+          ).toISOString();
+        } catch (error) {
+          console.error('Error formatting date:', error);
+          return new Date().toISOString();
+        }
+      };
+  
       const payload = {
         skills: formData.entries?.map((entry) => ({
           skill: entry.skill,
@@ -84,20 +106,21 @@ export const useMockInterviews = () => {
         currentExperience: formData.currentExperience,
         technology: formData.technology,
         jobDescription: formData.jobDescription,
-        rounds: [
-          {
-            ...formData.rounds,
-            dateTime: formData.combinedDateTime,
-            status: status,
-          },
-        ],
+        rounds: rounds.map(round => ({
+          ...round,
+          dateTime: formatDateTime(formData.combinedDateTime || round.dateTime),
+          status: status,
+          // Ensure interviewers is always an array
+          interviewers: Array.isArray(round.interviewers) ? round.interviewers : []
+        })),
         createdById: userId,
         lastModifiedById: userId,
         ownerId: userId,
         tenantId: organizationId,
       };
-
-      console.log("Sending payload:", payload); // Debug payload
+  
+      console.log('Sending payload:', JSON.stringify(payload, null, 2));
+      
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
         : `${config.REACT_APP_API_URL}/mockinterview`;

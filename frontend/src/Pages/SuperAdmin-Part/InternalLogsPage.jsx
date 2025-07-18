@@ -1,20 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
-import LogDetailsPopup from "../../Components/SuperAdminComponents/InternalLogs/LogDetailsPopup";
 // import { AiOutlineDownload } from "react-icons/ai";
 
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
-import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../Pages/SuperAdmin-Part/InternalLogs/Kanban.jsx";
 import {
   Eye,
   // Mail,
-  UserCircle,
   Pencil,
   ChevronUp,
   ChevronDown,
