@@ -648,7 +648,6 @@ const UserForm = ({ mode }) => {
                 )}
               </div>
             </div>
-//
             {/* ------------------------------ v1.0.0 > */}
             <div className="flex justify-end gap-3 pt-6">
               <button

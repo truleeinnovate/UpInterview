@@ -336,7 +336,6 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       case 'assessment':
         console.log('[36] Processing Assessment model');
         data = await DataModel.find(query)
-          .sort({ createdAt: -1 }) // Sort by creation date, newest first
           .lean();
         console.log('[37] Found', data.length, 'Assessment records');
         break;
