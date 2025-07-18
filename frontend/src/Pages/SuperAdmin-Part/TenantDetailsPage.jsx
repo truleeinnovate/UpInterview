@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - The Tenant View is not working in the live app. 
+// I'm currently working on fixing the issue
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Tab } from "../../Components/SuperAdminComponents/common/Tab";
@@ -26,9 +28,13 @@ import { useTenantById } from "../../apiHooks/superAdmin/useTenants";
 
 function TenantDetailsPage() {
   const { id } = useParams();
-  const { tenant, isLoading, isError, error, refetch } = useTenantById(
-    id?.toString()
-  );
+  // v1.0.0 <---------------------------------------------------------------------
+     console.log('1. CURRENT TENANT ID: ', id);
+  // v1.0.0 --------------------------------------------------------------------->
+  const { tenant, isLoading, isError, error, refetch } = useTenantById(id);
+  // v1.0.0 <---------------------------------------------------------------------
+     console.log('4. CURRENT TENANT VIEW: ', tenant);
+  // v1.0.0 --------------------------------------------------------------------->
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   // const [tenant, setTenant] = useState(null);
