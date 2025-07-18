@@ -89,12 +89,23 @@ const MyQuestionsList1 = forwardRef(
       closePopup: () => setShowNewListPopup(false),
     }));
 
+    //<------v1.0.0----- Prevent double-click save
+    const isSavingRef = useRef(false);
+
     const handleSave = async () => {
+      if (isSavingRef.current || saveOrUpdateListLoading) return; // Prevent double-click
+      isSavingRef.current = true;
+      // setSaveOrUpdateListLoading(true);
+      
       if (!newListName.trim()) {
+        isSavingRef.current = false;
+        // setSaveOrUpdateListLoading(false);
         setInputError('Label is required.');
         return;
       }
       if (!newListNameForName.trim()) {
+        isSavingRef.current = false;
+        // setSaveOrUpdateListLoading(false);
         setInputError('Name is required.');
         return;
       }
@@ -108,6 +119,8 @@ const MyQuestionsList1 = forwardRef(
           (!isEditing || list._id !== editingSectionId)
       );
       if (duplicateLabel) {
+        isSavingRef.current = false;
+        // setSaveOrUpdateListLoading(false);
         setInputError('A list with this label already exists.');
         return;
       }
@@ -119,6 +132,8 @@ const MyQuestionsList1 = forwardRef(
           (!isEditing || list._id !== editingSectionId)
       );
       if (duplicateName) {
+        isSavingRef.current = false;
+        // setSaveOrUpdateListLoading(false);
         setInputError('A list with this name already exists.');
         return;
       }
@@ -140,17 +155,22 @@ const MyQuestionsList1 = forwardRef(
           console.log('List updated successfully');
           setSelectedLabelnew(newListName);
           Cookies.set('lastSelectedLabel', newListName);
+          setShowNewListPopup(false);
         } else {
           console.log('New list created:', result);
           setNewListName('');
           setNewListNameForName('');
+          setShowNewListPopup(false);
         }
       } catch (error) {
         console.error('Error saving list:', error);
+      } finally {
+        isSavingRef.current = false;
+        // setSaveOrUpdateListLoading(false);
       }
-
-      setShowNewListPopup(false);
+      
     };
+    //-------v1.0.0------->
 
     useEffect(() => {
       const savedLabel = Cookies.get('lastSelectedLabel');
@@ -164,6 +184,7 @@ const MyQuestionsList1 = forwardRef(
     };
 
     const handleAddToList = async () => {
+      if (addQuestionToListLoading) return; // Prevent double-click
       try {
         // Determine lists to add and remove
         const currentListIds = existingQuestion?.data?.tenantListId?.map((id) => id.toString()) || [];
@@ -309,6 +330,7 @@ const MyQuestionsList1 = forwardRef(
                 onClick={handleAddToList}
                 isLoading={addQuestionToListLoading}
                 loadingText="Updating..."
+                disabled={addQuestionToListLoading}
               >
                 Save
               </LoadingButton>
@@ -516,6 +538,7 @@ const MyQuestionsList1 = forwardRef(
                   onClick={handleSave}
                   isLoading={saveOrUpdateListLoading}
                   loadingText={isEditing ? 'Updating...' : 'Saving...'}
+                  disabled={saveOrUpdateListLoading}
                 >
                   {isEditing ? 'Update' : 'Save'}
                 </LoadingButton>

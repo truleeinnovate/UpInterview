@@ -1,22 +1,21 @@
 /* eslint-disable react/prop-types */
 
-// v1.0.0-----Venkatesh---in kanban view 4 cards shown in 2xl grid and add userType === "effective"
+// v1.0.0-----Venkatesh---in kanban view 4 cards shown in 2xl grid and add effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual"
 
 import { motion } from 'framer-motion';
 import { FaEye, FaPencilAlt } from 'react-icons/fa';
 import { format, isValid, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase } from "lucide-react";
-import AuthCookieManager from "../../../../utils/AuthCookieManager/AuthCookieManager";
+
 
 const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, effectivePermissions_RoleName, impersonatedUser_roleName, impersonationPayloadID }) => {
   const navigate = useNavigate();
-  const userType = AuthCookieManager.getUserType();
 
   // Determine effective role based on impersonation
   const effectiveRole = effectivePermissions_RoleName;
-  console.log("userRole===",effectiveRole)
-  console.log("impersonatedUser_roleName==",impersonatedUser_roleName)
+  //console.log("userRole===",effectiveRole)
+  //console.log("impersonatedUser_roleName==",impersonatedUser_roleName)
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -59,7 +58,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
       return true;
     } else if (impersonatedUser_roleName === 'Support_Team') {
       return ticket.assignedToId === currentUserId || ticket.owner === currentUserId;
-    } else if (effectiveRole === 'Admin' || userType === "effective") {
+    } else if (effectiveRole === 'Admin' || effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual") {
       return true;
     } else {
       return ticket.assignedToId === currentUserId;
@@ -171,30 +170,28 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                   }`}
               >
                 <div className="flex justify-between items-start mb-4 gap-2">
+                  {/*<------v1.0.0-------- */}
                   <motion.div
                     className="flex-1 min-w-0 cursor-pointer"
                     onClick={() =>
                       navigate(
-                        effectiveRole === 'Admin' || userType === "effective" ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
+                       (effectiveRole === 'Admin' || effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual") ? `/support-desk/${ticket._id}` : `/support-desk/view/${ticket._id}`,
                         { state: { ticketData: ticket } }
                       )
                     }
                     whileHover={{ x: 2 }}
                   >
+                    
                     <h4
                       className="text-xl font-medium text-custom-blue truncate"
-                      onClick={() => {
-                        if (effectiveRole === 'Admin' || userType === "effective") {
-                          navigate(`/support-desk/${ticket._id}`, {
-                            state: { ticketData: ticket },
-                          });
-                        } else if (effectiveRole === 'SuperAdmin' || effectiveRole === 'Support Team') {
-                          navigate(`/support-desk/view/${ticket._id}`, {
-                            state: { ticketData: ticket },
-                          });
-                        }
-                      }}
+                      onClick={() =>
+                        navigate(
+                          (effectiveRole === 'Admin' || effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual") ? `/support-desk/${ticket._id}` : (impersonatedUser_roleName === "Support_Team" && ticket.assignedToId === impersonationPayloadID ) ? `/support-desk/view/${ticket._id}`:  impersonatedUser_roleName === "Super_Admin" ? `/support-desk/view/${ticket._id}`: `/support-desk/${ticket._id}`,
+                          { state: { ticketData: ticket } }
+                        )
+                      }
                     >
+                      {/*------v1.0.0--------> */}
                       {ticket.ticketCode}
                     </h4>
                     <p className="text-sm text-gray-500">{formatDate(ticket.createdAt)}</p>
@@ -207,7 +204,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                           whileTap={{ scale: 0.9 }}
                           onClick={() =>
                             navigate(
-                              effectiveRole === 'Admin' || userType === "effective" ? `/support-desk/${ticket._id}` : (impersonatedUser_roleName === "Support_Team" && ticket.assignedToId === impersonationPayloadID ) ? `/support-desk/view/${ticket._id}`:  impersonatedUser_roleName === "Super_Admin" ? `/support-desk/view/${ticket._id}`: `/support-desk/${ticket._id}`,
+                              (effectiveRole === 'Admin' || effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual") ? `/support-desk/${ticket._id}` : (impersonatedUser_roleName === "Support_Team" && ticket.assignedToId === impersonationPayloadID ) ? `/support-desk/view/${ticket._id}`:  impersonatedUser_roleName === "Super_Admin" ? `/support-desk/view/${ticket._id}`: `/support-desk/${ticket._id}`,
                               { state: { ticketData: ticket } }
                             )
                           }
@@ -216,7 +213,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                         >
                           <FaEye className="w-4 h-4" />
                         </motion.button>
-                        {(effectiveRole === 'Admin' || userType === "effective") && (
+                        {(effectiveRole === 'Admin' || effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual") && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}

@@ -225,7 +225,7 @@ const InterviewSlideover = ({ mode }) => {
     const modalClass = classNames(
         'fixed bg-white shadow-2xl border-l border-gray-200 z-50',
         {
-            'overflow-y-auto': true,
+            // 'overflow-y-auto': true,
             'inset-0': isFullScreen,
             'inset-y-0 right-0 w-full lg:w-1/3 xl:w-1/3 2xl:w-1/3': !isFullScreen
         }
@@ -237,7 +237,7 @@ const InterviewSlideover = ({ mode }) => {
             className={modalClass}
             overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
         >
-            <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
+            <div className={classNames('h-screen', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-semibold text-custom-blue">
@@ -263,7 +263,7 @@ const InterviewSlideover = ({ mode }) => {
                         key={formKey}
                         id="new-template-form" 
                         onSubmit={handleSubmit} 
-                        className="flex-1 flex flex-col overflow-y-auto"
+                        className="flex-1 flex flex-col h-[calc(100vh-100px)]"
                     >
                         <div className="px-2 sm:px-6 flex-1">
                             <div className="space-y-6 pt-6 pb-5">
