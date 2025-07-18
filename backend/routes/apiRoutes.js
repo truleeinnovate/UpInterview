@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  Assessment_Template permission name changed to AssessmentTemplates
 // v1.0.1  -  Ashraf  -  fixed postion and interviews rounds and questions no populates
+// v1.0.2  -  Ashraf  -  fixed interview questions and rounds filter issue
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -301,16 +302,18 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .lean();
 
         console.log('[30] Found', interviewQuestions.length, 'interview questions');
-
+// <------------------------------- v1.0.2 
         const roundsWithQuestions = roundsData.map((round) => ({
           ...round,
-          questions: interviewQuestions.filter((q) => q.roundId.equals(round._id)),
+          questions: interviewQuestions.filter((q) => q.roundId.toString() === round._id.toString()),
         }));
 
         data = interviews.map((interview) => ({
+          // <------------------------------- v1.0.2 
           ...interview,
-          rounds: roundsWithQuestions.filter((round) => round.interviewId.equals(interview._id)),
+          rounds: roundsWithQuestions.filter((round) => round.interviewId.toString() === interview._id.toString()),
         }));
+        // ------------------------------ v1.0.2 >
         console.log('[31] Final interview data with rounds and questions prepared');
         break;
 

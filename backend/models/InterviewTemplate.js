@@ -1,9 +1,12 @@
+// v1.0.0  -  Ashraf  -  fixed interview template code unique issue
 const mongoose = require("mongoose");
 
 // Interview Template Schema
 const InterviewTemplateSchema = new mongoose.Schema(
   {
-    interviewTemplateCode: { type: String, unique: true },
+    // <------------------------------- v1.0.0 
+    interviewTemplateCode: { type: String },
+    // ------------------------------ v1.0.0 >
     templateName: { type: String, required: true }, // Template name
     label: { type: String, required: true }, // Template label
     description: { type: String }, // Template purpose

@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  fixed position code unique issue
 const mongoose = require("mongoose");
 
 const roundSchema = new mongoose.Schema(
@@ -34,7 +35,9 @@ const roundSchema = new mongoose.Schema(
 
 const positionSchema = new mongoose.Schema(
   {
-    positionCode: { type: String, unique: true },
+    // <------------------------------- v1.0.0 
+    positionCode: { type: String },
+    // ------------------------------ v1.0.0 >
     title: String,
     companyname: String,
     jobDescription: String,

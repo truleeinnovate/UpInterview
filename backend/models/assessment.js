@@ -1,10 +1,13 @@
+// v1.0.0  -  Ashraf  -  fixed assessment code unique issue
 const mongoose = require("mongoose");
 
 const assessmentSchema = new mongoose.Schema(
   {
     AssessmentTitle: String,
     // AssessmentType: [String],
-    AssessmentCode: { type: String, unique: true },
+    // <------------------------------- v1.0.0 
+    AssessmentCode: { type: String },
+    // ------------------------------ v1.0.0 >
     Position: String,
     Duration: String,
     DifficultyLevel: String,
