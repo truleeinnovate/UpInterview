@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  commented expiry date because we dont have expiry date in schedule assessment
 // v1.0.1  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
+// v1.0.2  -  Ashraf  -  called sections function to load data fast
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { UserPlusIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
@@ -112,6 +113,10 @@ function AssessmentsTab({ assessment }) {
 
       if (response.data.success) {
         toast.success('Assessment link resent successfully');
+        // ------------------------------ v1.0.2 >
+        fetchAssessmentQuestions();
+        fetchScheduledAssessments();
+        // ------------------------------ v1.0.2 >
       } else {
         toast.error(response.data.message || 'Failed to resend link');
       }

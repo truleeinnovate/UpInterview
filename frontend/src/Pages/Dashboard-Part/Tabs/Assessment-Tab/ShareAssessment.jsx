@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  - fixed add candidate click navigate to add form
 // v1.0.1  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code),added dropdown to show assessment when user is from shedule assessment true. STOPPED LOOPS: Replaced bulk section fetching with lazy loading to prevent performance issues
+// v1.0.2  -  Ashraf  -  called sections function to load data fast
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { shareAssessmentAPI } from './AssessmentShareAPI.jsx';
@@ -156,6 +157,9 @@ const ShareAssessment = ({
     if (isOpen) {
       // Refetch candidates to ensure we have the latest data
       refetchCandidates();
+      // ------------------------------ v1.0.2 >
+      fetchAssessmentQuestions();
+      // ------------------------------ v1.0.2 >
     }
   }, [isOpen, refetchCandidates]);
 

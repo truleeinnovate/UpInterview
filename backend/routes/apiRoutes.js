@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  fixed postion and interviews rounds and questions no populates
 // v1.0.2  -  Ashraf  -  fixed interview questions and rounds filter issue
 // v1.0.3  -  Ashraf  -  fixed interview template model populate issues
+// v1.0.4  -  Ashraf  -  fixed assessment model sort issue,because assessment is in loop
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -319,18 +320,27 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
 
 // <------------------------------- v1.0.3 
-        case 'interviewtemplate':
-          console.log('[34] Processing InterviewTemplate model');
-          data = await DataModel.find(query)
-            .populate({
-              path: 'rounds.interviewers',
-              model: 'Contacts',
-              select: 'firstName lastName email',
-            })
-            .lean();
-          console.log('[35] Found', data.length, 'InterviewTemplate records');
-          break;
+              case 'interviewtemplate':
+        console.log('[34] Processing InterviewTemplate model');
+        data = await DataModel.find(query)
+          .populate({
+            path: 'rounds.interviewers',
+            model: 'Contacts',
+            select: 'firstName lastName email',
+          })
+          .lean();
+        console.log('[35] Found', data.length, 'InterviewTemplate records');
+        break;
+        // ------------------------------ v1.0.4 >
 
+      case 'assessment':
+        console.log('[36] Processing Assessment model');
+        data = await DataModel.find(query)
+          .sort({ createdAt: -1 }) // Sort by creation date, newest first
+          .lean();
+        console.log('[37] Found', data.length, 'Assessment records');
+        break;
+        // ------------------------------ v1.0.4 >
 
       case 'position':
         console.log('[32] Processing Position model');
@@ -346,9 +356,9 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       // ------------------------------ v1.0.1 >
 
       default:
-        console.log('[34] Processing generic model:', model);
+        console.log('[38] Processing generic model:', model);
         data = await DataModel.find(query).lean();
-        console.log('[35] Found', data.length, 'records for model', model);
+        console.log('[39] Found', data.length, 'records for model', model);
     }
 
     console.log('[36] Sending response with data');

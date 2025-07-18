@@ -1,9 +1,13 @@
 // v1.0.0  -  Ashraf  -  while editing assessment id not getting issues
 //v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 //v1.0.2  -  Ashraf  -  assessment question api data get when exist is true
+//v1.0.3  -  Ashraf  -  assessment data getting loop so added usecallback
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useEffect, useRef } from 'react';
+  // <---------------------- v1.0.3
+
+import { useEffect, useRef, useCallback } from 'react';
+// ------------------------------ v1.0.3 >
 import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
@@ -31,7 +35,7 @@ export const useAssessments = (filters = {}) => {
       return data.map(assessment => ({
         ...assessment,
         // Add any assessment-specific transformations here
-      })).reverse(); // Latest first
+      })); // Backend now sorts by createdAt: -1
     },
     enabled: !!hasViewPermission,
     retry: 1,
@@ -113,8 +117,9 @@ export const useAssessments = (filters = {}) => {
       console.error('Assessment questions save error:', err.message);
     },
   });
-
-  const fetchAssessmentQuestions = async (assessmentId) => {
+  // <---------------------- v1.0.3
+  const fetchAssessmentQuestions = useCallback(async (assessmentId) => {
+  // ------------------------------ v1.0.3 >
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/assessment-questions/list/${assessmentId}`
@@ -134,7 +139,7 @@ export const useAssessments = (filters = {}) => {
       console.error('Error fetching assessment questions:', error);
       return { data: null, error: error.message };
     }
-  };
+  }, []);
 
   const fetchAssessmentResults = async (assessmentId) => {
     try {

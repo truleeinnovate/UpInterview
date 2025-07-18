@@ -1,3 +1,4 @@
+// v1.0.0 - mansoor - changed the colors of timezone select and duplicate button to custom blue
 import React, { useState, useEffect, useCallback } from 'react';
 import TimezoneSelect from 'react-timezone-select';
 import Availability from '../../Dashboard-Part/Tabs/CommonCode-AllTabs/Availability';
@@ -112,8 +113,25 @@ const AvailabilityDetails = ({
             <TimezoneSelect
               value={selectedTimezone}
               onChange={handleTimezoneChange}
-              className="mt-1 text-sm"
+              className="mt-1 text-sm border-custom-blue hover:border-custom-blue focus:border-custom-blue focus:ring-custom-blue"
               isDisabled={isAutoDetecting}
+              menuPortalTarget={document.body}
+              styles={{
+                menu: (provided) => ({
+                  ...provided,
+                  border: '1px solid #0F4A7F',
+                  boxShadow: '0px 4px 12px rgba(15, 74, 127, 0.2)',
+                }),
+                option: (provided, state) => ({
+                  ...provided,
+                  backgroundColor: state.isSelected ? '#0F4A7F' : 'white',
+                  color: state.isSelected ? 'white' : '#0F4A7F',
+                  ':hover': {
+                    backgroundColor: '#0F4A7F',
+                    color: 'white',
+                  },
+                }),
+              }}
             />
             {errors.timeZone && (
               <p className="text-red-500 text-sm mt-2">{errors.timeZone}</p>

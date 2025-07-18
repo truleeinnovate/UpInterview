@@ -1,3 +1,5 @@
+// v1.0.0  -  Ashraf  -  removed recent activity code
+
 const bcrypt = require("bcrypt");
 const Tenant = require("../models/Tenant");
 const { Users } = require("../models/Users");
@@ -15,7 +17,6 @@ const Tabs = require("../models/Tabs");
 const Objects = require("../models/Objects");
 const jwt = require("jsonwebtoken");
 const RolesPermissionObject = require("../models/rolesPermissionObject");
-const RecentActivity = require("../models/recentActivity.js");
 const {
   generateToken,
   generateEmailVerificationToken,
@@ -164,17 +165,6 @@ const organizationUserCreation = async (req, res) => {
       const savedContact = await newContact.save();
       console.log(`Contact created for user: ${savedUser.email}`, {
         contactId: savedContact._id.toString(),
-      });
-
-      // Recent Activity for tracking
-      await RecentActivity.create({
-        userId: res.locals.userId,
-        user: `${res.locals.effectivePermissions_RoleName || "System User"}`,
-        action: "create_user",
-        details: `Created new user ${firstName} ${lastName}`,
-        entityId: savedUserId,
-        entityType: "Users",
-        tenantId: isSuperAdmin ? null : tenantId,
       });
 
       console.log("--- organizationUserCreation END ---");
@@ -1357,28 +1347,11 @@ const getOrganizationById = async (req, res) => {
       })
     );
 
-    const recentActivityRaw = await RecentActivity.find({ tenantId: id })
-      .sort({ timestamp: -1 })
-      .limit(10)
-      .lean();
-
-    const recentActivityWithContact = recentActivityRaw.map((activity) => {
-      const contact = allContacts.find(
-        (contact) =>
-          contact.ownerId?.toString() === activity.entityId?.toString()
-      );
-      return {
-        ...activity,
-        contact,
-      };
-    });
-
     const tenant = {
       tenant: {
         ...(organization || {}),
         ...(subscription || {}),
         subscriptionPlan,
-        recentActivity: recentActivityWithContact,
       },
       users: usersWithRoleAndContact,
     };

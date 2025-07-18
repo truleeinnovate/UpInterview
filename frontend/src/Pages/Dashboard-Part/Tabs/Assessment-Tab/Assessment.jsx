@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  assessment template id not getting issues
 // v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 // v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
+// v1.0.3  -  Ashraf  -  assessment sections and question api getting in loop issue
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -41,6 +42,9 @@ const Assessment = () => {
   });
   const [isShareOpen, setIsShareOpen] = useState(false);
   const filterIconRef = useRef(null);
+  // <---------------------- v1.0.3 
+  const sectionsFetchedRef = useRef(false);
+  // ------------------------------ v1.0.3 >
   // <---------------------- v1.0.0
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
   const [isDurationOpen, setIsDurationOpen] = useState(false);
@@ -61,6 +65,20 @@ const Assessment = () => {
     // Only run if assessmentData is loaded and not empty
     // <---------------------- v1.0.0
     if (!assessmentData || assessmentData.length === 0) return;
+    // ------------------------------ v1.0.3 >
+    // Prevent running if we already have sections data for all assessments
+    const hasAllSections = assessmentData.every(assessment => 
+      assessmentSections.hasOwnProperty(assessment._id)
+    );
+    if (hasAllSections) {
+      sectionsFetchedRef.current = true;
+      return;
+    }
+    
+    // Prevent multiple simultaneous fetches
+    if (sectionsFetchedRef.current) return;
+    sectionsFetchedRef.current = true;
+    // ------------------------------ v1.0.3 >
     
     const fetchSectionsInBatches = async () => {
       const batchSize = 5; // Process 5 assessments at a time
@@ -71,6 +89,12 @@ const Assessment = () => {
         
         try {
           const batchPromises = batch.map(async (assessment) => {
+            // ------------------------------ v1.0.3 >
+            // Skip if we already have sections for this assessment
+            if (assessmentSections.hasOwnProperty(assessment._id)) {
+              return { id: assessment._id, sections: assessmentSections[assessment._id] };
+            }
+            // ------------------------------ v1.0.3 >
             const { data, error } = await fetchAssessmentQuestions(assessment._id);
             
             let sections = 0;

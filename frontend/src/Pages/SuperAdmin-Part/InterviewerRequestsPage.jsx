@@ -5,19 +5,15 @@ import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadg
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
 import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
-import Loading from "../../Components/SuperAdminComponents/Loading/Loading.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "../../Components/Shared/Kanban/KanbanView.jsx";
 import { Eye, Mail, UserCircle, Pencil } from "lucide-react";
+import Loading from "../../Components/Loading.js";
 
 function InterviewerRequestsPage() {
   const [view, setView] = useState("table");
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeOn, setEditModeOn] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -36,7 +32,6 @@ function InterviewerRequestsPage() {
   }, []);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [requests, setRequests] = useState([
     {
       id: "REQ-001",
@@ -493,14 +488,14 @@ function InterviewerRequestsPage() {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  const handleStatusChange = (requestId, newStatus) => {
-    setRequests(
-      requests.map((request) =>
-        request.id === requestId ? { ...request, status: newStatus } : request
-      )
-    );
-    setSelectedRequest(null);
-  };
+  // const handleStatusChange = (requestId, newStatus) => {
+  //   setRequests(
+  //     requests.map((request) =>
+  //       request.id === requestId ? { ...request, status: newStatus } : request
+  //     )
+  //   );
+  //   setSelectedRequest(null);
+  // };
 
   const formatDate = (dateString) => {
     const options = {

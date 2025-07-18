@@ -1,3 +1,4 @@
+// v1.0.0  - mansoor - center the loading in vertically it is horizontally center previously itself
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from "axios";
@@ -15,7 +16,7 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 
 const InvoiceTab = () => {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [billingData, setBillingData] = useState([]);
 
     const authToken = Cookies.get("authToken");
@@ -340,7 +341,9 @@ const InvoiceTab = () => {
                     </div>
                 </main>
             </div>
-            <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background w-full">
+            {/* <-----------------------------------v1.0.0 */}
+            <main className="fixed inset-0 flex items-center justify-center bg-background w-full h-[calc(100vh-13rem)]">
+                {/* v1.0.0--------------------------------> */}
                 <div className="w-full overflow-auto">
                     {loading ? (
                         <Loading message="Loading Invoices..."/>

@@ -1,5 +1,5 @@
 // v1.0.0  -  Ashraf  -  fixed loops issues
-
+// v1.0.1  -  Ashraf  -  on saving both getting load 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
@@ -33,6 +33,8 @@ function RoundFormTemplates() {
   const [isInternalInterviews, setInternalInterviews] = useState(false);
   // const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [template, setTemplate] = useState(null);
+  // Add activeButton state to track which button was clicked
+  const [activeButton, setActiveButton] = useState(null); // 'save' or 'add' or null
 
   const [formData, setFormData] = useState({
     roundTitle: '',
@@ -635,10 +637,16 @@ function RoundFormTemplates() {
 
   const handleSubmit = async (e, isAddNewRound = false) => {
     e.preventDefault();
+    // ------------------------------ v1.0.1 >
 
+    // Set which button was clicked
+    setActiveButton(isAddNewRound ? 'add' : 'save');
+    // ------------------------------ v1.0.1 >
     // console.log("Submitting round form...");
     if (!validateForm()) {
       // console.log("Validation failed:", errors);
+      // Reset active button on validation failure
+      setActiveButton(null);
       return;
     }
 
@@ -758,6 +766,11 @@ function RoundFormTemplates() {
     } catch (error) {
       console.error('Error saving round:', error);
       alert('Failed to save round. Please try again.');
+    } finally {
+      // Reset active button regardless of success or failure
+      // ------------------------------ v1.0.1 >
+      setActiveButton(null);
+      // ------------------------------ v1.0.1 >
     }
   };
 
@@ -1434,21 +1447,23 @@ function RoundFormTemplates() {
 
               <LoadingButton
                 onClick={handleSubmit}
-                isLoading={isMutationLoading}
+                isLoading={isMutationLoading && activeButton === 'save'}
                 loadingText={id ? "Updating..." : "Saving..."}
               >
                 {roundId ? 'Update Round' : 'Save Round'}
               </LoadingButton>
+              {/* ------------------------------ v1.0.1 > */}
               {!roundId &&
                 <LoadingButton
                   onClick={(e) => handleSubmit(e, true)}
-                  isLoading={isMutationLoading}
+                  isLoading={isMutationLoading && activeButton === 'add'}
                   loadingText="Adding..."
                   variant="outline"
                 >
                   <FaPlus className="w-5 h-5 mr-1" /> Add New Round
                 </LoadingButton>
               }
+              {/* ------------------------------ v1.0.1 > */}
 
             </div>
             {errors.submit && <p className="text-red-500 text-sm mt-4 text-center">{errors.submit}</p>}

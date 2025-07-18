@@ -1,3 +1,4 @@
+// v1.0.0 - mansoor - change technology and skills showing ui color to custom blue
 import React, { useEffect, useRef, useState } from 'react'
 import { Trash2, X, Search, ChevronDown } from 'lucide-react';
 import InfoBox from './InfoBox.jsx';
@@ -182,15 +183,15 @@ const InterviewDetails = ({
     const handleNoShow = (event) => {
         const { value } = event.target;
         setInterviewDetailsData((prevData) => ({
-          ...prevData,
-          noShowPolicy: value,
+            ...prevData,
+            noShowPolicy: value,
         }));
         // Clear any previous errors
         setErrors((prev) => ({
-          ...prev,
-          noShowPolicy: "",
+            ...prev,
+            noShowPolicy: "",
         }));
-      };
+    };
 
     const handleBioChange = (e) => {
         const value = e.target.value;
@@ -219,30 +220,30 @@ const InterviewDetails = ({
     const handleInterviewFormatChange = (event) => {
         const { value, checked } = event.target;
         setInterviewDetailsData((prevData) => {
-          let updatedFormats = Array.isArray(prevData.interviewFormatWeOffer)
-            ? [...prevData.interviewFormatWeOffer]
-            : [];
-          
-          if (checked) {
-            updatedFormats = [...updatedFormats, value];
-          } else {
-            updatedFormats = updatedFormats.filter((format) => format !== value);
-          }
-          
-          return {
-            ...prevData,
-            interviewFormatWeOffer: updatedFormats,
-          };
+            let updatedFormats = Array.isArray(prevData.interviewFormatWeOffer)
+                ? [...prevData.interviewFormatWeOffer]
+                : [];
+
+            if (checked) {
+                updatedFormats = [...updatedFormats, value];
+            } else {
+                updatedFormats = updatedFormats.filter((format) => format !== value);
+            }
+
+            return {
+                ...prevData,
+                interviewFormatWeOffer: updatedFormats,
+            };
         });
-      
+
         if (value === "mock") {
-          setIsMockInterviewSelected(checked);
+            setIsMockInterviewSelected(checked);
         }
-        
+
         // Clear any previous errors
         setErrors((prev) => ({
-          ...prev,
-          interviewFormatWeOffer: "",
+            ...prev,
+            interviewFormatWeOffer: "",
         }));
     };
 
@@ -362,18 +363,24 @@ const InterviewDetails = ({
                                 {selectedTechnologyies.map((candidate, index) => (
                                     <div
                                         key={index}
-                                        className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
+                                        // <------------------------ v1.0.0
+                                        className="flex items-center justify-between bg-custom-blue/10 border border-custom-blue/10 rounded-md p-2"
+                                        //    v1.0.0 ------------------------>
                                         style={{ minWidth: '150px', maxWidth: '250px' }} // Inline styles for better control
                                     >
                                         <div className="flex-1 overflow-hidden">
-                                            <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
+                                            {/* <------------------------ v1.0.0 */}
+                                            <span className="ml-2 text-sm text-custom-blue truncate whitespace-nowrap">
+                                                {/*    v1.0.0 ------------------------> */}
                                                 {candidate.TechnologyMasterName}
                                             </span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveTechnology(index)}
-                                            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 ml-2"
+                                            // <------------------------ v1.0.0
+                                            className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-custom-blue/10 ml-2"
+                                            //    v1.0.0 ------------------------>
                                             title="Remove technology"
                                         >
                                             <X className="h-4 w-4" />
@@ -421,7 +428,9 @@ const InterviewDetails = ({
                                         <div
                                             key={skill._id}
                                             onClick={() => handleSelectSkill(skill)}
-                                            className="cursor-pointer hover:bg-gray-200 p-2"
+                                            // <------------------------ v1.0.0
+                                            className="cursor-pointer hover:bg-custom-blue/10 p-2"
+                                        //    v1.0.0 ------------------------>
                                         >
                                             {skill.SkillName}
                                         </div>
@@ -465,18 +474,24 @@ const InterviewDetails = ({
                                 {selectedSkills.map((skill, index) => (
                                     <div
                                         key={index}
-                                        className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
+                                        // <------------------------ v1.0.0
+                                        className="flex items-center justify-between bg-custom-blue/10 border border-custom-blue/10 rounded-md p-2"
+                                        //    v1.0.0 ------------------------>
                                         style={{ minWidth: '150px', maxWidth: '250px' }}
                                     >
                                         <div className="flex-1 overflow-hidden">
-                                            <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
+                                            {/* <------------------------ v1.0.0 */}
+                                            <span className="ml-2 text-sm text-custom-blue truncate whitespace-nowrap">
+                                                {/* v1.0.0 ------------------------> */}
                                                 {skill.SkillName}
                                             </span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveSkill(index)}
-                                            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 ml-2"
+                                            // <------------------------ v1.0.0
+                                            className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-custom-blue/10 ml-2"
+                                            //    v1.0.0 ------------------------>
                                             title="Remove skill"
                                         >
                                             <X className="h-4 w-4" />
@@ -616,7 +631,9 @@ const InterviewDetails = ({
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                             {/* Technical Coding */}
-                            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-indigo-500 transition-colors">
+                            {/* <------------------------------ v1.0.0 */}
+                            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                               {/* v1.0.0 ----------------------------> */}
                                 <div className="flex items-center h-5">
                                     <input
                                         id="format_technical"
@@ -624,8 +641,10 @@ const InterviewDetails = ({
                                         value="technical"
                                         checked={interviewDetailsData?.interviewFormatWeOffer?.includes("technical")}
                                         onChange={handleInterviewFormatChange}
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                    />
+                                        // <------------------------------ v1.0.0
+                                        className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                                        //    v1.0.0 ---------------------------->
+                                   />
                                 </div>
                                 <div className="ml-3">
                                     <label htmlFor="format_technical" className="font-medium text-gray-700">
@@ -636,7 +655,9 @@ const InterviewDetails = ({
                             </div>
 
                             {/* System Design */}
-                            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-indigo-500 transition-colors">
+                            {/* <------------------------------ v1.0.0 */}
+                            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                              {/* v1.0.0 ----------------------------> */}
                                 <div className="flex items-center h-5">
                                     <input
                                         id="format_system_design"
@@ -644,7 +665,9 @@ const InterviewDetails = ({
                                         value="system_design"
                                         checked={interviewDetailsData?.interviewFormatWeOffer?.includes("system_design")}
                                         onChange={handleInterviewFormatChange}
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        // <------------------------------ v1.0.0
+                                        className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                                        //    v1.0.0 ---------------------------->
                                     />
                                 </div>
                                 <div className="ml-3">
@@ -656,7 +679,9 @@ const InterviewDetails = ({
                             </div>
 
                             {/* Behavioral */}
-                            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-indigo-500 transition-colors">
+                            {/* <------------------------------ v1.0.0 */}
+                            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                              {/* v1.0.0 ----------------------------> */}
                                 <div className="flex items-center h-5">
                                     <input
                                         id="format_behavioral"
@@ -664,7 +689,9 @@ const InterviewDetails = ({
                                         value="behavioral"
                                         checked={interviewDetailsData?.interviewFormatWeOffer?.includes("behavioral")}
                                         onChange={handleInterviewFormatChange}
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        // <------------------------------ v1.0.0
+                                        className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                                        //    v1.0.0 ---------------------------->
                                     />
                                 </div>
                                 <div className="ml-3">
@@ -676,7 +703,9 @@ const InterviewDetails = ({
                             </div>
 
                             {/* Mock Interviews */}
-                            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-indigo-500 transition-colors">
+                            {/* <------------------------------ v1.0.0 */}
+                            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                              {/* v1.0.0 ----------------------------> */}
                                 <div className="flex items-center h-5">
                                     <input
                                         id="format_mock"
@@ -684,7 +713,9 @@ const InterviewDetails = ({
                                         value="mock"
                                         checked={interviewDetailsData?.interviewFormatWeOffer?.includes("mock")}
                                         onChange={handleInterviewFormatChange}
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        // <------------------------------ v1.0.0
+                                        className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                                        //    v1.0.0 ---------------------------->
                                     />
                                 </div>
                                 <div className="ml-3">
