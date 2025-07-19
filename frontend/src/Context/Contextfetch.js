@@ -331,7 +331,7 @@ const CustomProvider = ({ children }) => {
   }, [fetchInterviewers]);
 
   // Query for fetching users
-const {
+  const {
     data: usersRes = [],
     isLoading: usersLoading,
     refetch: refetchUsers,
@@ -345,9 +345,8 @@ const {
       return response.data
         .map((contact) => {
           if (contact.imageData?.filename) {
-            const imageUrl = `${
-              config.REACT_APP_API_URL
-            }/${contact.imageData.path.replace(/\\/g, "/")}`;
+            const imageUrl = `${config.REACT_APP_API_URL
+              }/${contact.imageData.path.replace(/\\/g, "/")}`;
             return { ...contact, imageUrl };
           }
           return contact;

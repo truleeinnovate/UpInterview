@@ -243,11 +243,11 @@ const CustomDropdown = ({
 //   );
 // };
 
-const PositionForm = ({ mode }) => {
+const PositionForm = ({ mode, onClose, isModal = false }) => {
   const { positionData, isMutationLoading, addOrUpdatePosition } = usePositions();
 
   const { templatesData } = useInterviewTemplates();
-    const {
+  const {
     companies,
     locations,
     skills,
@@ -258,7 +258,8 @@ const PositionForm = ({ mode }) => {
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
-  const fromPath = location.state?.from || '/position';
+  // Determine the correct path to return to based on current location and state
+  const fromPath = location.state?.from || (location.pathname.includes('/position/new-position') ? '/position' : '/position');
 
 
 
@@ -285,13 +286,43 @@ const PositionForm = ({ mode }) => {
 
   const [errors, setErrors] = useState("");
   const [showDropdownCompany, setShowDropdownCompany] = useState(false);
+  const [isCustomCompany, setIsCustomCompany] = useState(false);
+  const [companySearchTerm, setCompanySearchTerm] = useState('');
+  const companyDropdownRef = useRef(null);
+
   const handleCompanySelect = (company) => {
-    setFormData((prev) => ({ ...prev, companyName: company.CompanyName }));
+    if (company === 'others') {
+      setIsCustomCompany(true);
+      setFormData((prev) => ({ ...prev, companyName: "" }));
+    } else {
+      setIsCustomCompany(false);
+      setFormData((prev) => ({ ...prev, companyName: company.CompanyName }));
+    }
     setShowDropdownCompany(false);
+    setCompanySearchTerm('');
     if (errors.companyname) {
       setErrors((prevErrors) => ({ ...prevErrors, companyname: "" }))
     }
   };
+
+  // Handle click outside company dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (companyDropdownRef.current && !companyDropdownRef.current.contains(event.target)) {
+        setShowDropdownCompany(false);
+        setCompanySearchTerm('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const filteredCompanies = companies?.filter(company =>
+    company.CompanyName?.toString().toLowerCase().includes(companySearchTerm.toLowerCase())
+  );
 
   const [showDropdownTemplate, setShowDropdownTemplate] = useState(false);
 
@@ -315,7 +346,7 @@ const PositionForm = ({ mode }) => {
 
 
   const [deleteIndex, setDeleteIndex] = useState(null);
-  
+
 
 
   const skillpopupcancelbutton = () => {
@@ -324,7 +355,7 @@ const PositionForm = ({ mode }) => {
   }
   const [currentStep, setCurrentStep] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   const [hasMovedToRounds, setHasMovedToRounds] = useState(false);
   const [currentStage, setCurrentStage] = useState('basic');
 
@@ -448,7 +479,7 @@ const PositionForm = ({ mode }) => {
   };
 
 
-  
+
 
 
   useEffect(() => {
@@ -461,9 +492,17 @@ const PositionForm = ({ mode }) => {
       );
       setPositionId(id);
 
+      const companyName = selectedPosition?.companyname || "";
+
+      // Check if the company name exists in the companies list
+      const companyExists = companies?.some(company => company.CompanyName === companyName);
+      if (companyName && !companyExists) {
+        setIsCustomCompany(true);
+      }
+
       setFormData({
         title: selectedPosition?.title || "",
-        companyName: selectedPosition?.companyname || "",
+        companyName: companyName,
         minexperience: selectedPosition?.minexperience || 0,
         maxexperience: selectedPosition?.maxexperience || 0,
         minSalary: selectedPosition?.minSalary || "",
@@ -494,8 +533,8 @@ const PositionForm = ({ mode }) => {
       setAllSelectedExpertises(selectedPosition.skills?.map(skill => skill.expertise) || []);
     }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionData, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionData, id, companies]);
 
   const handleSubmit = async (e, actionType = "", skipValidation = false, updatedData = null) => {
     if (e) {
@@ -577,17 +616,22 @@ const PositionForm = ({ mode }) => {
       if (response.status === 'success') {
         // Handle navigation
         if (actionType === "BasicDetailsSave") {
-          // onClose();
-          navigate(fromPath);
-          // navigate('/position')
-          // const previousPage = location.state?.from || "/position";
-          // navigate(previousPage);
-          // if (mode === "new" || 'edit'){
-          // navigate('/position')
-          // } else {
-          //   navigate(`/position/view-details/${positionId}`)
-          // }
+          // If it's a modal, call the onClose function with the new position data
+          if (isModal && onClose) {
+            onClose(response.data);
+            return;
+          }
 
+          // Check if we came from InterviewForm
+          const fromPath = location.state?.from;
+          const returnTo = location.state?.returnTo;
+
+          if (fromPath === '/interviews/new' && returnTo) {
+            navigate(returnTo);
+          } else {
+            // Navigate back to position main page
+            navigate('/position');
+          }
         }
         if (actionType === "BasicDetailsSave&AddRounds") {
           setIsRoundModalOpen(true);
@@ -705,7 +749,7 @@ const PositionForm = ({ mode }) => {
   const handleSaveRound = (roundData, actionType) => {
     setFormData((prevData) => {
       let updatedRounds = [...(prevData.rounds || [])];
-  
+
       if (actionType === "RoundDetailsSave&AddRound") {
         updatedRounds.push(roundData);
       } else if (actionType === "RoundDetailsSave&Next") {
@@ -713,13 +757,13 @@ const PositionForm = ({ mode }) => {
       } else if (actionType === "RoundDetailsSave") {
         updatedRounds[currentRoundIndex] = roundData;
       }
-  
+
       return {
         ...prevData,
         rounds: updatedRounds,
       };
     });
-  
+
     // Call handleSubmit after the state has been updated
     setTimeout(() => {
       handleSubmit(null, actionType, true);
@@ -730,7 +774,7 @@ const PositionForm = ({ mode }) => {
 
     // Update flag when moving to rounds
     //const isBasicStage = currentStage === 'basic';
-   // const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
+    // const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
 
     return (
       <div className="flex items-center justify-center mb-4 mt-1 w-full overflow-x-auto py-2">
@@ -951,23 +995,92 @@ const PositionForm = ({ mode }) => {
 
                       {/* Company Name */}
                       <div>
-                        <CustomDropdown
-                          label="Company Name"
-                          name="companyName"
-                          value={formData.companyName}
-                          options={companies}
-                          onChange={(e) => {
-                            setFormData({ ...formData, companyName: e.target.value });
-                            if (errors.companyname) {
-                              setErrors((prevErrors) => ({ ...prevErrors, companyname: "" }));
-                            }
-                          }}
-                          error={errors.companyname}
-                          disabledError={true}
-                          placeholder="Select a Company"
-                          optionKey="CompanyName"
-                          optionValue="CompanyName"
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Company Name <span className="text-red-500">*</span>
+                        </label>
+                        {!isCustomCompany ? (
+                          <div className="relative" ref={companyDropdownRef}>
+                            <input
+                              type="text"
+                              value={formData.companyName}
+                              onClick={() => setShowDropdownCompany(!showDropdownCompany)}
+                              placeholder="Select a Company"
+                              autoComplete="off"
+                              className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.companyname ? 'border-red-500' : 'border-gray-300'}`}
+                              readOnly
+                            />
+                            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                              <ChevronDown className="text-lg" onClick={() => setShowDropdownCompany(!showDropdownCompany)} />
+                            </div>
+                            {showDropdownCompany && (
+                              <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
+                                <div className="border-b">
+                                  <div className="flex items-center border rounded px-2 py-1 m-2">
+                                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                                    <input
+                                      type="text"
+                                      placeholder="Search Company"
+                                      value={companySearchTerm}
+                                      onChange={(e) => setCompanySearchTerm(e.target.value)}
+                                      className="pl-8 focus:border-black focus:outline-none w-full"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="max-h-48 overflow-y-auto">
+                                  {filteredCompanies?.length > 0 ? (
+                                    filteredCompanies.map((company, index) => (
+                                      <div
+                                        key={company._id || index}
+                                        onClick={() => handleCompanySelect(company)}
+                                        className="cursor-pointer hover:bg-gray-200 p-2"
+                                      >
+                                        {company.CompanyName}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="p-2 text-gray-500">No companies found</div>
+                                  )}
+                                </div>
+                                <div className="border-t border-gray-200">
+                                  <div
+                                    onClick={() => handleCompanySelect('others')}
+                                    className="cursor-pointer hover:bg-gray-200 p-2"
+                                  >
+                                    <span className="text-gray-900 font-medium">+ Others</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={formData.companyName}
+                              onChange={(e) => {
+                                setFormData({ ...formData, companyName: e.target.value });
+                                if (errors.companyname) {
+                                  setErrors((prevErrors) => ({ ...prevErrors, companyname: "" }));
+                                }
+                              }}
+                              className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.companyname ? 'border-red-500' : 'border-gray-300'}`}
+                              placeholder="Enter custom company name"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsCustomCompany(false);
+                                setFormData({ ...formData, companyName: "" });
+                              }}
+                              className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        {errors.companyname && <p className="text-red-500 text-xs pt-1">{errors.companyname}</p>}
                       </div>
                     </div>
 
@@ -1254,55 +1367,55 @@ const PositionForm = ({ mode }) => {
                     {/* skills */}
                     <div>
 
-              <SkillsField
-                entries={entries}
-                errors={errors}
-                onAddSkill={(setEditingIndex) => {
-                  setEntries((prevEntries) => {
-                    const newEntries = [...prevEntries, { skill: "", experience: "", expertise: "" }];
-                    setEditingIndex(newEntries.length - 1);
-                    return newEntries;
-                  });
-                  setSelectedSkill("");
-                  setSelectedExp("");
-                  setSelectedLevel("");
-                }}
-                onEditSkill={(index) => {
-                  const entry = entries[index];
-                  setSelectedSkill(entry.skill || "");
-                  setSelectedExp(entry.experience);
-                  setSelectedLevel(entry.expertise);
-                }}
-                onDeleteSkill={(index) => {
-                  const entry = entries[index];
-                  setAllSelectedSkills(
-                    allSelectedSkills.filter((skill) => skill !== entry.skill)
-                  );
-                  setEntries(entries.filter((_, i) => i !== index));
-                }}
-                setIsModalOpen={setIsModalOpen}
-                setEditingIndex={setEditingIndex}
-                isModalOpen={isModalOpen}
-                currentStep={currentStep}
-                setCurrentStep={setCurrentStep}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                selectedSkill={selectedSkill}
-                setSelectedSkill={setSelectedSkill}
-                allSelectedSkills={allSelectedSkills}
-                selectedExp={selectedExp}
-                setSelectedExp={setSelectedExp}
-                selectedLevel={selectedLevel}
-                setSelectedLevel={setSelectedLevel}
-                skills={skills}
-                expertiseOptions={expertiseOptions}
-                experienceOptions={experienceOptions}
-                isNextEnabled={isNextEnabled}
-                handleAddEntry={handleAddEntry}
-                skillpopupcancelbutton={skillpopupcancelbutton}
-                editingIndex={editingIndex}
-              />
-              </div>
+                      <SkillsField
+                        entries={entries}
+                        errors={errors}
+                        onAddSkill={(setEditingIndex) => {
+                          setEntries((prevEntries) => {
+                            const newEntries = [...prevEntries, { skill: "", experience: "", expertise: "" }];
+                            setEditingIndex(newEntries.length - 1);
+                            return newEntries;
+                          });
+                          setSelectedSkill("");
+                          setSelectedExp("");
+                          setSelectedLevel("");
+                        }}
+                        onEditSkill={(index) => {
+                          const entry = entries[index];
+                          setSelectedSkill(entry.skill || "");
+                          setSelectedExp(entry.experience);
+                          setSelectedLevel(entry.expertise);
+                        }}
+                        onDeleteSkill={(index) => {
+                          const entry = entries[index];
+                          setAllSelectedSkills(
+                            allSelectedSkills.filter((skill) => skill !== entry.skill)
+                          );
+                          setEntries(entries.filter((_, i) => i !== index));
+                        }}
+                        setIsModalOpen={setIsModalOpen}
+                        setEditingIndex={setEditingIndex}
+                        isModalOpen={isModalOpen}
+                        currentStep={currentStep}
+                        setCurrentStep={setCurrentStep}
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        selectedSkill={selectedSkill}
+                        setSelectedSkill={setSelectedSkill}
+                        allSelectedSkills={allSelectedSkills}
+                        selectedExp={selectedExp}
+                        setSelectedExp={setSelectedExp}
+                        selectedLevel={selectedLevel}
+                        setSelectedLevel={setSelectedLevel}
+                        skills={skills}
+                        expertiseOptions={expertiseOptions}
+                        experienceOptions={experienceOptions}
+                        isNextEnabled={isNextEnabled}
+                        handleAddEntry={handleAddEntry}
+                        skillpopupcancelbutton={skillpopupcancelbutton}
+                        editingIndex={editingIndex}
+                      />
+                    </div>
 
                     {/* template */}
                     <div className="grid grid-cols-2">
@@ -1311,8 +1424,8 @@ const PositionForm = ({ mode }) => {
                         name="template"
                         value={formData.template?.templateName || ""}
                         // options={templatesData}
-                        options={templatesData.filter(template => template.rounds && template.rounds.length > 0 
-                           && template.status === 'active')}
+                        options={templatesData.filter(template => template.rounds && template.rounds.length > 0
+                          && template.status === 'active')}
                         onChange={(e) => {
                           const selectedTemplate = templatesData.find(t => t._id === e.target.value);
                           setFormData({ ...formData, template: selectedTemplate });
@@ -1377,8 +1490,22 @@ const PositionForm = ({ mode }) => {
               <div className="flex justify-end mt-4 space-x-3 mb-5">
                 <button className="px-3 py-1 border-custom-blue rounded border"
                   onClick={() => {
-                    // const previousPage = location.state?.from || "/position";
-                    navigate(fromPath);
+                    // If it's a modal, call the onClose function
+                    if (isModal && onClose) {
+                      onClose();
+                      return;
+                    }
+
+                    // Check if we came from InterviewForm
+                    const fromPath = location.state?.from;
+                    const returnTo = location.state?.returnTo;
+
+                    if (fromPath === '/interviews/new' && returnTo) {
+                      navigate(returnTo);
+                    } else {
+                      // Navigate back to position main page
+                      navigate('/position');
+                    }
                   }}
                 >
                   Cancel
