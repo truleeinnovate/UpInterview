@@ -101,7 +101,7 @@ const Assessment = () => {
     };
     
     fetchSectionsInBatches();
-  }, [assessmentData, fetchAssessmentQuestions]);
+  }, [assessmentData]);
   // <---------------------- v1.0.2 >
 
   // Only after all hooks

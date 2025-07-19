@@ -15,7 +15,7 @@ function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
   };
 
 return (
-  <div className="max-w-6xl">
+  <div className="">
     <div className="space-y-5">
       {sections?.length > 0 ? (
         sections.map((section, index) => (

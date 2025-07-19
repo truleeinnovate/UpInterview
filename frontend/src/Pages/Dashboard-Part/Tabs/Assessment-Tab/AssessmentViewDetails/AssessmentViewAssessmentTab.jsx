@@ -57,7 +57,7 @@ function AssessmentsTab({ assessment }) {
     };
 
     checkAssessmentSections();
-  }, [assessment?._id, fetchAssessmentQuestions]);
+  }, [assessment?._id]);
   // <---------------------- v1.0.1 >
 
   useEffect(() => {
@@ -190,11 +190,11 @@ function AssessmentsTab({ assessment }) {
                 className="flex justify-between items-center p-5 cursor-pointer hover:bg-gray-50 transition-colors"
                 onClick={() => toggleSchedule(schedule._id)}
               >
-                <div>
+                <div className='flex gap-2'>
                   <h4 className="text-lg font-semibold text-gray-800">
                     {schedule.order}
                   </h4>
-                  <div className="flex items-center mt-2 space-x-4">
+                  <div className="flex items-center space-x-4">
                     {/* // <---------------------- v1.0.0 */}
                     {/* <span className="text-sm text-gray-600">
                       <span className="font-medium">Expiry:</span>{' '}

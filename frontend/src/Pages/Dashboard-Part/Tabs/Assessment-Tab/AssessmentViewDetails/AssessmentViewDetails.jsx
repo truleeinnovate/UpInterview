@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  assessment view name changed
 // v1.0.1  -  Ashraf  -  assessment top border removed
+// v1.0.2  -  Venkatesh  -  assessment questions tab first index is open by default
 import { useState, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import { Minimize, Expand, X } from 'lucide-react';
@@ -52,7 +53,9 @@ function AssessmentView() {
           // Only initialize toggleStates if it's empty or length doesn't match sections
           setToggleStates((prev) => {
             if (prev.length !== data.sections.length) {
-              return new Array(data.sections.length).fill(false);
+              // <---------------------- v1.0.2------
+              return new Array(data.sections.length).fill(false).map((_, index) => index === 0);
+              //---------------------- v1.0.2------>
             }
             return prev; // Preserve existing toggle states
           });
