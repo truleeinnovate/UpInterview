@@ -43,14 +43,14 @@ function KanbanBoard({ interviews, onView, onViewInterview, onEditInterview, onV
             variants={item}
           >
             <div className="flex items-center mb-4">
-              <div className="h-6 w-32 bg-gray-200 animate-pulse rounded"></div>
-              <div className="ml-2 h-5 w-10 bg-gray-200 animate-pulse rounded-full"></div>
+              <div className="h-6 w-32 bg-gray-200 skeleton-animation rounded"></div>
+              <div className="ml-2 h-5 w-10 bg-gray-200 skeleton-animation rounded-full"></div>
             </div>
             <div className="space-y-4">
               {Array(3).fill(0).map((_, index) => (
                 <div
                   key={`${status}-${index}`}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 animate-pulse"
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 skeleton-animation"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center">

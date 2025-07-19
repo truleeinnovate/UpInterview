@@ -29,9 +29,9 @@ import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookie
 
 const UsersAccountTab = () => {
   const userType = AuthCookieManager.getUserType();
-  
+
   const { effectivePermissions, superAdminPermissions } = usePermissions();
-  const {  usersRes,usersLoading, currentPlan, toggleUserStatus } = useCustomContext();
+  const { usersRes, usersLoading, currentPlan, toggleUserStatus } = useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");
@@ -55,7 +55,7 @@ const UsersAccountTab = () => {
   const loading = userType === 'superAdmin' ? superAdminLoading : usersLoading;
 
   // Fetch super admin users when type is superAdmin
-useEffect(() => {
+  useEffect(() => {
     if (userType === 'superAdmin') {
       const fetchSuperAdminUsers = async () => {
         setSuperAdminLoading(true);
@@ -232,8 +232,8 @@ useEffect(() => {
                     row.gender === "Male"
                       ? maleImage
                       : row.gender === "Female"
-                      ? femaleImage
-                      : genderlessImage;
+                        ? femaleImage
+                        : genderlessImage;
                 }}
               />
             ) : (
@@ -247,7 +247,7 @@ useEffect(() => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${row.firstName ? row.firstName.charAt(0).toUpperCase().trim()+ row.firstName.slice(1).trim() : ""} ${row.lastName ? row.lastName.charAt(0).toUpperCase().trim() + row.lastName.slice(1) : ""}`.trim() || "Unknown"}
+              {`${row.firstName ? row.firstName.charAt(0).toUpperCase().trim() + row.firstName.slice(1).trim() : ""} ${row.lastName ? row.lastName.charAt(0).toUpperCase().trim() + row.lastName.slice(1) : ""}`.trim() || "Unknown"}
             </div>
           </div>
         </div>
@@ -295,164 +295,164 @@ useEffect(() => {
 
   return (
     <>
-    <div className="h-screen fixed w-full flex">
-      <div className="" />
-      <div className="flex-1 flex flex-col ml-0 h-full">
-        <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
+      <div className="h-screen fixed w-full flex">
+        <div className="" />
+        <div className="flex-1 flex flex-col ml-0 h-full">
+          <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4 sm:px-8 lg:px-8 xl:px-8 2xl:px-8">
             <motion.div
-            className="mb-6"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <>
-              <div className="bg-blue-50 border-l-4 border-custom-blue p-4 rounded-r-lg">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-custom-blue" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-custom-blue">User Management</h3>
-                    <div className="mt-2 text-sm text-custom-blue">
-                      <p>Manage all users who can conduct interviews, including:</p>
-                      <ul className="list-disc list-inside mt-1">
-                        <li>Create and manage interviewer accounts</li>
-                        <li>Set user roles and permissions</li>
-                        <li>Configure interview availability and expertise</li>
-                        <li>Track interviewer performance and ratings</li>
-                      </ul>
+              className="mb-6"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <>
+                <div className="bg-blue-50 border-l-4 border-custom-blue p-4 rounded-r-lg">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-custom-blue" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-custom-blue">User Management</h3>
+                      <div className="mt-2 text-sm text-custom-blue">
+                        <p>Manage all users who can conduct interviews, including:</p>
+                        <ul className="list-disc list-inside mt-1">
+                          <li>Create and manage interviewer accounts</li>
+                          <li>Set user roles and permissions</li>
+                          <li>Configure interview availability and expertise</li>
+                          <li>Track interviewer performance and ratings</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Header
-              title={userType === 'superAdmin' ? "Super Admins" : "Users"}
-              onAddClick={() => {
-                if (dataSource.length >= currentPlan.maxUsers) {
-                  toast(
-                    "Please upgrade your plan or deactivate existing users to add more.",
-                    {
-                      icon: "⚠️",
-                      style: {
-                        background: "#fff3cd",
-                        color: "#856404",
-                        border: "1px solid #ffeeba",
-                      },
-                    }
-                  );
-                } else {
-                  navigate("new");
-                }
-              }}
-              addButtonText="Add User"
-              canCreate={userType === 'superAdmin' ? superAdminPermissions?.Users
-                ?.Create : effectivePermissions?.Users
-                ?.Create}
+              </>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Header
+                title={userType === 'superAdmin' ? "Super Admins" : "Users"}
+                onAddClick={() => {
+                  if (dataSource.length >= currentPlan.maxUsers) {
+                    toast(
+                      "Please upgrade your plan or deactivate existing users to add more.",
+                      {
+                        icon: "⚠️",
+                        style: {
+                          background: "#fff3cd",
+                          color: "#856404",
+                          border: "1px solid #ffeeba",
+                        },
+                      }
+                    );
+                  } else {
+                    navigate("new");
+                  }
+                }}
+                addButtonText="Add User"
+                canCreate={userType === 'superAdmin' ? superAdminPermissions?.Users
+                  ?.Create : effectivePermissions?.Users
+                  ?.Create}
+              />
+            </motion.div>
+            <Toolbar
+              view={view}
+              setView={setView}
+              searchQuery={searchQuery}
+              onSearch={handleSearch}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrevPage={prevPage}
+              onNextPage={nextPage}
+              onFilterClick={handleFilterIconClick}
+              isFilterPopupOpen={isFilterPopupOpen}
+              isFilterActive={isFilterActive}
+              dataLength={dataSource?.length}
+              searchPlaceholder="Search by Firstname, Email, Phone..."
+              filterIconRef={filterIconRef}
             />
-          </motion.div>
-          <Toolbar
-            view={view}
-            setView={setView}
-            searchQuery={searchQuery}
-            onSearch={handleSearch}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
-            onFilterClick={handleFilterIconClick}
-            isFilterPopupOpen={isFilterPopupOpen}
-            isFilterActive={isFilterActive}
-            dataLength={dataSource?.length}
-            searchPlaceholder="Search by Firstname, Email, Phone..."
-            filterIconRef={filterIconRef}
-          />
-        </div>
-        <div className="fixed top-48 xl:top-56 lg:top-56 left-64 right-0 bg-background">
-          <motion.div className="">
-            <div className="relative w-full">
-              {view === "table" ? (
-                <div className="w-full">
-                  <TableView
-                    data={currentFilteredRows}
-                    columns={tableColumns}
-                    loading={loading}
-                    actions={tableActions}
-                    emptyState={userType === 'superAdmin' ? "No super admins found." : "No users found."}
-                  />
-                </div>
-              ) : (
-                <div className="w-full pl-4 pt-4 pr-4 mb-5">
-                  <KanbanView
-                    currentFilteredRows={currentFilteredRows}
-                    loading={loading}
-                    setActionViewMore={() => {}}
-                    userData={dataSource}
-                    toggleSidebar={() => navigate("new")}
-                  />
-                </div>
-              )}
-              <FilterPopup
-                isOpen={isFilterPopupOpen}
-                onClose={() => setFilterPopupOpen(false)}
-                onApply={handleApplyFilters}
-                onClearAll={handleClearAll}
-                filterIconRef={filterIconRef}
-              >
-                <div className="space-y-3">
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsRolesOpen(!isRolesOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Roles</span>
-                      {isRolesOpen ? (
-                        <ChevronUp className="text-xl text-gray-700" />
-                      ) : (
-                        <ChevronDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isRolesOpen && (
-                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {uniqueRoles.length > 0 ? (
-                          uniqueRoles.map((role) => (
-                            <label
-                              key={role}
-                              className="flex items-center space-x-2"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedRoles.includes(role)}
-                                onChange={() => handleRoleToggle(role)}
-                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                              />
-                              <span className="text-sm">{role}</span>
-                            </label>
-                          ))
+          </div>
+          <div className="fixed top-48 xl:top-56 lg:top-56 left-64 right-0 bg-background">
+            <motion.div className="">
+              <div className="relative w-full">
+                {view === "table" ? (
+                  <div className="w-full">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={loading}
+                      actions={tableActions}
+                      emptyState={userType === 'superAdmin' ? "No super admins found." : "No users found."}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full pl-4 pt-4 pr-4 mb-5">
+                    <KanbanView
+                      currentFilteredRows={currentFilteredRows}
+                      loading={loading}
+                      setActionViewMore={() => { }}
+                      userData={dataSource}
+                      toggleSidebar={() => navigate("new")}
+                    />
+                  </div>
+                )}
+                <FilterPopup
+                  isOpen={isFilterPopupOpen}
+                  onClose={() => setFilterPopupOpen(false)}
+                  onApply={handleApplyFilters}
+                  onClearAll={handleClearAll}
+                  filterIconRef={filterIconRef}
+                >
+                  <div className="space-y-3">
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsRolesOpen(!isRolesOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Roles</span>
+                        {isRolesOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
                         ) : (
-                          <span className="text-sm text-gray-500">
-                            No roles available
-                          </span>
+                          <ChevronDown className="text-xl text-gray-700" />
                         )}
                       </div>
-                    )}
+                      {isRolesOpen && (
+                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                          {uniqueRoles.length > 0 ? (
+                            uniqueRoles.map((role) => (
+                              <label
+                                key={role}
+                                className="flex items-center space-x-2"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedRoles.includes(role)}
+                                  onChange={() => handleRoleToggle(role)}
+                                  className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                />
+                                <span className="text-sm">{role}</span>
+                              </label>
+                            ))
+                          ) : (
+                            <span className="text-sm text-gray-500">
+                              No roles available
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </FilterPopup>
-            </div>
-          </motion.div>
+                </FilterPopup>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
-    </div>
-    {showUserManagementPopup && (
+      {showUserManagementPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -526,7 +526,7 @@ useEffect(() => {
       )}
       <ConfirmationModal
         show={showConfirmation}
-        userName={`${selectedUser?.firstName ? selectedUser?.firstName.charAt(0).toUpperCase()+selectedUser?.firstName.slice(1) : ""} ${selectedUser?.lastName ? selectedUser?.lastName.charAt(0).toUpperCase()+selectedUser?.lastName.slice(1) : ""}`}
+        userName={`${selectedUser?.firstName ? selectedUser?.firstName.charAt(0).toUpperCase() + selectedUser?.firstName.slice(1) : ""} ${selectedUser?.lastName ? selectedUser?.lastName.charAt(0).toUpperCase() + selectedUser?.lastName.slice(1) : ""}`}
         newStatus={newStatus}
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}

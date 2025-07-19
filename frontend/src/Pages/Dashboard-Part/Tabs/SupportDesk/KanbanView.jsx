@@ -74,8 +74,8 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
         className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
       >
         <div className="flex items-center justify-between mb-6">
-          <div className="h-8 w-1/4 bg-gray-200 animate-pulse rounded"></div>
-          <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-8 w-1/4 bg-gray-200 skeleton-animation rounded"></div>
+          <div className="h-8 w-20 bg-gray-200 skeleton-animation rounded"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full">
           {[...Array(6)].map((_, index) => (
@@ -88,33 +88,33 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
             >
               <div className="flex justify-between items-start mb-4 gap-2">
                 <div className="flex-1 min-w-0 space-y-2">
-                  <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-4 w-1/2 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-6 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-4 w-1/2 bg-gray-200 skeleton-animation rounded"></div>
                 </div>
                 <div className="flex gap-2">
-                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-lg"></div>
-                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-lg"></div>
+                  <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded-lg"></div>
+                  <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded-lg"></div>
                 </div>
               </div>
               <div className="mt-auto space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <div className="h-3 w-16 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-3 w-16 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                   <div className="space-y-1">
-                    <div className="h-3 w-16 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-3 w-16 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
-                  <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
+                  <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
+                  <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <div className="h-3 w-16 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-3 w-16 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                 </div>
               </div>

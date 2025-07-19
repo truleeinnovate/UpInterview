@@ -8,11 +8,11 @@ import { Eye } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
 
-const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => {}, handleEditClick = () => {}, loading = false, toggleSidebar = () => {} }) => {
- 
+const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => { }, handleEditClick = () => { }, toggleSidebar = () => { } }) => {
+
   const navigate = useNavigate();
-    return (
-      <motion.div
+  return (
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -20,25 +20,14 @@ const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => {}, handle
       className="h-[calc(100vh-200px)]"
     >
       <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4  overflow-y-auto">
-        {loading ? (
-          <div className="col-span-full py-10 text-center">
-            <div className="wrapper12">
-              <div className="circle12"></div>
-              <div className="circle12"></div>
-              <div className="circle12"></div>
-              <div className="shadow12"></div>
-              <div className="shadow12"></div>
-              <div className="shadow12"></div>
-            </div>
-          </div>
-        ) : currentFilteredRows.length === 0 ? (
+        {currentFilteredRows.length === 0 ? (
           <div className="col-span-full py-10 text-center">
             <div className="flex flex-col items-center justify-center p-5">
               {/* <p className="text-9xl rotate-180 text-blue-500">
                 <Info />
               </p> */}
               <p className="text-center text-lg font-normal">
-                 No Billing Data Found.
+                No Billing Data Found.
               </p>
               {/* <p
                 onClick={toggleSidebar}
@@ -67,7 +56,7 @@ const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => {}, handle
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
                   <div className="relative">
-                
+
                   </div>
                   <div className="ml-1">
                     <span> Payment Id</span>
@@ -102,18 +91,18 @@ const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => {}, handle
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col   text-gray-600">
                     <span>Invoice Id</span>
-                    <span  className='text-black font-medium'>{invoice?.invoiceNumber || ""}</span>
+                    <span className='text-black font-medium'>{invoice?.invoiceNumber || ""}</span>
                   </div>
                   <div className="flex flex-col  text-gray-600">
                     <span>Payment Service</span>
-                    <span  className='text-black font-medium'>{invoice?.type || ""}</span>
+                    <span className='text-black font-medium'>{invoice?.type || ""}</span>
                   </div>
                   <div className="flex flex-col   text-gray-600">
-                   <span>Total Amount</span>
-                    <span  className='text-black font-medium'>$ {invoice?.amount?.paid || 0}</span>
+                    <span>Total Amount</span>
+                    <span className='text-black font-medium'>$ {invoice?.amount?.paid || 0}</span>
                   </div>
-                   <div className="flex flex-col   text-gray-600">
-                   <span>Status</span>
+                  <div className="flex flex-col   text-gray-600">
+                    <span>Status</span>
                     <span className='text-black font-medium' >{invoice?.status || 0}</span>
                   </div>
                 </div>

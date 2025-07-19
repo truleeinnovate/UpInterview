@@ -94,7 +94,7 @@ const AssessmentKanban = ({
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-end mb-4">
-          <div className="h-8 w-32 bg-gray-200 animate-pulse rounded-lg"></div>
+          <div className="h-8 w-32 bg-gray-200 skeleton-animation rounded-lg"></div>
         </div>
 
         <div className="flex sm:flex-col flex-row gap-6 pb-6">
@@ -106,7 +106,7 @@ const AssessmentKanban = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: colIndex * 0.1 }}
             >
-              <div className="h-8 w-1/3 bg-gray-200 animate-pulse rounded mb-4"></div>
+              <div className="h-8 w-1/3 bg-gray-200 skeleton-animation rounded mb-4"></div>
               <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
                 {[...Array(4)].map((_, index) => (
                   <motion.div
@@ -117,21 +117,21 @@ const AssessmentKanban = ({
                     transition={{ delay: 0.1 + index * 0.05 }}
                   >
                     <div className="absolute top-2 right-2 flex space-x-1">
-                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
                     </div>
-                    <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-6 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
                     <div className="space-y-2">
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
+                      <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
                     </div>
                     <div className="flex justify-between pt-2">
-                      <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
-                      <div className="h-4 w-12 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
+                      <div className="h-4 w-12 bg-gray-200 skeleton-animation rounded"></div>
                     </div>
                   </motion.div>
                 ))}

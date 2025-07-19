@@ -16,7 +16,7 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
   const userId = tokenPayload?.userId;
   const ownerId = usersId || userId;
 
-  const { userProfile, isLoading, isError, error } = useUserProfile(ownerId)
+  const { userProfile } = useUserProfile(ownerId)
 
 
   // useEffect(() => {

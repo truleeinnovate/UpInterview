@@ -987,7 +987,7 @@ function RoundFormTemplates() {
                     <p className="text-red-500 text-sm">{errors.assessmentQuestions}</p>
                   )}
                   {questionsLoading ? (
-                    <div className="border rounded-md shadow-sm p-4 animate-pulse">
+                    <div className="border rounded-md shadow-sm p-4 skeleton-animation">
                     </div>
                     // <p className="text-gray-500">Loading assessment data...</p>
                   ) : (

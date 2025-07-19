@@ -966,7 +966,7 @@ function RoundFormPosition() {
 
                           {/* {errors.assessmentQuestions && <p className="text-red-500 text-xs">{errors.assessmentQuestions}</p>} */}
                           {assessmentQuestionsLoading ? (
-                            <div className="border rounded-md shadow-sm p-4 animate-pulse">
+                            <div className="border rounded-md shadow-sm p-4 skeleton-animation">
                             </div>
                           ) :
                             (

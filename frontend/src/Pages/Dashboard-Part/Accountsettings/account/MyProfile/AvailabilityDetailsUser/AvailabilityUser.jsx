@@ -30,7 +30,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
 
   const ownerId = usersId || userId;
 
-  const { userProfile, isLoading, isError, error } = useUserProfile(ownerId)
+  const { userProfile } = useUserProfile(ownerId)
   const { availability, loading: isAvailabilityLoading, error: availabilityError } = useInterviewAvailability(userProfile?.contactId || userProfile?._id);
   console.log("availability", availability);
 
@@ -56,7 +56,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
 
   useEffect(() => {
     if (!availability) return;
-  
+
     // Transform the availability data to match the times state structure
     const transformedTimes = {
       Sun: [{ startTime: null, endTime: null }],
@@ -67,7 +67,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
       Fri: [{ startTime: null, endTime: null }],
       Sat: [{ startTime: null, endTime: null }]
     };
-  
+
     // If we have availability data, update the times state
     if (availability.availability && availability.availability.length > 0) {
       // console.log('Processing availability data:', availability.availability); // Add this line
@@ -80,7 +80,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
         }
       });
     }
-  
+
     // console.log('Transformed times:', transformedTimes); // Add this line
     setTimes(transformedTimes);
   }, [availability]);

@@ -8,11 +8,80 @@ import 'react-toastify/dist/ReactToastify.css';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../config";
-import Loading from "../../../../Components/Loading";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
 import InvocieKanban from "./InvocieKanban";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+
+// Loading Skeleton for Invoice Table
+const InvoiceTableSkeleton = () => {
+    return (
+        <div className="w-full">
+            <div className="skeleton-animation">
+                {/* Table header skeleton */}
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                        <div className="grid grid-cols-6 gap-4">
+                            {[1, 2, 3, 4, 5, 6].map((i) => (
+                                <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Table rows skeleton */}
+                    {[1, 2, 3, 4, 5].map((row) => (
+                        <div key={row} className="px-6 py-4 border-b border-gray-100">
+                            <div className="grid grid-cols-6 gap-4">
+                                {[1, 2, 3, 4, 5, 6].map((cell) => (
+                                    <div key={cell} className="h-4 bg-gray-200 rounded"></div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Loading Skeleton for Invoice Kanban
+const InvoiceKanbanSkeleton = () => {
+    return (
+        <div className="w-full px-6">
+            <div className="skeleton-animation">
+                <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map((card) => (
+                        <div key={card} className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                            {/* Card header skeleton */}
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center">
+                                    <div className="h-8 w-8 bg-gray-200 rounded-full mr-3"></div>
+                                    <div>
+                                        <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                    </div>
+                                </div>
+                                <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                            </div>
+
+                            {/* Card content skeleton */}
+                            <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[1, 2, 3, 4].map((item) => (
+                                        <div key={item}>
+                                            <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
+                                            <div className="h-4 bg-gray-200 rounded w-20"></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const InvoiceTab = () => {
     const navigate = useNavigate();
@@ -40,7 +109,7 @@ const InvoiceTab = () => {
             const invoiceData = Invoice_res?.data || [];
             // Transform the data into a more usable structure
             const formattedData = invoiceData.map(invoice => {
-                const paymentId = invoice.paymentId || 
+                const paymentId = invoice.paymentId ||
                     `PAY-${invoice._id.toString().substring(18, 24)}-${Date.now().toString().substring(8)}`;
                 return {
                     id: invoice._id,
@@ -92,17 +161,17 @@ const InvoiceTab = () => {
     const [isStatusOpen, setIsStatusOpen] = useState(true);
     const [isTypeOpen, setIsTypeOpen] = useState(true);
     const [isAmountOpen, setIsAmountOpen] = useState(true);
-    
+
     const [selectedStatus, setSelectedStatus] = useState([]);
     const [selectedTypes, setSelectedTypes] = useState([]);
     const [amountRange, setAmountRange] = useState({ min: '', max: '' });
-    
+
     const [selectedFilters, setSelectedFilters] = useState({
         status: [],
         type: [],
         amount: { min: '', max: '' }
     });
-    
+
     useEffect(() => {
         if (isFilterPopupOpen) {
             setSelectedStatus(selectedFilters.status);
@@ -110,63 +179,63 @@ const InvoiceTab = () => {
             setAmountRange(selectedFilters.amount);
         }
     }, [isFilterPopupOpen, selectedFilters]);
-    
+
     const handleStatusToggle = (status) => {
-        setSelectedStatus(prev => 
+        setSelectedStatus(prev =>
             prev.includes(status)
-            ? prev.filter(s => s !== status)
-            : [...prev, status]
+                ? prev.filter(s => s !== status)
+                : [...prev, status]
         );
     };
-    
+
     const handleTypeToggle = (type) => {
-        setSelectedTypes(prev => 
+        setSelectedTypes(prev =>
             prev.includes(type)
-            ? prev.filter(t => t !== type)
-            : [...prev, type]
+                ? prev.filter(t => t !== type)
+                : [...prev, type]
         );
     };
-    
+
     const handleAmountChange = (field, value) => {
         setAmountRange(prev => ({
             ...prev,
             [field]: value
         }));
     };
-    
+
     const handleClearAll = () => {
         const clearedFilters = {
             status: [],
             type: [],
             amount: { min: '', max: '' }
         };
-        
+
         setSelectedStatus([]);
         setSelectedTypes([]);
         setAmountRange({ min: '', max: '' });
-        
+
         setSelectedFilters(clearedFilters);
         setIsFilterActive(false);
         setFilterPopupOpen(false);
     };
-    
+
     const handleApplyFilters = () => {
         const filters = {
             status: selectedStatus,
             type: selectedTypes,
             amount: amountRange
         };
-        
+
         setSelectedFilters(filters);
         setIsFilterActive(
-            filters.status.length > 0 || 
-            filters.type.length > 0 || 
-            filters.amount.min || 
+            filters.status.length > 0 ||
+            filters.type.length > 0 ||
+            filters.amount.min ||
             filters.amount.max
         );
         setFilterPopupOpen(false);
     };
-    
+
     const handleFilterIconClick = () => {
         if (billingData.length !== 0) {
             setFilterPopupOpen((prev) => !prev);
@@ -199,96 +268,108 @@ const InvoiceTab = () => {
 
     const tableColumns = [
         {
-            key: 'invoiceNumber',
-            header: 'Invoice Number',
-            render: (value) => value || 'N/A',
+            header: "Payment ID",
+            accessor: "paymentId",
+            cell: (value) => (
+                <span className="font-medium text-gray-900">{value}</span>
+            )
         },
         {
-            key: 'plan',
-            header: 'Plan',
-            render: (value) => value || 'N/A',
+            header: "Invoice Number",
+            accessor: "invoiceNumber",
+            cell: (value) => (
+                <span className="text-gray-600">{value}</span>
+            )
         },
         {
-            key: 'amount',
-            header: 'Amount',
-            render: (value) => value && value.total ? `₹${value.total}` : 'N/A',
+            header: "Customer",
+            accessor: "customer",
+            cell: (customer) => (
+                <div>
+                    <div className="font-medium text-gray-900">{customer?.name || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{customer?.userId || 'N/A'}</div>
+                </div>
+            )
         },
         {
-            key: 'status',
-            header: 'Status',
-            render: (value) => (
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                    value === 'paid' ? 'bg-green-100 text-green-800' :
-                    value === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    value === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                }`}>
-                    {value || 'N/A'}
-                </span>
-            ),
+            header: "Plan",
+            accessor: "plan",
+            cell: (value) => (
+                <span className="text-gray-600">{value || 'N/A'}</span>
+            )
         },
         {
-            key: 'dates',
-            header: 'Created At',
-            render: (value) => value && value.createdAt ? new Date(value.createdAt).toLocaleDateString() : 'N/A',
+            header: "Amount",
+            accessor: "amount",
+            cell: (amount) => (
+                <div>
+                    <div className="font-medium text-gray-900">${amount.total || 0}</div>
+                    <div className="text-sm text-gray-500">Paid: ${amount.paid || 0}</div>
+                </div>
+            )
         },
+        {
+            header: "Status",
+            accessor: "status",
+            cell: (value) => {
+                const statusColors = {
+                    'paid': 'bg-green-100 text-green-800',
+                    'pending': 'bg-yellow-100 text-yellow-800',
+                    'cancelled': 'bg-red-100 text-red-800',
+                    'failed': 'bg-red-100 text-red-800',
+                    'refunded': 'bg-blue-100 text-blue-800'
+                };
+                const colorClass = statusColors[value?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+                return (
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}>
+                        {value}
+                    </span>
+                );
+            }
+        }
     ];
 
     const tableActions = [
         {
-            key: 'view',
-            label: 'View Details',
-            icon: <FileText className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => navigate(`details/${row.id}`, { state: { invoiceData: row } }),
-        },
+            label: "View Details",
+            onClick: (row) => {
+                navigate(`details/${row.id}`, { state: { invoiceData: row } });
+            },
+            icon: FileText,
+            className: "text-custom-blue hover:bg-blue-50"
+        }
     ];
 
     const FilteredData = () => {
         if (!Array.isArray(billingData)) return [];
-        
-        let filteredData = billingData;
-        
-        if (searchQuery) {
-            filteredData = filteredData.filter(data => {
-                return (
-                    (data.paymentId && data.paymentId.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                    (data.invoiceNumber && data.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                    (data.status && data.status.toLowerCase().includes(searchQuery.toLowerCase()))
-                );
-            });
-        }
-        
-        if (selectedFilters.status.length > 0) {
-            filteredData = filteredData.filter(invoice => 
-                selectedFilters.status.includes(invoice.status)
-            );
-        }
-        
-        if (selectedFilters.type.length > 0) {
-            filteredData = filteredData.filter(invoice => 
-                selectedFilters.type.includes(invoice.type)
-            );
-        }
-        
-        if (selectedFilters.amount.min || selectedFilters.amount.max) {
-            filteredData = filteredData.filter(invoice => {
-                const amount = invoice.amount?.total || 0;
-                return (
-                    (!selectedFilters.amount.min || amount >= parseFloat(selectedFilters.amount.min)) &&
-                    (!selectedFilters.amount.max || amount <= parseFloat(selectedFilters.amount.max))
-                );
-            });
-        }
-        
-        return filteredData;
+
+        return billingData.filter((invoice) => {
+            const matchesStatus = selectedFilters.status.length === 0 ||
+                selectedFilters.status.includes(invoice.status?.toLowerCase());
+
+            const matchesType = selectedFilters.type.length === 0 ||
+                selectedFilters.type.includes(invoice.type?.toLowerCase());
+
+            const matchesAmount = (!selectedFilters.amount.min ||
+                invoice.amount.total >= parseFloat(selectedFilters.amount.min)) &&
+                (!selectedFilters.amount.max ||
+                    invoice.amount.total <= parseFloat(selectedFilters.amount.max));
+
+            const matchesSearch = !searchQuery ||
+                invoice.paymentId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                invoice.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                invoice.status?.toLowerCase().includes(searchQuery.toLowerCase());
+
+            return matchesStatus && matchesType && matchesAmount && matchesSearch;
+        });
     };
-    
-    const [currentPage, setCurrentPage] = useState(0);
-    const rowsPerPage = 9;
+
+    const rowsPerPage = 10;
     const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+    const [currentPage, setCurrentPage] = useState(0);
 
     const nextPage = () => {
-        if (currentPage < totalPages - 1) {
+        if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
             setCurrentPage(currentPage + 1);
         }
     };
@@ -341,12 +422,14 @@ const InvoiceTab = () => {
                     </div>
                 </main>
             </div>
-            {/* <-----------------------------------v1.0.0 */}
             <main className="fixed inset-0 flex items-center justify-center bg-background w-full h-[calc(100vh-13rem)]">
-                {/* v1.0.0--------------------------------> */}
                 <div className="w-full overflow-auto">
                     {loading ? (
-                        <Loading message="Loading Invoices..."/>
+                        viewMode === 'table' ? (
+                            <InvoiceTableSkeleton />
+                        ) : (
+                            <InvoiceKanbanSkeleton />
+                        )
                     ) : (
                         <motion.div className="w-full">
                             <div className="relative w-full">
@@ -355,19 +438,19 @@ const InvoiceTab = () => {
                                         <TableView
                                             data={currentFilteredRows}
                                             columns={tableColumns}
-                                            loading={loading}
+                                            loading={false}
                                             actions={tableActions}
                                             emptyState="No invoices found."
                                         />
                                     </div>
                                 ) : (
                                     <div className="w-full px-6">
-                                        <InvocieKanban 
+                                        <InvocieKanban
                                             currentFilteredRows={currentFilteredRows || []}
-                                            loading={loading}
-                                            handleUserClick={() => {}}
-                                            handleEditClick={() => {}}
-                                            toggleSidebar={() => {}}
+                                            loading={false}
+                                            handleUserClick={() => { }}
+                                            handleEditClick={() => { }}
+                                            toggleSidebar={() => { }}
                                         />
                                     </div>
                                 )}
