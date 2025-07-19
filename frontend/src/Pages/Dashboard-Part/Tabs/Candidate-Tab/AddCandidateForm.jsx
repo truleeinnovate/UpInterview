@@ -16,7 +16,7 @@ import {
   countryCodes,
 } from "../../../../utils/CandidateValidation";
 import Cookies from "js-cookie";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Minimize, Expand, ChevronDown, X, Trash, Eye } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
@@ -94,9 +94,8 @@ const CustomDropdown = ({
           onClick={toggleDropdown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-            error ? "border-red-500" : "border-gray-300"
-          }`}
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? "border-red-500" : "border-gray-300"
+            }`}
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -140,7 +139,7 @@ const CustomDropdown = ({
 };
 
 // Main AddCandidateForm Component
-const AddCandidateForm = ({ mode }) => {
+const AddCandidateForm = ({ mode, onClose, isModal = false }) => {
   const { skills, colleges, qualifications, currentRoles } = useMasterData();
 
   console.log("currentRoles:", currentRoles);
@@ -160,6 +159,7 @@ const AddCandidateForm = ({ mode }) => {
   } = useCandidates();
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -337,10 +337,10 @@ const AddCandidateForm = ({ mode }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry
       );
       setEntries(updatedEntries);
@@ -546,8 +546,21 @@ const AddCandidateForm = ({ mode }) => {
 
   const handleClose = () => {
     resetFormData();
-    // onClose();
-    // navigate('/candidate');
+
+    // If it's a modal, call the onClose function
+    if (isModal && onClose) {
+      onClose();
+      return;
+    }
+
+    // Check if we came from InterviewForm
+    const fromPath = location.state?.from;
+    const returnTo = location.state?.returnTo;
+
+    if (fromPath === '/interviews/new' && returnTo) {
+      navigate(returnTo);
+      return;
+    }
 
     switch (mode) {
       case "Edit":
@@ -564,10 +577,10 @@ const AddCandidateForm = ({ mode }) => {
   const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
     console.log("Starting submit process...");
-    
+
     // Set which button was clicked
     setActiveButton(isAddCandidate ? 'add' : 'save');
-    
+
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries,
@@ -616,7 +629,7 @@ const AddCandidateForm = ({ mode }) => {
         selectedImage,
         selectedResume,
       });
-      await addOrUpdateCandidate({
+      const response = await addOrUpdateCandidate({
         id,
         data,
         profilePicFile: selectedImage,
@@ -629,6 +642,21 @@ const AddCandidateForm = ({ mode }) => {
 
       if (!isAddCandidate) {
         setTimeout(() => {
+          // If it's a modal, call the onClose function with the new candidate data
+          if (isModal && onClose) {
+            onClose(response.data);
+            return;
+          }
+
+          // Check if we came from InterviewForm
+          const fromPath = location.state?.from;
+          const returnTo = location.state?.returnTo;
+
+          if (fromPath === '/interviews/new' && returnTo) {
+            navigate(returnTo);
+            return;
+          }
+
           switch (mode) {
             case "Edit":
               navigate(`/candidate`);
@@ -640,6 +668,13 @@ const AddCandidateForm = ({ mode }) => {
               navigate("/candidate");
           }
         }, 500); // Delay navigation to ensure loading state is visible
+      } else {
+        // For "Add Candidate" button, also close modal if in modal mode
+        if (isModal && onClose) {
+          setTimeout(() => {
+            onClose(response.data);
+          }, 500);
+        }
       }
     } catch (error) {
       console.error("Error adding candidate:", error);
@@ -786,11 +821,11 @@ const AddCandidateForm = ({ mode }) => {
                         <p className="text-xs text-gray-500">
                           {selectedResume?.fileSize || selectedResume?.size
                             ? `${(
-                                (selectedResume.size ||
-                                  selectedResume.fileSize) /
-                                1024 /
-                                1024
-                              ).toFixed(2)} MB`
+                              (selectedResume.size ||
+                                selectedResume.fileSize) /
+                              1024 /
+                              1024
+                            ).toFixed(2)} MB`
                             : ""}
                         </p>
                       </div>
@@ -886,9 +921,8 @@ const AddCandidateForm = ({ mode }) => {
                     name="LastName"
                     value={formData.LastName}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
-                      errors.LastName && "border-red-500"
-                    }`}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.LastName && "border-red-500"
+                      }`}
                     placeholder="Enter Last Name"
                   />
                   {errors.LastName && (
@@ -938,9 +972,8 @@ const AddCandidateForm = ({ mode }) => {
                     name="Email"
                     value={formData.Email}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${
-                      errors.Email && "border-red-500"
-                    }`}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${errors.Email && "border-red-500"
+                      }`}
                     placeholder="Enter Email Address"
                   />
                   {errors.Email && (
@@ -980,9 +1013,8 @@ const AddCandidateForm = ({ mode }) => {
                           }
                         }}
                         maxLength={10}
-                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
-                          errors.Phone && "border-red-500"
-                        }`}
+                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.Phone && "border-red-500"
+                          }`}
                         placeholder="Enter Phone Number"
                       />
 
@@ -1042,11 +1074,10 @@ const AddCandidateForm = ({ mode }) => {
                     max="15"
                     value={formData.CurrentExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                      errors.CurrentExperience
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentExperience
+                      ? "border-red-500"
+                      : "border-gray-300"
+                      }`}
                     placeholder="Enter Current Experience"
                   />
                   {errors.CurrentExperience && (
@@ -1071,11 +1102,10 @@ const AddCandidateForm = ({ mode }) => {
                     max="15"
                     value={formData.RelevantExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                      errors.RelevantExperience
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience
+                      ? "border-red-500"
+                      : "border-gray-300"
+                      }`}
                     placeholder="Enter Relevant Experience"
                   />
                   {errors.RelevantExperience && (
@@ -1105,11 +1135,10 @@ const AddCandidateForm = ({ mode }) => {
                       onChange={handleChange}
                       placeholder="Select Current Role"
                       autoComplete="off"
-                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                        errors.CurrentRole
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      }`}
+                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole
+                        ? "border-red-500"
+                        : "border-gray-300"
+                        }`}
                       readOnly
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -1218,9 +1247,8 @@ const AddCandidateForm = ({ mode }) => {
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${
-                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                 >
                   Cancel
                 </button>

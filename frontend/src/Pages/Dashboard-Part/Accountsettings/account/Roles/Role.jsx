@@ -1,3 +1,5 @@
+// v1.0.0  -  mansoor  -  added skeleton structure loading
+
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -11,7 +13,7 @@ import PermissionDisplay from './PermissionDisplay';
 import { formatWithSpaces, sortPermissions } from '../../../../../utils/RoleUtils';
 import Loading from '../../../../../Components/Loading.js';
 import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
-import RoleSkeleton from './RoleSkeleton';
+
 import ErrorState from '../../../../../Components/LoadingStates/ErrorState';
 import EmptyState from '../../../../../Components/LoadingStates/EmptyState';
 
@@ -21,10 +23,10 @@ const Role = () => {
   const { effectivePermissions, superAdminPermissions } = usePermissions();
   const permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
   const permissionKey = 'Roles';
-  
+
   const { data: filteredRoles, isLoading, isError, error } = useRolesQuery({ fetchAllRoles: true });
   console.log('filteredRoles', filteredRoles);
-  
+
   const [roles, setRoles] = useState([]);
   const [isProcessingOverrides, setIsProcessingOverrides] = useState(false);
   const navigate = useNavigate();
@@ -112,6 +114,66 @@ const Role = () => {
     fetchRoleOverrides();
   }, [filteredRoles, tenantId, userType]);
 
+    // <------------------------- v1.0.0
+  // Skeleton Loading Component for Roles
+  const RoleSkeleton = () => {
+    return (
+      <div className="space-y-6 mb-4">
+        {/* Header skeleton */}
+        <div className="flex justify-between items-center mt-3 px-3">
+          <div className="h-6 bg-gray-200 skeleton-animation rounded w-48"></div>
+          <div className="h-8 bg-gray-200 skeleton-animation rounded w-24"></div>
+        </div>
+
+        {/* Main content skeleton */}
+        <div className="bg-white px-3 rounded-lg shadow py-3 mx-3">
+          <div className="flex justify-between items-center mb-4">
+            <div className="h-6 bg-gray-200 skeleton-animation rounded w-32"></div>
+            <div className="h-4 bg-gray-200 skeleton-animation rounded w-24"></div>
+          </div>
+
+          {/* Role cards skeleton */}
+          <div className="space-y-6">
+            {[1, 2, 3].map((index) => (
+              <div key={index} className="bg-white p-5 rounded-lg shadow">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="h-5 bg-gray-200 skeleton-animation rounded w-32"></div>
+                      <div className="h-4 bg-gray-200 skeleton-animation rounded w-16"></div>
+                    </div>
+                    <div className="h-4 bg-gray-200 skeleton-animation rounded w-64 mb-2"></div>
+                  </div>
+                  <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded"></div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="h-5 bg-gray-200 skeleton-animation rounded w-24 mb-3"></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((permIndex) => (
+                      <div key={permIndex} className="space-y-2">
+                        <div className="h-4 bg-gray-200 skeleton-animation rounded w-20"></div>
+                        <div className="space-y-1">
+                          {[1, 2, 3].map((itemIndex) => (
+                            <div key={itemIndex} className="flex items-center">
+                              <div className="h-3 w-3 bg-gray-200 skeleton-animation rounded mr-2"></div>
+                              <div className="h-3 bg-gray-200 skeleton-animation rounded w-16"></div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+    // v1.0.0 -------------------------->
+
   // Show skeleton while initial data is loading
   if (isLoading) {
     return <RoleSkeleton />;
@@ -154,7 +216,7 @@ const Role = () => {
     const visibleObjects = role.objects
       ? role.objects.filter((obj) =>
         userType === 'superAdmin' ? true : obj.visibility === 'view_all'
-        ).slice(0, maxRows)
+      ).slice(0, maxRows)
       : [];
 
     return (

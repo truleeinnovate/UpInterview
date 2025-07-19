@@ -1,7 +1,8 @@
 // v1.0.0  -  mansoor  -  when we select the interview template then error is getting that is solved now
 // v1.0.1  -  mansoor  -  fixed dropdown alignments of candidate and position
+// v1.0.2  -  mansoor  -  added the add new buttons in the candidate and position dropdowns
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
@@ -11,6 +12,8 @@ import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
 import LoadingButton from '../../../../../Components/LoadingButton';
 import { useInterviewTemplates } from '../../../../../apiHooks/useInterviewTemplates.js';
 import { usePositions } from '../../../../../apiHooks/usePositions.js';
+import AddCandidateForm from '../../Candidate-Tab/AddCandidateForm.jsx';
+import PositionForm from '../../Position-Tab/Position-Form.jsx';
 
 // Custom Dropdown Component
 const CustomDropdown = ({
@@ -23,6 +26,8 @@ const CustomDropdown = ({
   error = false,
   placeholder = "Select an option",
   className = "",
+  onAddNew = null,
+  addNewLabel = "+ Add New",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -44,7 +49,17 @@ const CustomDropdown = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, id]);
-//  v1.0.1---------------------->
+  //  v1.0.1---------------------->
+
+  // <-------------------- v1.0.2
+  const handleAddNew = () => {
+    if (onAddNew) {
+      onAddNew();
+      setIsOpen(false);
+    }
+  };
+  //  v1.0.2 ---------------------->
+
   return (
     <div className={dropdownClass} data-dropdown={id}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
@@ -93,8 +108,8 @@ const CustomDropdown = ({
                       setIsOpen(false);
                     }}
                     className={`px-4 py-2 cursor-pointer transition-colors duration-150 ${option.value === 'loading'
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'hover:bg-gray-100'
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'hover:bg-gray-100'
                       } ${value === option.value ? 'bg-custom-blue/10 text-custom-blue' : ''
                       }`}
                   >
@@ -104,6 +119,19 @@ const CustomDropdown = ({
               </ul>
             )}
             {/* v1.0.1------------------> */}
+
+            {/* Add New Button */}
+            {onAddNew && (
+              <div className="border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={handleAddNew}
+                  className="w-full px-4 py-2 text-left text-gray-900 hover:bg-gray-100 transition-colors duration-150"
+                >
+                  <span className="text-gray-900 font-medium">{addNewLabel}</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -148,6 +176,7 @@ const InterviewForm = () => {
   const userId = tokenPayload?.userId;
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { positionData, isLoading: positionsLoading } = usePositions();
   const { templatesData, isLoading: templatesLoading } = useInterviewTemplates();
   const {
@@ -164,6 +193,58 @@ const InterviewForm = () => {
   const [showModal, setShowModal] = useState(false);
   const [candidateError, setCandidateError] = useState('');
   const [positionError, setPositionError] = useState('');
+  // <---------------------- v1.0.2
+  const [showCandidateModal, setShowCandidateModal] = useState(false);
+  const [showPositionModal, setShowPositionModal] = useState(false);
+
+  // Modal handlers for Add New buttons
+  const handleAddNewCandidate = () => {
+    setShowCandidateModal(true);
+  };
+
+  const handleAddNewPosition = () => {
+    setShowPositionModal(true);
+  };
+
+  const handleCloseCandidateModal = () => {
+    setShowCandidateModal(false);
+  };
+
+  const handleClosePositionModal = () => {
+    setShowPositionModal(false);
+  };
+
+  const handleCandidateCreated = (newCandidate) => {
+    setShowCandidateModal(false);
+    if (newCandidate && newCandidate._id) {
+      setCandidateId(newCandidate._id);
+      setCandidateError('');
+    }
+    toast.success("Candidate created successfully!");
+    // The candidate data will be automatically refreshed by the useCandidates hook
+  };
+
+  const handlePositionCreated = (newPosition) => {
+    setShowPositionModal(false);
+    if (newPosition && newPosition._id) {
+      setPositionId(newPosition._id);
+      setPositionError('');
+    }
+    toast.success("Position created successfully!");
+    // The position data will be automatically refreshed by the usePositions hook
+  };
+
+  // Handle click outside to close modals
+  const handleModalBackdropClick = (e, modalType) => {
+    if (e.target === e.currentTarget) {
+      if (modalType === 'candidate') {
+        handleCloseCandidateModal();
+      } else if (modalType === 'position') {
+        handleClosePositionModal();
+      }
+    }
+  };
+    //  v1.0.1---------------------->
 
   const isEditing = !!id;
   const interview = isEditing ? interviewData.find(interview => interview._id === id) : null;
@@ -319,6 +400,8 @@ const InterviewForm = () => {
                       error={candidateError}
                       placeholder={candidatesLoading ? "Loading..." : "Select a Candidate"}
                       disabled={candidatesLoading}
+                      onAddNew={handleAddNewCandidate}
+                      addNewLabel="+ Add New Candidate"
                     />
                     {/* v1.0.1-------------> */}
                   </div>
@@ -346,6 +429,8 @@ const InterviewForm = () => {
                       error={positionError}
                       placeholder={positionsLoading ? "Loading..." : "Select a Position"}
                       disabled={positionsLoading}
+                      onAddNew={handleAddNewPosition}
+                      addNewLabel="+ Add New Position"
                     />
                     {/* v1.0.1-----------------> */}
                   </div>
@@ -418,6 +503,46 @@ const InterviewForm = () => {
         onProceed={handleProceed}
         message="Changing the template will override the existing rounds. Do you want to proceed?"
       />
+
+   {/* <---------------------- v1.0.2 */}
+      {/* Candidate Modal */}
+      {showCandidateModal && (
+        // <div
+        //   className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+        //   onClick={(e) => handleModalBackdropClick(e, 'candidate')}
+        // >
+        //   <div className="bg-white rounded-lg w-full max-w-6xl h-full max-h-[95vh] overflow-hidden relative">
+        //     <button
+        //       onClick={handleCloseCandidateModal}
+        //       className="absolute top-4 right-4 z-10 text-gray-500 hover:text-gray-700 bg-white rounded-full p-2 shadow-lg"
+        //     >
+        //       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        //         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        //       </svg>
+        //     </button>
+        <AddCandidateForm
+          mode="Create"
+          onClose={handleCandidateCreated}
+          isModal={true}
+        />
+        //   </div>
+        // </div>
+      )}
+
+      {/* Position Modal */}
+      {showPositionModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+          onClick={(e) => handleModalBackdropClick(e, 'position')}
+        >
+          <PositionForm
+            mode="new"
+            onClose={handlePositionCreated}
+            isModal={true}
+          />
+        </div>
+      )}
+      {/* v1.0.1----------------------> */}
     </div>
   );
 };

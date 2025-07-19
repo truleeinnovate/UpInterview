@@ -1,3 +1,5 @@
+// v1.0.0  -  mansoor  -  added skeleton structure loading
+
 // import { useState } from 'react'
 import { ViewDetailsButton, EditButton } from '../../common/Buttons'
 // import { SidePopup } from '../../common/SidePopup'
@@ -10,7 +12,9 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 const InterviewerGroups = () => {
-  const { groups } = useCustomContext();
+  // <------------------------- v1.0.0
+  const { groups, groupsLoading } = useCustomContext();
+  // v1.0.0 -------------------------->
   const navigate = useNavigate();
   // const [selectedGroup, setSelectedGroup] = useState(null)
   // const [editingGroup, setEditingGroup] = useState(null)
@@ -44,6 +48,77 @@ const InterviewerGroups = () => {
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
 
+    // <------------------------- v1.0.0
+  // Skeleton Loading Component for Interview Groups
+  const InterviewerGroupsSkeleton = () => {
+    return (
+      <div className="space-y-6 px-4 py-6">
+        {/* Info section skeleton */}
+        <div className="bg-blue-50 border-l-4 border-custom-blue p-4 rounded-r-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <div className="h-5 w-5 bg-custom-blue skeleton-animation rounded"></div>
+            </div>
+            <div className="ml-3">
+              <div className="h-5 w-32 bg-custom-blue skeleton-animation rounded mb-2"></div>
+              <div className="space-y-2">
+                <div className="h-4 w-80 bg-custom-blue skeleton-animation rounded"></div>
+                <div className="space-y-1">
+                  <div className="h-3 w-64 bg-custom-blue skeleton-animation rounded"></div>
+                  <div className="h-3 w-72 bg-custom-blue skeleton-animation rounded"></div>
+                  <div className="h-3 w-68 bg-custom-blue skeleton-animation rounded"></div>
+                  <div className="h-3 w-60 bg-custom-blue skeleton-animation rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Header skeleton */}
+        <div className="flex justify-between items-center">
+          <div className="h-8 w-48 bg-gray-200 skeleton-animation rounded"></div>
+          <div className="h-10 w-32 bg-gray-200 skeleton-animation rounded"></div>
+        </div>
+
+        {/* Groups grid skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <div key={item} className="bg-white p-4 sm:p-6 rounded-lg shadow">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <div className="h-6 w-32 bg-gray-200 skeleton-animation rounded mb-2"></div>
+                  <div className="h-4 w-48 bg-gray-200 skeleton-animation rounded"></div>
+                </div>
+                <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded"></div>
+              </div>
+
+              <div className="mt-4">
+                <div className="h-4 w-24 bg-gray-200 skeleton-animation rounded mb-3"></div>
+                <div className="flex flex-wrap gap-2">
+                  <div className="h-6 w-20 bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-6 w-24 bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-6 w-18 bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded"></div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex justify-end space-x-2">
+                <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded"></div>
+                <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Show skeleton if data is still loading
+  if (groupsLoading) {
+    return <InterviewerGroupsSkeleton />;
+  }
+  // v1.0.0 -------------------------->
+  
   // console.log("tenantId InterviewerGroups", tenantId);
 
   // console.log("organizationId", tenantId, groups);

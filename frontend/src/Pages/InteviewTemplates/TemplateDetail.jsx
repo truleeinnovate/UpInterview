@@ -167,7 +167,7 @@ const TemplateDetail = () => {
 
   return (
     //  <----------v1.0.0
-    <div className="fixed inset-0 bg-white z-50 overflow-y-auto" style={{ top: '56px' }}>
+    <div className="fixed inset-0 bg-white z-40 overflow-y-auto" style={{ top: '56px' }}>
       {/* v1.0.0 ----------------> */}
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
 
