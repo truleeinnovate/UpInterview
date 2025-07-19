@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - changed order of routes because of conflicts
 const express = require("express");
 const router = express.Router();
 const {
@@ -8,6 +9,12 @@ const {
   getAllIntegrationLogs, // SUPER ADMIN added by Ashok
   getIntegrationById,
 } = require("../controllers/integrationLogController");
+
+// v1.0.0 <------------------------------------------------------------------------------
+// SUPER ADMIN added by Ashok ---------------------------------------------
+router.get("/", getAllIntegrationLogs);
+// -------------------------------------------------------------------------
+// v1.0.0 ------------------------------------------------------------------------------>
 
 // Get all integration logs with search and pagination
 // router.get("/", getIntegrationLogs);
@@ -22,9 +29,6 @@ router.post("/", createIntegrationLog);
 router.delete("/:id", deleteIntegrationLog);
 
 // SUPER ADMIN added by Ashok ---------------------------------------------
-// Get all integration logs without search and pagination
-router.get("/", getAllIntegrationLogs);
-
 // SUPER ADMIN Get integration log by ID added by Ashok
 router.get("/:id", getIntegrationById);
 // -------------------------------------------------------------------------

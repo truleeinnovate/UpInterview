@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - added console statement and made some changes. Integrations not getting on online
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge.jsx";
@@ -55,6 +57,10 @@ function IntegrationsPage() {
 
   const { integrations, isLoading } = useIntegrationLogs(); // from apiHooks
   const { selectedLog } = useIntegrationLogById(selectedLogId); // from apiHooks
+  // v1.0.0 <-----------------------------------------------------------------------------------
+  console.log("2. INTEGRATIONS LOGS AFTER RESPONSE: ", integrations);
+  console.log("4. SELECTED INTEGRATION LOG: ", selectedLog);
+  // v1.0.0 ----------------------------------------------------------------------------------->
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -680,10 +686,11 @@ function IntegrationsPage() {
             <div className="text-xs text-gray-500">Total Logs</div>
             <div className="text-xl font-semibold">{integrations?.length}</div>
           </div>
+          {/* v1.0.0 <------------------------------------------------------------------------------------------ */}
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-            <div className="text-xs text-gray-500">Errors</div>
-            <div className="text-xl font-semibold text-error-600">
-              {integrations?.filter((log) => log.status === "error").length}
+            <div className="text-xs text-gray-500">Success</div>
+            <div className="text-xl font-semibold text-success-600">
+              {integrations?.filter((log) => log.status === "success").length}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
@@ -693,11 +700,12 @@ function IntegrationsPage() {
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-            <div className="text-xs text-gray-500">Success</div>
-            <div className="text-xl font-semibold text-success-600">
-              {integrations?.filter((log) => log.status === "success").length}
+            <div className="text-xs text-gray-500">Errors</div>
+            <div className="text-xl font-semibold text-error-600">
+              {integrations?.filter((log) => log.status === "error").length}
             </div>
           </div>
+          {/* v1.0.0 ------------------------------------------------------------------------------> */}
         </div>
 
         {/* Toolbar */}
