@@ -92,7 +92,7 @@ function ScheduleAssDetails() {
           <div className={classNames('flex flex-col h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
             <div className="px-4 pt-4 sm:p-6 flex justify-between items-center bg-white z-50">
             <div>
-            <h2 className="text-lg font-semibold text-custom-blue">Schedule — {schedule.order || schedule.scheduledAssessmentCode}</h2>
+            <h2 className="text-lg font-semibold text-custom-blue">Schedule / {schedule.scheduledAssessmentCode}</h2>
             {/* // <---------------------- v1.0.0 */}
             {/* {schedule.expiryAt && (
               <p className="text-sm text-gray-500">

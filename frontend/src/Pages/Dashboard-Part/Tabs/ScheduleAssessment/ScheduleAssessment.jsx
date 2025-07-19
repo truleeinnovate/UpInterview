@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  removed expity date
 // v1.0.1  -  Ashraf  -  added new assessment button
+// v1.0.2 ---Venkatesh---change assessmentID to first in table column and add status column style
 
 import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
@@ -144,6 +145,21 @@ const ScheduleAssessment = () => {
   // Table definitions
   const tableColumns = [
     // Assessment Template ID
+    //<---------v1.0.2-----
+    {
+      key: 'scheduledAssessmentCode',
+      header: 'Assessment ID',
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => handleView(row)}
+        >
+          {value || "Not Provided"}
+
+        </div>
+      ),
+    },
+    //-------v1.0.2----->
     {
       key: 'assessmentId',
       header: 'Assessment Template ID',
@@ -193,19 +209,7 @@ const ScheduleAssessment = () => {
         );
       },
     },
-    {
-      key: 'scheduledAssessmentCode',
-      header: 'Assessment ID',
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => handleView(row)}
-        >
-          {value || "Not Provided"}
-
-        </div>
-      ),
-    },
+    
     // <---------------------- v1.0.0
     // {
     //   key: 'order',
@@ -221,8 +225,22 @@ const ScheduleAssessment = () => {
     {
       key: 'status',
       header: 'Status',
-      render: (v) => v ? v.charAt(0).toUpperCase() + v.slice(1) : 'Not Provided',
+      //<---------------------- v1.0.2--------
+      render: (v) => (
+        <span
+          className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+            v === "completed"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+              : v === "scheduled"
+              ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+              : "bg-slate-50 text-slate-700 border border-slate-200/60"
+          }`}
+        >
+          {v ? v.charAt(0).toUpperCase() + v.slice(1) : "Not Provided"}
+        </span>
+      ),
     },
+    // ---------------------- v1.0.2-------->
   ];
 
   const tableActions = [

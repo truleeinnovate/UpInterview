@@ -84,7 +84,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
         <div className="space-y-4">
           <div>
             <h4 className="text-sm font-medium text-gray-900">Instructions</h4>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 break-words">
               {assessment.Instructions ? (
                 <div className="text-sm text-gray-500">
                   {assessment.Instructions.split('\n').map((paragraph, pIndex) => (

@@ -230,7 +230,7 @@ const NewAssessment = () => {
       
       loadAssessmentQuestions();
     }
-  }, [id, isEditing, assessment, fetchAssessmentQuestions]);
+  }, [id, isEditing, assessment]);
   // <---------------------- v1.0.2 >
   // shashank - [10/01/2025]
   const [tabsSubmitStatus, setTabsSubmitStatus] = useState({

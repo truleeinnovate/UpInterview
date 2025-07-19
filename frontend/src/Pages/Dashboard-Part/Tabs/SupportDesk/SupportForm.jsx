@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
 
+
 // v1.0.0 ------ Venkatesh---changes in full screen mode icons and remove footer border-top
+// v1.0.1 ------ Venkatesh---change select dropdown to custom dropdown
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
@@ -287,19 +289,58 @@ const SupportForm = () => {
     ]
   );
 
-  const renderIssueOptions = useCallback(
-    () =>
-      issuesData.map((each) => (
-        <option
-          className="text-gray-700"
-          key={each.id}
-          value={`${each.issue} Issue`}
+  // <--------v1.0.1 ------ 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+
+  const CustomDropdown = ({ options, value, onChange, error }) => (
+    <div className="relative">
+      <button
+        type="button"
+        className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 text-left flex justify-between items-center ${error ? 'border-red-500' : ''}`}
+        onClick={toggleDropdown}
+      >
+        <span>{value || 'Select Issue'}</span>
+        <svg
+          className={`w-5 h-5 transform transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          {each.issue} Issue
-        </option>
-      )),
-    [issuesData]
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {dropdownOpen && (
+        <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+          {options.map((option) => (
+            <div
+              key={option.id}
+              className="cursor-pointer hover:bg-gray-100 px-4 py-2"
+              onClick={() => {
+                onChange({ target: { value: option.value } });
+                setDropdownOpen(false);
+              }}
+            >
+              {option.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
+
+  const issueOptions = [
+    ...issuesData.map((each) => ({
+      id: each.id,
+      value: `${each.issue} Issue`,
+      label: `${each.issue} Issue`,
+    })),
+    { id: 'other', value: 'Other', label: 'Other' }
+  ];
+  // --------v1.0.1 ------>
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50">
@@ -360,22 +401,14 @@ const SupportForm = () => {
                   </label>
                   {!otherIssueFlag ? (
                     <div>
-                      <select
-                        id="issueType"
-                        value={selectedIssue || otherIssue}
+                      {/* <------v1.0.1------*/}
+                      <CustomDropdown
+                        options={issueOptions}
+                        value={selectedIssue}
                         onChange={onChangeIssue}
-                        className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${
-                          errors.issueType ? "border-red-500" : ""
-                        }`}
-                      >
-                        <option value="" className="text-gray-500" hidden>
-                          Select Issue
-                        </option>
-                        {renderIssueOptions()}
-                        <option className="text-gray-700" value="Other">
-                          Other
-                        </option>
-                      </select>
+                        error={errors.issueType}
+                      />
+                      {/* -----v1.0.1------>*/}
                       {errors.issueType && (
                         <p className="text-red-500 text-xs mt-1">
                           {errors.issueType}
