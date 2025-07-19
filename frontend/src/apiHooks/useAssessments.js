@@ -2,6 +2,7 @@
 //v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 //v1.0.2  -  Ashraf  -  assessment question api data get when exist is true
 //v1.0.3  -  Ashraf  -  assessment data getting loop so added usecallback
+//v1.0.4  -  Ashraf  -  assessment data added reverse to get updated data first
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
   // <---------------------- v1.0.3
@@ -34,8 +35,11 @@ export const useAssessments = (filters = {}) => {
       const data = await fetchFilterData('assessment');
       return data.map(assessment => ({
         ...assessment,
+        // <---------------------- v1.0.4
         // Add any assessment-specific transformations here
-      })); // Backend now sorts by createdAt: -1
+      })).reverse();
+        // ---------------------- v1.0.4 >
+
     },
     enabled: !!hasViewPermission,
     retry: 1,

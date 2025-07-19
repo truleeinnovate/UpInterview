@@ -1,5 +1,6 @@
 // v1.0.0 - Mansoor - adjust the height of navbar (superadmin and normal user) for removing the gap below the navbar and home content and account settings
 // v1.0.1  -  Ashraf  -  Assessment_Template permission name changed to AssessmentTemplates
+// v1.0.2  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -30,6 +31,9 @@ import Loading from "../Loading.js";
 
 const CombinedNavbar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
+  // <---------------------- v1.0.2
+  const { effectivePermissions_RoleName } = usePermissions();
+  // ---------------------- v1.0.2 >
   const location = useLocation();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -208,7 +212,9 @@ const CombinedNavbar = () => {
 
   const handleLogout = async () => {
     closeAllDropdowns();
-    await smartLogout(navigate, setIsLoading);
+    // <---------------------- v1.0.2
+    await smartLogout(navigate, setIsLoading, effectivePermissions_RoleName);
+    // ---------------------- v1.0.2 >
   };
 
   // Check if a nav item or icon is active

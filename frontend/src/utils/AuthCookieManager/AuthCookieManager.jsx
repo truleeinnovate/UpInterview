@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout,when individual logout navigate to there linked page
 import Cookies from 'js-cookie';
 import { decodeJwt } from './jwtDecode';
 import { resetPermissionPreload } from "../permissionPreloader";
@@ -482,8 +483,10 @@ class AuthCookieManager {
 
 
   // Smart logout based on current authentication state
-  static async smartLogout(navigate, setLoading = null) {
+  //<---------------------- v1.0.0
+  static async smartLogout(navigate, setLoading = null, effectivePermissions_RoleName = null) {
     try {
+        // ---------------------- v1.0.0 >
       
       // Set loading state if provided
       if (setLoading) {
@@ -544,8 +547,14 @@ class AuthCookieManager {
         localStorage.removeItem('app_permissions_cache');
         localStorage.removeItem('permissions_effective');
         localStorage.removeItem('app_permissions_timestamp');
-        // Always redirect to main domain
-        window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "http://localhost:3000/organization-login";
+        
+        // Check if user is individual or individual freelancer and redirect accordingly
+        if (effectivePermissions_RoleName === 'Individual' || effectivePermissions_RoleName === 'Individual_Freelancer') {
+          window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/welcome-page-upinterview-individual" : "http://localhost:3000/welcome-page-upinterview-individual";
+        } else {
+          // Always redirect to main domain
+          window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "http://localhost:3000/organization-login";
+        }
         // navigate("/organization-login");
 
       } else if (authToken && impersonationToken) {

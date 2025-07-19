@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - getting tenant by id is not working on online
   // v1.0.1  -  Ashraf  -  removed recent activity code
+  // v1.0.2  -  Ashraf  -  getting error in azure for organization get based on id
   const bcrypt = require("bcrypt");
   const Tenant = require("../models/Tenant");
   const { Users } = require("../models/Users");
@@ -1351,7 +1352,10 @@
       );
       const tenant = {
         tenant: {
-          ...organization.toObject(),
+          // <-------------------------------v1.0.2
+          ...organization,
+    // ---------------------- v1.0.2 >
+          
           ...subscription,
           subscriptionPlan,
         },
