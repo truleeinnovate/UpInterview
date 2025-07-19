@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Integration logs not getting on online fixing in v1
 const IntegrationLog = require("../models/IntegrationLogs");
 
 // Create a new integration log entry
@@ -154,9 +155,10 @@ exports.deleteIntegrationLog = async (req, res) => {
 };
 
 // SUPER ADMIN added by Ashok ----------------------------------->
+// v1.0.0 <-------------------------------------------------------
 exports.getAllIntegrationLogs = async (req, res) => {
   try {
-    const logs = await IntegrationLog.find().sort({ createdAt: -1 });
+    const logs = await IntegrationLog.find().sort({ _id: -1 });
 
     res.status(200).json(logs);
   } catch (error) {
@@ -167,6 +169,7 @@ exports.getAllIntegrationLogs = async (req, res) => {
     });
   }
 };
+//v1.0.0 --------------------------------------------------------->
 
 // Get integration log by ID added by Ashok
 exports.getIntegrationById = async (req, res) => {

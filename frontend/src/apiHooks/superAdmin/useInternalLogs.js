@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Fixing fetching internal logs data
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
@@ -20,7 +21,10 @@ export const useInternalLogs = () => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/internal-logs`
       );
-      return response.data?.data || [];
+      // v1.0.0 <----------------------------------------------------------------
+      console.log("1. INTERNAL LOGS AT RESPONSE HOOK :", response.data);
+      return response.data?.logs || [];
+      // v1.0.0 ---------------------------------------------------------------->
     },
     enabled: isInitialized && !!hasViewPermission,
     staleTime: 1000 * 60 * 10, // 5 minutes
@@ -57,6 +61,8 @@ export const useInternalLogById = (logId) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/internal-logs/${logId}`
       );
+      // v1.0.0 ---------------------------------------------------------------
+      console.log('3. SELECTED INTERNAL LOG RESPONSE AT HOOK: ', response.data);
       return response.data || null;
     },
     enabled: isInitialized && !!hasViewPermission && !!logId,

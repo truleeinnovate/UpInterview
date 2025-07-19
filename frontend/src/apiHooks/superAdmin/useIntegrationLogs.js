@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Added console statements to check data fetching
+
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
@@ -20,6 +22,9 @@ export const useIntegrationLogs = () => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/integration-logs`
       );
+      // v1.0.0 <------------------------------------------------------
+      console.log("1. INTEGRATION LOGS AT RESPONSE HOOK: ", response.data);
+      // v1.0.0 ------------------------------------------------------>
       return response.data || [];
     },
     enabled: isInitialized && !!hasViewPermission,
@@ -57,6 +62,9 @@ export const useIntegrationLogById = (logId) => {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/integration-logs/${logId}`
       );
+      // v1.0.0 <------------------------------------------------------
+      console.log("3. INTEGRATION LOGS AT RESPONSE HOOK: ", response.data);
+      // v1.0.0 ------------------------------------------------------>
       return response.data || null;
     },
     enabled: isInitialized && !!hasViewPermission && !!logId,

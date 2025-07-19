@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - added console statements to check the app on online
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
@@ -56,6 +57,10 @@ function InternalLogsPage() {
 
   const { logs, isLoading } = useInternalLogs(); // from apiHooks
   const { log: selectedLog } = useInternalLogById(selectedLogId); // from apiHooks
+  // v1.0.0 <------------------------------------------------------------------------
+  console.log("2. INTERNAL LOGS AFTER RESPONSE: ", logs);
+  console.log("4. SELECTED INTERNAL LOG BY ID: ", selectedLog);
+  // v1.0.0 ------------------------------------------------------------------------>
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -731,16 +736,17 @@ function InternalLogsPage() {
             </button>
           </div> */}
         </div>
-
+       
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Logs</div>
             <div className="text-xl font-semibold">{logs?.length}</div>
           </div>
+           {/* v1.0.0 <---------------------------------------------------------------------------------------------------------------------- */}
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-            <div className="text-xs text-gray-500">Errors</div>
-            <div className="text-xl font-semibold text-error-600">
-              {logs?.filter((log) => log.status === "error").length}
+            <div className="text-xs text-gray-500">Success</div>
+            <div className="text-xl font-semibold text-success-600">
+              {logs?.filter((log) => log.status === "success").length}
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
@@ -750,11 +756,12 @@ function InternalLogsPage() {
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-            <div className="text-xs text-gray-500">Success</div>
-            <div className="text-xl font-semibold text-success-600">
-              {logs?.filter((log) => log.status === "success").length}
+            <div className="text-xs text-gray-500">Errors</div>
+            <div className="text-xl font-semibold text-error-600">
+              {logs?.filter((log) => log.status === "error").length}
             </div>
           </div>
+          {/* v1.0.0 ----------------------------------------------------------------------------------------------------------------------> */}
         </div>
 
         {/* Toolbar */}
