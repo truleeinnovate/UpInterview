@@ -18,8 +18,8 @@ const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissio
     return (
       <div className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10">
         <div className="flex items-center justify-between mb-6">
-          <div className="h-8 w-1/4 bg-gray-200 animate-pulse rounded"></div>
-          <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-8 w-1/4 bg-gray-200 skeleton-animation rounded"></div>
+          <div className="h-8 w-20 bg-gray-200 skeleton-animation rounded"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
           {[...Array(8)].map((_, index) => (
@@ -32,42 +32,42 @@ const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissio
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center w-full space-x-3">
-                  <div className="w-10 h-6 bg-gray-200 animate-pulse rounded-full"></div>
+                  <div className="w-10 h-6 bg-gray-200 skeleton-animation rounded-full"></div>
                   <div className="space-y-2 flex-1">
-                    <div className="h-4 w-3/4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-3 w-1/2 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-3 w-1/2 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
                 </div>
               </div>
               <div className="space-y-3 mb-4">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-3 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-3 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-3 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-3 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-3 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-3 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-3 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-3 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
+                  <div key={i} className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
                 ))}
               </div>
             </motion.div>

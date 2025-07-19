@@ -110,12 +110,12 @@ const TableView = ({
                   <tr key={`loading-${i}`}>
                     {columns.map((_, j) => (
                       <td key={j} className="px-3 py-2">
-                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded skeleton-animation"></div>
                       </td>
                     ))}
                     {actions.length > 0 && (
                       <td className="px-3 py-2">
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-12"></div>
+                        <div className="h-4 bg-gray-200 rounded skeleton-animation w-12"></div>
                       </td>
                     )}
                   </tr>

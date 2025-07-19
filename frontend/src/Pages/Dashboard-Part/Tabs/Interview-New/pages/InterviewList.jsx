@@ -473,7 +473,7 @@ function InterviewList() {
                       Array(3).fill(0).map((_, index) => (
                         <motion.div
                           key={`placeholder-${index}`}
-                          className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 animate-pulse"
+                          className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 skeleton-animation"
                           initial={false}
                           animate={{ height: 'auto' }}
                           transition={{ duration: 0.3 }}

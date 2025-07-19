@@ -11,16 +11,157 @@ import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import { usePermissions } from '../../../../../Context/PermissionsContext';
 import { usePermissionCheck } from '../../../../../utils/permissionUtils';
 import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
+import { useUserProfile } from '../../../../../apiHooks/useUsers';
+
+// Loading Skeleton for Basic Details
+const BasicDetailsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="skeleton-animation">
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+          <div className="h-8 bg-gray-200 rounded w-16 ml-2"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i}>
+              <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+              <div className="h-5 bg-gray-200 rounded w-32"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Loading Skeleton for Advanced Details
+const AdvancedDetailsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className='skeleton-animation'>
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i}>
+              <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+              <div className="h-5 bg-gray-200 rounded w-36"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Loading Skeleton for Interview Details
+const InterviewDetailsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="skeleton-animation">
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="space-y-6">
+          {[1, 2, 3].map((section) => (
+            <div key={section}>
+              <div className="h-5 bg-gray-200 rounded w-40 mb-3"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((item) => (
+                  <div key={item}>
+                    <div className="h-4 bg-gray-200 rounded w-28 mb-2"></div>
+                    <div className="h-5 bg-gray-200 rounded w-32"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Loading Skeleton for Availability Details
+const AvailabilityDetailsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="skeleton-animation">
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="space-y-6">
+          {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+            <div key={day} className="border-b pb-4">
+              <div className="h-5 bg-gray-200 rounded w-24 mb-3"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((time) => (
+                  <div key={time}>
+                    <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                    <div className="h-5 bg-gray-200 rounded w-28"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Loading Skeleton for Documents Section
+const DocumentsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="skeleton-animation">
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="space-y-6">
+          {[1, 2].map((doc) => (
+            <div key={doc} className="border rounded-lg p-4">
+              <div className="h-5 bg-gray-200 rounded w-32 mb-3"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-48"></div>
+                <div className="h-4 bg-gray-200 rounded w-36"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const MyProfile = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
   const userType = AuthCookieManager.getUserType();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const { singlecontact } = useCustomContext();
+  const { userProfile, isLoading: userProfileLoading } = useUserProfile();
+
   console.log("singlecontact", singlecontact);
-  
+
   const { effectivePermissions, superAdminPermissions } = usePermissions();
 
   // Select permissions based on user type
@@ -56,7 +197,7 @@ const MyProfile = () => {
   useEffect(() => {
     const fetchData = () => {
       try {
-        const contact = singlecontact[0]; 
+        const contact = singlecontact[0];
 
         if (contact) {
           const role = contact?.ownerId?.roleId?.roleName || "";
@@ -71,7 +212,7 @@ const MyProfile = () => {
         setIsFreelancer(false); // Default value on error
       }
     };
-  
+
     if (userId) {
       fetchData();
     }
@@ -91,8 +232,21 @@ const MyProfile = () => {
     }
   }, [subtab, navigate, isFreelancer, roleName]);
 
-  // Render subtab content
+  // Render subtab content with loading states
   const renderSubTabContent = () => {
+    // Show skeleton if loading
+    if (userProfileLoading) {
+      const skeletonComponents = {
+        basic: <BasicDetailsSkeleton />,
+        advanced: <AdvancedDetailsSkeleton />,
+        interview: <InterviewDetailsSkeleton />,
+        availability: <AvailabilityDetailsSkeleton />,
+        documents: <DocumentsSkeleton />,
+      };
+      return skeletonComponents[activeTab] || skeletonComponents['basic'];
+    }
+
+    // Show actual content when not loading
     const subTabComponents = {
       basic: <BasicDetailsTab />,
       advanced: <AdvancedDetails />,
@@ -110,7 +264,7 @@ const MyProfile = () => {
     permissions,
     hasMyProfilePermission: permissions?.MyProfile?.ViewTab
   });
-  
+
   const tabsToShow = [
     permissions?.MyProfile?.Basic && 'basic',
     permissions?.MyProfile?.Advance && 'advanced',
@@ -118,7 +272,7 @@ const MyProfile = () => {
     permissions?.MyProfile?.Availability && 'availability',
     permissions?.MyProfile?.Documents && 'documents',
   ].filter(Boolean);
-  
+
   console.log('📋 Tabs to show:', tabsToShow);
 
   return (
@@ -132,11 +286,10 @@ const MyProfile = () => {
                 <button
                   key={tabKey}
                   onClick={() => handleSubTabChange(tabKey)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tabKey
-                      ? 'border-custom-blue text-custom-blue'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tabKey
+                    ? 'border-custom-blue text-custom-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                 >
                   {tabKey.charAt(0).toUpperCase() + tabKey.slice(1)} Details
                 </button>

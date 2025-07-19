@@ -191,10 +191,10 @@ const CombinedNavbar = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       // For super admin users, only check the refs that are actually used
-      const refsToCheck = userType === 'superAdmin' 
+      const refsToCheck = userType === 'superAdmin'
         ? [moreRef, outlineRef, notificationRef, profileRef]
         : [assessmentRef, interviewRef, moreRef, outlineRef, notificationRef, profileRef];
-      
+
       if (refsToCheck.every((ref) => ref.current && !ref.current.contains(event.target))) {
         closeAllDropdowns();
       }
@@ -449,7 +449,7 @@ const CombinedNavbar = () => {
           onClick={toggleProfileDropdown}
         >
           {singleContactLoading ? (
-            <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse"></div>
+            <div className="w-7 h-7 rounded-full bg-gray-200 skeleton-animation"></div>
           ) : singleContact?.imageData?.path ? (
             <img
               src={singleContact.imageData.path}
@@ -462,7 +462,7 @@ const CombinedNavbar = () => {
         </p>
         <span className="font-medium ml-1">
           {singleContactLoading ? (
-            <div className="h-4 w-20 bg-gray-200 animate-pulse rounded"></div>
+            <div className="h-4 w-20 bg-gray-200 skeleton-animation rounded"></div>
           ) : (
             `${firstName} ${lastName}`
           )}
@@ -498,7 +498,7 @@ const CombinedNavbar = () => {
       </div>
       <div
         className="px-2 py-2 border-t"
-  
+
       >
         {[
           ...(checkPermission("Billing")
@@ -541,12 +541,12 @@ const CombinedNavbar = () => {
       ref: null,
       content: (
         <NavLink
-          to= {userType === 'superAdmin' ?  "/admin-dashboard": "/home"}
+          to={userType === 'superAdmin' ? "/admin-dashboard" : "/home"}
           className="text-black"
           onClick={() => closeAllDropdowns()}
         >
           <IoHome
-            className={isActive((userType === 'superAdmin' ?"/admin-dashboard":"/home")) ? "text-custom-blue" : "text-black"}
+            className={isActive((userType === 'superAdmin' ? "/admin-dashboard" : "/home")) ? "text-custom-blue" : "text-black"}
           />
         </NavLink>
       ),
@@ -607,7 +607,7 @@ const CombinedNavbar = () => {
             onClick={toggleProfileDropdown}
           >
             {singleContactLoading ? (
-              <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse"></div>
+              <div className="w-7 h-7 rounded-full bg-gray-200 skeleton-animation"></div>
             ) : singleContact?.imageData?.path ? (
               <img
                 src={singleContact?.imageData?.path}
@@ -637,7 +637,7 @@ const CombinedNavbar = () => {
 
   return (
     <>
-    {/* <------------------------------- v1.0.0 */}
+      {/* <------------------------------- v1.0.0 */}
       <div className={`bg-white fixed top-0 left-0 right-0 z-50 shadow-sm ${userType === 'superAdmin' ? 'border-b border-gray-200' : ''}`}>
         <div className='mx-auto relative'>
           <div className={`flex justify-between items-center ${userType === 'superAdmin' ? 'px-2 py-1' : 'border-gray-100 p-3 sm:px-4'}`}>
@@ -742,19 +742,17 @@ const CombinedNavbar = () => {
                     {/* Super Admin More Dropdown */}
                     <div className="relative flex items-center ml-6" ref={moreRef}>
                       <button
-                        className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative transition-colors duration-300' : ''} ${
-                          getMoreDropdownItems().some((item) => isActive(item.path))
-                            ? "text-custom-blue font-bold"
-                            : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                        className={`${userType === 'superAdmin' ? 'h-[52px] flex items-center relative transition-colors duration-300' : ''} ${getMoreDropdownItems().some((item) => isActive(item.path))
+                          ? "text-custom-blue font-bold"
+                          : "text-gray-600 hover:text-custom-blue"
+                          }`}
                         onClick={toggleMoreDropdown}
                       >
                         More
                         {userType === 'superAdmin' ? (
                           <IoIosArrowDown
-                            className={`ml-1 transition-transform duration-300 ease-in-out ${
-                              dropdownState.moreDropdown ? "rotate-180" : ""
-                            }`}
+                            className={`ml-1 transition-transform duration-300 ease-in-out ${dropdownState.moreDropdown ? "rotate-180" : ""
+                              }`}
                           />
                         ) : (
                           dropdownState.moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />
@@ -771,11 +769,10 @@ const CombinedNavbar = () => {
                               <NavLink
                                 key={path}
                                 to={path}
-                                className={`${userType === 'superAdmin' ? 'h-[42px] flex items-center px-4 relative' : 'block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md'} ${
-                                  isActive(path)
-                                    ? userType === 'superAdmin' ? "text-custom-blue font-bold" : "bg-gray-100 text-custom-blue"
-                                    : userType === 'superAdmin' ? "text-gray-600 hover:text-custom-blue" : ""
-                                }`}
+                                className={`${userType === 'superAdmin' ? 'h-[42px] flex items-center px-4 relative' : 'block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md'} ${isActive(path)
+                                  ? userType === 'superAdmin' ? "text-custom-blue font-bold" : "bg-gray-100 text-custom-blue"
+                                  : userType === 'superAdmin' ? "text-gray-600 hover:text-custom-blue" : ""
+                                  }`}
                                 onClick={closeAllDropdowns}
                               >
                                 {label}
@@ -921,11 +918,11 @@ const CombinedNavbar = () => {
                           {dropdownState.assessmentDropdown && (
                             <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                               <div className="space-y-1">
-                            {/* // <---------------------- v1.0.1 */}
+                                {/* // <---------------------- v1.0.1 */}
                                 {[
                                   ...(enhancedCheckPermission("AssessmentTemplates")
-// v1.0.1---------------------- >
-                           
+                                    // v1.0.1---------------------- >
+
                                     ? [{ to: "/assessments-template", label: "Assessment Templates" }]
                                     : []),
                                   ...(enhancedCheckPermission("Assessments")
@@ -1220,11 +1217,11 @@ const CombinedNavbar = () => {
                           )}
                         </div>
                       )}
-  {/* // <---------------------- v1.0.1 */}
+                    {/* // <---------------------- v1.0.1 */}
                     {(enhancedCheckPermission("AssessmentTemplates") ||
                       enhancedCheckPermission
-                      // v1.0.1---------------------- >
-                      ("Assessments")) && (
+                        // v1.0.1---------------------- >
+                        ("Assessments")) && (
                         <div className="relative" ref={assessmentRef}>
                           <button
                             className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/assessments") ||
@@ -1243,11 +1240,11 @@ const CombinedNavbar = () => {
                           </button>
                           {dropdownState.assessmentDropdown && (
                             <div className="mt-1 ml-4 space-y-1">
-                            {/* // <---------------------- v1.0.1 */}
+                              {/* // <---------------------- v1.0.1 */}
                               {[
                                 ...(enhancedCheckPermission("AssessmentTemplates")
-                                // v1.0.1---------------------- >
-                                ? [
+                                  // v1.0.1---------------------- >
+                                  ? [
                                     {
                                       to: "/assessments-template",
                                       label: "Assessment Templates",

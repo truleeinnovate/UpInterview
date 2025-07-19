@@ -194,8 +194,8 @@ const Users = () => {
                     row.gender === "Male"
                       ? maleImage
                       : row.gender === "Female"
-                      ? femaleImage
-                      : genderlessImage;
+                        ? femaleImage
+                        : genderlessImage;
                 }}
               />
             ) : (
@@ -222,7 +222,7 @@ const Users = () => {
   ];
 
 
-  
+
 
   // Table Actions Configuration
   const tableActions = [
@@ -350,7 +350,7 @@ const Users = () => {
                   <KanbanView
                     currentFilteredRows={currentFilteredRows}
                     loading={usersLoading}
-                    setActionViewMore={() => {}}
+                    setActionViewMore={() => { }}
                     userData={usersRes}
                     toggleSidebar={() => navigate("new")}
                   />

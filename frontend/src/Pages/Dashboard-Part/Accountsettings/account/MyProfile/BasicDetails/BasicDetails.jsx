@@ -40,7 +40,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
 
   // console.log("ownerId ownerId",ownerId);
 
-  const { userProfile, isLoading, isError, error } = useUserProfile()
+  const { userProfile } = useUserProfile()
 
 
 
@@ -163,12 +163,12 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
 
           <div>
             <p className="text-sm text-gray-500">First Name</p>
-            <p className="font-medium">{contactData.firstName ? contactData.firstName.charAt(0).toUpperCase()+contactData.firstName.slice(1) : 'Not Provided'}</p>
+            <p className="font-medium">{contactData.firstName ? contactData.firstName.charAt(0).toUpperCase() + contactData.firstName.slice(1) : 'Not Provided'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Last Name</p>
-            <p className="font-medium">{contactData.lastName ? contactData.lastName.charAt(0).toUpperCase()+contactData.lastName.slice(1) : 'Not Provided'}</p>
+            <p className="font-medium">{contactData.lastName ? contactData.lastName.charAt(0).toUpperCase() + contactData.lastName.slice(1) : 'Not Provided'}</p>
           </div>
 
           <div>

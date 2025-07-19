@@ -42,8 +42,8 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between mb-6">
-          <div className="h-8 w-1/3 bg-gray-200 animate-pulse rounded"></div>
-          <div className="h-8 w-24 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-8 w-1/3 bg-gray-200 skeleton-animation rounded"></div>
+          <div className="h-8 w-24 bg-gray-200 skeleton-animation rounded"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
           {[...Array(6)].map((_, index) => (
@@ -56,32 +56,32 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
             >
               <div className="flex justify-between items-start mb-4 gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded mb-2"></div>
-                  <div className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-4 w-2/3 bg-gray-200 animate-pulse rounded mt-1"></div>
+                  <div className="h-6 w-3/4 bg-gray-200 skeleton-animation rounded mb-2"></div>
+                  <div className="h-4 w-full bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-4 w-2/3 bg-gray-200 skeleton-animation rounded mt-1"></div>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-lg"></div>
-                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-lg"></div>
+                  <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded-lg"></div>
+                  <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded-lg"></div>
                 </div>
               </div>
               <div className="mt-auto space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-12 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                      <div className="h-4 w-12 bg-gray-200 skeleton-animation rounded"></div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                      <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
+                      <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                      <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
                     </div>
                   </div>
-                  <div className="h-6 w-16 bg-gray-200 animate-pulse rounded-full"></div>
+                  <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-8 bg-gray-200 animate-pulse rounded-lg"></div>
-                  <div className="h-8 bg-gray-200 animate-pulse rounded-lg"></div>
+                  <div className="h-8 bg-gray-200 skeleton-animation rounded-lg"></div>
+                  <div className="h-8 bg-gray-200 skeleton-animation rounded-lg"></div>
                 </div>
               </div>
             </motion.div>

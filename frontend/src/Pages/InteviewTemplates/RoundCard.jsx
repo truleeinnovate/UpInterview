@@ -322,7 +322,7 @@ const RoundCard = ({
             {showQuestions && (
               <div className="space-y-4">
                 {questionsLoading ? (
-                  <div className="text-center py-4 animate-pulse border rounded-md shadow-sm">
+                  <div className="text-center py-4 skeleton-animation border rounded-md shadow-sm">
                     <span className="text-gray-600">Loading questions...</span>
                   </div>
                 ) :

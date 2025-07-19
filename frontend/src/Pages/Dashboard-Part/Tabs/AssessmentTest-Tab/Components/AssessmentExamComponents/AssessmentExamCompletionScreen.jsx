@@ -6,7 +6,7 @@ function CompletionScreen() {
             <div className="max-w-[90rem] mx-auto py-12 px-8">
                 <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 p-12 text-center transform transition-all duration-500 hover:scale-[1.02]">
                     <div className="relative w-32 h-32 mx-auto mb-12">
-                        <div className="absolute inset-0 bg-green-500 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 bg-green-500 rounded-full skeleton-animation"></div>
                         <div className="relative w-32 h-32 bg-green-100 rounded-full flex items-center justify-center">
                             <CheckCircleIcon className="h-20 w-20 text-green-500" />
                         </div>

@@ -28,7 +28,7 @@ const UserForm = ({ mode }) => {
   // Fetch all roles and filter based on user type
   const { data: allRoles, isLoading: rolesLoading } = useRolesQuery({ fetchAllRoles: true });
   const userType = AuthCookieManager.getUserType();
-  
+
   console.log('UserForm - userType:', userType);
   console.log('UserForm - allRoles:', allRoles);
   // ------------------------------ v1.0.0 >
@@ -36,7 +36,7 @@ const UserForm = ({ mode }) => {
   const organizationRoles = useMemo(() => {
     if (!allRoles) return [];
     // <---------------------- v1.0.0
-    
+
     if (userType === 'superAdmin') {
       // For superAdmin, show roles with roleType 'internal'
       const filteredRoles = allRoles.filter(role => role.roleType === 'internal');
@@ -182,7 +182,7 @@ const UserForm = ({ mode }) => {
       });
       // Find the role to get its level for display
       const selectedRole = organizationRoles?.find(role => role._id === initialUserData.roleId);
-      const roleDisplayText = selectedRole 
+      const roleDisplayText = selectedRole
         ? `${selectedRole.label} (Level ${selectedRole.level ?? 0})`
         : initialUserData.label || "";
       setSelectedCurrentRole(roleDisplayText);
@@ -294,7 +294,7 @@ const UserForm = ({ mode }) => {
         isFileRemoved,
         editMode
       });
-      
+
       console.log("User saved successfully");
       navigate("/account-settings/users");
     } catch (error) {
@@ -306,8 +306,8 @@ const UserForm = ({ mode }) => {
   };
 
   const handleClose = () => {
-    
-      navigate("/account-settings/users");  
+
+    navigate("/account-settings/users");
 
   };
 
@@ -338,7 +338,7 @@ const UserForm = ({ mode }) => {
       >
         {/* ------------------------------ v1.0.0 > */}
         {isLoading && <Loading message="Loading..." />}
-        
+
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-custom-blue">
@@ -446,9 +446,8 @@ const UserForm = ({ mode }) => {
                   placeholder="First Name"
                   value={userData.firstName}
                   onChange={handleChange}
-                  className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${
-                    isLoading ? "opacity-50" : ""
-                  }`}
+                  className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${isLoading ? "opacity-50" : ""
+                    }`}
                   disabled={isLoading}
                 />
                 {errors.firstName && (
@@ -472,11 +471,9 @@ const UserForm = ({ mode }) => {
                   placeholder="Last Name"
                   value={userData.lastName}
                   onChange={handleChange}
-                  className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                    errors.lastName ? "border-red-500" : "border-gray-300"
-                  } focus:border-custom-blue ${
-                    isLoading ? "opacity-50" : ""
-                  }`}
+                  className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.lastName ? "border-red-500" : "border-gray-300"
+                    } focus:border-custom-blue ${isLoading ? "opacity-50" : ""
+                    }`}
                   disabled={isLoading}
                 />
                 {errors.lastName && (
@@ -502,11 +499,9 @@ const UserForm = ({ mode }) => {
                     value={userData.email}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                      errors.email ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.email ? "border-red-500" : "border-gray-300"
+                      } focus:border-custom-blue ${isLoading ? "opacity-50" : ""
+                      }`}
                     placeholder="your.email@example.com"
                     autoComplete="email"
                     disabled={isLoading}
@@ -537,11 +532,9 @@ const UserForm = ({ mode }) => {
                     value={userData.countryCode}
                     placeholder="Country Code"
                     onChange={handleCountryCodeChange}
-                    className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${
-                      errors.phone ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue w-1/4 mr-2 ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
+                    className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${errors.phone ? "border-red-500" : "border-gray-300"
+                      } focus:border-custom-blue w-1/4 mr-2 ${isLoading ? "opacity-50" : ""
+                      }`}
                     disabled={isLoading}
                   >
                     <option value="+91">+91 (IN)</option>
@@ -555,11 +548,9 @@ const UserForm = ({ mode }) => {
                     value={userData.phone}
                     placeholder="Enter Phone Number"
                     onChange={handlePhoneInput}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                      errors.phone ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.phone ? "border-red-500" : "border-gray-300"
+                      } focus:border-custom-blue ${isLoading ? "opacity-50" : ""
+                      }`}
                     disabled={isLoading}
                   />
                 </div>
@@ -589,11 +580,9 @@ const UserForm = ({ mode }) => {
                     value={selectedCurrentRole}
                     placeholder="Select Role"
                     onClick={toggleDropdownRole}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                      errors.roleId ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue cursor-pointer ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.roleId ? "border-red-500" : "border-gray-300"
+                      } focus:border-custom-blue cursor-pointer ${isLoading ? "opacity-50" : ""
+                      }`}
                     disabled={isLoading}
                   />
                   <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
@@ -661,16 +650,15 @@ const UserForm = ({ mode }) => {
               <button
                 type="submit"
                 form="user-form"
-                className={`mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 disabled={isLoading}
               >
                 {editMode ? "Save Changes" : "Save"}
               </button>
             </div>
           </form>
-            {/* ------------------------------ v1.0.0 > */}
+          {/* ------------------------------ v1.0.0 > */}
         </div>
       </div>
     </Modal>

@@ -569,23 +569,23 @@ const selectedLabelId = useMemo(() => {
     <div className="w-full px-4 py-6 mt-8">
       {/* Question List Skeleton */}
       <div className="mt-[60px] space-y-4">
-        <div className="bg-gray-200 h-12 rounded-t-lg animate-pulse"></div>
+        <div className="bg-gray-200 h-12 rounded-t-lg skeleton-animation"></div>
         <div className="p-4 bg-blue-50 rounded-b-lg border border-t-0 border-gray-200">
           {Array(3).fill().map((_, idx) => (
             <div key={idx} className="border border-gray-200 mb-4 rounded-lg bg-white shadow-sm">
               <div className="flex justify-between items-center p-4 border-b border-gray-200">
                 <div className="flex items-center w-3/4">
-                  <div className="h-6 w-6 bg-gray-200 rounded-full mr-2 animate-pulse"></div>
-                  <div className="h-6 w-full bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-6 w-6 bg-gray-200 rounded-full mr-2 skeleton-animation"></div>
+                  <div className="h-6 w-full bg-gray-200 rounded skeleton-animation"></div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-6 w-12 bg-gray-200 rounded-full animate-pulse"></div>
-                  <div className="h-6 w-16 bg-gray-200 rounded-md animate-pulse"></div>
-                  <div className="h-8 w-16 bg-gray-200 rounded-md animate-pulse"></div>
+                  <div className="h-6 w-12 bg-gray-200 rounded-full skeleton-animation"></div>
+                  <div className="h-6 w-16 bg-gray-200 rounded-md skeleton-animation"></div>
+                  <div className="h-8 w-16 bg-gray-200 rounded-md skeleton-animation"></div>
                 </div>
               </div>
               <div className="p-4">
-                <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-1/2 bg-gray-200 rounded skeleton-animation"></div>
               </div>
             </div>
           ))}

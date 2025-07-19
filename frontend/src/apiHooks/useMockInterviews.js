@@ -2,19 +2,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useRef } from "react";
-import { fetchFilterData } from "../utils/dataUtils";
+import { fetchFilterData } from "../api";
 import { config } from "../config";
 import { usePermissions } from "../Context/PermissionsContext";
 import { uploadFile } from "./imageApis";
 
 export const useMockInterviews = () => {
   const queryClient = useQueryClient();
-  const { sharingPermissionscontext = {} } = usePermissions() || {};
+  const { effectivePermissions } = usePermissions();
   const initialLoad = useRef(true);
 
-  // Use simple assignment instead of memo if issues persist
-  const mockInterviewPermissions =
-    sharingPermissionscontext?.mockInterviews || {};
+  // Check if user has permission to view mock interviews
+  const hasViewPermission = effectivePermissions?.MockInterviews?.View;
 
   // Query implementation
   const {
@@ -24,12 +23,12 @@ export const useMockInterviews = () => {
     error,
     refetch: refetchMockInterviews,
   } = useQuery({
-    queryKey: ["mockinterviews", mockInterviewPermissions],
+    queryKey: ["mockinterviews"],
     queryFn: async () => {
       try {
         const filteredInterviews = await fetchFilterData(
           "mockinterview",
-          mockInterviewPermissions
+          effectivePermissions
         );
         // console.log('Raw API response:', filteredInterviews[0]?.rounds?.interviewers);
         // console.log('Raw API response:', filteredInterviews);
@@ -39,8 +38,13 @@ export const useMockInterviews = () => {
         throw err;
       }
     },
-    enabled: !!mockInterviewPermissions, // Original simpler condition
+    enabled: !!hasViewPermission, // Only fetch if user has permission
     retry: 1,
+    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
+    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
   // useEffect(() => {
@@ -70,22 +74,22 @@ export const useMockInterviews = () => {
     }) => {
       const status =
         formData.rounds.interviewers?.length > 0 ? "Requests Sent" : "Draft";
-    
-        // <----------------------------- v1.0.0
+
+      // <----------------------------- v1.0.0
       // Ensure rounds is always an array
-      const rounds = Array.isArray(formData.rounds) 
-        ? formData.rounds 
+      const rounds = Array.isArray(formData.rounds)
+        ? formData.rounds
         : [formData.rounds];
-  
+
       // Format the dateTime properly for the backend
       const formatDateTime = (dateTimeStr) => {
         if (!dateTimeStr) return new Date().toISOString();
-        
+
         try {
           // Parse the date string (format: "18-07-2025 03:47 PM - 04:17")
           const [datePart, timePart] = dateTimeStr.split(' ');
           const [day, month, year] = datePart.split('-');
-          
+
           // Format as ISO string (backend expects this format)
           return new Date(
             `${year}-${month}-${day}T${timePart}:00.000Z`
@@ -95,7 +99,7 @@ export const useMockInterviews = () => {
           return new Date().toISOString();
         }
       };
-  
+
       const payload = {
         skills: formData.entries?.map((entry) => ({
           skill: entry.skill,
@@ -120,7 +124,7 @@ export const useMockInterviews = () => {
         ownerId: userId,
         tenantId: organizationId,
       };
-  
+
       console.log('Sending payload:', JSON.stringify(payload, null, 2));
       // v1.0.0 ----------------------------->
 

@@ -2,7 +2,7 @@ import React from 'react';
 
 const RoleSkeleton = () => {
   return (
-    <div className="space-y-6 mb-4 animate-pulse">
+    <div className="space-y-6 mb-4 skeleton-animation">
       {/* Header skeleton */}
       <div className="flex justify-between items-center mt-3 px-3">
         <div className="h-6 bg-gray-200 rounded w-48"></div>

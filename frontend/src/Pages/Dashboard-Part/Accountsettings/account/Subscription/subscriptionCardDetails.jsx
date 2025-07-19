@@ -9,9 +9,69 @@ import { handleMembershipChange } from "../../../../../utils/PaymentpageValidati
 //import { useCustomContext } from "../../../Context/Contextfetch";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
-import Loading from '../../../../../Components/Loading.js';
+
 import logo from '../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp'
 
+// Loading Skeleton for Subscription Card Details
+const SubscriptionCardDetailsSkeleton = () => {
+    return (
+        <div className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md">
+            <div className="skeleton-animation">
+                {/* Header skeleton */}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="h-6 bg-gray-200 rounded w-48"></div>
+                    <div className="h-7 w-7 bg-gray-200 rounded"></div>
+                </div>
+
+                {/* Description skeleton */}
+                <div className="h-4 bg-gray-200 rounded w-80 mb-6"></div>
+
+                {/* Content skeleton */}
+                <div className="w-full flex gap-6">
+                    <div className="w-9/12 md:w-7/12 sm:w-6/12">
+                        {/* Secure payment section skeleton */}
+                        <div className="bg-blue-50 p-4 mb-4 rounded-lg border border-blue-200">
+                            <div className="h-5 bg-gray-200 rounded w-32 mb-2"></div>
+                            <div className="space-y-2">
+                                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            </div>
+                        </div>
+
+                        {/* Price section skeleton */}
+                        <div className="mt-6 mb-4">
+                            <div className="h-6 bg-gray-200 rounded w-48 mb-2"></div>
+                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                        </div>
+                    </div>
+
+                    <div className="w-1/2">
+                        {/* Membership type skeleton */}
+                        <div className="h-5 bg-gray-200 rounded w-32 mb-4"></div>
+                        <div className="space-y-4">
+                            {[1, 2].map((item) => (
+                                <div key={item} className="border p-2 rounded-md bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-4 w-4 bg-gray-200 rounded"></div>
+                                        <div className="space-y-1">
+                                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                            <div className="h-3 bg-gray-200 rounded w-32"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Button skeleton */}
+                        <div className="mt-6">
+                            <div className="h-10 bg-gray-200 rounded w-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // Simple function to load Razorpay script
 const loadRazorpayScript = () => {
@@ -404,12 +464,7 @@ const SubscriptionCardDetails = () => {
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
 
             {processing ? (
-                // <div className="flex flex-col items-center justify-center h-screen">
-                //     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#217989]"></div>
-                //     <p className="mt-4 text-lg font-medium text-white">Processing your Subscription...</p>
-                // </div>
-                <Loading message="Processing your Subscription..." />
-
+                <SubscriptionCardDetailsSkeleton />
             ) : (
                 <form
                     className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md"

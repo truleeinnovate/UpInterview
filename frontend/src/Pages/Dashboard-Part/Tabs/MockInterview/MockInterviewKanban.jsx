@@ -17,8 +17,8 @@ const MockInterviewKanban = ({ mockinterviews, onRescheduleClick, onCancel, load
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between mb-6">
-          <div className="h-8 w-1/3 bg-gray-200 animate-pulse rounded"></div>
-          <div className="h-8 w-24 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-8 w-1/3 bg-gray-200 skeleton-animation rounded"></div>
+          <div className="h-8 w-24 bg-gray-200 skeleton-animation rounded"></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
@@ -33,44 +33,44 @@ const MockInterviewKanban = ({ mockinterviews, onRescheduleClick, onCancel, load
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
                   <div className="ml-3">
-                    <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-6 w-3/4 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-6 w-6 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 skeleton-animation rounded"></div>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-1.5">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-1.5">
-                    <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-4 w-4 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
                   </div>
                   <div></div>
                 </div>

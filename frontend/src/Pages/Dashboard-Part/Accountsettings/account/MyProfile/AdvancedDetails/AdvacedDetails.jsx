@@ -8,7 +8,7 @@ import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 
 const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
   console.log("type in AdvancedDetails", type);
-  
+
   // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
 
@@ -28,7 +28,7 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
   }
 
 
-  const { userProfile, isLoading, isError, error } = useUserProfile(ownerId)
+  const { userProfile } = useUserProfile(ownerId)
 
 
   // console.log("userId AdvancedDetails", userId);
