@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - fixed the default profile icon issue
 import React from "react";
 
 import {
@@ -72,7 +73,8 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
 
           <div className="mb-3">
             <div className="w-16 h-16 bg-custom-blue rounded-full mx-auto flex items-center justify-center mb-2 shadow-lg">
-              {candidate ? (
+              {/* v1.0.0 ------------------------------------------------- */}
+              {candidate?.ImageData ? (
                 <img
                   className="w-full h-full object-cover rounded-full"
                   src={candidate?.ImageData?.path}
@@ -81,10 +83,14 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
               ) : (
                 <User className="w-8 h-8 text-custom-bg opacity-75" />
               )}
+              {/* v1.0.0 ------------------------------------------------- */}
             </div>
 
             <h3 className="text-center font-bold text-lg">
-            {candidate?.FirstName.charAt(0).toUpperCase() + candidate?.FirstName.slice(1)} {candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1)}
+              {candidate?.FirstName.charAt(0).toUpperCase() +
+                candidate?.FirstName.slice(1)}{" "}
+              {candidate?.LastName.charAt(0).toUpperCase() +
+                candidate?.LastName.slice(1)}
             </h3>
 
             <p className="text-center text-base  pt-1 pb-2 text-gray-600">

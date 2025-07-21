@@ -1,4 +1,5 @@
 // v1.0.0  - mansoor - removed the sort by createdAt in the mock interview controller to save the mockinterview in the online
+// v1.0.1 - Ashok - added the sort by _id in the createMockInterview controller
 // controllers/mockInterviewController.js
 const { MockInterview } = require("../models/mockinterview");
 
@@ -25,6 +26,9 @@ exports.createMockInterview = async (req, res) => {
     const lastMockInterview = await MockInterview.findOne({})
       // <---------------- v1.0.0
       // .sort({ createdAt: -1 })
+      // v1.0.1 ------------------------------------->
+      .sort({_id:-1})
+      // v1.0.1 <-------------------------------------
       // v1.0.0------------------->
       .select("mockInterviewCode")
       .lean();
