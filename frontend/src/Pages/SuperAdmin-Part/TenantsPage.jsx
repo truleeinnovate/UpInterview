@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - fixed proper loading views
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
@@ -197,14 +198,17 @@ function TenantsPage() {
   };
 
   // Simple loading state - only show loading if we have no data and are loading
-  if (isLoading && (!tenants || tenants.length === 0)) {
-    return <Loading message="Loading tenants..." />;
-  }
+  // v1.0.0 <----------------------------------------------------------
+  // if (isLoading && (!tenants || tenants.length === 0)) {
+  //   return <Loading message="Loading tenants..." />;
+  // }
 
   // Show content even if permissions are still loading but we have data
-  if (tenants && tenants.length > 0) {
-    // Continue with rendering
-  }
+
+  // if (tenants && tenants.length > 0) {
+  //   // Continue with rendering
+  // }
+  // v1.0.0 ----------------------------------------------------------->
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
