@@ -352,31 +352,31 @@ const SuggestedQuestionsComponent = ({
         <div className="w-full px-5">
             <div className={`fixed flex items-center justify-between ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-12 right-12" : "top-32 left-5 right-5"}`}>
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-64 bg-gray-200 rounded-md skeleton-animation"></div>
-                    <div className="h-10 w-64 bg-gray-200 rounded-md skeleton-animation"></div>
+                    <div className="h-10 w-64 bg-gray-200 rounded-md animate-pulse"></div>
+                    <div className="h-10 w-64 bg-gray-200 rounded-md animate-pulse"></div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="h-6 w-12 bg-gray-200 rounded skeleton-animation"></div>
+                    <div className="h-6 w-12 bg-gray-200 rounded animate-pulse"></div>
                     <div className="flex gap-2">
-                        <div className="h-10 w-10 bg-gray-200 rounded-md skeleton-animation"></div>
-                        <div className="h-10 w-10 bg-gray-200 rounded-md skeleton-animation"></div>
+                        <div className="h-10 w-10 bg-gray-200 rounded-md animate-pulse"></div>
+                        <div className="h-10 w-10 bg-gray-200 rounded-md animate-pulse"></div>
                     </div>
-                    <div className="h-10 w-10 bg-gray-200 rounded-md skeleton-animation"></div>
+                    <div className="h-10 w-10 bg-gray-200 rounded-md animate-pulse"></div>
                 </div>
             </div>
             <div className="mt-[110px] space-y-4">
                 {Array(3).fill().map((_, idx) => (
                     <div key={idx} className="border border-gray-200 rounded-lg shadow-sm">
                         <div className="flex justify-between items-center border-b border-gray-200 px-4 py-2">
-                            <div className="h-6 w-3/4 bg-gray-200 rounded skeleton-animation"></div>
+                            <div className="h-6 w-3/4 bg-gray-200 rounded animate-pulse"></div>
                             <div className="flex items-center gap-2">
-                                <div className="h-6 w-16 bg-gray-200 rounded-md skeleton-animation"></div>
-                                <div className="h-8 w-16 bg-gray-200 rounded-md skeleton-animation"></div>
+                                <div className="h-6 w-16 bg-gray-200 rounded-md animate-pulse"></div>
+                                <div className="h-8 w-16 bg-gray-200 rounded-md animate-pulse"></div>
                             </div>
                         </div>
                         <div className="px-4 py-2">
-                            <div className="h-4 w-1/2 bg-gray-200 rounded skeleton-animation mb-2"></div>
-                            <div className="h-4 w-1/3 bg-gray-200 rounded skeleton-animation"></div>
+                            <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse mb-2"></div>
+                            <div className="h-4 w-1/3 bg-gray-200 rounded animate-pulse"></div>
                         </div>
                     </div>
                 ))}

@@ -268,77 +268,50 @@ const InvoiceTab = () => {
 
     const tableColumns = [
         {
-            header: "Payment ID",
-            accessor: "paymentId",
-            cell: (value) => (
-                <span className="font-medium text-gray-900">{value}</span>
-            )
+            key: 'invoiceNumber',
+            header: 'Invoice Number',
+            render: (value) => value || 'N/A',
         },
         {
-            header: "Invoice Number",
-            accessor: "invoiceNumber",
-            cell: (value) => (
-                <span className="text-gray-600">{value}</span>
-            )
+            key: 'plan',
+            header: 'Plan',
+            render: (value) => value || 'N/A',
         },
         {
-            header: "Customer",
-            accessor: "customer",
-            cell: (customer) => (
-                <div>
-                    <div className="font-medium text-gray-900">{customer?.name || 'N/A'}</div>
-                    <div className="text-sm text-gray-500">{customer?.userId || 'N/A'}</div>
-                </div>
-            )
+            key: 'amount',
+            header: 'Amount',
+            render: (value) => value && value.total ? `₹${value.total}` : 'N/A',
         },
         {
-            header: "Plan",
-            accessor: "plan",
-            cell: (value) => (
-                <span className="text-gray-600">{value || 'N/A'}</span>
-            )
+            key: 'status',
+            header: 'Status',
+            render: (value) => (
+                <span className={`px-2 py-2 rounded-full text-xs ${
+                    value === 'paid' ? 'bg-green-100 text-green-800' :
+                    value === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    value === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                }`}>
+                    { value ? value.charAt(0).toUpperCase() + value.slice(1) : 'N/A'}
+                </span>
+            ),
         },
         {
-            header: "Amount",
-            accessor: "amount",
-            cell: (amount) => (
-                <div>
-                    <div className="font-medium text-gray-900">${amount.total || 0}</div>
-                    <div className="text-sm text-gray-500">Paid: ${amount.paid || 0}</div>
-                </div>
-            )
+            key: 'dates',
+            header: 'Created At',
+            render: (value) => value && value.createdAt ? new Date(value.createdAt).toLocaleDateString() : 'N/A',
         },
-        {
-            header: "Status",
-            accessor: "status",
-            cell: (value) => {
-                const statusColors = {
-                    'paid': 'bg-green-100 text-green-800',
-                    'pending': 'bg-yellow-100 text-yellow-800',
-                    'cancelled': 'bg-red-100 text-red-800',
-                    'failed': 'bg-red-100 text-red-800',
-                    'refunded': 'bg-blue-100 text-blue-800'
-                };
-                const colorClass = statusColors[value?.toLowerCase()] || 'bg-gray-100 text-gray-800';
-                return (
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}>
-                        {value}
-                    </span>
-                );
-            }
-        }
     ];
 
     const tableActions = [
         {
-            label: "View Details",
-            onClick: (row) => {
-                navigate(`details/${row.id}`, { state: { invoiceData: row } });
-            },
-            icon: FileText,
-            className: "text-custom-blue hover:bg-blue-50"
-        }
+            key: 'view',
+            label: 'View Details',
+            icon: <FileText className="w-4 h-4 text-custom-blue" />,
+            onClick: (row) => navigate(`details/${row.id}`, { state: { invoiceData: row } }),
+        },
     ];
+
 
     const FilteredData = () => {
         if (!Array.isArray(billingData)) return [];

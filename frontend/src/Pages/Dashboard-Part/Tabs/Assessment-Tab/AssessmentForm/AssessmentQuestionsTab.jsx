@@ -133,7 +133,7 @@ const AssessmentQuestionsTab = ({
   // };
 
   return (
-    <div className="">
+    <>
       {/* Header Section */}
       <div className="px-6">
         {passScoreType === "Overall" && (
@@ -518,7 +518,7 @@ const AssessmentQuestionsTab = ({
       )}
       {/* // <---------------------- v1.0.0 */}
 
-    </div>
+    </>
   );
 };
 
