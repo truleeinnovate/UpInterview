@@ -95,7 +95,7 @@ const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => { }, handl
                   </div>
                   <div className="flex flex-col  text-gray-600">
                     <span>Payment Service</span>
-                    <span className='text-black font-medium'>{invoice?.type || ""}</span>
+                    <span className='text-black font-medium'>{invoice?.type ? invoice?.type.charAt(0).toUpperCase() + invoice?.type.slice(1) : ""}</span>
                   </div>
                   <div className="flex flex-col   text-gray-600">
                     <span>Total Amount</span>
@@ -103,7 +103,7 @@ const InvocieKanban = ({ currentFilteredRows, handleUserClick = () => { }, handl
                   </div>
                   <div className="flex flex-col   text-gray-600">
                     <span>Status</span>
-                    <span className='text-black font-medium' >{invoice?.status || 0}</span>
+                    <span className='text-black font-medium' >{invoice?.status ? invoice?.status.charAt(0).toUpperCase() + invoice?.status.slice(1) : ""}</span>
                   </div>
                 </div>
               </div>

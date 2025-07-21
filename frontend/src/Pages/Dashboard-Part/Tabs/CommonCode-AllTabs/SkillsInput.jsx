@@ -54,7 +54,7 @@ const CustomDropdown = ({
         value={value}
         onClick={() => setShow(!show)}
         // <-----v1.0.0--
-        className="block w-full px-3 py-2 h-8 text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 whitespace-nowrap overflow-ellipsis"
+        className="block w-full px-3 py-2 h-8 text-gray-900 border border-gray-400 rounded focus:outline-none focus:ring-1 whitespace-nowrap overflow-ellipsis"
         // -----v1.0.0---> 
         
       />
@@ -199,7 +199,7 @@ const SkillsField = ({
             { editingIndex === index || editingIndex === 'all' ? (
               // EDIT MODE
               <>
-                <div className="flex justify-between border border-gray-300 bg-white rounded w-full p-2 mr-3">
+                <div className="flex justify-between border border-gray-400 bg-white rounded w-full p-2 mr-3">
                   <div className="w-1/3 px-1">
                     <CustomDropdown
                       name="skill"
@@ -257,7 +257,7 @@ const SkillsField = ({
             ) : (
               // DISPLAY MODE
               <>
-                <div className="flex justify-between border border-gray-300 bg-white rounded w-full mr-3">
+                <div className="flex justify-between border border-gray-400 bg-white rounded w-full mr-3">
                   <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
                     {entry.skill}
                   </div>

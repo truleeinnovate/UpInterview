@@ -62,7 +62,7 @@ const QuestionBank = ({ assessmentId,
 
       {/* Tab Navigation - keep this outside the scrollable area */}
       <div
-        className={`fixed bg-white px-5 
+        className={`fixed bg-white px-5 z-40
         ${activeTab === "SuggesstedQuestions" && type !== "interviewerSection" && type !== "assessment" ? "h-[180px]" : "h-[110px]"}
         ${activeTab === "MyQuestionsList" && type !== "interviewerSection" && type !== "assessment" ? "h-[170px]" : ""}
         ${type === "interviewerSection" || type === "assessment" ? "w-[95%] px-4" : "w-full z-40 top-16 sm:top-0 md:top-0 lg:top-0 xl:top-0 2xl:top-0 left-0 right-0 pt-16"}`}

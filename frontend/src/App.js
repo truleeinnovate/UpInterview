@@ -788,7 +788,7 @@ const MainAppRoutes = ({
                     <Route path="documents" element={<DocumentsSection />} />
                   </Route>
                 )}
-                {hasPermission("InterviewerGroups") && (
+                {organization && hasPermission("InterviewerGroups") && (
                   <Route
                     path="interviewer-groups"
                     element={<InterviewerGroups />}
@@ -839,7 +839,11 @@ const MainAppRoutes = ({
                   </Route>
                 )}
                 {hasPermission("Subscription") && (
-                  <Route path="subscription" element={<Subscription />} />
+                  
+                  <><Route path="subscription" element={<Subscription />} />
+                  <Route path="subscription/card-details" element={<SubscriptionCardDetails />} />
+                  </>
+                  
                 )}
                 {hasPermission("Security") && (
                   <Route path="security" element={<Security />} />
