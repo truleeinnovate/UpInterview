@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from "js-cookie";
 import "./subscription-animations.css";
-import LoadingButton from "../../../../../Components/LoadingButton";
 import { usePositions } from '../../../../../apiHooks/usePositions';
 import { usePermissions } from '../../../../../Context/PermissionsContext';
 import { usePermissionCheck } from '../../../../../utils/permissionUtils';
@@ -112,6 +111,7 @@ const Subscription = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
+  const [loadingPlanId, setLoadingPlanId] = useState(null);
 
   // Fetch subscription data
   useEffect(() => {
@@ -309,6 +309,7 @@ const Subscription = () => {
   };
 
   const submitPlans = async (plan) => {
+    setLoadingPlanId(plan.planId);
     try {
       if (subscriptionData.subscriptionPlanId === plan.planId &&
         subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") &&
@@ -361,6 +362,8 @@ const Subscription = () => {
     } catch (error) {
       console.error('Error submitting plan:', error);
       toast.error('Failed to process plan selection');
+    } finally {
+      setLoadingPlanId(null);
     }
   };
 
@@ -496,52 +499,59 @@ const Subscription = () => {
                       <span className="text-sm sm:text-base md:text-lg font-medium"> /{isAnnual ? "year" : "month"}</span>
                     </p>
                   </div>
-                  <LoadingButton
-                    onClick={() => submitPlans(plan)}
-                    isLoading={isMutationLoading}
-                    loadingText="Processing..."
-                    // <----- v1.0.0 -----
-                    className={`w-full font-semibold py-2 mt-4 rounded-lg text-xs
-                  ${isHighlighted(plan) ? "bg-[#bcedf6] text-black hover:bg-[#bcedf6] hover:text-black" : "bg-custom-blue text-white hover:bg-custom-blue hover:text-white"}
-                  ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}
-                  ${(() => {
-                        // Check if this is an upgrade button
-                        if (subscriptionData.subscriptionPlanId) {
-                          const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
-                          const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
-                          if (currentPlanIndex !== -1 && thisPlanIndex > currentPlanIndex &&
-                            subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly")) {
-                            return "upgrade-button-animation";
-                          }
-                        }
-                        return "";
-                      })()}`}
-                    // ----- v1.0.0----->
-                    disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"}
-                  >
-                    {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"
-                      ? "Subscribed"
-                      : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "created"
-                        ? "Continue to Payment"
-                        : (() => {
-                          // Determine if this plan is higher or lower than current plan
-                          if (subscriptionData.subscriptionPlanId) {
-                            const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
-                            const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
-
-                            // Only compare plans when viewing the same billing cycle as the current subscription
-                            if (subscriptionData.selectedBillingCycle !== (isAnnual ? "annual" : "monthly")) {
-                              return "Choose";
-                            }
-
-                            // If current plan index exists and this plan index exists
-                            if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
-                              return thisPlanIndex > currentPlanIndex ? "Upgrade" : "Choose";
-                            }
-                          }
-                          return "Choose";
-                        })()}
-                  </LoadingButton>
+                  
+                  <button
+                onClick={() => submitPlans(plan)}
+                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
+                ${isHighlighted(plan) ? "bg-white text-custom-blue" : "text-white bg-custom-blue"}
+                ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}
+                ${(() => {
+                  // Check if this is an upgrade button
+                  if (subscriptionData.subscriptionPlanId) {
+                    const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
+                    const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
+                    if (currentPlanIndex !== -1 && thisPlanIndex > currentPlanIndex && 
+                        subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly")) {
+                      return "upgrade-button-animation";
+                    }
+                  }
+                  return "";
+                })()}`}
+                disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"}
+              >
+                {loadingPlanId === plan.planId ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"
+                ? "Subscribed"
+                : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "created"
+                ? "Continue to Payment"
+                : (() => {
+                    // Determine if this plan is higher or lower than current plan
+                    if (subscriptionData.subscriptionPlanId) {
+                      const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
+                      const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
+                      
+                      // Only compare plans when viewing the same billing cycle as the current subscription
+                      if (subscriptionData.selectedBillingCycle !== (isAnnual ? "annual" : "monthly")) {
+                        return "Choose";
+                      }
+                      
+                      // If current plan index exists and this plan index exists
+                      if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
+                        return thisPlanIndex > currentPlanIndex ? "Upgrade" : "Choose";
+                      }
+                    }
+                    return "Choose";
+                  })()
+                )}
+              </button>
 
                 </div>
               ))}
@@ -617,7 +627,3 @@ const Subscription = () => {
 };
 
 export default Subscription;
-
-
-
-
