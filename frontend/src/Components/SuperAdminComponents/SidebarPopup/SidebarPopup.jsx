@@ -1,3 +1,4 @@
+// v1.0.0 <-------------------------------------------------------------------->
 import { useState } from "react";
 import { Minimize, Expand, X } from "lucide-react";
 
@@ -24,7 +25,9 @@ function SidebarPopup({ title, children, onClose }) {
             : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
         }`}
       >
-        <div className="sticky top-0 border border-gray-300 bg-white px-4 sm:px-6 py-4 z-10">
+        {/* v1.0.0 <-------------------------------------------------------------------- */}
+        <div className="sticky top-0 bg-white px-4 sm:px-6 py-4 z-10">
+          {/* v1.0.0 ------------------------------------------------------------------> */}
           <div className="flex justify-between items-center">
             <div>
               <h2 className="ml-8 text-xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-bold text-custom-blue">
