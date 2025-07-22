@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  fixed scheduled assessment code unique issue
+// v1.0.1 -   removed cretedat because we wre already using timestamp
 const mongoose = require("mongoose");
 
 const ScheduledAssessmentSchema = new mongoose.Schema(
@@ -32,8 +33,12 @@ const ScheduledAssessmentSchema = new mongoose.Schema(
       ref: "Users",
       required: true,
     },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
+    
+    // <-------------------------------v1.0.1
+    // createdAt: { type: Date, default: Date.now },
+    // updatedAt: { type: Date, default: Date.now },
+ // ------------------------------v1.0.1 > 
+    
     isActive: { type: Boolean, default: true },
     order: { type: String, default: "Assessment 1" }, // New field for display name
   },

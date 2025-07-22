@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  displaying more fileds in result
 import { format } from 'date-fns';
 import manImage from '../../../Images/man.png';
 import { ReactComponent as IoIosArrowBack } from '../../../../../icons/IoIosArrowBack.svg';
@@ -12,10 +13,47 @@ function AssessmentResultView({
   isFullscreen,
   assessmentQuestions // assessmentQuestions come from AssessmentViewDetails.jsx
 }) {
+  // <---------------------- v1.0.0
+  // Helper to check if a date is valid
+  const isValidDate = (date) => {
+    const d = new Date(date);
+    return date && !isNaN(d);
+  };
+
+  // Helper to get expiry date from candidate or fallback
+  const getExpiryDate = () => {
+    if (candidate.expiryAt && isValidDate(candidate.expiryAt)) return candidate.expiryAt;
+    if (candidate.schedule && candidate.schedule.expiryAt && isValidDate(candidate.schedule.expiryAt)) return candidate.schedule.expiryAt;
+    return null;
+  };
+
+  // Section pass/fail logic
   const isEachSection = assessment.passScoreBy === 'Each Section';
   const totalAnsweredQuestions = candidate.sections.reduce((count, section) => {
     return count + section.Answers.reduce((acc, answer) => (!answer.isAnswerLater ? acc + 1 : acc), 0);
   }, 0);
+
+  // Section results for 'Each Section'
+  const sectionResults = isEachSection
+    ? candidate.sections.map(section => ({
+        name: section.SectionName,
+        score: section.totalScore,
+        passScore: section.passScore,
+        result: section.totalScore >= (section.passScore || 0) ? 'pass' : 'fail',
+        answered: section.Answers.filter(a => !a.isAnswerLater).length,
+        total: section.Answers.length,
+      }))
+    : [];
+
+  // Overall result
+  const overallResult = candidate.result;
+
+  // Time taken calculation
+  const totalDuration = assessment.Duration ? parseInt(assessment.Duration, 10) : 30;
+  const timeTaken = candidate.remainingTime !== undefined && candidate.remainingTime !== null
+    ? Math.floor((totalDuration * 60 - candidate.remainingTime) / 60)
+    : '-';
+ // <-------------------------------v1.0.0
 
   return (
     <div className={`flex ${isFullscreen ? 'flex-col' : 'flex-col'} gap-6 h-full min-h-screen p-6`}>
@@ -54,17 +92,37 @@ function AssessmentResultView({
                     <span className="text-gray-600">Assessment:</span>
                     <span className="font-medium">{assessment.AssessmentTitle}</span>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
+                  <div className="flex justify-between text-sm">
+                  {/* // <---------------------- v1.0.0 */}
+
                     <span className="text-gray-600">Status:</span>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      candidate.result === 'pass' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      overallResult === 'pass' ? 'bg-green-100 text-green-800' :
+                      overallResult === 'fail' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {candidate.result.charAt(0).toUpperCase() + candidate.result.slice(1)}
+                      {overallResult ? (overallResult.charAt(0).toUpperCase() + overallResult.slice(1)) : 'N/A'}
                     </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Expiry:</span>
+                    <span className="font-medium">
+                      {isValidDate(getExpiryDate()) ? format(new Date(getExpiryDate()), 'MMM dd, yyyy') : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Completed:</span>
+                    <span className="font-medium">
+                      {isValidDate(candidate.completionDate)
+                        ? format(new Date(candidate.completionDate), 'MMM dd, yyyy hh:mm a')
+                        : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Time Taken:</span>
+                    <span className="font-medium">{timeTaken} / {totalDuration} mins</span>
                   </div>
                 </div>
               </div>
-
               {/* Score Details */}
               <div className="space-y-3">
                 <h4 className="font-medium text-gray-800">Score Details</h4>
@@ -87,24 +145,25 @@ function AssessmentResultView({
                   </div>
                 </div>
               </div>
-
-              {/* Time Details */}
-              <div className="pt-4 border-t border-gray-200 text-sm">
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Time Taken:</span>
-                    <span className="font-medium">
-                      {Math.floor((30 * 60 - candidate.remainingTime) / 60)} / 30 mins
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Completed:</span>
-                    <span className="font-medium">
-                      {format(new Date(candidate.completionDate), 'MMM dd, yyyy hh:mm a')}
-                    </span>
+              {/* Section Results (if passScoreBy is Each Section) */}
+              {isEachSection && (
+                <div className="space-y-2 pt-2">
+                  <h4 className="font-medium text-gray-800">Section Results</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {sectionResults.map((section, idx) => (
+                      <div key={section.name || idx} className="flex justify-between items-center p-2 rounded border border-gray-200">
+                        <span className="font-medium text-gray-700">{section.name}</span>
+                        <span className="text-xs text-gray-500">Score: {section.score}/{section.passScore}</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          section.result === 'pass' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {section.result.charAt(0).toUpperCase() + section.result.slice(1)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -120,13 +179,12 @@ function AssessmentResultView({
               const candidateSection = candidate.sections.find(
                 (candSec) => candSec.SectionName === section.sectionName
               );
-              const answerCount = candidateSection?.Answers.reduce(
-                (acc, item) => (!item.isAnswerLater ? acc + 1 : acc),
-                0
-              ) || 0;
+              const answerCount = candidateSection?.Answers.filter(a => !a.isAnswerLater).length || 0;
               const sectionPass = isEachSection
                 ? candidateSection?.totalScore >= (candidateSection?.passScore || 0)
                 : true;
+    // <-------------------------------v1.0.1
+
 
               return (
                 <div key={section.sectionName || index} className="last:border-b-0">
