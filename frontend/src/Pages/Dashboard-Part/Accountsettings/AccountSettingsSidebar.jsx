@@ -124,12 +124,6 @@ const AccountSettingsSidebar = () => {
     'hrms-ats': 'HrmsAts'
   };
   
-  console.log('🔍 AccountSettingsSidebar Permission Map Debug:', {
-    userType,
-    permissionMap,
-    isInitialized,
-    loading
-  });
 
   // Filter navigation based on user type and permissions using direct checkPermission
   const filteredNavigation = navigation.map(section => ({
@@ -140,24 +134,24 @@ const AccountSettingsSidebar = () => {
         const superAdminItems = ['my-profile', 'roles', 'users'];
         
         if (!superAdminItems.includes(item.id)) {
-          console.log(`🔍 SuperAdmin filtering out ${item.id}: not in super admin items list`);
+          // console.log(`🔍 SuperAdmin filtering out ${item.id}: not in super admin items list`);
           return false;
         }
         
         const permissionKey = permissionMap[item.id];
         const hasPermission = checkPermission(permissionKey);
         
-        console.log(`🔍 SuperAdmin ${item.id}:`, {
-          permissionKey: permissionMap[item.id],
-          hasPermission
-        });
+        // console.log(`🔍 SuperAdmin ${item.id}:`, {
+        //   permissionKey: permissionMap[item.id],
+        //   hasPermission
+        // });
         return hasPermission;
       }
       
       // For non-super admin users
       const permissionKey = permissionMap[item.id];
       if (!permissionKey) {
-        console.log(`🔍 Non-super admin filtering out ${item.id}: no permission key`);
+        // console.log(`🔍 Non-super admin filtering out ${item.id}: no permission key`);
         return false;
       }
       
@@ -170,7 +164,7 @@ const AccountSettingsSidebar = () => {
     })
   })).filter(section => section.items.length > 0);
   
-  console.log('📋 Filtered Navigation:', filteredNavigation);
+  // console.log('📋 Filtered Navigation:', filteredNavigation);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((prev) => !prev);

@@ -1,4 +1,6 @@
-// v1.0.0  -  Ashraf  -  getting form in loop,fprm scroll issue 
+// v1.0.0  -  Ashraf  -  getting form in loop,form scroll issue 
+// v1.0.1  -  Ashraf  -  super adim creation issue
+
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Camera,
@@ -288,8 +290,15 @@ const UserForm = ({ mode }) => {
       }
       // ------------------------------ v1.0.0 >
       // Proceed with form submission
+      // <-------------------------------v1.0.1
+      let submitUserData = { ...userData };
+      // Remove isProfileCompleted for superAdmin
+      if (userType === 'superAdmin' && 'isProfileCompleted' in submitUserData) {
+        delete submitUserData.isProfileCompleted;
+      }
+      // ------------------------------v1.0.1 >
       const result = await addOrUpdateUser.mutateAsync({
-        userData,
+        userData: submitUserData,
         file,
         isFileRemoved,
         editMode
@@ -320,9 +329,9 @@ const UserForm = ({ mode }) => {
   );
 
   // Show loading state while roles are being fetched
-  if (rolesLoading) {
-    return <Loading message="Loading roles..." />;
-  }
+  // if (rolesLoading) {
+  //   return <Loading message="Loading roles..." />;
+  // }
 
   return (
     <Modal

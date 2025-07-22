@@ -173,6 +173,10 @@
 
 // export default RoleView;
 
+
+
+// v1.0.0  -  Ashraf  -  displaying label.level UI changed
+
 import { useState } from 'react';
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -231,48 +235,44 @@ const RoleView = ({ type }) => {
         'px-6': !isFullScreen,
       })}>
         <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-custom-blue">{role.label}</h2>
-            <div className="flex items-center gap-2">
-              {(type === 'superAdmin' ? permissions.Roles?.Edit : permissions.Roles?.Edit && role.roleName !== 'Admin') && (
-                <button onClick={handleEdit} className="p-1 rounded-full hover:bg-white/10">
-                  <PencilIcon className="h-5 w-5 text-gray-500" />
-                </button>
-              )}
-              <button onClick={() => setIsExpanded(!isExpanded)} className="p-1 rounded-full hover:bg-white/10">
-                {isExpanded ? (
-                  <ArrowsPointingInIcon className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <ArrowsPointingOutIcon className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
+          {/* // <-------------------------------v1.0.0 */}
+          {/* Top right action icons */}
+          <div className="flex justify-end items-center gap-2 mb-2">
+            {(type === 'superAdmin' ? permissions.Roles?.Edit : permissions.Roles?.Edit && role.roleName !== 'Admin') && (
               <button
-                onClick={() => navigate('/account-settings/roles')}
+                onClick={handleEdit}
                 className="p-1 rounded-full hover:bg-white/10"
               >
-                <XMarkIcon className="h-5 w-5 text-gray-500" />
+                <PencilIcon className="h-5 w-5 text-gray-500" />
               </button>
-            </div>
+            )}
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1 rounded-full hover:bg-white/10"
+            >
+              {isExpanded ? (
+                <ArrowsPointingInIcon className="h-5 w-5 text-gray-500" />
+              ) : (
+                <ArrowsPointingOutIcon className="h-5 w-5 text-gray-500" />
+              )}
+            </button>
+            <button
+              onClick={() => navigate('/account-settings/roles')}
+              className="p-1 rounded-full hover:bg-white/10"
+            >
+              <XMarkIcon className="h-5 w-5 text-gray-500" />
+            </button>
           </div>
-
+          {/* Main content starts here */}
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-lg font-medium">{role.label}</h2>
+            <span className="text-xs bg-custom-blue text-white px-2 py-1 rounded-full">
+              Level {role.level ?? 0}
+            </span>
+          </div>
+          <p className="text-gray-600 text-sm mb-6">{role.description || 'No description available'}</p>
+          {/* // <-------------------------------v1.0.0 > */}
           <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-4">Basic Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Label</p>
-                  <p className="text-sm text-gray-600">{role.label}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Description</p>
-                  <p className="text-sm text-gray-600">{role.description || 'No description available'}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Hierarchy Level</p>
-                  <p className="text-sm text-gray-600">Level: {role.level ?? 0}</p>
-                </div>
-              </div>
-            </div>
 
             {type !== 'superAdmin' && role.inherits && role.inherits.length > 0 && (
               <div>

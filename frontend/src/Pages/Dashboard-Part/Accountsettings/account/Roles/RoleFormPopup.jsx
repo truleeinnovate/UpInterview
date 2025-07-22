@@ -469,7 +469,7 @@
 //                           type="checkbox"
 //                           checked={formData.inherits.includes(role._id)}
 //                           onChange={() => handleInheritChange(role._id)}
-//                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+//                           className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue bg-custom-blue"
 //                         />
 //                         <span className="text-sm text-gray-700">
 //                           {role.label}
@@ -503,7 +503,7 @@
 //                                   ?.permissions || []).includes(perm)
 //                               }
 //                               onChange={() => handlePermissionChange(objectName, perm)}
-//                               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+//                               className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue bg-custom-blue"
 //                             />
 //                             <span className="text-sm text-gray-700">{formatWithSpaces(perm)}</span>
 //                           </label>
@@ -540,6 +540,7 @@
 // export default RoleFormPopup;
 
 // v1.0.0  -  Ashraf  -  edit is not working
+// v1.0.1  -  Ashraf  -  super admin and non super admin edit and create role issues fixed
 
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
@@ -570,7 +571,10 @@ const RoleFormPopup = ({ onSave, onClose }) => {
   const permissionKey = 'Roles';
   const navigate = useNavigate();
   const { id } = useParams();
-  const editMode = !!id;
+  // Support both '/role-edit/:id' and '/create' paths
+  // <-------------------------------v1.0.1
+  const editMode = !!id && id !== 'create';
+  // ------------------------------v1.0.1 >
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload.tenantId;
@@ -614,6 +618,10 @@ const RoleFormPopup = ({ onSave, onClose }) => {
   );
 
   useEffect(() => {
+    // <-------------------------------v1.0.1
+    // Wait until permissions are loaded and initialized
+    if (permissionsLoading || !isInitialized) return;
+    // ------------------------------v1.0.1 >
     if (editMode && !hasEditPermission) {
       navigate('/account-settings/roles');
       return;
@@ -675,8 +683,10 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           if (!role) {
             throw new Error('Role not found');
           }
+          // ------------------------------v1.0.1 >
 
-          let mergedObjects = role.objects;
+          let mergedObjects;
+          // <-------------------------------v1.0.1
           let inherits = role.inherits || [];
           let level = role.level ?? 0;
 
@@ -687,26 +697,33 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             const override = overrideResponse.data;
 
             if (override) {
-              const overrideObjectsMap = new Map(
-                override?.objects?.map((obj) => [obj.objectName, obj.permissions]) || []
-              );
-              const roleObjectsMap = new Map(
-                role.objects.map((obj) => [obj.objectName, obj.permissions])
-              );
-
-              mergedObjects = Array.from(
-                new Map([...roleObjectsMap, ...overrideObjectsMap]).entries()
-              ).map(([objectName, permissions]) => ({
-                objectName,
-                permissions,
-                visibility: role.objects.find((o) => o.objectName === objectName)?.visibility || 'view_all',
-                type: role.roleType || 'organization',
-              }));
-
+              // <-------------------------------v1.0.1
+              // Only use objects present in the base role
+              mergedObjects = role.objects.map((baseObj) => {
+                const overrideObj = override.objects?.find((o) => o.objectName === baseObj.objectName);
+                const mergedPermissions = { ...baseObj.permissions };
+                if (overrideObj) {
+                  Object.keys(overrideObj.permissions).forEach((perm) => {
+                    mergedPermissions[perm] = overrideObj.permissions[perm];
+                  });
+                }
+                return {
+                  objectName: baseObj.objectName,
+                  permissions: mergedPermissions,
+                  visibility: baseObj.visibility || 'view_all',
+                  type: baseObj.type || role.roleType,
+                };
+              });
+              // Do NOT add objects from override that are not in the base role
               inherits = override.inherits || role.inherits || [];
               level = override.level ?? role.level ?? 0;
+            } else {
+              mergedObjects = role.objects;
             }
+          } else {
+            mergedObjects = role.objects;
           }
+          // ------------------------------v1.0.1 >
 
           setAvailablePermissions(permissionsMap);
 
@@ -749,8 +766,10 @@ const RoleFormPopup = ({ onSave, onClose }) => {
         console.error('Error fetching data:', error);
       }
     };
+    // <-------------------------------v1.0.1
     fetchData();
-  }, [memoizedTenantId, memoizedId, memoizedEditMode, memoizedUserType, hasEditPermission, hasCreatePermission, organizationRoles]);
+  }, [memoizedTenantId, memoizedId, memoizedEditMode, memoizedUserType, hasEditPermission, hasCreatePermission, organizationRoles, permissionsLoading, isInitialized]);
+  // ------------------------------v1.0.1 >
 
   const handleLabelChange = useCallback((e) => {
     if (userType !== 'superAdmin') return; // Only super admins can edit label
@@ -969,6 +988,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
         };
 
         if (editMode) {
+          // PATCH the main roles collection
           const response = await axios.patch(
             `${config.REACT_APP_API_URL}/roles/${formData._id}`,
             roleData
@@ -978,6 +998,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             onSave(response.data);
           }
         } else {
+          // POST to the main roles collection
           const response = await axios.post(
             `${config.REACT_APP_API_URL}/roles`,
             roleData
@@ -988,11 +1009,30 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           }
         }
       } else {
+        // <-------------------------------v1.0.1
+        // Only include changed objects in overrideData for non-superAdmin
+        const changedObjects = formData.objects.filter((obj) => {
+          const initialObj = initialFormDataRef.current.objects.find(
+            (o) => o.objectName === obj.objectName
+          );
+          if (!initialObj) return true; // new object
+          // Compare permissions (as sets)
+          const permsA = new Set(obj.permissions);
+          const permsB = new Set(initialObj.permissions);
+          if (permsA.size !== permsB.size || [...permsA].some(p => !permsB.has(p))) return true;
+          // Compare visibility
+          if (obj.visibility !== initialObj.visibility) return true;
+          return false;
+        });
+
         const overrideData = {
           tenantId: tenantId,
           roleName: formData.roleName,
           level: formData.level,
-          objects: formData.objects.map((obj) => {
+          inherits: formData.inherits,
+        };
+        if (changedObjects.length > 0) {
+          overrideData.objects = changedObjects.map((obj) => {
             const permissions = {};
             const availablePerms = availablePermissions[obj.objectName]?.permissions || [];
             availablePerms.forEach((perm) => {
@@ -1003,9 +1043,9 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               permissions,
               visibility: obj.visibility,
             };
-          }),
-          inherits: formData.inherits,
-        };
+          });
+        }
+        // ------------------------------v1.0.1 >
 
         if (editMode) {
           const overrideResponse = await axios.get(
@@ -1071,10 +1111,10 @@ const RoleFormPopup = ({ onSave, onClose }) => {
     setIsFullScreen((prev) => !prev);
   };
 
-  const visibleObjects = Object.keys(availablePermissions).filter((objectName) => {
-    const visibility = formData.objects.find((o) => o.objectName === objectName)?.visibility || availablePermissions[objectName]?.visibility || 'view_all';
-    return userType === 'superAdmin' ? true : visibility === 'view_all';
-  });
+  // <-------------------------------v1.0.1
+  const visibleObjects = userType === 'superAdmin'
+    ? Object.keys(availablePermissions)
+    : formData.objects.map(obj => obj.objectName);
 
   return (
     <Modal
@@ -1089,7 +1129,8 @@ const RoleFormPopup = ({ onSave, onClose }) => {
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-custom-blue">
-              {editMode ? 'Edit Role' : 'Create New Role'}
+              {editMode ? 'Edit Role' : 'Create Role'}
+             {/* // <-------------------------------v1.0.1 */}
             </h2>
             <div className="flex items-center gap-2">
               <button
@@ -1142,47 +1183,28 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                         placeholder="Enter role name"
                       />
                     </div>
-                  </>
-                )}
-                {userType !== 'superAdmin' && editMode && (
-                  <>
+                    //
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Label
+                        Description
                       </label>
-                      <input
-                        type="text"
-                        value={formData.label}
-                        className="w-full border rounded-md px-3 py-2 border-gray-300 bg-gray-100 focus:outline-none"
-                        readOnly
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Role Name
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.roleName}
-                        className="w-full border rounded-md px-3 py-2 border-gray-300 bg-gray-100 focus:outline-none"
-                        readOnly
+                      <textarea
+                        value={formData.description}
+                        onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        className="w-full border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 min-h-[100px] resize-none"
+                        rows={3}
                       />
                     </div>
                   </>
                 )}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, description: e.target.value }))
-                    }
-                    className="w-full border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 min-h-[100px] resize-none"
-                    rows={3}
-                  />
-                </div>
+                {userType !== 'superAdmin' && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-medium">{formData.label}</h3>
+                    </div>
+                    <p className="text-gray-600 text-sm">{formData.description || 'No description available'}</p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Hierarchy Level
@@ -1220,7 +1242,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                             type="checkbox"
                             checked={formData.inherits.includes(role._id)}
                             onChange={() => handleInheritChange(role._id)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-gray-300 accent-custom-blue focus:ring-custom-blue"
                           />
                           <span className="text-sm text-gray-700">
                             {role.label}
@@ -1237,68 +1259,66 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               <div className="mb-8 border-b pb-6">
                 <h3 className="text-base sm:text-lg font-medium mb-4">Add New Object</h3>
                 <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Object Name
-                    </label>
-                    <input
-                      type="text"
-                      value={newObjectName}
-                      onChange={(e) => setNewObjectName(e.target.value)}
-                      className="w-full border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
-                      placeholder="Enter new object name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Visibility
-                    </label>
-                    <select
-                      value={newObjectVisibility}
-                      onChange={(e) => setNewObjectVisibility(e.target.value)}
-                      className="w-full border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
-                    >
-                      <option value="super_admin_only">Super Admin Only</option>
-                      <option value="view_all">View All</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Type
-                    </label>
-                    <select
-                      value={newObjectType}
-                      onChange={(e) => setNewObjectType(e.target.value)}
-                      className="w-full border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
-                    >
-                      <option value="internal">Internal</option>
-                      <option value="organization">Organization</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      New Permission
-                    </label>
-                    <div className="flex space-x-2 items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Object Name</label>
                       <input
                         type="text"
-                        value={newPermissionName}
-                        onChange={(e) => setNewPermissionName(e.target.value)}
+                        value={newObjectName}
+                        onChange={(e) => setNewObjectName(e.target.value)}
                         className="w-full border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
-                        placeholder="Enter new permission name"
+                        placeholder="Enter new object name"
                       />
-                      <select
-                        value={newPermissionValue}
-                        onChange={(e) => setNewPermissionValue(e.target.value === 'true')}
-                        className="border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
-                      >
-                        <option value={true}>True</option>
-                        <option value={false}>False</option>
-                      </select>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
+                        <select
+                          value={newObjectVisibility}
+                          onChange={(e) => setNewObjectVisibility(e.target.value)}
+                          className="w-full border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
+                        >
+                          <option value="super_admin_only">Super Admin Only</option>
+                          <option value="view_all">View All</option>
+                        </select>
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                        <select
+                          value={newObjectType}
+                          onChange={(e) => setNewObjectType(e.target.value)}
+                          className="w-full border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
+                        >
+                          <option value="internal">Internal</option>
+                          <option value="organization">Organization</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">New Permission</label>
+                    <div className="flex flex-wrap gap-2 items-center justify-between">
+                      <div className="flex flex-1 gap-2">
+                        <input
+                          type="text"
+                          value={newPermissionName}
+                          onChange={(e) => setNewPermissionName(e.target.value)}
+                          className="border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
+                          placeholder="Enter new permission name"
+                        />
+                        <select
+                          value={newPermissionValue}
+                          onChange={(e) => setNewPermissionValue(e.target.value === 'true')}
+                          className="border rounded-md px-3 py-2 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
+                        >
+                          <option value={true}>True</option>
+                          <option value={false}>False</option>
+                        </select>
+                      </div>
                       <button
                         type="button"
                         onClick={handleAddNewPermission}
-                        className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200"
+                        className="ml-auto px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200"
                         disabled={!newPermissionName.trim()}
                       >
                         Add Permission
@@ -1308,24 +1328,22 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                       {newObjectPermissions.map((perm, index) => (
                         <div
                           key={index}
-                          className="flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"
+                          className="flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700 gap-1"
                         >
                           <span>{perm.name}: {perm.value.toString()}</span>
                           <button
                             type="button"
                             onClick={() => handleToggleNewPermissionValue(perm.name)}
-                            className="ml-2 px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-xs"
+                            className="ml-1 px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-xs"
+                            title="Toggle value"
                           >
-                            Toggle
+                            ↔
                           </button>
                           <button
                             type="button"
-                            onClick={() =>
-                              setNewObjectPermissions((prev) =>
-                                prev.filter((p) => p.name !== perm.name)
-                              )
-                            }
-                            className="ml-2 text-red-500 hover:text-red-700"
+                            onClick={() => setNewObjectPermissions((prev) => prev.filter((p) => p.name !== perm.name))}
+                            className="ml-1 text-red-500 hover:text-red-700 text-lg"
+                            title="Delete permission"
                           >
                             ×
                           </button>
@@ -1333,14 +1351,16 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                       ))}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleAddNewObject}
-                    className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200"
-                    disabled={!newObjectName.trim() || newObjectPermissions.length === 0}
-                  >
-                    Add Object
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleAddNewObject}
+                      className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200"
+                      disabled={!newObjectName.trim() || newObjectPermissions.length === 0}
+                    >
+                      Add Object
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1357,17 +1377,10 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                           {userType === 'superAdmin' && (
                             <div className="space-y-2 mt-2">
                               <div>
-                                <label className="block text-xs font-medium text-gray-600">
-                                  Visibility
-                                </label>
+                                <label className="block text-xs font-medium text-gray-600">Visibility</label>
                                 <select
-                                  value={
-                                    formData.objects.find((o) => o.objectName === objectName)
-                                      ?.visibility || availablePermissions[objectName]?.visibility
-                                  }
-                                  onChange={(e) =>
-                                    handleUpdateObject(objectName, 'visibility', e.target.value)
-                                  }
+                                  value={formData.objects.find((o) => o.objectName === objectName)?.visibility || availablePermissions[objectName]?.visibility}
+                                  onChange={(e) => handleUpdateObject(objectName, 'visibility', e.target.value)}
                                   className="w-full border rounded-md px-3 py-1 text-sm border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
                                 >
                                   <option value="super_admin_only">Super Admin Only</option>
@@ -1375,17 +1388,10 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-600">
-                                  Type
-                                </label>
+                                <label className="block text-xs font-medium text-gray-600">Type</label>
                                 <select
-                                  value={
-                                    formData.objects.find((o) => o.objectName === objectName)?.type ||
-                                    availablePermissions[objectName]?.type
-                                  }
-                                  onChange={(e) =>
-                                    handleUpdateObject(objectName, 'type', e.target.value)
-                                  }
+                                  value={formData.objects.find((o) => o.objectName === objectName)?.type || availablePermissions[objectName]?.type}
+                                  onChange={(e) => handleUpdateObject(objectName, 'type', e.target.value)}
                                   className="w-full border rounded-md px-3 py-1 text-sm border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200"
                                 >
                                   <option value="internal">Internal</option>
@@ -1395,28 +1401,27 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                             </div>
                           )}
                         </div>
-                        {userType === 'superAdmin' && (
+                        {/* Only allow delete for super admin in create mode */}
+                        {userType === 'superAdmin' && !editMode && (
                           <button
                             type="button"
                             onClick={() => handleDeleteObject(objectName)}
-                            className="text-red-500 text-sm hover:underline"
+                            className="text-red-500 hover:bg-red-100 rounded-full p-2 ml-2"
+                            title="Delete Object"
                           >
-                            Delete Object
+                            🗑️
                           </button>
                         )}
                       </div>
                       <div className="space-y-2 grid grid-cols-2 gap-2">
                         {(availablePermissions[objectName]?.permissions || []).map((perm) => (
-                          <div key={perm} className="flex items-center space-x-2">
-                            <label className="flex items-center space-x-2">
+                          <div key={perm} className="flex items-center gap-2">
+                            <label className="flex items-center gap-2">
                               <input
                                 type="checkbox"
-                                checked={
-                                  (formData.objects.find((o) => o.objectName === objectName)
-                                    ?.permissions || []).includes(perm)
-                                }
+                                checked={(formData.objects.find((o) => o.objectName === objectName)?.permissions || []).includes(perm)}
                                 onChange={(e) => handlePermissionChange(objectName, perm, e.target.checked)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="rounded border-gray-300 accent-custom-blue focus:ring-custom-blue"
                               />
                               <span className="text-sm text-gray-700">{formatWithSpaces(perm)}</span>
                             </label>
@@ -1424,7 +1429,8 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                               <button
                                 type="button"
                                 onClick={() => handleDeletePermission(objectName, perm)}
-                                className="text-red-500 hover:text-red-700 text-xs"
+                                className="text-red-500 hover:bg-red-100 rounded-full p-1 text-xs"
+                                title="Delete Permission"
                               >
                                 ×
                               </button>
@@ -1442,13 +1448,13 @@ const RoleFormPopup = ({ onSave, onClose }) => {
               <button
                 type="button"
                 onClick={() => navigate('/account-settings/roles')}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200"
+                className="px-4 py-2 border border-custom-blue rounded-lg hover:bg-custom-blue/90 hover:text-white transition-colors duration-200"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200"
+                className={`ml-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200${userType === 'superAdmin' ? ' font-semibold' : ''}`}
               >
                 {editMode ? 'Save Changes' : 'Create Role'}
               </button>
@@ -1456,6 +1462,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           </form>
         </div>
       </div>
+      {/* // <-------------------------------v1.0.1 > */}
     </Modal>
   );
 };

@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  added data reverse to load updated first
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -65,10 +66,13 @@ const UsersAccountTab = () => {
           const response = await axios.get(url, {
             headers: {
               'Content-Type': 'application/json',
-              // No Authorization header for super admin API
+              // No Authorization or tenantId header for super admin API
             },
           });
-          setSuperAdminUsers(response.data || []);
+          // <-------------------------------v1.0.0
+          // Reverse to show latest at top
+          setSuperAdminUsers((response.data || []).reverse());
+          // ------------------------------v1.0.0 >
         } catch (error) {
           console.error('Error fetching super admin users:', error);
           toast.error('Failed to load super admin users');

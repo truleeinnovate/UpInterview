@@ -1,6 +1,7 @@
 // v1.0.0 - Mansoor - adjust the height of navbar (superadmin and normal user) for removing the gap below the navbar and home content and account settings
 // v1.0.1  -  Ashraf  -  Assessment_Template permission name changed to AssessmentTemplates
 // v1.0.2  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout
+// v1.0.3  -  Ashraf  -  updated loading tabs issue
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -106,6 +107,10 @@ const CombinedNavbar = () => {
 
   // Enhanced permission check - use dynamic permissions only
   const enhancedCheckPermission = (permissionKey) => {
+ // <-------------------------------v1.0.3
+    // If permissions are still loading, show all tabs (do not hide anything)
+    if (loading || !isInitialized) return true;
+    // ------------------------------v1.0.3 >
     return checkPermission(permissionKey);
   };
 

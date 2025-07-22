@@ -1,5 +1,6 @@
 // v1.0.0  -  mansoor  -  removed unnecessary comments from this file
 //v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
+//v1.0.2  -  Ashraf  -  added create role path
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -870,6 +871,12 @@ const MainAppRoutes = ({
                       path="role-edit/new"
                       element={<RoleFormPopup />}
                     />
+                    {/* v1.0.2  -  Ashraf  -  added create role path */}
+                    <Route
+                      path="create"
+                      element={<RoleFormPopup />}
+                    />
+                    {/* v1.0.2  -  Ashraf  -  added create role path */}
                     <Route
                       path="view/:id"
                       element={<RoleView />}

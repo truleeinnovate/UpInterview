@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - getting tenant by id is not working on online
   // v1.0.1  -  Ashraf  -  removed recent activity code
   // v1.0.2  -  Ashraf  -  getting error in azure for organization get based on id
+  // v1.0.3  -  Ashraf  -  fixed suepr admin creation issue
   const bcrypt = require("bcrypt");
   const Tenant = require("../models/Tenant");
   const { Users } = require("../models/Users");
@@ -55,8 +56,16 @@
         editMode,
         _id,
         isEmailVerified,
-        type, // Extract type from UserData
+         // <-------------------------------v1.0.3
+        userType, // Extract type from UserData
       } = UserData;
+
+      // Remove isProfileCompleted for super admins if present
+      const isSuperAdmin = userType === "superAdmin";
+      if (isSuperAdmin && 'isProfileCompleted' in UserData) {
+        delete UserData.isProfileCompleted;
+      }
+      // ------------------------------v1.0.3 >
   
       // Validate roleId
       if (!mongoose.Types.ObjectId.isValid(roleId)) {
@@ -65,11 +74,10 @@
       }
   
       // Validate tenantId for non-super admins
-      const isSuperAdmin = type === "superAdmin";
-      if (!isSuperAdmin && !mongoose.Types.ObjectId.isValid(tenantId)) {
-        console.log(`Invalid tenantId: ${tenantId} for non-super admin user`);
-        return res.status(400).json({ message: "Invalid tenantId format" });
-      }
+      // if (!isSuperAdmin && !mongoose.Types.ObjectId.isValid(tenantId)) {
+      //   console.log(`Invalid tenantId: ${tenantId} for non-super admin user`);
+      //   return res.status(400).json({ message: "Invalid tenantId format" });
+      // }
   
       if (editMode && _id) {
         // Update existing user
@@ -87,7 +95,11 @@
         existingUser.tenantId = isSuperAdmin ? null : tenantId; // Set tenantId to null for super admins
         existingUser.roleId = new mongoose.Types.ObjectId(roleId); // Ensure ObjectId
         existingUser.countryCode = countryCode;
-        existingUser.isProfileCompleted = isProfileCompleted || false;
+         // <-------------------------------v1.0.3
+        if (!isSuperAdmin) {
+          existingUser.isProfileCompleted = isProfileCompleted || false;
+        }
+        // ------------------------------v1.0.3 >
         existingUser.status = status || "active";
         existingUser.isEmailVerified = isEmailVerified || false;
   
@@ -96,7 +108,9 @@
           _id: savedUser._id.toString(),
           roleId: savedUser.roleId.toString(),
           tenantId: savedUser.tenantId ? savedUser.tenantId.toString() : null,
-          type,
+           // <-------------------------------v1.0.3
+          userType,
+          // ------------------------------v1.0.3 >
         });
   
         // Update contact
@@ -138,9 +152,11 @@
           tenantId: isSuperAdmin ? null : tenantId, // Set tenantId to null for super admins
           roleId: new mongoose.Types.ObjectId(roleId), // Ensure ObjectId
           countryCode,
-          isProfileCompleted: isProfileCompleted || false,
           status: status || "active",
           isEmailVerified: isEmailVerified || false,
+           // <-------------------------------v1.0.3
+          ...(isSuperAdmin ? {} : { isProfileCompleted: isProfileCompleted || false }),
+          // ------------------------------v1.0.3 >
         });
   
         const savedUser = await newUser.save();
@@ -150,7 +166,7 @@
           _id: savedUserId.toString(),
           roleId: savedUser.roleId.toString(),
           tenantId: savedUser.tenantId ? savedUser.tenantId.toString() : null,
-          type,
+          userType,
         });
   
         if (!savedUserId) {

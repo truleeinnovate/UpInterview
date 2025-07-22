@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  increased catch loading time
 import axios from 'axios';
 import { config } from '../config';
 import AuthCookieManager from './AuthCookieManager/AuthCookieManager';
@@ -70,8 +71,9 @@ export const hasValidCachedPermissions = () => {
 
     const { timestamp } = JSON.parse(cached);
     const age = Date.now() - timestamp;
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
+    // <-------------------------------v1.0.0
+    const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+    // ------------------------------v1.0.0 >
     const isValid = age < CACHE_DURATION;
     
     if (isValid) {
