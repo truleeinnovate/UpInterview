@@ -1,4 +1,7 @@
 /* eslint-disable react/prop-types */
+
+// v1.0.0 - Venkatesh - added custom location
+
 import { useEffect, useState, useRef } from 'react';
 import AssessmentDetails from './AssessmentType';
 import TechnicalType from './TechnicalType';
@@ -47,6 +50,8 @@ const CustomDropdown = ({
     const displayValue = optionKey ? option[optionKey] : option;
     return displayValue?.toString().toLowerCase().includes(searchTerm.toLowerCase());
   });
+
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -770,6 +775,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }, 0);
   };
 
+  
+
   const renderStageIndicator = () => {
 
     // Update flag when moving to rounds
@@ -946,6 +953,46 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       setShowAssessment(true);
     }
   };
+
+  // Location dropdown state - same pattern as company
+  const [showDropdownLocation, setShowDropdownLocation] = useState(false);
+  const [isCustomLocation, setIsCustomLocation] = useState(false);
+  const [locationSearchTerm, setLocationSearchTerm] = useState('');
+  const locationDropdownRef = useRef(null);
+
+  const handleLocationSelect = (location) => {
+    if (location === 'others') {
+      setIsCustomLocation(true);
+      setFormData((prev) => ({ ...prev, Location: "" }));
+    } else {
+      setIsCustomLocation(false);
+      setFormData((prev) => ({ ...prev, Location: location.LocationName }));
+    }
+    setShowDropdownLocation(false);
+    setLocationSearchTerm('');
+    if (errors.location) {
+      setErrors((prevErrors) => ({ ...prevErrors, location: "" }))
+    }
+  };
+
+  // Handle click outside location dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (locationDropdownRef.current && !locationDropdownRef.current.contains(event.target)) {
+        setShowDropdownLocation(false);
+        setLocationSearchTerm('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const filteredLocations = locations?.filter(location =>
+    location.LocationName?.toString().toLowerCase().includes(locationSearchTerm.toLowerCase())
+  );
 
   return (
     <div className="flex items-center justify-center">
@@ -1307,21 +1354,96 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       </div>
 
                       {/* location */}
+                      {/*<-----v1.0.0------ */}
                       <div>
-                        <CustomDropdown
-                          label="Location"
-                          name="location"
-                          value={formData.Location}
-                          options={locations}
-                          onChange={(e) => {
-                            setFormData({ ...formData, Location: e.target.value });
-                          }}
-                          disabledError={false}
-                          placeholder="Select a Location"
-                          optionKey="LocationName"
-                          optionValue="LocationName"
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Location <span className="text-red-500">*</span>
+                        </label>
+                        {!isCustomLocation ? (
+                          <div className="relative" ref={locationDropdownRef}>
+                            <input
+                              type="text"
+                              value={formData.Location}
+                              onClick={() => setShowDropdownLocation(!showDropdownLocation)}
+                              placeholder="Select a Location"
+                              autoComplete="off"
+                              className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.location ? 'border-red-500' : 'border-gray-300'}`}
+                              readOnly
+                            />
+                            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                              <ChevronDown className="text-lg" onClick={() => setShowDropdownLocation(!showDropdownLocation)} />
+                            </div>
+                            {showDropdownLocation && (
+                              <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
+                                <div className="border-b">
+                                  <div className="flex items-center border rounded px-2 py-1 m-2">
+                                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                                    <input
+                                      type="text"
+                                      placeholder="Search Location"
+                                      value={locationSearchTerm}
+                                      onChange={(e) => setLocationSearchTerm(e.target.value)}
+                                      className="pl-8 focus:border-black focus:outline-none w-full"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="max-h-48 overflow-y-auto">
+                                  {filteredLocations?.length > 0 ? (
+                                    filteredLocations.map((location, index) => (
+                                      <div
+                                        key={location._id || index}
+                                        onClick={() => handleLocationSelect(location)}
+                                        className="cursor-pointer hover:bg-gray-200 p-2"
+                                      >
+                                        {location.LocationName}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="p-2 text-gray-500">No locations found</div>
+                                  )}
+                                </div>
+                                <div className="border-t border-gray-200">
+                                  <div
+                                    onClick={() => handleLocationSelect('others')}
+                                    className="cursor-pointer hover:bg-gray-200 p-2"
+                                  >
+                                    <span className="text-gray-900 font-medium">+ Others</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={formData.Location}
+                              onChange={(e) => {
+                                setFormData({ ...formData, Location: e.target.value });
+                                if (errors.location) {
+                                  setErrors((prevErrors) => ({ ...prevErrors, location: "" }));
+                                }
+                              }}
+                              className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.location ? 'border-red-500' : 'border-gray-300'}`}
+                              placeholder="Enter custom location name"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsCustomLocation(false);
+                                setFormData({ ...formData, Location: "" });
+                              }}
+                              className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        {errors.location && <p className="text-red-500 text-xs pt-1">{errors.location}</p>}
                       </div>
+                      {/* -----v1.0.0-----> */}
                     </div>
                     {/* </div> */}
 
@@ -1529,5 +1651,3 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 };
 
 export default PositionForm;
-
-

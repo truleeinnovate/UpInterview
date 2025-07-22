@@ -221,7 +221,9 @@ const CandidateFullscreen = () => {
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">Skills</h4>
+              <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                Skills
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {candidate?.skills ? (
                   candidate.skills.map((skill, index) => (
@@ -232,19 +234,19 @@ const CandidateFullscreen = () => {
                     >
                     <span
                       key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.skill}
                     </span>
                     <span
                       key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.experience}
                     </span>
                     <span
                       key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.expertise}
                     </span>
