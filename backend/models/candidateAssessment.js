@@ -75,6 +75,10 @@
 // },{timestamps:true});
 
 
+
+
+// v1.0.0  -  Ashraf  -  removed cretedat because we wre already using timestamp
+
 const mongoose = require('mongoose');
 
 const AnswerSchema = new mongoose.Schema({ 
@@ -137,7 +141,9 @@ const CandidateAssessmentSchema = new mongoose.Schema({
     progress: { type: Number, default: 0 },
     totalScore: { type: Number, default: 0 },
     rescheduledTo: { type: mongoose.Schema.Types.ObjectId, ref: 'CandidateAssessment' },
-    createdAt: { type: Date, default: Date.now },    
+       // <-------------------------------v1.0.0
+    // createdAt: { type: Date, default: Date.now },   
+ // ------------------------------v1.0.0 > 
     completionTime: { type: String },
     sections: [sectionSchema],
     remainingTime: { type: Number, default: null }, // Time left in seconds

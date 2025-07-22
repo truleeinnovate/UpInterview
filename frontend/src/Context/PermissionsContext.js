@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  fixed login as user then only effective permissions will have.backto super admin then reload super admin permissions
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { config } from '../config';
@@ -187,11 +188,18 @@ export const PermissionsProvider = ({ children }) => {
           effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
           effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
           inheritedRoleIds: permissionData.inheritedRoleIds || [],
-          superAdminPermissions: null,
+              // <-------------------------------v1.0.0
+
+          superAdminPermissions: null, // <-- Always clear super admin permissions when logging in as user
           isImpersonating: false,
           impersonatedUser_roleType: null,
           impersonatedUser_roleName: null
         };
+        
+        // Explicitly clear super admin permissions from cache when logging in as user (impersonation)
+        clearPermissionsCache('superAdmin');
+ // ------------------------------v1.0.0 > 
+
       } else if (userType === 'superAdmin') {
         // For super admin, cache super admin permissions - no effective permissions unless impersonating
         const isImpersonating = permissionData.isImpersonating || false;

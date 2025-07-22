@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  fixed assessment result tab issue.before getting only completed status data now we will display all status data
 const Assessment = require("../models/assessment");
 const { isValidObjectId } = require("mongoose");
 const { CandidateAssessment } = require("../models/candidateAssessment");
@@ -137,31 +138,37 @@ exports.getAssessmentResults = async (req, res) => {
     // Prepare response data
     const results = await Promise.all(
       scheduledAssessments.map(async (schedule) => {
-        // Find completed candidate assessments for this schedule
+        // Find all candidate assessments for this schedule (not just completed)
         const candidateAssessments = await CandidateAssessment.find({
           scheduledAssessmentId: schedule._id,
-          status: "completed",
           isActive: true,
+          // <-------------------------------v1.0.0
         })
           .populate("candidateId", "FirstName LastName Email CurrentExperience")
           .select(
-            "candidateId status totalScore endedAt sections startedAt remainingTime"
+            "candidateId status totalScore endedAt sections startedAt remainingTime expiryAt"
           );
-
+        // ------------------------------v1.0.0 >
         // Process candidate results with pass/fail logic
         const formattedCandidates = candidateAssessments.map((ca) => {
           let resultStatus = "N/A";
-          if (assessment.passScoreBy === "Overall") {
-            resultStatus =
-              ca.totalScore >= (assessment.passScore || 0) ? "pass" : "fail";
-          } else if (assessment.passScoreBy === "Each Section") {
-            const sectionResults = ca.sections.map((section) => {
-              return section.totalScore >= (section.passScore || 0);
-            });
-            resultStatus = sectionResults.every((passed) => passed)
-              ? "pass"
-              : "fail";
+        // <-------------------------------v1.0.0
+          if (ca.status === "completed") {
+            if (assessment.passScoreBy === "Overall") {
+              resultStatus =
+                ca.totalScore >= (assessment.passScore || 0) ? "pass" : "fail";
+            } else if (assessment.passScoreBy === "Each Section") {
+              const sectionResults = ca.sections.map((section) => {
+                return section.totalScore >= (section.passScore || 0);
+              });
+              resultStatus = sectionResults.every((passed) => passed)
+                ? "pass"
+                : "fail";
+            }
+          } else {
+            resultStatus = ca.status || "N/A";
           }
+          // ------------------------------v1.0.0 >
 
           return {
             id: ca._id,
@@ -171,8 +178,14 @@ exports.getAssessmentResults = async (req, res) => {
             experience: ca.candidateId.CurrentExperience || 0,
             totalScore: ca.totalScore,
             result: resultStatus,
+            // <-------------------------------v1.0.0
+            status: ca.status, // Add status field
+            // ------------------------------v1.0.0 >
             completionDate: ca.endedAt,
             startedAt: ca.startedAt,
+            // <-------------------------------v1.0.0
+            expiryAt: ca.expiryAt, // Add expiryAt from candidate assessment
+            // ------------------------------v1.0.0 >
             sections: ca.sections,
             remainingTime: ca.remainingTime,
             answeredQuestions: ca.sections.reduce((count, section) => {

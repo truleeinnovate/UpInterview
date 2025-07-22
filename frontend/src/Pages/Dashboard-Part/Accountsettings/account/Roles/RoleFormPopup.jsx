@@ -1183,7 +1183,6 @@ const RoleFormPopup = ({ onSave, onClose }) => {
                         placeholder="Enter role name"
                       />
                     </div>
-                    //
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Description
