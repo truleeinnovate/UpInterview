@@ -118,7 +118,7 @@ export const validateConfirmPassword = (password, confirmPassword) => {
 export const validateOrganizationSignup = async (formData, setErrors, checkEmailExists, checkProfileIdExists) => {
   const errors = {};
 
-  // errors.email = await validateEmail(formData.email, checkEmailExists);
+  errors.email = await validateEmail(formData.email, checkEmailExists);
   errors.profileId = await validateProfileId(formData.profileId, checkProfileIdExists);
   errors.lastName = !formData.lastName ? 'Last Name is required' : '';
   errors.phone = validatePhone(formData.phone, formData.countryCode);

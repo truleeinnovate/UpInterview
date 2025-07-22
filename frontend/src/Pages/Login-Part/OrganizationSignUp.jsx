@@ -244,6 +244,18 @@ export const Organization = () => {
       contactType: 'Organization',
     };
 
+    const isValid = await validateOrganizationSignup(
+      organizationData,
+      setErrors,
+      checkEmailExists,
+      checkProfileIdExists
+    );
+
+    if (!isValid) {
+      setIsSubmitting(false);
+      return;
+    }
+
     // Validate email format and existence
     const emailFormatError = validateWorkEmail(selectedEmail);
     if (emailFormatError) {
@@ -267,21 +279,9 @@ export const Organization = () => {
       return;
     }
 
-    const isValid = await validateOrganizationSignup(
-      organizationData,
-      setErrors,
-      checkEmailExists,
-      checkProfileIdExists
-    );
-
     const confirmPasswordError = validateConfirmPassword(selectedPassword, selectedConfirmPassword);
     if (confirmPasswordError) {
       setErrors((prev) => ({ ...prev, confirmPassword: confirmPasswordError }));
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!isValid) {
       setIsSubmitting(false);
       return;
     }
