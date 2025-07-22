@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - change in delete file
 const cloudinary = require("../../utils/cloudinary");
 const { Candidate } = require("../../models/candidate");
 const { Contacts } = require("../../models/Contacts");
@@ -91,7 +92,10 @@ const uploadHandler = async (req, res) => {
           data: instance,
         });
       }
-      return res.status(400).json({ error: "No file found to delete" });
+      // v1.0.0 <-----------------------------------------------------------
+      // return res.status(400).json({ error: "No file found to delete" });
+      return res.status(204).send();
+      // v1.0.0 ----------------------------------------------------------->
     }
 
     // UPLOAD logic
