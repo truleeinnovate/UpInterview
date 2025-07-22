@@ -1,5 +1,5 @@
 // v1.0.0  -  Ashraf  -  removed consoles
-
+// v1.0.1  -  Ashraf  -  fixed feeds api issues.removed /api
 // this is new
 require('dotenv').config();
 
@@ -872,7 +872,9 @@ app.get('/check-profileId', async (req, res) => {
 
 const historyFeedsRoutes = require("./routes/feedsRoutes");
 const WalletRouter = require("./routes/WalletRoutes.js");
-app.use("/api/feeds", historyFeedsRoutes);
+ // <-------------------------------v1.0.1
+app.use("/feeds", historyFeedsRoutes);
+// ------------------------------v1.0.1 >
 app.use("/wallet", WalletRouter);
 
 // task

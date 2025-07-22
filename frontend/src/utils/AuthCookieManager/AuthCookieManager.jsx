@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout,when individual logout navigate to there linked page
+// v1.0.0  -  Ashraf  -  login as user issue
 import Cookies from 'js-cookie';
 import { decodeJwt } from './jwtDecode';
 import { resetPermissionPreload } from "../permissionPreloader";
@@ -40,15 +41,19 @@ class AuthCookieManager {
   static setAuthToken(token) {
 
     try {
+      // <-------------------------------v1.0.0
+      const currentDomain = window.location.hostname;
       const cookieOptions = {
         expires: 7, // 7 days
         secure: true,
         sameSite: 'None', // Required for cross-origin
         path: '/', // Ensure cookie is available on all paths
+        ...(currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')
+          ? { domain: '.upinterview.io' }
+          : {}),
       };
-      
       Cookies.set(AUTH_TOKEN_KEY, token, cookieOptions);
-  
+      
     } catch (error) {
       console.error('❌ Error setting auth token:', error);
     }
@@ -58,12 +63,17 @@ class AuthCookieManager {
   static setImpersonationToken(token, userData = null) {
 
     try {
+      const currentDomain = window.location.hostname;
       const cookieOptions = {
         expires: 7, // 7 days
         secure: true,
         sameSite: 'None', // Required for cross-origin
         path: '/', // Ensure cookie is available on all paths
+        ...(currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')
+          ? { domain: '.upinterview.io' }
+          : {}),
       };
+      // ------------------------------v1.0.0 >
       
       // Set the token in cookies
       Cookies.set('impersonationToken', token, cookieOptions);

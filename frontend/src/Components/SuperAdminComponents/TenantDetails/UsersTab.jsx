@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  delay login as user
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge";
@@ -244,6 +245,10 @@ function UsersTab({ users, viewMode }) {
           organization: data.isOrganization,
         });
         console.log("✅ loginAsUser function completed");
+ // <-------------------------------v1.0.0
+        // Wait for cookie to be available before fetching permissions
+        await new Promise(res => setTimeout(res, 200));
+        // ------------------------------v1.0.0 >
 
         // Verify cookies were set
         console.log("🔍 Verifying cookies after setting:");

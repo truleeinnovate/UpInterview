@@ -1,4 +1,5 @@
 // v1.0.0  -  mansoor  -  added skeleton structure loading
+// v1.0.1  -  Ashraf  -  create new role path fixed
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -299,12 +300,13 @@ const Role = () => {
       <div className="space-y-6 mb-4">
         <div className="flex justify-between items-center mt-3 px-3">
           <h2 className="text-lg text-custom-blue font-semibold">Roles & Permissions</h2>
-          {(permissions?.Roles?.Create) && (
+          {/* // <-------------------------------v1.0.1 */}
+          {(userType === 'superAdmin' && permissions?.Roles?.Create) && (
             <button
               onClick={() =>
-                navigate('/account-settings/roles/role-edit/new'
-                )
+                navigate('/account-settings/roles/create')
               }
+              // ------------------------------v1.0.1 >
               className="px-4 py-1 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90"
             >
               Create Role

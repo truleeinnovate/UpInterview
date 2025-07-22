@@ -61,13 +61,13 @@ const permissionMiddleware = async (req, res, next) => {
     let impersonatedUser_roleType = null;
     let impersonatedUser_roleName = null;
 
-    console.log('[permissionMiddleware] Processing permissions:', {
-      hasAuthToken: !!authToken,
-      hasImpersonationToken: !!impersonationToken,
-      userId,
-      tenantId,
-      impersonatedUserId
-    });
+    // console.log('[permissionMiddleware] Processing permissions:', {
+    //   hasAuthToken: !!authToken,
+    //   hasImpersonationToken: !!impersonationToken,
+    //   userId,
+    //   tenantId,
+    //   impersonatedUserId
+    // });
 
     // Only process user if we have both userId and tenantId
     if (userId && tenantId) {
@@ -161,14 +161,14 @@ const permissionMiddleware = async (req, res, next) => {
       impersonatedUser_roleName,
     };
 
-    console.log('[permissionMiddleware] Final permissions result:', {
-      effectivePermissionsCount: Object.keys(permissionsObject).length,
-      hasSuperAdminPermissions: !!superAdminPermissions,
-      isImpersonating,
-      roleType: effectivePermissions_RoleType,
-      roleName: effectivePermissions_RoleName,
-      userId: res.locals.userId
-    });
+    // console.log('[permissionMiddleware] Final permissions result:', {
+    //   effectivePermissionsCount: Object.keys(permissionsObject).length,
+    //   hasSuperAdminPermissions: !!superAdminPermissions,
+    //   isImpersonating,
+    //   roleType: effectivePermissions_RoleType,
+    //   roleName: effectivePermissions_RoleName,
+    //   userId: res.locals.userId
+    // });
 
     next();
   } catch (error) {
