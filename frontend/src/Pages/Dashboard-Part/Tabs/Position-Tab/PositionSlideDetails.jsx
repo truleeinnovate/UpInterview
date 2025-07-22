@@ -246,18 +246,44 @@ const PositionSlideDetails = () => {
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">Skills</h4>
-                <div className="flex flex-wrap gap-2">
-                  {position.skills.map((skill, index) => (
+              <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                Skills
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {position?.skills ? (
+                  position.skills.map((skill, index) => (
+                    <>
+                    {/* <------v1.0.0 ------*/}
+                    <div
+                    className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100"
+                    >
                     <span
                       key={index}
-                      className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
                     >
                       {skill.skill}
                     </span>
-                  ))}
-                </div>
+                    <span
+                      key={index}
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                    >
+                      {skill.experience}
+                    </span>
+                    <span
+                      key={index}
+                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                    >
+                      {skill.expertise}
+                    </span>
+                    </div>
+                    {/* v1.0.0 ------->*/}
+                    </>
+                  ))
+                ) : (
+                  <span>No skills found</span>
+                )}
               </div>
+            </div>
             </div>
 
             {/* Interviewers summary */}

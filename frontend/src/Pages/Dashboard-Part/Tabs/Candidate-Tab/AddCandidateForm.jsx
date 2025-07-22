@@ -2,6 +2,8 @@
    The candidate was saved successfully the first time, but an error occurred on the second attempt
 */
 
+// v1.0.1 - Venkatesh - added custom university
+
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
 import Modal from "react-modal";
@@ -62,6 +64,15 @@ const CustomDropdown = ({
       .includes(searchTerm.toLowerCase());
   });
 
+  // Always push the 'Other' option (if present) to the top of the list
+  const sortedOptions = filteredOptions?.sort((a, b) => {
+    const aVal = optionKey ? a[optionKey] : a;
+    const bVal = optionKey ? b[optionKey] : b;
+    if (aVal === "Other") return -1;
+    if (bVal === "Other") return 1;
+    return 0;
+  });
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -117,8 +128,8 @@ const CustomDropdown = ({
                 </div>
               </div>
             )}
-            {filteredOptions?.length > 0 ? (
-              filteredOptions.map((option, index) => (
+            {sortedOptions?.length > 0 ? (
+              sortedOptions.map((option, index) => (
                 <div
                   key={option._id || index}
                   onClick={() => handleSelect(option)}
@@ -187,6 +198,10 @@ const AddCandidateForm = ({ mode, onClose, isModal = false }) => {
   // const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
   const [searchTermCurrentRole, setSearchTermCurrentRole] = useState("");
+  //<----v1.0.1---
+  const [showCustomUniversity, setShowCustomUniversity] = useState(false);
+  const [customUniversity, setCustomUniversity] = useState("");
+  //----v1.0.1--->
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
   const genderOptions = ["Male", "Female"];
@@ -1044,20 +1059,88 @@ const AddCandidateForm = ({ mode, onClose, isModal = false }) => {
                 />
 
                 {/* University/College */}
-                <CustomDropdown
-                  label="University/College"
-                  name="UniversityCollege"
-                  value={formData.UniversityCollege}
-                  options={colleges}
-                  onChange={handleChange}
-                  error={errors.UniversityCollege}
-                  placeholder="Select University/College"
-                  optionKey="University_CollegeName"
-                  optionValue="University_CollegeName"
-                />
+                {/* <--------v1.0.1----- */}
+                <div>
+                  <label
+                    htmlFor="UniversityCollege"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    University/College
+                  </label>
+                  
+                  {!showCustomUniversity ? (
+                    <CustomDropdown
+                      label=""
+                      name="UniversityCollege"
+                      value={formData.UniversityCollege}
+                      options={[...colleges, { University_CollegeName: "Other" }]}
+                      onChange={(e) => {
+                        if (e.target.value === "Other") {
+                          setShowCustomUniversity(true);
+                          setCustomUniversity("");
+                          setFormData(prev => ({ ...prev, UniversityCollege: "" }));
+                        } else {
+                          handleChange(e);
+                        }
+                      }}
+                      error={errors.UniversityCollege}
+                      placeholder="Select University/College"
+                      optionKey="University_CollegeName"
+                      optionValue="University_CollegeName"
+                      hideLabel={true}
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={customUniversity}
+                        onChange={(e) => setCustomUniversity(e.target.value)}
+                        placeholder="Enter University/College name"
+                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                          errors.UniversityCollege ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (customUniversity.trim()) {
+                              setFormData(prev => ({
+                                ...prev,
+                                UniversityCollege: customUniversity.trim()
+                              }));
+                              setShowCustomUniversity(false);
+                            }
+                          }}
+                          className="px-3 py-1 bg-custom-blue text-white text-sm rounded hover:bg-custom-blue/80"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCustomUniversity(false);
+                            setCustomUniversity("");
+                          }}
+                          className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {errors.UniversityCollege && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.UniversityCollege}
+                    </p>
+                  )}
+                </div>
+                {/* --------v1.0.1----->*/}
                 <p className="text-lg font-semibold col-span-2">
                   Experience Details
                 </p>
+
                 {/* current experience */}
                 <div>
                   <label

@@ -1,4 +1,7 @@
 /* eslint-disable react/prop-types */
+
+// v1.0.0 - Venkatesh - added custom location
+
 import { useEffect, useState, useRef } from 'react';
 import AssessmentDetails from './AssessmentType';
 import TechnicalType from './TechnicalType';
@@ -47,6 +50,17 @@ const CustomDropdown = ({
     const displayValue = optionKey ? option[optionKey] : option;
     return displayValue?.toString().toLowerCase().includes(searchTerm.toLowerCase());
   });
+
+  //<------v1.0.0
+  // Always push the 'Other' option (if present) to the top of the list
+  const sortedOptions = filteredOptions?.sort((a, b) => {
+    const aVal = optionKey ? a[optionKey] : a;
+    const bVal = optionKey ? b[optionKey] : b;
+    if (aVal === 'Other') return -1;
+    if (bVal === 'Other') return 1;
+    return 0;
+  });
+  //------v1.0.0----->
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -99,8 +113,8 @@ const CustomDropdown = ({
                 </div>
               </div>
             )}
-            {filteredOptions?.length > 0 ? (
-              filteredOptions.map((option, index) => (
+            {sortedOptions?.length > 0 ? (
+              sortedOptions.map((option, index) => (
                 <div
                   key={option._id || index}
                   onClick={() => handleSelect(option)}
@@ -770,6 +784,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }, 0);
   };
 
+  
+
   const renderStageIndicator = () => {
 
     // Update flag when moving to rounds
@@ -946,6 +962,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       setShowAssessment(true);
     }
   };
+
+  const [showCustomLocation, setShowCustomLocation] = useState(false);
+  const [customLocation, setCustomLocation] = useState("");
 
   return (
     <div className="flex items-center justify-center">
@@ -1307,21 +1326,81 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       </div>
 
                       {/* location */}
+                      {/*<-----v1.0.0------ */}
                       <div>
-                        <CustomDropdown
-                          label="Location"
-                          name="location"
-                          value={formData.Location}
-                          options={locations}
-                          onChange={(e) => {
-                            setFormData({ ...formData, Location: e.target.value });
-                          }}
-                          disabledError={false}
-                          placeholder="Select a Location"
-                          optionKey="LocationName"
-                          optionValue="LocationName"
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Location
+                        </label>
+                        
+                        {!showCustomLocation ? (
+                          <CustomDropdown
+                            label=""
+                            name="location"
+                            value={formData.Location}
+                            options={[...locations, { LocationName: "Other" }]}
+                            onChange={(e) => {
+                              if (e.target.value === "Other") {
+                                setShowCustomLocation(true);
+                                setCustomLocation("");
+                                setFormData(prev => ({ ...prev, Location: "" }));
+                              } else {
+                                setFormData({ ...formData, Location: e.target.value });
+                              }
+                            }}
+                            disabledError={false}
+                            placeholder="Select a Location"
+                            optionKey="LocationName"
+                            optionValue="LocationName"
+                            hideLabel={true}
+                          />
+                        ) : (
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              value={customLocation}
+                              onChange={(e) => setCustomLocation(e.target.value)}
+                              placeholder="Enter Location name"
+                              className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                                errors.Location ? "border-red-500" : "border-gray-300"
+                              }`}
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (customLocation.trim()) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      Location: customLocation.trim()
+                                    }));
+                                    setShowCustomLocation(false);
+                                  }
+                                }}
+                                className="px-3 py-1 bg-custom-blue text-white text-sm rounded hover:bg-custom-blue/80"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowCustomLocation(false);
+                                  setCustomLocation("");
+                                }}
+                                className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {errors.Location && (
+                          <p className="text-red-500 text-xs pt-1">
+                            {errors.Location}
+                          </p>
+                        )}
                       </div>
+                      {/* -----v1.0.0-----> */}
                     </div>
                     {/* </div> */}
 
@@ -1529,5 +1608,3 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 };
 
 export default PositionForm;
-
-
