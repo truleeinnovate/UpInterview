@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashraf  -  fixed interview questions and rounds filter issue
 // v1.0.3  -  Ashraf  -  fixed interview template model populate issues
 // v1.0.4  -  Ashraf  -  fixed assessment model sort issue,because assessment is in loop
+// v1.0.5  -  Mansoor  -  fixed mockinterview model mapping issue
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -12,7 +13,9 @@ const Assessment = require("../models/assessment");
 const { Position } = require('../models/Position');
 const InterviewTemplate = require("../models/InterviewTemplate");
 const { Interview } = require('../models/Interview');
-const MockInterview = require('../models/MockInterview');
+// v1.0.5 <-----------------------------
+const { MockInterview } = require('../models/MockInterview');
+// v1.0.5-------------------------------->
 const { TenantQuestions } = require('../models/TenantQuestions');
 const TenantQuestionsListNames = require('../models/TenantQuestionsListNames');
 const { InterviewRounds } = require('../models/InterviewRounds');
@@ -58,7 +61,14 @@ const modelRequirements = {
     model: InterviewTemplate,
     permissionName: 'InterviewTemplates',
     requiredPermission: 'View'
+  },
+  // <------------------------v1.0.5
+  mockinterview: { // FIXED: added mockinterview mapping
+    model: MockInterview,
+    permissionName: 'MockInterviews',
+    requiredPermission: 'View'
   }
+  // v1.0.5---------------------------->
 };
 
 const getModelMapping = (permissions) => {
@@ -181,7 +191,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       query.ownerId = userId;
       console.log('[13] Individual user - adding ownerId filter:', query);
     } else if (roleType === 'organization' && roleName !== 'Admin') {
-      if(model.toLowerCase() === 'scheduleassessment') {
+      if (model.toLowerCase() === 'scheduleassessment') {
         // For scheduled assessments, organization non-admin can see all under same organization
       }
       if (inheritedRoleIds?.length > 0) {
@@ -203,7 +213,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     } else {
       console.log('[18] Organization Admin - only tenantId filter applied');
       // Ensure scheduled assessments are not restricted by ownerId
-      if(model.toLowerCase() === 'scheduleassessment') {
+      if (model.toLowerCase() === 'scheduleassessment') {
         delete query.ownerId;
       }
     }
@@ -282,10 +292,10 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         console.log('[27] Found', interviews.length, 'interviews');
         const interviewIds = interviews.map((interview) => interview._id);
         console.log('[28] Interview IDs for related data:', interviewIds);
-// <------------------------------- v1.0.1 
+        // <------------------------------- v1.0.1 
         const roundsData = await InterviewRounds.find({
           interviewId: { $in: interviewIds },
-// ------------------------------ v1.0.1 >
+          // ------------------------------ v1.0.1 >
         })
           .populate({
             path: 'interviewers',
@@ -298,13 +308,13 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
         const interviewQuestions = await InterviewQuestions.find({
           interviewId: { $in: interviewIds },
-// <------------------------------- v1.0.1 
+          // <------------------------------- v1.0.1 
         })
           .select('roundId snapshot')
           .lean();
 
         console.log('[30] Found', interviewQuestions.length, 'interview questions');
-// <------------------------------- v1.0.2 
+        // <------------------------------- v1.0.2 
         const roundsWithQuestions = roundsData.map((round) => ({
           ...round,
           questions: interviewQuestions.filter((q) => q.roundId.toString() === round._id.toString()),
@@ -319,8 +329,8 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         console.log('[31] Final interview data with rounds and questions prepared');
         break;
 
-// <------------------------------- v1.0.3 
-              case 'interviewtemplate':
+      // <------------------------------- v1.0.3 
+      case 'interviewtemplate':
         console.log('[34] Processing InterviewTemplate model');
         data = await DataModel.find(query)
           .populate({
@@ -331,7 +341,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .lean();
         console.log('[35] Found', data.length, 'InterviewTemplate records');
         break;
-        // ------------------------------ v1.0.4 >
+      // ------------------------------ v1.0.4 >
 
       case 'assessment':
         console.log('[36] Processing Assessment model');
@@ -339,7 +349,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .lean();
         console.log('[37] Found', data.length, 'Assessment records');
         break;
-        // ------------------------------ v1.0.4 >
+      // ------------------------------ v1.0.4 >
 
       case 'position':
         console.log('[32] Processing Position model');

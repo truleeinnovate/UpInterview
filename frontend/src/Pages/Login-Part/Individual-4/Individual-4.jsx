@@ -551,7 +551,7 @@ const MultiStepForm = () => {
         // Clear all cookies and localStorage before setting new ones
         clearAllAuth();
         console.log('✅ Cleared all cookies and localStorage for individual signup');
-        
+
         setAuthCookies({ authToken: response.data.token });
 
         // CUSTOM PROFILE PIC OR LINKEDIN PROFILE PIC
@@ -645,17 +645,7 @@ const MultiStepForm = () => {
 
   return (
     <>
-      {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
-          <div className="flex flex-col items-center">
-            <TailSpin color="#ffffff" height={50} width={50} />
-            <span className="mt-2 text-white text-lg font-semibold">
-              Processing...
-            </span>
-          </div>
-        </div>
-      )}
-
+      {/* Removed loading overlay and spinner */}
       <form>
         <div className="min-h-screen bg-gray-50">
           <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
@@ -742,7 +732,7 @@ const MultiStepForm = () => {
               currentStep={currentStep}
               isFreelancer={Freelancer || isInternalInterviewer}
               isInternalInterviewer={isInternalInterviewer}
-              isSubmitting={loading}
+              isSubmitting={false} // Always false, disables loading state
             />
           </div>
         </div>

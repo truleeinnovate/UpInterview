@@ -1,3 +1,4 @@
+// v1.0.0  -  mansoor  -  removed the format function and used the date.toISOString() instead to store the date of birth in the database
 import React, { useRef, useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -283,6 +284,7 @@ const BasicDetails = ({
     }
   };
 
+  // v1.0.0 removed the format function and used the date.toISOString() instead to store the date of birth in the database
   const handleDateChange = (date) => {
     if (!date) {
       setBasicDetailsData((prevData) => ({ ...prevData, dateOfBirth: "" }));
@@ -290,10 +292,9 @@ const BasicDetails = ({
       setErrors((prevErrors) => ({ ...prevErrors, dateOfBirth: "" }));
       return;
     }
-    const formattedDate = format(date, "dd-MM-yyyy");
     setBasicDetailsData((prevData) => ({
       ...prevData,
-      dateOfBirth: formattedDate,
+      dateOfBirth: date.toISOString(),
     }));
     setStartDate(date);
   };
