@@ -64,15 +64,7 @@ const CustomDropdown = ({
       .includes(searchTerm.toLowerCase());
   });
 
-  // Always push the 'Other' option (if present) to the top of the list
-  const sortedOptions = filteredOptions?.sort((a, b) => {
-    const aVal = optionKey ? a[optionKey] : a;
-    const bVal = optionKey ? b[optionKey] : b;
-    if (aVal === "Other") return -1;
-    if (bVal === "Other") return 1;
-    return 0;
-  });
-
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -128,8 +120,8 @@ const CustomDropdown = ({
                 </div>
               </div>
             )}
-            {sortedOptions?.length > 0 ? (
-              sortedOptions.map((option, index) => (
+            {filteredOptions?.length > 0 ? (
+              filteredOptions.map((option, index) => (
                 <div
                   key={option._id || index}
                   onClick={() => handleSelect(option)}
@@ -198,9 +190,47 @@ const AddCandidateForm = ({ mode, onClose, isModal = false }) => {
   // const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
   const [searchTermCurrentRole, setSearchTermCurrentRole] = useState("");
-  //<----v1.0.1---
-  const [showCustomUniversity, setShowCustomUniversity] = useState(false);
-  const [customUniversity, setCustomUniversity] = useState("");
+  //<----v1.0.1 - University dropdown state---
+  const [showDropdownUniversity, setShowDropdownUniversity] = useState(false);
+  const [isCustomUniversity, setIsCustomUniversity] = useState(false);
+  const [universitySearchTerm, setUniversitySearchTerm] = useState('');
+  const universityDropdownRef = useRef(null);
+
+  const handleUniversitySelect = (university) => {
+    if (university === 'others') {
+      setIsCustomUniversity(true);
+      setFormData((prev) => ({ ...prev, UniversityCollege: "" }));
+    } else {
+      setIsCustomUniversity(false);
+      setFormData((prev) => ({ ...prev, UniversityCollege: university.University_CollegeName }));
+    }
+    setShowDropdownUniversity(false);
+    setUniversitySearchTerm('');
+    if (errors.UniversityCollege) {
+      setErrors((prevErrors) => ({ ...prevErrors, UniversityCollege: "" }))
+    }
+  };
+
+
+
+  // Handle click outside university dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (universityDropdownRef.current && !universityDropdownRef.current.contains(event.target)) {
+        setShowDropdownUniversity(false);
+        setUniversitySearchTerm('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const filteredUniversities = colleges?.filter(college =>
+    college.University_CollegeName?.toString().toLowerCase().includes(universitySearchTerm.toLowerCase())
+  );
   //----v1.0.1--->
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
@@ -1061,80 +1091,92 @@ const AddCandidateForm = ({ mode, onClose, isModal = false }) => {
                 {/* University/College */}
                 {/* <--------v1.0.1----- */}
                 <div>
-                  <label
-                    htmlFor="UniversityCollege"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    University/College
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    University/College <span className="text-red-500">*</span>
                   </label>
-                  
-                  {!showCustomUniversity ? (
-                    <CustomDropdown
-                      label=""
-                      name="UniversityCollege"
-                      value={formData.UniversityCollege}
-                      options={[...colleges, { University_CollegeName: "Other" }]}
-                      onChange={(e) => {
-                        if (e.target.value === "Other") {
-                          setShowCustomUniversity(true);
-                          setCustomUniversity("");
-                          setFormData(prev => ({ ...prev, UniversityCollege: "" }));
-                        } else {
-                          handleChange(e);
-                        }
-                      }}
-                      error={errors.UniversityCollege}
-                      placeholder="Select University/College"
-                      optionKey="University_CollegeName"
-                      optionValue="University_CollegeName"
-                      hideLabel={true}
-                    />
-                  ) : (
-                    <div className="space-y-2">
+                  {!isCustomUniversity ? (
+                    <div className="relative" ref={universityDropdownRef}>
                       <input
                         type="text"
-                        value={customUniversity}
-                        onChange={(e) => setCustomUniversity(e.target.value)}
-                        placeholder="Enter University/College name"
-                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                          errors.UniversityCollege ? "border-red-500" : "border-gray-300"
-                        }`}
+                        value={formData.UniversityCollege}
+                        onClick={() => setShowDropdownUniversity(!showDropdownUniversity)}
+                        placeholder="Select a University/College"
+                        autoComplete="off"
+                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.UniversityCollege ? 'border-red-500' : 'border-gray-300'}`}
+                        readOnly
                       />
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (customUniversity.trim()) {
-                              setFormData(prev => ({
-                                ...prev,
-                                UniversityCollege: customUniversity.trim()
-                              }));
-                              setShowCustomUniversity(false);
-                            }
-                          }}
-                          className="px-3 py-1 bg-custom-blue text-white text-sm rounded hover:bg-custom-blue/80"
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowCustomUniversity(false);
-                            setCustomUniversity("");
-                          }}
-                          className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
-                        >
-                          Cancel
-                        </button>
+                      <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                        <ChevronDown className="text-lg" onClick={() => setShowDropdownUniversity(!showDropdownUniversity)} />
                       </div>
+                      {showDropdownUniversity && (
+                        <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
+                          <div className="border-b">
+                            <div className="flex items-center border rounded px-2 py-1 m-2">
+                              <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                              <input
+                                type="text"
+                                placeholder="Search University/College"
+                                value={universitySearchTerm}
+                                onChange={(e) => setUniversitySearchTerm(e.target.value)}
+                                className="pl-8 focus:border-black focus:outline-none w-full"
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-48 overflow-y-auto">
+                            {filteredUniversities?.length > 0 ? (
+                              filteredUniversities.map((university, index) => (
+                                <div
+                                  key={university._id || index}
+                                  onClick={() => handleUniversitySelect(university)}
+                                  className="cursor-pointer hover:bg-gray-200 p-2"
+                                >
+                                  {university.University_CollegeName}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-2 text-gray-500">No universities found</div>
+                            )}
+                          </div>
+                          <div className="border-t border-gray-200">
+                            <div
+                              onClick={() => handleUniversitySelect('others')}
+                              className="cursor-pointer hover:bg-gray-200 p-2"
+                            >
+                              <span className="text-gray-900 font-medium">+ Others</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formData.UniversityCollege}
+                        onChange={(e) => {
+                          setFormData({ ...formData, UniversityCollege: e.target.value });
+                          if (errors.UniversityCollege) {
+                            setErrors((prevErrors) => ({ ...prevErrors, UniversityCollege: "" }));
+                          }
+                        }}
+                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.UniversityCollege ? 'border-red-500' : 'border-gray-300'}`}
+                        placeholder="Enter custom university/college name"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomUniversity(false);
+                          setFormData({ ...formData, UniversityCollege: "" });
+                        }}
+                        className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
                   )}
-                  
-                  {errors.UniversityCollege && (
-                    <p className="text-red-500 text-xs pt-1">
-                      {errors.UniversityCollege}
-                    </p>
-                  )}
+                  {errors.UniversityCollege && <p className="text-red-500 text-xs pt-1">{errors.UniversityCollege}</p>}
                 </div>
                 {/* --------v1.0.1----->*/}
                 <p className="text-lg font-semibold col-span-2">

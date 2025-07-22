@@ -63,14 +63,14 @@ const CustomDropdown = ({
         onClick={() => setShow(!show)}
       />
       {show && (
-        <div className="absolute bg-white border mt-1 w-full max-h-56 overflow-y-auto z-10 text-xs">
+        <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-56 overflow-y-auto z-10 text-xs">
           {!disableSearch && (
             <div className="border-b p-2">
               <div className="relative">
                 <Search className="absolute left-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500" />
                 <input
                   type="text"
-                  className="pl-5 w-full text-xs focus:outline-none"
+                  className="pl-5 py-1 border border-gray-200 rounded-md w-full text-xs focus:outline-none"
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
