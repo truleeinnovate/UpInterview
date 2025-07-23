@@ -142,7 +142,7 @@ exports.updateTicketById = async (req, res) => {
 exports.updateSupportTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, comment, user, updatedByUserId, notifyUser } = req.body;
+    const { status, comment, userComment, user, updatedByUserId, notifyUser } = req.body;
 
     if (!status) {
       return res.status(400).json({ error: "Status is required" });
@@ -166,6 +166,7 @@ exports.updateSupportTicket = async (req, res) => {
       date: new Date(),
       user: user || "Unknown",
       comment: comment || "",
+      userComment: userComment || "",
     });
 
     const updatedTicket = await ticket.save();

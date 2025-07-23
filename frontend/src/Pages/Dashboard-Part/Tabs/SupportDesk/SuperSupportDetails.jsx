@@ -1,4 +1,6 @@
 /* eslint-disable react/prop-types */
+
+// v1.0.0------Venkatesh------add attachments tab
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MdOutlineCancel } from "react-icons/md";
@@ -58,7 +60,7 @@ function SupportDetails() {
   //console.log("curentTicket-------",currentTicket)
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("details");
+  const [activeTab, setActiveTab] = useState("Details");
   const statusSteps = [
     "",
     "New",
@@ -236,16 +238,6 @@ function SupportDetails() {
             </h2>
           </div>
           <div className="flex items-center space-x-2">
-            {(impersonatedUser_roleName === "Super_Admin" ||
-              impersonatedUser_roleName === "Support_Team") && (
-              <button
-                onClick={toggleStatusModal}
-                className="p-2 bg-custom-blue text-white hover:bg-custom-blue/90 rounded-md transition-colors"
-                title="Change Status"
-              >
-                <FaExchangeAlt className="w-5 h-5" />
-              </button>
-            )}
 
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
@@ -287,9 +279,10 @@ function SupportDetails() {
           </span>
         </div>
 
-        <div className="border-b border-gray-200">
+        <div className="flex justify-between border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
-            {["details", "status"].map((tab) => (
+            {/* <----v1.0.0------Venkatesh------add attachments tab */}
+            {["Details", "Status", "Attachments"].map((tab) => (
               <button
                 key={tab}
                 className={`pt-2 pb-2 capitalize transition-colors ${
@@ -302,10 +295,22 @@ function SupportDetails() {
                 {tab === "status" ? "Status History" : tab}
               </button>
             ))}
+            {/* ---v1.0.0------Venkatesh------add attachments tab--> */}
+            
           </nav>
+          {(impersonatedUser_roleName === "Super_Admin" ||
+              impersonatedUser_roleName === "Support_Team") && (
+              <button
+                onClick={toggleStatusModal}
+                className="p-2 mb-1 bg-custom-blue text-white hover:bg-custom-blue/90 rounded-md transition-colors"
+                title="Change Status"
+              >
+                Change Status
+              </button>
+            )}
         </div>
 
-        {activeTab === "details" ? (
+        {activeTab === "Details" ? (
           <>
             <div
               className={`flex justify-center items-center ${
@@ -434,20 +439,9 @@ function SupportDetails() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-blue/10 rounded-lg">
-                    <FaCalendarAlt className="w-5 h-5 text-custom-blue" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Priority</p>
-                    <p className="text-gray-700">
-                      {currentTicket.priority || "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-custom-blue/10 rounded-lg">
                     <FaUser className="w-5 h-5 text-custom-blue" />
                   </div>
-                  <div className="flex items-start gap-24">
+                  <div className="flex items-start gap-16">
                     <div className="flex flex-col items-start">
                       <p className="text-sm text-gray-500">Owner</p>
                       {isOwnerEditing ? (
@@ -505,6 +499,18 @@ function SupportDetails() {
                     )}
                   </div>
                 </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-custom-blue/10 rounded-lg">
+                    <FaCalendarAlt className="w-5 h-5 text-custom-blue" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Priority</p>
+                    <p className="text-gray-700">
+                      {currentTicket.priority || "N/A"}
+                    </p>
+                  </div>
+                </div>
+                
               </div>
             </div>
 
@@ -522,35 +528,7 @@ function SupportDetails() {
                   </p>
                 </div>
               </div>
-              <div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                  Attachment
-                </h4>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-custom-blue/10 rounded-lg mt-1">
-                    <FaFileAlt className="w-5 h-5 text-custom-blue" />
-                  </div>
-                  <div className="flex-grow whitespace-pre-wrap break-words break-all">
-                    <p className="text-gray-700 truncate">
-                      {currentTicket?.attachment?.filename ||
-                        "No attachment provided."}
-                    </p>
-                  </div>
-
-                  {currentTicket?.attachment?.path && (
-                    <button
-                      type="button"
-                      title="Preview Attachment"
-                      onClick={() =>
-                        window.open(currentTicket.attachment.path, "_blank")
-                      }
-                      className="mt-1 p-2 hover:bg-gray-100 rounded-lg transition"
-                    >
-                      <Eye className="w-5 h-5 text-gray-600 hover:text-blue-600" />
-                    </button>
-                  )}
-                </div>
-              </div>
+              
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-4">
@@ -585,12 +563,38 @@ function SupportDetails() {
               </div>
             </div>
           </>
-        ) : (
+        ) : activeTab === "Status" ? (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-4">
             <h4 className="text-lg font-semibold text-gray-800 mb-4">
               Status History
             </h4>
             <StatusHistory history={currentTicket} />
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-4">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">
+              Attachments
+            </h4>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-custom-blue/10 rounded-lg mt-1">
+                <FaFileAlt className="w-5 h-5 text-custom-blue" />
+              </div>
+              <div className="flex-grow whitespace-pre-wrap break-words break-all">
+                <p className="text-gray-700 truncate">
+                  {currentTicket?.attachment?.filename || "No attachment provided."}
+                </p>
+              </div>
+              {currentTicket?.attachment?.path && (
+                <button
+                  type="button"
+                  title="Preview Attachment"
+                  onClick={() => window.open(currentTicket.attachment.path, "_blank")}
+                  className="mt-1 p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <Eye className="w-5 h-5 text-gray-600 hover:text-blue-600" />
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

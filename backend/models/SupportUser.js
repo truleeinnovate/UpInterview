@@ -5,6 +5,7 @@ const StatusHistorySchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   user: { type: String },
   notifyUser: { type: Boolean },
+  userComment: { type: String },
   comment: { type: String },
 });
 
