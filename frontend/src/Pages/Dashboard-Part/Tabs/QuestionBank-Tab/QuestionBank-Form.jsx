@@ -1,4 +1,5 @@
 // v1.0.0 ----- Venkatesh ---min experience and max experience validation added
+// v1.0.1--------Venkatesh---saveOrUpdateQuestion mutation added
 
 import React from "react";
 import { useState, useEffect, useRef } from "react";
@@ -144,6 +145,8 @@ useEffect(() => {
         options: question.options || [],
         // hints: question.hints || "", // Add this line for hint field
         programmingDetails: question.programmingDetails || [],
+        minexperience: question.minexperience || "",
+        maxexperience: question.maxexperience || "",
       });
       setHintContent(question.hints || "");
       setSelectedSkill(question.skill || "");
@@ -264,20 +267,26 @@ useEffect(() => {
       console.log("tenant question response", questionResponse);
 
       // Handle adding question to assessment if type is 'assessment'
-      if (type === "assessment") {
-        const reqBody = {
-          questionId: questionResponse._id,
-          source: "custom",
-          snapshot: {
-            questionText: formData.questionText,
-            options: formData.options,
-            correctAnswer: formData.correctAnswer,
-            questionType: formData.questionType,
-            score: Number(formData.score),
-          },
-        };
-        updateQuestionsInAddedSectionFromQuestionBank(sectionName, reqBody, "addquestion");
-      }
+      // <----------v1.0.1---------- 
+      if (type === "assessment" && typeof updateQuestionsInAddedSectionFromQuestionBank === "function") {
+        // ----------v1.0.1----------> 
+          const reqBody = {
+            questionId: questionResponse._id,
+            source: "custom",
+            snapshot: {
+              questionText: formData.questionText,
+              options: formData.options,
+              correctAnswer: formData.correctAnswer,
+              questionType: formData.questionType,
+              score: Number(formData.score),
+            },
+          };
+          updateQuestionsInAddedSectionFromQuestionBank(sectionName, reqBody, "addquestion");
+          //<---------v1.0.1----------
+        } else if (type === "assessment") {
+          console.warn("updateQuestionsInAddedSectionFromQuestionBank callback not provided");
+          // ---------v1.0.1---------->
+        }
 
       console.log(isEdit ? "Question updated:" : "Question created:", questionResponse);
 

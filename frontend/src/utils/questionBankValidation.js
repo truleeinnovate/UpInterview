@@ -9,7 +9,7 @@ export const validateQuestionBankData = (formData, mcqOptions,section) => {
         minexperience: "Min Experience is required",
         maxexperience: "Max Experience is required",
         // score: "Score is required",
-        ...(section==="assessmet" && {score:"score is required"}),
+        ...(section === "assessment" && { score: "Score is required" }),
         correctAnswer: "Answer is required",
     };
 
