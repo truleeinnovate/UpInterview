@@ -1,4 +1,4 @@
-
+// v1.0.0------Venkatesh------change comment to internal comments and add user comments
 
 
 function StatusHistory({ history }) {
@@ -29,12 +29,17 @@ function StatusHistory({ history }) {
       </div>
       </div>
         
-      
+      {/* <-------v1.0.0------ */}
+      <div className="flex items-start ">
+          <span className="font-medium text-gray-700 w-32">Internal Comments</span>
+          <span className="text-gray-600 flex-1 break-words">{history?.statusHistory?.[0]?.comment}</span>
+      </div>
+
       <div className="flex items-start">
-          <span className="font-medium text-gray-700 w-32">Comments</span>
-          <span className="text-gray-600 flex-1">{history?.statusHistory?.[0]?.comment}</span>
-        </div>
-      
+          <span className="font-medium text-gray-700 w-32">User Comments</span>
+          <span className="text-gray-600 flex-1 break-words">{history?.statusHistory?.[0]?.userComment}</span>
+      </div>
+      {/* -------v1.0.0------> */}
     </div>
 
     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">

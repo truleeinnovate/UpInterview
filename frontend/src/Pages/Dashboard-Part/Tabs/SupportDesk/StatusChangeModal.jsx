@@ -30,6 +30,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
 
   const [newStatus, setNewStatus] = useState("");
   const [comment, setComment] = useState("");
+  const [userComment, setUserComment] = useState("");
   const [notifyUser, setNotifyUser] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -41,6 +42,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
   );
 
   const characterCount = useMemo(() => comment.length, [comment]);
+  const userCharacterCount = useMemo(() => userComment.length, [userComment]);
 
   const toggleFullWidth = useCallback(() => {
     setIsFullWidth((prev) => !prev);
@@ -56,7 +58,8 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
       const statusData = {
         updatedByUserId: impersonationPayload.impersonatedUserId,
         status: newStatus,
-        comment: comment.trim(),
+        comment: comment,
+        userComment: userComment,
         notifyUser,
         user: singleContact.firstName || "System", // You can replace this with actual user info if available
       };
@@ -96,6 +99,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
     isFormValid,
     newStatus,
     comment,
+    userComment,
     notifyUser,
     ticketId,
     onClose,
@@ -121,6 +125,14 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
     }
   }, []);
 
+  const handleUserCommentChange = useCallback((e) => {
+    const value = e.target.value;
+    if (value.length <= 250) {
+      setUserComment(value);
+      setError("");
+    }
+  }, []);
+
   const handleNotifyUserChange = useCallback((e) => {
     setNotifyUser(e.target.checked);
   }, []);
@@ -134,7 +146,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
           isFullWidth ? "w-full" : "w-1/2"
         } h-full`}
       >
-        <div className="border-b sticky top-0 z-10 flex justify-between items-center p-4">
+        <div className="sticky top-0 z-10 flex justify-between items-center p-4">
           <h2 className="text-xl font-medium">Change Status</h2>
           <div className="flex items-center space-x-2">
             <button
@@ -192,12 +204,12 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
             </select>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-2">
             <label
               className="block text-sm font-medium text-gray-700 mb-2"
               htmlFor="comment"
             >
-              Add a Comment <span className="text-red-500">*</span>
+              Internal Comment <span className="text-red-500">*</span>
             </label>
             <div>
               <textarea
@@ -211,6 +223,28 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
               />
               <div className="text-right text-sm text-gray-500 mt-1">
                 {characterCount}/250
+              </div>
+            </div>
+          </div>
+          <div className="mb-6">
+            <label
+              className="block text-sm font-medium text-gray-700 mb-2"
+              htmlFor="comment"
+            >
+              User Comment
+            </label>
+            <div>
+              <textarea
+                id="userComment"
+                value={userComment}
+                onChange={handleUserCommentChange}
+                className="w-full text-gray-700 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue h-40 resize-none"
+                placeholder="Enter your comment here..."
+                maxLength={250}
+                aria-required="true"
+              />
+              <div className="text-right text-sm text-gray-500 mt-1">
+                {userCharacterCount}/250
               </div>
             </div>
           </div>
@@ -242,7 +276,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-10 flex justify-end gap-4 p-4 border-t bg-white">
+        <div className="sticky bottom-0 z-10 flex justify-end gap-4 p-4 bg-white">
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-custom-blue focus:ring-offset-2"
