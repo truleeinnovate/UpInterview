@@ -889,14 +889,10 @@ const RoundFormInterviews = () => {
     }
   }, []);
 
-  if (!rounds) {
-    return <div><Loading /></div>;
-  }
-
   const breadcrumbItems = [
     {
       label: 'Interviews',
-      path: '/'
+      path: '/interviewList'
     },
     {
       label: candidate?.LastName || 'Interview',

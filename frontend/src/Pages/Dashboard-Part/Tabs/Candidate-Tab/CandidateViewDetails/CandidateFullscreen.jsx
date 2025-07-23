@@ -54,12 +54,12 @@ const CandidateFullscreen = () => {
     };
   }, [id, candidateData]);
 
-  if (!candidate)
-    return (
-      <div className="text-center h-full w-full justify-center items-center">
-        <Loading />
-      </div>
-    );
+  // if (!candidate)
+  //   return (
+  //     <div className="text-center h-full w-full justify-center items-center">
+  //       <Loading />
+  //     </div>
+  //   );
 
   const content = (
     <div className="h-full flex flex-col">

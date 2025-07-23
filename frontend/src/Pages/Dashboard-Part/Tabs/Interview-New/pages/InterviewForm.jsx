@@ -28,6 +28,7 @@ const CustomDropdown = ({
   className = "",
   onAddNew = null,
   addNewLabel = "+ Add New",
+  required = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -64,7 +65,7 @@ const CustomDropdown = ({
     <div className={dropdownClass} data-dropdown={id}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
         {/* <-------------------- v1.0.0 */}
-        {label} <span className="text-red-500">*</span>
+        {label} {required && <span className="text-red-500">*</span>}
         {/* v1.0.0 ----------------------------> */}
       </label>
       <div className="relative">
@@ -415,6 +416,7 @@ const InterviewForm = () => {
                       disabled={candidatesLoading || from360}
                       onAddNew={handleAddNewCandidate}
                       addNewLabel="+ Add New Candidate"
+                      required={true}
                     />
                     {/* v1.0.1-------------> */}
                   </div>
@@ -444,6 +446,7 @@ const InterviewForm = () => {
                       disabled={positionsLoading}
                       onAddNew={handleAddNewPosition}
                       addNewLabel="+ Add New Position"
+                      required={true}
                     />
                     {/* v1.0.1-----------------> */}
                   </div>
@@ -452,6 +455,7 @@ const InterviewForm = () => {
                     <CustomDropdown
                       id="template"
                       label="Interview Template"
+                      required={false}
                       value={templateId}
                       onChange={handleTemplateChange}
                       // <----------v1.0.1
@@ -468,19 +472,6 @@ const InterviewForm = () => {
                       disabled={!positionId || templatesLoading}
                       placeholder={templatesLoading ? "Loading..." : "Select a Template"}
                     />
-                    {!templatesLoading && positionId && templatesData && (
-                      <div className="mt-2">
-                        {templatesData.filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active').length === 0 ? (
-                          <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded-md">
-                            ⚠️ No active templates with rounds found. Please create or activate a template first.
-                          </p>
-                        ) : (
-                          <p className="text-sm text-gray-500">
-                            Showing {templatesData.filter(template => template.rounds && template.rounds.length > 0 && template.status === 'active').length} active template(s)
-                          </p>
-                        )}
-                      </div>
-                    )}
                     {/* v1.0.1 -------------------> */}
                   </div>
 
