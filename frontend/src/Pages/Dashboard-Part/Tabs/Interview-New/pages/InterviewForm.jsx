@@ -196,6 +196,7 @@ const InterviewForm = () => {
   // <---------------------- v1.0.2
   const [showCandidateModal, setShowCandidateModal] = useState(false);
   const [showPositionModal, setShowPositionModal] = useState(false);
+  const [from360, setFrom360] = useState(false);
 
   // Modal handlers for Add New buttons
   const handleAddNewCandidate = () => {
@@ -244,7 +245,7 @@ const InterviewForm = () => {
       }
     }
   };
-    //  v1.0.1---------------------->
+  //  v1.0.1---------------------->
 
   const isEditing = !!id;
   const interview = isEditing ? interviewData.find(interview => interview._id === id) : null;
@@ -271,6 +272,17 @@ const InterviewForm = () => {
       }
     }
   }, [positionId]);
+
+  useEffect(() => {
+    if (
+      location.state?.candidateId &&
+      candidateData?.length > 0 &&
+      !candidateId
+    ) {
+      setCandidateId(location.state.candidateId);
+      setFrom360(!!location.state.from360);
+    }
+  }, [location.state, candidateData, candidateId]);
 
   // <-------------------- v1.0.0
   const handleTemplateChange = (newTemplateId) => {
@@ -335,7 +347,7 @@ const InterviewForm = () => {
       }
 
       // Use createInterview mutation from useInterviews hook
-      await createInterview({
+      const result = await createInterview({
         candidateId,
         positionId,
         orgId,
@@ -343,6 +355,13 @@ const InterviewForm = () => {
         templateId,
         id, // interviewId
       });
+      // On success, navigate to rounds step and pass state
+      const interviewId = result?._id || id;
+      if (from360 && candidateId) {
+        navigate(`/interviews/${interviewId}/rounds/new`, { state: { candidateId, from360 } });
+      } else {
+        navigate('/interviewList');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -393,13 +412,13 @@ const InterviewForm = () => {
                           : candidateData?.length > 0
                             ? candidateData.map(candidate => ({
                               value: candidate._id,
-                              label: `${candidate.LastName} (${candidate.Email})`
+                              label: `${candidate.FirstName || ''} ${candidate.LastName} (${candidate.Email})`
                             }))
                             : []
                       }
                       error={candidateError}
                       placeholder={candidatesLoading ? "Loading..." : "Select a Candidate"}
-                      disabled={candidatesLoading}
+                      disabled={candidatesLoading || from360}
                       onAddNew={handleAddNewCandidate}
                       addNewLabel="+ Add New Candidate"
                     />
@@ -504,7 +523,7 @@ const InterviewForm = () => {
         message="Changing the template will override the existing rounds. Do you want to proceed?"
       />
 
-   {/* <---------------------- v1.0.2 */}
+      {/* <---------------------- v1.0.2 */}
       {/* Candidate Modal */}
       {showCandidateModal && (
         // <div

@@ -160,7 +160,7 @@ const MyProfile = () => {
   const { singlecontact } = useCustomContext();
   const { userProfile, isLoading: userProfileLoading } = useUserProfile();
 
-  console.log("singlecontact", singlecontact);
+  // console.log("singlecontact", singlecontact);
 
   const { effectivePermissions, superAdminPermissions } = usePermissions();
 
@@ -258,12 +258,12 @@ const MyProfile = () => {
   };
 
   // Build a list of tabs that the current user is allowed to see based on user type
-  console.log('🔍 MyProfile Debug:', {
-    userType,
-    isInitialized,
-    permissions,
-    hasMyProfilePermission: permissions?.MyProfile?.ViewTab
-  });
+  // console.log('🔍 MyProfile Debug:', {
+  //   userType,
+  //   isInitialized,
+  //   permissions,
+  //   hasMyProfilePermission: permissions?.MyProfile?.ViewTab
+  // });
 
   const tabsToShow = [
     permissions?.MyProfile?.Basic && 'basic',
@@ -273,7 +273,7 @@ const MyProfile = () => {
     permissions?.MyProfile?.Documents && 'documents',
   ].filter(Boolean);
 
-  console.log('📋 Tabs to show:', tabsToShow);
+  // console.log('📋 Tabs to show:', tabsToShow);
 
   return (
     <div className="flex flex-col h-full bg-gray-50">

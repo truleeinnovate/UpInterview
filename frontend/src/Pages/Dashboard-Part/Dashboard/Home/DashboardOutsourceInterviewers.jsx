@@ -17,7 +17,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
       const nextSlot = availability.days?.[0]?.timeSlots?.[0];
       return {
         id: availability._id,
-        name: contact.Name ? contact.Name.charAt(0).toUpperCase()+contact.Name.charAt(1).toLowerCase() : 'Unknown',
+        name: contact.Name ? contact.Name.charAt(0).toUpperCase() + contact.Name.charAt(1).toLowerCase() : 'Unknown',
         role: contact.CurrentRole || 'N/A',
         image: contact.ImageData?.path
           ? `${process.env.REACT_APP_API_URL}/${contact.ImageData.path.replace(/\\/g, '/')}`
@@ -75,13 +75,12 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
           displayInterviewers.map((interviewer, index) => (
             <div
               key={interviewer.id}
-              className={`absolute top-0 left-0 w-full p-4 border border-gray-200 rounded-xl hover:border-indigo-100 hover:bg-indigo-50/50 transition-all duration-500 ${
-                index === currentIndex
+              className={`absolute top-0 left-0 w-full p-4 border border-gray-200 rounded-xl hover:border-indigo-100 hover:bg-indigo-50/50 transition-all duration-500 ${index === currentIndex
                   ? 'opacity-100 translate-x-0'
                   : index < currentIndex
                     ? '-translate-x-full opacity-0'
                     : 'translate-x-full opacity-0'
-              }`}
+                }`}
             >
               <div className="flex items-start gap-4">
                 <div className="flex flex-col items-center gap-2">
@@ -95,7 +94,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                     <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
                       <span className="text-white font-semibold text-lg">
                         {interviewer.name.split(' ')[1]?.[0]?.toUpperCase() ||
-                         interviewer.name.split(' ')[0]?.[0]?.toUpperCase()}
+                          interviewer.name.split(' ')[0]?.[0]?.toUpperCase()}
                       </span>
                     </div>
                   )}
@@ -125,7 +124,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                   <div className="grid grid-cols-2 gap-y-2 gap-x-6 mb-3">
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500">
                       <Building size={14} />
-                      <span className="truncate">{interviewer.department || interviewer.company}</span>
+                      <span className="truncate block max-w-[120px]">{interviewer.department || interviewer.company}</span>
                     </div>
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500 -ml-6">
                       <MapPin size={14} />
@@ -150,11 +149,10 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
 
                   <div className="flex items-center justify-between">
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
-                        interviewer.availability === 'Available'
+                      className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${interviewer.availability === 'Available'
                           ? 'bg-green-100 text-green-600'
                           : 'bg-yellow-100 text-yellow-600'
-                      }`}
+                        }`}
                     >
                       <CheckCircle size={14} className="mr-1" />
                       {interviewer.availability}
@@ -185,9 +183,8 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                 setSlideDirection(index > currentIndex ? 'right' : 'left');
                 setCurrentIndex(index);
               }}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? 'bg-custom-blue w-4' : 'bg-gray-300'
-              }`}
+              className={`w-2 h-2 rounded-full transition-all ${index === currentIndex ? 'bg-custom-blue w-4' : 'bg-gray-300'
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}

@@ -3,31 +3,32 @@ import React, { useState } from 'react';
 import { format, parseISO, isValid } from 'date-fns';
 
 import {
-  ChevronDown ,
-  ChevronUp ,
+  ChevronDown,
+  ChevronUp,
   Building,
-  Star ,
+  Star,
   Eye,
-  Download ,
-  Mail ,
-  Expand ,
+  Download,
+  Mail,
+  Expand,
   Minimize,
-  User ,
-  Calendar ,
-  Clock ,
-  CheckCircle2 ,
-  X ,
-  Code ,
-  Laptop2 ,
-  MessageCircle 
+  User,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  X,
+  Code,
+  Laptop2,
+  MessageCircle
 } from 'lucide-react';
 
 import Modal from 'react-modal';
+import { useNavigate } from 'react-router-dom';
 
 Modal.setAppElement('#root');
 const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
-  if(round.length === 0) {
+  if (round.length === 0) {
     return <p className='justify-center items-center'>No Rounds selected</p>
   }
 
@@ -144,8 +145,8 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${round.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                      round.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
+                    round.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
                     }`}>
                     {round.status}
                   </span>
@@ -215,12 +216,13 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
   );
 };
 
-const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
+const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => {
+  const navigate = useNavigate();
   const [expandedInterview, setExpandedInterview] = useState(null);
   const [activeTab, setActiveTab] = useState('details');
   const [selectedRound, setSelectedRound] = useState(null);
   const [selectedInterview, setSelectedInterview] = useState(null);
-  
+
   const toggleInterview = (id) => {
     setExpandedInterview(expandedInterview === id ? null : id);
   };
@@ -273,166 +275,169 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
         <h3 className="text-2xl font-bold text-custom-blue">
           Interview Process
         </h3>
-        <button className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20">
+        <button
+          className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20"
+          onClick={() => navigate('/interviews/new', { state: { candidateId, from360: true } })}
+        >
           Add Interview
         </button>
       </div>
 
       {interviews.length === 0 ? <p className='text-center text-lg font-semibold'>No Interviews Scheduled</p> :
 
-      <div className="space-y-4">
-        {/* {
+        <div className="space-y-4">
+          {/* {
          interviews?.map((interview) => ( */}
-        <div
-          // key={interview?._id}
-          className="border border-gray-200 rounded-xl overflow-hidden bg-white transition-all duration-200 hover:shadow-md"
-        >
-          <div className="flex items-center justify-between p-4 bg-gray-50">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Building className="w-5 h-5 text-custom-blue" />
+          <div
+            // key={interview?._id}
+            className="border border-gray-200 rounded-xl overflow-hidden bg-white transition-all duration-200 hover:shadow-md"
+          >
+            <div className="flex items-center justify-between p-4 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <Building className="w-5 h-5 text-custom-blue" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-800">{interviews?.positionId?.companyname || "N/A"}</h4>
+                  <p className="text-sm text-gray-600">{interviews?.positionId?.title || "N/A"}</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-semibold text-gray-800">{interviews?.positionId?.companyname || "N/A"}</h4>
-                <p className="text-sm text-gray-600">{interviews?.positionId?.title || "N/A"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onViewDetails(interviews)}
-                className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-                title="View Details"
-              >
-                <Eye className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => toggleInterview(interviews?._id)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {expandedInterview === interviews?._id ? (
-                  <ChevronUp className="w-4 h-4 text-gray-600" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {expandedInterview === interviews?._id && (
-            <div className="p-4">
-              <div className="flex gap-4 mb-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
                 <button
-                  className={`pb-2 px-1 text-sm font-medium transition-colors relative ${activeTab === 'details'
+                  onClick={() => onViewDetails(interviews)}
+                  className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
+                  title="View Details"
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => toggleInterview(interviews?._id)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  {expandedInterview === interviews?._id ? (
+                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {expandedInterview === interviews?._id && (
+              <div className="p-4">
+                <div className="flex gap-4 mb-4 border-b border-gray-200">
+                  <button
+                    className={`pb-2 px-1 text-sm font-medium transition-colors relative ${activeTab === 'details'
                       ? 'text-custom-blue border-b-2 border-custom-blue'
                       : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                  onClick={() => setActiveTab('details')}
-                >
-                  Details
-                </button>
-                <button
-                  className={`pb-2 px-1 text-sm font-medium transition-colors relative ${activeTab === 'feedback'
+                      }`}
+                    onClick={() => setActiveTab('details')}
+                  >
+                    Details
+                  </button>
+                  <button
+                    className={`pb-2 px-1 text-sm font-medium transition-colors relative ${activeTab === 'feedback'
                       ? 'text-custom-blue border-b-2 '
                       : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                  onClick={() => setActiveTab('feedback')}
-                >
-                  Feedback
-                </button>
-              </div>
+                      }`}
+                    onClick={() => setActiveTab('feedback')}
+                  >
+                    Feedback
+                  </button>
+                </div>
 
-              {activeTab === 'details' ? (
-                <div className="space-y-4">
-                  {interviews?.rounds.map((round, index) => (
-                    <div
-                      key={index}
-                      className="border-l-4 border-custom-blue pl-4 py-2"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h5 className="font-semibold text-gray-800">{round?.roundTitle || "N/A"}</h5>
-                          <p className="text-sm text-gray-600">Interviewer: {round.interviewers[0]?.name || "N/A"}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm text-gray-500">
-                            {round?.dateTime
-                              ? (() => {
-                                try {
-                                  // Extract date part from datetime string
-                                  const datePart = round.dateTime.split(' ')[0];
+                {activeTab === 'details' ? (
+                  <div className="space-y-4">
+                    {interviews?.rounds.map((round, index) => (
+                      <div
+                        key={index}
+                        className="border-l-4 border-custom-blue pl-4 py-2"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h5 className="font-semibold text-gray-800">{round?.roundTitle || "N/A"}</h5>
+                            <p className="text-sm text-gray-600">Interviewer: {round.interviewers[0]?.name || "N/A"}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm text-gray-500">
+                              {round?.dateTime
+                                ? (() => {
+                                  try {
+                                    // Extract date part from datetime string
+                                    const datePart = round.dateTime.split(' ')[0];
 
-                                  // Convert DD-MM-YYYY → YYYY-MM-DD
-                                  const formattedDate = datePart.split('-').reverse().join('-');
+                                    // Convert DD-MM-YYYY → YYYY-MM-DD
+                                    const formattedDate = datePart.split('-').reverse().join('-');
 
-                                  // Format date to "MMM dd, yyyy"
-                                  return format(new Date(formattedDate), 'MMM dd, yyyy');
-                                } catch (error) {
-                                  console.error("Invalid date format:", round?.dateTime, error);
-                                  return 'Invalid Date';
-                                }
-                              })()
-                              : 'N/A'}
+                                    // Format date to "MMM dd, yyyy"
+                                    return format(new Date(formattedDate), 'MMM dd, yyyy');
+                                  } catch (error) {
+                                    console.error("Invalid date format:", round?.dateTime, error);
+                                    return 'Invalid Date';
+                                  }
+                                })()
+                                : 'N/A'}
 
-                          </span>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`
+                            </span>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`
                                 px-2 py-1 rounded-full text-xs font-medium
                                 ${round.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                round.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'}
+                                  round.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-gray-100 text-gray-800'}
                               `}>
-                              {round?.status || "N/A"}
-                            </span>
-                            <button
-                              onClick={() => handleViewRound(interviews, round)}
-                              className="p-1 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-                              title="View Round Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {interviews?.rounds?.length > 0 &&
-                    interviews?.rounds?.map((round, index) => (
-                      <div key={index} className="bg-gray-50 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h6 className="font-medium text-gray-800">{round?.roundTitle}</h6>
-                          <div className="flex items-center gap-2">
-                            {round.feedback && (
-                              <>
-                                <button
-                                  // onClick={() => handleEmailFeedback(interview, round)}
-                                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                  title="Email Feedback"
-                                >
-                                  <Mail className="w-4 h-4" />
-                                </button>
-                                <button
-                                  // onClick={() => downloadFeedback(interview, round)}
-                                  className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-                                  title="Download Feedback"
-                                >
-                                  <Download className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={`w-4 h-4 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
-                                />
-                              ))}
+                                {round?.status || "N/A"}
+                              </span>
+                              <button
+                                onClick={() => handleViewRound(interviews, round)}
+                                className="p-1 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                title="View Round Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
                         </div>
-                        {/* {round.feedback && (
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {interviews?.rounds?.length > 0 &&
+                      interviews?.rounds?.map((round, index) => (
+                        <div key={index} className="bg-gray-50 rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h6 className="font-medium text-gray-800">{round?.roundTitle}</h6>
+                            <div className="flex items-center gap-2">
+                              {round.feedback && (
+                                <>
+                                  <button
+                                    // onClick={() => handleEmailFeedback(interview, round)}
+                                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                    title="Email Feedback"
+                                  >
+                                    <Mail className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    // onClick={() => downloadFeedback(interview, round)}
+                                    className="p-2 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                    title="Download Feedback"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+                              <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`w-4 h-4 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          {/* {round.feedback && (
                           <>
                             <p className="text-sm text-gray-600 mb-3">{round.feedback}</p>
                             <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
@@ -454,18 +459,18 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
                             </div>
                           </>
                         )} */}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          {/* // ))} */}
         </div>
-        {/* // ))} */}
-      </div>
 
-        }
-      
+      }
+
       {selectedRound && selectedInterview && (
         <RoundDetailsModal
           round={selectedRound}
@@ -477,7 +482,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit }) => {
           }}
         />
       )}
-    
+
     </div>
   );
 };
