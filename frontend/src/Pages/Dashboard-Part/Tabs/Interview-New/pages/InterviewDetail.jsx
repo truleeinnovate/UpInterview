@@ -98,9 +98,9 @@ const InterviewDetail = () => {
   }, [rounds]);
 
   // Ensure hooks are always called before any conditional return
-  if (!interview) {
-    return <Loading />;
-  }
+  // if (!interview) {
+  //   return <Loading />;
+  // }
 
   if (!interview) {
     return (

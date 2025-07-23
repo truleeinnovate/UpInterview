@@ -66,7 +66,7 @@ const MainContent = () => {
   };
 
 
-  if (!candidate) return <Loading />
+  // if (!candidate) return <Loading />
 
 
   const handleViewInterview = (interviewId) => {

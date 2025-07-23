@@ -659,9 +659,9 @@ function RoundFormPosition() {
     }
   };
 
-  if (!rounds) {
-    return <div><Loading /></div>;
-  }
+  // if (!rounds) {
+  //   return <div><Loading /></div>;
+  // }
 
   // Create breadcrumb items with status
   const breadcrumbItems = isPositionContext

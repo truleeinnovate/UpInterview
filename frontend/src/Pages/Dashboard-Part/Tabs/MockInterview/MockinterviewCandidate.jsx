@@ -9,7 +9,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
     console.log("candidate ", candidate );
     
 
-  if (!candidate) return <div className='text-center h-full w-full justify-center items-center'><Loading /></div>;
+  // if (!candidate) return <div className='text-center h-full w-full justify-center items-center'><Loading /></div>;
   // const [isEditing, setIsEditing] = useState(false);
   // const [editedCandidate, setEditedCandidate] = useState(candidate);
 

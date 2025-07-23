@@ -120,7 +120,7 @@ const PositionSlideDetails = () => {
     { id: 'Activity', name: 'Activity', icon: '📊' }
   ];
 
-  if (!position) return <div className='flex justify-center items-center h-full w-full'><Loading /></div>;
+  // if (!position) return <div className='flex justify-center items-center h-full w-full'><Loading /></div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
