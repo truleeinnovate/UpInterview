@@ -64,7 +64,7 @@ const CustomDropdown = ({
       .includes(searchTerm.toLowerCase());
   });
 
-  
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -142,7 +142,7 @@ const CustomDropdown = ({
 };
 
 // Main AddCandidateForm Component
-const AddCandidateForm = ({ mode, onClose, isModal = false }) => {
+const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = false }) => {
   const { skills, colleges, qualifications, currentRoles } = useMasterData();
 
   console.log("currentRoles:", currentRoles);
@@ -1386,7 +1386,7 @@ const AddCandidateForm = ({ mode, onClose, isModal = false }) => {
                   {id ? "Update" : "Save"}
                 </LoadingButton>
 
-                {!id && (
+                {!hideAddButton && !id && (
                   <LoadingButton
                     onClick={(e) => handleSubmit(e, true)}
                     isLoading={isMutationLoading && activeButton === 'add'}
