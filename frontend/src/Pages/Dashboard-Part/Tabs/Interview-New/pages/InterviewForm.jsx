@@ -221,7 +221,6 @@ const InterviewForm = () => {
       setCandidateId(newCandidate._id);
       setCandidateError('');
     }
-    toast.success("Candidate created successfully!");
     // The candidate data will be automatically refreshed by the useCandidates hook
   };
 
@@ -231,7 +230,6 @@ const InterviewForm = () => {
       setPositionId(newPosition._id);
       setPositionError('');
     }
-    toast.success("Position created successfully!");
     // The position data will be automatically refreshed by the usePositions hook
   };
 
@@ -357,11 +355,7 @@ const InterviewForm = () => {
       });
       // On success, navigate to rounds step and pass state
       const interviewId = result?._id || id;
-      if (from360 && candidateId) {
-        navigate(`/interviews/${interviewId}/rounds/new`, { state: { candidateId, from360 } });
-      } else {
-        navigate('/interviewList');
-      }
+      navigate(`/interviews/${interviewId}/rounds/new`, { state: { candidateId, from360 } });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -507,7 +501,6 @@ const InterviewForm = () => {
                     >
                       {isEditing ? "Update Interview" : "Create Interview"}
                     </LoadingButton>
-
                   </div>
                 </div>
               </form>
@@ -543,6 +536,7 @@ const InterviewForm = () => {
           mode="Create"
           onClose={handleCandidateCreated}
           isModal={true}
+          hideAddButton={true}
         />
         //   </div>
         // </div>

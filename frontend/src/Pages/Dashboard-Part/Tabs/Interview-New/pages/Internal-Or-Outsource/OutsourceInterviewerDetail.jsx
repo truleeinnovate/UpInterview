@@ -348,7 +348,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[50]">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-                <div className=" border-b border-gray-200 px-4 py-2">
+                <div className=" border-b border-gray-200 px-4 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
                             <InterviewerAvatar interviewer={interviewer} size="lg" />
@@ -418,7 +418,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
                     {renderTabContent()}
                 </div>
 
-                <div className="flex justify-end space-x-3 px-4 py-2 border-t border-gray-200">
+                <div className="flex justify-end space-x-3 px-4 py-3 border-t border-gray-200">
                     <button
                         onClick={onClose}
                         className="px-4 py-1 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"

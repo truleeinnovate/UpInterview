@@ -276,7 +276,9 @@ function InterviewList() {
                 className="text-sm font-medium text-custom-blue cursor-pointer truncate"
                 onClick={() => handleViewPosition(position)}
               >
-                {position?.title.charAt(0).toUpperCase() + position?.title.slice(1) || 'Unknown'}
+                {position?.title
+                  ? position.title.charAt(0).toUpperCase() + position.title.slice(1)
+                  : 'Unknown'}
               </div>
               <div className="text-sm text-gray-500 truncate">
                 {position?.companyname || 'No Company'} • {position?.Location || 'No location'}
@@ -391,19 +393,19 @@ function InterviewList() {
   const tableActions = [
     ...(effectivePermissions.Interviews?.View
       ? [{
-          key: 'view',
-          label: 'View Details',
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: handleViewInterview,
-        }]
+        key: 'view',
+        label: 'View Details',
+        icon: <Eye className="w-4 h-4 text-custom-blue" />,
+        onClick: handleViewInterview,
+      }]
       : []),
     ...(effectivePermissions.Interviews?.Edit
       ? [{
-          key: 'edit',
-          label: 'Edit',
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: handleEditInterview,
-        }]
+        key: 'edit',
+        label: 'Edit',
+        icon: <Pencil className="w-4 h-4 text-green-600" />,
+        onClick: handleEditInterview,
+      }]
       : []),
   ];
 
