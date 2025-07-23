@@ -62,9 +62,9 @@ const ConfirmationModal = ({
 // Set app element for accessibility
 Modal.setAppElement("#root");
 
-const UserProfileDetails = ({type}) => {
+const UserProfileDetails = ({ type }) => {
   console.log("type in UserProfileDetails", type);
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const userData = location.state?.userData;
@@ -80,6 +80,7 @@ const UserProfileDetails = ({type}) => {
   const [advacedEditOpen, setAdvacedEditOpen] = useState(false);
   const [interviewEditOpen, setInterviewEditOpen] = useState(false);
   const [availabilityEditOpen, setAvailabilityEditOpen] = useState(false);
+  const [availabilityData, setAvailabilityData] = useState(null);
 
   console.log("userData", userData);
 
@@ -97,6 +98,22 @@ const UserProfileDetails = ({type}) => {
 
   const handleInterviewEditSuccess = () => {
     refetchUsers(); // Refresh the users data in context
+  };
+
+  const handleAvailabilityEditSuccess = () => {
+    refetchUsers(); // Refresh the users data in context
+    setAvailabilityData(null); // Clear the availability data
+  };
+
+  const handleAvailabilityEditClick = (data) => {
+    console.log("Availability edit clicked with data:", data);
+    setAvailabilityData(data);
+    setAvailabilityEditOpen(true);
+  };
+
+  const handleAvailabilityEditClose = () => {
+    setAvailabilityEditOpen(false);
+    setAvailabilityData(null); // Clear the availability data
   };
 
   // useEffect(() => {
@@ -144,18 +161,18 @@ const UserProfileDetails = ({type}) => {
   const isInternalInterviewer = userData.roleName === "Internal_Interviewer";
   const tabs = isInternalInterviewer
     ? [
-        { id: "basic", label: "Basic Details" },
-        { id: "advanced", label: "Advanced Details" },
-        { id: "interview", label: "Interview Details" },
-        { id: "availability", label: "Availability" },
-      ]
+      { id: "basic", label: "Basic Details" },
+      { id: "advanced", label: "Advanced Details" },
+      { id: "interview", label: "Interview Details" },
+      { id: "availability", label: "Availability" },
+    ]
     : [
-        { id: "basic", label: "Basic Details" },
-        { id: "advanced", label: "Advanced Details" },
-      ];
+      { id: "basic", label: "Basic Details" },
+      { id: "advanced", label: "Advanced Details" },
+    ];
 
-      console.log("userData",userData);
-      
+  console.log("userData", userData);
+
 
   const renderBasicDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
@@ -202,6 +219,7 @@ const UserProfileDetails = ({type}) => {
           usersId={userData?._id}
           setAvailabilityEditOpen={setAvailabilityEditOpen}
           isFullScreen={isFullScreen}
+          onEditClick={handleAvailabilityEditClick}
         />
       </div>
     );
@@ -241,10 +259,10 @@ const UserProfileDetails = ({type}) => {
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
                 >
                   {isFullScreen ? (
-                <ArrowsPointingInIcon className="h-5 w-5" />
-              ) : (
-                <ArrowsPointingOutIcon className="h-5 w-5" />
-              )}
+                    <ArrowsPointingInIcon className="h-5 w-5" />
+                  ) : (
+                    <ArrowsPointingOutIcon className="h-5 w-5" />
+                  )}
                 </button>
                 <button
                   onClick={handleClose}
@@ -264,8 +282,8 @@ const UserProfileDetails = ({type}) => {
                       (userData.gender === "Male"
                         ? maleImage
                         : userData.gender === "Female"
-                        ? femaleImage
-                        : genderlessImage)
+                          ? femaleImage
+                          : genderlessImage)
                     }
                     alt={userData?.firstName || "User"}
                     onError={(e) => {
@@ -276,7 +294,7 @@ const UserProfileDetails = ({type}) => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">
-                    {userData.firstName ? userData.firstName.charAt(0).toUpperCase()+userData.firstName.slice(1) : ""} {userData.lastName ? userData.lastName.charAt(0).toUpperCase()+userData.lastName.slice(1) : ""}
+                    {userData.firstName ? userData.firstName.charAt(0).toUpperCase() + userData.firstName.slice(1) : ""} {userData.lastName ? userData.lastName.charAt(0).toUpperCase() + userData.lastName.slice(1) : ""}
                   </h3>
                   <p className="text-gray-600">
                     {userData.currentRole || userData.label || "N/A"}
@@ -285,11 +303,10 @@ const UserProfileDetails = ({type}) => {
               </div>
               <div className="flex items-center space-x-2">
                 <span
-                  className={`text-sm font-medium ${
-                    newStatus === "active"
-                      ? "text-custom-blue"
-                      : "text-gray-500"
-                  }`}
+                  className={`text-sm font-medium ${newStatus === "active"
+                    ? "text-custom-blue"
+                    : "text-gray-500"
+                    }`}
                 >
                   {newStatus === "active" ? "Active" : "Inactive"}
                 </span>
@@ -373,10 +390,10 @@ const UserProfileDetails = ({type}) => {
         {availabilityEditOpen && (
           <EditAvailabilityDetails
             from="users"
-
             usersId={userData._id}
-            setAvailabilityEditOpen={setAvailabilityEditOpen}
-            onSuccess={handleInterviewEditSuccess}
+            setAvailabilityEditOpen={handleAvailabilityEditClose}
+            onSuccess={handleAvailabilityEditSuccess}
+            availabilityData={availabilityData}
           />
         )}
       </Modal>

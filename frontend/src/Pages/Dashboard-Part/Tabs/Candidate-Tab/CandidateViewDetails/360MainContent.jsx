@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import InterviewRounds from './InterviewRounds';
 import AppliedPositions from './AppliedPositions';
-import Timeline from './Timeline'; 
+import Timeline from './Timeline';
 import PositionDetails from './PositionDetails';
 import InterviewDetails from './InterviewDetails';
 import classNames from 'classnames';
@@ -36,14 +36,14 @@ const MainContent = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editModeOn, setEditModeOn] = useState(false);
   const [slideShow, setSlideShow] = useState(false);
-  
+
   // const {
   //   interviewData
   // } = useCustomContext();
 
-    const {
-      interviewData,
-    } = useInterviews();
+  const {
+    interviewData,
+  } = useInterviews();
 
   const interview = interviewData.find((data) => data?.candidateId?._id === id);
 
@@ -66,7 +66,7 @@ const MainContent = () => {
   };
 
 
-  if (!candidate) return  <Loading />
+  if (!candidate) return <Loading />
 
 
   const handleViewInterview = (interviewId) => {
@@ -152,6 +152,7 @@ const MainContent = () => {
                     interviews={interview || []}
                     onViewDetails={setSelectedInterview}
                     onEdit={handleEdit}
+                    candidateId={id}
                   />
                   {selectedInterview && (
                     <InterviewDetails
@@ -187,7 +188,7 @@ const MainContent = () => {
               {activeTab === 'documents' && (
                 <Documents documents={candidate.documents || []} />
               )}
-               {activeTab === 'Activity' && (
+              {activeTab === 'Activity' && (
                 <Activity parentId={id} />
               )}
             </div>
@@ -209,7 +210,7 @@ const MainContent = () => {
         // onSave={handleAddCandidate}
         />} */}
       </main>
-     
+
       <Outlet />
 
     </div>

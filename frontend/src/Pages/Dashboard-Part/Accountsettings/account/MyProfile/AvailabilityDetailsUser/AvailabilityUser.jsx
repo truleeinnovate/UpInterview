@@ -7,7 +7,7 @@ import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
 import { useUserProfile } from '../../../../../../apiHooks/useUsers';
 import { useInterviewAvailability } from '../../../../../../apiHooks/useInterviewAvailability';
 
-const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen }) => {
+const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen, onEditClick }) => {
   // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({})
@@ -197,12 +197,32 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
         <h3 className={`text-lg font-medium ${mode === 'users' ? 'hidden' : ""}`}>Availability</h3>
 
         <button
-          onClick={() =>
-            mode === 'users' ?
-              setAvailabilityEditOpen(true)
-              : navigate(`/account-settings/my-profile/availability-edit/${contactData?._id}`)
-
-          }
+          onClick={() => {
+            if (mode === 'users') {
+              // Pass availability data to the parent component
+              if (onEditClick) {
+                onEditClick({
+                  availabilityData: availability,
+                  userProfile: userProfile,
+                  times: times,
+                  selectedTimezone: selectedTimezone,
+                  selectedOption: selectedOption
+                });
+              }
+              setAvailabilityEditOpen(true);
+            } else {
+              // Pass availability data through navigation state
+              navigate(`/account-settings/my-profile/availability-edit/${contactData?._id}`, {
+                state: {
+                  availabilityData: availability,
+                  userProfile: userProfile,
+                  times: times,
+                  selectedTimezone: selectedTimezone,
+                  selectedOption: selectedOption
+                }
+              });
+            }
+          }}
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
         >
           Edit
