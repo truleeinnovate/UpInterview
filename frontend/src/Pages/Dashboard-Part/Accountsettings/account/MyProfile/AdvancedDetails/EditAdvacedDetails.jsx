@@ -1,3 +1,5 @@
+//v1.0.0 removed coverLetterdescription feild by Ranjith
+
 import React, { useEffect, useRef, useState } from "react";
 import { Expand, Minimize, Search, X, ChevronDown } from "lucide-react";
 import classNames from "classnames";
@@ -79,7 +81,7 @@ const EditAdvacedDetails = ({
     industry: "",
     experience: "",
     location: "",
-    coverLetterdescription: "",
+    // coverLetterdescription: "",
   });
 
   // const [resumeName, setResumeName] = useState("");
@@ -111,7 +113,7 @@ const EditAdvacedDetails = ({
         industry: userProfile.industry || "",
         experience: userProfile.yearsOfExperience || "",
         location: userProfile.location || "",
-        coverLetterdescription: userProfile.coverLetterdescription || "",
+        // coverLetterdescription: userProfile.coverLetterdescription || "",
         id: userProfile._id,
       });
       // setResumeName(userProfile?.resume?.filename);
@@ -211,7 +213,7 @@ const EditAdvacedDetails = ({
       industry: formData.industry?.trim() || "",
       yearsOfExperience: formData.experience?.trim() || "",
       location: formData.location?.trim() || "",
-      coverLetterdescription: formData.coverLetterdescription?.trim() || "",
+      // coverLetterdescription: formData.coverLetterdescription?.trim() || "",
       // skills: formData.skills
       id: formData._id,
     };
@@ -692,7 +694,7 @@ const EditAdvacedDetails = ({
               </div> */}
             </div>
 
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Cover Letter Description{" "}
               </label>
@@ -713,7 +715,7 @@ const EditAdvacedDetails = ({
               <p className="text-gray-600 text-sm sm:text-xs float-right mt-0.5">
                 {formData.coverLetterdescription.length}/500
               </p>
-            </div>
+            </div> */}
 
             <div className="flex justify-end space-x-3 mr-2 ">
               <button

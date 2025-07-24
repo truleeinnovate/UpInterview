@@ -179,7 +179,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   };
-  
+
   const prevPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prevPage) => prevPage - 1);
@@ -195,7 +195,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
     setCurrentPage(0);
   };
   const kanbanColumns = [];
-
 
   // Table Columns Configuration
   const tableColumns = [
@@ -221,11 +220,34 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             )}
           </div>
           <div className="ml-3">
-                          <div
-                className="text-sm font-medium text-custom-blue cursor-pointer"
-                onClick={() => effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)}
-              >
-              {(row?.FirstName.charAt(0).toUpperCase() + row.FirstName.slice(1) || "") + " " + (row.LastName.charAt(0).toUpperCase() + row.LastName.slice(1) || "")}
+            <div
+              className="text-sm font-medium text-custom-blue cursor-pointer"
+              onClick={
+                () =>
+                  navigate(
+                    isAssessmentView
+                      ? `/assessment/${row?.assessmentId}/view-details/${row?._id}`
+                      : // `/assessments/candidate-details/${row._id}`
+                        effectivePermissions.Candidates?.View &&
+                          `view-details/${row._id}`,
+                    {
+                      state: isAssessmentView
+                        ? {
+                            from: `/assessment-details/${row?.assessmentId}`,
+                            assessmentId: row?.assessmentId,
+                          }
+                        : { from: "/candidate" },
+                    }
+                  )
+
+                //  effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)
+              }
+            >
+              {(row?.FirstName.charAt(0).toUpperCase() +
+                row.FirstName.slice(1) || "") +
+                " " +
+                (row.LastName.charAt(0).toUpperCase() + row.LastName.slice(1) ||
+                  "")}
             </div>
           </div>
         </div>
@@ -281,7 +303,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
 
   // Table Actions Configuration
   const tableActions = [
-            ...(effectivePermissions.Candidates?.View
+    ...(effectivePermissions.Candidates?.View
       ? [
           {
             key: "view",
@@ -290,8 +312,9 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
             onClick: (row) =>
               navigate(
                 isAssessmentView
-                  ? `candidate-details/${row._id}`
-                  : `view-details/${row._id}`,
+                  ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
+                  : // `/assessments/candidate-details/${row._id}`
+                    `view-details/${row._id}`,
                 {
                   state: isAssessmentView
                     ? {
@@ -301,6 +324,19 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                     : { from: "/candidate" },
                 }
               ),
+            // navigate(
+            //   isAssessmentView
+            //     ? `candidate-details/${row._id}`
+            //     : `view-details/${row._id}`,
+            //   {
+            //     state: isAssessmentView
+            //       ? {
+            //           from: `/assessment-details/${row?.assessmentId}`,
+            //           assessmentId: row?.assessmentId,
+            //         }
+            //       : { from: "/candidate" },
+            //   }
+            // ),
           },
         ]
       : []),
@@ -340,12 +376,18 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
     <div className="flex items-center gap-1">
-              {effectivePermissions.Candidates?.View && (
+      {effectivePermissions.Candidates?.View && (
         <button
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`view-details/${item._id}`);
+            isAssessmentView
+              ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
+              : navigate(`view-details/${item._id}`);
           }}
+          // onClick={(e) => {
+          //   e.stopPropagation();
+          //   navigate(`view-details/${item._id}`);
+          // }}
           className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
           title="View Details"
         >
@@ -459,16 +501,28 @@ function Candidate({ candidates, onResendLink, isAssessmentView }) {
                       data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
                         id: candidate._id,
-                        title: `${candidate?.FirstName || ""} ${candidate?.LastName || ""}`.trim(),
-                        firstName: `${candidate?.FirstName.charAt(0).toUpperCase()+candidate?.FirstName.slice(1) || ""} ${candidate?.LastName.charAt(0).toUpperCase()+candidate?.LastName.slice(1) || ""}`.trim(),
-                        currentRole: candidate?.CurrentRole || candidate?.CurrentExperience || "N/A",
+                        title: `${candidate?.FirstName || ""} ${
+                          candidate?.LastName || ""
+                        }`.trim(),
+                        firstName: `${
+                          candidate?.FirstName.charAt(0).toUpperCase() +
+                            candidate?.FirstName.slice(1) || ""
+                        } ${
+                          candidate?.LastName.charAt(0).toUpperCase() +
+                            candidate?.LastName.slice(1) || ""
+                        }`.trim(),
+                        currentRole:
+                          candidate?.CurrentRole ||
+                          candidate?.CurrentExperience ||
+                          "N/A",
                         email: candidate?.Email || "N/A",
                         phone: candidate?.Phone || "N/A",
                         industry: candidate?.HigherQualification || "N/A",
                         linkedinUrl: candidate?.CurrentExperience || "N/A",
                         skills: candidate?.skills || [],
                         avatar: candidate?.ImageData?.path || null,
-                        status: candidate?.HigherQualification || "Not Provided",
+                        status:
+                          candidate?.HigherQualification || "Not Provided",
                         isAssessmentView: isAssessmentView,
                       }))}
                       columns={kanbanColumns}
