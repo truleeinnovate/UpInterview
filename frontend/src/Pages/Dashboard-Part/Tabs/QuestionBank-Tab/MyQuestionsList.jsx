@@ -596,7 +596,7 @@ const selectedLabelId = useMemo(() => {
 
   return (
     <div className="w-full px-4 py-2 mt-10 bg-white">
-      <div className={`flex items-center justify-between fixed z-40 ${type === "interviewerSection" || type === "assessment" ? "left-12 right-12" : "left-7 right-7"}`}>
+      <div className={`flex items-center justify-between fixed z-40 ${type === "interviewerSection" || type === "assessment" ? "left-32 right-32" : "left-7 right-7"}`}>
         <div className="flex items-center gap-2">
           <div className="relative inline-block w-48">
             <button
@@ -894,7 +894,7 @@ const selectedLabelId = useMemo(() => {
                             </div>
                           )}
                           <div className="p-4 pt-0">
-                            <p className="text-sm break-words whitespace-pre-wrap">
+                            <p className="text-sm break-words whitespace-pre-wrap pt-2">
                               <span className="font-medium text-gray-700">Answer: </span>
                               <span className="text-gray-600">
                                 {question.questionType === "MCQ" && question.options

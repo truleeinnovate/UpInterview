@@ -1,5 +1,6 @@
 // v1.0.0 ------ Venkatesh------ I’ve set both “Save” buttons inside to type="button", preventing them from triggering the parent <form> submit.Now, when you create or update a Question List, the main form’s validation won’t fire unexpectedly.
 //<---------------------- v1.0.0------Venkatesh------Simple check to ensure the list label and name are unique (case-insensitive)
+//<---------------------- v1.0.1------Venkatesh------Prevent double-click save (simplified)
 
 import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
@@ -89,29 +90,29 @@ const MyQuestionsList1 = forwardRef(
       closePopup: () => setShowNewListPopup(false),
     }));
 
-    //<------v1.0.0----- Prevent double-click save
-    const isSavingRef = useRef(false);
+    //---------------------- v1.0.1------
+    //<------v1.0.1----- Prevent double-click save (simplified)
+    const [isSaving, setIsSaving] = useState(false);
+    const [isAddingToList, setIsAddingToList] = useState(false);
 
     const handleSave = async () => {
-      if (isSavingRef.current || saveOrUpdateListLoading) return; // Prevent double-click
-      isSavingRef.current = true;
-      // setSaveOrUpdateListLoading(true);
+      if (saveOrUpdateListLoading || isSaving) return; // Prevent multiple clicks
+      setIsSaving(true);
       
       if (!newListName.trim()) {
-        isSavingRef.current = false;
-        // setSaveOrUpdateListLoading(false);
         setInputError('Label is required.');
+        setIsSaving(false);
         return;
       }
       if (!newListNameForName.trim()) {
-        isSavingRef.current = false;
-        // setSaveOrUpdateListLoading(false);
         setInputError('Name is required.');
+        setIsSaving(false);
         return;
       }
 
       // Simple check to ensure the list label and name are unique (case-insensitive)
-      //<---------------------- v1.0.0------
+      //---------------------- v1.0.0------>
+      //---------- v1.0.1------>
       const duplicateLabel = createdLists.some(
         (list) =>
           list.label &&
@@ -119,9 +120,8 @@ const MyQuestionsList1 = forwardRef(
           (!isEditing || list._id !== editingSectionId)
       );
       if (duplicateLabel) {
-        isSavingRef.current = false;
-        // setSaveOrUpdateListLoading(false);
         setInputError('A list with this label already exists.');
+        setIsSaving(false);
         return;
       }
 
@@ -132,9 +132,8 @@ const MyQuestionsList1 = forwardRef(
           (!isEditing || list._id !== editingSectionId)
       );
       if (duplicateName) {
-        isSavingRef.current = false;
-        // setSaveOrUpdateListLoading(false);
         setInputError('A list with this name already exists.');
+        setIsSaving(false);
         return;
       }
 
@@ -165,10 +164,8 @@ const MyQuestionsList1 = forwardRef(
       } catch (error) {
         console.error('Error saving list:', error);
       } finally {
-        isSavingRef.current = false;
-        // setSaveOrUpdateListLoading(false);
+        setIsSaving(false);
       }
-      
     };
     //-------v1.0.0------->
 
@@ -184,7 +181,8 @@ const MyQuestionsList1 = forwardRef(
     };
 
     const handleAddToList = async () => {
-      if (addQuestionToListLoading) return; // Prevent double-click
+      if (addQuestionToListLoading || isAddingToList) return; // Prevent multiple clicks
+      setIsAddingToList(true);
       try {
         // Determine lists to add and remove
         const currentListIds = existingQuestion?.data?.tenantListId?.map((id) => id.toString()) || [];
@@ -218,6 +216,8 @@ const MyQuestionsList1 = forwardRef(
         closeDropdown();
       } catch (error) {
         console.error('Error updating question lists:', error);
+      } finally {
+        setIsAddingToList(false);
       }
     };
 
@@ -328,9 +328,9 @@ const MyQuestionsList1 = forwardRef(
                 type="button"
                 //----v1.0.0--->
                 onClick={handleAddToList}
-                isLoading={addQuestionToListLoading}
+                isLoading={addQuestionToListLoading || isAddingToList}
                 loadingText="Updating..."
-                disabled={addQuestionToListLoading}
+                disabled={addQuestionToListLoading || isAddingToList}
               >
                 Save
               </LoadingButton>
@@ -348,10 +348,11 @@ const MyQuestionsList1 = forwardRef(
               <div className="relative" ref={popupRef}>
                 <input
                 placeholder="Select Question List"
-                  className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
+                  className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 cursor-pointer ${
                     error ? 'border-red-500' : 'border-gray-300 focus:border-black'
                   }`}
                   onClick={togglePopup}
+                  readOnly
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
                   <MdArrowDropDown
@@ -536,9 +537,9 @@ const MyQuestionsList1 = forwardRef(
                   type="button"
                   //------v1.0.0--->
                   onClick={handleSave}
-                  isLoading={saveOrUpdateListLoading}
+                  isLoading={saveOrUpdateListLoading || isSaving}
                   loadingText={isEditing ? 'Updating...' : 'Saving...'}
-                  disabled={saveOrUpdateListLoading}
+                  disabled={saveOrUpdateListLoading || isSaving}
                 >
                   {isEditing ? 'Update' : 'Save'}
                 </LoadingButton>
