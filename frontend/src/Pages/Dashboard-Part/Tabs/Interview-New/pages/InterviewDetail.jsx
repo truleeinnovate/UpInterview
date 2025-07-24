@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+// v1.0.0 - Ranjith added the interview details tab new things relaetd path set for candidate and postion view tab show proeprly
+
+import React, { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   User,
   Briefcase,
@@ -13,42 +15,52 @@ import {
   LayoutList,
   LayoutGrid,
   ExternalLink,
-  Users
-} from 'lucide-react';
-import Breadcrumb from '../../CommonCode-AllTabs/Breadcrumb.jsx';
-import InterviewProgress from '../components/InterviewProgress';
-import StatusBadge from '../../CommonCode-AllTabs/StatusBadge.jsx';
-import FinalFeedbackModal from '../components/FinalFeedbackModal';
-import CompletionReasonModal from '../components/CompletionReasonModal';
-import SingleRoundView from '../components/SingleRoundView';
-import VerticalRoundsView from '../components/VerticalRoundsView';
-import PositionSlideDetails from '../../Position-Tab/PositionSlideDetails';
-import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
-import Loading from '../../../../../Components/Loading.js';
+  Users,
+} from "lucide-react";
+import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
+import InterviewProgress from "../components/InterviewProgress";
+import StatusBadge from "../../CommonCode-AllTabs/StatusBadge.jsx";
+import FinalFeedbackModal from "../components/FinalFeedbackModal";
+import CompletionReasonModal from "../components/CompletionReasonModal";
+import SingleRoundView from "../components/SingleRoundView";
+import VerticalRoundsView from "../components/VerticalRoundsView";
+import PositionSlideDetails from "../../Position-Tab/PositionSlideDetails";
+import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
+import Loading from "../../../../../Components/Loading.js";
+import CandidateDetails from "../../Candidate-Tab/CandidateViewDetails/CandidateDetails.jsx";
 
 const InterviewDetail = () => {
   const { id } = useParams();
-  const {
-    interviewData,
-    updateInterviewStatus,
-  } = useInterviews();
+  const { interviewData, updateInterviewStatus } = useInterviews();
 
-
-  const interview = interviewData?.find(interview => interview._id === id);
+  const interview = interviewData?.find((interview) => interview._id === id);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState(null);
-  const [selectPositionView, setSelectPositionView] = useState(false);
+  // const [selectedPosition, setSelectedPosition] = useState(null);
+  // const [selectPositionView, setSelectPositionView] = useState(false);
   const handleView = (candidate) => {
     if (!candidate) return; // Prevents error if candidate is undefined
     setSelectedCandidate(candidate);
     setSelectCandidateView(true);
   };
+  // const handleViewPosition = (position) => {
+  //   setSelectedPosition(position);
+  //   setSelectPositionView(true);
+  // };
+
+  // <-------v1.0.0 - Ranjith
+
   const handleViewPosition = (position) => {
-    setSelectedPosition(position);
-    setSelectPositionView(true);
+    navigate(`/position/view-details/${position._id}`, {
+      state: {
+        mode: "Interview",
+      },
+    });
+    // setSelectedPosition(position);
+    // setSelectPositionView(true);
   };
 
+  // ----------------------->
 
   const navigate = useNavigate();
 
@@ -63,33 +75,33 @@ const InterviewDetail = () => {
       setCandidate(interview?.candidateId || null);
       setPosition(interview?.positionId || null);
       setRounds(interview?.rounds || []);
-      setTemplate(interview?.templateId || null)
+      setTemplate(interview?.templateId || null);
     }
   }, [interview]);
-
 
   const [activeRound, setActiveRound] = useState(null);
   const [showFinalFeedbackModal, setShowFinalFeedbackModal] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const [roundsViewMode, setRoundsViewMode] = useState('vertical');
+  const [roundsViewMode, setRoundsViewMode] = useState("vertical");
 
   // Entity details state
   const [entityDetailsSidebar, setEntityDetailsSidebar] = useState(null);
   const [entityDetailsModal, setEntityDetailsModal] = useState(null);
 
-
   useEffect(() => {
     if (rounds) {
       // Set the active round to the first non-completed round
       const nextRound = rounds
-        .filter(round => ['Pending', 'Scheduled'].includes(round.status))
+        .filter((round) => ["Pending", "Scheduled"].includes(round.status))
         .sort((a, b) => a.sequence - b.sequence)[0];
 
       if (nextRound) {
         setActiveRound(nextRound._id);
       } else {
         // If all rounds are completed, set the last round as active
-        const lastRound = [...rounds].sort((a, b) => b.sequence - a.sequence)[0];
+        const lastRound = [...rounds].sort(
+          (a, b) => b.sequence - a.sequence
+        )[0];
         if (lastRound) {
           setActiveRound(lastRound._id);
         }
@@ -107,13 +119,18 @@ const InterviewDetail = () => {
       <div className="min-h-screen bg-gray-50">
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 sm:px-0">
-            <Breadcrumb items={[
-              { label: 'Interviews', path: '/interviewList' },
-              { label: 'Not Found' }
-            ]} />
+            <Breadcrumb
+              items={[
+                { label: "Interviews", path: "/interviewList" },
+                { label: "Not Found" },
+              ]}
+            />
             <div className="mt-6 text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-500">Interview not found.</p>
-              <Link to="/interviewList" className="mt-4 inline-block text-custom-blue hover:text-custom-blue/90">
+              <Link
+                to="/interviewList"
+                className="mt-4 inline-block text-custom-blue hover:text-custom-blue/90"
+              >
                 Back to Interviews
               </Link>
             </div>
@@ -122,7 +139,6 @@ const InterviewDetail = () => {
       </div>
     );
   }
-
 
   // Count internal and external interviewers across all rounds
   const allInterviewerIds = new Set();
@@ -145,19 +161,18 @@ const InterviewDetail = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
   // cancle interviwe popup
 
-
   const handleStatusChange = (newStatus) => {
     if (rounds) {
       const updatedInterview = {
-        status: newStatus
+        status: newStatus,
       };
     }
   };
@@ -183,7 +198,11 @@ const InterviewDetail = () => {
 
   const handleUpdateStatus = async (newStatus, reason = null) => {
     try {
-      await updateInterviewStatus({ interviewId: id, status: newStatus, reason });
+      await updateInterviewStatus({
+        interviewId: id,
+        status: newStatus,
+        reason,
+      });
     } catch (error) {
       console.error("Failed to update interview status:", error);
     }
@@ -201,13 +220,13 @@ const InterviewDetail = () => {
     setIsModalOpen(false);
   };
 
-  console.log('interview?.status', interview?.status)
+  console.log("interview?.status", interview?.status);
   const canAddRound = () => {
-    return interview?.status === 'Draft';
+    return interview?.status === "Draft";
   };
 
   const canEditRound = (round) => {
-    return interview?.status === 'Draft' && round.status !== 'Completed';
+    return interview?.status === "Draft" && round.status !== "Completed";
   };
 
   const handleEditRound = (round) => {
@@ -223,20 +242,17 @@ const InterviewDetail = () => {
   };
 
   const toggleViewMode = () => {
-    setRoundsViewMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
+    setRoundsViewMode((prev) =>
+      prev === "horizontal" ? "vertical" : "horizontal"
+    );
   };
 
-  const pendingRounds = rounds?.filter(round =>
-    ['Pending', 'Scheduled'].includes(round.status)
+  const pendingRounds = rounds?.filter((round) =>
+    ["Pending", "Scheduled"].includes(round.status)
   );
 
-
-  const handleViewEntityDetails = (
-    entity,
-    type,
-    viewType = 'sidebar'
-  ) => {
-    if (viewType === 'sidebar') {
+  const handleViewEntityDetails = (entity, type, viewType = "sidebar") => {
+    if (viewType === "sidebar") {
       setEntityDetailsSidebar({ entity, type });
       setEntityDetailsModal(null);
     } else {
@@ -254,20 +270,22 @@ const InterviewDetail = () => {
   // Create breadcrumb items with status
   const breadcrumbItems = [
     {
-      label: 'Interviews',
-      path: '/interviewList'
+      label: "Interviews",
+      path: "/interviewList",
     },
     {
-      label: candidate?.LastName || 'Interview',
+      label: candidate?.LastName || "Interview",
       path: `/interviews/${id}`,
-      status: interview?.status
-    }
+      status: interview?.status,
+    },
   ];
 
   // Calculate progress percentage
-  const completedRounds = rounds?.filter(round => round.status === 'Completed').length || 0;
+  const completedRounds =
+    rounds?.filter((round) => round.status === "Completed").length || 0;
   const totalRounds = rounds?.length || 0;
-  const progressPercentage = totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
+  const progressPercentage =
+    totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
 
   // Check if all rounds are completed
   const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
@@ -277,7 +295,10 @@ const InterviewDetail = () => {
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div>
           <div className="flex items-center mb-4">
-            <Link to="/interviewList" className="text-gray-800 flex items-center mr-4">
+            <Link
+              to="/interviewList"
+              className="text-gray-800 flex items-center mr-4"
+            >
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back to Interviews
             </Link>
@@ -289,13 +310,16 @@ const InterviewDetail = () => {
             <div className="px-5 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Interview Details <span> <StatusBadge status={interview?.status} size="md" /></span>
+                  Interview Details{" "}
+                  <span>
+                    {" "}
+                    <StatusBadge status={interview?.status} size="md" />
+                  </span>
                 </h3>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">
                   Created on {formatDate(interview?.createdAt)}
                 </p>
               </div>
-
             </div>
 
             <div className="border-t border-gray-200 px-5 py-5 sm:px-6">
@@ -321,7 +345,12 @@ const InterviewDetail = () => {
                         )}
                       </div>
                       <div>
-                        <div className="font-medium">{candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : 'Unknown'}</div>
+                        <div className="font-medium">
+                          {candidate?.LastName
+                            ? candidate.LastName.charAt(0).toUpperCase() +
+                              candidate.LastName.slice(1)
+                            : "Unknown"}
+                        </div>
                         <div className="text-xs text-gray-500 mt-1">
                           {candidate?.Email} • {candidate?.Phone}
                         </div>
@@ -334,7 +363,6 @@ const InterviewDetail = () => {
                               <button
                                 // onClick={() => handleViewEntityDetails(candidate, 'candidate', 'sidebar')}
                                 onClick={() => handleView(candidate)}
-
                                 className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                               >
                                 View Details
@@ -362,7 +390,12 @@ const InterviewDetail = () => {
                     Position
                   </dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    <div className="font-medium">{position?.title ? position.title.charAt(0).toUpperCase() + position.title.slice(1) : 'Unknown'}</div>
+                    <div className="font-medium">
+                      {position?.title
+                        ? position.title.charAt(0).toUpperCase() +
+                          position.title.slice(1)
+                        : "Unknown"}
+                    </div>
                     <div className="text-xs text-gray-500 mt-1">
                       {position?.companyname} • {position?.Location}
                     </div>
@@ -395,18 +428,35 @@ const InterviewDetail = () => {
                     Template
                   </dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    <div className="font-medium">{template?.templateName ? template.templateName.charAt(0).toUpperCase() + template.templateName.slice(1) : 'Not selected any template'}</div>
+                    <div className="font-medium">
+                      {template?.templateName
+                        ? template.templateName.charAt(0).toUpperCase() +
+                          template.templateName.slice(1)
+                        : "Not selected any template"}
+                    </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {template && (
                         <>
                           <button
-                            onClick={() => handleViewEntityDetails(template, 'template', 'sidebar')}
+                            onClick={() =>
+                              handleViewEntityDetails(
+                                template,
+                                "template",
+                                "sidebar"
+                              )
+                            }
                             className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                           >
                             View Details
                           </button>
                           <button
-                            onClick={() => handleViewEntityDetails(template, 'template', 'modal')}
+                            onClick={() =>
+                              handleViewEntityDetails(
+                                template,
+                                "template",
+                                "modal"
+                              )
+                            }
                             className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                             title="Open in popup"
                           >
@@ -445,21 +495,31 @@ const InterviewDetail = () => {
               <div className="mt-6 mb-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center mb-2">
                   <Users className="h-5 w-5 text-gray-500 mr-2" />
-                  <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
+                  <h4 className="text-sm font-medium text-gray-700">
+                    Interviewers
+                  </h4>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <div className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
-                    <span className="font-medium">{internalInterviewerIds.size}</span> Internal
+                    <span className="font-medium">
+                      {internalInterviewerIds.size}
+                    </span>{" "}
+                    Internal
                   </div>
                   <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                    <span className="font-medium">{externalInterviewerIds.size}</span> Outsourced
+                    <span className="font-medium">
+                      {externalInterviewerIds.size}
+                    </span>{" "}
+                    Outsourced
                   </div>
                   <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                    <span className="font-medium">{allInterviewerIds.size}</span> Total
+                    <span className="font-medium">
+                      {allInterviewerIds.size}
+                    </span>{" "}
+                    Total
                   </div>
                 </div>
               </div>
-
 
               {/* Interview Rounds Table Header */}
               <div className="border-gray-200 px-4 py-5 sm:px-6 mt-3">
@@ -472,7 +532,7 @@ const InterviewDetail = () => {
                       onClick={toggleViewMode}
                       className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                     >
-                      {roundsViewMode === 'vertical' ? (
+                      {roundsViewMode === "vertical" ? (
                         <>
                           <LayoutGrid className="h-4 w-4 mr-1" />
                           Horizontal View
@@ -485,17 +545,18 @@ const InterviewDetail = () => {
                       )}
                     </button>
 
-                    {interview?.status === 'In Progress' && allRoundsCompleted && (
-                      <button
-                        onClick={() => setShowFinalFeedbackModal(true)}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                      >
-                        <FileText className="h-4 w-4 mr-1" />
-                        Add Final Feedback
-                      </button>
-                    )}
+                    {interview?.status === "In Progress" &&
+                      allRoundsCompleted && (
+                        <button
+                          onClick={() => setShowFinalFeedbackModal(true)}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          Add Final Feedback
+                        </button>
+                      )}
 
-                    {interview?.status === 'Draft' && (
+                    {interview?.status === "Draft" && (
                       <button
                         onClick={() => setShowCompletionModal(true)}
                         className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -514,8 +575,6 @@ const InterviewDetail = () => {
                         Cancel Interview
                       </button>
                     )}
-
-
 
                     {/* {console.log('canAddRound', canAddRound)} */}
                     {canAddRound() && (
@@ -547,7 +606,7 @@ const InterviewDetail = () => {
 
                 {rounds.length > 0 && (
                   <div className="mt-6">
-                    {roundsViewMode === 'horizontal' ? (
+                    {roundsViewMode === "horizontal" ? (
                       activeRound && (
                         <SingleRoundView
                           rounds={rounds}
@@ -595,7 +654,6 @@ const InterviewDetail = () => {
           interviewId={id}
         />
       )}
-
 
       {/* Confirmation Modal for cancle interview */}
       {isModalOpen && (
@@ -649,18 +707,31 @@ const InterviewDetail = () => {
             entityType={entityDetailsModal.type}
           />
         )} */}
+
       {/* {selectCandidateView === true && (
-          <CandidateDetails
-            candidate={selectedCandidate}
-            onClose={() => setSelectCandidateView(null)}
-          />
-        )} */}
-      {selectPositionView === true && (
+        <CandidateDetails
+          candidate={selectedCandidate}
+          onClose={() => setSelectCandidateView(null)}
+        />
+      )} */}
+
+      {/* // <-------v1.0.0 - Ranjith  */}
+      {selectCandidateView === true && (
+        <CandidateDetails
+          mode="Interview"
+          candidateId={selectedCandidate?._id}
+          onClose={() => setSelectCandidateView(false)}
+        />
+      )}
+
+      {/*  ------------------------> */}
+
+      {/* {selectPositionView === true && (
         <PositionSlideDetails
           position={selectedPosition}
           onClose={() => setSelectPositionView(null)}
         />
-      )}
+      )} */}
     </div>
   );
 };
