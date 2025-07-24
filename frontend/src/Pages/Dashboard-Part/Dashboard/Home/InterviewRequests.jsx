@@ -10,30 +10,72 @@ const InterviewRequests = () => {
   const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
 
+  const [contacts, setContacts] = useState([]);
   const [requests, setRequests] = useState([]);
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
-
-  // Fetch interview requests
   useEffect(() => {
-    const fetchRequests = async () => {
+    const fetchData = async () => {
       try {
-        console.log("ownerId of interview requests :-", ownerId);
-        const response = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest/requests`, {
-          params: { ownerId },
+        // Step 1: Fetch Contacts
+        const contactRes = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
+        const allContacts = contactRes.data;
+        console.log("All contacts:", allContacts);
+
+        // Step 2: Find the specific contact with matching ownerId
+        // ownerId is a string, contact.ownerId may be ObjectId or string
+        const matchedContact = allContacts.find(contact =>
+          contact.ownerId?.toString() === ownerId
+        );
+
+        if (!matchedContact) {
+          setError("No matching contact found.");
+          setLoading(false);
+          return;
+        }
+
+        setContacts(allContacts);
+        setSelectedContact(matchedContact);
+
+        // Step 3: Fetch Interview Requests using matched contact ID
+        const requestRes = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest/requests`, {
+          params: { interviewerId: matchedContact._id }
         });
-        console.log("response of interview requests :-", response.data);
-        setRequests(response.data);
-        setLoading(false);
+
+        console.log("Interview requests for matched contact:", requestRes.data);
+        setRequests(requestRes.data);
       } catch (err) {
-        setError('Failed to fetch interview requests');
+        console.error('Failed to fetch data:', err);
+        setError('Error fetching data');
+      } finally {
         setLoading(false);
       }
     };
-    fetchRequests();
+
+    fetchData();
   }, []);
+
+  // // Fetch interview requests
+  // useEffect(() => {
+  //   const fetchRequests = async () => {
+  //     try {
+  //       console.log("ownerId of interview requests :-", ownerId);
+  //       const response = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest/requests`, {
+  //         params: { ownerId },
+  //       });
+  //       console.log("response of interview requests :-", response.data);
+  //       setRequests(response.data);
+  //       setLoading(false);
+  //     } catch (err) {
+  //       setError('Failed to fetch interview requests');
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchRequests();
+  // }, []);
 
   // Handle Accept button click
   const handleAccept = async (requestId, contactId, roundId) => {

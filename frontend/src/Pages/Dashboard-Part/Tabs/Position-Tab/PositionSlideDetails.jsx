@@ -54,6 +54,7 @@ const PositionSlideDetails = () => {
   useEffect(() => {
     const fetchPosition = async () => {
       try {
+        console.log('started position')
         const foundPosition = positionData?.find((pos) => pos._id === id);
         console.log('Found Position:', foundPosition);
 
@@ -166,7 +167,7 @@ const PositionSlideDetails = () => {
             <div className="space-y-6 mt-4">
               <div className="text-center mb-4">
                 <h3 className="text-2xl font-bold text-gray-900">{position?.companyname || ''}</h3>
-                <p className="text-gray-600 mt-1">{position.title.charAt(0).toUpperCase() + position.title.slice(1) || 'position'}</p>
+                <p className="text-gray-600 mt-1">{position?.title.charAt(0).toUpperCase() + position?.title?.slice(1) || 'position'}</p>
               </div>
 
               {/* {position.rounds?.length === 0
@@ -198,14 +199,14 @@ const PositionSlideDetails = () => {
                       <Building2 className="w-4 h-4 text-blue-600" />
                       <span className="text-sm">Company Name</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-800">{position.companyname}</p>
+                    <p className="text-sm font-medium text-gray-800">{position?.companyname}</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
                       <MapPin className="w-4 h-4 text-red-500" />
                       <span className="text-sm">Location</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-800">{position.Location || 'Not Disclosed'}</p>
+                    <p className="text-sm font-medium text-gray-800">{position?.Location || 'Not Disclosed'}</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
@@ -340,7 +341,7 @@ const PositionSlideDetails = () => {
                     </>
                   )}
                   <Link
-                    to={`/position/edit-position/${position._id}`}
+                    to={`/position/edit-position/${position?._id}`}
                     state={{ from: location.pathname }}
                     className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                   >
