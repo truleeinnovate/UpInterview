@@ -1,25 +1,30 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom';
-import classNames from 'classnames';
-import Modal from 'react-modal';
+// v.0.0.1  changes made in interviwers getting data and creating groups and editing groups view group data
+
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import classNames from "classnames";
+import Modal from "react-modal";
 import Cookies from "js-cookie";
-import { Maximize, Minimize, X } from 'lucide-react';
-import axios from 'axios';
-import { validateGroupForm } from '../../../../../utils/InterviewGroupValidations';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
-import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
-import { config } from '../../../../../config';
-import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline';
-Modal.setAppElement('#root');
+import { Maximize, Minimize, X } from "lucide-react";
+import axios from "axios";
+import { validateGroupForm } from "../../../../../utils/InterviewGroupValidations";
+import { useCustomContext } from "../../../../../Context/Contextfetch";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../../config";
+import {
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+} from "@heroicons/react/24/outline";
+Modal.setAppElement("#root");
 const InterviewerGroupFormPopup = () => {
   const { id } = useParams();
   const { groups, interviewers } = useCustomContext();
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    status: 'active',
-    members: []
-  })
+    name: "",
+    description: "",
+    status: "active",
+    members: [],
+  });
 
   console.log("InterviewerGroupFormPopup id", id);
 
@@ -37,48 +42,77 @@ const InterviewerGroupFormPopup = () => {
   useEffect(() => {
     const fetchData = () => {
       try {
-        console.log('InterviewerGroupFormPopup:', groups);
-        console.log('InterviewerGroupFormPopup for ID:', id);
-        const group = groups.find(group => group._id === id);
-        console.log('InterviewerGroupFormPopup group:', group);
+        console.log("InterviewerGroupFormPopup:", groups);
+        console.log("InterviewerGroupFormPopup for ID:", id);
+        const group = groups.find((group) => group._id === id);
+        console.log("InterviewerGroupFormPopup group:", group);
 
         if (group) {
           // Map the API data to our form structure
           setFormData({
-            name: group.name || '',
-            description: group.description || '',
-            status: group.status || 'active',
-            members: group.userIds || [] // Changed from userIds to members
+            name: group.name || "",
+            description: group.description || "",
+            status: group.status || "active",
+            members: group.userIds || [], // Changed from userIds to members
           });
         }
       } catch (error) {
-        console.error('Error setting form data:', error);
+        console.error("Error setting form data:", error);
         setFormData({
-          name: '',
-          description: '',
-          status: 'active',
-          members: []
+          name: "",
+          description: "",
+          status: "active",
+          members: [],
         });
       }
-    }
+    };
 
     if (id) {
       fetchData();
     }
   }, [id, groups]);
 
-
   // interviewers
+  // useEffect(() => {
+  //   console.log("interviewers", interviewers?.data);
+
+  //   if (interviewers?.data) {
+  //     setUsers(interviewers?.data || []);
+  //   } else {
+  //     setUsers([])
+  //   }
+
+  // }, [tenantId, interviewers?.data])
+
+  // <------------------- v.0.0.1 by Ranjith
+  // getting only internal and admin only filtering data based for organization only
   useEffect(() => {
-    console.log("interviewers", interviewers?.data);
+    const interviewersArray =
+      interviewers?.data && Array.isArray(interviewers.data)
+        ? interviewers.data
+        : [];
 
-    if (interviewers?.data) {
-      setUsers(interviewers?.data || []);
+    console.log("interviewersArray", interviewersArray);
+
+    if (interviewersArray) {
+      const filteredInterviewers = interviewersArray
+        .filter((interviewer) => {
+          // Only include internal interviewers who are NOT admins
+          return (
+            interviewer.type === "internal" || interviewer.roleLabel === "Admin"
+          );
+        })
+        .map((interviewer) => ({
+          ...interviewer,
+        }));
+
+      console.log("filteredInterviewers", filteredInterviewers);
+      setUsers(filteredInterviewers || []);
     } else {
-      setUsers([])
+      setUsers([]);
     }
-
-  }, [tenantId, interviewers?.data])
+  }, [tenantId, interviewers?.data]);
+  // ----------------------------------->
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,7 +133,7 @@ const InterviewerGroupFormPopup = () => {
           description: formData.description,
           status: formData.status,
           users: formData.members,
-          tenantId: tenantId
+          tenantId: tenantId,
         });
       } else {
         // Create new group
@@ -108,25 +142,25 @@ const InterviewerGroupFormPopup = () => {
           description: formData.description,
           status: formData.status,
           users: formData.members,
-          tenantId: tenantId
+          tenantId: tenantId,
         });
       }
 
-      navigate('/account-settings/interviewer-groups');
+      navigate("/account-settings/interviewer-groups");
     } catch (error) {
-      console.error('Error saving group:', error);
-      alert(`Failed to ${id ? 'update' : 'create'} group. Please try again.`);
+      console.error("Error saving group:", error);
+      alert(`Failed to ${id ? "update" : "create"} group. Please try again.`);
     }
   };
 
   const handleMemberToggle = (memberId) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       members: prev.members?.includes(memberId) // Added optional chaining
-        ? prev.members.filter(id => id !== memberId)
-        : [...(prev.members || []), memberId] // Handle case where members is undefined
+        ? prev.members.filter((id) => id !== memberId)
+        : [...(prev.members || []), memberId], // Handle case where members is undefined
     }));
-  }
+  };
 
   //     const handleSubmit = async (e) => {
   //       e.preventDefault();
@@ -135,9 +169,8 @@ const InterviewerGroupFormPopup = () => {
   //       setFormErrors(errors);
 
   //       if (Object.keys(errors).length > 0) {
-  //         return; 
+  //         return;
   //       }
-
 
   //       // Basic validation
   //       if (!formData.name || !formData.members.length) {
@@ -163,9 +196,6 @@ const InterviewerGroupFormPopup = () => {
   //       }
   //     };
 
-
-
-
   // const handleMemberToggle = (memberId) => {
   //   setFormData(prev => ({
   //     ...prev,
@@ -176,29 +206,30 @@ const InterviewerGroupFormPopup = () => {
   // }
 
   const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
+    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
     {
-      'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      "inset-0": isFullScreen,
+      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
 
-  const title = id ? 'Edit Group' : 'Create New Group'
+  const title = id ? "Edit Group" : "Create New Group";
 
   return (
-
     // onClose={() => navigate(`/account-settings/interviewer-groups`)}
     <Modal
       isOpen={true}
       onRequestClose={() => navigate(`/account-settings/interviewer-groups`)}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    // className={modalClass}
-
+      // className={modalClass}
     >
-      <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen })}>
+      <div
+        className={classNames("h-full", {
+          "max-w-6xl mx-auto px-6": isFullScreen,
+        })}
+      >
         <div className="p-6 ">
-
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-custom-blue">{title}</h2>
             <div className="flex items-center gap-2">
@@ -207,14 +238,14 @@ const InterviewerGroupFormPopup = () => {
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 {isFullScreen ? (
-                                <ArrowsPointingInIcon className="h-5 w-5" />
-                              ) : (
-                                <ArrowsPointingOutIcon className="h-5 w-5" />
-                              )}
+                  <ArrowsPointingInIcon className="h-5 w-5" />
+                ) : (
+                  <ArrowsPointingOutIcon className="h-5 w-5" />
+                )}
               </button>
               <button
                 onClick={() => {
-                  navigate(`/account-settings/interviewer-groups`)
+                  navigate(`/account-settings/interviewer-groups`);
                   // setUserData(formData)
                   // setIsBasicModalOpen(false);
                 }}
@@ -224,7 +255,6 @@ const InterviewerGroupFormPopup = () => {
               </button>
             </div>
           </div>
-
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
@@ -239,9 +269,10 @@ const InterviewerGroupFormPopup = () => {
                     type="text"
                     placeholder="Enter Group Name"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
-
                   />
                   {formErrors.name && (
                     <p className="text-red-500 text-sm ">{formErrors.name}</p>
@@ -255,13 +286,19 @@ const InterviewerGroupFormPopup = () => {
                   <textarea
                     placeholder="Write a description of the group"
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
                     rows={3}
-
                   />
                   {formErrors.description && (
-                    <p className="text-red-500 text-sm ">{formErrors.description}</p>
+                    <p className="text-red-500 text-sm ">
+                      {formErrors.description}
+                    </p>
                   )}
                 </div>
 
@@ -272,7 +309,12 @@ const InterviewerGroupFormPopup = () => {
                   <select
                     value={formData.status}
                     placeholder="Select Status"
-                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        status: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                   >
                     <option value="active">Active</option>
@@ -284,11 +326,15 @@ const InterviewerGroupFormPopup = () => {
 
             {/* Member Selection */}
             <div>
-              <h3 className="text-lg font-medium mb-4">Select Members <span className="text-red-500">*</span></h3>
+              <h3 className="text-lg font-medium mb-4">
+                Select Members <span className="text-red-500">*</span>
+              </h3>
               <div className="space-y-2">
                 {/* <div className=""> */}
                 {formErrors.members && (
-                  <p className="text-red-500 text-sm mt-2">{formErrors.members}</p>
+                  <p className="text-red-500 text-sm mt-2">
+                    {formErrors.members}
+                  </p>
                 )}
                 <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
                   <table className="min-w-full divide-y divide-gray-200">
@@ -312,22 +358,37 @@ const InterviewerGroupFormPopup = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y  divide-gray-200">
-                      {users.length > 0 ?
+                      {users.length > 0 ? (
                         users.map((member, index) => (
                           <tr key={member._id}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <input
                                 type="checkbox"
-                                checked={formData.members.includes(member?.contact?._id)}
-                                onChange={() => handleMemberToggle(member?.contact?._id)}
+                                checked={formData.members.includes(
+                                  member?.contact?._id
+                                )}
+                                onChange={() =>
+                                  handleMemberToggle(member?.contact?._id)
+                                }
                                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                               />
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>
-                                <div className="font-medium text-gray-900">{member?.contact?.firstName || member?.contact?.lastName ? `
-                              ${member?.contact?.firstName + " " + member?.contact?.lastName}` : "Not Provided"}</div>
-                                <div className="text-sm text-gray-500">{member?.contact?.email || "Not Provided"}</div>
+                                <div className="font-medium text-gray-900">
+                                  {member?.contact?.firstName ||
+                                  member?.contact?.lastName
+                                    ? `
+                              ${
+                                member?.contact?.firstName +
+                                " " +
+                                member?.contact?.lastName
+                              }`
+                                    : "Not Provided"}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {member?.contact?.email || "Not Provided"}
+                                </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -347,8 +408,11 @@ const InterviewerGroupFormPopup = () => {
                       </td> */}
                           </tr>
                         ))
-                        : <p className='flex w-full justify-center items-center mx-auto p-4'>No Interviwers Found</p>
-                      }
+                      ) : (
+                        <p className="flex w-full justify-center items-center mx-auto p-4">
+                          No Interviwers Found
+                        </p>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -367,14 +431,14 @@ const InterviewerGroupFormPopup = () => {
                 type="submit"
                 className="px-4 py-2 bg-custom-blue text-white rounded-lg"
               >
-                {id ? 'Save Changes' : 'Create Group'}
+                {id ? "Save Changes" : "Create Group"}
               </button>
             </div>
           </form>
         </div>
       </div>
     </Modal>
-  )
-}
+  );
+};
 
-export default InterviewerGroupFormPopup
+export default InterviewerGroupFormPopup;

@@ -1,5 +1,5 @@
 // v1.0.0 ------ Venkatesh--- added skills width to full and skills added in column wise
-
+//v1.0.1 ------ Ranjith---- added some fullscreen mode ato this ui
 import Modal from "react-modal";
 import {
   Phone,
@@ -24,15 +24,31 @@ import { FaGenderless } from "react-icons/fa";
 import { LiaGenderlessSolid } from "react-icons/lia";
 import { GrDocumentText } from "react-icons/gr";
 import { ReactComponent as FaEdit } from "../../../../../icons/FaEdit.svg";
+import classNames from "classnames";
 Modal.setAppElement("#root");
 
-const CandidateDetails = ({ mode }) => {
+const CandidateDetails = ({ mode, candidateId }) => {
   const { candidateData } = useCandidates();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState({});
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const { id } = useParams();
+  // const { id } = useParams();
+  const params = useParams();
+
   const location = useLocation();
+  const id = candidateId || params?.id;
+
+  //< ----------------------v1.0.1 Ranjith added for ui adjustement for responsive proeprly
+  const modalClass = classNames(
+    "fixed bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden transition-all duration-300",
+    {
+      "inset-0 w-full h-full": isFullScreen,
+      "inset-y-0 right-0 w-full sm:w-full md:w-full 2xl:w-1/2 lg:w-1/2 xl:w-1/2":
+        !isFullScreen,
+    }
+  );
+
+  //   ------->
 
   useEffect(() => {
     let isMounted = true; // flag to track component mount status
@@ -60,10 +76,12 @@ const CandidateDetails = ({ mode }) => {
 
   // With this:
   const getFromPath = () => {
-    if (mode === "Assessment") {
-      // If coming from assessment, go back to assessment details
-      return `/assessment-details/${location.state?.assessmentId}`;
-    }
+    // if (mode === "Assessment") {
+    //   // If coming from assessment, go back to assessment details
+    //   return `/assessment-details/${location.state?.assessmentId}`;
+    // }
+    if (mode === "Assessment") return -1;
+    if (mode === "Interview") return null;
     // Default to candidate list or use the stored from path
     return location.state?.from || "/candidate";
   };
@@ -73,7 +91,12 @@ const CandidateDetails = ({ mode }) => {
   // if (!candidate || loading) return <Loading />
 
   const content = (
-    <div className="h-full flex flex-col">
+    <div
+      className={classNames("h-full", {
+        "max-w-6xl mx-auto px-6": isFullScreen,
+      })}
+      // className="h-full flex flex-col"
+    >
       <div className="sticky top-0 bg-white p-4 flex justify-between items-center z-10">
         <h2 className="text-2xl font-semibold text-custom-blue">Candidate</h2>
         <div className="flex items-center gap-2">
@@ -380,30 +403,28 @@ const CandidateDetails = ({ mode }) => {
                 {candidate?.skills ? (
                   candidate.skills.map((skill, index) => (
                     <>
-                    {/* <------v1.0.0 ------*/}
-                    <div
-                    className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100"
-                    >
-                    <span
-                      key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
-                    >
-                      {skill.skill}
-                    </span>
-                    <span
-                      key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
-                    >
-                      {skill.experience}
-                    </span>
-                    <span
-                      key={index}
-                      className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
-                    >
-                      {skill.expertise}
-                    </span>
-                    </div>
-                    {/* v1.0.0 ------->*/}
+                      {/* <------v1.0.0 ------*/}
+                      <div className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100">
+                        <span
+                          key={index}
+                          className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                        >
+                          {skill.skill}
+                        </span>
+                        <span
+                          key={index}
+                          className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                        >
+                          {skill.experience}
+                        </span>
+                        <span
+                          key={index}
+                          className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
+                        >
+                          {skill.expertise}
+                        </span>
+                      </div>
+                      {/* v1.0.0 ------->*/}
                     </>
                   ))
                 ) : (
@@ -448,13 +469,22 @@ const CandidateDetails = ({ mode }) => {
   // }
 
   return (
-    <div
-      className={`fixed inset-y-0 right-0 ${
-        isFullScreen ? "w-full " : "w-1/2"
-      } bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden`}
+    // <div
+    //   className={`fixed inset-y-0 right-0 ${
+    //     isFullScreen ? "w-full " : "w-1/2"
+    //   } bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden`}
+    // >
+    //< ----------------------v1.0.1 Ranjith added for ui adjustement for responsive proeprly
+
+    <Modal
+      isOpen={true}
+      className={modalClass}
+      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
       {content}
-    </div>
+    </Modal>
+    //  ----------Ranjith >
+    // </div>
   );
 };
 
