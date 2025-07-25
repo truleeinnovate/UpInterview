@@ -1,6 +1,11 @@
+// v1.0.0 - Ashok - modified logId to auto numbers internal and integration logs
 const internalLogController = require('../controllers/internalLogController.js');
 // const integrationLogController = require('../controllers/integrationLogController');
 const historyFeedsController = require('../controllers/feedsController.js');
+// v1.0.0 <------------------------------------------------------------------
+const InternalLog = require("../models/InternalLog.js");
+const IntegrationLogs = require("../models/IntegrationLogs.js");
+// v1.0.0 ------------------------------------------------------------------>
 
 
 //Middelware for intergration Logging
@@ -15,6 +20,23 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
     // Create a flag on the response object
     res.locals.shouldLog = true;
 
+    // v1.0.0 <---------------------------------------------------------------
+    // Generate custom logId (INTG-00001, INTG-00002, ...)
+    const lastLog = await IntegrationLogs.findOne({})
+        .sort({ _id: -1 })
+        .select('logId')
+        .lean();
+
+    let nextLogId = 'INTG-00001';
+    if (lastLog?.logId) {
+        const match = lastLog.logId.match(/INTG-(\d+)/);
+        if (match) {
+            const nextNumber = parseInt(match[1], 10) + 1;
+            nextLogId = `INTG-${String(nextNumber).padStart(5, '0')}`;
+        }
+    }
+    // v1.0.0 --------------------------------------------------------------->
+
     // Override res.json to ensure we only log once
     const originalJson = res.json;
     res.json = function (body) {
@@ -24,7 +46,9 @@ exports.integrationLoggingMiddleware = async (req, res, next) => {
             const responseData = res.locals.responseData || body;
 
             const logDetails = {
-                logId: `log_${Date.now()}`,
+                // v1.0.0 <---------------------------------------------------------------
+                logId: lastLog,
+                // v1.0.0 --------------------------------------------------------------->
                 tenantId: '',
                 ownerId: '',
                 status: responseData.status || (res.statusCode >= 400 ? 'error' : 'success'),
@@ -117,12 +141,30 @@ exports.internalLoggingMiddleware = async (req, res, next) => {
     const startTime = Date.now();
     const originalJson = res.json;
 
+    // v1.0.0 <---------------------------------------------------------------
+    // Generate custom logId (ILOG-00001, ILOG-00002, ...)
+    const lastLog = await InternalLog.findOne({})
+        .sort({ _id: -1 })
+        .select('logId')
+        .lean();
+
+    let nextLogId = 'ILOG-00001';
+    if (lastLog?.logId) {
+        const match = lastLog.logId.match(/ILOG-(\d+)/);
+        if (match) {
+            const nextNumber = parseInt(match[1], 10) + 1;
+            nextLogId = `ILOG-${String(nextNumber).padStart(5, '0')}`;
+        }
+    }
+    // v1.0.0 --------------------------------------------------------------->
     res.json = function (body) {
         const logData = res.locals.logData;
         if (logData) {
             const logDetails = {
                 ...logData,
-                logId: `log_${Date.now()}`,
+                // v1.0.0 <---------------------------------------------------------------
+                logId: nextLogId,
+                // v1.0.0 --------------------------------------------------------------->
                 executionTime: `${Date.now() - startTime}ms`,
                 requestEndPoint: req.originalUrl,
                 requestMethod: req.method,

@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - changed createdAt to _id for customRequestId generation
 const mongoose = require("mongoose");
 const Interview = require("../models/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest");
@@ -71,9 +72,11 @@ exports.createRequest = async (req, res) => {
     const isInternal = interviewerType === "internal";
 
     // Step 1: Get the last created request to determine the last number used
+    // v1.0.0 <------------------------------------------------------------------------
     const lastRequest = await InterviewRequest.findOne({})
-      // .sort({ createdAt: -1 }) // ensure you have timestamps enabled
+      .sort({ _id: -1 }) // ensure you have timestamps enabled
       .select("customRequestId");
+    // v1.0.0 ------------------------------------------------------------------------>
 
     let latestNumber = 0;
     if (lastRequest && lastRequest.customRequestId) {
@@ -129,7 +132,14 @@ exports.getAllRequests = async (req, res) => {
         path: "candidateId",
         model: "Candidate",
         select: "skills",
+      })
+      // v1.0.0 <------------------------------------------------------------------------
+      .populate({
+        path: "interviewerId",
+        model: "Contacts",
+        select: "firstName lastName email phone currentRole imageData skills", // customize fields
       });
+    // v1.0.0 ------------------------------------------------------------------------>
     res.status(200).json(requests);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -445,7 +455,19 @@ exports.getSingleInterviewRequest = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const request = await InterviewRequest.findById(id);
+    const request = await InterviewRequest.findById(id)
+      .populate({
+        path: "candidateId",
+        model: "Candidate",
+        select: "skills",
+      })
+      // v1.0.0 <------------------------------------------------------------------------
+      .populate({
+        path: "interviewerId",
+        model: "Contacts",
+        select: "firstName lastName email phone currentRole imageData skills", // customize fields
+      });
+    // v1.0.0 ------------------------------------------------------------------------>
 
     return res.status(200).json(request);
   } catch (error) {

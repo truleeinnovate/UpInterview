@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  Assessment_Template permission name changed to AssessmentTemplates
 // v1.0.2  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout
 // v1.0.3  -  Ashraf  -  updated loading tabs issue
+// v1.0.4  -  Ashok   -  changed tab name from "Integrations" to "Integration Logs" in super admin navbar
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -329,11 +330,13 @@ const CombinedNavbar = () => {
           label: "Internal Logs",
           permissionKey: "InternalLogs.ViewTab",
         },
+        // v1.0.4 <-----------------------------------------------------
         {
           path: "/integrations",
-          label: "Integrations",
+          label: "Integration Logs",
           permissionKey: "IntegrationLogs.ViewTab",
         },
+        // v1.0.4 ----------------------------------------------------->
       ];
     } else {
       return [

@@ -14,7 +14,7 @@ import { toast } from 'react-hot-toast';
 
 const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
   console.log("type in BasicDetails", type);
-
+  console.log("SELECTED USER ID IN BASIC DETAILS ==============================> ", usersId)
   // const { usersRes } = useCustomContext();
 
   const [contactData, setContactData] = useState({});
