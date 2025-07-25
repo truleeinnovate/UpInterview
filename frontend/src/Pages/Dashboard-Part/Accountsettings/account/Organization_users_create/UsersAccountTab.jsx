@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  added data reverse to load updated first
+// v1.0.1 - Ashok - fixing Interviews and availability issues for users
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -54,7 +55,7 @@ const UsersAccountTab = () => {
   // Select data and loading state based on type
   const dataSource = userType === 'superAdmin' ? superAdminUsers : usersRes;
   const loading = userType === 'superAdmin' ? superAdminLoading : usersLoading;
-
+  console.log("SETTINGS USERS =================================> : ", usersRes)
   // Fetch super admin users when type is superAdmin
   useEffect(() => {
     if (userType === 'superAdmin') {
