@@ -225,8 +225,60 @@ exports.updateRequestStatus = async (req, res) => {
 
 exports.getInterviewRequests = async (req, res) => {
   try {
-    const { ownerId } = req.query;
+    const { ownerId, interviewerId } = req.query;
 
+    // If interviewerId is provided, fetch requests for that interviewer only
+    if (interviewerId) {
+      if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
+        return res.status(400).json({ message: 'Invalid interviewerId' });
+      }
+      const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
+      const requests = await InterviewRequest.find({ interviewerId: interviewerObjectId })
+        .populate("candidateId")
+        .populate("positionId")
+        .populate("tenantId")
+        .populate("roundId")
+        .populate("interviewerId")
+        .lean();
+      const formattedRequests = requests.map((request) => ({
+        ...request,
+        _id: request._id,
+        id: request._id,
+        positionId: request.positionId || null,
+        tenantId: request.tenantId || null,
+        roundId: request.roundId || null,
+        contactId: request.interviewerId || null,
+        status: request.status,
+        requestedDate: request.requestedAt
+          ? new Date(request.requestedAt).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        urgency: request.expiryDateTime
+          ? new Date(request.expiryDateTime) < new Date()
+            ? "High"
+            : "Medium"
+          : "Low",
+        type: request.roundId?.interviewType || "Unknown Type",
+        roundId: request.roundId?._id || null,
+        roundDetails: request.roundId
+          ? {
+            roundTitle: request.roundId.roundTitle,
+            interviewType: request.roundId.interviewType,
+            duration: request.roundId.duration,
+            dateTime: request.roundId.dateTime,
+          }
+          : null,
+        originalRequest: {
+          dateTime: request.dateTime,
+          duration: request.duration,
+          status: request.status,
+          interviewerType: request.interviewerType,
+          expiryDateTime: request.expiryDateTime,
+        },
+      }));
+      return res.status(200).json(formattedRequests);
+    }
+
+    // Default: use ownerId logic
     if (!ownerId) {
       return res.status(400).json({ message: "ownerId is required" });
     }
@@ -294,11 +346,11 @@ exports.getInterviewRequests = async (req, res) => {
         roundId: request.roundId?._id || null,
         roundDetails: request.roundId
           ? {
-              roundTitle: request.roundId.roundTitle,
-              interviewType: request.roundId.interviewType,
-              duration: request.roundId.duration,
-              dateTime: request.roundId.dateTime,
-            }
+            roundTitle: request.roundId.roundTitle,
+            interviewType: request.roundId.interviewType,
+            duration: request.roundId.duration,
+            dateTime: request.roundId.dateTime,
+          }
           : null,
         originalRequest: {
           dateTime: request.dateTime,
@@ -316,7 +368,7 @@ exports.getInterviewRequests = async (req, res) => {
 
     res.status(200).json(formattedRequests);
   } catch (error) {
-    console.error("[getInterviewRequests] Error:", error);
+    console.error("[getInterviewRequests] Error:", error, error.stack);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

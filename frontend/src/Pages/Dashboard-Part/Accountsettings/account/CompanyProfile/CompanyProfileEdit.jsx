@@ -1,3 +1,5 @@
+//  verison 0.01 changes done by Ranjith related to some feilds like company size properly binded
+
 // import { companyProfile, companySizes, industries } from '../mockData/companyData'
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useEffect, useRef, useState } from "react";
@@ -24,7 +26,9 @@ import { validateFile } from "../../../../../utils/FileValidation/FileValidation
 
 Modal.setAppElement("#root");
 
-export const companySizes = ["1-10", "11-50", "51-200", "201-500", "501+"];
+const companySizes = ["0-10", "10-20", "50-100", "100-500", "500-1000"];
+
+// export const companySizes = ["1-10", "11-50", "51-200", "201-500", "501+"];
 // export const industries = ['Technology', 'Finance', 'Healthcare', 'Education', 'Manufacturing'];
 
 const CompanyEditProfile = () => {
@@ -496,8 +500,9 @@ const CompanyEditProfile = () => {
                         autoComplete="off"
                         onClick={toggleIndustry}
                         readOnly
-                        className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.industry ? "border-red-500" : "border-gray-300"
-                          }`}
+                        className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                          errors.industry ? "border-red-500" : "border-gray-300"
+                        }`}
                       />
                       <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
                         <ChevronDown
@@ -857,7 +862,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="headquarters.address"
                           value={formData.headquarters.address}
-                           placeholder="Address"
+                          placeholder="Address"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
@@ -870,7 +875,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="headquarters.city"
                           value={formData.headquarters.city}
-                           placeholder="City"
+                          placeholder="City"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -886,7 +891,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="headquarters.state"
                           value={formData.headquarters.state}
-                           placeholder="State"
+                          placeholder="State"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -899,7 +904,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="headquarters.zip"
                           value={formData.headquarters.zip}
-                           placeholder="Zip Code"
+                          placeholder="Zip Code"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -915,7 +920,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="headquarters.country"
                           value={formData.headquarters.country}
-                           placeholder="Country"
+                          placeholder="Country"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -928,7 +933,7 @@ const CompanyEditProfile = () => {
                           type="tel"
                           name="headquarters.phone"
                           value={formData.headquarters.phone}
-                           placeholder="Phone Number"
+                          placeholder="Phone Number"
                           // onChange={handleInputChange}
                           onChange={(e) => {
                             const value = e.target.value.replace(/\D/g, ""); // remove non-digits
@@ -936,7 +941,7 @@ const CompanyEditProfile = () => {
                               handleInputChange({
                                 target: {
                                   name: "headquarters.phone",
-                                  value
+                                  value,
                                 },
                               });
                             }
@@ -968,7 +973,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="regionalOffice.address"
                           value={formData.regionalOffice.address}
-                           placeholder="Address"
+                          placeholder="Address"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -981,7 +986,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="regionalOffice.city"
                           value={formData.regionalOffice.city}
-                           placeholder="City"
+                          placeholder="City"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -996,7 +1001,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="regionalOffice.state"
                           value={formData.regionalOffice.state}
-                           placeholder="State"
+                          placeholder="State"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -1009,7 +1014,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="regionalOffice.zip"
                           value={formData.regionalOffice.zip}
-                           placeholder="Zip Code"
+                          placeholder="Zip Code"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -1024,7 +1029,7 @@ const CompanyEditProfile = () => {
                           type="text"
                           name="regionalOffice.country"
                           value={formData.regionalOffice.country}
-                           placeholder="Country"
+                          placeholder="Country"
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
                         />
@@ -1037,7 +1042,7 @@ const CompanyEditProfile = () => {
                           type="tel"
                           name="regionalOffice.phone"
                           value={formData.regionalOffice.phone}
-                           placeholder="Phone Number"
+                          placeholder="Phone Number"
                           // onChange={handleInputChange}
                           onChange={(e) => {
                             const value = e.target.value.replace(/\D/g, ""); // remove non-digits
@@ -1045,7 +1050,7 @@ const CompanyEditProfile = () => {
                               handleInputChange({
                                 target: {
                                   name: "regionalOffice.phone",
-                                  value
+                                  value,
                                 },
                               });
                             }
