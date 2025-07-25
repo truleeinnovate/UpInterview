@@ -374,8 +374,6 @@ exports.getInterviewRequests = async (req, res) => {
 };
 
 exports.acceptInterviewRequest = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
     const { requestId, contactId, roundId } = req.body;
 
@@ -397,13 +395,11 @@ exports.acceptInterviewRequest = async (req, res) => {
     }
 
     // Update InterviewRounds: Add contactId to interviewers array
-    const round = await InterviewRounds.findById(roundId).session(session);
+    const round = await InterviewRounds.findById(roundId);
     if (!round) {
       console.log(
         `acceptInterviewRequest: Interview round not found for roundId ${roundId}`
       );
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({ message: "Interview round not found" });
     }
 
@@ -412,18 +408,18 @@ exports.acceptInterviewRequest = async (req, res) => {
     if (!round.interviewers.includes(contactId)) {
       round.interviewers.push(contactId);
       round.status = "scheduled";
-      await round.save({ session });
+      await round.save();
     } else {
       console.log(
         `acceptInterviewRequest: Contact ${contactId} already in round ${roundId}`
       );
     }
 
-    // Delete all interview requests with the same roundId
+    // Delete all interview requests with the same roundId except the accepted one
     const deleteResult = await InterviewRequest.deleteMany({
       roundId: roundId,
       _id: { $ne: requestId }, // Don't delete the accepted request
-    }).session(session);
+    });
 
     console.log(
       `Deleted ${deleteResult.deletedCount} other interview requests for round ${roundId}`
@@ -433,11 +429,9 @@ exports.acceptInterviewRequest = async (req, res) => {
     await InterviewRequest.findByIdAndUpdate(
       requestId,
       { status: "accepted" },
-      { session, new: true }
+      { new: true }
     );
 
-    await session.commitTransaction();
-    session.endSession();
     res.status(200).json({
       message:
         "Interview request accepted and other requests for this round removed",
@@ -445,8 +439,6 @@ exports.acceptInterviewRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("[acceptInterviewRequest] Error:", error);
-    await session.abortTransaction();
-    session.endSession();
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
