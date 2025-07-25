@@ -22,7 +22,7 @@ export const preloadPermissions = async () => {
     const userType = AuthCookieManager.getUserType();
     const permissionsUrl = `${config.REACT_APP_API_URL}/users/permissions`;
 
-    console.log('🔄 Preloading permissions for user type:', userType);
+    // console.log('🔄 Preloading permissions for user type:', userType);
 
     const response = await axios.get(permissionsUrl, {
       withCredentials: true,
@@ -45,7 +45,7 @@ export const preloadPermissions = async () => {
     // Mark as preloaded
     permissionsPreloaded = true;
     
-    console.log('✅ Permissions preloaded and cached successfully');
+    // console.log('✅ Permissions preloaded and cached successfully');
     
     return permissionData;
   } catch (error) {

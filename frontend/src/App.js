@@ -1,6 +1,7 @@
 // v1.0.0  -  mansoor  -  removed unnecessary comments from this file
 //v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 //v1.0.2  -  Ashraf  -  added create role path
+// v1.0.3 - Ranjith - new route CandidateDetails to assessment page
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -27,7 +28,10 @@ import { DocumentsSection } from "./Pages/Dashboard-Part/Accountsettings/account
 import SessionExpiration from "./Components/SessionExpiration.jsx";
 import Loading from "./Components/Loading.js";
 import UserDataLoader from "./Components/UserDataLoader.jsx";
-import { preloadPermissions, hasValidCachedPermissions } from "./utils/permissionPreloader";
+import {
+  preloadPermissions,
+  hasValidCachedPermissions,
+} from "./utils/permissionPreloader";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 
 // Lazy-loaded components (unchanged)
@@ -393,7 +397,12 @@ const MainAppRoutes = ({
   showLogoPaths,
   noNavbarPaths,
 }) => {
-  const { effectivePermissions, superAdminPermissions, loading, isInitialized } = usePermissions();
+  const {
+    effectivePermissions,
+    superAdminPermissions,
+    loading,
+    isInitialized,
+  } = usePermissions();
   const userType = AuthCookieManager.getUserType();
 
   // Combine permissions into a single object
@@ -408,8 +417,8 @@ const MainAppRoutes = ({
   // Show loading when permissions are being loaded and not initialized
   // if (loading || !isInitialized) {
   //   return (
-  //     <Loading 
-  //       message="Loading permissions..." 
+  //     <Loading
+  //       message="Loading permissions..."
   //       size="large"
   //       className="fixed inset-0 z-50 bg-white"
   //     />
@@ -424,7 +433,6 @@ const MainAppRoutes = ({
     }
     return combinedPermissions[objectName][permissionType] ?? false;
   };
-
 
   return (
     <>
@@ -444,7 +452,10 @@ const MainAppRoutes = ({
               element={<OrganizationSignUp />}
             />
             <Route path="/organization-login" element={<OrganizationLogin />} />
-            <Route path="/welcome-page-upinterview-individual" element={<WelcomePageUpinterviewIndividual />} />
+            <Route
+              path="/welcome-page-upinterview-individual"
+              element={<WelcomePageUpinterviewIndividual />}
+            />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route
               path="/payment-details"
@@ -475,7 +486,6 @@ const MainAppRoutes = ({
             <Route path="/resetPassword" element={<ResetPassword />} />
             <Route path="/forgetPassword" element={<ForgetPassword />} />
             <Route path="/assessmenttest" element={<AssessmentTest />} />
-
 
             {/* Protected Routes */}
             <Route
@@ -666,7 +676,7 @@ const MainAppRoutes = ({
                     {/* // <---------------------- v1.0.1 */}
                     {hasPermission("AssessmentTemplates", "Edit") && (
                       // v1.0.1---------------------- >
-                                            <Route
+                      <Route
                         path="assessments-template/edit/:id"
                         element={<AssessmentForm />}
                       />
@@ -676,19 +686,33 @@ const MainAppRoutes = ({
               )}
 
               {/* Assessment */}
+              {/* Ranjith added this new route CandidateDetails*/}
               {hasPermission("Assessments") && (
                 <>
-                <Route path="/assessments" element={<ScheduleAssessment />} />
-                
-                {hasPermission("Assessments", "View") && (
+                  <Route path="/assessments" element={<ScheduleAssessment />} />
+
+                  {hasPermission("Assessments", "View") && (
+                    <Route
+                      path="assessment/:id"
+                      element={
+                        <>
+                          <ScheduleAssDetails /> <ScheduleAssessment />
+                        </>
+                      }
+                    />
+                  )}
+
                   <Route
-                    path="assessment/:id"
-                    element={<><ScheduleAssDetails /> <ScheduleAssessment /></>}
+                    path="assessment/:assessmentId/view-details/:id"
+                    element={
+                      <>
+                        <CandidateDetails mode="Assessment" />
+                        <ScheduleAssessment />
+                      </>
+                    }
                   />
-                )}
                 </>
               )}
-              
 
               {/* Wallet */}
               {hasPermission("Wallet") && (
@@ -708,16 +732,12 @@ const MainAppRoutes = ({
                 </Route>
               )}
 
-
               {hasPermission("Billing") && (
-                  <Route path="billing-details" element={<BillingSubtabs />}>
-                    <Route index element={null} />
-                    <Route
-                      path="details/:id"
-                      element={<UserInvoiceDetails />}
-                    />
-                  </Route>
-                )}
+                <Route path="billing-details" element={<BillingSubtabs />}>
+                  <Route index element={null} />
+                  <Route path="details/:id" element={<UserInvoiceDetails />} />
+                </Route>
+              )}
 
               {/* Account Settings Routes from effective user */}
 
@@ -812,9 +832,7 @@ const MainAppRoutes = ({
                 {hasPermission("Users") && (
                   <Route path="users" element={<UsersLayout />}>
                     {hasPermission("Users", "Create") && (
-
                       <Route path="new" element={<UserForm mode="create" />} />
-
                     )}
                     {hasPermission("Users", "Edit") && (
                       <Route
@@ -840,11 +858,13 @@ const MainAppRoutes = ({
                   </Route>
                 )}
                 {hasPermission("Subscription") && (
-                  
-                  <><Route path="subscription" element={<Subscription />} />
-                  <Route path="subscription/card-details" element={<SubscriptionCardDetails />} />
+                  <>
+                    <Route path="subscription" element={<Subscription />} />
+                    <Route
+                      path="subscription/card-details"
+                      element={<SubscriptionCardDetails />}
+                    />
                   </>
-                  
                 )}
                 {hasPermission("Security") && (
                   <Route path="security" element={<Security />} />
@@ -863,24 +883,12 @@ const MainAppRoutes = ({
                 {hasPermission("Roles") && (
                   <Route path="roles" element={<Role />}>
                     <Route index element={null} />
-                    <Route
-                      path="role-edit/:id"
-                      element={<RoleFormPopup />}
-                    />
-                    <Route
-                      path="role-edit/new"
-                      element={<RoleFormPopup />}
-                    />
+                    <Route path="role-edit/:id" element={<RoleFormPopup />} />
+                    <Route path="role-edit/new" element={<RoleFormPopup />} />
                     {/* v1.0.2  -  Ashraf  -  added create role path */}
-                    <Route
-                      path="create"
-                      element={<RoleFormPopup />}
-                    />
+                    <Route path="create" element={<RoleFormPopup />} />
                     {/* v1.0.2  -  Ashraf  -  added create role path */}
-                    <Route
-                      path="view/:id"
-                      element={<RoleView />}
-                    />
+                    <Route path="view/:id" element={<RoleView />} />
                   </Route>
                 )}
                 {hasPermission("Sharing") && (
@@ -892,7 +900,6 @@ const MainAppRoutes = ({
                 <Route path="webhooks" element={<Webhooks />} />
                 <Route path="hrms-ats" element={<HrmsAtsApi />} />
               </Route>
-
 
               {/* Interview Templates */}
               {hasPermission("InterviewTemplates") && (
@@ -966,16 +973,16 @@ const MainAppRoutes = ({
                   )}
                   {hasPermission("SupportDesk", "View") && (
                     <>
-                    <Route
-                      path="/support-desk/:id"
-                      element={
-                        <>
-                          <SupportViewPage />
-                          <SupportDesk />
-                        </>
-                      }
-                    />
-                    <Route
+                      <Route
+                        path="/support-desk/:id"
+                        element={
+                          <>
+                            <SupportViewPage />
+                            <SupportDesk />
+                          </>
+                        }
+                      />
+                      <Route
                         path="/support-desk/view/:id"
                         element={
                           <>
@@ -1192,7 +1199,7 @@ const App = () => {
       preloadPermissions().catch(() => {});
       // v1.0.0 --------------------->
     }
-    
+
     // Sync user type with localStorage to ensure consistency
     if (authToken) {
       AuthCookieManager.syncUserType();
