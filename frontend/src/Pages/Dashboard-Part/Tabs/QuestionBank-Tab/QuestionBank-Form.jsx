@@ -280,9 +280,9 @@ useEffect(() => {
         
         // Map error field names to actual element selectors
         const fieldSelectors = {
+          'questionType': 'input[placeholder="Select Question Type"]',
           'questionText': '#questionText',
           'tenantListId': 'input[placeholder="Select Question List"]',
-          'questionType': 'input[placeholder="Select Question Type"]',
           'skill': 'input[placeholder="Select Skills"]',
           'difficultyLevel': 'input[placeholder="Select Difficulty Level"]',
           'minexperience': 'input[placeholder="Min Experience"]',
