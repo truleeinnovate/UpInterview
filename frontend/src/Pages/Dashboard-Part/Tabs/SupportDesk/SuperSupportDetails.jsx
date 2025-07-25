@@ -302,7 +302,7 @@ function SupportDetails() {
               impersonatedUser_roleName === "Support_Team") && (
               <button
                 onClick={toggleStatusModal}
-                className="p-2 mb-1 bg-custom-blue text-white hover:bg-custom-blue/90 rounded-md transition-colors"
+                className="px-1 py-1 mb-1 bg-custom-blue text-xs w-24 whitespace-nowrap text-white hover:bg-custom-blue/90 rounded-md transition-colors"
                 title="Change Status"
               >
                 Change Status

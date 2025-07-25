@@ -97,7 +97,7 @@ useEffect(() => {
     maxexperience: "",
   });
   const [charLimits, setCharLimits] = useState({ min: 1, max: 100 });
-  const [hintCharLimit, setHintCharLimit] = useState(250);
+  const [hintCharLimit, setHintCharLimit] = useState(300);
   const [hintContent, setHintContent] = useState('');
   const [autoAssessment, setAutoAssessment] = useState(false);
   const [answerMatching, setAnswerMatching] = useState('Exact');
@@ -136,6 +136,14 @@ useEffect(() => {
         errorMessage = "Please enter a valid number";
         setErrors({ ...errors, [name]: errorMessage });
         return; // Don't update formData if invalid
+      }
+      
+      // Check digit limit (15 digits max, excluding decimal point and minus sign)
+      const digitCount = value.replace(/[-\.]/g, '').length;
+      if (digitCount > 15) {
+        errorMessage = "Number cannot exceed 15 digits";
+        setErrors({ ...errors, [name]: errorMessage });
+        return; // Don't update formData if exceeds limit
       }
     }
     
@@ -192,6 +200,20 @@ useEffect(() => {
       }
     }
   }, [isEdit, question]);
+
+  // Auto-update character limits when question type changes
+  useEffect(() => {
+    if (selectedQuestionType === 'Short Text(Single line)') {
+      setCharLimits({ min: 1, max: 500 });
+    } else if (selectedQuestionType === 'Long Text(Paragraph)') {
+      setCharLimits({ min: 1, max: 2000 });
+    } else if (selectedQuestionType === 'Number') {
+      setCharLimits({ min: 1, max: 15 });
+    } else {
+      setCharLimits({ min: 1, max: 1000 });
+    }
+  }, [selectedQuestionType]);
+
   const clearFormFields = () => {
     setFormData({
       questionText: "",
@@ -250,6 +272,59 @@ useEffect(() => {
       setErrors(newErrors);
       setIsSubmitting(false);
       //----v1.0.2-----Prevent double-click---->
+      
+      // Scroll to first error field
+      setTimeout(() => {
+        const firstErrorField = Object.keys(newErrors)[0];
+        console.log('First error field:', firstErrorField);
+        
+        // Map error field names to actual element selectors
+        const fieldSelectors = {
+          'questionType': 'input[placeholder="Select Question Type"]',
+          'questionText': '#questionText',
+          'tenantListId': 'input[placeholder="Select Question List"]',
+          'skill': 'input[placeholder="Select Skills"]',
+          'difficultyLevel': 'input[placeholder="Select Difficulty Level"]',
+          'minexperience': 'input[placeholder="Min Experience"]',
+          'maxexperience': 'input[placeholder="Max Experience"]',
+          'score': 'input[name="score"]',
+          'correctAnswer': '#correctAnswer'
+        };
+        
+        const selector = fieldSelectors[firstErrorField];
+        let errorElement = null;
+        
+        if (selector) {
+          errorElement = document.querySelector(selector);
+        }
+        
+        console.log('Using selector:', selector);
+        console.log('Found error element:', errorElement);
+        
+        if (errorElement) {
+          // Scroll to the element
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Try to focus if it's focusable
+          setTimeout(() => {
+            try {
+              if (errorElement.click) {
+                errorElement.click(); // For dropdowns
+              }
+              if (errorElement.focus) {
+                errorElement.focus(); // For inputs
+              }
+            } catch (e) {
+              console.log('Could not focus/click element:', e);
+            }
+          }, 500);
+        } else {
+          console.log('Element not found, scrolling to top');
+          // Fallback: scroll to top if can't find specific field
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 300);
+      
       return;
     }
 
@@ -341,6 +416,23 @@ useEffect(() => {
 
       if (isSaveAndNext) {
         setQuestionNumber(prevNumber => prevNumber + 1);
+        // Scroll to first field (Question field) for next question
+        setTimeout(() => {
+          //console.log('Scrolling to Question field after Save & Next');
+          
+          // Find and scroll to the Question field
+          const questionField = document.querySelector('input[placeholder="Select Question Type"]');
+          if (questionField) {
+            questionField.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Focus the question field for immediate typing
+            setTimeout(() => {
+              questionField.focus();
+            }, 500);
+          } else {
+            // Fallback to scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 500);
       } else {
         onClose();
       }
@@ -880,16 +972,24 @@ useEffect(() => {
                       id="questionText"
                       value={formData.questionText}
                       onChange={handleChange}
+                      maxLength={1000}
                       className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${errors.questionText
                         ? "border-red-500"
                         : "border-gray-300 focus:border-black"
                         }`}
                     ></textarea>
-                    {errors.questionText && (
+                    {/* Question Character Counter */}
+                    <div className="flex justify-between items-center text-sm text-gray-500 mt-1">
+                    {errors.questionText ? (
                       <p className="text-red-500 text-sm ">
                         {errors.questionText}
                       </p>
-                    )}
+                    ):
+                    <div></div>
+                    }
+                      {formData.questionText.length}/1000 characters
+                    </div>
+                    
                   </div>
                 </div>
               </div>
@@ -929,20 +1029,27 @@ useEffect(() => {
                               className="block text-sm font-medium leading-6 text-gray-500"
                             ></label>
                           </div>
-                          <div className="flex-grow flex items-center relative mb-5">
-                            <span className="absolute left-0 pl-1  text-gray-500">
+                          <div className="flex-grow flex justify-center relative mb-5">
+                            <span className="absolute left-0 pl-1 pt-2 text-gray-500">
                               {optionLabels[index]}.
                             </span>
+                            <div className="flex flex-col w-full">
                             <input
                               id={`option${index}`}
                               name={`option${index}`}
                               autoComplete="off"
+                              maxLength={250}
                               className={`border  px-3 py-2  sm:text-sm rounded-md border-gray-300   text-gray-500 focus:border-black focus:outline-none w-full pl-8`}
                               onChange={(e) => handleOptionChange(index, e)}
                               value={option.option}
                               readOnly={option.isSaved && !option.isEditing}
                               placeholder={`Please add option`}
                             />
+                            {/* MCQ Option Character Counter */}
+                            <div className="text-right text-xs text-gray-400 mt-1">
+                              {option.option.length}/250 characters
+                            </div>
+                            </div>
                             {!option.isSaved || option.isEditing ? (
                               <div className="flex gap-2 ml-2">
                                 <button
@@ -993,11 +1100,11 @@ useEffect(() => {
                   </div>
                 )}
                 {/* Answer */}
-                <div className="flex flex-col gap-2 mb-4 mt-4">
+                <div className="flex flex-col gap-2 mb-2 mt-2">
                   <div>
                     <label
                       htmlFor="Answer"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                      className="block text-sm font-medium text-gray-700"
                     >
                       Answer <span className="text-red-500">*</span>
                     </label>
@@ -1059,17 +1166,28 @@ useEffect(() => {
                         id="correctAnswer"
                         value={formData.correctAnswer}
                         onChange={handleChange}
+                        maxLength={(selectedQuestionType === 'Short Text(Single line)' || selectedQuestionType === 'Long Text(Paragraph)') ? charLimits.max : 1000}
                         className={` w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 p-2 ${errors.correctAnswer
                           ? "border-red-500"
                           : "border-gray-300 focus:border-black"
                           }`}
                       ></textarea>
                     )}
-                    {errors.correctAnswer && (
-                      <p className="text-red-500 text-sm">
-                        {errors.correctAnswer}
-                      </p>
-                    )}
+                    {/* Character Counter */}
+                    <div className="flex justify-between items-center text-sm mt-1">
+                      {errors.correctAnswer ? (
+                        <p className="text-red-500 text-sm">
+                          {errors.correctAnswer}
+                        </p>
+                      ) : (
+                        <div></div>
+                      )}
+                      <div className="text-gray-500">
+                        {formData.correctAnswer.length}/{charLimits.max} characters
+                      </div>
+                    </div>
+                   
+                    
                   </div>
                 </div>
 
@@ -1094,15 +1212,16 @@ useEffect(() => {
                       <span className={`-mt-5 ${selectedQuestionType === 'Short Text(Single line)' ? 'text-gray-400' : ''}`}>Max</span>
                       <input
                         type="number"
-                        min="100"
+                        min="1"
                         placeholder="Max"
-                        max="3000"
+                        max={selectedQuestionType === 'Short Text(Single line)' ? "500" : "2000"}
                         step="1"
                         value={charLimits.max}
-                        onChange={(e) => setCharLimits(prev => ({ ...prev, max: Math.min(3000, Math.max(100, e.target.value)) }))}
-                        onKeyDown={(e) => e.preventDefault()} // Prevent typing and clearing
-                        readOnly={selectedQuestionType === 'Short Text(Single line)'}
-                        className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2 ${selectedQuestionType === 'Short Text(Single line)' ? 'text-gray-400' : ''}`}
+                        onChange={(e) => {
+                          const maxLimit = selectedQuestionType === 'Short Text(Single line)' ? 500 : 2000;
+                          setCharLimits(prev => ({ ...prev, max: Math.min(maxLimit, Math.max(1, e.target.value)) }));
+                        }}
+                        className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2`}
                       />
                     </div>
                   </div>
@@ -1135,7 +1254,7 @@ useEffect(() => {
                       }}
                     />
                     {hintContent.length >= hintCharLimit * 0.75 && (
-                      <div className="text-right -mt-3 text-gray-500 text-xs">
+                      <div className="text-right -mt-3 pt-2 text-gray-500 text-xs">
                         {hintContent.length}/{hintCharLimit}
                       </div>
                     )}

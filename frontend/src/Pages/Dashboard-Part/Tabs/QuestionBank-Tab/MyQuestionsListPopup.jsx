@@ -501,22 +501,33 @@ const MyQuestionsList1 = forwardRef(
                   <label className="text-sm font-medium w-20">
                     Label <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={newListName}
-                    onChange={(e) => {
-                      const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, '');
-                      setNewListName(sanitizedValue);
-                      setInputError('');
-                    }}
-                    onBlur={() => setNewListNameForName(newListName.replace(/\s+/g, '_'))}
-                    className="flex-1 px-3 py-2 h-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue"
-                    placeholder="Enter label"
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={newListName}
+                      maxLength={30}
+                      onChange={(e) => {
+                        const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9_ ]/g, '');
+                        setNewListName(sanitizedValue);
+                        setInputError('');
+                      }}
+                      onBlur={() => setNewListNameForName(newListName.replace(/\s+/g, '_'))}
+                      className="w-full px-3 py-2 h-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue"
+                      placeholder="Enter label"
+                    />
+                    {/* Character Counter */}
+                    <div className="flex justify-between items-center text-sm text-gray-500 mt-1">
+                      {inputError ? (
+                        <p className="text-red-500 text-xs">
+                          {inputError}
+                        </p>
+                      ) : (
+                        <div></div>
+                      )}
+                      <span className="text-xs">{newListName.length}/30 characters</span>
+                    </div>
+                  </div>
                 </div>
-                {inputError && (
-                  <div className="text-red-500 text-xs ml-20">{inputError}</div>
-                )}
 
                 {/* Name */}
                 <div className="flex items-center">
