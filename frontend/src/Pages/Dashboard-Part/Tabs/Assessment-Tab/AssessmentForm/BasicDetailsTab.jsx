@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  assessment to assesment templates added in fileds
 import React, { useState, useEffect, useRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { ReactComponent as CgInfo } from "../../../../../icons/CgInfo.svg";
@@ -117,18 +118,23 @@ const BasicDetailsTab = ({
   return (
     <div>
       <form>
+      {/* // <---------------------- v1.0.0 */}
+      
         <div className="space-y-6 px-12">
-          <div className="font-semibold text-xl mb-5">Assessment Details:</div>
+          <div className="font-semibold text-xl mb-5">Assessment Template Details:</div>
+          {/* // <---------------------- v1.0.0 */}
 
           {/* Assessment Name and Type */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             <div>
+              {/* // <---------------------- v1.0.0 */}
               <label
                 htmlFor="AssessmentTitle"
                 className="block text-sm font-medium text-gray-700"
               >
-                Assessment Name <span className="text-red-500">*</span>
+                Assessment Template Name <span className="text-red-500">*</span>
               </label>
+              {/* // <---------------------- v1.0.0 */}
               <div className="mt-1">
                 <input
                   type="text"
@@ -483,12 +489,14 @@ const BasicDetailsTab = ({
 
             {/* Expiry Date */}
             <div>
+              {/* // <---------------------- v1.0.0 */}
               <label
                 htmlFor="expiry"
                 className="block text-sm font-medium text-gray-700"
               >
-                Expiry Date
+                Template Expiry Date
               </label>
+              {/* // <---------------------- v1.0.0 */}
               <div className="mt-1">
                 <DatePicker
                   selected={startDate}
@@ -529,7 +537,8 @@ const BasicDetailsTab = ({
                 </div>
                 {showLinkExpiryDay && (
                   <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-24 overflow-y-auto">
-                    {Array.from({ length: 15 }, (_, index) => index + 1).map(
+                    {/* // <---------------------- v1.0.0 */}
+                    {Array.from({ length: 10 }, (_, index) => index + 1).map(
                       (days) => (
                         <div
                           key={days}
@@ -549,6 +558,7 @@ const BasicDetailsTab = ({
                     )}
                   </div>
                 )}
+                {/* // <---------------------- v1.0.0 */}
                 {errors.LinkExpiryDays && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.LinkExpiryDays}
