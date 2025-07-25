@@ -405,7 +405,7 @@ const SuggestedQuestionsComponent = ({
     return (
         <div className="h-full flex flex-col">
             {/* Search/Filter Bar */}
-            <div className={`fixed flex items-center justify-end ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-12 right-12" : "top-32 left-5 right-5"} z-40`}>
+            <div className={`fixed flex items-center justify-end ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-32 right-32" : "top-32 left-5 right-5"} z-40`}>
                 <div className="flex gap-x-3">
                     <div className="relative flex items-center rounded-md border">
                         <span className="p-2 text-custom-blue">
@@ -639,6 +639,7 @@ const SuggestedQuestionsComponent = ({
 
             )}
 
+           
             <FilterPopup
                 isOpen={isPopupOpen}
                 onClose={() => setIsPopupOpen(false)}
@@ -709,7 +710,7 @@ const SuggestedQuestionsComponent = ({
                 }}
                 filterIconRef={filterIconRef}
             >
-                <div style={{ maxHeight: 340, minWidth: 260, overflowY: "auto" }}>
+                <div style={{ maxHeight: 340, minWidth: 260, overflowY: "auto", }}>
                     <div className="p-2">
                         <div
                             className="flex justify-between items-center cursor-pointer"

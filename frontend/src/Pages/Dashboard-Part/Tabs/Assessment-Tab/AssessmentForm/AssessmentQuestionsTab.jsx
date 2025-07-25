@@ -492,7 +492,7 @@ const AssessmentQuestionsTab = ({
           onClick={() => setIsQuestionPopup(false)}
         >
           <div
-            className="bg-white rounded-md w-[95%] h-[90%]"
+            className="bg-white rounded-md w-[85%] h-[80%]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="py-3 px-4  flex items-center justify-between">
