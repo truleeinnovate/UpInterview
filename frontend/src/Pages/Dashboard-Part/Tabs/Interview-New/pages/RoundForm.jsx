@@ -18,13 +18,17 @@ import Loading from '../../../../../Components/Loading.js';
 import { useInterviews } from '../../../../../apiHooks/useInterviews.js';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 import LoadingButton from '../../../../../Components/LoadingButton';
-
+const moment = require('moment-timezone');
 
 // Function to update start and end time
 const formatDateTime = (date, showDate = true) => {
   if (!date) return "";
 
-  const d = new Date(date);
+   // Convert UTC date to local timezone for display
+   const d = new Date(date);
+   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // const d = new Date(date);
 
   // Format date if required
   const day = String(d.getDate()).padStart(2, "0");
@@ -34,6 +38,7 @@ const formatDateTime = (date, showDate = true) => {
 
   // Format time
   const formattedTime = d.toLocaleTimeString("en-US", {
+    timeZone: timeZone,
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
@@ -146,13 +151,22 @@ const RoundFormInterviews = () => {
     if (interviewType === "instant") {
       const now = new Date();
       now.setMinutes(now.getMinutes() + 15); // Start after 15 min
-      start = now;
+      // start = now;
 
-      const endTime = new Date(now);
+    // Convert to UTC 
+     const localTimeStr = moment(now).format('YYYY-MM-DD HH:mm');
+      start = moment.tz(localTimeStr, 'YYYY-MM-DD HH:mm', Intl.DateTimeFormat().resolvedOptions().timeZone).utc().toDate();
+
+      const endTime = new Date(start);
+      // const endTime = new Date(now);
       endTime.setMinutes(endTime.getMinutes() + newDuration);
       end = endTime;
     } else if (interviewType === "scheduled" && scheduledDate) {
-      start = new Date(scheduledDate);
+      // start = new Date(scheduledDate);
+       // Convert scheduled date from local timezone to UTC
+    const localTimeStr = moment(scheduledDate).format('YYYY-MM-DD HH:mm');
+    start = moment.tz(localTimeStr, 'YYYY-MM-DD HH:mm', Intl.DateTimeFormat().resolvedOptions().timeZone).utc().toDate();
+
 
       const endTime = new Date(start);
       endTime.setMinutes(endTime.getMinutes() + newDuration);
@@ -846,6 +860,19 @@ const RoundFormInterviews = () => {
             }
           );
         }
+      }
+
+      console.log("response",response);
+
+      if (response.status === 'ok'){
+        const video_call_res = await axios.post(`${config.REACT_APP_API_URL}/api/agora/create-video-room`,
+          {
+            title: roundTitle,
+            enablePSTN: false
+          }
+        )
+        console.log("video_call_res",video_call_res.data);
+        
       }
 
       console.log("Navigating to the interview details page");

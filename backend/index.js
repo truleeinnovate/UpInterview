@@ -143,12 +143,10 @@ const organizationRoutes = require('./routes/organizationLoginRoutes.js');
 const Cardrouter = require('./routes/Carddetailsroutes.js');
 const EmailRouter = require('./routes/EmailsRoutes/emailsRoute.js');
 const usersRoutes = require('./routes/usersRoutes.js');
+// Add import for agoraRoomRoute
+const agoraRoomRoute = require('./routes/agoraRoomRoute.js');
 
-
-
-
-
-
+app.use('/api/agora', agoraRoomRoute);
 app.use('/api', apiRoutes);
 app.use('/linkedin', linkedinAuthRoutes);
 app.use('/Individual', individualLoginRoutes);
