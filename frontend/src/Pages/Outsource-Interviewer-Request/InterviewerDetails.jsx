@@ -183,10 +183,16 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
           }`}
         >
           {/* Header */}
-          <div className="sticky top-0 border border-gray-300 bg-white px-4 sm:px-6 py-4 z-10">
+          {/* <div className="sticky top-0 border border-gray-300 bg-white px-4 sm:px-6 py-4 z-10">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="ml-8 text-xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-bold text-custom-blue">
+                <h2 className="ml-8 text-xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-bold text-custom-blue"> */}
+          {/* v1.0.0 <-------------------------------------------------------------------------------------------------------------------- */}
+          <div className="sticky top-0 bg-white px-4 sm:px-6 py-4 z-10">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-bold text-custom-blue">
+          {/* v1.0.0 -------------------------------------------------------------------------------------------------------------------- */}
                   Outsource Interviewer
                 </h2>
               </div>

@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Disabled outer scrollbar when the popup is open
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
@@ -42,6 +43,10 @@ import {
   useInvoices,
   useInvoiceById,
 } from "../../../apiHooks/superAdmin/useInvoices.js";
+// v1.0.0 <-------------------------------------------------------------------------
+import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock.js";
+// v1.0.0 -------------------------------------------------------------------------
+
 
 function InvoicesTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
@@ -496,7 +501,10 @@ function InvoicesTable({ organizationId, viewMode }) {
   };
 
   // Render Popup content
-  const renderPopupContent = (invoice) => {
+  // v1.0.0 <-------------------------------------------------------------------------
+  const PopupContent = ({invoice}) => {
+    useScrollLock(true);
+    // v1.0.0 ------------------------------------------------------------------------->
     return (
       <div className="px-4">
         <div className="rounded-sm px-4 w-full">
@@ -829,7 +837,9 @@ function InvoicesTable({ organizationId, viewMode }) {
             invoice={selectedInvoice}
             onClose={() => setIsPopupOpen(false)}
           >
-            {renderPopupContent(selectedInvoice)}
+            {/* v1.0.1 <------------------------------------------ */}
+            <PopupContent invoice={selectedInvoice} />
+            {/* v1.0.1 ------------------------------------------> */}
           </SidebarPopup>
         )}
       </div>

@@ -1,4 +1,5 @@
 // v1.0.0  -  mansoor  -  added skeleton structure loading
+// v1.0.1  -  Ashok    -  changed the styles at bullet points
 
 // import { useState } from 'react'
 import { ViewDetailsButton, EditButton } from '../../common/Buttons'
@@ -166,12 +167,15 @@ const InterviewerGroups = () => {
               <h3 className="text-sm font-medium text-custom-blue">Interviewer Groups</h3>
               <div className="mt-2 text-sm text-custom-blue">
                 <p>Create specialized interviewer groups for different assessment types:</p>
-                <ul className="list-disc list-inside mt-1">
+                {/* v1.0.1 <---------------------------------------------------------------------------------------------------------------------------- */}
+                <ul className="list-disc list-inside mt-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-1 gap-x-16">
+                {/* v1.0.1 -----------------------------------------------------------------------------------------------------------------------------> */}
                   <li>Group interviewers by expertise (Frontend, Backend, etc.)</li>
                   <li>Manage technical and non-technical interview panels</li>
                   <li>Organize interviewers by seniority levels</li>
                   <li>Track group-specific interview metrics</li>
                 </ul>
+                
               </div>
             </div>
           </div>

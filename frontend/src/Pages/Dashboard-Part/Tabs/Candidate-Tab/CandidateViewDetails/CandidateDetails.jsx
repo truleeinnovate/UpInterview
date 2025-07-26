@@ -1,5 +1,6 @@
 // v1.0.0 ------ Venkatesh--- added skills width to full and skills added in column wise
 //v1.0.1 ------ Ranjith---- added some fullscreen mode ato this ui
+// v1.0.2  - Ashok - fixed form scroll and transition issues
 import Modal from "react-modal";
 import {
   Phone,
@@ -25,7 +26,11 @@ import { LiaGenderlessSolid } from "react-icons/lia";
 import { GrDocumentText } from "react-icons/gr";
 import { ReactComponent as FaEdit } from "../../../../../icons/FaEdit.svg";
 import classNames from "classnames";
+// v1.0.2 <------------------------------------------------------------------------
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
+// v1.0.2 ------------------------------------------------------------------------->
 Modal.setAppElement("#root");
+
 
 const CandidateDetails = ({ mode, candidateId }) => {
   const { candidateData } = useCandidates();
@@ -34,18 +39,29 @@ const CandidateDetails = ({ mode, candidateId }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   // const { id } = useParams();
   const params = useParams();
+  // v1.0.2 <--------------------------------------------------------------------
+  useScrollLock(true)
+  // v1.0.2 -------------------------------------------------------------------->
 
   const location = useLocation();
   const id = candidateId || params?.id;
 
   //< ----------------------v1.0.1 Ranjith added for ui adjustement for responsive proeprly
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden transition-all duration-300",
+    // v1.0.2 <-------------------------------------------------------------------- 
+    // "fixed bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden transition-all duration-300",
+    // {
+    //   "inset-0 w-full h-full": isFullScreen,
+    //   "inset-y-0 right-0 w-full sm:w-full md:w-full 2xl:w-1/2 lg:w-1/2 xl:w-1/2":
+    //     !isFullScreen,
+    // }
+
+    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
     {
-      "inset-0 w-full h-full": isFullScreen,
-      "inset-y-0 right-0 w-full sm:w-full md:w-full 2xl:w-1/2 lg:w-1/2 xl:w-1/2":
-        !isFullScreen,
+      "inset-0": isFullScreen,
+      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
+    // v1.0.2 --------------------------------------------------------------------->
   );
 
   //   ------->

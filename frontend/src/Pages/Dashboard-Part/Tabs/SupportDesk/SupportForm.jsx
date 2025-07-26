@@ -3,6 +3,7 @@
 
 // v1.0.0 ------ Venkatesh---changes in full screen mode icons and remove footer border-top
 // v1.0.1 ------ Venkatesh---change select dropdown to custom dropdown
+// v1.0.2 - Ashok - Implemented scroll lock hook for conditionally disable outer scrollbar
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
@@ -13,6 +14,7 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import LoadingButton from "../../../../Components/LoadingButton";
+import {useScrollLock} from "../../../../apiHooks/scrollHook/useScrollLock";
 
 const maxDescriptionLen = 500;
 
@@ -67,6 +69,12 @@ const SupportForm = () => {
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [attachmentFileError, setAttachmentFileError] = useState("");
   const [isAttachmentFileRemoved, setIsAttachmentRemoved] = useState(false);
+
+
+  // v1.0.2 <-------------------------------------------------------------------------
+  useScrollLock(true); // This will lock the outer scrollbar when the form is open
+  // v1.0.2 ------------------------------------------------------------------------->
+
 
   const issuesData = useMemo(
     () => [

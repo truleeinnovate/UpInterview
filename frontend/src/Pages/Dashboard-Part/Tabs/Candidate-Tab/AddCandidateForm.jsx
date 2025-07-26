@@ -3,6 +3,7 @@
 */
 
 // v1.0.1 - Venkatesh - added custom university
+// v1.0.2 - Ashok - disabled the scroll conditionally based on the isModalOpen state and added scroll to top logic after form submission
 
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
@@ -26,6 +27,9 @@ import LoadingButton from "../../../../Components/LoadingButton";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { validateFile } from "../../../../utils/FileValidation/FileValidation";
+// v1.0.2 <---------------------------------------------------------------------
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+// v1.0.2 --------------------------------------------------------------------->
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -64,7 +68,6 @@ const CustomDropdown = ({
       .includes(searchTerm.toLowerCase());
   });
 
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -97,8 +100,9 @@ const CustomDropdown = ({
           onClick={toggleDropdown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? "border-red-500" : "border-gray-300"
-            }`}
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+            error ? "border-red-500" : "border-gray-300"
+          }`}
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -142,7 +146,12 @@ const CustomDropdown = ({
 };
 
 // Main AddCandidateForm Component
-const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = false }) => {
+const AddCandidateForm = ({
+  mode,
+  onClose,
+  isModal = false,
+  hideAddButton = false,
+}) => {
   const { skills, colleges, qualifications, currentRoles } = useMasterData();
 
   console.log("currentRoles:", currentRoles);
@@ -151,6 +160,11 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
 
+  // v1.0.2 <----------------------------------------------------------------
+  useScrollLock(true);
+
+  const formRef = useRef(null);
+  // v1.0.2 ----------------------------------------------------------------->
   const {
     candidateData,
     isLoading: _isLoading,
@@ -193,43 +207,49 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
   //<----v1.0.1 - University dropdown state---
   const [showDropdownUniversity, setShowDropdownUniversity] = useState(false);
   const [isCustomUniversity, setIsCustomUniversity] = useState(false);
-  const [universitySearchTerm, setUniversitySearchTerm] = useState('');
+  const [universitySearchTerm, setUniversitySearchTerm] = useState("");
   const universityDropdownRef = useRef(null);
 
   const handleUniversitySelect = (university) => {
-    if (university === 'others') {
+    if (university === "others") {
       setIsCustomUniversity(true);
       setFormData((prev) => ({ ...prev, UniversityCollege: "" }));
     } else {
       setIsCustomUniversity(false);
-      setFormData((prev) => ({ ...prev, UniversityCollege: university.University_CollegeName }));
+      setFormData((prev) => ({
+        ...prev,
+        UniversityCollege: university.University_CollegeName,
+      }));
     }
     setShowDropdownUniversity(false);
-    setUniversitySearchTerm('');
+    setUniversitySearchTerm("");
     if (errors.UniversityCollege) {
-      setErrors((prevErrors) => ({ ...prevErrors, UniversityCollege: "" }))
+      setErrors((prevErrors) => ({ ...prevErrors, UniversityCollege: "" }));
     }
   };
-
-
 
   // Handle click outside university dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (universityDropdownRef.current && !universityDropdownRef.current.contains(event.target)) {
+      if (
+        universityDropdownRef.current &&
+        !universityDropdownRef.current.contains(event.target)
+      ) {
         setShowDropdownUniversity(false);
-        setUniversitySearchTerm('');
+        setUniversitySearchTerm("");
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  const filteredUniversities = colleges?.filter(college =>
-    college.University_CollegeName?.toString().toLowerCase().includes(universitySearchTerm.toLowerCase())
+  const filteredUniversities = colleges?.filter((college) =>
+    college.University_CollegeName?.toString()
+      .toLowerCase()
+      .includes(universitySearchTerm.toLowerCase())
   );
   //----v1.0.1--->
 
@@ -382,10 +402,10 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
@@ -602,7 +622,7 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
     const fromPath = location.state?.from;
     const returnTo = location.state?.returnTo;
 
-    if (fromPath === '/interviews/new' && returnTo) {
+    if (fromPath === "/interviews/new" && returnTo) {
       navigate(returnTo);
       return;
     }
@@ -624,7 +644,7 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
     console.log("Starting submit process...");
 
     // Set which button was clicked
-    setActiveButton(isAddCandidate ? 'add' : 'save');
+    setActiveButton(isAddCandidate ? "add" : "save");
 
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
@@ -697,7 +717,7 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
           const fromPath = location.state?.from;
           const returnTo = location.state?.returnTo;
 
-          if (fromPath === '/interviews/new' && returnTo) {
+          if (fromPath === "/interviews/new" && returnTo) {
             navigate(returnTo);
             return;
           }
@@ -728,6 +748,11 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
       // Reset active button regardless of success or failure
       setActiveButton(null);
     }
+
+    // v1.0.2 <----------------------------------------------------------------------------
+    // Scroll to top of form
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    // v1.0.2 ---------------------------------------------------------------------------->
   };
 
   const modalClass = classNames(
@@ -755,7 +780,9 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
             { "opacity-50": isMutationLoading }
           )}
         >
-          <div className="p-6">
+          {/* v1.0.2 <------------------------------------------------------------------ */}
+          <div className="p-6" ref={formRef}>
+          {/* v1.0.2 ------------------------------------------------------------------> */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-custom-blue">
                 {id ? "Update Candidate" : "Add New Candidate"}
@@ -866,11 +893,11 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                         <p className="text-xs text-gray-500">
                           {selectedResume?.fileSize || selectedResume?.size
                             ? `${(
-                              (selectedResume.size ||
-                                selectedResume.fileSize) /
-                              1024 /
-                              1024
-                            ).toFixed(2)} MB`
+                                (selectedResume.size ||
+                                  selectedResume.fileSize) /
+                                1024 /
+                                1024
+                              ).toFixed(2)} MB`
                             : ""}
                         </p>
                       </div>
@@ -966,8 +993,9 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                     name="LastName"
                     value={formData.LastName}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.LastName && "border-red-500"
-                      }`}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                      errors.LastName && "border-red-500"
+                    }`}
                     placeholder="Enter Last Name"
                   />
                   {errors.LastName && (
@@ -1017,8 +1045,9 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                     name="Email"
                     value={formData.Email}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${errors.Email && "border-red-500"
-                      }`}
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${
+                      errors.Email && "border-red-500"
+                    }`}
                     placeholder="Enter Email Address"
                   />
                   {errors.Email && (
@@ -1058,8 +1087,9 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                           }
                         }}
                         maxLength={10}
-                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.Phone && "border-red-500"
-                          }`}
+                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                          errors.Phone && "border-red-500"
+                        }`}
                         placeholder="Enter Phone Number"
                       />
 
@@ -1099,14 +1129,25 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                       <input
                         type="text"
                         value={formData.UniversityCollege}
-                        onClick={() => setShowDropdownUniversity(!showDropdownUniversity)}
+                        onClick={() =>
+                          setShowDropdownUniversity(!showDropdownUniversity)
+                        }
                         placeholder="Select a University/College"
                         autoComplete="off"
-                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.UniversityCollege ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                          errors.UniversityCollege
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
                         readOnly
                       />
                       <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <ChevronDown className="text-lg" onClick={() => setShowDropdownUniversity(!showDropdownUniversity)} />
+                        <ChevronDown
+                          className="text-lg"
+                          onClick={() =>
+                            setShowDropdownUniversity(!showDropdownUniversity)
+                          }
+                        />
                       </div>
                       {showDropdownUniversity && (
                         <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
@@ -1117,7 +1158,9 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                                 type="text"
                                 placeholder="Search University/College"
                                 value={universitySearchTerm}
-                                onChange={(e) => setUniversitySearchTerm(e.target.value)}
+                                onChange={(e) =>
+                                  setUniversitySearchTerm(e.target.value)
+                                }
                                 className="pl-8 focus:border-black focus:outline-none w-full"
                               />
                             </div>
@@ -1127,22 +1170,28 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                               filteredUniversities.map((university, index) => (
                                 <div
                                   key={university._id || index}
-                                  onClick={() => handleUniversitySelect(university)}
+                                  onClick={() =>
+                                    handleUniversitySelect(university)
+                                  }
                                   className="cursor-pointer hover:bg-gray-200 p-2"
                                 >
                                   {university.University_CollegeName}
                                 </div>
                               ))
                             ) : (
-                              <div className="p-2 text-gray-500">No universities found</div>
+                              <div className="p-2 text-gray-500">
+                                No universities found
+                              </div>
                             )}
                           </div>
                           <div className="border-t border-gray-200">
                             <div
-                              onClick={() => handleUniversitySelect('others')}
+                              onClick={() => handleUniversitySelect("others")}
                               className="cursor-pointer hover:bg-gray-200 p-2"
                             >
-                              <span className="text-gray-900 font-medium">+ Others</span>
+                              <span className="text-gray-900 font-medium">
+                                + Others
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -1154,12 +1203,22 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                         type="text"
                         value={formData.UniversityCollege}
                         onChange={(e) => {
-                          setFormData({ ...formData, UniversityCollege: e.target.value });
+                          setFormData({
+                            ...formData,
+                            UniversityCollege: e.target.value,
+                          });
                           if (errors.UniversityCollege) {
-                            setErrors((prevErrors) => ({ ...prevErrors, UniversityCollege: "" }));
+                            setErrors((prevErrors) => ({
+                              ...prevErrors,
+                              UniversityCollege: "",
+                            }));
                           }
                         }}
-                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.UniversityCollege ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                          errors.UniversityCollege
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
                         placeholder="Enter custom university/college name"
                       />
                       <button
@@ -1170,13 +1229,27 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                         }}
                         className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </div>
                   )}
-                  {errors.UniversityCollege && <p className="text-red-500 text-xs pt-1">{errors.UniversityCollege}</p>}
+                  {errors.UniversityCollege && (
+                    <p className="text-red-500 text-xs pt-1">
+                      {errors.UniversityCollege}
+                    </p>
+                  )}
                 </div>
                 {/* --------v1.0.1----->*/}
                 <p className="text-lg font-semibold col-span-2">
@@ -1199,10 +1272,11 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                     max="15"
                     value={formData.CurrentExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentExperience
-                      ? "border-red-500"
-                      : "border-gray-300"
-                      }`}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                      errors.CurrentExperience
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                     placeholder="Enter Current Experience"
                   />
                   {errors.CurrentExperience && (
@@ -1227,10 +1301,11 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                     max="15"
                     value={formData.RelevantExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.RelevantExperience
-                      ? "border-red-500"
-                      : "border-gray-300"
-                      }`}
+                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                      errors.RelevantExperience
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                     placeholder="Enter Relevant Experience"
                   />
                   {errors.RelevantExperience && (
@@ -1260,10 +1335,11 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                       onChange={handleChange}
                       placeholder="Select Current Role"
                       autoComplete="off"
-                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${errors.CurrentRole
-                        ? "border-red-500"
-                        : "border-gray-300"
-                        }`}
+                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                        errors.CurrentRole
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
                       readOnly
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -1372,15 +1448,16 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${
+                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   Cancel
                 </button>
 
                 <LoadingButton
                   onClick={handleSubmit}
-                  isLoading={isMutationLoading && activeButton === 'save'}
+                  isLoading={isMutationLoading && activeButton === "save"}
                   loadingText={id ? "Updating..." : "Saving..."}
                 >
                   {id ? "Update" : "Save"}
@@ -1389,7 +1466,7 @@ const AddCandidateForm = ({ mode, onClose, isModal = false, hideAddButton = fals
                 {!hideAddButton && !id && (
                   <LoadingButton
                     onClick={(e) => handleSubmit(e, true)}
-                    isLoading={isMutationLoading && activeButton === 'add'}
+                    isLoading={isMutationLoading && activeButton === "add"}
                     loadingText="Adding..."
                   >
                     <FaPlus className="w-5 h-5 mr-1" /> Add Candidate

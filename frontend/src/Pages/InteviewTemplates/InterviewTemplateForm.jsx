@@ -1,5 +1,6 @@
 // v1.0.0  -  Mansoor  -  removed required for description
-// v1.0.1  -  Ashraf  -  on saving both getting load 
+// v1.0.1  -  Ashraf  -  on saving both getting load
+// v1.0.2  -  Ashok   -  disabled outer scrollbar for the form
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
@@ -11,6 +12,9 @@ import { useInterviewTemplates } from '../../apiHooks/useInterviewTemplates';
 // import { useQueryClient } from '@tanstack/react-query';
 import LoadingButton from '../../Components/LoadingButton';
 import { ReactComponent as FaPlus } from '../../icons/FaPlus.svg';
+// v1.0.2 <----------------------------------------------------------------------------
+import {useScrollLock} from "../../apiHooks/scrollHook/useScrollLock"
+// v1.0.2 ---------------------------------------------------------------------------->
 
 const InterviewSlideover = ({ mode }) => {
     const { templatesData, saveTemplate, isMutationLoading } = useInterviewTemplates();
@@ -35,6 +39,10 @@ const InterviewSlideover = ({ mode }) => {
     // ------------------------------ v1.0.1 >
     // Add activeButton state to track which button was clicked
     const [activeButton, setActiveButton] = useState(null); // 'save' or 'add' or null
+
+    // v1.0.2 <----------------------------------------------------------------------------
+    useScrollLock(true);
+    // v1.0.2 ---------------------------------------------------------------------------->
 
     useEffect(() => {
         if (templatesData) {

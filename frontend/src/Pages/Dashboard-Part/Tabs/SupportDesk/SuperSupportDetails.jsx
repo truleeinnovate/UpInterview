@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 
 // v1.0.0------Venkatesh------add attachments tab
+// v1.0.0 - Ashok - disabled outer scrollbar using custom hook
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MdOutlineCancel } from "react-icons/md";
@@ -25,6 +26,9 @@ import { config } from "../../../../config.js";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { Minimize, Expand, X, Eye } from "lucide-react";
+// v1.0.0 <-------------------------------------------------------------------------
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
+// v1.0.0 ------------------------------------------------------------------------->
 
 const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
@@ -72,6 +76,10 @@ function SupportDetails() {
   const [isOwnerEditing, setIsOwnerEditing] = useState(false);
   const [ownerOptions, setOwnerOptions] = useState([]);
   console.log("ownerOptions---", ownerOptions);
+
+  // v1.0.0 <-------------------------------------------------------------------------
+  useScrollLock(true);
+  // v1.0.0 ------------------------------------------------------------------------->
 
   useEffect(() => {
     const fetchUsers = async () => {

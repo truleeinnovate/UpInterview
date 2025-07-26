@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Disabled outer scrollbar when the popup is open
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge.jsx";
@@ -34,6 +35,9 @@ import {
   useReceipts,
   useReceiptById,
 } from "../../../apiHooks/superAdmin/useReceipts";
+// v1.0.0 <-------------------------------------------------------------------------
+import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock.js";
+// v1.0.0 -------------------------------------------------------------------------
 
 function ReceiptsTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
@@ -458,7 +462,10 @@ function ReceiptsTable({ organizationId, viewMode }) {
   };
 
   // Render Popup content
-  const renderPopupContent = (receipt) => {
+  // v1.0.0 <-------------------------------------------------------------------------
+  const PopupContent = ({receipt}) => {
+    useScrollLock(true);
+  // v1.0.0 ------------------------------------------------------------------------->
     return (
       <div className="px-4">
         <div className="rounded-sm px-4 w-full">
@@ -726,7 +733,9 @@ function ReceiptsTable({ organizationId, viewMode }) {
       <div>
         {isPopupOpen && selectedReceipt && (
           <SidebarPopup title="Receipt" onClose={() => setIsPopupOpen(false)}>
-            {renderPopupContent(selectedReceipt)}
+            {/* v1.0.0 <---------------------------------------------------------- */}
+            <PopupContent receipt={selectedReceipt} />
+            {/* v1.0.0 ----------------------------------------------------------> */}
           </SidebarPopup>
         )}
       </div>
