@@ -1,5 +1,6 @@
 // v1.0.0  -  mansoor  -  added skeleton structure loading
 // v1.0.1  -  Ashraf  -  create new role path fixed
+// v1.0.2  -  Ashok   -  added font semibold for view more button
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -266,7 +267,9 @@ const Role = () => {
                       { state: { role, roles } }
                     )
                   }
-                  className="mt-4 text-custom-blue hover:underline text-sm"
+                  // v1.0.2 <---------------------------------------------------------------------------------
+                  className="mt-4 font-semibold text-custom-blue hover:underline text-sm"
+                  // v1.0.2 --------------------------------------------------------------------------------->
                 >
                   View More
                 </button>

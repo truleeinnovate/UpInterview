@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - disabled outer scrollbar using custom hook
+
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -15,6 +17,9 @@ import {
 } from "react-icons/fa";
 import { Minimize, Expand, X, Eye } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
+// v1.0.0 <-------------------------------------------------------------------------
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+// v1.0.0 ------------------------------------------------------------------------->
 //import SupportForm from "./SupportForm";
 
 //const validReopenStatus = ["resolved", "cancel"];
@@ -36,6 +41,10 @@ const SupportViewPage = () => {
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
   };
+
+  // v1.0.0 <-------------------------------------------------------------------------
+  useScrollLock(true);
+  // v1.0.0 ------------------------------------------------------------------------->
 
   const formatDate = useCallback((dateString) => {
     if (!dateString) return "N/A";
