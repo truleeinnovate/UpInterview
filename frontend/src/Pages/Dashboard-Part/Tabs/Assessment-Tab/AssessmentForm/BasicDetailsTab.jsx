@@ -1,5 +1,5 @@
 // v1.0.0  -  Ashraf  -  assessment to assesment templates added in fileds
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { ReactComponent as CgInfo } from "../../../../../icons/CgInfo.svg";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
@@ -72,6 +72,7 @@ const BasicDetailsTab = ({
 
   // Handle click outside dropdowns
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleClickOutside = (event) => {
       if (
         (linkExpiryRef.current && !linkExpiryRef.current.contains(event.target)) &&
