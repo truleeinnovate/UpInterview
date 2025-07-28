@@ -1,3 +1,5 @@
+//<---v1.0.0------venkatesh------add scroll into view for error msg
+
 import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
@@ -271,6 +273,16 @@ const TaskForm = ({
     ? getNameFromId(selectedOptionIdRelatedTo) 
     : "";
 
+  //<-----v1.0.0------
+  const handleValidationErrors = () => {
+    setTimeout(() => {
+      const firstErrorField = document.querySelector('.text-red-500');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
+ //----------v1.0.0------>
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -289,6 +301,7 @@ const TaskForm = ({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      handleValidationErrors();
       console.log("Form validation failed:", newErrors);
       return;
     }

@@ -1,4 +1,5 @@
 //  verison 0.01 changes done by Ranjith related to some feilds like company size properly binded
+// v1.0.2 changes done by Venky related to error msg scroll into view
 
 // import { companyProfile, companySizes, industries } from '../mockData/companyData'
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
@@ -292,6 +293,7 @@ const CompanyEditProfile = () => {
     const validationErrors = validateCompanyProfile(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      handleValidationErrors();
       return;
     }
     console.log("validationErrors", validationErrors);
@@ -354,6 +356,16 @@ const CompanyEditProfile = () => {
       console.error("Error updating company profile:", error);
     }
   };
+// <---v1.0.2------
+  const handleValidationErrors = () => {
+    setTimeout(() => {
+      const firstErrorField = document.querySelector('.text-red-500');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
+  //-----------v1.0.2------>
 
   const modalClass = classNames(
     "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",

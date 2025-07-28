@@ -864,7 +864,7 @@ const RoundFormInterviews = () => {
 
       console.log("response",response);
 
-      // <----------------dont remove this comment------------------------->
+      // don't remove this code related to agora video room
       // if (response.status === 'ok'){
       //   const video_call_res = await axios.post(`${config.REACT_APP_API_URL}/api/agora/create-video-room`,
       //     {
@@ -873,6 +873,7 @@ const RoundFormInterviews = () => {
       //     }
       //   )
       //   console.log("video_call_res",video_call_res.data);
+        
       // }
 
       console.log("Navigating to the interview details page");

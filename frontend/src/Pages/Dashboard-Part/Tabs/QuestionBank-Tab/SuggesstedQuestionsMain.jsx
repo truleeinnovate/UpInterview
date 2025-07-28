@@ -350,7 +350,7 @@ const SuggestedQuestionsComponent = ({
     // Skeleton Loader
     const SkeletonLoader = () => (
         <div className="w-full px-5">
-            <div className={`fixed flex items-center justify-between ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-12 right-12" : "top-32 left-5 right-5"}`}>
+            <div className={`fixed flex items-center justify-between ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-40 right-40" : "top-32 left-5 right-5"}`}>
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-64 bg-gray-200 rounded-md animate-pulse"></div>
                     <div className="h-10 w-64 bg-gray-200 rounded-md animate-pulse"></div>
