@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  - fixed add candidate click navigate to add form
 // v1.0.1  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code),added dropdown to show assessment when user is from shedule assessment true. STOPPED LOOPS: Replaced bulk section fetching with lazy loading to prevent performance issues
 // v1.0.2  -  Ashraf  -  called sections function to load data fast
+// v1.0.3  -  Ashraf  -  removed already selected cant select logic because very new schedule we can select same candidate
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { shareAssessmentAPI } from './AssessmentShareAPI.jsx';
@@ -19,6 +20,7 @@ import { Plus } from 'lucide-react';
 // ------------------------------ v1.0.0 >
 // <---------------------- v1.0.1
 import { useAssessments } from '../../../../apiHooks/useAssessments.js';
+import { useQueryClient } from '@tanstack/react-query';
 // <---------------------- v1.0.1 >
 
 
@@ -31,6 +33,7 @@ const ShareAssessment = ({
   // <---------------------- v1.0.1
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { candidateData, loading, refetch: refetchCandidates } = useCandidates();
+  const queryClient = useQueryClient();
   // <---------------------- v1.0.1 >
 
   // <------------------------------- v1.0.0 
@@ -294,16 +297,23 @@ const ShareAssessment = ({
 
   const handleCandidateSelect = (candidate) => {
     if (candidate && !selectedCandidates.some((selected) => selected._id === candidate._id)) {
-      const assignedSchedules = assignedCandidates.filter(
-        (ac) => ac.candidateId === candidate._id.toString()
-      );
-      if (assignedSchedules.length > 0) {
-        const scheduleNames = assignedSchedules.map((ac) => ac.scheduleOrder).join(', ');
-        toast.error(
-          `${candidate.LastName} is already assigned to ${scheduleNames}.`
-        );
-        return;
-      }
+      // <-------------------------------v1.0.3
+      // const assignedSchedules = assignedCandidates.
+      // filter(
+      //   (ac) => ac.candidateId === candidate._id.
+      //   toString()
+      // );
+      // if (assignedSchedules.length > 0) {
+      //   const scheduleNames = assignedSchedules.map
+      //   ((ac) => ac.scheduleOrder).join(', ');
+      //   toast.error(
+      //     `${candidate.LastName} is already assigned 
+      //     to ${scheduleNames}.`
+      //   );
+      //   return;
+      // }
+      // Remove the restriction that prevents selecting already assigned candidates
+      // This allows creating multiple schedule assessments for the same assessment template
       setSelectedCandidates([...selectedCandidates, candidate]);
       setErrors({ ...errors, Candidate: '' });
     }
@@ -315,8 +325,12 @@ const ShareAssessment = ({
   const handleSelectAllVisible = () => {
     const newCandidates = filteredCandidates.filter(
       candidate =>
-        !selectedCandidates.some(selected => selected._id === candidate._id) &&
-        !assignedCandidates.some(ac => ac.candidateId === candidate._id.toString())
+        // !selectedCandidates.some(selected => selected.
+        //   _id === candidate._id) &&
+        //   !assignedCandidates.some(ac => ac.candidateId 
+        //   === candidate._id.toString())
+        !selectedCandidates.some(selected => selected._id === candidate._id)
+        // Remove the restriction that prevents selecting already assigned candidates
     );
 
     if (newCandidates.length > 0) {
@@ -367,22 +381,26 @@ const ShareAssessment = ({
       setErrors,
       setIsLoading,
       organizationId,
-      userId
+      userId,
+      queryClient
     });
 
     if (result.success) {
-      await fetchAssignedCandidates(fromscheduleAssessment ? selectedAssessment._id : assessment._id);
-      // <---------------------- v1.0.1
+      // React Query will handle data refresh automatically
+      // No need to manually fetch data
     } else {
       toast.error(result.message || 'Failed to schedule assessment');
     }
     setIsLoading(false);
   };
-
+// <-------------------------------v1.0.3 >
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center">
+    <div 
+      className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center"
+      onClick={onCloseshare}
+    >
       <div
         className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -612,20 +630,17 @@ const ShareAssessment = ({
                       <ul className="divide-y divide-gray-100">
                         {filteredCandidates.length > 0 ? (
                           filteredCandidates.map((candidate) => {
-                            const assignedSchedules = assignedCandidates.filter(
-                              (ac) => ac.candidateId === candidate._id.toString()
-                            );
-                            const isAssigned = assignedSchedules.length > 0;
                             const isSelected = selectedCandidates.some(
                               (selected) => selected._id === candidate._id
                             );
 
                             return (
+                              // <-------------------------------v1.0.3
                               <li
                                 key={candidate._id}
-                                className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${isAssigned ? 'bg-yellow-50' :
+                                className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
                                   isSelected ? 'bg-blue-50' : ''
-                                  }`}
+                                }`}
                                 onClick={() => handleCandidateSelect(candidate)}
                               >
                                 <div className="flex items-center">
@@ -638,11 +653,8 @@ const ShareAssessment = ({
                                     </span>
                                   )}
                                 </div>
-                                {isAssigned ? (
-                                  <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                                    Assigned
-                                  </span>
-                                ) : isSelected ? (
+                                {isSelected ? (
+                                  // <-------------------------------v1.0.3
                                   <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full">
                                     Selected
                                   </span>

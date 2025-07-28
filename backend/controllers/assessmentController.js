@@ -1,15 +1,18 @@
 // v1.0.0  -  Ashraf  -  fixed assessment result tab issue.before getting only completed status data now we will display all status data
-const Assessment = require("../models/assessment");
+// v1.0.1  -  Ashraf  -  fixed assessment code issue.now it will generate assessment code like ASMT-TPL-00001 and assessment name to assessment template
+ // <-------------------------------v1.0.1
+const Assessment = require("../models/assessmentTemplates");
+// ------------------------------v1.0.1 >
 const { isValidObjectId } = require("mongoose");
 const { CandidateAssessment } = require("../models/candidateAssessment");
 
 const mongoose = require("mongoose");
-const ScheduleAssessment = require("../models/scheduledAssessmentsSchema"); // Adjust path
-const { Candidate } = require("../models/candidate"); // Adjust path
-const Notification = require("../models/notification"); // Adjust path if needed
+const ScheduleAssessment = require("../models/assessmentsSchema"); 
+const { Candidate } = require("../models/candidate");
+const Notification = require("../models/notification");
 const { encrypt } = require("../utils/generateOtp");
-const sendEmail = require("../utils/sendEmail"); // Adjust path
-const emailTemplateModel = require("../models/EmailTemplatemodel"); // Adjust path
+const sendEmail = require("../utils/sendEmail");
+const emailTemplateModel = require("../models/EmailTemplatemodel");
 const notificationMiddleware = require("../middleware/notificationMiddleware");
 //newassessment is using
 
@@ -64,6 +67,9 @@ exports.newAssessment = async (req, res) => {
     // Generate custom AssessmentCode like "ASMT-00001"
     const lastAssessment = await Assessment.findOne({ tenantId })
       .select("AssessmentCode")
+       // <-------------------------------v1.0.0
+      .sort({ AssessmentCode: -1 }) // Sort by AssessmentCode in descending order
+       // <-------------------------------v1.0.0
       .lean();
 
     let nextNumber = 1;
@@ -141,8 +147,9 @@ exports.getAssessmentResults = async (req, res) => {
         // Find all candidate assessments for this schedule (not just completed)
         const candidateAssessments = await CandidateAssessment.find({
           scheduledAssessmentId: schedule._id,
-          isActive: true,
-          // <-------------------------------v1.0.0
+           // <-------------------------------v1.0.1
+          // Removed isActive: true filter to show cancelled candidates
+          // ------------------------------v1.0.1 >
         })
           .populate("candidateId", "FirstName LastName Email CurrentExperience")
           .select(
@@ -243,7 +250,9 @@ exports.getAssignedCandidates = async (req, res) => {
     // Find all candidate assessments with these scheduledAssessmentIds
     const candidateAssessments = await CandidateAssessment.find({
       scheduledAssessmentId: { $in: scheduledAssessmentIds },
-      isActive: true,
+       // <-------------------------------v1.0.1
+      // Removed isActive: true filter to show cancelled candidates
+      // ------------------------------v1.0.1 >
     }).select("candidateId scheduledAssessmentId");
 
     // Create a mapping of candidateId to their scheduledAssessment details

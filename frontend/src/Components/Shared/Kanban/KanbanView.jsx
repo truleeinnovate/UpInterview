@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  added assessment expiry date in kanban view
 // src/Components/Shared/Kanban/KanbanView.jsx
 import React from "react";
 import { motion } from "framer-motion";
@@ -195,6 +196,44 @@ const KanbanView = ({
                         <span className="truncate">{item.linkedinUrl || "N/A"}</span>
                       </div>
                     </div>
+                    {/* <-------------------------------v1.0.0 */}
+                    {/* Show expiry date for assessment view */}
+                    {item.expiryAt && (
+                      <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                        <div className="text-xs text-gray-600 font-medium mb-1">Assessment Expiry</div>
+                        <div className="text-xs text-gray-800">
+                          {(() => {
+                            const now = new Date();
+                            const expiry = new Date(item.expiryAt);
+                            const timeDiff = expiry.getTime() - now.getTime();
+                            
+                            if (timeDiff <= 0) {
+                              return <span className="text-red-600 font-medium">Expired</span>;
+                            }
+                            
+                            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            
+                            let timeText = '';
+                            if (days > 0) {
+                              timeText = `${days}d ${hours}h`;
+                            } else if (hours > 0) {
+                              timeText = `${hours}h`;
+                            } else {
+                              const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                              timeText = `${minutes}m`;
+                            }
+                            
+                            return (
+                              <span className={timeDiff < 24 * 60 * 60 * 1000 ? 'text-red-600' : 'text-gray-600'}>
+                                {timeText} remaining
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    )}
+                    {/* ------------------------------v1.0.0 > */}
                   </div>
                   <div className="mt-4">
                     <div className="flex flex-wrap gap-1">

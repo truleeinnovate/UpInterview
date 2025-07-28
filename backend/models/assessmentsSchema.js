@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  fixed scheduled assessment code unique issue
 // v1.0.1 -   removed cretedat because we wre already using timestamp
+// v1.0.2 -   added expired and failed statuses to enum
 const mongoose = require("mongoose");
 
 const ScheduledAssessmentSchema = new mongoose.Schema(
@@ -20,7 +21,7 @@ const ScheduledAssessmentSchema = new mongoose.Schema(
     expiryAt: { type: Date },
     status: {
       type: String,
-      enum: ["scheduled", "cancelled", "completed"],
+      enum: ["scheduled", "cancelled", "completed", "expired", "failed"],
       default: "scheduled",
     },
     rescheduledFrom: {
