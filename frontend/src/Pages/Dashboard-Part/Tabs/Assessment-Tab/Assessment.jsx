@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 // v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 // v1.0.3  -  Ashraf  -  assessment sections and question api getting in loop issue
+// v1.0.4  -  Ashraf  -  assessment to assessment templates
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -394,7 +395,9 @@ const Assessment = () => {
                 columns={tableColumns}
                 actions={tableActions}
                 loading={isLoading}
-                emptyState="No assessments found."
+                // <-------------------------------v1.0.4
+                emptyState="No assessments templates found."
+                // ------------------------------v1.0.4 >
                 className="table-fixed w-full"
               />
             ) : (

@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  removed consoles
 // v1.0.1  -  Ashraf  -  fixed feeds api issues.removed /api
+// v1.0.2  -  Ashraf  -  fixed name assessment to assessment template
 // this is new
 require('dotenv').config();
 
@@ -262,7 +263,9 @@ app.use((err, req, res, next) => {
 const { Candidate } = require("./models/candidate.js");
 const { Position } = require("./models/position.js");
 const TeamMember = require("./models/TeamMembers.js");
-const Assessment = require("./models/assessment.js");
+ // <-------------------------------v1.0.2
+const Assessment = require("./models/assessmentTemplates");
+// ------------------------------v1.0.2 >
 const { Interview } = require("./models/Interview.js");
 const { MockInterview } = require("./models/mockinterview.js");
 const { Users } = require("./models/Users.js");

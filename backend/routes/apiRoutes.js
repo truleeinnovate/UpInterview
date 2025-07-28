@@ -4,12 +4,15 @@
 // v1.0.3  -  Ashraf  -  fixed interview template model populate issues
 // v1.0.4  -  Ashraf  -  fixed assessment model sort issue,because assessment is in loop
 // v1.0.5  -  Mansoor  -  fixed mockinterview model mapping issue
+// v1.0.6  -  Ashraf  -  fixed assessment to assessment template,schedule assessment to assessment schema
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { Candidate } = require('../models/Candidate');
-const Assessment = require("../models/assessment");
+// <-------------------------------v1.0.6
+const Assessment = require("../models/assessmentTemplates");
+// ------------------------------v1.0.6 >
 const { Position } = require('../models/Position');
 const InterviewTemplate = require("../models/InterviewTemplate");
 const { Interview } = require('../models/Interview');
@@ -22,7 +25,9 @@ const { InterviewRounds } = require('../models/InterviewRounds');
 const InterviewQuestions = require('../models/InterviewQuestions');
 const Users = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
-const ScheduledAssessmentSchema = require('../models/scheduledAssessmentsSchema');
+// <-------------------------------v1.0.6
+const ScheduledAssessmentSchema = require('../models/assessmentsSchema');
+// ------------------------------v1.0.6 >
 
 const modelRequirements = {
   candidate: {

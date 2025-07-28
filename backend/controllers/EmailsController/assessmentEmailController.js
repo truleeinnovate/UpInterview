@@ -1,10 +1,12 @@
 // v1.0.0  -  Ashraf  -  adding assessment code while sending email we will create schedule assessment and candidate assessment
 // v1.0.1  -  Ashraf  -  azure getting error while sending email
-
+// v1.0.2  -  Ashraf  -  fixed name schedule assessment to assessment schema and schedule assessment to assessment schema
 
 const { CandidateAssessment } = require("../../models/candidateAssessment");
 const { encrypt } = require('../../utils/generateOtp')
-const ScheduleAssessment = require('../../models/scheduledAssessmentsSchema');
+// <-------------------------------v1.0.2 
+const ScheduleAssessment = require('../../models/assessmentsSchema');
+// ------------------------------v1.0.2 >
 const { Candidate } = require("../../models/candidate");
 const CryptoJS = require("crypto-js");
 const crypto = require("crypto");
@@ -15,8 +17,10 @@ const { generateOTP } = require('../../utils/generateOtp')
 const Otp = require("../../models/Otp");
 const mongoose = require("mongoose");
 const Notification = require("../../models/notification");
-const Assessment = require("../../models/assessment");
+// <-------------------------------v1.0.2
+const Assessment = require("../../models/assessmentTemplates");
 const config = require("../../config");
+// ------------------------------v1.0.2 >
 
 
 

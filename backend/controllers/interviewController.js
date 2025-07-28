@@ -413,6 +413,9 @@
 
 // module.exports = { createInterview, saveInterviewRound, getDashboardStats };
 
+// v1.0.0  -  Ashraf  -  fixed name assessment to assessment template
+
+
 const mongoose = require("mongoose");
 const { Interview } = require("../models/Interview");
 const { InterviewRounds } = require("../models/InterviewRounds.js");
@@ -424,7 +427,10 @@ const { encrypt, generateOTP } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");
 const interviewQuestions = require("../models/interviewQuestions");
 const { Position } = require("../models/position.js");
-const Assessment = require("../models/assessment");
+// <-------------------------------v1.0.0
+const Assessment = require("../models/assessmentTemplates");
+// ------------------------------v1.0.0 >
+
 
 const createInterview = async (req, res) => {
   try {

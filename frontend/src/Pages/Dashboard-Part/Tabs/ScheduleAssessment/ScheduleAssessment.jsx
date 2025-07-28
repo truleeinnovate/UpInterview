@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  removed expity date
 // v1.0.1  -  Ashraf  -  added new assessment button
 // v1.0.2 ---Venkatesh---change assessmentID to first in table column and add status column style
+// v1.0.3  -  Ashraf  -  added extend/cancel functionality for candidate assessments. replaced actions button with direct extend/cancel buttons and restored original columns. added automatic expiry check functionality
 
 import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
@@ -14,24 +15,47 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useScheduleAssessments } from '../../../../apiHooks/useScheduleAssessments.js';
 import { usePermissions } from '../../../../Context/PermissionsContext';
-import { Eye, Pencil } from 'lucide-react';
+// <-------------------------------v1.0.3
+import { Eye, Pencil, Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
+// ------------------------------v1.0.3 >
 import ScheduleAssessmentKanban from './ScheduleAssessmentKanban.jsx';
+// <-------------------------------v1.0.3 >
+import AssessmentActionPopup from '../Assessment-Tab/AssessmentViewDetails/AssessmentActionPopup.jsx';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useAssessments } from '../../../../apiHooks/useAssessments.js';
+import axios from 'axios';
+import { config } from '../../../../config.js';
+import toast from 'react-hot-toast';
+// ------------------------------v1.0.3 >
 // <---------------------- v1.0.1
 import ShareAssessment from "../Assessment-Tab/ShareAssessment.jsx";
 // <---------------------- v1.0.1 >
 
 const ScheduleAssessment = () => {
   const { effectivePermissions } = usePermissions();
-  const { assessmentData } = useAssessments();
+  // <-------------------------------v1.0.3
+  const { assessmentData, checkExpiredAssessments, updateAllScheduleStatuses } = useAssessments();
   const { scheduleData, isLoading } = useScheduleAssessments();
   const navigate = useNavigate();
   // <---------------------- v1.0.1
   const [isShareOpen, setIsShareOpen] = useState(false);
   // <---------------------- v1.0.1 >
-
+  // <---------------------- v1.0.3
+  const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selectedAction, setSelectedAction] = useState(''); // 'extend' or 'cancel'
+  // Function to check if action buttons should be shown based on schedule status
+  const shouldShowActionButtons = (schedule) => {
+    const status = schedule.status?.toLowerCase();
+    // Hide buttons for completed, cancelled, expired, and failed statuses
+    return !['completed', 'cancelled', 'expired', 'failed'].includes(status);
+  };
+  // Function to handle manual schedule status updates
+  const handleUpdateAllScheduleStatuses = () => {
+    updateAllScheduleStatuses.mutate();
+  };
+  // ------------------------------v1.0.3 >
   const assessmentIds = assessmentData?.map((a) => a._id) || [];
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,7 +65,9 @@ const ScheduleAssessment = () => {
   // Filter state
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
-  const [statusOptions] = useState(['Scheduled', 'Completed', 'Cancelled']);
+  // <-------------------------------v1.0.3
+  const [statusOptions] = useState(['Scheduled', 'Completed', 'Cancelled', 'Expired', 'Failed']);
+  // ------------------------------v1.0.3 >
   // Applied filters
   const [selectedStatus, setSelectedStatus] = useState([]);
   // Draft filters edited inside popup (not applied until Apply is clicked)
@@ -99,50 +125,91 @@ const ScheduleAssessment = () => {
     setSelectedStatus(tempSelectedStatus);
     setIsFilterActive(true);
     setFilterPopupOpen(false);
-    setCurrentPage(0);
   };
-
+  // ------------------------------v1.0.3 >
   const handleClearFilters = () => {
     setSelectedStatus([]);
+    setTempSelectedStatus([]);
     setIsFilterActive(false);
-    setFilterPopupOpen(false);
   };
 
   const handleFilterIconClick = () => {
-    const willOpen = !isFilterPopupOpen;
-    setFilterPopupOpen(willOpen);
-    if (willOpen) {
-      // sync draft state with applied state when opening popup
-      setTempSelectedStatus(selectedStatus);
-    }
+    setFilterPopupOpen(!isFilterPopupOpen);
   };
 
-  // Handlers
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
+
   const nextPage = () => {
-    if (currentPage < totalPages - 1) setCurrentPage((p) => p + 1);
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
   };
+
   const prevPage = () => {
-    if (currentPage > 0) setCurrentPage((p) => p - 1);
+    setCurrentPage((prev) => Math.max(prev - 1, 0));
   };
 
   const handleView = (schedule) => {
-    // Adjust route when details page exists
-    navigate(`/assessment/${schedule._id}`, { state: { schedule } });
+    navigate(`/assessment/${schedule._id}`, {
+      state: { schedule: schedule }
+    });
   };
 
-  // <---------------------- v1.0.1
   const handleShareClick = () => {
-      setIsShareOpen(true);
+    setIsShareOpen(true);
   };
+
   const handleCloseShare = () => {
     setIsShareOpen(false);
   };
-  // <---------------------- v1.0.1 >
-  // Table definitions
+
+  // <---------------------- v1.0.3
+  const handleActionClick = async (schedule, action) => {
+    try {
+      // Fetch candidate data for this schedule if not already available
+      if (!schedule.candidates || schedule.candidates.length === 0) {
+        const assessmentId = typeof schedule.assessmentId === 'object' ? schedule.assessmentId._id : schedule.assessmentId;
+        if (assessmentId) {
+          const response = await axios.get(`${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`);
+          if (response.data.success && response.data.data) {
+            const scheduleWithCandidates = response.data.data.find(s => s._id === schedule._id);
+            if (scheduleWithCandidates) {
+              setSelectedSchedule(scheduleWithCandidates);
+            } else {
+              setSelectedSchedule(schedule);
+            }
+          } else {
+            setSelectedSchedule(schedule);
+          }
+        } else {
+          setSelectedSchedule(schedule);
+        }
+      } else {
+        setSelectedSchedule(schedule);
+      }
+      setSelectedAction(action);
+      setIsActionPopupOpen(true);
+    } catch (error) {
+      console.error('Error fetching candidate data:', error);
+      setSelectedSchedule(schedule);
+      setSelectedAction(action);
+      setIsActionPopupOpen(true);
+    }
+  };
+
+  const handleActionSuccess = () => {
+    // The useAssessments mutations will automatically invalidate and refresh the data
+    // No manual reload needed - React Query will handle the refresh
+  };
+  const handleCheckExpired = async () => {
+    try {
+      await checkExpiredAssessments.mutateAsync();
+    } catch (error) {
+      console.error('Error checking expired assessments:', error);
+    }
+  };
+// <-------------------------------v1.0.3
   const tableColumns = [
     // Assessment Template ID
     //<---------v1.0.2-----
@@ -209,19 +276,6 @@ const ScheduleAssessment = () => {
         );
       },
     },
-    
-    // <---------------------- v1.0.0
-    // {
-    //   key: 'order',
-    //   header: 'ORDER',
-    //   render: (v) => v || 'Not Provided',
-    // },
-    // {
-    //   key: 'expiryAt',
-    //   header: 'Expiry Date',
-    //   render: (v) => (v ? format(new Date(v), 'MMM dd, yyyy') : 'Not Provided'),
-    // },
-    // <---------------------- v1.0.0
     {
       key: 'status',
       header: 'Status',
@@ -233,8 +287,16 @@ const ScheduleAssessment = () => {
               ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
               : v === "scheduled"
               ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+              // <-------------------------------v1.0.3
+              : v === "cancelled"
+              ? "bg-red-50 text-red-700 border border-red-200/60"
+              : v === "expired"
+              ? "bg-orange-50 text-orange-700 border border-orange-200/60"
+              : v === "failed"
+              ? "bg-red-50 text-red-700 border border-red-200/60"
               : "bg-slate-50 text-slate-700 border border-slate-200/60"
           }`}
+          // ------------------------------v1.0.3 >
         >
           {v ? v.charAt(0).toUpperCase() + v.slice(1) : "Not Provided"}
         </span>
@@ -264,6 +326,22 @@ const ScheduleAssessment = () => {
         },
       ]
       : []),
+    // <-------------------------------v1.0.3
+    {
+      key: 'extend',
+      label: 'Extend',
+      icon: <Calendar className="w-4 h-4 text-blue-600" />,
+      onClick: (schedule) => handleActionClick(schedule, 'extend'),
+      show: shouldShowActionButtons,
+    },
+    {
+      key: 'cancel',
+      label: 'Cancel',
+      icon: <AlertTriangle className="w-4 h-4 text-red-600" />,
+      onClick: (schedule) => handleActionClick(schedule, 'cancel'),
+      show: shouldShowActionButtons,
+    },
+    // ------------------------------v1.0.3 >
   ];
 
   return (
@@ -293,6 +371,20 @@ const ScheduleAssessment = () => {
               searchPlaceholder="Search Assessments..."
               filterIconRef={filterIconRef}
             />
+            {/* <-------------------------------v1.0.3 */}
+            
+            {/* Manual Update Status Button - helps to update status or refresh status manually */}
+            {/* <div className="flex justify-end mb-4">
+              <button
+                onClick={handleUpdateAllScheduleStatuses}
+                disabled={updateAllScheduleStatuses.isPending}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${updateAllScheduleStatuses.isPending ? 'animate-spin' : ''}`} />
+                {updateAllScheduleStatuses.isPending ? 'Updating...' : 'Update All Statuses'}
+              </button>
+            </div> */}
+            {/* ------------------------------v1.0.3 > */}
           </div>
         </main>
       </div>
@@ -315,8 +407,11 @@ const ScheduleAssessment = () => {
                 assessments={assessmentData}
                 loading={isLoading}
                 onView={handleView}
+                // <-------------------------------v1.0.3
+                onAction={handleActionClick}
               //onEdit={handleEdit}
               />
+              // ------------------------------v1.0.3 >
             )}
             <FilterPopup
               isOpen={isFilterPopupOpen}
@@ -369,6 +464,27 @@ const ScheduleAssessment = () => {
         />
       )}
       {/* <---------------------- v1.0.1 > */}
+      {/* <---------------------- v1.0.3 */}
+      {isActionPopupOpen && selectedSchedule && (
+        <AssessmentActionPopup
+          isOpen={isActionPopupOpen}
+          onClose={() => {
+            setIsActionPopupOpen(false);
+            setSelectedSchedule(null);
+            setSelectedAction('');
+          }}
+          schedule={{
+            ...selectedSchedule, 
+            assessmentId: typeof selectedSchedule.assessmentId === 'object' 
+              ? selectedSchedule.assessmentId 
+              : assessmentData?.find(a => a._id === selectedSchedule.assessmentId)
+          }}
+          candidates={selectedSchedule.candidates || []}
+          onSuccess={handleActionSuccess}
+          defaultAction={selectedAction}
+        />
+      )}
+      {/* ------------------------------ v1.0.3 > */}
     </div>
   );
 };

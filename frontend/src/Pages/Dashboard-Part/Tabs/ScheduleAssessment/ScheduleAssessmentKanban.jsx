@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  displaying expity date and status correctly
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -7,6 +8,9 @@ import {
   CalendarIcon,
   ClipboardDocumentListIcon,
   BookOpenIcon,
+  // <-------------------------------v1.0.0
+  ExclamationTriangleIcon,
+  // ------------------------------v1.0.0 >
 } from '@heroicons/react/24/outline';
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
@@ -20,12 +24,24 @@ const ScheduleAssessmentKanban = ({
   assessments = [],
   onView,
   onEdit,
+  // <-------------------------------v1.0.0
+  onAction,
   loading = false,
 }) => {
+  // Function to check if action buttons should be shown based on schedule status
+  const shouldShowActionButtons = (schedule) => {
+    const status = schedule.status?.toLowerCase();
+    // Hide buttons for completed, cancelled, expired, and failed statuses
+    return !['completed', 'cancelled', 'expired', 'failed'].includes(status);
+  };
+ 
+
   const [columns, setColumns] = useState({
     scheduled: { title: 'Scheduled', items: [] },
     completed: { title: 'Completed', items: [] },
     cancelled: { title: 'Cancelled', items: [] },
+    expired: { title: 'Expired', items: [] },
+    failed: { title: 'Failed', items: [] },
   });
 
   useEffect(() => {
@@ -42,7 +58,16 @@ const ScheduleAssessmentKanban = ({
         title: 'Cancelled',
         items: schedules.filter((s) => s.status === 'cancelled'),
       },
+      expired: {
+        title: 'Expired',
+        items: schedules.filter((s) => s.status === 'expired'),
+      },
+      failed: {
+        title: 'Failed',
+        items: schedules.filter((s) => s.status === 'failed'),
+      },
     });
+    // <-------------------------------v1.0.0
   }, [schedules]);
 
   const onDragEnd = (result) => {
@@ -99,101 +124,109 @@ const ScheduleAssessmentKanban = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
             >
-              <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                {column.title} ({column.items.length})
-              </h2>
+              {/* <-------------------------------v1.0.0 */}
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">{column.title}</h3>
               <Droppable droppableId={columnId}>
                 {(provided) => (
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className="grid grid-cols-1 gap-4"
+                    className="space-y-3"
                   >
-                    {column.items.map((schedule, idx) => (
-                      <Draggable
-                        key={schedule._id}
-                        draggableId={schedule._id}
-                        index={idx}
-                      >
-                        {(provided) => (
+                    {column.items.map((schedule, index) => (
+                      <Draggable key={schedule._id} draggableId={schedule._id} index={index}>
+                        {(provided, snapshot) => (
                           <motion.div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className="bg-white rounded-lg shadow p-4 space-y-2 relative group border border-gray-200"
-                            whileHover={{ y: -3 }}
+                            className={`bg-white rounded-lg p-4 shadow-sm border-l-4 ${
+                              snapshot.isDragging ? 'shadow-lg' : ''
+                            } ${
+                              columnId === 'scheduled'
+                                ? 'border-l-blue-500'
+                                : columnId === 'completed'
+                                ? 'border-l-green-500'
+                                : 'border-l-red-500'
+                            }`}
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
                           >
-                            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => onView(schedule)}
-                                className="p-1 text-gray-500 hover:text-custom-blue hover:bg-blue-50 rounded"
-                              >
-                                <EyeIcon className="w-5 h-5" />
-                              </button>
-                              {/* <button
-                                onClick={() => onEdit(schedule)}
-                                className="p-1 text-gray-500 hover:text-custom-blue hover:bg-indigo-50 rounded"
-                              >
-                                <PencilSquareIcon className="w-5 h-5" />
-                              </button> */}
-                            </div>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center space-x-2">
+                                    <EyeIcon
+                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-custom-blue"
+                                      onClick={() => onView(schedule)}
+                                    />
+                                    {onAction && shouldShowActionButtons(schedule) && (
+                                      <>
+                                        <CalendarIcon
+                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-blue-600"
+                                          onClick={() => onAction(schedule, 'extend')}
+                                          title="Extend Assessment"
+                                        />
+                                        <ExclamationTriangleIcon
+                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-red-600"
+                                          onClick={() => onAction(schedule, 'cancel')}
+                                          title="Cancel Assessment"
+                                        />
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                                {/* <-------------------------------v1.0.0 */}
+                                <h3
+                                  className="font-medium text-lg text-custom-blue truncate pr-10 cursor-pointer"
+                                  onClick={() => onView(schedule)}
+                                >
+                                  {schedule.order}
+                                </h3>
 
-                            <h3
-                              className="font-medium text-lg text-custom-blue truncate pr-10 cursor-pointer"
-                              onClick={() => onView(schedule)}
-                            >
-                              {schedule.order}
-                            </h3>
+                                {/* Assessment Template ID */}
+                                <div className="text-sm text-gray-600">
+                                <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-2" /> {(() => {
+                                    const val = schedule.assessmentId;
+                                    let obj = null;
+                                    if (val) {
+                                      if (typeof val === 'object') {
+                                        obj = val;
+                                      } else {
+                                        obj = (assessments || []).find((a) => a._id === val);
+                                      }
+                                    }
+                                    return obj?.AssessmentCode || obj?._id || 'Not Provided';
+                                  })()}
+                                </div>
 
-                            {/* Assessment Template ID */}
-                            <div className="text-sm text-gray-600">
-                            <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-2" /> {(() => {
-                                const val = schedule.assessmentId;
-                                let obj = null;
-                                if (val) {
-                                  if (typeof val === 'object') {
-                                    obj = val;
-                                  } else {
-                                    obj = (assessments || []).find((a) => a._id === val);
-                                  }
-                                }
-                                return obj?.AssessmentCode || obj?._id || 'Not Provided';
-                              })()}
-                            </div>
+                                {/* Assessment Template Name */}
+                                <div className="text-sm text-gray-600">
+                                <BookOpenIcon className="w-5 h-5 inline-block mr-2" /> {(() => {
+                                    const val = schedule.assessmentId;
+                                    let obj = null;
+                                    if (val) {
+                                      if (typeof val === 'object') {
+                                        obj = val;
+                                      } else {
+                                        obj = (assessments || []).find((a) => a._id === val);
+                                      }
+                                    }
+                                    const title = obj?.AssessmentTitle || 'Not Provided';
+                                    return title.charAt ? title.charAt(0).toUpperCase() + title.slice(1) : title;
+                                  })()}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-2" /> {schedule.scheduledAssessmentCode ? schedule.scheduledAssessmentCode : 'Not Provided'}
+                                </div>
 
-                            {/* Assessment Template Name */}
-                            <div className="text-sm text-gray-600">
-                            <BookOpenIcon className="w-5 h-5 inline-block mr-2" /> {(() => {
-                                const val = schedule.assessmentId;
-                                let obj = null;
-                                if (val) {
-                                  if (typeof val === 'object') {
-                                    obj = val;
-                                  } else {
-                                    obj = (assessments || []).find((a) => a._id === val);
-                                  }
-                                }
-                                const title = obj?.AssessmentTitle || 'Not Provided';
-                                return title.charAt ? title.charAt(0).toUpperCase() + title.slice(1) : title;
-                              })()}
+                                <span
+                                  className={`px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800`}
+                                >
+                                  {schedule.status ? schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1) : 'Not Provided'}
+                                </span>
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-600">
-                            <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-2" /> {schedule.scheduledAssessmentCode ? schedule.scheduledAssessmentCode : 'Not Provided'}
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <CalendarIcon className="w-4 h-4" />
-                              <span>
-                                {schedule.expiryAt
-                                  ? format(new Date(schedule.expiryAt), 'MMM dd, yyyy')
-                                  : 'Not Provided'}
-                              </span>
-                            </div>
-
-                            <span
-                              className={`px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800`}
-                            >
-                              {schedule.status ? schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1) : 'Not Provided'}
-                            </span>
                           </motion.div>
                         )}
                       </Draggable>
@@ -226,6 +259,7 @@ ScheduleAssessmentKanban.propTypes = {
   assessments: PropTypes.array,
   onView: PropTypes.func.isRequired,
   onEdit: PropTypes.func,
+  onAction: PropTypes.func,
   loading: PropTypes.bool,
 };
 

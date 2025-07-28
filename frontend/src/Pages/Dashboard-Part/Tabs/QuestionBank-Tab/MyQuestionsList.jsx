@@ -1,5 +1,5 @@
 // v1.0.0 ------ Venkatesh--- check list name using ternary operator
-
+// v1.0.1  -  Ashraf  -  fixed toast error
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
@@ -340,7 +340,9 @@ const MyQuestionsList = ({
         // 4. Show remaining questions count
         const remaining = questionsLimit - (checkedCount + 1);
         if (remaining > 0) {
-          toast.info(`${remaining} questions remaining to reach the limit`);
+          // <-------------------------------v1.0.1
+          toast(`${remaining} questions remaining to reach the limit`);
+          // ------------------------------v1.0.1 >
         } else {
           toast.success('You have reached the required number of questions!');
         }
