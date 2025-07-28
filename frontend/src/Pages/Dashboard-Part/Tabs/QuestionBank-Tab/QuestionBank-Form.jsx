@@ -52,8 +52,6 @@ const QuestionBankForm = ({
   selectedLabelId
 }) => {
 
-  const formRef = useRef(null);
-
   const { saveOrUpdateQuestion, saveOrUpdateQuestionLoading,createdLists } = useQuestions();
   // console.log("selectedLabelId ================", selectedLabelId);
   const [selectedLabels, setSelectedLabels] = useState(false);
@@ -419,22 +417,22 @@ useEffect(() => {
       if (isSaveAndNext) {
         setQuestionNumber(prevNumber => prevNumber + 1);
         // Scroll to first field (Question field) for next question
-        // setTimeout(() => {
-        //   //console.log('Scrolling to Question field after Save & Next');
+        setTimeout(() => {
+          //console.log('Scrolling to Question field after Save & Next');
           
-        //   // Find and scroll to the Question field
-        //   const questionField = document.querySelector('input[placeholder="Select Question Type"]');
-        //   if (questionField) {
-        //     questionField.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        //     // Focus the question field for immediate typing
-        //     setTimeout(() => {
-        //       questionField.focus();
-        //     }, 500);
-        //   } else {
-        //     // Fallback to scroll to top
-        //     window.scrollTo({ top: 0, behavior: 'smooth' });
-        //   }
-        // }, 500);
+          // Find and scroll to the Question field
+          const questionField = document.querySelector('input[placeholder="Select Question Type"]');
+          if (questionField) {
+            questionField.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Focus the question field for immediate typing
+            setTimeout(() => {
+              questionField.focus();
+            }, 500);
+          } else {
+            // Fallback to scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 500);
       } else {
         onClose();
       }
@@ -445,12 +443,6 @@ useEffect(() => {
     } finally {
       setIsSubmitting(false);//----v1.0.2-----Prevent double-click---->
     }
-
-    // v1.0.2 <----------------------------------------------------------------------------
-    // Scroll to top of form
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
-    // v1.0.2 ---------------------------------------------------------------------------->
-
   };
 
 
@@ -716,7 +708,6 @@ useEffect(() => {
   ${section === "interviewerSection" || section==="assessment" ? "w-1/2  fixed h-[95%] flex flex-col justify-between right-9 " : 'fixed right-0 top-0 bottom-0 w-1/2'}
 `}
 > */}
-          <div ref={formRef}>
           <div className="p-6 flex-1 overflow-y-auto">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
@@ -1573,7 +1564,6 @@ useEffect(() => {
               </div>
             </form>
             {/* </div> */}
-          </div>
           </div>
         </div>
         {/* </div> */}

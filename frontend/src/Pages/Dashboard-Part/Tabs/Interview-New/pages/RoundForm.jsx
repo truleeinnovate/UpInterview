@@ -864,16 +864,16 @@ const RoundFormInterviews = () => {
 
       console.log("response",response);
 
-      if (response.status === 'ok'){
-        const video_call_res = await axios.post(`${config.REACT_APP_API_URL}/api/agora/create-video-room`,
-          {
-            title: roundTitle,
-            enablePSTN: false
-          }
-        )
-        console.log("video_call_res",video_call_res.data);
-        
-      }
+      // <----------------dont remove this comment------------------------->
+      // if (response.status === 'ok'){
+      //   const video_call_res = await axios.post(`${config.REACT_APP_API_URL}/api/agora/create-video-room`,
+      //     {
+      //       title: roundTitle,
+      //       enablePSTN: false
+      //     }
+      //   )
+      //   console.log("video_call_res",video_call_res.data);
+      // }
 
       console.log("Navigating to the interview details page");
       navigate(`/interviews/${interviewId}`);

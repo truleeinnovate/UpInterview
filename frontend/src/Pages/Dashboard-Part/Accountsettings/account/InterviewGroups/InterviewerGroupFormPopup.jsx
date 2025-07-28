@@ -121,7 +121,6 @@ const InterviewerGroupFormPopup = () => {
     setFormErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      handleValidationErrors();
       return;
     }
 
@@ -161,15 +160,6 @@ const InterviewerGroupFormPopup = () => {
         ? prev.members.filter((id) => id !== memberId)
         : [...(prev.members || []), memberId], // Handle case where members is undefined
     }));
-  };
-
-  const handleValidationErrors = () => {
-    setTimeout(() => {
-      const firstErrorField = document.querySelector('.text-red-500');
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
   };
 
   //     const handleSubmit = async (e) => {

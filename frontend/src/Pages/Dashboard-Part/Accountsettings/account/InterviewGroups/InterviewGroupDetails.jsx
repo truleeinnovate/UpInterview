@@ -102,24 +102,24 @@ const InterviewGroupDetails = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-base text-gray-500">Name</p>
-                  <p className="font-medium">{selectedGroup.name ? selectedGroup.name.charAt(0).toUpperCase() + selectedGroup.name.slice(1) : "Not Provided"}</p>
+                  <p className="font-medium">{selectedGroup.name || "Not Provided"}</p>
                 </div>
-                <div className="break-words">
+                <div>
                   <p className="text-base text-gray-500">Description</p>
-                  <p className="font-medium">{selectedGroup.description ? selectedGroup.description.charAt(0).toUpperCase() + selectedGroup.description.slice(1) : "Not Provided"}</p>
+                  <p className="font-medium">{selectedGroup.description || "Not Provided"}</p>
                 </div>
                 <div>
                   <p className="text-base text-gray-500 mb-1">Status</p>
                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${selectedGroup.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                     }`}>
-                    {selectedGroup.status ? selectedGroup.status.charAt(0).toUpperCase() + selectedGroup.status.slice(1) : "Not Provided"}
+                    {selectedGroup.status || "Not Provided"}
                   </span>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg text-gray-500 font-base mb-2">{selectedGroup.numberOfUsers > 1 ? "Members" : "Member"} ({selectedGroup.numberOfUsers || 0})</h3>
+              <h3 className="text-lg text-gray-500 font-base mb-2">Members ({selectedGroup.numberOfUsers || 0})</h3>
               <div className="space-x-4 flex">
                 {(selectedGroup.usersNames || []).map((member, idx) => (
                   <div key={idx} className="flex items-center justify-between  ">

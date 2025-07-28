@@ -352,10 +352,7 @@ const BasicDetailsEditPage = ({
 
     console.log("validationErrors", validationErrors);
 
-    if (!isEmptyObject(validationErrors)) {
-      handleValidationErrors();
-      return;
-    }
+    if (!isEmptyObject(validationErrors)) return;
 
     const cleanFormData = {
       email: formData.email.trim() || "",
@@ -461,15 +458,6 @@ const BasicDetailsEditPage = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleValidationErrors = () => {
-    setTimeout(() => {
-      const firstErrorField = document.querySelector(".text-red-500");
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }, 100);
   };
 
   // const handleSubmit = async (e) => {
