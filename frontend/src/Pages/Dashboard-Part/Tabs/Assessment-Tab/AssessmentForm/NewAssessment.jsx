@@ -35,6 +35,7 @@ import { X } from "lucide-react";
 
 
 const NewAssessment = () => {
+  const formRef = useRef(null);
   const { assessmentData, addOrUpdateAssessment, upsertAssessmentQuestions, isMutationLoading, fetchAssessmentQuestions } = useAssessments();
   const { positionData } = usePositions();
 
@@ -358,6 +359,16 @@ const NewAssessment = () => {
     return { assessmentData };
   };
 
+  const handleValidationErrors = (errors) => {
+    setErrors(errors);
+    setTimeout(() => {
+      const firstErrorField = document.querySelector('.text-red-500');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
+
   // const handleSave = async (event, currentTab, actionType) => {
   //   event.preventDefault();
   //   console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
@@ -463,7 +474,7 @@ const NewAssessment = () => {
 
     if (errors) {
       console.warn('❗ Validation failed:', errors);
-      setErrors(errors);
+      handleValidationErrors(errors);
       setActiveButton(null); // Reset active button on validation failure
       setIsSaving(false);
       return;
@@ -590,6 +601,7 @@ const NewAssessment = () => {
       setIsSaving(false);
       setActiveButton(null); // Reset active button regardless of success or failure
     }
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   // <---------------------- v1.0.0
   const gatherDataUpToCurrentTab = (currentTab) => {
@@ -1285,8 +1297,8 @@ const NewAssessment = () => {
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50">
+    <div ref={formRef}>
+      <div className="bg-gray-50">
         <main className=" mx-auto py-4 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg">
@@ -1558,7 +1570,7 @@ const NewAssessment = () => {
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 };
 

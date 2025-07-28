@@ -198,17 +198,17 @@ const InterviewerGroups = () => {
             <div key={group._id} className="bg-white p-4 sm:p-6 rounded-lg shadow">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-medium">{group.name}</h3>
+                  <h3 className="text-lg font-medium">{group.name ? group.name.charAt(0).toUpperCase() + group.name.slice(1) : "N/A"}</h3>
                   {/* <p className="text-gray-500 mt-1 text-sm">{group.description}</p> */}
                 </div>
                 <span className={`px-2 py-1 text-xs rounded-full ${group.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                   }`}>
-                  {group.status}
+                  {group.status ? group.status.charAt(0).toUpperCase() + group.status.slice(1) : "N/A"}
                 </span>
               </div>
 
               <div className="mt-4">
-                <p className="text-sm text-gray-500">Members: {group.numberOfUsers}</p>
+                <p className="text-sm text-gray-500">{group.numberOfUsers > 1 ? "Members:" : "Member:"} {group.numberOfUsers}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {group.usersNames.map((member, index) => (
                     <span key={index} className="px-2 py-1 bg-gray-100 rounded-full text-sm">
