@@ -4,9 +4,9 @@
 
 // v1.0.1 - Venkatesh - added custom university
 // v1.0.2 - Ashok - disabled the scroll conditionally based on the isModalOpen state and added scroll to top logic after form submission
-
+// v1.0.3 - Ashok - Added navigating to invalid fields after form submission and removed form outline
 /* eslint-disable react/prop-types */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, forwardRef } from "react";
 import Modal from "react-modal";
 import classNames from "classnames";
 import { format } from "date-fns";
@@ -30,120 +30,247 @@ import { validateFile } from "../../../../utils/FileValidation/FileValidation";
 // v1.0.2 <---------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.2 --------------------------------------------------------------------->
+// v1.0.3 <----------------------------------------------------------------------------------
+import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError";
+// v1.0.3 ----------------------------------------------------------------------------------->
 
+// v1.0.3 <-----------------------------------------------------------------
 // Reusable CustomDropdown Component
-const CustomDropdown = ({
-  label,
-  name,
-  value,
-  options,
-  onChange,
-  error,
-  placeholder,
-  optionKey, // For objects, e.g., 'QualificationName' or 'University_CollegeName'
-  optionValue, // For objects, e.g., 'QualificationName' or number for simple arrays
-  disableSearch = false,
-  hideLabel = false,
-}) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const dropdownRef = useRef(null);
+// const CustomDropdown = ({
+//   label,
+//   name,
+//   value,
+//   options,
+//   onChange,
+//   error,
+//   placeholder,
+//   optionKey, // For objects, e.g., 'QualificationName' or 'University_CollegeName'
+//   optionValue, // For objects, e.g., 'QualificationName' or number for simple arrays
+//   disableSearch = false,
+//   hideLabel = false,
+// }) => {
+//   const [showDropdown, setShowDropdown] = useState(false);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const dropdownRef = useRef(null);
 
-  const toggleDropdown = () => {
-    setShowDropdown(!showDropdown);
-  };
+//   const toggleDropdown = () => {
+//     setShowDropdown(!showDropdown);
+//   };
 
-  const handleSelect = (option) => {
-    const selectedValue = optionValue ? option[optionValue] : option;
-    onChange({ target: { name, value: selectedValue } });
-    setShowDropdown(false);
-    setSearchTerm("");
-  };
+//   const handleSelect = (option) => {
+//     const selectedValue = optionValue ? option[optionValue] : option;
+//     onChange({ target: { name, value: selectedValue } });
+//     setShowDropdown(false);
+//     setSearchTerm("");
+//   };
 
-  const filteredOptions = options?.filter((option) => {
-    const displayValue = optionKey ? option[optionKey] : option;
-    return displayValue
-      .toString()
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-  });
+//   const filteredOptions = options?.filter((option) => {
+//     const displayValue = optionKey ? option[optionKey] : option;
+//     return displayValue
+//       .toString()
+//       .toLowerCase()
+//       .includes(searchTerm.toLowerCase());
+//   });
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+//         setShowDropdown(false);
+//       }
+//     };
+
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     };
+//   }, []);
+
+//   return (
+//     <div ref={dropdownRef}>
+//       {!hideLabel && (
+//         <label
+//           htmlFor={name}
+//           className="block text-sm font-medium text-gray-700 mb-1"
+//         >
+//           {label} <span className="text-red-500">*</span>
+//         </label>
+//       )}
+//       <div className="relative">
+//         <input
+//           name={name}
+//           type="text"
+//           id={name}
+//           value={value}
+//           onClick={toggleDropdown}
+//           placeholder={placeholder}
+//           autoComplete="off"
+//           className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+//             error ? "border-red-500" : "border-gray-300"
+//           }`}
+//           readOnly
+//         />
+//         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+//           <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
+//         </div>
+//         {showDropdown && (
+//           <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+//             {!disableSearch && (
+//               <div className="border-b">
+//                 <div className="flex items-center border rounded px-2 py-1 m-2">
+//                   <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+//                   <input
+//                     type="text"
+//                     placeholder={`Search ${label}`}
+//                     value={searchTerm}
+//                     onChange={(e) => setSearchTerm(e.target.value)}
+//                     className="pl-8 focus:border-black focus:outline-none w-full"
+//                   />
+//                 </div>
+//               </div>
+//             )}
+//             {filteredOptions?.length > 0 ? (
+//               filteredOptions.map((option, index) => (
+//                 <div
+//                   key={option._id || index}
+//                   onClick={() => handleSelect(option)}
+//                   className="cursor-pointer hover:bg-gray-200 p-2"
+//                 >
+//                   {optionKey ? option[optionKey] : option}
+//                 </div>
+//               ))
+//             ) : (
+//               <div className="p-2 text-gray-500">No options found</div>
+//             )}
+//           </div>
+//         )}
+//       </div>
+//       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
+//     </div>
+//   );
+// };
+
+const CustomDropdown = forwardRef(
+  (
+    {
+      label,
+      name,
+      value,
+      options,
+      onChange,
+      error,
+      placeholder,
+      optionKey,
+      optionValue,
+      disableSearch = false,
+      hideLabel = false,
+    },
+    ref
+  ) => {
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef(null);
+
+    const toggleDropdown = () => {
+      setShowDropdown(!showDropdown);
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+    const handleSelect = (option) => {
+      const selectedValue = optionValue ? option[optionValue] : option;
+      onChange({ target: { name, value: selectedValue } });
+      setShowDropdown(false);
+      setSearchTerm("");
     };
-  }, []);
 
-  return (
-    <div ref={dropdownRef}>
-      {!hideLabel && (
-        <label
-          htmlFor={name}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          {label} <span className="text-red-500">*</span>
-        </label>
-      )}
-      <div className="relative">
-        <input
-          name={name}
-          type="text"
-          id={name}
-          value={value}
-          onClick={toggleDropdown}
-          placeholder={placeholder}
-          autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-            error ? "border-red-500" : "border-gray-300"
-          }`}
-          readOnly
-        />
-        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-          <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
-        </div>
-        {showDropdown && (
-          <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-            {!disableSearch && (
-              <div className="border-b">
-                <div className="flex items-center border rounded px-2 py-1 m-2">
-                  <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder={`Search ${label}`}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 focus:border-black focus:outline-none w-full"
-                  />
-                </div>
-              </div>
-            )}
-            {filteredOptions?.length > 0 ? (
-              filteredOptions.map((option, index) => (
-                <div
-                  key={option._id || index}
-                  onClick={() => handleSelect(option)}
-                  className="cursor-pointer hover:bg-gray-200 p-2"
-                >
-                  {optionKey ? option[optionKey] : option}
-                </div>
-              ))
-            ) : (
-              <div className="p-2 text-gray-500">No options found</div>
-            )}
-          </div>
+    const filteredOptions = options?.filter((option) => {
+      const displayValue = optionKey ? option[optionKey] : option;
+      return displayValue
+        .toString()
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+    });
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target)
+        ) {
+          setShowDropdown(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+      <div>
+        {/* 👈 This is where the scroll will target */}
+        {!hideLabel && (
+          <label
+            htmlFor={name}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {label} <span className="text-red-500">*</span>
+          </label>
         )}
+        <div className="relative" ref={dropdownRef}>
+          <input
+            ref={ref}
+            name={name}
+            type="text"
+            id={name}
+            value={value}
+            onClick={toggleDropdown}
+            placeholder={placeholder}
+            autoComplete="off"
+            className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+              error ? "border-red-500" : "border-gray-300"
+            }`}
+            readOnly
+          />
+          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+            <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
+          </div>
+          {showDropdown && (
+            <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+              {!disableSearch && (
+                <div className="border-b">
+                  <div className="flex items-center border rounded px-2 py-1 m-2">
+                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder={`Search ${label}`}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 focus:border-black focus:outline-none w-full"
+                    />
+                  </div>
+                </div>
+              )}
+              {filteredOptions?.length > 0 ? (
+                filteredOptions.map((option, index) => (
+                  <div
+                    key={option._id || index}
+                    onClick={() => handleSelect(option)}
+                    className="cursor-pointer hover:bg-gray-200 p-2"
+                  >
+                    {optionKey ? option[optionKey] : option}
+                  </div>
+                ))
+              ) : (
+                <div className="p-2 text-gray-500">No options found</div>
+              )}
+            </div>
+          )}
+        </div>
+        {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
       </div>
-      {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
-    </div>
-  );
-};
+    );
+  }
+);
+// v1.0.3 ----------------------------------------------------------------->
 
 // Main AddCandidateForm Component
 const AddCandidateForm = ({
@@ -269,6 +396,23 @@ const AddCandidateForm = ({
     "10+ years",
   ];
 
+  // v1.0.3 <---------------------------------------------------------------------------
+  const fieldRefs = {
+    FirstName: useRef(null),
+    LastName: useRef(null),
+    Gender: useRef(null),
+    Email: useRef(null),
+    CountryCode: useRef(null),
+    Phone: useRef(null),
+    HigherQualification: useRef(null),
+    UniversityCollege: useRef(null),
+    CurrentExperience: useRef(null),
+    RelevantExperience: useRef(null),
+    CurrentRole: useRef(null),
+    skills: useRef(null),
+  };
+
+  // v1.0.3 --------------------------------------------------------------------------->
   const [formData, setFormData] = useState({
     FirstName: "",
     LastName: "",
@@ -657,6 +801,9 @@ const AddCandidateForm = ({
       setErrors(newErrors);
       // Reset active button on validation failure
       setActiveButton(null);
+      // v1.0.3 <-----------------------------------------------------------------
+      scrollToFirstError(newErrors, fieldRefs);
+      // v1.0.3 ----------------------------------------------------------------->
       return;
     }
 
@@ -751,12 +898,18 @@ const AddCandidateForm = ({
 
     // v1.0.2 <----------------------------------------------------------------------------
     // Scroll to top of form
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    // v1.0.3 <-------------------------------------------------------------------
+    if (isAddCandidate) {
+      formRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    // v1.0.3 ------------------------------------------------------------------->
     // v1.0.2 ---------------------------------------------------------------------------->
   };
 
+  // v1.0.3 <-------------------------------------------------------------------
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200",
+    "fixed bg-white shadow-2xl outline-none",
+    // v1.0.3 ----------------------------------------------------------------->
     {
       "overflow-y-auto": !isModalOpen,
       "overflow-hidden": isModalOpen,
@@ -781,8 +934,8 @@ const AddCandidateForm = ({
           )}
         >
           {/* v1.0.2 <------------------------------------------------------------------ */}
-          <div className="p-6" ref={formRef}>
-          {/* v1.0.2 ------------------------------------------------------------------> */}
+          <div className="p-6">
+            {/* v1.0.2 ------------------------------------------------------------------> */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-custom-blue">
                 {id ? "Update Candidate" : "Add New Candidate"}
@@ -976,10 +1129,13 @@ const AddCandidateForm = ({
                   </label>
                   <input
                     type="text"
+                    // v1.0.3 <--------------------------------------------------------
+                    ref={fieldRefs.FirstName}
+                    // v1.0.3 --------------------------------------------------------->
                     name="FirstName"
                     value={formData.FirstName}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 "
+                    className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300"
                     placeholder="Enter First Name"
                   />
                 </div>
@@ -989,6 +1145,9 @@ const AddCandidateForm = ({
                     Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
+                    // v1.0.3 <--------------------------------------------------------
+                    ref={fieldRefs.LastName}
+                    // v1.0.3 --------------------------------------------------------->
                     type="text"
                     name="LastName"
                     value={formData.LastName}
@@ -1022,6 +1181,9 @@ const AddCandidateForm = ({
                 {/* Gender */}
 
                 <CustomDropdown
+                  // v1.0.3 <--------------------------------------------------------
+                  ref={fieldRefs.Gender}
+                  // v1.0.3 --------------------------------------------------------->
                   label="Gender"
                   name="Gender"
                   value={formData.Gender}
@@ -1041,6 +1203,9 @@ const AddCandidateForm = ({
                     Email <span className="text-red-500">*</span>
                   </label>
                   <input
+                    // v1.0.3 <--------------------------------------------------------
+                    ref={fieldRefs.Email}
+                    // v1.0.3 --------------------------------------------------------->
                     type="email"
                     name="Email"
                     value={formData.Email}
@@ -1062,6 +1227,9 @@ const AddCandidateForm = ({
                   <div className="flex  gap-2">
                     <div className="w-20">
                       <CustomDropdown
+                        // v1.0.3 <--------------------------------------------------------
+                        ref={fieldRefs.CountryCode}
+                        // v1.0.3 --------------------------------------------------------->
                         hideLabel
                         name="CountryCode"
                         value={formData.CountryCode}
@@ -1077,6 +1245,9 @@ const AddCandidateForm = ({
                     </div>
                     <div className="flex-1">
                       <input
+                        // v1.0.3 <--------------------------------------------------------
+                        ref={fieldRefs.Phone}
+                        // v1.0.3 --------------------------------------------------------->
                         type="text"
                         name="Phone"
                         value={formData.Phone}
@@ -1107,6 +1278,9 @@ const AddCandidateForm = ({
 
                 {/* higher qualification */}
                 <CustomDropdown
+                  // v1.0.3 <--------------------------------------------------------
+                  ref={fieldRefs.HigherQualification}
+                  // v1.0.3 --------------------------------------------------------->
                   label="Higher Qualification"
                   name="HigherQualification"
                   value={formData.HigherQualification}
@@ -1127,6 +1301,9 @@ const AddCandidateForm = ({
                   {!isCustomUniversity ? (
                     <div className="relative" ref={universityDropdownRef}>
                       <input
+                        // v1.0.3 <--------------------------------------------------------
+                        ref={fieldRefs.UniversityCollege}
+                        // v1.0.3 --------------------------------------------------------->
                         type="text"
                         value={formData.UniversityCollege}
                         onClick={() =>
@@ -1155,6 +1332,9 @@ const AddCandidateForm = ({
                             <div className="flex items-center border rounded px-2 py-1 m-2">
                               <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
                               <input
+                                // v1.0.3 <--------------------------------------------------------
+                                ref={fieldRefs.UniversityCollegeSearch}
+                                // v1.0.3 --------------------------------------------------------->
                                 type="text"
                                 placeholder="Search University/College"
                                 value={universitySearchTerm}
@@ -1200,6 +1380,9 @@ const AddCandidateForm = ({
                   ) : (
                     <div className="relative">
                       <input
+                        // v1.0.3 <--------------------------------------------------------
+                        ref={fieldRefs.UniversityCollege}
+                        // v1.0.3 --------------------------------------------------------->
                         type="text"
                         value={formData.UniversityCollege}
                         onChange={(e) => {
@@ -1265,6 +1448,9 @@ const AddCandidateForm = ({
                     Current Experience <span className="text-red-500">*</span>
                   </label>
                   <input
+                    // v1.0.3 <--------------------------------------------------------
+                    ref={fieldRefs.CurrentExperience}
+                    // v1.0.3 --------------------------------------------------------->
                     type="number"
                     name="CurrentExperience"
                     id="CurrentExperience"
@@ -1294,6 +1480,9 @@ const AddCandidateForm = ({
                     Relevant Experience <span className="text-red-500">*</span>
                   </label>
                   <input
+                    // v1.0.3 <--------------------------------------------------------
+                    ref={fieldRefs.RelevantExperience}
+                    // v1.0.3 --------------------------------------------------------->
                     type="number"
                     name="RelevantExperience"
                     id="RelevantExperience"
@@ -1327,6 +1516,9 @@ const AddCandidateForm = ({
                   </label>
                   <div className="relative">
                     <input
+                      // v1.0.3 <--------------------------------------------------------
+                      ref={fieldRefs.CurrentRole}
+                      // v1.0.3 --------------------------------------------------------->
                       name="CurrentRole"
                       type="text"
                       id="CurrentRole"

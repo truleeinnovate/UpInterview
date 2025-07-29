@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 
 // v1.0.0 - Venkatesh - added custom location
+// v1.0.1 - Ashok - added scroll to error functionality
 
 import { useEffect, useState, useRef } from 'react';
 import AssessmentDetails from './AssessmentType';
@@ -15,6 +16,9 @@ import { usePositions } from '../../../../apiHooks/usePositions';
 import LoadingButton from '../../../../Components/LoadingButton';
 import { useMasterData } from '../../../../apiHooks/useMasterData';
 import { useInterviewTemplates } from '../../../../apiHooks/useInterviewTemplates.js';
+// v1.0.1 <----------------------------------------------------------------------------
+import { scrollToFirstError } from '../../../../utils/ScrollToFirstError/scrollToFirstError.js';
+// v1.0.1 ---------------------------------------------------------------------------->
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -267,7 +271,20 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const fromPath = location.state?.from || (location.pathname.includes('/position/new-position') ? '/position' : '/position');
 
 
+  // v1.0.1 <----------------------------------------------------------------------
+  const fieldRefs = {
+    title: useRef(null),
+    companyname: useRef(null),
+    minexperience: useRef(null),
+    maxexperience: useRef(null),
+    noOfPositions: useRef(null),
+    location: useRef(null),
+    jobdescription: useRef(null),
+    skills: useRef(null),
+    // Add more if needed
+  };
 
+  // v1.0.1 ---------------------------------------------------------------------->
 
 
 
@@ -569,6 +586,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const { formIsValid, newErrors } = validateForm(dataToSubmit, entries, dataToSubmit.rounds);
       if (!formIsValid) {
         setErrors(newErrors);
+        // v1.0.1 <------------------------------------------------------
+        scrollToFirstError(newErrors, fieldRefs); // 🔥 Add this line
+        // v1.0.1 ------------------------------------------------------>
         return;
       }
     }
@@ -1024,7 +1044,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Title <span className="text-red-500">*</span>
                         </label>
+                        {/* v1.0.1 <------------------------------------------------------------ */}
                         <input
+                          ref={fieldRefs.title}
                           type="text"
                           value={formData.title}
                           onChange={(e) => {
@@ -1034,9 +1056,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             }
                           }}
                           placeholder="UI/UX Designer"
-                          className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.title ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-                            }`}
+                          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
                         />
+                        {/* v1.0.1 -------------------------------------------------------------> */}
                         {errors.title && <p className="text-red-500 text-xs mt-1 ">{errors.title}</p>}
                       </div>
 
@@ -1045,9 +1067,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Company Name <span className="text-red-500">*</span>
                         </label>
+                        {/*  v1.0.1 <--------------------------------------------------------------------------- */}
                         {!isCustomCompany ? (
                           <div className="relative" ref={companyDropdownRef}>
                             <input
+                              ref={fieldRefs.companyname}
+                        
                               type="text"
                               value={formData.companyName}
                               onClick={() => setShowDropdownCompany(!showDropdownCompany)}
@@ -1056,6 +1081,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.companyname ? 'border-red-500' : 'border-gray-300'}`}
                               readOnly
                             />
+                            {/* v1.0.1 ------------------------------------------------------------------------> */}
                             <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
                               <ChevronDown className="text-lg" onClick={() => setShowDropdownCompany(!showDropdownCompany)} />
                             </div>
@@ -1102,6 +1128,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         ) : (
                           <div className="relative">
                             <input
+                            // v1.0.1 <-------------------------------------------------------------------------------
+                              ref={fieldRefs.companyname}
                               type="text"
                               value={formData.companyName}
                               onChange={(e) => {
@@ -1113,6 +1141,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.companyname ? 'border-red-500' : 'border-gray-300'}`}
                               placeholder="Enter custom company name"
                             />
+                            {/* v1.0.1 -------------------------------------------------------------------------------> */}
                             <button
                               type="button"
                               onClick={() => {
@@ -1144,7 +1173,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           <div>
                             <div className="flex flex-row items-center gap-3">
                               <label className="block text-xs text-gray-500 mb-1">Min</label>
+                              {/* v1.0.1 <---------------------------------------------------------------------------- */}
                               <input
+                                ref={fieldRefs.minexperience}
                                 type="number"
                                 min="1"
                                 max="15"
@@ -1173,19 +1204,22 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                       : formData.maxexperience
                                   });
                                 }}
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.minexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
+                                className={`w-full px-3 py-2 border rounded-md ${errors.minexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
                                 placeholder="Enter Min Experience"
                               />
-
+                            
                             </div>
                             {errors.minexperience && <p className="text-red-500 text-xs pl-8 mt-1 ">{errors.minexperience}</p>}
                           </div>
+                          {/* v1.0.1 ----------------------------------------------------------------------------> */}
 
                           {/* Max Experience */}
                           <div>
                             <div className="flex flex-row items-center gap-3">
                               <label className="block text-xs text-gray-500 mb-1">Max</label>
+                              {/* v1.0.1 <------------------------------------------------------------------------------------- */}
                               <input
+                                ref={fieldRefs.maxexperience}
                                 type="number"
                                 min="1"
                                 max="15"
@@ -1210,13 +1244,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                     maxexperience: maxExp
                                   });
                                 }}
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
+                                className={`w-full px-3 py-2 border rounded-md ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
                                 placeholder="Enter Max Experience"
                               />
 
                             </div>
                             {errors.maxexperience && <p className="text-red-500 text-xs pl-8 mt-1 ">{errors.maxexperience}</p>}
                           </div>
+                          {/* v1.0.1 -------------------------------------------------------------------------------------> */}
                         </div>
                       </div>
 
@@ -1329,6 +1364,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         </label>
 
                         <input
+                        // v1.0.1 <------------------------------------------
+                          ref={fieldRefs.noOfPositions}
+                        // v1.0.1 ------------------------------------------>
                           type="number"
                           min={1}
                           value={formData.NoofPositions}
@@ -1347,7 +1385,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           // readOnly
                           // onClick={() => setShowDropdownCompany(!showDropdownCompany)}
                           placeholder="Select No. of Positions"
-                          className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.noOfPositions ? "border-red-500" : "border-gray-300"}`}
+                          className={`w-full px-3 py-2 border rounded-md ${errors.noOfPositions ? "border-red-500" : "border-gray-300"}`}
                         // className="w-full px-3 py-2 border rounded-md focus:outline-none"
                         />
                         {errors.noOfPositions && <p className="text-red-500 text-xs mt-1 ">{errors.noOfPositions}</p>}
@@ -1362,6 +1400,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         {!isCustomLocation ? (
                           <div className="relative" ref={locationDropdownRef}>
                             <input
+                              // v1.0.1 <------------------------------------------
+                              ref={fieldRefs.location}
+                              // v1.0.1 ------------------------------------------>
                               type="text"
                               value={formData.Location}
                               onClick={() => setShowDropdownLocation(!showDropdownLocation)}
@@ -1416,6 +1457,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         ) : (
                           <div className="relative">
                             <input
+                              // v1.0.1 <------------------------------------------
+                              ref={fieldRefs.location}
+                              // v1.0.1 ------------------------------------------>
                               type="text"
                               value={formData.Location}
                               onChange={(e) => {
@@ -1451,6 +1495,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                     <div>
                       <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Job Description <span className="text-red-500">*</span></label>
                       <textarea
+                        ref={fieldRefs.jobdescription}
                         id="jobDescription"
                         name="jobDescription"
                         value={formData.jobDescription}
@@ -1463,7 +1508,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             setErrors((prev) => ({ ...prev, jobdescription: "" }));
                           }
                         }}
-                        className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm h-32 ${errors.jobdescription ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                        className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3  sm:text-sm h-32 ${errors.jobdescription ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                         placeholder="This position is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
                         rows={10}
                         minLength={50}
@@ -1490,6 +1535,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                     <div>
 
                       <SkillsField
+                        ref={fieldRefs.skills}
                         entries={entries}
                         errors={errors}
                         onAddSkill={(setEditingIndex) => {
