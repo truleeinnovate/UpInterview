@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+// v1.0.0 - Ashok - modified as first round should open by default
+
+import React, { useState, useEffect } from "react";
 // import PropTypes from 'prop-types';
 import {
   // Edit,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
-import PositionRoundCard from './PositionRoundCard';
+} from "lucide-react";
+import PositionRoundCard from "./PositionRoundCard";
 // import { Button } from '../../CommonCode-AllTabs/ui/button';
 
 const VerticalRoundsViewPosition = ({
@@ -21,17 +23,33 @@ const VerticalRoundsViewPosition = ({
   // Track expanded rounds
   const [expandedRounds, setExpandedRounds] = useState({});
 
-  // Toggle round expansion
-const toggleRound = (roundId) => {
-  setExpandedRounds(prev => {
-    // If the clicked round is already expanded, close it
-    if (prev[roundId]) {
-      return { ...prev, [roundId]: false };
+  // v1.0.0 <-------------------------------------------------------------------
+  // Automatically expand the first round
+  useEffect(() => {
+    if (sortedRounds.length > 0) {
+      setExpandedRounds((prev) => {
+        // Only set if nothing is expanded yet
+        if (Object.keys(prev).length === 0) {
+          return { [sortedRounds[0]._id]: true };
+        }
+        return prev;
+      });
     }
-    // Otherwise, close all rounds and open the clicked one
-    return { [roundId]: true };
-  });
-};
+  }, [sortedRounds]);
+
+  // v1.0.0 ------------------------------------------------------------------->
+
+  // Toggle round expansion
+  const toggleRound = (roundId) => {
+    setExpandedRounds((prev) => {
+      // If the clicked round is already expanded, close it
+      if (prev[roundId]) {
+        return { ...prev, [roundId]: false };
+      }
+      // Otherwise, close all rounds and open the clicked one
+      return { [roundId]: true };
+    });
+  };
 
   // Check if a round is expanded
   const isExpanded = (roundId) => !!expandedRounds[roundId];
@@ -39,7 +57,10 @@ const toggleRound = (roundId) => {
   return (
     <div className="space-y-4 ">
       {sortedRounds.map((round) => (
-        <div key={round._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div
+          key={round._id}
+          className="bg-white rounded-lg shadow-md overflow-hidden"
+        >
           <button
             onClick={() => toggleRound(round._id)}
             className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
@@ -50,7 +71,8 @@ const toggleRound = (roundId) => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {round.roundTitle}</h3>
+                  {round.roundTitle}
+                </h3>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
                   {/* <span className="mr-2">{round.interviewType}</span> */}
                   <span>•</span>
@@ -58,9 +80,7 @@ const toggleRound = (roundId) => {
                 </div>
               </div>
             </div>
-            <div 
-            
-            className='flex items-center space-x-4'>
+            <div className="flex items-center space-x-4">
               {/* {canEditRound(round) && (
                 <Button
                   onClick={() => onEditRound(round)}

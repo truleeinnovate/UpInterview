@@ -1,5 +1,6 @@
 // v1.0.0  - mansoor - added the path in the top to go back
 // v1.0.1 - Ranjith - added the mode to the postion tab for the inetrview mode
+// v1.0.2 - Ashok - modified some styles
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
@@ -341,7 +342,9 @@ const PositionSlideDetails = () => {
                 <div className="flex space-x-2">
                   {rounds.length > 0 && (
                     <>
-                      <button
+                      {/* v1.0.2 <---------------------------------------------------------------------------------------------- */}
+                      {rounds.length > 1 && (
+                        <button
                         onClick={toggleViewMode}
                         className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                       >
@@ -357,6 +360,8 @@ const PositionSlideDetails = () => {
                           </>
                         )}
                       </button>
+                      )}
+                      {/* v1.0.2 ------------------------------------------------------------------------------------------------>  */}
                       <button
                         onClick={handleAddRound}
                         className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue focus:outline-none"

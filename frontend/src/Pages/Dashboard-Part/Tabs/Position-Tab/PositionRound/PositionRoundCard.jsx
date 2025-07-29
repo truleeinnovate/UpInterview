@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - removed show and hide for interviewers
+
 import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
 import {
@@ -259,7 +261,9 @@ const PositionRoundCard = ({
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Schedule</h4>
                   <div className="flex items-center text-sm text-gray-500 mb-1">
                     <Calendar className="h-4 w-4 mr-1" />
-                    <span>Scheduled: {formatDate(round.scheduledDate)}</span>
+                    {/* v1.0.0 <------------------------------------------------------------------ */}
+                    <span>Scheduled: {formatDate(round?.updatedAt)}</span>
+                    {/* v1.0.0 ------------------------------------------------------------------> */}
                     {isInstantInterview() && (
                       <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
                         Instant
@@ -281,14 +285,15 @@ const PositionRoundCard = ({
                 </div>
                 {round.assessmentId ? <div></div>
                   : <div>
+                    {/* v1.0.0 <----------------------------------------------------------------------------- */}
                     <div className="flex justify-between items-center ">
-                      <h4 className="text-sm font-medium text-gray-700"> {showInterviewers &&
+                      <h4 className="text-sm font-medium text-gray-700"> {
                         <>
                           <span>{round?.interviewerType || ""}</span>
                           <span>{round?.interviewerGroupName ? " Group" : ""}</span>
                         </>
                       } Interviewers </h4>
-                      <button
+                      {/* <button
                         onClick={() => {
                           setShowInterviewers(!showInterviewers)
 
@@ -297,12 +302,13 @@ const PositionRoundCard = ({
                       >
                         {showInterviewers ? 'Hide' : 'Show'}
                         {showInterviewers ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
-                      </button>
+                      </button> */}
                     </div>
 
 
-
-                    {showInterviewers && round?.interviewers && (
+                    {/* {showInterviewers && round?.interviewers && ( */}
+                    {round?.interviewers && (
+                    //  v1.0.0 ----------------------------------------------------------------------->
                       <div className="space-y-2">
                         {internalInterviewers.length > 0 && (
                           <div >
