@@ -270,25 +270,35 @@ const UserForm = ({ mode }) => {
     )
     .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
 
+  // Handle validation errors with auto-scroll
+  const handleValidationErrors = () => {
+    setTimeout(() => {
+      const firstErrorField = document.querySelector('.text-red-500');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        console.log('Scrolling to error field:', firstErrorField);
+      } else {
+        console.log('No error field found');
+      }
+    }, 300);
+  };
+
   // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return;
-
+    //if (isLoading) return;
     setIsLoading(true);
-    console.log("Submitting userData:", userData);
 
-    try {
-      // Validate form data
-      const newErrors = await validateUserForm(userData, editMode);
-      console.log("Validation errors:", newErrors);
+    const validationErrors = await validateUserForm(userData, editMode);
+    setErrors(validationErrors);
 
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        setIsLoading(false);
-        return;
-      }
+    if (Object.keys(validationErrors).length > 0) {
+      handleValidationErrors();
+      setIsLoading(false);
+      return;
+    }
       // ------------------------------ v1.0.0 >
+    try {
       // Proceed with form submission
       // <-------------------------------v1.0.1
       let submitUserData = { ...userData };

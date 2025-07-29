@@ -600,7 +600,7 @@ const selectedLabelId = useMemo(() => {
     <>
       <Toaster />
       <div className="w-full px-4 py-2 mt-10 bg-white">
-        <div className={`flex items-center justify-between fixed z-40 ${type === "interviewerSection" || type === "assessment" ? "left-40 right-40" : "left-7 right-7"}`}>
+        <div className={`flex items-center justify-between fixed z-40 ${type === "interviewerSection" || type === "assessment" ? `${type === "assessment" ? "left-40 right-40" : "left-16 right-16"}` : "left-7 right-7"}`}>
           <div className="flex items-center gap-2">
             <div className="relative inline-block w-48">
               <button

@@ -308,7 +308,7 @@ const BasicDetailsEditPage = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    //setLoading(true);
     //   if (formData.profileId !== originalProfileId) {
     //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
     //  console.log("profileIdError",profileIdError);

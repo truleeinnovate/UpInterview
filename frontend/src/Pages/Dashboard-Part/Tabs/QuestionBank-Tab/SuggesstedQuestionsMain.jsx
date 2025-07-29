@@ -405,7 +405,7 @@ const SuggestedQuestionsComponent = ({
     return (
         <div className="h-full flex flex-col">
             {/* Search/Filter Bar */}
-            <div className={`fixed flex items-center justify-end ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-40 right-40" : "top-32 left-5 right-5"} z-40`}>
+            <div className={`fixed flex items-center justify-end ${(type === "interviewerSection" || type === "assessment") ? `${type === "assessment" ? "top-40 left-40 right-40" : "top-32 left-16 right-16"}` : "top-32 left-5 right-5"} z-40`}>
                 <div className="flex gap-x-3">
                     <div className="relative flex items-center rounded-md border">
                         <span className="p-2 text-custom-blue">
