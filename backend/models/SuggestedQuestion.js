@@ -61,3 +61,50 @@ const SuggestedQuestion = mongoose.model(
 module.exports = {
   SuggestedQuestion,
 };
+
+
+
+
+// const mongoose = require("mongoose");
+
+// const suggestedQuestionSchema = new mongoose.Schema(
+//   {
+//     questionOrderId: String, // SUGQ-00000, SUGQ-00001,SUGQ-00002
+//     questionText: String,
+//     questionType: String,
+//     technology: String,
+//     skill: String,
+//     category: String,
+//     subCategory: String,
+//     tags: [String],
+//     difficultyLevel: String,
+//     isInterviewQuestionOnly: Boolean,
+//     assessmentConfig: {
+//       autoAssessable: Boolean,
+//       codeTemplate: String,
+//       expectedOutput: [String],
+//     },
+//     solutions: [
+//       {
+//         language: String,
+//         code: String,
+//       },
+//     ],
+//     hints: [String],
+//     explanation: String,
+//     isActive: Boolean,
+//     createdBy: String,
+//   },
+//   { timestamps: true }
+// );
+
+// const SuggestedQuestion = mongoose.model(
+//   "suggestedQuestions",
+//   suggestedQuestionSchema
+// );
+// module.exports = {
+//   SuggestedQuestion,
+// };
+
+
+

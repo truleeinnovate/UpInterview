@@ -2,6 +2,7 @@
 //v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 //v1.0.2  -  Ashraf  -  added create role path
 // v1.0.3 - Ranjith - new route CandidateDetails to assessment page
+// v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -11,7 +12,7 @@ import CombinedNavbar from "./Components/Navbar/CombinedNavbar";
 import Logo from "./Pages/Login-Part/Logo";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
-import AuthCookieManager from "./utils/AuthCookieManager/AuthCookieManager";
+import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
 import {
   usePermissions,
   PermissionsProvider,
@@ -1148,7 +1149,9 @@ const MainAppRoutes = ({
 
 const App = () => {
   const location = useLocation();
-  const authToken = Cookies.get("authToken");
+  // <---------------------- v1.0.4
+  const authToken = getAuthToken(); // Use validated token getter
+  // ---------------------- v1.0.4 >
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -1204,7 +1207,60 @@ const App = () => {
     if (authToken) {
       AuthCookieManager.syncUserType();
     }
+    // <---------------------- v1.0.4
+
+    // Initialize cross-tab authentication sync
+    const cleanupAuthListener = AuthCookieManager.setupCrossTabAuthListener();
+    
+    // Check browser permissions and capabilities
+    const browserPermissions = AuthCookieManager.checkBrowserPermissions();
+    console.log('Browser permissions check:', browserPermissions);
+    
+    // Detect new browser context
+    if (AuthCookieManager.isNewBrowserContext()) {
+      console.log('New browser context detected - syncing auth state');
+      AuthCookieManager.syncAuthAcrossTabs();
+    }
+
+    // Request notification permission if not granted (only for authenticated users)
+    if (authToken && !browserPermissions.notifications) {
+      // Delay the permission request to avoid blocking the UI
+      setTimeout(async () => {
+        try {
+          await AuthCookieManager.requestNotificationPermission();
+        } catch (error) {
+          console.warn('Failed to request notification permission:', error);
+        }
+      }, 2000); // Wait 2 seconds after app loads
+    }
+
+    // Listen for token expiration events
+    const handleTokenExpired = async (event) => {
+      console.log('Token expired event received:', event.detail);
+      
+      // Use the dedicated token expiration handler
+      await AuthCookieManager.handleTokenExpiration();
+    };
+
+    window.addEventListener('tokenExpired', handleTokenExpired);
+
+    // Start token validation if user is authenticated
+    let tokenValidationCleanup = null;
+    if (authToken) {
+      tokenValidationCleanup = AuthCookieManager.startTokenValidation();
+    }
+
+    return () => {
+      if (cleanupAuthListener) {
+        cleanupAuthListener();
+      }
+      if (tokenValidationCleanup) {
+        tokenValidationCleanup();
+      }
+      window.removeEventListener('tokenExpired', handleTokenExpired);
+    };
   }, [authToken]); // Only run when authToken changes (login/logout)
+  // ---------------------- v1.0.4 >
 
   useEffect(() => {
     const emitter = getActivityEmitter();

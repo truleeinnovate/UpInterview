@@ -1,3 +1,5 @@
+// v1.0.0  -  mansoor  -  testing cookies that works in all browsers
+
 /**
  * Utility functions for cookie management
  */
@@ -7,19 +9,28 @@
  */
 const getAuthCookieOptions = () => {
   const isLocalhost = process.env.NODE_ENV === 'development';
+  // <---------------------- v1.0.0
+  const isProduction = process.env.NODE_ENV === 'production';
+  // ---------------------- v1.0.0 >
 
   // Determine the appropriate domain
-  let domain = undefined; // Always use undefined domain for production
+  let domain = undefined;
   console.log('=== COOKIE UTILS DEBUG ===');
   console.log('NODE_ENV:', process.env.NODE_ENV);
   console.log('COOKIE_DOMAIN env var:', process.env.COOKIE_DOMAIN);
   console.log('Initial domain value:', domain);
   console.log('isLocalhost:', isLocalhost);
+  // <---------------------- v1.0.0
+  console.log('isProduction:', isProduction);
 
-  // For production, always use undefined domain regardless of environment variable
-  if (process.env.NODE_ENV === 'production') {
+  // For production, use domain only if explicitly set
+  if (isProduction && process.env.COOKIE_DOMAIN) {
+    domain = process.env.COOKIE_DOMAIN;
+    console.log('Production mode: Using domain from env var:', domain);
+  } else if (isProduction) {
     domain = undefined;
-    console.log('Production mode: Using undefined domain (ignoring env var)');
+    console.log('Production mode: Using undefined domain (no env var set)');
+    // ---------------------- v1.0.0 >
   } else {
     // For development, check environment variable
     domain = process.env.COOKIE_DOMAIN;
@@ -33,8 +44,10 @@ const getAuthCookieOptions = () => {
 
   const options = {
     httpOnly: false, // Allow client-side JS to read the cookie
-    secure: true, // Always secure for HTTPS
-    sameSite: 'None', // Required for cross-site cookies in production
+    // <---------------------- v1.0.0
+    secure: isProduction, // Only secure in production
+    sameSite: isLocalhost ? 'Lax' : 'None', // Use Lax for localhost, None for production
+    // ---------------------- v1.0.0 >
     maxAge: 24 * 60 * 60 * 1000, // 1 day
     path: '/', // Make cookie available on all paths
   };

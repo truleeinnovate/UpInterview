@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  using authcookie manager to get current tokein 
 import { useState, useEffect } from 'react';
 import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import {
@@ -8,6 +9,9 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import { X } from 'lucide-react';
 import { usePushNotifications } from '../../apiHooks/usePushNotifications';
+// <---------------------- v1.0.0
+import AuthCookieManager, { getAuthToken } from '../../utils/AuthCookieManager/AuthCookieManager';
+// ---------------------- v1.0.0 >
 
 const NotificationList = ({ notifications = [], detailed = false, onMarkAsRead }) => {
   if (!Array.isArray(notifications)) return null;
@@ -71,29 +75,39 @@ NotificationList.propTypes = {
 export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdowns }) {
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [filter, setFilter] = useState('all');
+  // <---------------------- v1.0.0
+  const [showPermissionRequest, setShowPermissionRequest] = useState(false);
+  // ---------------------- v1.0.0 >
 
-  const authToken = Cookies.get("authToken");
+  // <---------------------- v1.0.0
+  const authToken = getAuthToken(); // Use validated token getter
   const tokenPayload = decodeJwt(authToken);
   const ownerId = tokenPayload?.userId;
+  // ---------------------- v1.0.0 >
+
 
   // Use shared hook for data + mutations
   const { notifications: notificationList = [], isLoading: loading, markAsRead, markAllAsRead } = usePushNotifications(ownerId);
-  // const [error, setError] = useState(null);
+  // ---------------------- v1.0.0 >
 
 
-
-
-
-  useEffect(() => {
-    if (!isOpen) {
+useEffect(() => {
+    if (isOpen) {
       setShowAllNotifications(false); // Reset when panel closes
+      
+      // Check notification permission when panel opens
+      const permissions = AuthCookieManager.checkBrowserPermissions();
+      if (!permissions.notifications) {
+        setShowPermissionRequest(true);
+      }
     }
   }, [isOpen]);
 
-
-
-
-
+  const handlePermissionGranted = () => {
+    setShowPermissionRequest(false);
+    // Optionally refresh notifications or show success message
+  };
+  // ---------------------- v1.0.0 >
   const typeFilteredNotifications = (notificationList || []).filter((notification) => {
     if (!notification) return false;
     if (filter === 'all') return true;
@@ -110,7 +124,6 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
     if (a.unread === b.unread) return 0;
     return a.unread ? -1 : 1;
   });
-  //console.log("Filtered Notifications:", filteredNotifications); // Debug log
 
   const unreadCount = (notificationList || []).filter((n) => n?.unread).length;
 
@@ -139,88 +152,123 @@ export default function NotificationPanel({ isOpen, setIsOpen, closeOtherDropdow
       </button>
 
       {isOpen && !showAllNotifications && (
-         <div className="relative">
-        <div className="absolute top-5 border right-0 w-80 bg-white rounded-lg shadow-lg py-2 z-50 -mr-10">
-          <div className="flex justify-between items-center px-3 sm:px-4 py-2 border-gray-200">
-            <h3 className="text-base sm:text-lg font-medium text-gray-800">Notifications</h3>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={togglePanel}>
-            <X className="w-4 h-4" />
-             
-            </button>
-          </div>
-          {loading ? (
-            <div className="p-4 text-center text-gray-500">Loading notifications...</div>
-          ) : filteredNotifications.length === 0 ? (
-            <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
-          ) : (
-            <>
-              <NotificationList notifications={filteredNotifications.slice(0, 3)} onMarkAsRead={markAsRead} />
-              <div className="px-3 sm:px-4 py-2 border-t border-gray-200">
-                <button
-                  className="w-full text-sm text-custom-blue hover:text-custom-blue/80 font-medium rounded-md px-3 py-1.5"
-                  onClick={() => setShowAllNotifications(true)}
-                >
-                  View All Notifications
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-        <IoIosArrowUp className="absolute top-3 left-[50%] -translate-x-1/2 right-0 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50" />
-        </div>
-      )}
-
-      {isOpen && showAllNotifications && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-md shadow-lg w-full max-w-2xl max-h-[600px] overflow-hidden">
-            <div className="px-4 sm:px-6 py-4 border-b flex justify-between items-center">
-              <h2 className="text-lg sm:text-sm font-semibold text-gray-600">All Notifications</h2>
-              <button onClick={() => setShowAllNotifications(false)} className="text-gray-500 hover:text-gray-700">
-                <XMarkIcon className="h-5 w-5 sm:w-6 sm:h-6" />
+        <div className="relative">
+          <div className="absolute top-5 border right-0 w-80 bg-white rounded-lg shadow-lg py-2 z-50 -mr-10">
+            <div className="flex justify-between items-center px-3 sm:px-4 py-2 border-gray-200">
+              <h3 className="text-base sm:text-lg font-medium text-gray-800">Notifications</h3>
+              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" onClick={togglePanel}>
+                <X className="w-4 h-4" />
               </button>
             </div>
-
-            <div className="px-4 sm:px-6 py-4 border-b">
-              <div className="flex sm:flex-row flex-col sm:items-center justify-between gap-2 sm:gap-4">
-                <div className="w-full sm:w-auto">
-                  <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="w-full text-sm border rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-custom-blue"
-                  >
-                    <option value="all">All</option>
-                    <option value="unread">Unread</option>
-                    <option value="Subscription">Subscription</option>
-                    <option value="Interviews">Interviews</option>
-                    <option value="Assessments">Assessments</option>
-                    <option value="Feedback">Feedback</option>
-                    <option value="Schedule">Schedule</option>
-                  </select>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <button
-                    onClick={markAllAsRead}
-                    className="flex-1 sm:flex-none text-sm text-custom-blue hover:text-custom-blue/80 px-3 py-1.5 border border-custom-blue rounded-md hover:bg-custom-blue/10"
-                  >
-                    Mark all as read
-                  </button>
-                  <button
-                    className="flex-1 sm:flex-none text-sm text-red-600 hover:text-red-800 px-3 py-1.5 border border-red-600 rounded-md hover:bg-red-50"
-                  >
-                    Clear all
-                  </button>
+            {/* // <---------------------- v1.0.0 */}
+            
+            {showPermissionRequest && (
+              <div className="px-3 sm:px-4 py-3 bg-yellow-50 border-l-4 border-yellow-400">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                      Browser notifications are disabled. 
+                      <button 
+                        onClick={() => setShowPermissionRequest(false)}
+                        className="ml-1 underline hover:no-underline"
+                      >
+                        Enable notifications
+                      </button>
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+            {/* // ---------------------- v1.0.0 > */}
+            
+            {loading ? (
+              <div className="p-4 text-center text-gray-500">Loading notifications...</div>
+            ) : filteredNotifications.length === 0 ? (
+              <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
+            ) : (
+              <>
+                <NotificationList notifications={filteredNotifications.slice(0, 3)} onMarkAsRead={markAsRead} />
+                <div className="px-3 sm:px-4 py-2 border-t border-gray-200">
+                  <button
+                    className="w-full text-sm text-custom-blue hover:text-custom-blue/80 font-medium rounded-md px-3 py-1.5"
+                    onClick={() => setShowAllNotifications(true)}
+                  >
+                    View All Notifications
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      {/* // ---------------------- v1.0.0 > */}
 
-            <div className="p-4 sm:p-6 overflow-y-auto max-h-[400px]">
+      {/* Permission Request Modal */}
+      {showPermissionRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold mb-4">Enable Notifications</h2>
+            <p className="text-gray-600 mb-6">
+              To receive important updates about interviews, assessments, and other activities, 
+              please enable browser notifications.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={async () => {
+                  const granted = await AuthCookieManager.requestNotificationPermission();
+                  if (granted) {
+                    handlePermissionGranted();
+                  }
+                }}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Enable Notifications
+              </button>
+              <button
+                onClick={() => setShowPermissionRequest(false)}
+                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+              >
+                Later
+              </button>
+            </div>
+          </div>
+          {/* // ---------------------- v1.0.0 > */}
+        </div>
+      )}
+      {/* // ---------------------- v1.0.0 > */}
+      {/* Rest of the component remains the same */}
+      {isOpen && showAllNotifications && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold">All Notifications</h2>
+              <button
+                onClick={() => setShowAllNotifications(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
               {loading ? (
-                <div className="text-center text-gray-500 py-8">Loading notifications...</div>
-              ) : filteredNotifications.length > 0 ? (
-                <NotificationList notifications={filteredNotifications} detailed={true} onMarkAsRead={markAsRead} />
+                <div className="text-center text-gray-500">Loading notifications...</div>
+              ) : filteredNotifications.length === 0 ? (
+                <div className="text-center text-gray-500">No notifications</div>
               ) : (
-                <div className="text-center text-gray-500 py-8">No notifications found</div>
+                <NotificationList 
+                  notifications={filteredNotifications} 
+                  detailed={true} 
+                  onMarkAsRead={markAsRead} 
+                />
+           
               )}
+                   {/* // ---------------------- v1.0.0 > */}
             </div>
           </div>
         </div>
