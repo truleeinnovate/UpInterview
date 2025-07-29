@@ -330,7 +330,7 @@ const ScheduleAssessment = () => {
     {
       key: 'extend',
       label: 'Extend',
-      icon: <Calendar className="w-4 h-4 text-blue-600" />,
+      icon: <Calendar className="w-4 h-4 text-custom-blue" />,
       onClick: (schedule) => handleActionClick(schedule, 'extend'),
       show: shouldShowActionButtons,
     },

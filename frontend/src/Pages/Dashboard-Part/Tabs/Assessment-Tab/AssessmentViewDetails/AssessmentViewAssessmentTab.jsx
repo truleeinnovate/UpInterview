@@ -83,6 +83,7 @@ function AssessmentsTab({ assessment }) {
         return acc;
       }, {});
       setOpenSchedules(initialOpenState);
+      setOpenSchedules((prev) => ({ ...prev, [scheduledAssessments[0]._id]: true }));
     }
   }, [scheduledAssessments]);
   // ------------------------------v1.0.3 >
