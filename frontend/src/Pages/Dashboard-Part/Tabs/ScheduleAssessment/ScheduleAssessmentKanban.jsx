@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
+import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge';
 
 /**
  * Kanban view for Scheduled Assessments – visually similar to AssessmentKanban
@@ -181,11 +182,7 @@ const ScheduleAssessmentKanban = ({
                                   className="font-medium text-lg text-custom-blue truncate pr-10 cursor-pointer"
                                   onClick={() => onView(schedule)}
                                 >
-                                  {schedule.order} <span
-                                  className={`px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800`}
-                                >
-                                  {schedule.status ? schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1) : 'Not Provided'}
-                                </span>
+                                  {schedule.order} <StatusBadge status={schedule.status} text={schedule.status ? schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1) : "Not Provided"}/>
                                 </h3>
 
                                 {/* Assessment Template ID */}

@@ -19,6 +19,7 @@ import { useCustomContext } from "../../../../Context/Contextfetch";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 
 
 function SupportDesk() {
@@ -132,22 +133,6 @@ function SupportDesk() {
     return isValid(date) ? format(date, "dd MMM yyyy") : "N/A";
   };
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "new":
-        return "bg-blue-100 text-blue-800";
-      case "assigned":
-        return "bg-purple-100 text-purple-800";
-      case "inprogress":
-        return "bg-yellow-100 text-yellow-800";
-      case "resolved":
-        return "bg-green-100 text-green-800";
-      case "close":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
 
   // const hasActionAccess = (ticket) => {
   //   if (impersonatedUser_roleName === "Super_Admin") {
@@ -201,13 +186,8 @@ function SupportDesk() {
       key: "status",
       header: "Status",
       render: (value) => (
-        <span
-          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-            value
-          )}`}
-        >
-          {value || "N/A"}
-        </span>
+        <StatusBadge status={value} text={value ? value.charAt(0).toUpperCase() + value.slice(1) : "Not Provided"}/>
+        
       ),
     },
     ...(impersonatedUser_roleName === "Super_Admin" ||

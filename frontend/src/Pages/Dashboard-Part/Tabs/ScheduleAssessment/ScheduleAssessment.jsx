@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  added new assessment button
 // v1.0.2 ---Venkatesh---change assessmentID to first in table column and add status column style
 // v1.0.3  -  Ashraf  -  added extend/cancel functionality for candidate assessments. replaced actions button with direct extend/cancel buttons and restored original columns. added automatic expiry check functionality
+// v1.0.4  -  Venkatesh  -  added common status column style
 
 import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
@@ -30,6 +31,7 @@ import toast from 'react-hot-toast';
 // ------------------------------v1.0.3 >
 // <---------------------- v1.0.1
 import ShareAssessment from "../Assessment-Tab/ShareAssessment.jsx";
+import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
 // <---------------------- v1.0.1 >
 
 const ScheduleAssessment = () => {
@@ -280,29 +282,16 @@ const ScheduleAssessment = () => {
       key: 'status',
       header: 'Status',
       //<---------------------- v1.0.2--------
+      //<---------------------- v1.0.4
       render: (v) => (
-        <span
-          className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-            v === "completed"
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
-              : v === "scheduled"
-              ? "bg-amber-50 text-amber-700 border border-amber-200/60"
-              // <-------------------------------v1.0.3
-              : v === "cancelled"
-              ? "bg-red-50 text-red-700 border border-red-200/60"
-              : v === "expired"
-              ? "bg-orange-50 text-orange-700 border border-orange-200/60"
-              : v === "failed"
-              ? "bg-red-50 text-red-700 border border-red-200/60"
-              : "bg-slate-50 text-slate-700 border border-slate-200/60"
-          }`}
-          // ------------------------------v1.0.3 >
-        >
-          {v ? v.charAt(0).toUpperCase() + v.slice(1) : "Not Provided"}
-        </span>
+        <StatusBadge
+          status={v}
+          text={v ? v.charAt(0).toUpperCase() + v.slice(1) : "Not Provided"}
+        />
       ),
     },
     // ---------------------- v1.0.2-------->
+    // ------------------------------v1.0.4>
   ];
 
   const tableActions = [
