@@ -1,9 +1,11 @@
 // v1.0.0 - Ashok - changed createdAt to _id for customRequestId generation
+// v1.0.1 - Venkatesh - added wallet functionality deduction and hold amount
 const mongoose = require("mongoose");
 const Interview = require("../models/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest");
 const { Contacts } = require("../models/Contacts");
 const { InterviewRounds } = require("../models/InterviewRounds");
+const Wallet = require("../models/WalletTopup");
 
 //old mansoor code i have changed this code because each interviwer send one request
 
@@ -179,7 +181,7 @@ exports.updateRequestStatus = async (req, res) => {
       return res.status(404).json({ message: "Interview request not found" });
     }
     let isAccepted = false;
-    request.interviewerIds = request.interviewerIds.map((interviewer) => {
+    request.interviewerId = request.interviewerId.map((interviewer) => {
       const updatedInterviewer = interviewerIds.find(
         (i) => String(i.id) === String(interviewer.id)
       );
@@ -192,7 +194,7 @@ exports.updateRequestStatus = async (req, res) => {
       return interviewer;
     });
     if (isAccepted) {
-      request.interviewerIds = request.interviewerIds.map((interviewer) => ({
+      request.interviewerId = request.interviewerId.map((interviewer) => ({
         ...interviewer,
         status: interviewer.status === "accepted" ? "accepted" : "cancelled",
       }));
@@ -204,6 +206,8 @@ exports.updateRequestStatus = async (req, res) => {
           Status: "scheduled",
         }));
         await interview.save();
+
+      
       } else {
         return res.status(404).json({
           message: "Interview not found for the scheduledInterviewId",
@@ -432,6 +436,45 @@ exports.acceptInterviewRequest = async (req, res) => {
       { new: true }
     );
 
+    //<-----------v1.0.1-----------------------
+    // add hourly rate to the request
+    const findHourlyRate = await Contacts.findById(contactId);
+    const hourlyRate = findHourlyRate.hourlyRate;
+
+    const request = await InterviewRequest.findById(requestId);
+    const duration = request.duration;
+    const durationInMinutes = parseInt(duration.split(" ")[0]);
+    // if hourlyRate is 100$ and duration is 45 minutes, totalAmount is 75$
+    const totalAmount = (hourlyRate * durationInMinutes) / 60;
+  
+    const wallet = await Wallet.findById(request.tenantId);
+    const walletBalance = wallet.balance;
+  
+    // Check if there is enough balance in the wallet
+    if (walletBalance < totalAmount) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient balance in wallet to accept this interview request."
+      });
+    }
+  
+    // Deduct the total amount from wallet balance
+    const updatedWallet = await Wallet.findByIdAndUpdate(
+      request.tenantId,
+      { 
+        $inc: { 
+          balance: -totalAmount,
+          holdAmount: totalAmount
+        } 
+      },
+      { new: true }
+    );
+  
+    // Log the transaction or update any other necessary fields
+    console.log(`Deducted ${totalAmount} from wallet balance. New balance: ${updatedWallet.balance}`);
+    console.log(`Added ${totalAmount} to hold amount. New hold amount: ${updatedWallet.holdAmount}`);
+    //-----------v1.0.1------------------------------>
+  
     res.status(200).json({
       message:
         "Interview request accepted and other requests for this round removed",

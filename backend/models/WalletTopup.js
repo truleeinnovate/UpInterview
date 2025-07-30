@@ -17,6 +17,7 @@ const WalletSchema = new mongoose.Schema(
     tenantId: { type: String },
     ownerId: String,
     balance: { type: Number, required: true, default: 0 },
+    holdAmount: { type: Number, required: true, default: 0 },
     transactions: [
       {
         type: {

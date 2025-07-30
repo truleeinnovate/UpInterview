@@ -35,6 +35,7 @@ import {
 } from "./utils/permissionPreloader";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 
+
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
@@ -149,6 +150,9 @@ const ScheduleAssessment = lazy(() =>
 );
 const ScheduleAssDetails = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
+);
+const Feedbacks = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedbacks/Feedbacks")
 );
 const MyProfile = lazy(() =>
   import(
@@ -943,6 +947,14 @@ const MainAppRoutes = ({
                     path="/interview-templates/:id/round"
                     element={<RoundFormTemplate />}
                   />
+                </>
+              )}
+              
+              {/* Feedbacks */}
+              {hasPermission("Feedbacks") && (
+                <>
+                  <Route path="/feedbacks" element={<Feedbacks />} />
+                  
                 </>
               )}
 
