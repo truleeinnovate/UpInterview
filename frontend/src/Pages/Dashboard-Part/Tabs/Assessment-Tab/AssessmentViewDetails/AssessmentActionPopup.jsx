@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  extend limit changed to 5 days max
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -286,7 +287,7 @@ const AssessmentActionPopup = ({
                   <input
                     type="number"
                     min="1"
-                    max="10"
+                    max="5"// v1.0.0  -  Ashraf  -  extend limit changed to 5 days max
                     value={extensionDays}
                     onChange={(e) => setExtensionDays(parseInt(e.target.value) || 1)}
                     className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
