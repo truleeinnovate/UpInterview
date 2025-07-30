@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Added status badge common code
+
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil } from "lucide-react";
@@ -12,6 +14,9 @@ import { ReactComponent as MdKeyboardArrowDown } from "../../icons/MdKeyboardArr
 import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates.js";
 import { useMediaQuery } from "react-responsive";
 import { usePermissions } from "../../Context/PermissionsContext";
+// v1.0.0 <------------------------------------------------------------------------------------
+import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge.jsx";
+// v1.0.0 ------------------------------------------------------------------------------------>
 
 const InterviewTemplates = () => {
   const { effectivePermissions } = usePermissions();
@@ -86,7 +91,10 @@ const InterviewTemplates = () => {
 
   const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredTemplates.length);
+  const endIndex = Math.min(
+    startIndex + itemsPerPage,
+    filteredTemplates.length
+  );
   const paginatedTemplates = filteredTemplates.slice(startIndex, endIndex);
 
   const handlePreviousPage = () => {
@@ -132,6 +140,11 @@ const InterviewTemplates = () => {
     return `${diffYears} Year${diffYears > 1 ? "s" : ""} ago`;
   };
 
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "";
+    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  };
+
   const tableColumns = [
     {
       key: "interviewTemplateCode",
@@ -165,19 +178,27 @@ const InterviewTemplates = () => {
     {
       key: "status",
       header: "Status",
-      render: (value) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
-            value === "active"
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
-              : value === "inactive"
-              ? "bg-amber-50 text-amber-700 border border-amber-200/60"
-              : "bg-slate-50 text-slate-700 border border-slate-200/60"
-          }`}
-        >
-          {value ? value.charAt(0).toUpperCase() + value.slice(1) : "Active"}
-        </span>
-      ),
+      render: (value) => {
+        // v1.0.0 <---------------------------------------------------------------------------
+        // <span
+        //   className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
+        //     value === "active"
+        //       ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+        //       : value === "inactive"
+        //       ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+        //       : "bg-slate-50 text-slate-700 border border-slate-200/60"
+        //   }`}
+        // >
+        //   {value ? value.charAt(0).toUpperCase() + value.slice(1) : "Active"}
+        // </span>
+
+        return value ? (
+          <StatusBadge status={capitalizeFirstLetter(value)} />
+        ) : (
+          <span className="text-gray-400 text-sm">N/A</span>
+        );
+      },
+      // v1.0.0 ----------------------------------------------------------------------------->
     },
     {
       key: "updatedAt",

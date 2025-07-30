@@ -1,12 +1,12 @@
 // v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
-
+// v1.0.1  -  Ashok   -  added status badge as common code
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
 import MockProfileDetails from "./MockProfileDetails";
 import ReschedulePopup from "./ReschedulePopup.jsx";
-import { motion } from 'framer-motion';
-import { Eye, Pencil, Timer, XCircle } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Eye, Pencil, Timer, XCircle } from "lucide-react";
 import CancelPopup from "./ScheduleCancelPopup.jsx";
 import { useNavigate } from "react-router-dom";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
@@ -14,17 +14,17 @@ import Header from "../../../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import MockInterviewKanban from "./MockInterviewKanban.jsx";
-import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
-import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
+import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
+import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
+// v1.0.1 <--------------------------------------------------------------------------
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
+// v1.0.1 -------------------------------------------------------------------------->
 
 const MockInterview = () => {
   const { effectivePermissions, isInitialized } = usePermissions();
-  const { 
-    mockinterviewData, 
-    isLoading, 
-  } = useMockInterviews();
+  const { mockinterviewData, isLoading } = useMockInterviews();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,70 +150,89 @@ const MockInterview = () => {
     setCancelSchedule(false);
   };
 
+  // v1.0.1 <------------------------------------------------------
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "";
+    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  };
+  // v1.0.1 ------------------------------------------------------>
+
   const tableColumns = [
     {
-      key: 'mockInterviewCode',
-      header: 'Interview ID',
+      key: "mockInterviewCode",
+      header: "Interview ID",
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => navigate(`/mockinterview-details/${row._id}`)}
         >
-          {row?.mockInterviewCode || 'N/A'}
+          {row?.mockInterviewCode || "N/A"}
         </div>
       ),
     },
     {
-      key: 'title',
-      header: 'Interview Title',
+      key: "title",
+      header: "Interview Title",
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => navigate(`/mockinterview-details/${row._id}`)}
         >
-          {row?.rounds?.[0]?.roundTitle || 'Not Provided'}
+          {row?.rounds?.[0]?.roundTitle || "Not Provided"}
         </div>
       ),
     },
     {
-      key: 'technology',
-      header: 'Technology',
-      render: (value) => value || 'Not Provided',
+      key: "technology",
+      header: "Technology",
+      render: (value) => value || "Not Provided",
     },
     {
-      key: 'status',
-      header: 'Status',
-      render: (value, row) => row?.rounds?.[0]?.status || 'Not Provided',
+      key: "status",
+      // v1.0.0 <--------------------------------------------------------------------
+      header: "Status",
+      // render: (value, row) => row?.rounds?.[0]?.status || "Not Provided",
+      render: (value, row) => {
+        return row?.rounds?.[0]?.status ? (
+          <StatusBadge status={row.rounds[0].status} />
+        ) : (
+          <span className="text-gray-400 text-sm">Not Provided</span>
+        );
+      },
+      // v1.0.0 -------------------------------------------------------------------->
     },
     {
-      key: 'duration',
-      header: 'Duration',
-      render: (value, row) => row?.rounds?.[0]?.duration || 'Not Provided',
+      key: "duration",
+      header: "Duration",
+      render: (value, row) => row?.rounds?.[0]?.duration || "Not Provided",
     },
     {
-      key: 'interviewer',
-      header: 'Interviewer',
+      key: "interviewer",
+      header: "Interviewer",
       render: (value, row) => {
         const interviewers = row?.rounds?.[0]?.interviewers || [];
-        if (interviewers.length === 0) return 'Not Provided';
-        
+        if (interviewers.length === 0) return "Not Provided";
+
         // Map interviewer names, accessing contact.Name or firstName/lastName
         const names = interviewers
           .map((interviewer) => {
             const contact = interviewer?.contact;
-            return contact?.Name || `${contact?.firstName || ''} ${contact?.lastName || ''}`.trim();
+            return (
+              contact?.Name ||
+              `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim()
+            );
           })
           .filter(Boolean); // Remove empty strings
-        
-        if (names.length === 0) return 'Not Provided';
-        
+
+        if (names.length === 0) return "Not Provided";
+
         // Show first name and truncate with ... if more than one
         const displayText = names.length > 1 ? `${names[0]}...` : names[0];
         const additionalCount = names.length > 1 ? names.length - 1 : 0;
-        
+
         return (
           <div className="w-48 truncate flex items-center space-x-1">
-            <span className="text-sm text-gray-900" title={names.join(', ')}>
+            <span className="text-sm text-gray-900" title={names.join(", ")}>
               {displayText}
             </span>
             {additionalCount > 0 && (
@@ -226,17 +245,17 @@ const MockInterview = () => {
       },
     },
     {
-      key: 'createdAt',
-      header: 'Created On',
+      key: "createdAt",
+      header: "Created On",
       render: (value) => {
-        if (!value) return 'Not Provided';
+        if (!value) return "Not Provided";
         const date = new Date(value);
-        return date.toLocaleString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
+        return date.toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
           hour12: true,
         });
       },
@@ -245,26 +264,26 @@ const MockInterview = () => {
 
   const tableActions = [
     {
-      key: 'view',
-      label: 'View Details',
+      key: "view",
+      label: "View Details",
       icon: <Eye className="w-4 h-4 text-blue-600" />,
       onClick: (row) => navigate(`/mockinterview-details/${row._id}`),
     },
     {
-      key: 'edit',
-      label: 'Edit',
+      key: "edit",
+      label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => navigate(`/mock-interview/${row._id}/edit`),
     },
     {
-      key: 'reschedule',
-      label: 'Reschedule',
+      key: "reschedule",
+      label: "Reschedule",
       icon: <Timer className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => onRescheduleClick(row),
     },
     {
-      key: 'cancel',
-      label: 'Cancel',
+      key: "cancel",
+      label: "Cancel",
       icon: <XCircle className="w-4 h-4 text-red-500" />,
       onClick: () => onCancelClick(),
     },
@@ -277,7 +296,7 @@ const MockInterview = () => {
           <div className="sm:px-0">
             <Header
               title="Mock Interviews"
-              onAddClick={() => navigate('/mockinterview-create')}
+              onAddClick={() => navigate("/mockinterview-create")}
               addButtonText="Add Interview"
               canCreate={effectivePermissions.MockInterviews?.Create}
             />
@@ -346,7 +365,7 @@ const MockInterview = () => {
                   </div>
                   {isStatusOpen && (
                     <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                      {['Draft', 'Scheduled', 'Cancelled'].map((status) => (
+                      {["Draft", "Scheduled", "Cancelled"].map((status) => (
                         <label
                           key={status}
                           className="flex items-center space-x-2"
@@ -374,9 +393,7 @@ const MockInterview = () => {
           onCloseprofile={() => setmockinterviewDataView(false)}
         />
       )}
-      {cancelSchedule && (
-        <CancelPopup onClose={closepopup} />
-      )}
+      {cancelSchedule && <CancelPopup onClose={closepopup} />}
       {reschedule && (
         <ReschedulePopup
           onClose={closeschedulepopup}
