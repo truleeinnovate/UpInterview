@@ -1,5 +1,6 @@
 //  verison 0.01 changes done by Ranjith related to some feilds like company size properly binded
 // v1.0.2 changes done by Venky related to error msg scroll into view
+// v1.0.3 changes done by Venkatesh related to error msg scroll into view
 
 // import { companyProfile, companySizes, industries } from '../mockData/companyData'
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
@@ -24,6 +25,7 @@ import { config } from "../../../../../config";
 import { useMasterData } from "../../../../../apiHooks/useMasterData";
 import { uploadFile } from "../../../../../apiHooks/imageApis";
 import { validateFile } from "../../../../../utils/FileValidation/FileValidation";
+import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError";
 
 Modal.setAppElement("#root");
 
@@ -289,11 +291,31 @@ const CompanyEditProfile = () => {
     setFormData((prev) => ({ ...prev, logo: "" }));
   };
 
+  //<----v1.0.3----
+  const fieldRefs = {
+    company: useRef(null),
+    industry: useRef(null),
+    employees: useRef(null),
+    website: useRef(null),
+    country: useRef(null),
+    firstName: useRef(null),
+    lastName: useRef(null),
+    email: useRef(null),
+    phone: useRef(null),
+    jobTitle: useRef(null),
+    location: useRef(null),
+    headquarters: useRef(null),
+    regionalOffice: useRef(null),
+    socialMedia: useRef(null),
+    logo: useRef(null),
+  };
+  //----v1.0.3---->
+
   const handleSave = async () => {
     const validationErrors = validateCompanyProfile(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      handleValidationErrors();
+      scrollToFirstError(errors, fieldRefs);//<----v1.0.3----
       return;
     }
     console.log("validationErrors", validationErrors);
@@ -356,17 +378,6 @@ const CompanyEditProfile = () => {
       console.error("Error updating company profile:", error);
     }
   };
-// <---v1.0.2------
-  const handleValidationErrors = () => {
-    setTimeout(() => {
-      const firstErrorField = document.querySelector('.text-red-500');
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
-  //-----------v1.0.2------>
-
   const modalClass = classNames(
     "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
     {
@@ -481,6 +492,7 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="company"
+                      ref={fieldRefs.company}//<----v1.0.3----
                       value={formData.company}
                       placeholder="Company Name"
                       onChange={handleInputChange}
@@ -507,6 +519,7 @@ const CompanyEditProfile = () => {
                         name="industry"
                         type="text"
                         id="industry"
+                        ref={fieldRefs.industry}//<----v1.0.3----
                         value={formData.industry}
                         placeholder="Information Technology"
                         autoComplete="off"
@@ -582,6 +595,7 @@ const CompanyEditProfile = () => {
                     <select
                       name="employees"
                       value={formData.employees}
+                      ref={fieldRefs.employees}//<----v1.0.3----
                       placeholder="Select Size"
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -606,6 +620,7 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="website"
+                      ref={fieldRefs.website}//<----v1.0.3----
                       value={formData.website}
                       placeholder="Website URL"
                       onChange={handleInputChange}
@@ -713,6 +728,7 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="firstName"
+                      ref={fieldRefs.firstName}//<----v1.0.3----
                       value={formData.firstName}
                       placeholder="First Name"
                       onChange={handleInputChange}
@@ -731,6 +747,7 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="lastName"
+                      ref={fieldRefs.lastName}//<----v1.0.3----
                       value={formData.lastName}
                       placeholder="Last Name"
                       onChange={handleInputChange}
@@ -752,6 +769,7 @@ const CompanyEditProfile = () => {
                     <input
                       type="email"
                       name="email"
+                      ref={fieldRefs.email}//<----v1.0.3----
                       value={formData.email}
                       placeholder="Email"
                       onChange={handleInputChange}
@@ -770,6 +788,7 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="phone"
+                      ref={fieldRefs.phone}//<----v1.0.3----
                       value={formData.phone}
                       placeholder="Phone Number"
                       onChange={(e) => {
@@ -799,6 +818,7 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="jobTitle"
+                      ref={fieldRefs.jobTitle}//<----v1.0.3----
                       value={formData.jobTitle}
                       placeholder="Job Title"
                       onChange={handleInputChange}
