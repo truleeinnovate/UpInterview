@@ -29,6 +29,7 @@
     "express": "^4.17.1",
     "framer-motion": "^12.6.5",
     "js-cookie": "^3.0.5",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.483.0",
     "moment-timezone": "^0.6.0",
     "react": "^18.3.1",

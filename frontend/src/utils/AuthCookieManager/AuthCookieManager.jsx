@@ -1,8 +1,11 @@
 // v1.0.0  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout,when individual logout navigate to there linked page
-// v1.0.0  -  Ashraf  -  login as user issue
+// v1.0.1  -  Ashraf  -  login as user issue
+// v1.0.2  -  Ashraf  -  using authcookie manager to get current tokein,cookies works in all browsers correctly,creaing cookies or expiry cookies correctly
 import Cookies from 'js-cookie';
+// <---------------------- v1.0.2
+import { jwtDecode } from 'jwt-decode';
 import { decodeJwt } from './jwtDecode';
-import { resetPermissionPreload } from "../permissionPreloader";
+// ---------------------- v1.0.2 >
 
 // Token keys
 const AUTH_TOKEN_KEY = 'authToken';
@@ -20,7 +23,30 @@ class AuthCookieManager {
   // Get auth token (effective user token)
   static getAuthToken() {
     try {
-      return Cookies.get(AUTH_TOKEN_KEY);
+      // <---------------------- v1.0.2
+      const token = Cookies.get(AUTH_TOKEN_KEY);
+      
+      // If token exists, validate it's not expired
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          if (decoded && decoded.exp) {
+            const currentTime = Math.floor(Date.now() / 1000);
+            if (currentTime >= decoded.exp) {
+              // Token is expired, clear it
+              this.clearExpiredToken(AUTH_TOKEN_KEY);
+              return null;
+            }
+          }
+        } catch (error) {
+          console.warn('Error decoding auth token:', error);
+          this.clearExpiredToken(AUTH_TOKEN_KEY);
+          return null;
+        }
+      }
+
+      return token;
+      // ---------------------- v1.0.2 >
     } catch (error) {
       console.warn('Error getting auth token:', error);
       return null;
@@ -30,53 +56,183 @@ class AuthCookieManager {
   // Get impersonation token (super admin token)
   static getImpersonationToken() {
     try {
-      return Cookies.get(IMPERSONATION_TOKEN_KEY);
+      // <---------------------- v1.0.2
+      const token = Cookies.get(IMPERSONATION_TOKEN_KEY);
+      
+      // If token exists, validate it's not expired
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          if (decoded && decoded.exp) {
+            const currentTime = Math.floor(Date.now() / 1000);
+            if (currentTime >= decoded.exp) {
+              // Token is expired, clear it
+              this.clearExpiredToken(IMPERSONATION_TOKEN_KEY);
+              return null;
+            }
+          }
+        } catch (error) {
+          console.warn('Error decoding impersonation token:', error);
+          this.clearExpiredToken(IMPERSONATION_TOKEN_KEY);
+          return null;
+        }
+      }
+      
+      return token;
+      // ---------------------- v1.0.2 >
     } catch (error) {
       console.warn('Error getting impersonation token:', error);
       return null;
     }
   }
+  // ---------------------- v1.0.2 >
+
+  // Clear expired token and trigger smart logout
+  static clearExpiredToken(tokenKey) {
+    try {
+      // Clear the expired cookie
+      const currentDomain = window.location.hostname;
+      const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
+      
+      const clearOptions = {
+        expires: new Date(0),
+        path: '/',
+        secure: !isLocalhost,
+        sameSite: isLocalhost ? 'Lax' : 'None'
+      };
+      
+      if (!isLocalhost && currentDomain.includes('upinterview.io')) {
+        clearOptions.domain = '.upinterview.io';
+      }
+      
+      Cookies.set(tokenKey, '', clearOptions);
+      
+      // Clear any localStorage backup (cleanup)
+      try {
+        localStorage.removeItem(`${tokenKey}_backup`);
+      } catch (e) {
+        // Ignore localStorage errors
+      }
+      
+      // Trigger token expired event for smart logout
+      window.dispatchEvent(new CustomEvent('tokenExpired', { 
+        detail: { tokenKey } 
+      }));
+      
+      console.log(`Expired token cleared: ${tokenKey}`);
+    } catch (error) {
+      console.error(`Error clearing expired token ${tokenKey}:`, error);
+    }
+  }
+
+  // Sync authentication state across tabs
+  static syncAuthAcrossTabs() {
+    try {
+      const authToken = this.getAuthToken();
+      const impersonationToken = this.getImpersonationToken();
+      
+      // Broadcast auth state to other tabs
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const authState = {
+          authToken,
+          impersonationToken,
+          timestamp: Date.now()
+        };
+        
+        localStorage.setItem('auth_sync_state', JSON.stringify(authState));
+        
+        // Trigger storage event for other tabs
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'auth_sync_state',
+          newValue: JSON.stringify(authState)
+        }));
+      }
+    } catch (error) {
+      console.warn('Error syncing auth across tabs:', error);
+    }
+  }
+
+  // Listen for auth changes from other tabs
+  static setupCrossTabAuthListener() {
+    if (typeof window === 'undefined') return;
+    
+    const handleStorageChange = (event) => {
+      if (event.key === 'auth_sync_state') {
+        try {
+          const authState = JSON.parse(event.newValue);
+          if (authState && authState.timestamp) {
+            // Update local state if the remote state is newer
+            const localTimestamp = localStorage.getItem('auth_sync_timestamp') || '0';
+            if (authState.timestamp > parseInt(localTimestamp)) {
+              // Sync the tokens
+              if (authState.authToken) {
+                this.setAuthToken(authState.authToken);
+              }
+              if (authState.impersonationToken) {
+                this.setImpersonationToken(authState.impersonationToken);
+              }
+              localStorage.setItem('auth_sync_timestamp', authState.timestamp.toString());
+            }
+          }
+        } catch (error) {
+          console.warn('Error processing auth sync event:', error);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Return cleanup function
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }
 
   // Set auth token
   static setAuthToken(token) {
-
     try {
-      // <-------------------------------v1.0.0
       const currentDomain = window.location.hostname;
+      const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
+      
       const cookieOptions = {
         expires: 7, // 7 days
-        secure: true,
-        sameSite: 'None', // Required for cross-origin
-        path: '/', // Ensure cookie is available on all paths
-        ...(currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')
-          ? { domain: '.upinterview.io' }
-          : {}),
+        secure: !isLocalhost, // Only secure in production
+        sameSite: isLocalhost ? 'Lax' : 'None', // Use Lax for localhost, None for production
+        path: '/',
       };
+      
+      // Only set domain for production and when not localhost
+      if (!isLocalhost && currentDomain.includes('upinterview.io')) {
+        cookieOptions.domain = '.upinterview.io';
+      }
+      
       Cookies.set(AUTH_TOKEN_KEY, token, cookieOptions);
       
     } catch (error) {
       console.error('❌ Error setting auth token:', error);
     }
   }
-
+  // ---------------------- v1.0.2 >
   // Set impersonation token
   static setImpersonationToken(token, userData = null) {
-
     try {
       const currentDomain = window.location.hostname;
+      const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
+      
       const cookieOptions = {
         expires: 7, // 7 days
-        secure: true,
-        sameSite: 'None', // Required for cross-origin
-        path: '/', // Ensure cookie is available on all paths
-        ...(currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')
-          ? { domain: '.upinterview.io' }
-          : {}),
+        secure: !isLocalhost, // Only secure in production
+        sameSite: isLocalhost ? 'Lax' : 'None', // Use Lax for localhost, None for production
+        path: '/',
       };
-      // ------------------------------v1.0.0 >
+      
+      // Only set domain for production and when not localhost
+      if (!isLocalhost && currentDomain.includes('upinterview.io')) {
+        cookieOptions.domain = '.upinterview.io';
+      }
       
       // Set the token in cookies
-      Cookies.set('impersonationToken', token, cookieOptions);
+      Cookies.set(IMPERSONATION_TOKEN_KEY, token, cookieOptions);
       
       if (userData) {
         localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
@@ -490,8 +646,6 @@ class AuthCookieManager {
     }
   }
 
-
-
   // Smart logout based on current authentication state
   //<---------------------- v1.0.0
   static async smartLogout(navigate, setLoading = null, effectivePermissions_RoleName = null) {
@@ -504,7 +658,10 @@ class AuthCookieManager {
       }
 
       // Reset permission preload flag
+      // <---------------------- v1.0.2
+      const { resetPermissionPreload } = await import("../permissionPreloader");
       resetPermissionPreload();
+      // ---------------------- v1.0.2 >
       
       // Get current authentication state
       const authToken = AuthCookieManager.getAuthToken();
@@ -517,22 +674,29 @@ class AuthCookieManager {
       const clearCookie = (name) => {
         try {
           const currentDomain = window.location.hostname;
+          // <---------------------- v1.0.2
+          const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
           
           const clearOptions = {
             expires: new Date(0),
-            path: '/'
+            path: '/',
+            secure: !isLocalhost,
+            sameSite: isLocalhost ? 'Lax' : 'None'
           };
           
-          // Only set domain for production (not localhost)
-          if (currentDomain !== 'localhost' && !currentDomain.includes('127.0.0.1')) {
+          // Only set domain for production and when not localhost
+          if (!isLocalhost && currentDomain.includes('upinterview.io')) {
             clearOptions.domain = '.upinterview.io';
           }
           
+          // Clear from cookies
           Cookies.set(name, '', clearOptions);
+          
         } catch (error) {
           console.error(`Error clearing cookie ${name}:`, error);
         }
       };
+      // ---------------------- v1.0.2 >
 
       if (impersonationToken && !authToken) {
         // Clear super admin related data
@@ -581,7 +745,9 @@ class AuthCookieManager {
       }
 
       // Wait a moment for cookies to be cleared, then verify
-      setTimeout(() => {
+      // <---------------------- v1.0.2
+      setTimeout(async () => {
+      // ---------------------- v1.0.2 >
         // Verify that cookies and localStorage were cleared
         const verifyAuthToken = AuthCookieManager.getAuthToken();
         const verifyImpersonationToken = AuthCookieManager.getImpersonationToken();
@@ -598,18 +764,20 @@ class AuthCookieManager {
           if (verifyAuthToken && !verifyImpersonationToken) {
             clearCookie(AUTH_TOKEN_KEY);
           } else if (!verifyAuthToken && verifyImpersonationToken) {
+            // <---------------------- v1.0.2
           } else {
-            AuthCookieManager.clearAllAuth();
+            await AuthCookieManager.clearAllAuth();
           }
         } else {
           // Other scenarios: both tokens should be cleared
           if (verifyAuthToken || verifyImpersonationToken) {
-            AuthCookieManager.clearAllAuth();
+            await AuthCookieManager.clearAllAuth();
+            // ---------------------- v1.0.2 >
           }
         }
 
       }, 100);
-
+      
     } catch (error) {
       console.error('Error during smart logout:', error);
       // Ensure loading is turned off even if there's an error
@@ -620,6 +788,88 @@ class AuthCookieManager {
       window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "http://localhost:3000/organization-login";
       // navigate("/organization-login");
 
+    }
+  }
+  // ---------------------- v1.0.2 >
+
+  // Simplified logout for token expiration (no navigation required)
+  static async handleTokenExpiration() {
+    try {
+      console.log('🔄 Handling token expiration...');
+      
+      // Reset permission preload flag
+      const { resetPermissionPreload } = await import("../permissionPreloader");
+      resetPermissionPreload();
+      
+      // Get current authentication state
+      const authToken = AuthCookieManager.getAuthToken();
+      const impersonationToken = AuthCookieManager.getImpersonationToken();
+
+      // Helper function to clear cookies
+      const clearCookie = (name) => {
+        try {
+          const currentDomain = window.location.hostname;
+          const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
+          
+          const clearOptions = {
+            expires: new Date(0),
+            path: '/',
+            secure: !isLocalhost,
+            sameSite: isLocalhost ? 'Lax' : 'None'
+          };
+          
+          if (!isLocalhost && currentDomain.includes('upinterview.io')) {
+            clearOptions.domain = '.upinterview.io';
+          }
+          
+          Cookies.set(name, '', clearOptions);
+        } catch (error) {
+          console.error(`Error clearing cookie ${name}:`, error);
+        }
+      };
+
+      // Clear all authentication data based on current state
+      if (impersonationToken && !authToken) {
+        // Clear super admin related data
+        clearCookie(IMPERSONATION_TOKEN_KEY);
+        localStorage.removeItem(IMPERSONATED_USER_KEY);
+        localStorage.removeItem(USER_TYPE_KEY);
+        AuthCookieManager.clearPermissions('superAdmin');
+        localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
+        localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
+        
+      } else if (authToken && !impersonationToken) {
+        // Clear effective user related data
+        clearCookie(AUTH_TOKEN_KEY);
+        localStorage.removeItem(USER_TYPE_KEY);
+        AuthCookieManager.clearPermissions('effective');
+        localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
+        localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_TIMESTAMP);
+        localStorage.removeItem('app_permissions_cache');
+        localStorage.removeItem('permissions_effective');
+        localStorage.removeItem('app_permissions_timestamp');
+        
+      } else if (authToken && impersonationToken) {
+        // Clear effective user data, keep super admin data
+        clearCookie(AUTH_TOKEN_KEY);
+        AuthCookieManager.clearPermissions('effective');
+        AuthCookieManager.clearAllPermissionCaches();
+        localStorage.removeItem(USER_TYPE_KEY);
+      }
+
+      // Always redirect to login page for token expiration
+      const loginUrl = process.env.NODE_ENV === 'production' 
+        ? "https://app.upinterview.io/organization-login" 
+        : "http://localhost:3000/organization-login";
+      
+      window.location.href = loginUrl;
+      
+    } catch (error) {
+      console.error('❌ Error handling token expiration:', error);
+      // Fallback: redirect to login
+      window.location.href = process.env.NODE_ENV === 'production' 
+        ? "https://app.upinterview.io/organization-login" 
+        : "http://localhost:3000/organization-login";
     }
   }
 
@@ -644,10 +894,13 @@ class AuthCookieManager {
   }
 
   // Clear all authentication data
-  static clearAllAuth() {
+  static async clearAllAuth() {
     try {
       // Reset permission preload flag
+      const { resetPermissionPreload } = await import("../permissionPreloader");
+
       resetPermissionPreload();
+      // ---------------------- v1.0.2 >
       
       // Clear localStorage
       localStorage.clear();
@@ -864,7 +1117,129 @@ class AuthCookieManager {
       return { error: error.message };
     }
   }
+  // ---------------------- v1.0.2 >
+  // Check browser permissions and capabilities
+  static checkBrowserPermissions() {
+    const permissions = {
+      cookies: false,
+      localStorage: false,
+      sessionStorage: false,
+      notifications: false
+    };
+    
+    try {
+      // Check cookie support
+      document.cookie = 'test=1';
+      permissions.cookies = document.cookie.includes('test=1');
+      document.cookie = 'test=1; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    } catch (e) {
+      console.warn('Cookie support check failed:', e);
+    }
+    
+    try {
+      // Check localStorage support
+      localStorage.setItem('test', '1');
+      permissions.localStorage = localStorage.getItem('test') === '1';
+      localStorage.removeItem('test');
+    } catch (e) {
+      console.warn('localStorage support check failed:', e);
+    }
+    
+    try {
+      // Check sessionStorage support
+      sessionStorage.setItem('test', '1');
+      permissions.sessionStorage = sessionStorage.getItem('test') === '1';
+      sessionStorage.removeItem('test');
+    } catch (e) {
+      console.warn('sessionStorage support check failed:', e);
+    }
+    
+    // Check notification permission
+    if ('Notification' in window) {
+      permissions.notifications = Notification.permission === 'granted';
+    }
+    
+    return permissions;
+  }
 
+  // Request notification permissions only
+  static async requestNotificationPermission() {
+    try {
+      if ('Notification' in window && Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        return permission === 'granted';
+      } else if ('Notification' in window) {
+        return Notification.permission === 'granted';
+      }
+      return false;
+    } catch (e) {
+      console.warn('Notification permission request failed:', e);
+      return false;
+    }
+  }
+
+  // Detect if we're in a new browser context
+  static isNewBrowserContext() {
+    try {
+      const contextId = sessionStorage.getItem('browser_context_id');
+      if (!contextId) {
+        // Generate new context ID
+        const newContextId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+        sessionStorage.setItem('browser_context_id', newContextId);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('Could not check browser context:', e);
+      return true; // Assume new context if we can't check
+    }
+  }
+
+  // Validate token expiration periodically
+  static startTokenValidation() {
+    // Check tokens every 5 minutes
+    const validationInterval = setInterval(() => {
+      try {
+        const authToken = this.getAuthToken();
+        const impersonationToken = this.getImpersonationToken();
+        
+        // If no tokens exist, clear the interval
+        if (!authToken && !impersonationToken) {
+          clearInterval(validationInterval);
+          return;
+        }
+        
+        // Validation is already done in getAuthToken() and getImpersonationToken()
+        // This just ensures we check periodically
+        console.log('Token validation check completed');
+        
+      } catch (error) {
+        console.error('Error during token validation:', error);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    // Return cleanup function
+    return () => clearInterval(validationInterval);
+  }
+
+  // Check if token will expire soon (within 1 hour)
+  static isTokenExpiringSoon(token) {
+    try {
+      if (!token) return false;
+      
+      const decoded = jwtDecode(token);
+      if (decoded && decoded.exp) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        const oneHour = 60 * 60; // 1 hour in seconds
+        return (decoded.exp - currentTime) <= oneHour;
+      }
+      return false;
+    } catch (error) {
+      console.warn('Error checking token expiration:', error);
+      return false;
+    }
+  }
+  // ---------------------- v1.0.2 >
 
 }
 
@@ -906,5 +1281,13 @@ export const clearAllPermissionCaches = AuthCookieManager.clearAllPermissionCach
 
 // Smart logout
 export const smartLogout = AuthCookieManager.smartLogout;
+// <---------------------- v1.0.2
+export const handleTokenExpiration = AuthCookieManager.handleTokenExpiration;
+// ---------------------- v1.0.2 >
+
+
+
+
+
 
 export default AuthCookieManager;

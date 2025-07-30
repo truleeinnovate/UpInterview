@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout
 // v1.0.3  -  Ashraf  -  updated loading tabs issue
 // v1.0.4  -  Ashok   -  changed tab name from "Integrations" to "Integration Logs" in super admin navbar
+// v1.0.5  -  Ashraf  -  using authcookie manager to get current tokein 
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -29,15 +30,19 @@ import { usePermissionCheck } from "../../utils/permissionUtils";
 import AuthCookieManager from "../../utils/AuthCookieManager/AuthCookieManager";
 import { useSingleContact } from "../../apiHooks/useUsers";
 import Loading from "../Loading.js";
-
+// <---------------------- v1.0.5
+import { getAuthToken, getImpersonationToken } from "../../utils/AuthCookieManager/AuthCookieManager";
+// ---------------------- v1.0.5 >
 
 const CombinedNavbar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
   // <---------------------- v1.0.2
   const { effectivePermissions_RoleName } = usePermissions();
   // ---------------------- v1.0.2 >
+  // <---------------------- v1.0.5
   const location = useLocation();
-  const authToken = Cookies.get("authToken");
+  const authToken = getAuthToken();
+  // ---------------------- v1.0.5 >
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const { userProfile } = useCustomContext();
