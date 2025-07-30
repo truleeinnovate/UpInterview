@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  getting form in loop,form scroll issue 
 // v1.0.1  -  Ashraf  -  super adim creation issue
+// v1.0.2  -  Venkatesh  -  add error msg scroll
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
@@ -24,6 +25,7 @@ import { useRolesQuery } from '../../../../../apiHooks/useRoles.js';
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
 import Loading from "../../../../../Components/Loading.js";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
+import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 
 const UserForm = ({ mode }) => {
 
@@ -270,25 +272,33 @@ const UserForm = ({ mode }) => {
     )
     .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
 
+  //<-----v1.0.2------
+  const fieldRefs = {
+      firstName: useRef(null),
+      lastName: useRef(null),
+      email: useRef(null),
+      phone: useRef(null),
+      roleId: useRef(null),
+      };
+  //-----v1.0.2------>
+    
+
   // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return;
-
+    //if (isLoading) return;
     setIsLoading(true);
-    console.log("Submitting userData:", userData);
 
-    try {
-      // Validate form data
-      const newErrors = await validateUserForm(userData, editMode);
-      console.log("Validation errors:", newErrors);
+    const validationErrors = await validateUserForm(userData, editMode);
+    setErrors(validationErrors);
 
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        setIsLoading(false);
-        return;
-      }
+    if (Object.keys(validationErrors).length > 0) {
+      scrollToFirstError(validationErrors, fieldRefs)//<-----v1.0.2------>
+      setIsLoading(false);
+      return;
+    }
       // ------------------------------ v1.0.0 >
+    try {
       // Proceed with form submission
       // <-------------------------------v1.0.1
       let submitUserData = { ...userData };
@@ -453,6 +463,7 @@ const UserForm = ({ mode }) => {
                   name="firstName"
                   id="firstName"
                   placeholder="First Name"
+                  ref={fieldRefs.firstName}//<-----v1.0.2------
                   value={userData.firstName}
                   onChange={handleChange}
                   className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${isLoading ? "opacity-50" : ""
@@ -478,6 +489,7 @@ const UserForm = ({ mode }) => {
                   name="lastName"
                   id="lastName"
                   placeholder="Last Name"
+                  ref={fieldRefs.lastName}//<-----v1.0.2------
                   value={userData.lastName}
                   onChange={handleChange}
                   className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.lastName ? "border-red-500" : "border-gray-300"
@@ -501,7 +513,7 @@ const UserForm = ({ mode }) => {
                 </label>
                 <div className="relative">
                   <input
-                    ref={emailInputRef}
+                    ref={emailInputRef || fieldRefs.email}//<-----v1.0.2------
                     name="email"
                     type="text"
                     id="email"
@@ -539,6 +551,7 @@ const UserForm = ({ mode }) => {
                   <select
                     name="countryCode"
                     value={userData.countryCode}
+                    ref={fieldRefs.countryCode}//<-----v1.0.2------
                     placeholder="Country Code"
                     onChange={handleCountryCodeChange}
                     className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${errors.phone ? "border-red-500" : "border-gray-300"
@@ -554,6 +567,7 @@ const UserForm = ({ mode }) => {
                     type="tel"
                     name="phone"
                     id="phone"
+                    ref={fieldRefs.phone}//<-----v1.0.2------
                     value={userData.phone}
                     placeholder="Enter Phone Number"
                     onChange={handlePhoneInput}
@@ -586,6 +600,7 @@ const UserForm = ({ mode }) => {
                   <input
                     type="text"
                     readOnly
+                    ref={fieldRefs.roleId}//<-----v1.0.2------
                     value={selectedCurrentRole}
                     placeholder="Select Role"
                     onClick={toggleDropdownRole}

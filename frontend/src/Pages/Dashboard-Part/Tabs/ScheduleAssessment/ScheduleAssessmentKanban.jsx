@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
+import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge';
 
 /**
  * Kanban view for Scheduled Assessments – visually similar to AssessmentKanban
@@ -144,7 +145,7 @@ const ScheduleAssessmentKanban = ({
                               snapshot.isDragging ? 'shadow-lg' : ''
                             } ${
                               columnId === 'scheduled'
-                                ? 'border-l-blue-500'
+                                ? 'border-l-custom-blue'
                                 : columnId === 'completed'
                                 ? 'border-l-green-500'
                                 : 'border-l-red-500'
@@ -163,7 +164,7 @@ const ScheduleAssessmentKanban = ({
                                     {onAction && shouldShowActionButtons(schedule) && (
                                       <>
                                         <CalendarIcon
-                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-blue-600"
+                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-custom-blue"
                                           onClick={() => onAction(schedule, 'extend')}
                                           title="Extend Assessment"
                                         />
@@ -181,7 +182,7 @@ const ScheduleAssessmentKanban = ({
                                   className="font-medium text-lg text-custom-blue truncate pr-10 cursor-pointer"
                                   onClick={() => onView(schedule)}
                                 >
-                                  {schedule.order}
+                                  {schedule.order} <StatusBadge status={schedule.status} text={schedule.status ? schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1) : "Not Provided"}/>
                                 </h3>
 
                                 {/* Assessment Template ID */}
@@ -219,12 +220,6 @@ const ScheduleAssessmentKanban = ({
                                 <div className="text-sm text-gray-600">
                                 <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-2" /> {schedule.scheduledAssessmentCode ? schedule.scheduledAssessmentCode : 'Not Provided'}
                                 </div>
-
-                                <span
-                                  className={`px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800`}
-                                >
-                                  {schedule.status ? schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1) : 'Not Provided'}
-                                </span>
                               </div>
                             </div>
                           </motion.div>

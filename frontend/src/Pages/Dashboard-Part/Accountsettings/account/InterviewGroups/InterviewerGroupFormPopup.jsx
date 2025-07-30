@@ -1,6 +1,7 @@
 // v.0.0.1  changes made in interviwers getting data and creating groups and editing groups view group data
+// v.0.0.2 - Venkatesh---  add error msg scroll
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import classNames from "classnames";
 import Modal from "react-modal";
@@ -15,6 +16,7 @@ import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
+import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError";
 Modal.setAppElement("#root");
 const InterviewerGroupFormPopup = () => {
   const { id } = useParams();
@@ -114,6 +116,15 @@ const InterviewerGroupFormPopup = () => {
   }, [tenantId, interviewers?.data]);
   // ----------------------------------->
 
+  //<-----v1.0.2------
+  const fieldRefs = {
+        name: useRef(null),
+        description: useRef(null),
+        status: useRef(null),
+        members: useRef(null),
+        };
+  //-----v1.0.2------>
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -121,7 +132,7 @@ const InterviewerGroupFormPopup = () => {
     setFormErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      handleValidationErrors();
+      scrollToFirstError(errors, fieldRefs )//<-----v1.0.2------
       return;
     }
 
@@ -163,14 +174,6 @@ const InterviewerGroupFormPopup = () => {
     }));
   };
 
-  const handleValidationErrors = () => {
-    setTimeout(() => {
-      const firstErrorField = document.querySelector('.text-red-500');
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
 
   //     const handleSubmit = async (e) => {
   //       e.preventDefault();
@@ -278,6 +281,7 @@ const InterviewerGroupFormPopup = () => {
                   <input
                     type="text"
                     placeholder="Enter Group Name"
+                    ref={fieldRefs.name}//<-----v1.0.2------
                     value={formData.name}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, name: e.target.value }))
@@ -295,6 +299,7 @@ const InterviewerGroupFormPopup = () => {
                   </label>
                   <textarea
                     placeholder="Write a description of the group"
+                    ref={fieldRefs.description}//<-----v1.0.2------
                     value={formData.description}
                     onChange={(e) =>
                       setFormData((prev) => ({
@@ -318,6 +323,7 @@ const InterviewerGroupFormPopup = () => {
                   </label>
                   <select
                     value={formData.status}
+                    ref={fieldRefs.status}//<-----v1.0.2------
                     placeholder="Select Status"
                     onChange={(e) =>
                       setFormData((prev) => ({

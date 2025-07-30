@@ -1,6 +1,7 @@
 // // v1.0.0 ----- Venkatesh ---min experience and max experience validation added
 // // v1.0.1--------Venkatesh---saveOrUpdateQuestion mutation added
 // // v1.0.2--------Venkatesh---Prevent double-click save (simplified)
+// // v1.0.3--------Venkatesh---Function to close all other dropdowns when one is opened
 
 
 
@@ -129,7 +130,7 @@ useEffect(() => {
     const { name, value } = e.target;
 
     let errorMessage = "";
-    
+
     // Validate numeric input for Number question type
     if (name === "correctAnswer" && selectedQuestionType === "Number") {
       // Allow empty value, numbers, decimal points, and negative sign
@@ -149,6 +150,19 @@ useEffect(() => {
       }
     }
     
+    //<------v1.0.3------- Prevent entering question if question type is not selected
+    if (name === "questionText" && !selectedQuestionType) {
+      setErrors((prev) => ({ ...prev, questionType: "Please select a question type before entering a question." }));
+      return;
+    }
+
+    // Prevent entering answer if question text is not filled
+    if (name === "correctAnswer" && !formData.questionText.trim()) {
+      setErrors((prev) => ({ ...prev, questionText: "Please enter a question before providing an answer." }));
+      return;
+    }
+    //<------v1.0.3------- Prevent entering answer if question text is not filled
+
     setFormData({ ...formData, [name]: value });
     setErrors({ ...errors, [name]: errorMessage });
   };
@@ -459,6 +473,7 @@ useEffect(() => {
   const skillsPopupRef = useRef(null);
 
   const toggleSkillsPopup = () => {
+    closeOtherDropdowns('showDropdownSkillPopup');
     setShowSkillsPopup((prev) => !prev);
   };
 
@@ -516,7 +531,19 @@ useEffect(() => {
     fetchData();
   }, []);
 
+  // <-------v1.0.3---------
+  const closeOtherDropdowns = (currentDropdown) => {
+    if (currentDropdown !== 'showDropdownQuestionType') setShowDropdownQuestionType(false);
+    if (currentDropdown !== 'showDropdownDifficultyLevel') setShowDropdownDifficultyLevel(false);
+    if (currentDropdown !== 'showDropdownSkillPopup') setShowSkillsPopup(false);
+    if (currentDropdown !== 'showDropdownMinExperience') setShowDropdownMinExperience(false);
+    if (currentDropdown !== 'showDropdownMaxExperience') setShowDropdownMaxExperience(false);
+    if (currentDropdown !== 'showDropdownBooleanAnswer') setShowDropdownBooleanAnswer(false);
+  };
+  //---------v1.0.3--------->
+
   const toggleDropdownDifficultyLevel = () => {
+    closeOtherDropdowns('showDropdownDifficultyLevel');
     setShowDropdownDifficultyLevel(!showDropdownDifficultyLevel);
   };
 
@@ -535,6 +562,7 @@ useEffect(() => {
   };
   const difficultyLevels = ["Easy", "Medium", "Hard"];
   const toggleDropdownQuestionType = () => {
+    closeOtherDropdowns('showDropdownQuestionType');
     setShowDropdownQuestionType(!showDropdownQuestionType);
   };
 
@@ -631,12 +659,14 @@ useEffect(() => {
 
   const [selectedMinExperience, setSelectedMinExperience] = useState("");
   const [showDropdownMinExperience, setShowDropdownMinExperience] = useState(false);
+
   const minExperienceOptions = Array.from({ length: 11 }, (_, i) => ({
     value: `${i}`,
     label: `${i}`,
   }));
 
   const toggleDropdownMinExperience = () => {
+    closeOtherDropdowns('showDropdownMinExperience');
     setShowDropdownMinExperience((prev) => !prev);
   };
 
@@ -656,6 +686,7 @@ useEffect(() => {
   })).filter((option) => parseInt(option.value) > parseInt(selectedMinExperience));
 
   const toggleDropdownMaxExperience = () => {
+    closeOtherDropdowns('showDropdownMaxExperience');
     setShowDropdownMaxExperience((prev) => !prev);
   };
 
@@ -667,6 +698,7 @@ useEffect(() => {
   };
 
   const toggleDropdownBooleanAnswer = () => {
+    closeOtherDropdowns('showDropdownBooleanAnswer');
     setShowDropdownBooleanAnswer((prev) => !prev);
   };
 

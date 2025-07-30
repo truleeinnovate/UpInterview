@@ -351,14 +351,14 @@ const CombinedNavbar = () => {
           permissionKey: "Analytics.ViewTab",
         },
         {
-          path: "/support-desk",
-          label: "Support Desk",
-          permissionKey: "SupportDesk.ViewTab",
-        },
-        {
           path: "/questionBank",
           label: "Question Bank",
           permissionKey: "QuestionBank.ViewTab",
+        },
+        {
+          path: "/support-desk",
+          label: "Support Desk",
+          permissionKey: "SupportDesk.ViewTab",
         },
       ];
     }
@@ -993,9 +993,6 @@ const CombinedNavbar = () => {
                                   ...(enhancedCheckPermission("Analytics")
                                     ? [{ to: "/analytics", label: "Analytics" }]
                                     : []),
-                                  ...(enhancedCheckPermission("SupportDesk")
-                                    ? [{ to: "/support-desk", label: "Support Desk" }]
-                                    : []),
                                   ...(enhancedCheckPermission("QuestionBank")
                                     ? [
                                       {
@@ -1003,6 +1000,9 @@ const CombinedNavbar = () => {
                                         label: "Question Bank",
                                       },
                                     ]
+                                    : []),
+                                  ...(enhancedCheckPermission("SupportDesk")
+                                    ? [{ to: "/support-desk", label: "Support Desk" }]
                                     : []),
                                 ].map(({ to, label }) => (
                                   <NavLink

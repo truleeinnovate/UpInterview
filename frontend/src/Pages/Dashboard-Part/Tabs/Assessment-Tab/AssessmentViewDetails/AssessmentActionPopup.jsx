@@ -210,12 +210,12 @@ const AssessmentActionPopup = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center space-x-3">
             {action === 'extend' ? (
-              <Calendar className="w-6 h-6 text-blue-600" />
+              <Calendar className="w-6 h-6 text-custom-blue" />
             ) : action === 'cancel' ? (
               <AlertCircle className="w-6 h-6 text-red-600" />
             ) : (
@@ -245,7 +245,7 @@ const AssessmentActionPopup = ({
                   onClick={() => setAction('extend')}
                   className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
                 >
-                  <Calendar className="w-5 h-5 text-blue-600 mr-3" />
+                  <Calendar className="w-5 h-5 text-custom-blue mr-3" />
                   <div className="text-left">
                     <div className="font-medium text-gray-900">Extend Assessment</div>
                     <div className="text-sm text-gray-500">Add more time for candidates to complete</div>
@@ -328,7 +328,7 @@ const AssessmentActionPopup = ({
                           setSelectedCandidates([]);
                         }
                       }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue/80"
                       disabled={isLoading}
                     />
                     <span className="text-sm text-gray-700">Select All</span>
@@ -368,7 +368,7 @@ const AssessmentActionPopup = ({
                           type="checkbox"
                           checked={selectedCandidates.includes(candidateId)}
                           onChange={() => handleCandidateToggle(candidateId)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
+                          className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue/80 mr-3"
                           disabled={isLoading}
                         />
                         <div className="flex-1">
@@ -382,7 +382,7 @@ const AssessmentActionPopup = ({
                                 <div className="text-xs text-gray-600 mt-1">
                                   <span className="font-medium">Expiry:</span> {timeUntilExpiry}
                                   {action === 'extend' && inExtensionWindow && (
-                                    <span className="ml-2 text-blue-600 font-medium">✓ Extension Window</span>
+                                    <span className="ml-2 text-custom-blue font-medium">✓ Extension Window</span>
                                   )}
                                 </div>
                               )}
@@ -429,7 +429,7 @@ const AssessmentActionPopup = ({
                 </div>
               </div>
               <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
-                <p className="text-xs text-blue-700">
+                <p className="text-xs text-custom-blue">
                   <strong>Business Rules:</strong><br/>
                   • Extensions are only allowed 24-72 hours before the assessment expires<br/>
                   • Cancellations are only allowed before the assessment expires<br/>
@@ -448,10 +448,10 @@ const AssessmentActionPopup = ({
         <div className="flex items-center justify-end space-x-3 p-6">
           <button
             onClick={onClose}
-            className={`px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`px-4 py-2 text-gray-700 bg-white border border-custom-blue rounded-md hover:bg-white hover:text-custom-blue transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isLoading}
           >
-            Cancel
+            Close
           </button>
           {action && (
             <button
@@ -459,7 +459,7 @@ const AssessmentActionPopup = ({
               disabled={isLoading || selectedCandidates.length === 0}
               className={`px-4 py-2 text-white rounded-md transition-colors ${
                 action === 'extend'
-                  ? 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300'
+                  ? 'bg-custom-blue hover:bg-custom-blue/80 disabled:bg-custom-blue/50'
                   : 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
               }`}
             >
