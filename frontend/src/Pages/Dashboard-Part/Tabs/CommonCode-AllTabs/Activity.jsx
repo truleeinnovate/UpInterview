@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - fixed styles issues padding, spacing etc
+// v1.0.1 - Ashok - fixed spacing at activity sub tab and added optional chaining (ex. value?.value)
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 // v1.0.0 <--------------------------------------------------------------------------------
@@ -281,7 +282,7 @@ function Activity({ parentId }) {
       case "position_updated":
         return (
           <div className="space-y-3">
-            {fieldMessage && fieldMessage.length > 0 ? (
+            {fieldMessage && fieldMessage?.length > 0 ? (
               fieldMessage.map(({ fieldName, message }, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center space-x-2">
@@ -290,11 +291,11 @@ function Activity({ parentId }) {
                   </div>
                   <div className="flex items-center space-x-2 ml-6">
                     <span className="px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-600 min-w-[100px] text-center">
-                      {formatValue(fieldName, feed.history[index]?.oldValue)}
+                      {formatValue(fieldName, feed?.history[index]?.oldValue)}
                     </span>
                     <AiOutlineSync className="text-gray-400 flex-shrink-0" />
                     <span className="px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-900 font-medium min-w-[100px] text-center">
-                      {formatValue(fieldName, feed.history[index]?.newValue)}
+                      {formatValue(fieldName, feed?.history[index]?.newValue)}
                     </span>
                   </div>
                 </div>
@@ -313,28 +314,28 @@ function Activity({ parentId }) {
                 <AiOutlineCalendar className="text-gray-400" />
                 <span className="text-gray-600">Scheduled for:</span>
                 <span className="font-medium">
-                  {new Date(metadata.scheduledFor).toLocaleString()}
+                  {new Date(metadata?.scheduledFor)?.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
                 <AiOutlineClockCircle className="text-gray-400" />
                 <span className="text-gray-600">Duration:</span>
-                <span className="font-medium">{metadata.duration}</span>
+                <span className="font-medium">{metadata?.duration}</span>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <AiOutlineUser className="text-gray-400" />
               <span className="text-gray-600">Interviewer:</span>
-              <span className="font-medium">{metadata.interviewer}</span>
+              <span className="font-medium">{metadata?.interviewer}</span>
             </div>
             <div className="flex items-center space-x-2">
               <AiOutlineLink className="text-gray-400" />
               <span className="text-gray-600">Location:</span>
-              <span className="font-medium">{metadata.location}</span>
+              <span className="font-medium">{metadata?.location}</span>
             </div>
-            {metadata.notes && (
+            {metadata?.notes && (
               <div className="mt-2 p-3 bg-white rounded-md border border-gray-200">
-                <p className="text-sm text-gray-600">{metadata.notes}</p>
+                <p className="text-sm text-gray-600">{metadata?.notes}</p>
               </div>
             )}
           </div>
@@ -346,31 +347,33 @@ function Activity({ parentId }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <AiOutlineTag className="text-gray-400" />
-                <span className="text-gray-600">{metadata.assessmentName}</span>
+                <span className="text-gray-600">
+                  {metadata?.assessmentName}
+                </span>
               </div>
               <div className="flex items-center space-x-2">
                 <AiOutlineClockCircle className="text-gray-400" />
                 <span className="text-gray-600">Time spent:</span>
-                <span className="font-medium">{metadata.timeSpent}</span>
+                <span className="font-medium">{metadata?.timeSpent}</span>
               </div>
             </div>
             <div className="bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-lg font-semibold">Overall Score</span>
                 <span className="text-2xl font-bold text-green-600">
-                  {metadata.score}%
+                  {metadata?.score}%
                 </span>
               </div>
               <div className="space-y-3">
-                {metadata.breakdown &&
-                  Object.entries(metadata.breakdown).map(
+                {metadata?.breakdown &&
+                  Object.entries(metadata?.breakdown).map(
                     ([category, score]) => (
                       <div
                         key={category}
                         className="flex items-center justify-between"
                       >
                         <span className="text-gray-600 capitalize">
-                          {category.replace(/([A-Z])/g, " $1").trim()}
+                          {category?.replace(/([A-Z])/g, " $1").trim()}
                         </span>
                         <div className="flex items-center space-x-2">
                           <div className="w-48 h-2 bg-gray-200 rounded-full">
@@ -387,10 +390,10 @@ function Activity({ parentId }) {
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between text-sm text-gray-500">
                 <span>
-                  Questions: {metadata.completedQuestions}/
-                  {metadata.totalQuestions}
+                  Questions: {metadata?.completedQuestions}/
+                  {metadata?.totalQuestions}
                 </span>
-                <span>Completed: {formatDate(metadata.completedAt)}</span>
+                <span>Completed: {formatDate(metadata?.completedAt)}</span>
               </div>
             </div>
           </div>
@@ -407,6 +410,7 @@ function Activity({ parentId }) {
 
   // v1.0.0 ------------------------------------------------------------------------>
 
+  // v.0.1 <------------------------------------------------------------------------------------
   return (
     <div className="space-y-6 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -453,7 +457,7 @@ function Activity({ parentId }) {
                           setShowFilters(false);
                         }}
                       >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                        {type?.charAt(0)?.toUpperCase() + type?.slice(1)}
                       </button>
                     ))}
                   </div>
@@ -467,18 +471,20 @@ function Activity({ parentId }) {
       <div className="relative">
         <div className="absolute left-4 sm:left-8 top-0 bottom-0 w-px bg-gray-200" />
         <div className="space-y-6">
+          {/* v1.0.1 <--------------------------------------------------------------------- */}
           {loading ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-16 text-gray-500">
               Loading feeds...
             </div>
-          ) : error ? (
+          ) : // v1.0.1 ---------------------------------------------------------------------->
+          error ? (
             <div className="text-center py-8 text-red-500">{error}</div>
           ) : filteredFeeds.length > 0 ? (
-            filteredFeeds.map((feed) => {
-              const styles = getFeedTypeStyle(feed.feedType);
+            filteredFeeds?.map((feed) => {
+              const styles = getFeedTypeStyle(feed?.feedType);
               return (
                 <div
-                  key={feed._id}
+                  key={feed?._id}
                   className={`
                     relative pl-8 sm:pl-16 pr-8 sm:pr-4 py-4 rounded-lg border 
                     transition-all duration-200 overflow-hidden
@@ -490,31 +496,31 @@ function Activity({ parentId }) {
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                       <div className="flex items-center gap-4">
                         <div className="bg-white rounded-full p-2 shadow-sm">
-                          {getFeedIcon(feed.feedType, feed.action)}
+                          {getFeedIcon(feed.feedType, feed?.action)}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className={`font-medium ${styles.text} truncate`}>
-                            {feed.action.description}
+                            {feed?.action?.description}
                           </h4>
                           <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
                             <div className="flex items-center">
                               <AiOutlineUser className="mr-1 flex-shrink-0" />
                               <span className="truncate">
-                                {feed.metadata.changedBy || "System"}
+                                {feed?.metadata?.changedBy || "System"}
                               </span>
                             </div>
                             <span className="hidden sm:inline">•</span>
                             <time className="flex-shrink-0">
                               {formatDate(
-                                feed.metadata.changedAt || feed.createdAt
+                                feed?.metadata?.changedAt || feed?.createdAt
                               )}
                             </time>
                           </div>
                         </div>
                       </div>
                       <StatusBadge
-                        status={feed.feedType}
-                        text={capitalizeFirstLetter(feed.feedType)}
+                        status={feed?.feedType}
+                        text={capitalizeFirstLetter(feed?.feedType)}
                       />
                     </div>
 
@@ -537,6 +543,7 @@ function Activity({ parentId }) {
       </div>
     </div>
   );
+  // v.0.1 ------------------------------------------------------------------------------------>
 }
 
 export default Activity;

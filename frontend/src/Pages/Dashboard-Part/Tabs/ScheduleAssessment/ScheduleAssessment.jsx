@@ -305,16 +305,6 @@ const ScheduleAssessment = () => {
         },
       ]
       : []),
-    ...(effectivePermissions.Assessments?.Edit
-      ? [
-        {
-          key: 'edit',
-          label: 'Edit',
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          //onClick: handleEdit,
-        },
-      ]
-      : []),
     // <-------------------------------v1.0.3
     {
       key: 'extend',
