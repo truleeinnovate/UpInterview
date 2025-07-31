@@ -1,5 +1,5 @@
 // ----- v1.0.0 ----- Venkatesh----improve dropdown styles and placeholder text in small devices shown in ellipsis and border border-gray-300 added
-// v1.0.1 - Ashok - added useForward ref to implement scroll to first error functionali
+// v1.0.1 - Ashok - added useForward ref to implement scroll to first error functionality
 import { useState, useRef, useEffect, forwardRef } from 'react';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
