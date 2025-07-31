@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - add first letter capital function
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
@@ -277,22 +278,24 @@ const MockInterviewDetails = () => {
                       <StatusBadge status={mockinterview?.status} size="md" />
                     </span>
                   </h3>
+                  {/* v1.0.0 <--------------------------------------------------------------- */}
                   <p className="mt-1 max-w-2xl text-sm text-gray-500">
                     Created on{" "}
-                    {mockinterview?.createdDate
-                      ? new Date(mockinterview.createdDate).toLocaleDateString()
+                    {mockinterview?.createdAt
+                      ? new Date(mockinterview?.createdAt)?.toLocaleDateString()
                       : "N/A"}
                   </p>
+                  {/* v1.0.0 ---------------------------------------------------------------> */}
                 </div>
               </div>
 
               <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-1">
                   <div className="sm:col-span-1">
-                    <dt className="text-sm font-medium text-gray-500 flex items-center">
+                    {/* <dt className="text-sm font-medium text-gray-500 flex items-center">
                       <User className="h-5 w-5 mr-1" />
                       Candidate
-                    </dt>
+                    </dt> */}
                     <dd className="mt-1 text-sm text-gray-900">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center">
                         <div className="mr-0 mb-3 sm:mb-0 sm:mr-3">

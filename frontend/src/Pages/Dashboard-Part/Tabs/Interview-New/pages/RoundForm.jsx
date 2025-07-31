@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - removed extra status text
+// v1.0.1 - Ashok - Added scroll to first error functionality
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb";
 
@@ -28,6 +29,9 @@ import Loading from "../../../../../Components/Loading.js";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import LoadingButton from "../../../../../Components/LoadingButton";
+// v1.0.1 <----------------------------------------------------------------------------
+import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+// v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
 
 // Function to update start and end time
@@ -150,6 +154,15 @@ const RoundFormInterviews = () => {
   console.log("internalInterviewers", internalInterviewers);
   console.log("interviewerViewType", interviewerViewType);
   console.log("interviewerGroupName", interviewerGroupName);
+
+  // v1.0.1 <-------------------------------------------------------------------------
+  const fieldRefs = {
+    roundTitle: useRef(null),
+    interviewMode: useRef(null),
+    sequence: useRef(null),
+    assessmentTemplate: useRef(null),
+  };
+  // v1.0.1 ------------------------------------------------------------------------->
 
   const updateTimes = useCallback(
     (newDuration) => {
@@ -823,9 +836,31 @@ const RoundFormInterviews = () => {
           organization ? interviewer._id : interviewer.contactId
         );
       }
+      // v1.0.1 <---------------------------------------------------------------------------------
+      // const roundData = {
+      //   roundTitle,
+      //   interviewMode,
+      //   interviewerGroupName,
+      //   interviewerViewType,
+      //   sequence,
+      //   ...(roundTitle === "Assessment" && assessmentTemplate.assessmentId
+      //     ? { assessmentId: assessmentTemplate.assessmentId }
+      //     : {}),
+      //   instructions,
+      //   status,
+      //   ...(roundTitle !== "Assessment" && {
+      //     duration,
+      //     interviewerType: selectedInterviewType,
+      //     dateTime: combinedDateTime,
+      //     interviewType,
+      //   }),
+      //   ...(selectedInterviewType !== "external" && {
+      //     interviewers: formattedInterviewers || [],
+      //   }), // cleanedInterviewers
+      // };
 
       const roundData = {
-        roundTitle,
+        roundTitle: roundTitle === "Other" ? customRoundTitle : roundTitle,
         interviewMode,
         interviewerGroupName,
         interviewerViewType,
@@ -843,7 +878,7 @@ const RoundFormInterviews = () => {
         }),
         ...(selectedInterviewType !== "external" && {
           interviewers: formattedInterviewers || [],
-        }), // cleanedInterviewers
+        }),
       };
 
       console.log("Validating the round data");
@@ -853,8 +888,10 @@ const RoundFormInterviews = () => {
       console.log("Validation errors:", validationErrors);
       if (Object.keys(validationErrors).length > 0) {
         console.log("Validation errors found, stopping submission");
+        scrollToFirstError(validationErrors, fieldRefs);
         return;
       }
+      // v1.0.1 --------------------------------------------------------------------------------->
 
       console.log("roundData", roundData);
       const payload = isEditing
@@ -1029,6 +1066,14 @@ const RoundFormInterviews = () => {
     setExpandedSections({});
     setSectionQuestions({});
 
+    // v1.0.1 <----------------------------------------------------------------
+    // Clear the assessmentTemplate validation error
+    setErrors((prev) => ({
+      ...prev,
+      assessmentTemplate: "",
+    }));
+    // v1.0.1 ---------------------------------------------------------------->
+
     if (assessment._id) {
       setQuestionsLoading(true);
       fetchAssessmentQuestions(assessment._id).then(({ data, error }) => {
@@ -1045,6 +1090,7 @@ const RoundFormInterviews = () => {
     // fetchQuestionsForAssessment(assessment._id);
     setShowDropdown(false);
   };
+
   const toggleSection = async (sectionId, e) => {
     e.preventDefault(); // Prevent default behavior
     e.stopPropagation();
@@ -1127,10 +1173,12 @@ const RoundFormInterviews = () => {
                         htmlFor="roundTitle"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        Round Title *
+                        Round Title <span className="text-red-500">*</span>
                       </label>
+                      {/* v1.0.1 <------------------------------------------------------------------------ */}
                       {roundTitle === "Other" ? (
                         <input
+                          ref={fieldRefs.roundTitle}
                           type="text"
                           id="roundTitle"
                           name="roundTitle"
@@ -1144,28 +1192,49 @@ const RoundFormInterviews = () => {
                               setRoundTitle(""); // Reset if the input is left empty
                             }
                           }}
-                          className={`mt-1 block w-full border ${
-                            errors.roundTitle
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                          // className={`mt-1 block w-full border ${
+                          //   errors.roundTitle
+                          //     ? "border-red-500"
+                          //     : "border-gray-300"
+                          // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                            border ${
+                              errors.roundTitle
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
+                            }
+                            focus:outline-gray-300
+                          `}
                           // required
                           placeholder="Enter Custom Round Title"
                         />
                       ) : (
                         <select
+                          ref={fieldRefs.roundTitle}
                           id="roundTitle"
                           name="roundTitle"
                           value={roundTitle}
                           onChange={(e) => {
                             handleRoundTitleChange(e);
-                            setErrors({ ...errors, roundTitle: "" }); // Clear error on change
+                            setErrors({
+                              ...errors,
+                              roundTitle: "",
+                              interviewMode: "",
+                            }); // Clear error on change
                           }}
-                          className={`mt-1 block w-full border ${
-                            errors.roundTitle
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                          // className={`mt-1 block w-full border ${
+                          //   errors.roundTitle
+                          //     ? "border-red-500"
+                          //     : "border-gray-300"
+                          // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                            border ${
+                              errors.roundTitle
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
+                            }
+                            focus:outline-gray-300
+                          `}
                           // required
                         >
                           <option value="">Select Round Title</option>
@@ -1181,6 +1250,7 @@ const RoundFormInterviews = () => {
                           {errors.roundTitle}
                         </p>
                       )}
+                      {/* v1.0.1 ------------------------------------------------------------------------> */}
                     </div>
 
                     {/* Interview Mode */}
@@ -1189,9 +1259,11 @@ const RoundFormInterviews = () => {
                         htmlFor="mode"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        Interview Mode *
+                        Interview Mode <span className="text-red-500">*</span>
                       </label>
+                      {/* v1.0.1 <-------------------------------------------------------------------------------- */}
                       <select
+                        ref={fieldRefs.interviewMode}
                         id="interviewMode"
                         name="interviewMode"
                         value={interviewMode}
@@ -1199,11 +1271,19 @@ const RoundFormInterviews = () => {
                           setInterviewMode(e.target.value);
                           setErrors({ ...errors, interviewMode: "" }); // Clear error on change
                         }}
-                        className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
-                          errors.interviewMode
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
+                        // className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
+                        //   errors.interviewMode
+                        //     ? "border-red-500"
+                        //     : "border-gray-300"
+                        // } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.interviewMode
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
                         // required
                         disabled={roundTitle === "Assessment"}
                       >
@@ -1216,6 +1296,7 @@ const RoundFormInterviews = () => {
                           {errors.interviewMode}
                         </p>
                       )}
+                      {/* v1.0.1 --------------------------------------------------------------------------------> */}
                     </div>
                   </div>
 
@@ -1226,9 +1307,11 @@ const RoundFormInterviews = () => {
                         htmlFor="sequence"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        Sequence *
+                        Sequence <span className="text-red-500">*</span>
                       </label>
+                      {/* v1.0.1 <------------------------------------------------------------------------------------- */}
                       <input
+                        ref={fieldRefs.sequence}
                         type="number"
                         id="sequence"
                         name="sequence"
@@ -1238,9 +1321,17 @@ const RoundFormInterviews = () => {
                           setSequence(parseInt(e.target.value));
                           setErrors({ ...errors, sequence: "" }); // Clear error on change
                         }}
-                        className={`mt-1 block w-full border ${
-                          errors.sequence ? "border-red-500" : "border-gray-300"
-                        } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                        // className={`mt-1 block w-full border ${
+                        //   errors.sequence ? "border-red-500" : "border-gray-300"
+                        // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.sequence
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
                         // required
                       />
                       <p className="mt-1 text-xs text-gray-500">
@@ -1252,6 +1343,7 @@ const RoundFormInterviews = () => {
                           {errors.sequence}
                         </p>
                       )}
+                      {/* v1.0.1 ---------------------------------------------------------------------------------------> */}
                     </div>
 
                     {/* Status */}
@@ -1284,12 +1376,22 @@ const RoundFormInterviews = () => {
                             Assessment Template{" "}
                             <span className="text-red-500">*</span>
                           </label>
+                          {/* v1.0.1 <--------------------------------------------------------------------- */}
                           <div className="relative flex-1">
                             <input
+                              ref={fieldRefs.assessmentTemplate}
                               type="text"
                               name="assessmentTemplate"
                               id="assessmentTemplate"
-                              className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                              // className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                                border ${
+                                  errors.assessmentTemplate
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
+                                }
+                                focus:outline-gray-300
+                              `}
                               placeholder="Enter Assessment Template Name"
                               value={assessmentTemplate.assessmentName || ""}
                               onChange={(e) => {
@@ -1335,6 +1437,7 @@ const RoundFormInterviews = () => {
                               {errors.assessmentTemplate}
                             </p>
                           )}
+                          {/* v1.0.1 ---------------------------------------------------------------------> */}
                         </div>
 
                         {/* assessment questions */}

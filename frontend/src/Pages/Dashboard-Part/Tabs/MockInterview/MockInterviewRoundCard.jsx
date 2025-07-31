@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - added format date function
 import React, { useState } from "react";
 import {
   Calendar,
@@ -112,17 +113,19 @@ const MoockRoundCard = ({
                 </h4>
                 <div className="flex items-center text-sm text-gray-500 mb-1">
                   <Calendar className="h-4 w-4 mr-1" />
-                  <span>Scheduled: {round.dateTime.split(" ")[0]}</span>
+                  {/* v1.0.0 <------------------------------------------------------------------- */}
+                  <span>Scheduled: {formatDate(round?.dateTime?.split(" ")[0])}</span>
                   {isInstantInterview() && (
                     <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
                       Instant
                     </span>
                   )}
+                  {/* v1.0.0 <------------------------------------------------------------------- */}
                 </div>
                 {round.completedDate && (
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="h-4 w-4 mr-1" />
-                    <span>Completed: {formatDate(round.completedDate)}</span>
+                    <span>Completed: {formatDate(round?.completedDate)}</span>
                   </div>
                 )}
                 {round.duration && (

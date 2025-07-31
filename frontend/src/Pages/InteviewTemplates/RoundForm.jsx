@@ -2,6 +2,8 @@
 // v1.0.1  -  Ashraf  -  on saving both getting load
 // v1.0.2  -  Ashok   -  added scroll to first error functionality
 // v1.0.3  -  Ashok   - improved the code
+// v1.0.4  -  Ashok   - added scroll to top when Add new Round
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
@@ -93,6 +95,10 @@ function RoundFormTemplates() {
     instructions: useRef(null),
   };
   // v1.0.2 ------------------------------------------------------------>
+
+  // v1.0.4 <----------------------------------------------------------------
+  const formRef = useRef(null);
+  // v1.0.4 ---------------------------------------------------------------->
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -834,6 +840,11 @@ function RoundFormTemplates() {
       setActiveButton(null);
       // ------------------------------ v1.0.1 >
     }
+    // v1.0.4 <-------------------------------------------------------------
+    if (isAddNewRound) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    // v1.0.4 ------------------------------------------------------------->
   };
 
   const [showDropdown, setShowDropdown] = useState(false);
@@ -853,7 +864,12 @@ function RoundFormTemplates() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    // v1.0.4 <-------------------------------------------------------------------------
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100"
+      ref={formRef}
+    >
+      {/*  v1.0.4 ----------------------------------------------------------------------->  */}
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
         <Breadcrumb items={breadcrumbItems} />
 
