@@ -18,7 +18,7 @@ import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeybo
 import { useScheduleAssessments } from "../../../../apiHooks/useScheduleAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 // <-------------------------------v1.0.3
-import { Eye, Pencil, Calendar, AlertTriangle, RefreshCw } from "lucide-react";
+import { Eye, Pencil, Calendar, AlertTriangle, RefreshCw, Share2, Mail } from 'lucide-react';
 // ------------------------------v1.0.3 >
 import ScheduleAssessmentKanban from "./ScheduleAssessmentKanban.jsx";
 // <-------------------------------v1.0.3 >
@@ -52,7 +52,7 @@ const ScheduleAssessment = () => {
   // <---------------------- v1.0.3
   const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [selectedAction, setSelectedAction] = useState(""); // 'extend' or 'cancel'
+  const [selectedAction, setSelectedAction] = useState(''); // 'extend', 'cancel', or 'resend'
   // Function to check if action buttons should be shown based on schedule status
   const shouldShowActionButtons = (schedule) => {
     const status = schedule.status?.toLowerCase();
@@ -192,6 +192,13 @@ const ScheduleAssessment = () => {
 
   const handleCloseShare = () => {
     setIsShareOpen(false);
+  };
+
+  const handleResendClick = (schedule) => {
+    // Use the same logic as handleActionClick since candidate data is already available
+    handleActionClick(schedule, 'resend');
+    console.log();
+    
   };
 
   // <---------------------- v1.0.3
@@ -355,6 +362,13 @@ const ScheduleAssessment = () => {
       label: "Cancel",
       icon: <AlertTriangle className="w-4 h-4 text-red-600" />,
       onClick: (schedule) => handleActionClick(schedule, "cancel"),
+      show: shouldShowActionButtons,
+    },
+    {
+      key: "resend",
+      label: "Resend Link",
+      icon: <Mail className="w-4 h-4 text-green-600" />,
+      onClick: (schedule) => handleResendClick(schedule),
       show: shouldShowActionButtons,
     },
     // ------------------------------v1.0.3 >
@@ -579,13 +593,9 @@ const ScheduleAssessment = () => {
             setSelectedAction("");
           }}
           schedule={{
-            ...selectedSchedule,
-            assessmentId:
-              typeof selectedSchedule.assessmentId === "object"
-                ? selectedSchedule.assessmentId
-                : assessmentData?.find(
-                    (a) => a._id === selectedSchedule.assessmentId
-                  ),
+            ...selectedSchedule, 
+            assessmentId: selectedSchedule.assessmentId
+
           }}
           candidates={selectedSchedule.candidates || []}
           onSuccess={handleActionSuccess}
