@@ -1,5 +1,7 @@
 // v1.0.0  - mansoor - improved the error message
-import { useState, useRef, useEffect, useCallback } from "react";
+// v1.0.1  - Ashok - addded scroll to first error functionality
+
+import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import Cookies from "js-cookie";
 import { useNavigate, useParams } from "react-router-dom";
@@ -28,120 +30,255 @@ import LoadingButton from "../../../../Components/LoadingButton";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
 import { validateFile } from "../../../../utils/FileValidation/FileValidation.js";
+// v1.0.1 <-------------------------------------------------------------------------------
+import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+// v1.0.1 ------------------------------------------------------------------------------->
 
 // Reusable CustomDropdown Component
-const CustomDropdown = ({
-  label,
-  name,
-  value,
-  options,
-  onChange,
-  error,
-  placeholder,
-  optionKey,
-  optionValue,
-  disableSearch = false,
-  hideLabel = false,
-}) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const dropdownRef = useRef(null);
+// v1.0.1 <----------------------------------------------------------------
+// const CustomDropdown = ({
+//   label,
+//   name,
+//   value,
+//   options,
+//   onChange,
+//   error,
+//   placeholder,
+//   optionKey,
+//   optionValue,
+//   disableSearch = false,
+//   hideLabel = false,
+// }) => {
+//   const [showDropdown, setShowDropdown] = useState(false);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const dropdownRef = useRef(null);
 
-  const toggleDropdown = () => {
-    setShowDropdown(!showDropdown);
-  };
+//   const toggleDropdown = () => {
+//     setShowDropdown(!showDropdown);
+//   };
 
-  const handleSelect = (option) => {
-    const selectedValue = optionValue ? option[optionValue] : option;
-    onChange({ target: { name, value: selectedValue } });
-    setShowDropdown(false);
-    setSearchTerm("");
-  };
+//   const handleSelect = (option) => {
+//     const selectedValue = optionValue ? option[optionValue] : option;
+//     onChange({ target: { name, value: selectedValue } });
+//     setShowDropdown(false);
+//     setSearchTerm("");
+//   };
 
-  const filteredOptions = options?.filter((option) => {
-    const displayValue = optionKey ? option[optionKey] : option;
-    return displayValue
-      .toString()
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-  });
+//   const filteredOptions = options?.filter((option) => {
+//     const displayValue = optionKey ? option[optionKey] : option;
+//     return displayValue
+//       .toString()
+//       .toLowerCase()
+//       .includes(searchTerm.toLowerCase());
+//   });
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+//         setShowDropdown(false);
+//       }
+//     };
+
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     };
+//   }, []);
+
+//   return (
+//     <div ref={dropdownRef}>
+//       {!hideLabel && (
+//         <label
+//           htmlFor={name}
+//           className="block text-sm font-medium text-gray-700 mb-1"
+//         >
+//           {label} <span className="text-red-500">*</span>
+//         </label>
+//       )}
+//       <div className="relative">
+//         <input
+//           name={name}
+//           type="text"
+//           id={name}
+//           value={value}
+//           onClick={toggleDropdown}
+//           placeholder={placeholder}
+//           autoComplete="off"
+//           className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+//             error ? "border-red-500" : "border-gray-300"
+//           }`}
+//           readOnly
+//         />
+//         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+//           <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
+//         </div>
+//         {showDropdown && (
+//           <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+//             {!disableSearch && (
+//               <div className="border-b">
+//                 <div className="flex items-center border rounded px-2 py-1 m-2">
+//                   <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+//                   <input
+//                     type="text"
+//                     placeholder={`Search ${label}`}
+//                     value={searchTerm}
+//                     onChange={(e) => setSearchTerm(e.target.value)}
+//                     className="pl-8 focus:border-black focus:outline-none w-full"
+//                   />
+//                 </div>
+//               </div>
+//             )}
+//             {filteredOptions?.length > 0 ? (
+//               filteredOptions.map((option, index) => (
+//                 <div
+//                   key={option._id || index}
+//                   onClick={() => handleSelect(option)}
+//                   className="cursor-pointer hover:bg-gray-200 p-2"
+//                 >
+//                   {optionKey ? option[optionKey] : option}
+//                 </div>
+//               ))
+//             ) : (
+//               <div className="p-2 text-gray-500">No options found</div>
+//             )}
+//           </div>
+//         )}
+//       </div>
+//       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
+//     </div>
+//   );
+// };
+
+const CustomDropdown = forwardRef(
+  (
+    {
+      label,
+      name,
+      value,
+      options,
+      onChange,
+      error,
+      placeholder,
+      optionKey,
+      optionValue,
+      disableSearch = false,
+      hideLabel = false,
+    },
+    ref
+  ) => {
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef(null);
+
+    const toggleDropdown = () => {
+      setShowDropdown(!showDropdown);
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+    const handleSelect = (option) => {
+      const selectedValue = optionValue ? option[optionValue] : option;
+      onChange({ target: { name, value: selectedValue } });
+      setShowDropdown(false);
+      setSearchTerm("");
     };
-  }, []);
 
-  return (
-    <div ref={dropdownRef}>
-      {!hideLabel && (
-        <label
-          htmlFor={name}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          {label} <span className="text-red-500">*</span>
-        </label>
-      )}
-      <div className="relative">
-        <input
-          name={name}
-          type="text"
-          id={name}
-          value={value}
-          onClick={toggleDropdown}
-          placeholder={placeholder}
-          autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-            error ? "border-red-500" : "border-gray-300"
-          }`}
-          readOnly
-        />
-        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-          <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
-        </div>
-        {showDropdown && (
-          <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-            {!disableSearch && (
-              <div className="border-b">
-                <div className="flex items-center border rounded px-2 py-1 m-2">
-                  <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder={`Search ${label}`}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 focus:border-black focus:outline-none w-full"
-                  />
-                </div>
-              </div>
-            )}
-            {filteredOptions?.length > 0 ? (
-              filteredOptions.map((option, index) => (
-                <div
-                  key={option._id || index}
-                  onClick={() => handleSelect(option)}
-                  className="cursor-pointer hover:bg-gray-200 p-2"
-                >
-                  {optionKey ? option[optionKey] : option}
-                </div>
-              ))
-            ) : (
-              <div className="p-2 text-gray-500">No options found</div>
-            )}
-          </div>
+    const filteredOptions = options?.filter((option) => {
+      const displayValue = optionKey ? option[optionKey] : option;
+      return displayValue
+        .toString()
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+    });
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target)
+        ) {
+          setShowDropdown(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
+
+    return (
+      <div ref={dropdownRef}>
+        {!hideLabel && (
+          <label
+            htmlFor={name}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {label} <span className="text-red-500">*</span>
+          </label>
         )}
+        <div className="relative">
+          <input
+            ref={ref}
+            name={name}
+            type="text"
+            id={name}
+            value={value}
+            onClick={toggleDropdown}
+            placeholder={placeholder}
+            autoComplete="off"
+            // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+            //   error ? "border-red-500" : "border-gray-300"
+            // }`}
+            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+              border ${
+                error
+                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                  : "border-gray-300 focus:ring-red-300"
+              }
+              focus:outline-gray-300
+            `}
+            readOnly
+          />
+          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+            <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
+          </div>
+          {showDropdown && (
+            <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+              {!disableSearch && (
+                <div className="border-b">
+                  <div className="flex items-center border rounded px-2 py-1 m-2">
+                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder={`Search ${label}`}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 focus:border-black focus:outline-none w-full"
+                    />
+                  </div>
+                </div>
+              )}
+              {filteredOptions?.length > 0 ? (
+                filteredOptions.map((option, index) => (
+                  <div
+                    key={option._id || index}
+                    onClick={() => handleSelect(option)}
+                    className="cursor-pointer hover:bg-gray-200 p-2"
+                  >
+                    {optionKey ? option[optionKey] : option}
+                  </div>
+                ))
+              ) : (
+                <div className="p-2 text-gray-500">No options found</div>
+              )}
+            </div>
+          )}
+        </div>
+        {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
       </div>
-      {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
-    </div>
-  );
-};
+    );
+  }
+);
+// v1.0.1 ---------------------------------------------------------------->
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
 const parseCustomDateTime = (dateTimeStr) => {
@@ -221,6 +358,20 @@ const MockSchedulelater = () => {
   const organizationId = tokenPayload?.tenantId;
 
   const [showDropdownRole, setShowDropdownRole] = useState(false);
+
+  // v1.0.1 <-----------------------------------------------------------------------------
+  const fieldRefs = {
+    higherQualification: useRef(null),
+    technology: useRef(null),
+    currentExperience: useRef(null),
+    relevantExperience: useRef(null),
+    currentRole: useRef(null),
+    skills: useRef(null),
+    "rounds.roundTitle": useRef(null),
+    "rounds.interviewMode": useRef(null),
+  };
+
+  // v1.0.1 ---------------------------------------------------------------------------->
 
   const toggleDropdownRole = () => {
     setShowDropdownRole(!showDropdownRole);
@@ -409,6 +560,9 @@ const MockSchedulelater = () => {
     setErrors(newErrors);
 
     if (!formIsValid) {
+      // v1.0.1 <--------------------------------------------------------
+      scrollToFirstError(newErrors, fieldRefs);
+      // v1.0.1 -------------------------------------------------------->
       console.error("Form is not valid:", newErrors);
       console.groupEnd();
       return;
@@ -487,9 +641,11 @@ const MockSchedulelater = () => {
           let errorMessage = "Failed to save interview. Please try again.";
 
           if (error.response?.status === 500) {
-            errorMessage = "Server error. Please try again later or contact support.";
+            errorMessage =
+              "Server error. Please try again later or contact support.";
           } else if (error.response?.status === 400) {
-            errorMessage = "Invalid data. Please check your input and try again.";
+            errorMessage =
+              "Invalid data. Please check your input and try again.";
           }
 
           setErrors((prev) => ({
@@ -774,6 +930,9 @@ const MockSchedulelater = () => {
   const handleNext = () => {
     const { formIsValid, newErrors } = validatePage1(formData, entries);
     setErrors(newErrors);
+    // v1.0.1 <----------------------------------------------------------------
+    scrollToFirstError(newErrors, fieldRefs);
+    // v1.0.1 ---------------------------------------------------------------->
     if (formIsValid) {
       setCurrentPage(2);
     } else {
@@ -938,6 +1097,9 @@ const MockSchedulelater = () => {
                         </div>
                       </div>
                       <CustomDropdown
+                        // v1.0.1 <-----------------------------------------------------------------
+                        ref={fieldRefs.higherQualification}
+                        // v1.0.1 ----------------------------------------------------------------->
                         label="Higher Qualification"
                         name="HigherQualification"
                         value={formData.higherQualification}
@@ -960,17 +1122,28 @@ const MockSchedulelater = () => {
                         <div className="flex-grow relative">
                           <div className="relative">
                             <input
+                              // v.0.1 <--------------------------------------------------------
+                              ref={fieldRefs.technology}
+                              // v.0.1 -------------------------------------------------------->
                               value={formData.technology}
                               onClick={toggleDropdownTechnology}
                               name="technology"
                               type="text"
                               id="Technology"
                               readOnly
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
-                                errors.technology
-                                  ? "border-red-500 focus:ring-red-500"
-                                  : "border-gray-300"
-                              }`}
+                              // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+                              //   errors.technology
+                              //     ? "border-red-500 focus:ring-red-500"
+                              //     : "border-gray-300"
+                              // }`}
+                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                                border ${
+                                  errors.technology
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
+                                }
+                                focus:outline-gray-300
+                              `}
                             />
                             {errors.technology && (
                               <p className="text-red-500 text-sm mt-1">
@@ -1006,7 +1179,9 @@ const MockSchedulelater = () => {
                           </label>
                         </div>
                         <div className="flex-grow">
+                          {/* v1.0.0 <-------------------------------------------------------------- */}
                           <input
+                            ref={fieldRefs.currentExperience}
                             type="number"
                             name="currentExperience"
                             value={formData.currentExperience}
@@ -1016,17 +1191,26 @@ const MockSchedulelater = () => {
                             max="15"
                             autoComplete="off"
                             onKeyDown={handleExperienceKeyDown}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
-                              errors.currentExperience
-                                ? "border-red-500 focus:ring-red-500"
-                                : "border-gray-300"
-                            }`}
+                            // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+                            //   errors.currentExperience
+                            //     ? "border-red-500 focus:ring-red-500"
+                            //     : "border-gray-300"
+                            // }`}
+                            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                              border ${
+                                errors.currentExperience
+                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                  : "border-gray-300 focus:ring-red-300"
+                              }
+                              focus:outline-gray-300
+                            `}
                           />
                           {errors.currentExperience && (
                             <p className="text-red-500 text-sm mt-1">
                               {errors.currentExperience}
                             </p>
                           )}
+                          {/* v1.0.1 --------------------------------------------------------------> */}
                         </div>
                       </div>
                       <div>
@@ -1074,7 +1258,9 @@ const MockSchedulelater = () => {
                       </div>
                     </div>
                     <div>
+                      {/* v1.0.0 <---------------------------------------------------------------- */}
                       <SkillsField
+                        ref={fieldRefs.skills}
                         entries={entries}
                         errors={errors}
                         onAddSkill={(setEditingIndex) => {
@@ -1127,6 +1313,7 @@ const MockSchedulelater = () => {
                         skillpopupcancelbutton={skillpopupcancelbutton}
                         editingIndex={editingIndex}
                       />
+                      {/* v1.0.0 -------------------------------------------------------------------> */}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1211,16 +1398,26 @@ const MockSchedulelater = () => {
                         >
                           Round Title *
                         </label>
+                        {/* v1.0.0 <---------------------------------------------------------------------- */}
                         <input
+                          ref={fieldRefs["rounds.roundTitle"]}
                           id="rounds.roundTitle"
                           name="rounds.roundTitle"
                           value={formData.rounds.roundTitle}
                           onChange={handleChange}
-                          className={`mt-1 block w-full border ${
-                            errors["rounds.roundTitle"]
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                          // className={`mt-1 block w-full border ${
+                          //   errors["rounds.roundTitle"]
+                          //     ? "border-red-500"
+                          //     : "border-gray-300"
+                          // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                            border ${
+                              errors["rounds.roundTitle"]
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
+                            }
+                            focus:outline-gray-300
+                          `}
                           required
                         />
                         {errors["rounds.roundTitle"] && (
@@ -1228,6 +1425,7 @@ const MockSchedulelater = () => {
                             {errors["rounds.roundTitle"]}
                           </p>
                         )}
+                        {/* v1.0.0 ----------------------------------------------------------------------> */}
                       </div>
                       <div>
                         <label
@@ -1236,7 +1434,9 @@ const MockSchedulelater = () => {
                         >
                           Interview Mode *
                         </label>
+                        {/* v1.0.0 <----------------------------------------------------------------- */}
                         <select
+                          ref={fieldRefs["rounds.interviewMode"]}
                           id="rounds.interviewMode"
                           name="rounds.interviewMode"
                           value={formData.rounds.interviewMode}
@@ -1254,11 +1454,19 @@ const MockSchedulelater = () => {
                               [name]: value ? "" : "This field is required",
                             }));
                           }}
-                          className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
-                            errors.interviewMode
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
+                          // className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
+                          //   errors.interviewMode
+                          //     ? "border-red-500"
+                          //     : "border-gray-300"
+                          // } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
+                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                            border ${
+                              errors["rounds.interviewMode"]
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
+                            }
+                            focus:outline-gray-300
+                          `}
                           required
                         >
                           <option value="">Select Interview Mode</option>
@@ -1270,6 +1478,7 @@ const MockSchedulelater = () => {
                             {errors["rounds.interviewMode"]}
                           </p>
                         )}
+                        {/* v1.0.0 -----------------------------------------------------------------> */}
                       </div>
                     </div>
                     <div className="mb-4">
