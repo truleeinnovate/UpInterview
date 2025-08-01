@@ -52,7 +52,7 @@ const overallImpressionSchema = new mongoose.Schema({
 const feedbackSchema = new mongoose.Schema(
   {
     tenantId:String, // reference to  tenant
-    interviewId:String, // reference to interview session
+    interviewRoundId:String, // reference to interview session
     candidateId: String, //candidate information
     interviewerId:String, //interviewer information
     skills: [skillsSchema], //overall skill ratings

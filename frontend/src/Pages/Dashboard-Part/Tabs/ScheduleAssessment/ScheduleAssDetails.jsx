@@ -119,10 +119,10 @@ function ScheduleAssDetails() {
           "mx-auto": isFullScreen,
         })}
       >
-        <div className="px-4 pt-4 sm:p-6 flex justify-between items-center bg-white z-50">
+        <div className="px-4 pt-4 sm:p-6 flex justify-between items-center z-50">
           <div>
             <h2 className="text-lg font-semibold text-custom-blue">
-              Schedule / {schedule.scheduledAssessmentCode}
+            {schedule.scheduledAssessmentCode}
             </h2>
             {/* // <---------------------- v1.0.0 */}
             {/* {schedule.expiryAt && (

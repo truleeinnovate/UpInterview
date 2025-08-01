@@ -1,7 +1,14 @@
+// v1.0.0  -  Ashraf  -  extend limit changed to 5 days max
+// v1.0.1  -  Ashraf  -  added resend link functionality and if already extended and cancel show as disable
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Calendar, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { X, Calendar, AlertCircle, CheckCircle, Clock, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
+// <-------------------------------v1.0.1
+import axios from 'axios';
+import { config } from '../../../../../config.js';
+import Cookies from 'js-cookie';
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
 
 const AssessmentActionPopup = ({ 
   isOpen, 
@@ -9,13 +16,13 @@ const AssessmentActionPopup = ({
   schedule, 
   candidates, 
   onSuccess,
-  defaultAction = '' // 'extend' or 'cancel'
+  defaultAction = '' // 'extend', 'cancel', or 'resend'
 }) => {
   console.log('AssessmentActionPopup', candidates);
   const [action, setAction] = useState(defaultAction); // 'extend' or 'cancel'
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [extensionDays, setExtensionDays] = useState(1);
-  
+
   // Get the assessment template's linkExpiryDays for consistent extensions
   const getTemplateExtensionDays = useMemo(() => {
     if (schedule?.assessmentId?.linkExpiryDays) {
@@ -25,25 +32,33 @@ const AssessmentActionPopup = ({
   }, [schedule?.assessmentId?.linkExpiryDays]);
   const [selectAll, setSelectAll] = useState(false);
 
-  const { extendAssessment, cancelAssessment } = useAssessments();
+  const { extendAssessment, cancelAssessment, assessmentData } = useAssessments();
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
+  const organizationId = tokenPayload?.tenantId;
+  const [isResendLoading, setIsResendLoading] = useState(false);
 
 
 
-  // Filter candidates that can be acted upon based on business rules
-  const availableCandidates = useMemo(() => {
-    return candidates.filter(candidate => {
+  // Get all candidates and determine which ones can be acted upon
+  const allCandidates = useMemo(() => {
+    return candidates.map(candidate => {
       // Handle both candidate data structure and candidate assessment data structure
       const candidateData = candidate.candidateId || candidate;
       const assessmentData = candidate.candidateId ? candidate : null;
-      
+
       // Get status and expiry from the appropriate location
       const status = assessmentData ? assessmentData.status : candidateData.status;
-      const expiryDate = assessmentData?.expiryAt ? new Date(assessmentData.expiryAt) : 
-                        candidateData?.expiryAt ? new Date(candidateData.expiryAt) : null;
-      
+      const expiryDate = assessmentData?.expiryAt ? new Date(assessmentData.expiryAt) :
+        candidateData?.expiryAt ? new Date(candidateData.expiryAt) : null;
+
       const now = new Date();
       const isExpired = expiryDate && now > expiryDate;
-      
+
+      let canAct = false;
+      let reason = '';
+
       if (action === 'extend') {
         // Can extend if:
         // 1. Status is pending or in_progress
@@ -51,49 +66,97 @@ const AssessmentActionPopup = ({
         // 3. Not already extended (only 1 extension allowed)
         // 4. Within 24-72 hours before expiry (extension window)
         const validStatusForExtend = ['pending', 'in_progress'].includes(status);
-        
-        if (!validStatusForExtend || isExpired || status === 'extended') {
-          return false;
-        }
-        
-        // Check if within extension window (24-72 hours before expiry)
-        if (expiryDate) {
+
+        if (!validStatusForExtend) {
+          reason = 'Invalid status for extension';
+        } else if (isExpired) {
+          reason = 'Assessment expired';
+        } else if (status === 'extended') {
+          reason = 'Already extended';
+        } else if (expiryDate) {
           const timeUntilExpiry = expiryDate.getTime() - now.getTime();
           const hoursUntilExpiry = timeUntilExpiry / (1000 * 60 * 60);
-          
+
           // Allow extension only if within 24-72 hours before expiry
-          return hoursUntilExpiry >= 24 && hoursUntilExpiry <= 72;
+          if (hoursUntilExpiry < 24) {
+            reason = 'Too close to expiry';
+          } else if (hoursUntilExpiry > 72) {
+            reason = 'Too early for extension';
+          } else {
+            canAct = true;
+          }
+        } else {
+          reason = 'No expiry date';
         }
-        
-        return false;
       } else if (action === 'cancel') {
         // Can cancel if:
         // 1. Status is pending, in_progress, or extended (allow cancelling extended assessments)
         // 2. Not expired (cancellations only allowed before expiry)
         // 3. Not already cancelled (only 1 cancellation allowed)
         const validStatusForCancel = ['pending', 'in_progress', 'extended'].includes(status);
-        return validStatusForCancel && !isExpired && status !== 'cancelled';
+
+        if (!validStatusForCancel) {
+          reason = 'Invalid status for cancellation';
+        } else if (isExpired) {
+          reason = 'Assessment expired';
+        } else if (status === 'cancelled') {
+          reason = 'Already cancelled';
+        } else {
+          canAct = true;
+        }
+      } else if (action === 'resend') {
+        // Can resend link if:
+        // 1. Status is pending, in_progress, or extended
+        // 2. Not expired (can't resend to expired assessments)
+        // 3. Not completed (no need to resend to completed assessments)
+        // 4. Not cancelled (no need to resend to cancelled assessments)
+        const validStatusForResend = ['pending', 'in_progress', 'extended'].includes(status);
+
+        if (!validStatusForResend) {
+          reason = 'Invalid status for resend';
+        } else if (isExpired) {
+          reason = 'Assessment expired';
+        } else if (status === 'completed') {
+          reason = 'Assessment completed';
+        } else if (status === 'cancelled') {
+          reason = 'Assessment cancelled';
+        } else {
+          canAct = true;
+        }
       }
-      return false;
+
+      return {
+        ...candidate,
+        canAct,
+        reason,
+        status,
+        expiryDate,
+        isExpired
+      };
     });
   }, [candidates, action]);
+
+  // Get candidates that can be acted upon for select all functionality
+  const availableCandidates = useMemo(() => {
+    return allCandidates.filter(candidate => candidate.canAct);
+  }, [allCandidates]);
 
   // Helper function to format time until expiry
   const getTimeUntilExpiry = (expiryDate) => {
     if (!expiryDate) return 'No expiry date';
-    
+
     const now = new Date();
     const expiry = new Date(expiryDate);
     const timeDiff = expiry.getTime() - now.getTime();
-    
+
     if (timeDiff <= 0) {
       return 'Expired';
     }
-    
+
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (days > 0) {
       return `${days}d ${hours}h remaining`;
     } else if (hours > 0) {
@@ -106,12 +169,12 @@ const AssessmentActionPopup = ({
   // Helper function to check if candidate is in extension window
   const isInExtensionWindow = (expiryDate) => {
     if (!expiryDate) return false;
-    
+
     const now = new Date();
     const expiry = new Date(expiryDate);
     const timeDiff = expiry.getTime() - now.getTime();
     const hoursUntilExpiry = timeDiff / (1000 * 60 * 60);
-    
+
     return hoursUntilExpiry >= 24 && hoursUntilExpiry <= 72;
   };
 
@@ -128,10 +191,10 @@ const AssessmentActionPopup = ({
 
   const handleCandidateToggle = (candidateId) => {
     setSelectedCandidates(prev => {
-      const newSelection = prev.includes(candidateId) 
+      const newSelection = prev.includes(candidateId)
         ? prev.filter(id => id !== candidateId)
         : [...prev, candidateId];
-      
+
       // Update selectAll based on new selection
       const allSelected = availableCandidates.every(c => {
         const assessmentData = c.candidateId ? c : null;
@@ -141,7 +204,7 @@ const AssessmentActionPopup = ({
       if (allSelected !== selectAll) {
         setSelectAll(allSelected);
       }
-      
+
       return newSelection;
     });
   };
@@ -169,14 +232,62 @@ const AssessmentActionPopup = ({
         await cancelAssessment.mutateAsync({
           candidateAssessmentIds: selectedCandidates
         });
+            } else if (action === 'resend') {
+        setIsResendLoading(true);
+        
+        // Get the assessmentId from the schedule object
+        let assessmentId;
+        if (schedule?.assessmentId) {
+          if (typeof schedule.assessmentId === 'object') {
+            assessmentId = schedule.assessmentId._id;
+          } else {
+            assessmentId = schedule.assessmentId;
+          }
+        }
+        
+        console.log('Debug - Schedule object:', schedule);
+        console.log('Debug - AssessmentId being sent:', assessmentId);
+        
+        if (!assessmentId) {
+          throw new Error('Unable to determine assessment ID for resend operation');
+        }
+        
+        // Use the same API endpoint for both single and multiple candidates
+        const response = await axios.post(
+          `${config.REACT_APP_API_URL}/emails/resend-link`,
+          {
+            candidateAssessmentIds: selectedCandidates,
+            userId,
+            organizationId,
+            assessmentId,
+          }
+        );
+
+        if (response.data.success) {
+          if (selectedCandidates.length === 1) {
+            toast.success('Assessment link resent successfully');
+          } else {
+            const { summary } = response.data;
+            toast.success(`Resent links to ${summary.successful} out of ${summary.total} candidates`);
+          }
+          onSuccess?.();
+          onClose();
+        } else {
+          toast.error(response.data.message || 'Failed to resend links');
+        }
       }
-      
-      onSuccess?.();
-      // Close popup only after successful operation
-      onClose();
+
+      if (action !== 'resend') {
+        onSuccess?.();
+        // Close popup only after successful operation
+        onClose();
+      }
     } catch (error) {
-      // Error handling is done in the mutation
       console.error(`Error ${action}ing assessments:`, error);
+      if (action === 'resend') {
+        setIsResendLoading(false);
+        toast.error(error.response?.data?.message || 'Failed to resend assessment links');
+      }
       // Don't close popup on error - let user see the error and try again
     }
   };
@@ -204,7 +315,7 @@ const AssessmentActionPopup = ({
     }
   };
 
-  const isLoading = extendAssessment.isPending || cancelAssessment.isPending;
+  const isLoading = extendAssessment.isPending || cancelAssessment.isPending || isResendLoading;
 
   if (!isOpen) return null;
 
@@ -218,11 +329,13 @@ const AssessmentActionPopup = ({
               <Calendar className="w-6 h-6 text-custom-blue" />
             ) : action === 'cancel' ? (
               <AlertCircle className="w-6 h-6 text-red-600" />
+            ) : action === 'resend' ? (
+              <Mail className="w-6 h-6 text-green-600" />
             ) : (
               <Clock className="w-6 h-6 text-gray-600" />
             )}
             <h2 className="text-xl font-semibold text-gray-900">
-              {action === 'extend' ? 'Extend Assessment' : action === 'cancel' ? 'Cancel Assessment' : 'Select Action'}
+              {action === 'extend' ? 'Extend Assessment' : action === 'cancel' ? 'Cancel Assessment' : action === 'resend' ? 'Resend Assessment Links' : 'Select Action'}
             </h2>
           </div>
           <button
@@ -240,7 +353,7 @@ const AssessmentActionPopup = ({
           {!action && (
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Choose an action:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   onClick={() => setAction('extend')}
                   className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
@@ -261,6 +374,16 @@ const AssessmentActionPopup = ({
                     <div className="text-sm text-gray-500">Cancel selected candidate assessments</div>
                   </div>
                 </button>
+                <button
+                  onClick={() => setAction('resend')}
+                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors"
+                >
+                  <Mail className="w-5 h-5 text-green-600 mr-3" />
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Resend Links</div>
+                    <div className="text-sm text-gray-500">Resend assessment links to candidates</div>
+                  </div>
+                </button>
               </div>
             </div>
           )}
@@ -270,7 +393,7 @@ const AssessmentActionPopup = ({
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <h3 className="font-medium text-gray-900 mb-2">Schedule: {schedule?.order}</h3>
               <p className="text-sm text-gray-600">
-                Available candidates: {availableCandidates.length} of {candidates.length}
+                Available candidates: {availableCandidates.length} of {allCandidates.length}
               </p>
             </div>
           )}
@@ -286,7 +409,7 @@ const AssessmentActionPopup = ({
                   <input
                     type="number"
                     min="1"
-                    max="10"
+                    max="5"// v1.0.0  -  Ashraf  -  extend limit changed to 5 days max
                     value={extensionDays}
                     onChange={(e) => setExtensionDays(parseInt(e.target.value) || 1)}
                     className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -299,7 +422,21 @@ const AssessmentActionPopup = ({
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Uses assessment template's link expiry setting. One-time extension allowed only 24-72 hours before assessment expires.
+                Uses assessment template's link expiry setting. One-time extension allowed  before assessment expires.
+              </p>
+            </div>
+          )}
+          {action === 'cancel' && (
+            <div className="mb-6">
+              <p className="text-xs text-gray-500 mt-1">
+                Cancellations are only allowed before the assessment expires
+              </p>
+            </div>
+          )}
+          {action === 'resend' && (
+            <div className="mb-6">
+              <p className="text-xs text-gray-500 mt-1">
+                Resend links are only allowed before the assessment expires
               </p>
             </div>
           )}
@@ -336,40 +473,38 @@ const AssessmentActionPopup = ({
                 )}
               </div>
 
-              {availableCandidates.length === 0 ? (
+              {allCandidates.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>No candidates available for this action</p>
+                  <p>No candidates found</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {availableCandidates.map((candidate, index) => {
+                  {allCandidates.map((candidate, index) => {
                     // Handle both candidate data structure and candidate assessment data structure
                     const candidateData = candidate.candidateId || candidate;
                     const assessmentData = candidate.candidateId ? candidate : null;
-                    
+
                     // Get the appropriate ID for selection
                     const candidateId = assessmentData ? assessmentData._id : (candidateData.id || candidateData._id);
-                    
-                    // Get status and expiry from assessment data if available
-                    const status = assessmentData ? assessmentData.status : candidateData.status;
-                    const expiryDate = assessmentData?.expiryAt ? new Date(assessmentData.expiryAt) : 
-                                      candidateData?.expiryAt ? new Date(candidateData.expiryAt) : null;
-                    
-                    const timeUntilExpiry = getTimeUntilExpiry(expiryDate);
-                    const inExtensionWindow = action === 'extend' ? isInExtensionWindow(expiryDate) : false;
-                    
+
+                    const timeUntilExpiry = getTimeUntilExpiry(candidate.expiryDate);
+                    const inExtensionWindow = action === 'extend' ? isInExtensionWindow(candidate.expiryDate) : false;
+
                     return (
                       <label
                         key={candidateId || `${candidateData.Email}-${index}`}
-                        className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                        className={`flex items-center p-3 border border-gray-200 rounded-lg transition-colors ${candidate.canAct
+                            ? 'hover:bg-gray-50 cursor-pointer'
+                            : 'bg-gray-50 cursor-not-allowed opacity-60'
+                          }`}
                       >
                         <input
                           type="checkbox"
                           checked={selectedCandidates.includes(candidateId)}
-                          onChange={() => handleCandidateToggle(candidateId)}
+                          onChange={() => candidate.canAct && handleCandidateToggle(candidateId)}
                           className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue/80 mr-3"
-                          disabled={isLoading}
+                          disabled={isLoading || !candidate.canAct}
                         />
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
@@ -378,18 +513,19 @@ const AssessmentActionPopup = ({
                                 {candidateData.FirstName} {candidateData.LastName}
                               </div>
                               <div className="text-sm text-gray-500">{candidateData.Email}</div>
-                              {expiryDate && (
+                              {candidate.expiryDate && (
                                 <div className="text-xs text-gray-600 mt-1">
                                   <span className="font-medium">Expiry:</span> {timeUntilExpiry}
-                                  {action === 'extend' && inExtensionWindow && (
+                                  {action === 'extend' && inExtensionWindow && candidate.canAct && (
                                     <span className="ml-2 text-custom-blue font-medium">✓ Extension Window</span>
                                   )}
+
                                 </div>
                               )}
                             </div>
                             <div className="text-right">
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
-                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(candidate.status)}`}>
+                                {candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
                               </span>
                             </div>
                           </div>
@@ -402,46 +538,7 @@ const AssessmentActionPopup = ({
             </div>
           )}
 
-          {/* Status Legend */}
-          {action && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Status Legend:</h4>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center space-x-2">
-                  <span className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded-full"></span>
-                  <span>Pending</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-3 h-3 bg-purple-100 border border-purple-300 rounded-full"></span>
-                  <span>In Progress</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-3 h-3 bg-green-100 border border-green-300 rounded-full"></span>
-                  <span>Completed/Pass</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-3 h-3 bg-red-100 border border-red-300 rounded-full"></span>
-                  <span>Cancelled/Failed</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-3 h-3 bg-orange-100 border border-orange-300 rounded-full"></span>
-                  <span>Expired</span>
-                </div>
-              </div>
-              <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
-                <p className="text-xs text-custom-blue">
-                  <strong>Business Rules:</strong><br/>
-                  • Extensions are only allowed 24-72 hours before the assessment expires<br/>
-                  • Cancellations are only allowed before the assessment expires<br/>
-                  • Extension uses assessment template's link expiry setting (1-10 days)<br/>
-                  • Each assessment can be extended only once (1 chance)<br/>
-                  • Extended assessments can be cancelled (1 chance to cancel)<br/>
-                  • Already cancelled assessments cannot be modified<br/>
-                  • Expired assessments are automatically updated when candidates don't attend
-                </p>
-              </div>
-            </div>
-          )}
+
         </div>
 
         {/* Footer */}
@@ -457,11 +554,12 @@ const AssessmentActionPopup = ({
             <button
               onClick={handleSubmit}
               disabled={isLoading || selectedCandidates.length === 0}
-              className={`px-4 py-2 text-white rounded-md transition-colors ${
-                action === 'extend'
+              className={`px-4 py-2 text-white rounded-md transition-colors ${action === 'extend'
                   ? 'bg-custom-blue hover:bg-custom-blue/80 disabled:bg-custom-blue/50'
-                  : 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
-              }`}
+                  : action === 'cancel'
+                    ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
+                    : 'bg-green-600 hover:bg-green-700 disabled:bg-green-300'
+                }`}
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
@@ -469,7 +567,7 @@ const AssessmentActionPopup = ({
                   <span>Processing...</span>
                 </div>
               ) : (
-                `${action === 'extend' ? `Extend (${extensionDays}d)` : 'Cancel'} (${selectedCandidates.length})`
+                `${action === 'extend' ? `Extend (${extensionDays}d)` : action === 'cancel' ? 'Cancel' : 'Resend Links'} (${selectedCandidates.length})`
               )}
             </button>
           )}
@@ -478,5 +576,6 @@ const AssessmentActionPopup = ({
     </div>
   );
 };
+// ------------------------------v1.0.1 >
 
 export default AssessmentActionPopup; 

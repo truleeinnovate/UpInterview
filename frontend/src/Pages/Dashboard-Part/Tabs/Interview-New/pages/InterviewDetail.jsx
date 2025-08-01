@@ -528,22 +528,26 @@ const InterviewDetail = () => {
                     Interview Rounds
                   </h3>
                   <div className="flex space-x-2">
-                    <button
-                      onClick={toggleViewMode}
-                      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
-                    >
-                      {roundsViewMode === "vertical" ? (
-                        <>
-                          <LayoutGrid className="h-4 w-4 mr-1" />
-                          Horizontal View
-                        </>
-                      ) : (
-                        <>
-                          <LayoutList className="h-4 w-4 mr-1" />
-                          Vertical View
-                        </>
-                      )}
-                    </button>
+                    {/* v1.0.0 <------------------------------------------------------------------------------------------------------------- */}
+                    {interview?.rounds?.length > 1  && (
+                      <button
+                        onClick={toggleViewMode}
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                      >
+                        {roundsViewMode === "vertical" ? (
+                          <>
+                            <LayoutGrid className="h-4 w-4 mr-1" />
+                            Horizontal View
+                          </>
+                        ) : (
+                          <>
+                            <LayoutList className="h-4 w-4 mr-1" />
+                            Vertical View
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {/* v1.0.0 -------------------------------------------------------------------------------------------------------------> */}
 
                     {interview?.status === "In Progress" &&
                       allRoundsCompleted && (

@@ -5,6 +5,8 @@
 // v1.0.1 - Venkatesh - added custom university
 // v1.0.2 - Ashok - disabled the scroll conditionally based on the isModalOpen state and added scroll to top logic after form submission
 // v1.0.3 - Ashok - Added navigating to invalid fields after form submission and removed form outline
+// v1.0.4 - Ashok - improved outline and border when errors in fields
+
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect, forwardRef } from "react";
 import Modal from "react-modal";
@@ -225,9 +227,19 @@ const CustomDropdown = forwardRef(
             onClick={toggleDropdown}
             placeholder={placeholder}
             autoComplete="off"
-            className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-              error ? "border-red-500" : "border-gray-300"
-            }`}
+            // v1.0.4 <-------------------------------------------------------------------------------------------------------------------
+            // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+            //   error ? "border-red-500" : "border-gray-300"
+            // }`}
+            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+              border ${
+                error
+                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                  : "border-gray-300 focus:ring-red-300"
+              }
+              focus:outline-gray-300
+            `}
+            // v1.0.4 ------------------------------------------------------------------------------------------------------------------->
             readOnly
           />
           <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -934,7 +946,9 @@ const AddCandidateForm = ({
           )}
         >
           {/* v1.0.2 <------------------------------------------------------------------ */}
-          <div className="p-6">
+          {/* v1.0.4 <----------------------------------------------------------------------------------- */}
+          <div className="p-6" ref={formRef}>
+            {/* v1.0.4 ----------------------------------------------------------------------------------> */}
             {/* v1.0.2 ------------------------------------------------------------------> */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-custom-blue">
@@ -1152,9 +1166,19 @@ const AddCandidateForm = ({
                     name="LastName"
                     value={formData.LastName}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
-                      errors.LastName && "border-red-500"
-                    }`}
+                    // v1.0.4 <---------------------------------------------------------------------------------------------------------------------------
+                    // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                    //   errors.LastName && "border-red-500"
+                    // }`}
+                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${
+                        errors.LastName
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
+                    // v1.0.4 --------------------------------------------------------------------------------------------------------------------------->
                     placeholder="Enter Last Name"
                   />
                   {errors.LastName && (
@@ -1210,9 +1234,19 @@ const AddCandidateForm = ({
                     name="Email"
                     value={formData.Email}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${
-                      errors.Email && "border-red-500"
-                    }`}
+                    // v1.0.4 <----------------------------------------------------------------------------------------------------------------------
+                    // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${
+                    //   errors.Email && "border-red-500"
+                    // }`}
+                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${
+                        errors.Email
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
+                    // v1.0.4 <---------------------------------------------------------------------------------------------------------------------->
                     placeholder="Enter Email Address"
                   />
                   {errors.Email && (
@@ -1258,9 +1292,19 @@ const AddCandidateForm = ({
                           }
                         }}
                         maxLength={10}
-                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
-                          errors.Phone && "border-red-500"
-                        }`}
+                        // v1.0.4 <-------------------------------------------------------------------------------------------------------------------------
+                        // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                        //   errors.Phone && "border-red-500"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.Phone
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
+                        // v1.0.4 ------------------------------------------------------------------------------------------------------------------------->
                         placeholder="Enter Phone Number"
                       />
 
@@ -1311,11 +1355,21 @@ const AddCandidateForm = ({
                         }
                         placeholder="Select a University/College"
                         autoComplete="off"
-                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                          errors.UniversityCollege
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        }`}
+                        // v1.0.4 <-----------------------------------------------------------------------------------------------------------------
+                        // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                        //   errors.UniversityCollege
+                        //     ? "border-red-500"
+                        //     : "border-gray-300"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.UniversityCollege
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
+                        // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
                         readOnly
                       />
                       <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -1397,11 +1451,21 @@ const AddCandidateForm = ({
                             }));
                           }
                         }}
-                        className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                          errors.UniversityCollege
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        }`}
+                        // v1.0.4 <--------------------------------------------------------------------------------------------------------------------
+                        // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                        //   errors.UniversityCollege
+                        //     ? "border-red-500"
+                        //     : "border-gray-300"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.UniversityCollege
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
+                        // v1.0.4 -------------------------------------------------------------------------------------------------------------------->
                         placeholder="Enter custom university/college name"
                       />
                       <button
@@ -1458,11 +1522,21 @@ const AddCandidateForm = ({
                     max="15"
                     value={formData.CurrentExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                      errors.CurrentExperience
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
+                    // v1.0.4 <-----------------------------------------------------------------------------------------------------------------
+                    // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                    //   errors.CurrentExperience
+                    //     ? "border-red-500"
+                    //     : "border-gray-300"
+                    // }`}
+                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${
+                        errors.CurrentExperience
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
+                    // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
                     placeholder="Enter Current Experience"
                   />
                   {errors.CurrentExperience && (
@@ -1490,11 +1564,21 @@ const AddCandidateForm = ({
                     max="15"
                     value={formData.RelevantExperience}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                      errors.RelevantExperience
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
+                    // v1.0.4 <--------------------------------------------------------------------------------------------------------
+                    // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                    //   errors.RelevantExperience
+                    //     ? "border-red-500"
+                    //     : "border-gray-300"
+                    // }`}
+                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${
+                        errors.RelevantExperience
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
+                    // v1.0.4 -------------------------------------------------------------------------------------------------------->
                     placeholder="Enter Relevant Experience"
                   />
                   {errors.RelevantExperience && (
@@ -1527,11 +1611,21 @@ const AddCandidateForm = ({
                       onChange={handleChange}
                       placeholder="Select Current Role"
                       autoComplete="off"
-                      className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                        errors.CurrentRole
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      }`}
+                      // v1.0.4 <----------------------------------------------------------------------------------------------------------
+                      // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                      //   errors.CurrentRole
+                      //     ? "border-red-500"
+                      //     : "border-gray-300"
+                      // }`}
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.CurrentRole
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 ---------------------------------------------------------------------------------------------------------->
                       readOnly
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">

@@ -1,4 +1,6 @@
 // v1.0.0  -  Ashraf  -  assessment to assesment templates added in fileds
+// v1.0.1  -  Ashok   -  Added scroll to first error functionality
+
 import React, { useEffect, useRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { ReactComponent as CgInfo } from "../../../../../icons/CgInfo.svg";
@@ -53,6 +55,9 @@ const BasicDetailsTab = ({
   setShowDropdownDuration,
   positions,
   errors,
+  // v1.0.1 <----------------------------------------
+  fieldRefs,
+  // v1.0.1 <----------------------------------------
 }) => {
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -75,11 +80,16 @@ const BasicDetailsTab = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleClickOutside = (event) => {
       if (
-        (linkExpiryRef.current && !linkExpiryRef.current.contains(event.target)) &&
-        (assessmentTypeRef.current && !assessmentTypeRef.current.contains(event.target)) &&
-        (positionRef.current && !positionRef.current.contains(event.target)) &&
-        (difficultyRef.current && !difficultyRef.current.contains(event.target)) &&
-        (durationRef.current && !durationRef.current.contains(event.target))
+        linkExpiryRef.current &&
+        !linkExpiryRef.current.contains(event.target) &&
+        assessmentTypeRef.current &&
+        !assessmentTypeRef.current.contains(event.target) &&
+        positionRef.current &&
+        !positionRef.current.contains(event.target) &&
+        difficultyRef.current &&
+        !difficultyRef.current.contains(event.target) &&
+        durationRef.current &&
+        !durationRef.current.contains(event.target)
       ) {
         closeAllDropdowns();
       }
@@ -119,10 +129,12 @@ const BasicDetailsTab = ({
   return (
     <div>
       <form>
-      {/* // <---------------------- v1.0.0 */}
-      
+        {/* // <---------------------- v1.0.0 */}
+
         <div className="space-y-6 px-12">
-          <div className="font-semibold text-xl mb-5">Assessment Template Details:</div>
+          <div className="font-semibold text-xl mb-5">
+            Assessment Template Details:
+          </div>
           {/* // <---------------------- v1.0.0 */}
 
           {/* Assessment Name and Type */}
@@ -138,6 +150,8 @@ const BasicDetailsTab = ({
               {/* // <---------------------- v1.0.0 */}
               <div className="mt-1">
                 <input
+                  // v1.0.1 <---------------------------------------------------------------------
+                  ref={fieldRefs.AssessmentTitle}
                   type="text"
                   name="AssessmentTitle"
                   id="AssessmentTitle"
@@ -148,15 +162,27 @@ const BasicDetailsTab = ({
                   }
                   placeholder="Enter Assessment Name"
                   autoComplete="off"
-                  className={`block w-full border ${errors.AssessmentTitle ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  // className={`block w-full border ${
+                  //   errors.AssessmentTitle
+                  //     ? "border-red-500"
+                  //     : "border-gray-300"
+                  // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                    border ${
+                      errors.AssessmentTitle
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
+                    }
+                    focus:outline-gray-300
+                  `}
                 />
+                {/* v1.0.1 <---------------------------------------------------------------------- */}
                 {formData?.AssessmentTitle?.length >=
                   assessmentTitleLimit * 0.75 && (
-                    <div className="text-right text-xs text-gray-500">
-                      {formData?.AssessmentTitle?.length}/{assessmentTitleLimit}
-                    </div>
-                  )}
+                  <div className="text-right text-xs text-gray-500">
+                    {formData?.AssessmentTitle?.length}/{assessmentTitleLimit}
+                  </div>
+                )}
                 {errors.AssessmentTitle && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.AssessmentTitle}
@@ -164,7 +190,6 @@ const BasicDetailsTab = ({
                 )}
               </div>
             </div>
-
 
             <div>
               <label
@@ -174,7 +199,9 @@ const BasicDetailsTab = ({
                 No. of Questions <span className="text-red-500">*</span>
               </label>
               <div className="mt-1">
+                {/* v1.0.1 <----------------------------------------------------------------------------- */}
                 <input
+                  ref={fieldRefs.NumberOfQuestions}
                   type="number"
                   name="NumberOfQuestions"
                   value={formData.NumberOfQuestions}
@@ -185,10 +212,22 @@ const BasicDetailsTab = ({
                   step="1"
                   autoComplete="off"
                   placeholder="Enter Number of Questions"
-                  className={`block w-full border ${errors.NumberOfQuestions ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  // className={`block w-full border ${
+                  //   errors.NumberOfQuestions
+                  //     ? "border-red-500"
+                  //     : "border-gray-300"
+                  // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                    border ${
+                      errors.NumberOfQuestions
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
+                    }
+                    focus:outline-gray-300
+                  `}
                   onKeyDown={(e) => e.preventDefault()} // 👈 Prevent typing
                 />
+                {/* v1.0.1 -----------------------------------------------------------------------------> */}
 
                 {errors.NumberOfQuestions && (
                   <p className="text-red-500 text-sm mt-1">
@@ -317,17 +356,25 @@ const BasicDetailsTab = ({
                   <CgInfo className="w-4 h-4" />
                 </button>
                 {showMessage && (
-                  <div onClick={() => setShowMessage(false)} className="absolute mt-6 ml-0 max-w-xs bg-white text-gray-700 text-sm border border-gray-200 rounded-md p-2 shadow-lg z-10 cursor-pointer">
-                    Depending on the position, we can offer sections with tailored questions.
+                  <div
+                    onClick={() => setShowMessage(false)}
+                    className="absolute mt-6 ml-0 max-w-xs bg-white text-gray-700 text-sm border border-gray-200 rounded-md p-2 shadow-lg z-10 cursor-pointer"
+                  >
+                    Depending on the position, we can offer sections with
+                    tailored questions.
                   </div>
                 )}
               </div>
 
               <div className="mt-1 relative">
                 <div
-                  className={`relative w-full cursor-default rounded-md border ${errors.Position ? 'border-red-500' : 'border-gray-300'
-                    } bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 ${errors.Position ? 'focus:ring-red-500' : 'focus:ring-blue-500'
-                    } sm:text-sm min-h-[42px] flex items-center`}
+                  className={`relative w-full cursor-default rounded-md border ${
+                    errors.Position ? "border-red-500" : "border-gray-300"
+                  } bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 ${
+                    errors.Position
+                      ? "focus:ring-red-500"
+                      : "focus:ring-blue-500"
+                  } sm:text-sm min-h-[42px] flex items-center`}
                   onClick={modifiedTogglePosition}
                   aria-haspopup="listbox"
                   aria-expanded={showDropdownPosition}
@@ -346,8 +393,17 @@ const BasicDetailsTab = ({
                           aria-label="Remove selection"
                         >
                           <span className="sr-only">Remove</span>
-                          <svg className="h-2.5 w-2.5" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                            <path strokeLinecap="round" strokeWidth="1.5" d="M1 1l6 6m0-6L1 7" />
+                          <svg
+                            className="h-2.5 w-2.5"
+                            stroke="currentColor"
+                            fill="none"
+                            viewBox="0 0 8 8"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeWidth="1.5"
+                              d="M1 1l6 6m0-6L1 7"
+                            />
                           </svg>
                         </button>
                       </span>
@@ -356,18 +412,25 @@ const BasicDetailsTab = ({
                     <span className="text-gray-500">Select Position</span>
                   )}
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <MdArrowDropDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <MdArrowDropDown
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
                   </span>
                 </div>
 
                 {showDropdownPosition && (
                   <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-60 overflow-auto focus:outline-none sm:text-sm">
                     <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-2">
-                      <p className="font-medium text-gray-700 text-sm">Recent Positions</p>
+                      <p className="font-medium text-gray-700 text-sm">
+                        Recent Positions
+                      </p>
                     </div>
                     <ul>
                       {positions.length === 0 ? (
-                        <div className="text-gray-500 py-2 px-4">No recent positions found</div>
+                        <div className="text-gray-500 py-2 px-4">
+                          No recent positions found
+                        </div>
                       ) : (
                         positions.map((position) => (
                           <li
@@ -380,7 +443,9 @@ const BasicDetailsTab = ({
                             }}
                           >
                             <div className="flex items-center">
-                              <span className="ml-3 block truncate">{position.title}</span>
+                              <span className="ml-3 block truncate">
+                                {position.title}
+                              </span>
                             </div>
                           </li>
                         ))
@@ -414,13 +479,28 @@ const BasicDetailsTab = ({
                 Difficulty Level <span className="text-red-500">*</span>
               </label>
               <div className="relative mt-1">
+                {/* v1.0.1 <---------------------------------------------------------------------- */}
                 <div
-                  className={`flex items-center border ${errors.DifficultyLevel ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  ref={fieldRefs.DifficultyLevel}
+                  // className={`flex items-center border ${
+                  //   errors.DifficultyLevel
+                  //     ? "border-red-500"
+                  //     : "border-gray-300"
+                  // } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  className={`mt-1 flex items-center w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                    border ${
+                      errors.DifficultyLevel
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
+                    }
+                    focus:outline-gray-300
+                  `}
                   onClick={modifiedToggleDifficulty}
                 >
                   {selectedDifficulty || (
-                    <span className="text-gray-400">Select Difficulty Level</span>
+                    <span className="text-gray-400">
+                      Select Difficulty Level
+                    </span>
                   )}
                   <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
                 </div>
@@ -443,6 +523,7 @@ const BasicDetailsTab = ({
                   </p>
                 )}
               </div>
+              {/* v1.0.1 <---------------------------------------------------------------------- */}
             </div>
           </div>
 
@@ -458,8 +539,9 @@ const BasicDetailsTab = ({
               </label>
               <div className="relative mt-1">
                 <div
-                  className={`flex items-center border ${errors.Duration ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  className={`flex items-center border ${
+                    errors.Duration ? "border-red-500" : "border-gray-300"
+                  } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
                   onClick={modifiedToggleDuration}
                 >
                   {selectedDuration || (
@@ -481,9 +563,7 @@ const BasicDetailsTab = ({
                   </div>
                 )}
                 {errors.Duration && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.Duration}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.Duration}</p>
                 )}
               </div>
             </div>
@@ -513,7 +593,6 @@ const BasicDetailsTab = ({
                 )}
               </div>
             </div>
-
           </div>
 
           {/* Link Expiry Days */}
@@ -527,8 +606,9 @@ const BasicDetailsTab = ({
               </label>
               <div className="relative mt-1">
                 <div
-                  className={`flex items-center border ${errors.LinkExpiryDays ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  className={`flex items-center border ${
+                    errors.LinkExpiryDays ? "border-red-500" : "border-gray-300"
+                  } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
                   onClick={modifiedToggleLinkExpiry}
                 >
                   {linkExpiryDays || (
@@ -569,7 +649,6 @@ const BasicDetailsTab = ({
             </div>
             <div></div> {/* Empty div to maintain grid structure */}
           </div>
-
         </div>
       </form>
 

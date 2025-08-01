@@ -1,6 +1,9 @@
 // v1.0.0  -  Ashraf  -  fixed loops issues
 // v1.0.1  -  Ashraf  -  on saving both getting load
 // v1.0.2  -  Ashok   -  added scroll to first error functionality
+// v1.0.3  -  Ashok   - improved the code
+// v1.0.4  -  Ashok   - added scroll to top when Add new Round
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
@@ -84,12 +87,18 @@ function RoundFormTemplates() {
   // v1.0.2 <------------------------------------------------------------
   const fieldRefs = {
     roundTitle: useRef(null),
+    customRoundTitle: useRef(null),
     interviewMode: useRef(null),
     interviewerType: useRef(null),
+    assessmentTemplate: useRef(null),
     questions: useRef(null),
     instructions: useRef(null),
   };
   // v1.0.2 ------------------------------------------------------------>
+
+  // v1.0.4 <----------------------------------------------------------------
+  const formRef = useRef(null);
+  // v1.0.4 ---------------------------------------------------------------->
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -831,6 +840,11 @@ function RoundFormTemplates() {
       setActiveButton(null);
       // ------------------------------ v1.0.1 >
     }
+    // v1.0.4 <-------------------------------------------------------------
+    if (isAddNewRound) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    // v1.0.4 ------------------------------------------------------------->
   };
 
   const [showDropdown, setShowDropdown] = useState(false);
@@ -850,7 +864,12 @@ function RoundFormTemplates() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    // v1.0.4 <-------------------------------------------------------------------------
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100"
+      ref={formRef}
+    >
+      {/*  v1.0.4 ----------------------------------------------------------------------->  */}
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
         <Breadcrumb items={breadcrumbItems} />
 
@@ -895,8 +914,16 @@ function RoundFormTemplates() {
                         clearError("roundTitle");
                       }
                     }}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
+                    // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
                     // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-0 focus:border-gray-400 sm:text-sm"
+                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${
+                        errors.roundTitle
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
                     required
                     placeholder="Enter Custom Round Title"
                   />
@@ -921,7 +948,7 @@ function RoundFormTemplates() {
                       border ${
                         errors.roundTitle
                           ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-indigo-500"
+                          : "border-gray-300 focus:ring-red-300"
                       }
                       focus:outline-gray-300
                     `}
@@ -984,7 +1011,7 @@ function RoundFormTemplates() {
                     border ${
                       errors.interviewMode
                         ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-indigo-500"
+                        : "border-gray-300 focus:ring-red-300"
                     }
                     focus:outline-gray-300
                   `}
@@ -1076,16 +1103,26 @@ function RoundFormTemplates() {
                   >
                     Assessment Template <span className="text-red-500">*</span>
                   </label>
+                  {/* v1.0.0 <----------------------------------------------------------------------- */}
                   <div className="relative flex-1" ref={dropdownRef}>
                     <input
+                      ref={fieldRefs.assessmentTemplate}
                       type="text"
                       name="assessmentTemplate"
                       id="assessmentTemplate"
-                      className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none sm:text-sm ${
-                        errors.assessmentTemplate
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      }`}
+                      // className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none sm:text-sm ${
+                      //   errors.assessmentTemplate
+                      //     ? "border-red-500"
+                      //     : "border-gray-300"
+                      // }`}
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.assessmentTemplate
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
                       placeholder="Enter Assessment Template Name"
                       value={formData.assessmentTemplate?.assessmentName || ""}
                       onChange={(e) =>
@@ -1128,6 +1165,7 @@ function RoundFormTemplates() {
                       {errors.assessmentTemplate}
                     </p>
                   )}
+                  {/* v1.0.0 --------------------------------------------------------------------------> */}
                 </div>
               )}
             </div>
@@ -1742,24 +1780,39 @@ function RoundFormTemplates() {
                 value={formData.instructions}
                 id="instructions"
                 name="instructions"
-                onChange={(e) =>
+                // v1.0.3 <-------------------------------------------------------------------------------------------------------------------
+                // onChange={(e) =>
+                //   setFormData((prev) => ({
+                //     ...prev,
+                //     instructions: e.target.value,
+                //   }))
+                // }
+                onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
                     instructions: e.target.value,
-                  }))
-                }
+                  }));
+                  clearError("instructions");
+                }}
                 // className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 sm:text-sm h-64 ${
                 //   errors.instructions ? "border-red-500" : "border-gray-300"
                 // }`}
-                className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 sm:text-sm h-64
-                  ${
+                // className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 sm:text-sm h-64
+                //   ${
+                //     errors.instructions
+                //       ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                //       : "border-gray-300 focus:ring-indigo-500"
+                //   }
+                //   focus:outline-gray-300
+                // `}
+                className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                  border ${
                     errors.instructions
                       ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                      : "border-gray-300 focus:ring-indigo-500"
+                      : "border-gray-300 focus:ring-red-300"
                   }
                   focus:outline-gray-300
                 `}
-                //  v1.0.3 <---------------------------------------------------------------------------->
                 placeholder="Enter round instructions..."
                 rows="10"
                 minLength={50}
@@ -1784,10 +1837,14 @@ function RoundFormTemplates() {
                   {formData.instructions.length}/1000
                 </p>
               </div>
+              {/*  v1.0.3 --------------------------------------------------------------------------------------------------------------> */}
             </div>
 
             <div className="flex justify-end gap-4 p-6  rounded-b-lg">
               <Button
+                // v1.0.2 <------------------------------------------------------------------
+                className="border border-custom-blue"
+                // v1.0.2 ------------------------------------------------------------------>
                 variant="outline"
                 onClick={() => navigate(`/interview-templates/${id}`)}
               >
