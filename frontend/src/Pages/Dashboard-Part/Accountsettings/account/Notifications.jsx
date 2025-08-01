@@ -1,8 +1,17 @@
 import { BellIcon, CheckIcon, CreditCardIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import { recentNotifications,notificationPreferences } from '../mockData/notificationsData'
+import { usePermissions } from '../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../utils/permissionUtils';
 
+const NotificationsDetails = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
 
-export function NotificationsDetails() {
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("NotificationsSettings")) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Notifications</h2>
@@ -20,7 +29,7 @@ export function NotificationsDetails() {
                     <span className="capitalize">{type.split(/(?=[A-Z])/).join(' ')}</span>
                     <button
                       className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                        enabled ? 'bg-blue-600' : 'bg-gray-200'
+                        enabled ? 'bg-custom-blue' : 'bg-gray-200'
                       }`}
                     >
                       <span
@@ -43,7 +52,7 @@ export function NotificationsDetails() {
         <div className="space-y-4">
           {recentNotifications.map(notification => (
             <div key={notification.id} className="flex items-start space-x-4 border-b pb-4 last:border-b-0">
-              {notification.type === 'interview' && <BellIcon className="h-6 w-6 text-blue-500" />}
+              {notification.type === 'interview' && <BellIcon className="h-6 w-6 text-custom-blue" />}
               {notification.type === 'assessment' && <CheckIcon className="h-6 w-6 text-green-500" />}
               {notification.type === 'billing' && <CreditCardIcon className="h-6 w-6 text-purple-500" />}
               {notification.type === 'security' && <ShieldCheckIcon className="h-6 w-6 text-red-500" />}
@@ -51,7 +60,7 @@ export function NotificationsDetails() {
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">{notification.title}</h4>
                   {!notification.read && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                    <span className="px-2 py-1 bg-blue-100 text-custom-blue rounded-full text-xs">
                       New
                     </span>
                   )}
@@ -68,3 +77,5 @@ export function NotificationsDetails() {
     </div>
   )
 }
+
+export default NotificationsDetails

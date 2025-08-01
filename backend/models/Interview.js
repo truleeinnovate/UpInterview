@@ -1,3 +1,5 @@
+// v1.0.0  -  Ashraf  -  fixed interview code unique issue
+
 
 const mongoose = require('mongoose');
 
@@ -7,16 +9,16 @@ const interviewSchema = new mongoose.Schema({
     templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewTemplate' },
     status: String, // draft --> if accept - inprogress - after all rounds selected or rejected
     scheduleType: String,
-    createdById: mongoose.Schema.Types.ObjectId,
-    lastModifiedById: mongoose.Schema.Types.ObjectId,
     ownerId: mongoose.Schema.Types.ObjectId,
     tenantId: mongoose.Schema.Types.ObjectId,
     completionReason: String,
-    
-    // createdOn: { type: Date, default: Date.now },
-    // teamId:String
+    // <------------------------------- v1.0.0 
+    interviewCode: { type: String }, // <-- it will store INTV-00001, INTV-00002 -->
+    // ------------------------------ v1.0.0 >
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
 }, { timestamps: true });
 
 const Interview = mongoose.model('Interview', interviewSchema);
 
-module.exports = {Interview};
+module.exports = { Interview };

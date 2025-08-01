@@ -1,42 +1,192 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react';
 import Cookies from "js-cookie";
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
-
-import BasicDetailsTab from './BasicDetails/BasicDetails'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import BasicDetailsTab from './BasicDetails/BasicDetails';
 import AdvancedDetails from './AdvancedDetails/AdvacedDetails';
-import InterviewUserDetails from './InterviewDetails/InterviewDetails'
-import AvailabilityUser from './AvailabilityDetailsUser/AvailabilityUser'
-import SidebarProfile from '../Sidebar';
-import { navigation } from '../../mockData/navigationData';
+import InterviewUserDetails from './InterviewDetails/InterviewDetails';
+import AvailabilityUser from './AvailabilityDetailsUser/AvailabilityUser';
+import { DocumentsSection } from './DocumentsDetails/DocumentsSection';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { usePermissions } from '../../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../../utils/permissionUtils';
+import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
+import { useUserProfile } from '../../../../../apiHooks/useUsers';
 
-export function MyProfile() {
+// Loading Skeleton for Basic Details
+const BasicDetailsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="skeleton-animation">
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+          <div className="h-8 bg-gray-200 rounded w-16 ml-2"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i}>
+              <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+              <div className="h-5 bg-gray-200 rounded w-32"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Loading Skeleton for Advanced Details
+const AdvancedDetailsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className='skeleton-animation'>
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i}>
+              <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+              <div className="h-5 bg-gray-200 rounded w-36"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Loading Skeleton for Interview Details
+const InterviewDetailsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="skeleton-animation">
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="space-y-6">
+          {[1, 2, 3].map((section) => (
+            <div key={section}>
+              <div className="h-5 bg-gray-200 rounded w-40 mb-3"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((item) => (
+                  <div key={item}>
+                    <div className="h-4 bg-gray-200 rounded w-28 mb-2"></div>
+                    <div className="h-5 bg-gray-200 rounded w-32"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Loading Skeleton for Availability Details
+const AvailabilityDetailsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="skeleton-animation">
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="space-y-6">
+          {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+            <div key={day} className="border-b pb-4">
+              <div className="h-5 bg-gray-200 rounded w-24 mb-3"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((time) => (
+                  <div key={time}>
+                    <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                    <div className="h-5 bg-gray-200 rounded w-28"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Loading Skeleton for Documents Section
+const DocumentsSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="skeleton-animation">
+        {/* Header buttons skeleton */}
+        <div className="flex items-center justify-end py-2 mb-4">
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="space-y-6">
+          {[1, 2].map((doc) => (
+            <div key={doc} className="border rounded-lg p-4">
+              <div className="h-5 bg-gray-200 rounded w-32 mb-3"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-48"></div>
+                <div className="h-4 bg-gray-200 rounded w-36"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MyProfile = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const userType = AuthCookieManager.getUserType();
   const location = useLocation();
   const navigate = useNavigate();
-  
-  const {contacts} = useCustomContext();
-  // const subtab = location.pathname.split('/').pop();
+
+  const { singlecontact } = useCustomContext();
+  const { userProfile, isLoading: userProfileLoading } = useUserProfile();
+
+  // console.log("singlecontact", singlecontact);
+
+  const { effectivePermissions, superAdminPermissions } = usePermissions();
+
+  // Select permissions based on user type
+  const permissions = userType === 'superAdmin' ? superAdminPermissions : effectivePermissions;
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
-
   const userId = tokenPayload.userId;
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isEditMode = location.pathname.includes('-edit');
   const [isFreelancer, setIsFreelancer] = useState(false);
   const [roleName, setRoleName] = useState("");
 
-   // Extract path segments from URL
-   const pathSegments = location.pathname.split('/');
-   const lastSegment = pathSegments[pathSegments.length - 1];
-   const secondLastSegment = pathSegments[pathSegments.length - 2];
-  
-  
+  // Extract path segments from URL
+  const pathSegments = location.pathname.split('/');
+  const lastSegment = pathSegments[pathSegments.length - 1];
+  const secondLastSegment = pathSegments[pathSegments.length - 2];
 
-   // Determine subtab based on whether we're in edit mode
-   const subtab = useMemo(() => {
+  const [documents, setDocuments] = useState({
+    resume: null,
+    coverLetter: null,
+  });
+
+  // Determine subtab based on whether we're in edit mode
+  const subtab = useMemo(() => {
     if (isEditMode) {
       return secondLastSegment?.split('-edit')[0]; // e.g. "basic" from "basic-edit"
     } else {
@@ -47,18 +197,14 @@ export function MyProfile() {
   useEffect(() => {
     const fetchData = () => {
       try {
-        const user = contacts.find(user => user.ownerId === userId);
+        const contact = singlecontact[0];
 
-        // console.log("user subtab ",user);
-
-        if (user) {
-          const role = user?.ownerId?.roleId?.roleName || "";
-          
+        if (contact) {
+          const role = contact?.ownerId?.roleId?.roleName || "";
           setRoleName(role);
-          const freelancerStatus = user.isFreelancer === "true";
+          const freelancerStatus = contact?.ownerId?.isFreelancer === "true";
           setIsFreelancer(freelancerStatus);
         } else {
-          // console.warn('User not found in contacts');
           setIsFreelancer(false); // Default value if user not found
         }
       } catch (error) {
@@ -66,127 +212,98 @@ export function MyProfile() {
         setIsFreelancer(false); // Default value on error
       }
     };
-  
+
     if (userId) {
       fetchData();
     }
-  }, [userId, contacts]); // Added contacts to dependencies
+  }, [userId, singlecontact]);
 
-  // console.log("location.pathname", location.pathname, "subtab",subtab)
-
-  // const activeTab = location.pathname.split('/').pop() || 'basic';
-  const activeTab = subtab || 'basic'
-  // || 'basic';
-
-  // console.log('MyProfile activeTab:', activeTab, 'isEditMode:', isEditMode);
-
+  const activeTab = subtab || 'basic';
 
   const handleSubTabChange = (tab) => {
     navigate(`/account-settings/my-profile/${tab}`);
-    // navigate(tab);
   };
-
-
 
   // Redirect to basic if subtab is invalid
   useEffect(() => {
-    const validSubtabs = isFreelancer || roleName === "Internal_Interviewer"
-    ? ['basic', 'advanced', 'interview', 'availability'] 
-    : ['basic', 'advanced',];
-    // const validSubtabs = ['basic', 'advanced', 'interview', 'availability'];
+    const validSubtabs = ['basic', 'advanced', 'interview', 'availability', 'documents'];
     if (!validSubtabs.includes(subtab)) {
       navigate('/account-settings/my-profile/basic', { replace: true });
     }
-  }, [subtab, navigate]);
+  }, [subtab, navigate, isFreelancer, roleName]);
 
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen((prev) => !prev);
-  }, []);
-
-
-
-
-  // Updated renderSubTabContent with correct component mapping
+  // Render subtab content with loading states
   const renderSubTabContent = () => {
-    // if (isEditMode) {
-    //   return <Outlet />;
-    // }
+    // Show skeleton if loading
+    if (userProfileLoading) {
+      const skeletonComponents = {
+        basic: <BasicDetailsSkeleton />,
+        advanced: <AdvancedDetailsSkeleton />,
+        interview: <InterviewDetailsSkeleton />,
+        availability: <AvailabilityDetailsSkeleton />,
+        documents: <DocumentsSkeleton />,
+      };
+      return skeletonComponents[activeTab] || skeletonComponents['basic'];
+    }
+
+    // Show actual content when not loading
     const subTabComponents = {
-      basic: 
-      <BasicDetailsTab />
-      ,
+      basic: <BasicDetailsTab />,
       advanced: <AdvancedDetails />,
       interview: <InterviewUserDetails />,
       availability: <AvailabilityUser />,
+      documents: <DocumentsSection documents={documents} onUpdate={setDocuments} />,
     };
-    // console.log('Current active tab:', activeTab);
     return subTabComponents[activeTab] || subTabComponents['basic'];
   };
 
-  const tabsToShow = isFreelancer || roleName === "Internal_Interviewer"
-    ? ['basic', 'advanced', 'interview', 'availability'] 
-    : ['basic', 'advanced'];
+  // Build a list of tabs that the current user is allowed to see based on user type
+  // console.log('🔍 MyProfile Debug:', {
+  //   userType,
+  //   isInitialized,
+  //   permissions,
+  //   hasMyProfilePermission: permissions?.MyProfile?.ViewTab
+  // });
 
+  const tabsToShow = [
+    permissions?.MyProfile?.Basic && 'basic',
+    permissions?.MyProfile?.Advance && 'advanced',
+    permissions?.MyProfile?.Interview && 'interview',
+    permissions?.MyProfile?.Availability && 'availability',
+    permissions?.MyProfile?.Documents && 'documents',
+  ].filter(Boolean);
 
+  // console.log('📋 Tabs to show:', tabsToShow);
 
   return (
-    <div className="flex flex-col h-full  bg-gray-50 " >
-
+    <div className="flex flex-col h-full bg-gray-50">
       {/* Tabs */}
-      <div className="flex-1 ">
-      <div className='flex flex-col w-full sm:mt-10 md:mt-20'>
-        <div className="border-b ml-6 mr-6">
-          <nav className="flex space-x-8">
-            {tabsToShow.map(tabKey => (
-              <button
-                key={tabKey}
-                onClick={() => handleSubTabChange(tabKey)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tabKey
+      <div className="flex-1">
+        <div className="flex flex-col w-full sm:mt-10 md:mt-20">
+          <div className="border-b ml-6 mr-6">
+            <nav className="flex space-x-8">
+              {tabsToShow.map(tabKey => (
+                <button
+                  key={tabKey}
+                  onClick={() => handleSubTabChange(tabKey)}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tabKey
                     ? 'border-custom-blue text-custom-blue'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                {tabKey.charAt(0).toUpperCase() + tabKey.slice(1)} Details
-              </button>
-            ))}
-
-          </nav>
+                    }`}
+                >
+                  {tabKey.charAt(0).toUpperCase() + tabKey.slice(1)} Details
+                </button>
+              ))}
+            </nav>
+          </div>
+          <div className="ml-6 mr-6">
+            {!isEditMode && renderSubTabContent()}
+            {isEditMode && <><Outlet /> {renderSubTabContent()}</>}
+          </div>
         </div>
-        <div className=" ml-6 mr-6 ">
-         
-         {/* {renderSubTabContent()} */}
-         {!isEditMode && renderSubTabContent()}
-            {/* Render Outlet for edit mode */}
-            {isEditMode && <> <Outlet /> {renderSubTabContent()} </>}
-
-         {/* <Outlet /> */}
-       
-       </div>
-       
       </div>
-      </div>
-
-          {/* Content Area - takes 40% width */}
-
-          
-          
-        {/* <div className="hidden lg:block lg:w-[40%] border-l pl-4 overflow-y-auto"> */}
-          {/* <Outlet /> */}
-        {/* </div> */}
-      
-
-
-      {/* Overlay */}
-      {/* {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden xl:hidden 2xl:hidden"
-          onClick={toggleSidebar}
-        />
-      )} */}
-
-
-
-
     </div>
-  )
-}
+  );
+};
+
+export default MyProfile;

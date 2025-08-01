@@ -5,6 +5,7 @@ const Invoicemodels = require('../models/Invoicemodels.js');
 const Wallet = require('../models/WalletTopup.js');
 const { createInvoice, createSubscriptionRecord, createReceipt, calculateEndDate } = require('./CustomerSubscriptionInvoiceContollers.js');
 
+
 // Function to handle subscription creation
 const createSubscriptionControllers = async (req, res) => {
   try {
@@ -13,9 +14,13 @@ const createSubscriptionControllers = async (req, res) => {
     if (!planDetails || !userDetails || !status) {
       return res.status(400).json({ message: 'Missing required details cretateSubscriptionControllers.' });
     }
+    console.log("planDetails ----", planDetails);
+    console.log("userDetails ----", userDetails);
+    console.log("status ----", status);
+    console.log("totalAmount ----", totalAmount);
+   
 
     const { subscriptionPlanId } = planDetails;
-    console.log("total amount", totalAmount);
 
     const numericTotalAmount = Number(totalAmount);
     if (isNaN(numericTotalAmount)) {
@@ -41,7 +46,6 @@ const createSubscriptionControllers = async (req, res) => {
         });
     
         await wallet.save(); // Save the new wallet to the database
-        console.log("Wallet created:", wallet);
     } else {
         console.log("Wallet already exists:", wallet);
     }
@@ -58,15 +62,24 @@ const createSubscriptionControllers = async (req, res) => {
     const existingSubscription = await CustomerSubscription.findOne({ ownerId: userDetails.ownerId });
 
     if (existingSubscription) {
-
+      // Update subscription details
       existingSubscription.subscriptionPlanId = subscriptionPlanId;
       existingSubscription.selectedBillingCycle = userDetails.membershipType;
       existingSubscription.price = pricing;
       existingSubscription.discount = discount;
       existingSubscription.startDate = new Date();
-      existingSubscription.totalAmount = calculatedTotalAmount,
-
-        existingSubscription.status = 'active';
+      existingSubscription.totalAmount = calculatedTotalAmount;
+      existingSubscription.endDate = null;
+      existingSubscription.features = [];
+      //existingSubscription.razorpayCustomerId = null;
+      //existingSubscription.razorpaySubscriptionId = null;
+      existingSubscription.receiptId = null;
+      existingSubscription.nextBillingDate = null;
+      
+      
+      // Use the provided status instead of hardcoding to 'active'
+      // This allows flexibility in subscription status management
+      existingSubscription.status = status;
       await existingSubscription.save();
 
       // const plan = await SubscriptionPlan.findById(subscriptionPlanId);
@@ -83,13 +96,6 @@ const createSubscriptionControllers = async (req, res) => {
         await existingInvoice.save();
       }
 
-      console.log({
-        message: 'Subscription and invoice successfully updated.',
-        subscription: existingSubscription,
-        invoiceId: existingInvoice._id
-      }
-      );
-
       return res.status(200).json({
         message: 'Subscription and invoice successfully updated.',
         subscription: existingSubscription,
@@ -97,39 +103,49 @@ const createSubscriptionControllers = async (req, res) => {
       });
     }
 
-    if (status === "pending") {
+    // Accept both 'pending' and 'created' statuses for new subscriptions
+    if (status === "pending" || status === "created" || (userDetails.userType === "individual" && (userDetails.membershipType === "monthly" || userDetails.membershipType === "annual"))) {
+      console.log(`Processing subscription with status: ${status}`);
+
 
       const invoice = await createInvoice(
         userDetails.tenantId,
         userDetails.ownerId,
+        plan.planName,
         planDetails.subscriptionPlanId,
         numericTotalAmount,
         userDetails,
-        status,
+        status, // Pass the original status to maintain consistency
         discount
       );
 
+      
+      
       const subscription = await createSubscriptionRecord(
         userDetails,
         planDetails,
         pricing,
         discount,
         totalAmount,
-        invoice._id
+        invoice._id,
+        status
       );
 
-      // console.log( { subscription,
-      //   invoiceId: invoice._id});
-
+      console.log(`Created subscription with status: ${status}`);
       console.log({ invoiceId: invoice._id });
 
+
       return res.status(200).json({
-        message: 'Subscription successfully created and payment processed.',
+        message: `Subscription successfully created with status: ${status}`,
         subscription,
         invoiceId: invoice._id,
       });
     }
-    return res.status(400).json({ message: 'Invalid payment status.' });
+    
+    // Provide more informative error for invalid status
+    return res.status(400).json({ 
+      message: 'Invalid payment status. Allowed values are "pending" or "created".' 
+    });
   } catch (error) {
     console.error('Error creating/updating subscription:', error);
     res.status(500).json({ message: 'An error occurred.', error });
@@ -172,20 +188,14 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
     const pricing = parseInt(cardDetails.membershipType === 'monthly' ? planDetails.monthlyPrice : planDetails.annualPrice);
     const discount = parseInt(cardDetails.membershipType === 'monthly' ? planDetails.monthlyDiscount || 0 : planDetails.annualDiscount || 0);
 
-
-    console.log("status", status);
-
-
     if (status === "paid") {
       const requiredPayment = pricing - discount;
-
-      console.log('Required Payment:', pricing, discount);
-
       if (totalPaid >= (pricing - discount)) {
 
         // console.log("status",status);
         // Update the invoice
         invoice.status = status;
+        invoice.planName = planDetails.planName;
         invoice.amountPaid = totalPaid
         invoice.endDate = endDate;
         invoice.startDate = new Date();
@@ -260,7 +270,7 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
     // console.log(req.params);
 
     const { ownerId } = req.params;
-    console.log("ownerId", ownerId)
+    // console.log("ownerId", ownerId)
 
     if (!ownerId) {
       return res.status(400).json({ message: 'ownerId ID is required.' });
@@ -287,10 +297,15 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
 
     const subscriptionsWithPlanNames = customerSubscriptions.map((sub) => {
       const plan = subscriptionPlans.find((plan) => String(plan._id) === String(sub.subscriptionPlanId));
+      // console.log("plan", plan);
+      
       return {
         ...sub,
+        ...plan,
         planName: plan ? plan.name : null,
-        Sub_Plan_features: plan.features
+        Sub_Plan_features: plan.features,
+        // maxUsers:plan.maxUsers || 0
+         maxUsers: plan?.maxUsers ?? 0,
       };
     });
 

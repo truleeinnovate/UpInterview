@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
- 
+const mongoose = require("mongoose");
+
 // const ContactsSchema = new mongoose.Schema({
 //     name: String,
 //     firstname: String,
@@ -47,7 +47,7 @@ const mongoose = require('mongoose');
 //     //     type: String
 //     // }
 // });
- 
+
 // const ContactsSchema = new mongoose.Schema({
 //     name: String,
 //     firstname: String,
@@ -69,15 +69,15 @@ const mongoose = require('mongoose');
 //     preferredDuration: String,
 //     location: String,
 //     introduction: String,
- 
+
 //     ResumePdf: String,
 //     Coverletter:String,
 //     Technology:[String],
- 
+
 //     IsReadyForMockInterviews:String, //this feild have to check from login page this feild data is not getting properly
-   
+
 //    skills:[String],
-   
+
 //     // Technologys: [String],diretly add from form
 //     // password: String,
 //     contactType: String,
@@ -110,9 +110,9 @@ const mongoose = require('mongoose');
 //     //     type: String
 //     // }
 // },{ timestamps: true,strict: false  });
- 
- 
-const ContactsSchema = new mongoose.Schema({
+
+const ContactsSchema = new mongoose.Schema(
+  {
     firstName: String,
     lastName: String,
     countryCode: String,
@@ -127,65 +127,79 @@ const ContactsSchema = new mongoose.Schema({
     experience: { type: String },
     gender: String,
     imageData: {
-        filename: String,
-        path: String,
-        contentType: String,
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+      fileSize: Number,
+      uploadDate: Date,
     },
     timeZone: String,
     preferredDuration: String,
     location: String,
     introduction: String,
-    resumePdf: String,
-    coverLetter: String,
-   
+    // resumePdf: String,
+    resume: {
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+      fileSize: Number,
+      uploadDate: Date,
+    },
+    // coverLetter: String,
+    coverLetter: {
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+      fileSize: Number,
+      uploadDate: Date, 
+    },
     // ranjith added have to check proeprly
-    coverLetterdescription:String,
-    professionalTitle:String,
-    bio:String,
-    InterviewFormatWeOffer:[String],
-    NoShowPolicy:String,
-    PreviousExperienceConductingInterviews:String,
-    PreviousExperienceConductingInterviewsYears:String,
-    ExpertiseLevel_ConductingInterviews:String,
- 
- 
+    coverLetterdescription: String,
+    professionalTitle: String,
+    bio: String,
+    InterviewFormatWeOffer: [String],
+    NoShowPolicy: String,
+    PreviousExperienceConductingInterviews: String,
+    PreviousExperienceConductingInterviewsYears: String,
+    ExpertiseLevel_ConductingInterviews: String,
+    expectedRatePerMockInterview: String, //newly added  Ranjith
     technologies: [String],
     isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly
     skills: [String],
     contactType: String,
     experienceYears: String,
+    yearsOfExperience: String,
     previousExperience: String,
     isFreelancer: String,
     expertiseLevel: String,
     language: String,
     // contactType: String,
-    dateOfBirth:String,
-    interviewerType: String,
-    isAddedTeam: String,
-    interviewType: String,
-    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
-    availability: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Interviewavailability' }],
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-    // createdDate: {
-    //     type: Date,
-    //     default: Date.now
-    // },
-    createdBy: {
-        type: String,
+    dateOfBirth: String,
+    // interviewerType: String,
+    // isAddedTeam: String,
+    // interviewType: String,
+    availability: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "InterviewAvailability" },
+    ],
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    completionStatus: {
+      basicDetails: { type: Boolean, default: false },
+      additionalDetails: { type: Boolean, default: false },
+      interviewDetails: { type: Boolean, default: false },
+      availabilityDetails: { type: Boolean, default: false },
     },
-    // ModifiedDate: {
-    //     type: Date,
-    //     default: Date.now
-    // },
-    // ModifiedBy: {
-    //     type: String
-    // }
-}, { timestamps: true});
- 
- 
- 
-const Contacts = mongoose.model('Contacts', ContactsSchema);
- 
+  },
+  { timestamps: true }
+);
+
+const Contacts = mongoose.model("Contacts", ContactsSchema);
+
 module.exports = {
-    Contacts,
+  Contacts,
 };

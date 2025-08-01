@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { config } from "../../config";
 
 const ResetPassword = () => {
   const location = useLocation();
   const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [userId, setUserId] = useState(null);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState({ text: "", type: "" }); // { text: string, type: 'error' | 'success' }
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [type, setType] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
-    const userType = params.get("type"); // Get type from URL
+    const userType = params.get("type");
+
+    console.log("Extracted token:", token); // Log the token
+  console.log("Extracted type:", userType); // Log the type
 
     if (token) setUserId(token);
     if (userType) setType(userType);
@@ -23,112 +28,169 @@ const ResetPassword = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setMessage({ text: "", type: "" });
 
-    if (password !== newPassword) {
-      setMessage("Passwords do not match.");
+    console.log("Token being sent:", userId); // Log the token
+    console.log("Request payload:", { token: userId, newPassword: password, type }); // Log the full payload
+
+    // Validation checks
+    if (password !== confirmPassword) {
+      setMessage({ text: "Passwords do not match.", type: "error" });
+      setIsSubmitting(false);
       return;
     }
 
     const strongPasswordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!strongPasswordRegex.test(password)) {
-      setMessage(
-        "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character."
-      );
+      setMessage({
+        text: "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character.",
+        type: "error",
+      });
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/Organization/reset-password`, {
+      const response = await fetch(`${config.REACT_APP_API_URL}/Organization/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: userId, newPassword, type }), // Pass type to backend
+        body: JSON.stringify({ token: userId, newPassword: password, type }),
       });
 
       const data = await response.json();
-      setMessage(data.message);
-      if (data.success) {
-        window.location.href = "/organization-login";
+
+      if (response.ok) {
+        setMessage({ text: data.message || "Password updated successfully!", type: "success" });
+        setTimeout(() => {
+          window.location.href = type === "usercreatepass" ? "/organization-login" : "/organization-login";
+        }, 2000);
+      } else {
+        console.log('error', data)
+        // setMessage({ text: data.message || "Failed to reset password. Please try again.", type: "error" });
       }
     } catch (error) {
-      setMessage("An error occurred. Please try again.");
+      console.log('error', error)
+      // setMessage({ text: "An error occurred. Please try again.", type: "error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center mt-10">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-teal-100">
-            <Lock className="h-6 w-6 text-teal-600" />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            {type === "usercreatepass" ? "Create Your Password" : "Set a new password"}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {message || 
-              (type === "usercreatepass" 
-                ? "Set up your password for the first time." 
-                : "Create a new password. Ensure it differs from previous ones for security.")}
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleResetPassword}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div className="relative">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                {type === "usercreatepass" ? "Create Password" : "New Password"}
-              </label>
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md pr-10"
-                placeholder={type === "usercreatepass" ? "Create your password" : "Enter your new password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff className="h-5 w-5 text-gray-600 mt-5" /> : <Eye className="h-5 w-5 text-gray-600 mt-5" />}
-              </button>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <div className="text-center">
+            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-teal-100">
+              <Lock className="h-6 w-6 text-teal-600" />
             </div>
-            <div className="relative">
-              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <input
-                id="confirm-password"
-                name="confirm-password"
-                type={showConfirmPassword ? "text" : "password"}
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md pr-10"
-                placeholder="Re-enter password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-3 flex items-center"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? <EyeOff className="h-5 w-5 mt-5 text-gray-600" /> : <Eye className="h-5 w-5 text-gray-600 mt-5" />}
-              </button>
-            </div>
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              {type === "usercreatepass" ? "Create Your Password" : "Reset Your Password"}
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              {type === "usercreatepass"
+                ? "Set up your password for the first time."
+                : "Create a new password. Ensure it differs from previous ones."}
+            </p>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              className="w-full py-2 px-4 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition"
-            >
-              {type === "usercreatepass" ? "Create Password" : "Update Password"}
-            </button>
-          </div>
-        </form>
+          {message.text && (
+            <div className={`mt-4 p-3 rounded-md text-center ${message.type === "error"
+                ? "bg-red-100 text-red-700"
+                : "bg-green-100 text-green-700"
+              }`}>
+              {message.text}
+            </div>
+          )}
+
+          <form className="mt-6 space-y-6" onSubmit={handleResetPassword}>
+            <div className="space-y-4">
+              <div className="relative">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  {type === "usercreatepass" ? "Create Password" : "New Password"}
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 pr-10"
+                  placeholder={type === "usercreatepass" ? "Create your password" : "Enter new password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center pt-5"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+              </div>
+
+              <div className="relative">
+                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirm-password"
+                  name="confirm-password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 pr-10"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center pt-5"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors ${
+                  isSubmitting ? 'bg-teal-500 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {type === "usercreatepass" ? 'Creating...' : 'Resetting...'}
+                  </>
+                ) : type === "usercreatepass" ? (
+                  'Create Password'
+                ) : (
+                  'Reset Password'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

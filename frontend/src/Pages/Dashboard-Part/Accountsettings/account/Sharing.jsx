@@ -4,11 +4,20 @@ import { sharingSettings, sharedContent, sharingAnalytics } from '../mockData/sh
 import { EditButton } from '../common/Buttons'
 import { SharingSettingsPopup } from './SharingSettingsPopup'
 import { ShareContentPopup } from './ShareContentPopup'
+import { usePermissions } from '../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../utils/permissionUtils';
 
-export function Sharing() {
+const Sharing = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const [isEditingSettings, setIsEditingSettings] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const [selectedContent, setSelectedContent] = useState(null)
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Sharing")) {
+    return null;
+  }
 
   const handleUpdateSettings = (newSettings) => {
     console.log('Update settings:', newSettings)
@@ -27,11 +36,16 @@ export function Sharing() {
         <div className="flex space-x-3">
           <button
             onClick={() => setIsSharing(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
           >
             Share New Content
           </button>
-          <EditButton onClick={() => setIsEditingSettings(true)} />
+          <button
+            onClick={() => setIsEditingSettings(true)}
+            className="px-2 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
+          >
+            <EditButton className="text-white hover:text-white"/>
+          </button>
         </div>
       </div>
 
@@ -44,7 +58,7 @@ export function Sharing() {
               <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
               <button
                 className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  value ? 'bg-blue-600' : 'bg-gray-200'
+                  value ? 'bg-custom-blue' : 'bg-gray-200'
                 }`}
               >
                 <span
@@ -142,3 +156,5 @@ export function Sharing() {
     </div>
   )
 }
+
+export default Sharing

@@ -1,24 +1,34 @@
-import React, { useState } from "react";
-// import "../../../../index.css";
-// import "../styles/tabs.scss";
+import { useState } from "react";
 import MyQuestionListMain from "./MyQuestionsList.jsx"
 import SuggesstedQuestions from "./SuggesstedQuestionsMain.jsx";
-import Popup from "reactjs-popup";
-import { useLocation } from "react-router-dom";
-import { Minimize, Maximize, XCircle, ChevronUp } from 'lucide-react';
+import { XCircle } from "lucide-react";
+import { usePermissions } from "../../../../Context/PermissionsContext";
+import { usePermissionCheck } from "../../../../utils/permissionUtils";
 
-// const QuestionBank = ({section,closeQuestionBank,questionBankPopupVisibility,setQuestionBankPopupVisibility}) => {
-//change done by Shashank on -[08/01/2025]
-const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSectionFromQuestionBank, section: sectionProp, closeQuestionBank, questionBankPopupVisibility, setQuestionBankPopupVisibility,addedSections, questionsLimit,checkedCount}) => {
+const QuestionBank = ({ assessmentId,
+  sectionName,
+  updateQuestionsInAddedSectionFromQuestionBank,
+  type,
+  questionBankPopupVisibility,
+  addedSections,
+  questionsLimit,
+  closeQuestionBank,
+  checkedCount,
+  fromScheduleLater, onAddQuestion, handleRemoveQuestion, handleToggleMandatory,
+  interviewQuestionsLists, removedQuestionIds
+}) => {
+
+  console.log("type:", type);
+
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([])
 
-  const location = useLocation()
- const section = location.state?.section || sectionProp || ""
-  //  const section = location?.state?.section || sectionProp || "assessment";
-
-  console.log('location state from qb', location.state)
-  //  alert(`section: ${section}`)
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("QuestionBank")) {
+    return null;
+  }
 
   const handleSuggestedTabClick = (questionType) => {
     setActiveTab("SuggesstedQuestions");
@@ -27,100 +37,37 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
   const handleFavoriteTabClick = (questionType) => {
     setActiveTab("MyQuestionsList");
   };
+
   return (
-    <div className={`${section === "interviewerSection" || section === "assessment" ? "h-[95%] bg-white rounded-lg" : ""}`}>
+    <div className={`sm:pt-10 md:pt-10 lg:pt-3 xl:pt-3 2xl:pt-3 ${type === "interviewerSection" || type === "assessment" ? "h-[85%] bg-white rounded-lg flex flex-col" : ""}`}>
       {/* Header Section */}
-      <div className={`${section === "interviewerSection" || section === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}`}>
-        {(section === "Popup" || section === "interviewerSection" || section === "assessment") && (
-          <div className={`flex justify-between items-center p-4 ${section === "interviewerSection" || section === "assessment" ? "bg-custom-blue text-white rounded-t-lg" : " text-white"}`}>
+      {/* <div className={`${type === "interviewerSection" || type === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}
+      ${type === "interviewerSection" ? 'hidden' : ""}`}>
+        {(type === "interviewerSection" || type === "assessment") && (
+          <div className={`flex justify-between items-center p-4 ${type === "interviewerSection" || type === "assessment" ? "bg-custom-blue text-white rounded-t-lg" : " text-white"}`}>
             <div>
               <span className="text-xl font-semibold">Question Bank</span>
             </div>
             <div className="flex items-center gap-4">
-              {section === "Popup" && (
-                <>
-                  {questionBankPopupVisibility ? (
-                    <button className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200" onClick={() => setQuestionBankPopupVisibility(false)}>
-                      <Minimize className="text-xl transition-transform duration-200 hover:scale-110" />
-                    </button>
-                  ) : (
-                    <button className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200" onClick={() => setQuestionBankPopupVisibility(true)}>
-                      <Maximize className="text-xl transition-transform duration-200 hover:scale-110" />
-                    </button>
-                  )}
-                </>
-              )}
-              
-              {section === "Popup" ? (
-                <Popup
-                  modal
-                  closeOnDocumentClick={false}
-                  overlayStyle={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    backdropFilter: 'blur(5px)',
-                    WebkitBackdropFilter: 'blur(5px)',
-                  }}
-                  contentStyle={{
-                    width: '90%',
-                    maxWidth: '1200px',
-                    height: '90vh',
-                    borderRadius: '0.5rem',
-                    padding: '0',
-                    border: 'none',
-                    backgroundColor: 'white',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                  }}
-                  arrow={false}
-                  offsetX={-130}
-                  trigger={
-                    <button className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200">
-                      <XCircle className="text-xl transition-transform duration-200 hover:scale-110" />
-                    </button>
-                  }
-                >
-                  {close => (
-                    <div className="mt-3 relative bg-white text-black w-[300px] rounded-md shadow-lg p-4 border border-gray-200">
-                      <ChevronUp className="absolute right-4 -top-3 text-white text-2xl" />
-                      <div className="flex flex-col gap-4">
-                        <h2 className="font-medium text-center text-gray-700">Are you sure to close the form?</h2>
-                        <div className="flex gap-4 justify-center">
-                          <button
-                            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-all duration-200"
-                            onClick={() => close()}
-                          >
-                            No
-                          </button>
-                          <button
-                            className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-blue-700 transition-all duration-200"
-                            onClick={() => {
-                              setQuestionBankPopupVisibility(false);
-                              closeQuestionBank();
-                              close();
-                            }}
-                          >
-                            Yes
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </Popup>
-              ) : (
-                <button 
-                  className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200"
-                  onClick={() => closeQuestionBank()}
-                >
-                  <XCircle className="text-xl transition-transform duration-200 hover:scale-110" />
-                </button>
-              )}
+              <button
+                className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200"
+                onClick={() => closeQuestionBank()}
+              >
+                <XCircle className="text-xl transition-transform duration-200 hover:scale-110" />
+              </button>
             </div>
           </div>
         )}
-      </div>
-  
-      {/* Tab Navigation */}
-      <div className={`${section === "interviewerSection" || section === "assessment" ? "w-full px-4" : "z-10 top-28 sm:top-32 md:top-36 left-0 right-0 px-4"}`}>
-        <div className="flex border-b border-gray-200">
+      </div> */}
+
+      {/* Tab Navigation - keep this outside the scrollable area */}
+      <div
+        className={`fixed bg-white px-5 z-40
+        ${activeTab === "SuggesstedQuestions" && type !== "interviewerSection" && type !== "assessment" ? "h-[180px]" : "h-[110px]"}
+        ${activeTab === "MyQuestionsList" && type !== "interviewerSection" && type !== "assessment" ? "h-[170px]" : ""}
+        ${type === "interviewerSection" || type === "assessment" ? `${type === "assessment" ? "w-[85%]" : "w-[95%]"} px-4 ` : "w-full z-40 top-16 sm:top-0 md:top-0 lg:top-0 xl:top-0 2xl:top-0 left-0 right-0 pt-16"}`}
+      >
+        <div className="flex">
           <button
             className={`px-6 py-3 font-medium text-sm ${activeTab === "SuggesstedQuestions" ? "text-custom-blue border-b-2 border-custom-blue" : "text-gray-500 hover:text-gray-700 transition-colors duration-200"}`}
             onClick={() => handleSuggestedTabClick()}
@@ -135,9 +82,9 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
           </button>
         </div>
       </div>
-  
-      {/* Tab Content */}
-      <div className={`${section === "interviewerSection" || section === "assessment" ? "h-[calc(100%-110px)]" : "h-[calc(100%-100px)]"} overflow-auto transition-all duration-300`}>
+
+      {/* Tab Content - only this should scroll */}
+      <div className={`flex-1 mt-3 overflow-auto ${type === "interviewerSection" || type === "assessment" ? "" : ""} transition-all duration-300`}>
         {activeTab === "SuggesstedQuestions" && (
           <SuggesstedQuestions
             sectionName={sectionName}
@@ -145,10 +92,16 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
             interviewQuestionsList={interviewQuestionsList}
             setInterviewQuestionsList={setInterviewQuestionsList}
             questionBankPopupVisibility={questionBankPopupVisibility}
-            section={section}
+            type={type}
             addedSections={addedSections}
             questionsLimit={questionsLimit}
             checkedCount={checkedCount}
+            onAddQuestion={onAddQuestion}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
+            fromScheduleLater={fromScheduleLater}
+            interviewQuestionsLists={interviewQuestionsLists}
+            removedQuestionIds={removedQuestionIds}
           />
         )}
         {activeTab === "MyQuestionsList" && (
@@ -159,16 +112,23 @@ const QuestionBank = ({ assessmentId, sectionName, updateQuestionsInAddedSection
             interviewQuestionsList={interviewQuestionsList}
             setInterviewQuestionsList={setInterviewQuestionsList}
             questionBankPopupVisibility={questionBankPopupVisibility}
-            section={section}
+            type={type}
             addedSections={addedSections}
             questionsLimit={questionsLimit}
             checkedCount={checkedCount}
+            onAddQuestion={onAddQuestion}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
+            fromScheduleLater={fromScheduleLater}
+            removedQuestionIds={removedQuestionIds}
+            interviewQuestionsLists={interviewQuestionsLists}
+            activeTab={activeTab}
           />
         )}
       </div>
     </div>
   );
-  
+
 };
 
 export default QuestionBank;

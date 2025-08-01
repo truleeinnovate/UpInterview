@@ -69,7 +69,7 @@ export function ShareContentPopup({ content, onSave, onClose }) {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md p-1 border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                 required
               />
             </div>
@@ -81,7 +81,7 @@ export function ShareContentPopup({ content, onSave, onClose }) {
               <select
                 value={formData.type}
                 onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md  p-1 border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
               >
                 <option value="interview">Interview Template</option>
                 <option value="assessment">Assessment</option>
@@ -97,7 +97,7 @@ export function ShareContentPopup({ content, onSave, onClose }) {
                 type="number"
                 value={formData.expiryDays}
                 onChange={(e) => setFormData(prev => ({ ...prev, expiryDays: parseInt(e.target.value) }))}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-md p-1 border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                 min="1"
                 required
               />
@@ -112,12 +112,12 @@ export function ShareContentPopup({ content, onSave, onClose }) {
                   id="recipient"
                   type="text"
                   placeholder="Email or domain"
-                  className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="flex-1 rounded-md  p-1 border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                 />
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-                  className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="rounded-md  p-1 border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                 >
                   <option value="viewer">Viewer</option>
                   <option value="editor">Editor</option>
@@ -125,7 +125,7 @@ export function ShareContentPopup({ content, onSave, onClose }) {
                 <button
                   type="button"
                   onClick={handleAddRecipient}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
                 >
                   Add
                 </button>
@@ -155,13 +155,13 @@ export function ShareContentPopup({ content, onSave, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:text-gray-900"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
             >
               {content ? 'Save Changes' : 'Share Content'}
             </button>

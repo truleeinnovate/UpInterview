@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { Trash, Maximize, Minimize, Search, X, ChevronDown } from 'lucide-react';
+import { Maximize, Minimize, Search, X, ChevronDown } from 'lucide-react';
 import classNames from 'classnames';
 import Modal from 'react-modal';
 import axios from 'axios';
@@ -10,23 +10,34 @@ import { isEmptyObject, validateInterviewForm } from '../../../../../../utils/My
 import { ReactComponent as Technology } from '../../../../../../icons/technology.svg';
 import { ReactComponent as SkillIcon } from '../../../../../../icons/Skills.svg';
 import { useCustomContext } from '../../../../../../Context/Contextfetch';
-import { useNavigate, useParams } from 'react-router-dom';
+import { redirect, useNavigate, useParams } from 'react-router-dom';
+import { config } from '../../../../../../config';
+import { useMasterData } from '../../../../../../apiHooks/useMasterData';
+import { useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 
-const EditInterviewDetails = () => {
+const EditInterviewDetails = ({ from, usersId, setInterviewEditOpen, onSuccess }) => {
 
+  // const {
+  //   usersRes
+  // } = useCustomContext();
   const {
     skills,
-    contacts,
-    setContacts
-  } = useCustomContext();
+  } = useMasterData();
   const popupRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const resolvedId = usersId || id;
+
+  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
+  // const requestEmailChange = useRequestEmailChange();
+  const updateContactDetail = useUpdateContactDetail();
+  const queryClient = useQueryClient();
 
   const [searchTermSkills, setSearchTermSkills] = useState('');
   const skillsPopupRef = useRef(null);
@@ -47,6 +58,7 @@ const EditInterviewDetails = () => {
     PreviousExperienceConductingInterviewsYears: '',
     ExpertiseLevel_ConductingInterviews: '',
     hourlyRate: "",
+    expectedRatePerMockInterview: "",
     // IsReadyForMockInterviews: '',
     // ExpectedRatePerMockInterviewMin: '',
     // ExpectedRatePerMockInterviewMax: '',
@@ -59,10 +71,11 @@ const EditInterviewDetails = () => {
     bio: "",
     interviewFormatWeOffer: []
   });
+  const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false)
 
   const bioLength = formData.bio?.length || 0;
 
-
+  // console.log("userId Interview Details", from);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -80,46 +93,44 @@ const EditInterviewDetails = () => {
 
   // Changed: Updated useEffect to properly map all backend fields
   useEffect(() => {
-    const fetchUserData = async () => {
 
-      try {
+    // const contact = usersRes.find(user => user.contactId === resolvedId);
 
 
-        // "67d77741a9e3fc000cbf61fd"
-        const user = contacts.find(user => user.ownerId === id);
-        // console.log("user", user);
-        setFormData({
-          PreviousExperienceConductingInterviews: user.PreviousExperienceConductingInterviews || '',
-          PreviousExperienceConductingInterviewsYears: user.PreviousExperienceConductingInterviewsYears || '',
-          ExpertiseLevel_ConductingInterviews: user.ExpertiseLevel_ConductingInterviews || '',
-          // IsReadyForMockInterviews: user.IsReadyForMockInterviews || '',
-          // ExpectedRatePerMockInterviewMin: String(user.ExpectedRatePerMockInterviewMin || ''),
-          // ExpectedRatePerMockInterviewMax: String(user.ExpectedRatePerMockInterviewMax || ''),
-          Technology: Array.isArray(user.technologies) ? user.technologies : [],
-          NoShowPolicy: user.NoShowPolicy || '',
-          // ExpectedRateMin: String(user.ExpectedRateMin || ''),
-          // ExpectedRateMax: String(user.ExpectedRateMax || ''),
-          skills: Array.isArray(user.skills) ? user.skills : [],
-          interviewFormatWeOffer: Array.isArray(user.InterviewFormatWeOffer) ? user.InterviewFormatWeOffer : [], professionalTitle: user.professionalTitle || "",
-          bio: user.bio || "",
-          hourlyRate: user.hourlyRate,
-          id:user._id
-        });
-        setSelectedSkills(Array.isArray(user.skills) ? user.skills : []);
-        setInterviewPreviousExperience(user.PreviousExperienceConductingInterviews || '');
-        setExpertiseLevel(user.ExpertiseLevel_ConductingInterviews || '');
-        setIsReady(user.IsReadyForMockInterviews === 'yes');
-        setSelectedCandidates(user.technologies.map(tech => ({ TechnologyMasterName: tech })) || []);
-        setErrors({});
+    // if (!contact) return;
+    if (!userProfile || !userProfile._id) return;
 
-      } catch (error) {
-        console.error('Error updating advanced details:', error);
-      }
+    console.log("Edit Interview Details userProfile", userProfile);
+    // console.log("user", user);
+    setFormData({
+      PreviousExperienceConductingInterviews: userProfile?.previousExperienceConductingInterviews || '',
+      PreviousExperienceConductingInterviewsYears: userProfile?.previousExperienceConductingInterviewsYears || '',
+      ExpertiseLevel_ConductingInterviews: userProfile?.expertiseLevelConductingInterviews || '',
+      // IsReadyForMockInterviews: user.IsReadyForMockInterviews || '',
+      // ExpectedRatePerMockInterviewMin: String(user.ExpectedRatePerMockInterviewMin || ''),
+      // ExpectedRatePerMockInterviewMax: String(user.ExpectedRatePerMockInterviewMax || ''),
+      Technology: Array.isArray(userProfile?.technologies) ? userProfile?.technologies : [],
+      NoShowPolicy: userProfile?.noShowPolicy || '',
+      // ExpectedRateMin: String(user.ExpectedRateMin || ''),
+      // ExpectedRateMax: String(user.ExpectedRateMax || ''),
+      skills: Array.isArray(userProfile?.skills) ? userProfile?.skills : [],
+      interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer) ? userProfile?.interviewFormatWeOffer : [],
+      professionalTitle: userProfile?.professionalTitle || "",
+      bio: userProfile?.bio || "",
+      hourlyRate: userProfile?.hourlyRate,
+      id: userProfile?._id,
+      expectedRatePerMockInterview: userProfile?.expectedRatePerMockInterview || ""
+    });
+    setIsMockInterviewSelected(userProfile?.expectedRatePerMockInterview ? true : false);
+    setSelectedSkills(Array.isArray(userProfile?.skills) ? userProfile?.skills : []);
+    setInterviewPreviousExperience(userProfile?.previousExperienceConductingInterviews || '');
+    setExpertiseLevel(userProfile?.expertiseLevelConductingInterviews || '');
+    setIsReady(userProfile?.IsReadyForMockInterviews === 'yes');
+    setSelectedCandidates(userProfile?.technologies.map(tech => ({ TechnologyMasterName: tech })) || []);
+    setErrors({});
 
-    }
 
-    fetchUserData();
-  }, [id]);
+  }, [resolvedId, userProfile?._id]);
 
   const handleBioChange = (e) => {
     const value = e.target.value;
@@ -181,26 +192,26 @@ const EditInterviewDetails = () => {
   };
 
 
-  const handleRadioChange3 = (event) => {
-    const value = event.target.value;
-    setFormData((prevData) => ({
-      ...prevData,
-      IsReadyForMockInterviews: value,
-      ...(value === "no" ? {
-        ExpectedRatePerMockInterviewMin: "",
-        ExpectedRatePerMockInterviewMax: ""
-      } : {}),
-    }));
-    setIsReady(value === "yes");
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      IsReadyForMockInterviews: value ? "" : "Please select an option",
-      ...(value === "no" ? {
-        ExpectedRatePerMockInterviewMin: "",
-        ExpectedRatePerMockInterviewMax: ""
-      } : {}),
-    }));
-  };
+  // const handleRadioChange3 = (event) => {
+  //   const value = event.target.value;
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     IsReadyForMockInterviews: value,
+  //     ...(value === "no" ? {
+  //       ExpectedRatePerMockInterviewMin: "",
+  //       ExpectedRatePerMockInterviewMax: ""
+  //     } : {}),
+  //   }));
+  //   setIsReady(value === "yes");
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     IsReadyForMockInterviews: value ? "" : "Please select an option",
+  //     ...(value === "no" ? {
+  //       ExpectedRatePerMockInterviewMin: "",
+  //       ExpectedRatePerMockInterviewMax: ""
+  //     } : {}),
+  //   }));
+  // };
 
   const handleChangeExperienceYears = (e) => {
     const value = e.target.value;
@@ -214,17 +225,7 @@ const EditInterviewDetails = () => {
     }));
   };
 
-  const handleChangeforExp = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value === "" ? "" : Math.max(1, Math.min(100, Number(value))), // Changed: Adjusted max to 100 to match UI
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
+
 
 
   const handleSelectCandidate = (technologies) => {
@@ -242,17 +243,17 @@ const EditInterviewDetails = () => {
     }));
   };
 
-  const clearRemoveCandidate = () => {
-    setSelectedCandidates([]);
-    setFormData(prev => ({
-      ...prev,
-      Technology: []
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      Technology: "At least one technology is required",
-    }));
-  };
+  // const clearRemoveCandidate = () => {
+  //   setSelectedCandidates([]);
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     Technology: []
+  //   }));
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     Technology: "At least one technology is required",
+  //   }));
+  // };
 
   const handleRemoveCandidate = (index) => {
     const newCandidates = selectedCandidates.filter((_, i) => i !== index);
@@ -284,18 +285,16 @@ const EditInterviewDetails = () => {
 
 
 
-  // Handle input changes for text fields
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
+
+  const handleCloseModal = () => {
+    if (from === 'users') {
+      setInterviewEditOpen(false)
+    } else {
+      // navigate('/account-settings/my-profile/interview', { replace: true })
+      navigate(-1) // Added by Ashok
+    }
+
+  }
 
 
   // API call to save all changes
@@ -315,35 +314,49 @@ const EditInterviewDetails = () => {
     // console.log("form", formData , typeof Number(formData.hourlyRate));
 
 
-    try {
-      const cleanFormData = {
-        PreviousExperienceConductingInterviews: String(formData.PreviousExperienceConductingInterviews?.trim() || '').trim(),
-        PreviousExperienceConductingInterviewsYears: String(formData.PreviousExperienceConductingInterviewsYears || '').trim(),
-        ExpertiseLevel_ConductingInterviews: String(formData.ExpertiseLevel_ConductingInterviews || '').trim() ,
-        hourlyRate: Number(formData.hourlyRate) || '',
-        // IsReadyForMockInterviews: formData.IsReadyForMockInterviews?.trim() || '',
-        // ExpectedRatePerMockInterviewMin: String(formData.ExpectedRatePerMockInterviewMin)?.trim() || '', // Changed: Convert to string before trim
-        // ExpectedRatePerMockInterviewMax: String(formData.ExpectedRatePerMockInterviewMax)?.trim() || '', // Changed: Convert to string before trim
-        technologies: Array.isArray(formData.Technology) ? formData.Technology : [],
-        skills: Array.isArray(formData.skills) ? formData.skills : [],
-        NoShowPolicy: String(formData.NoShowPolicy || '').trim() ,
-        // ExpectedRateMin: String(formData.ExpectedRateMin)?.trim() || '', // Changed: Convert to string before trim
-        // ExpectedRateMax: String(formData.ExpectedRateMax)?.trim() || '',  // Changed: Convert to string before trim
-        InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-        professionalTitle: String(formData.professionalTitle || "").trim(),
-        bio: String(formData.bio || "").trim(),
-         id:formData.id
-      };
+    const cleanFormData = {
+      PreviousExperienceConductingInterviews: String(formData.PreviousExperienceConductingInterviews?.trim() || '').trim(),
+      PreviousExperienceConductingInterviewsYears: String(formData.PreviousExperienceConductingInterviewsYears || '').trim(),
+      ExpertiseLevel_ConductingInterviews: String(formData.ExpertiseLevel_ConductingInterviews || '').trim(),
+      hourlyRate: Number(formData.hourlyRate) || '',
 
-      const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/contact-detail/${formData.id}`,
-        cleanFormData
-      );
+      // IsReadyForMockInterviews: formData.IsReadyForMockInterviews?.trim() || '',
+      // ExpectedRatePerMockInterviewMin: String(formData.ExpectedRatePerMockInterviewMin)?.trim() || '', // Changed: Convert to string before trim
+      // ExpectedRatePerMockInterviewMax: String(formData.ExpectedRatePerMockInterviewMax)?.trim() || '', // Changed: Convert to string before trim
+      technologies: Array.isArray(formData.Technology) ? formData.Technology : [],
+      skills: Array.isArray(formData.skills) ? formData.skills : [],
+      NoShowPolicy: String(formData.NoShowPolicy || '').trim(),
+      // ExpectedRateMin: String(formData.ExpectedRateMin)?.trim() || '', // Changed: Convert to string before trim
+      // ExpectedRateMax: String(formData.ExpectedRateMax)?.trim() || '',  // Changed: Convert to string before trim
+      InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
+      expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes('mock') ? formData.expectedRatePerMockInterview : '',
+      professionalTitle: String(formData.professionalTitle || "").trim(),
+      bio: String(formData.bio || "").trim(),
+      id: formData.id
+    };
+
+    try {
+
+
+      // const response = await axios.patch(
+      //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+      //   cleanFormData
+      // );
+
+      const response = await updateContactDetail.mutateAsync({
+        resolvedId,
+        data: cleanFormData,
+      });
+      await queryClient.invalidateQueries(["userProfile", resolvedId]);
+
+      console.log("response cleanFormData", response);
 
       if (response.status === 200) {
         // setUserData((prev) => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
-        navigate('/account-settings/my-profile/interview')
+        handleCloseModal();
+        // onSuccess();
+        if (usersId) onSuccess();
       }
     } catch (error) {
       console.error('Error updating interview details:', error);
@@ -412,7 +425,28 @@ const EditInterviewDetails = () => {
         interviewFormatWeOffer: ''
       }));
     }
+
+    if (value === "mock") {
+      setIsMockInterviewSelected(checked);
+    }
   };
+
+
+  const handleChangeforExp = (e) => {
+    const value = e.target.value;
+    setFormData((prev) => {
+      return {
+        ...prev,
+        expectedRatePerMockInterview: value,
+      };
+    });
+    setErrors((prevErrors) => {
+      const errorMessage =
+        value >= 20 && value <= 500 ? "" : "Hourly rate must be between $20 and $500.";
+      return { ...prevErrors, expectedRatePerMockInterview: errorMessage };
+    });
+  };
+
 
   const handleHourlyRateChange = (e) => {
     const value = e.target.value || "";
@@ -435,7 +469,7 @@ const EditInterviewDetails = () => {
   return (
     <Modal
       isOpen={true}
-      onRequestClose={() => navigate('/account-settings/my-profile/interview')}
+      onRequestClose={handleCloseModal}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     // shouldCloseOnOverlayClick={false}
@@ -463,11 +497,7 @@ const EditInterviewDetails = () => {
                 )}
               </button>
               <button
-                onClick={() => {
-                  navigate('/account-settings/my-profile/interview')
-                  // setFormData(userData); // Reset to original data
-                  // setIsBasicModalOpen(false);
-                }}
+                onClick={handleCloseModal}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -793,7 +823,7 @@ const EditInterviewDetails = () => {
                   ].map(({ id, value, label, description }) => (
                     <div
                       key={id}
-                      className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-indigo-500 transition-colors"
+                      className="relative flex items-start p-4 rounded-lg border border-gray-200  transition-colors"
                     >
                       <div className="flex items-center h-5">
                         <input
@@ -822,70 +852,45 @@ const EditInterviewDetails = () => {
                 )}
               </div>
 
-
-
-              {/* Mock Interviews */}
-              {/* <div>
-                  <p className="block text-sm font-medium text-gray-900 mb-2">Are you ready to take mock interviews? <span className="text-red-500">*</span></p>
-                  <div className="mt-3 flex space-x-6">
-                    {["yes", "no"].map((option) => (
-                      <label key={option} className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          name="IsReadyForMockInterviews"
-                          className="form-radio text-gray-600"
-                          value={option}
-                          checked={formData.IsReadyForMockInterviews === option}
-                          onChange={handleRadioChange3}
-                        />
-                        <span className="ml-2 capitalize">{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.IsReadyForMockInterviews && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.IsReadyForMockInterviews}</p>}
-                </div> */}
-
               {/* Expected Rate Per Mock Interview */}
-              {/* {isReady && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Expected rate per mock interview <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                      {["Min", "Max"].map((label, index) => (
-                        <div key={index} className="w-full">
-                          <div className="flex items-center gap-2">
-                           
-                            <span className="text-gray-900 text-sm mb-1">{label}:</span>
+              {isMockInterviewSelected && (
+                <div>
+                  <label
+                    htmlFor="hourly_rate"
+                    className="block text-sm font-medium text-gray-900 mb-2"
+                  >
+                    Expected rate per mock interview (USD) <span className="text-red-500">*</span>
+                  </label>
 
-                           
-                            <div className="relative flex-1">
-                              <input
-                                type="number"
-                                name={`ExpectedRatePerMockInterview${label}`}
-                                min="1"
-                                max="100"
-                                value={formData[`ExpectedRatePerMockInterview${label}`]}
-                                onChange={handleChangeforExp}
-                                className={`block border rounded-md bg-white pl-3 pr-6 py-2 text-sm text-gray-900 w-full focus:outline-none ${errors[`ExpectedRatePerMockInterview${label}`] ? "border-red-500" : "border-gray-400"
-                                  } appearance-none`}
-                              />
-                             
-                              <span className="absolute inset-y-0 right-3 flex items-center text-gray-500 pointer-events-none">$</span>
-                            </div>
-                          </div>
-
-                          
-                          {errors[`ExpectedRatePerMockInterview${label}`] && (
-                            <p className="text-red-500 text-sm sm:text-xs mt-1 ml-9">{errors[`ExpectedRatePerMockInterview${label}`]}</p>
-                          )}
-                        </div>
-                      ))}
+                  <div className="relative">
+                    {/* Dollar Symbol */}
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">$</span>
                     </div>
+
+                    {/* Hourly Rate Input */}
+                    <input
+                      id="expectedRatePerMockInterview"
+                      type="number"
+                      name="expectedRatePerMockInterview"
+                      min="20"
+                      max="500"
+                      value={formData?.expectedRatePerMockInterview}
+                      onChange={handleChangeforExp}
+                      className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.expectedRatePerMockInterview ? "border-red-500" : "border-gray-300"
+                        }`}
+                      placeholder="75"
+                    />
                   </div>
 
+                  {/* Error Message */}
+                  {errors.expectedRatePerMockInterview && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.expectedRatePerMockInterview}</p>
+                  )}
+                </div>
+              )}
 
-                )} */}
+
 
               {/* No-Show Policy */}
               {/* {isReady && ( */}
@@ -915,61 +920,110 @@ const EditInterviewDetails = () => {
               {/* Professional Title */}
               <div className="sm:col-span-6 col-span-2">
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                  Professional Title
+                  Professional Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="Professional Title"
                   name="professionalTitle"
                   type="text"
                   value={formData.professionalTitle}
-                  onChange={(e) =>
+                  // onChange={(e) =>
+                  //   setFormData((prevData) => ({
+                  //     ...prevData,
+                  //     professionalTitle: e.target.value,
+                  //   }))
+                  // }
+                  onChange={(e) => {
                     setFormData((prevData) => ({
                       ...prevData,
                       professionalTitle: e.target.value,
-                    }))
-                  }
-                  className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    }));
+                    // Clear error when user starts typing
+                    if (e.target.value.length >= 50) {
+                      setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                    }
+                  }}
+                  // onBlur={(e) => {
+                  //   const value = e.target.value.trim();
+                  //   if (!value) {
+                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
+                  //   } else if (value.length < 50) {
+                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
+                  //   } else if (value.length > 100) {
+                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
+                  //   } else {
+                  //     setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                  //   }
+                  // }}
+                  className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2  sm:text-sm"
                   placeholder="Senior Software Engineer"
                 />
-                {errors.title && (
+                <div className="flex justify-between ">
+                  {errors.professionalTitle ? (
+                    <p className="text-sm text-red-600">{errors.professionalTitle}</p>
+                  ) : (
+                    <p className="text-xs text-gray-500">Min 50 characters</p>
+                  )}
+                  {formData.professionalTitle?.length > 0 && (
+                    <p className={`text-xs ${formData.professionalTitle.length < 50 || errors.professionalTitle ? 'text-red-500' : 'text-gray-500'}`}>
+                      {formData.professionalTitle.length}/100
+                    </p>
+                  )}
+                </div>
+                {/* {errors.title && (
                   <p className="mt-1.5 text-sm text-red-600">{errors.title.message}</p>
-                )}
+                )} */}
               </div>
 
               {/* Professional Bio */}
               <div className="sm:col-span-6 col-span-2">
                 <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                  Professional Bio
+                  Professional Bio <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <textarea
                     id="bio"
                     rows="5"
                     value={formData.bio}
-                    onChange={handleBioChange}
-                    className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.bio ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                    // onChange={handleBioChange}
+                    onChange={(e) => {
+                      handleBioChange(e);
+                      // Clear error when user starts typing
+                      // if (e.target.value.length >= 150) {
+                      //   setErrors(prev => ({ ...prev, bio: '' }));
+                      // }
+                    }}
+                    // onBlur={(e) => {
+                    //   const value = e.target.value.trim();
+                    //   if (!value) {
+                    //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
+                    //   } else if (value.length < 150) {
+                    //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
+                    //   } else {
+                    //     setErrors(prev => ({ ...prev, bio: '' }));
+                    //   }
+                    // }}
+                    className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2  sm:text-sm `}
+                    // ${errors.bio ? 'border-red-500' : 'border-gray-300'
+                    //   }
                     placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
+                    minLength={150}
                     maxLength={500}
                   ></textarea>
                   {bioLength > 0 && (
                     <p
-                      className={`absolute -bottom-6 right-0 text-xs ${bioLength > 500
-                        ? 'text-red-500'
-                        : bioLength > 400
-                          ? 'text-yellow-500'
-                          : 'text-gray-500'
-                        }`}
+                      className={`absolute -bottom-6 right-0 text-xs ${bioLength < 150 || errors.bio ? 'text-red-500' : bioLength > 450 ? 'text-yellow-500' : 'text-gray-500'}`}
                     >
                       {bioLength}/500
                     </p>
                   )}
+               
                 </div>
-                <div className="flex justify-between mt-2">
+                <div className="flex justify-between ">
                   {errors.bio ? (
                     <p className="text-sm text-red-600">{errors.bio}</p>
                   ) : (
-                    <p className="text-xs text-gray-500">Min 20 characters</p>
+                    <p className="text-xs text-gray-500">Min 150 characters</p>
                   )}
                 </div>
               </div>
@@ -985,7 +1039,7 @@ const EditInterviewDetails = () => {
             <div className="flex justify-end space-x-3  ">
               <button
                 type="button"
-                onClick={() => navigate('/account-settings/my-profile/interview')}
+                onClick={handleCloseModal}
 
                 className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
               >

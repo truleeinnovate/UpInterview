@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 import axios from "axios";
 import CryptoJS from 'crypto-js';
 import React, { useState, useEffect } from "react";
@@ -6,10 +7,16 @@ import AssessmentTestPage1 from './Components/AssessmentTestPage1.jsx';
 import AssessmentTestPage2 from './Components/AssessmentTestPage2.jsx';
 import AssessmentExamStart from './Components/AssessmentExamStart.jsx';
 import toast from 'react-hot-toast';
-import logo from "../../../Dashboard-Part/Images/upinterviewLogo.png";
+import logo from "../../../Dashboard-Part/Images/upinterviewLogo.webp";
+import { config } from "../../../../config.js";
+// <---------------------- v1.0.0
+import { useAssessments } from '../../../../apiHooks/useAssessments.js';
 
 
 const AssessmentTest = () => {
+  const { fetchAssessmentQuestions } = useAssessments();
+  // <---------------------- v1.0.0
+
   const [isVerified, setIsVerified] = useState(false);
   const [assessment, setAssessment] = useState(null);
   const [assessmentQuestions, setAssessmentQuestions] = useState(null);
@@ -23,32 +30,43 @@ const AssessmentTest = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [candidateAssessmentId, setCandidateAssessmentId] = useState(null);
 
- // Fallback URL
+  // Fallback URL
 
   useEffect(() => {
     if (assessment?.assessmentId?._id) {
       console.log('Fetching assessment questions for ID:', assessment.assessmentId._id);
-      axios.get(`${process.env.REACT_APP_API_URL}/assessment-questions/list/${assessment.assessmentId._id}`)
-        .then(response => {
-          console.log('API Response:', response.data);
-          if (response.data.success) {
-            setAssessmentQuestions(response.data.data);
+      
+      const loadAssessmentQuestions = async () => {
+        try {
+          const { data, error } = await fetchAssessmentQuestions(assessment.assessmentId._id);
+          
+          if (error) {
+            toast.error('Failed to load assessment questions.');
+            setError('Failed to load assessment questions.');
+            return;
+          }
+          
+          if (data && data.sections) {
+            setAssessmentQuestions(data);
           } else {
             toast.error('Failed to load assessment questions.');
             setError('Failed to load assessment questions.');
           }
-        })
-        .catch(error => {
+        } catch (error) {
           console.error('Error fetching assessment questions:', error);
           toast.error('Error loading assessment questions.');
           setError('Error loading assessment questions.');
-        });
+        }
+      };
+      
+      loadAssessmentQuestions();
     }
-  }, [assessment]);
+  }, [assessment, fetchAssessmentQuestions]);
+  // <---------------------- v1.0.0 >
 
   const getCandidateAssessmentDetails = async (candidateAssessmentId) => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate-assessment/details/${candidateAssessmentId}`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/candidate-assessment/details/${candidateAssessmentId}`);
       if (response.data.success) {
         const document = response.data.candidateAssessment;
         return {
@@ -86,25 +104,25 @@ const AssessmentTest = () => {
       return null;
     }
 
-    console.log('Calculating scores:', {
-      passScoreBy: assessment.assessmentId.passScoreBy,
-      passScoreType: assessment.assessmentId.passScoreType,
-      assessment: assessment.assessmentId,
-      questions: assessmentQuestions.sections,
-    });
+    // console.log('Calculating scores:', {
+    //   passScoreBy: assessment.assessmentId.passScoreBy,
+    //   passScoreType: assessment.assessmentId.passScoreType,
+    //   assessment: assessment.assessmentId,
+    //   questions: assessmentQuestions.sections,
+    // });
 
     if (assessment.assessmentId.passScoreBy === "Overall") {
-      console.log('Using Overall scores');
+      // console.log('Using Overall scores');
       return {
         passScore: assessment.assessmentId.passScore,
         totalScore: assessment.assessmentId.totalScore,
         showPercentage: assessment.assessmentId.passScoreType === "Percentage",
       };
     } else {
-      console.log('Calculating scores for Each Section');
+      // console.log('Calculating scores for Each Section');
       const totalPassScore = assessmentQuestions.sections.reduce((sum, section) => sum + (section?.passScore || 0), 0);
       const totalScore = assessmentQuestions.sections.reduce((sum, section) => sum + (section?.totalScore || 0), 0);
-      console.log('Calculated scores:', { totalPassScore, totalScore });
+      // console.log('Calculated scores:', { totalPassScore, totalScore });
       return {
         passScore: totalPassScore,
         totalScore: totalScore,
@@ -115,10 +133,10 @@ const AssessmentTest = () => {
 
   useEffect(() => {
     if (assessment && assessmentQuestions) {
-      console.log('Calculating scores for assessment:', assessment?.assessmentId?._id);
+      // console.log('Calculating scores for assessment:', assessment?.assessmentId?._id);
       const scores = calculateTotalScores(assessment, assessmentQuestions);
       if (scores) {
-        console.log('Scores calculated:', scores);
+        // console.log('Scores calculated:', scores);
         setCalculatedScores(scores);
       } else {
         setError('Failed to calculate scores.');
@@ -140,7 +158,7 @@ const AssessmentTest = () => {
         setCandidateAssessmentId(decryptedId);
 
         const { candidateId, scheduledAssessmentId, expiryAt } = await getCandidateAssessmentDetails(decryptedId);
-        console.log("candidateId, scheduledAssessmentId, expiryAt", candidateId, scheduledAssessmentId, expiryAt);
+        // console.log("candidateId, scheduledAssessmentId, expiryAt", candidateId, scheduledAssessmentId, expiryAt);
 
         // Check if the link has expired
         if (new Date(expiryAt) < new Date()) {
@@ -156,7 +174,7 @@ const AssessmentTest = () => {
         setCandidateId(candidateId);
 
         // Fetch assessment details
-        const assessmentResponse = await axios.get(`${process.env.REACT_APP_API_URL}/schedule-assessment/list/${scheduledAssessmentId}`);
+        const assessmentResponse = await axios.get(`${config.REACT_APP_API_URL}/schedule-assessment/list/${scheduledAssessmentId}`);
         if (assessmentResponse.data.scheduledAssessment) {
           setAssessment(assessmentResponse.data.scheduledAssessment);
           console.log('Assessment Data:', assessmentResponse.data);
@@ -165,7 +183,7 @@ const AssessmentTest = () => {
         }
 
         // Fetch candidate details
-        const candidateResponse = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${candidateId}`);
+        const candidateResponse = await axios.get(`${config.REACT_APP_API_URL}/candidate/${candidateId}`);
         const candidateData = candidateResponse.data;
         console.log('Candidate Data:', candidateData);
 
@@ -177,7 +195,7 @@ const AssessmentTest = () => {
         const candidateWithImage = {
           ...candidateData,
           imageUrl: candidateData.ImageData?.filename
-            ? `${process.env.REACT_APP_API_URL}/${candidateData.ImageData.path.replace(/\\/g, '/')}`
+            ? `${config.REACT_APP_API_URL}/${candidateData.ImageData.path.replace(/\\/g, '/')}`
             : null,
         };
         setCandidate(candidateWithImage);
@@ -191,25 +209,36 @@ const AssessmentTest = () => {
     fetchAssessmentAndCandidate();
   }, [location]);
 
-  const renderHeader = () => (
-    <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-[90rem] mx-auto px-8 py-3">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-        <img src={logo} alt="Logo" className="w-20" />
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-500">Powered by</span>
-            <img
-              src="https://placehold.co/150x50?text=Customer"
-              alt="Customer Logo"
-              className="h-6 hover:opacity-80 transition-opacity"
-            />
+  const renderHeader = () => {
+    // Get the organization logo from assessment data if available
+    const organizationLogo = assessment?.organization?.logo ||
+      assessment?.assessmentId?.organization?.logo ||
+      'https://placehold.co/150x50?text=Organization';
+
+    return (
+      <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-[90rem] mx-auto px-8 py-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <img src={logo} alt="Logo" className="w-20" />
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">Powered by</span>
+              <img
+                src={organizationLogo}
+                alt="Organization Logo"
+                className="h-8 max-w-[120px] object-contain hover:opacity-80 transition-opacity"
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  e.target.src = 'https://placehold.co/150x50?text=Organization';
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (isLinkExpired) {
     return (
@@ -240,7 +269,7 @@ const AssessmentTest = () => {
   }
 
   return (
-    <div className="-mt-16">
+    <div className="">
       <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
         {renderHeader()}
 

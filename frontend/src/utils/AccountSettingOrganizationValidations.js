@@ -10,6 +10,7 @@ export const validateCompanyProfile = (formData) => {
     if (!safeTrim(formData.industry)) errors.industry = "Industry is required";
     if (!safeTrim(formData.employees)) errors.employees = "Company size is required";
     if (!safeTrim(formData.country)) errors.country = "Country is required";
+    if (!safeTrim(formData.website)) errors.website = "Website is required";
     if (!safeTrim(formData.firstName)) errors.firstName = "First name is required";
     if (!safeTrim(formData.lastName)) errors.lastName = "Last name is required";
     if (!safeTrim(formData.email)) errors.email = "Email is required"; // Fixed capitalization (Email -> email)
@@ -43,6 +44,21 @@ export const validateCompanyProfile = (formData) => {
     }
     if (formData.socialMedia?.facebook && !socialRegex.test(formData.socialMedia.facebook)) {
         errors.facebook = "Invalid Facebook URL";
+    }
+
+    // In your validateCompanyProfile function
+    // const phoneRegex = /^\d{10}$/;
+
+    // Headquarters phone validation
+    if (formData.headquarters.phone && !phoneRegex.test(formData.headquarters.phone)) {
+        errors.headquarters = errors.headquarters || {};
+        errors.headquarters.phone = "Phone must be exactly 10 digits";
+    }
+
+    // Regional office phone validation
+    if (formData.regionalOffice.phone && !phoneRegex.test(formData.regionalOffice.phone)) {
+        errors.regionalOffice = errors.regionalOffice || {};
+        errors.regionalOffice.phone = "Phone must be exactly 10 digits";
     }
 
     return errors;

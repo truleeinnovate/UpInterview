@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ViewDetailsButton, EditButton } from '../../common/Buttons'
-import { WalletBalancePopup } from './WalletBalancePopup'
-import { WalletTransactionPopup } from './WalletTransactionPopup'
 
 import axios from 'axios'
 import Cookies from "js-cookie";
-import { Outlet, useNavigate } from 'react-router-dom'
-import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { Outlet } from 'react-router-dom'
+import WalletBalancePopup from './WalletBalancePopup';
+import WalletTransactionPopup from './WalletTransactionPopup';
+import { WalletTopupPopup } from './WalletTopupPopup'
+import { BankAccountsPopup } from './BankAccountsPopup'
+import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
+import './topupAnimation.css';
+import { usePermissions } from '../../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../../utils/permissionUtils';
 
 export const getTransactionTypeStyle = (type) => {
   switch (type) {
@@ -21,9 +26,9 @@ export const getTransactionTypeStyle = (type) => {
   }
 }
 
-export  const calculatePendingBalance = (walletBalance) => {
+export const calculatePendingBalance = (walletBalance) => {
   if (!walletBalance?.transactions) return 0;
-  
+
   return walletBalance.transactions.reduce((total, transaction) => {
     if (transaction.type.toLowerCase() === 'hold') {
       return total + transaction.amount;
@@ -34,190 +39,353 @@ export  const calculatePendingBalance = (walletBalance) => {
 
 
 
-export function Wallet() {
-  const {walletBalance} = useCustomContext();
-  const navigate = useNavigate();
-  
+const Wallet = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
+  const [walletBalance, setWalletBalance] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [viewingBalance, setViewingBalance] = useState(false);
+  const [isTopupOpen, setIsTopupOpen] = useState(false);
+  const [isBankAccountsOpen, setIsBankAccountsOpen] = useState(false);
+  const [animateTopUp, setAnimateTopUp] = useState(true);
+  const topUpButtonRef = useRef(null);
 
-  // const userId = Cookies.get("userId");
-  // console.log("user", userId);
-  // // /get-top-up/:ownerId
+  // Function to fetch wallet data directly
+  async function fetchWalletData() {
+    try {
+      setIsLoading(true);
+      if (!userId) {
+        console.error('User ID not found');
+        setIsLoading(false);
+        return;
+      }
 
+      console.log('Fetching wallet data for user:', userId);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/wallet/${userId}`);
+
+      if (response.data && response.data.walletDetials && response.data.walletDetials.length > 0) {
+        console.log('Wallet data received:', response.data.walletDetials[0]);
+        // Set wallet balance to the first wallet object in the array
+        setWalletBalance(response.data.walletDetials[0]);
+      } else {
+        console.warn('No wallet data found or empty wallet data');
+        setWalletBalance(null);
+      }
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+      setWalletBalance(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchWalletData();
+  }, []);
+
+  useEffect(() => {
+    setAnimateTopUp(true);
+    const animationTimer = setTimeout(() => {
+      setAnimateTopUp(false);
+    }, 20000);
+
+    return () => clearTimeout(animationTimer);
+  }, []);
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Wallet")) {
+    return null;
+  }
+
+
+
+  // Get wallet transactions from the fetched data
+  const walletTransactions = walletBalance?.transactions || [];
+
+  // Fetch wallet data on component mount
   // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const wallet_res = await axios.get(`${process.env.REACT_APP_API_URL}/get-top-up/${userId}`);
-  //       // Find user based on userId
+  //   fetchWalletData();
+  // }, []);
 
-  //       const walletDetailsArray = wallet_res.data.walletDetials;
+  console.log("walletBalance ", walletBalance);
 
-  //       console.log("walletDetailsArray", walletDetailsArray);
+  // Start animation on page load and stop after 20 seconds
+  // useEffect(() => {
+  //   setAnimateTopUp(true);
+  //   const animationTimer = setTimeout(() => {
+  //     setAnimateTopUp(false);
+  //   }, 20000);
 
+  //   return () => clearTimeout(animationTimer);
+  // }, []);
 
-  //       const walletDetails = Array.isArray(walletDetailsArray) && walletDetailsArray.length > 0
-  //         ? walletDetailsArray[0]
-  //         : {};
-
-  //       // const walletDetails = wallet_res.data;  
-
-  //       // const user = allUsers_data.find(user => user._id === "67d77741a9e3fc000cbf61fd");
-
-  //       console.log("walletDetails", walletDetails);
-
-
-  //       if (userId) {
-  //         setWalletBalance(walletDetails);
-
-  //       }
-
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   if (userId) {
-  //     fetchData();
-  //   }
-  // }, [userId]);
-
-
-
-
-  // if (!walletBalance) {
-  //   return <div className='flex justify-center items-center w-full h-full'>Loading wallet data...</div>;
-  // }
-
- 
   const pendingBalance = calculatePendingBalance(walletBalance);
+
+  const handleTopup = async (topupData) => {
+    console.log('Processing top-up:', topupData);
+
+    try {
+      if (!userId) {
+        console.error('User ID not found');
+        return;
+      }
+
+      // Show success message
+      // alert(`Successfully added $${topupData.amount.toFixed(2)} to your wallet!`);
+
+      console.log('Refreshing wallet data after topup');
+      await fetchWalletData();
+    } catch (error) {
+      console.error('Error refreshing wallet data after topup:', error);
+    }
+  };
+
+  const handleSaveBankAccounts = (accounts) => {
+    // In a real application, this would make an API call
+    console.log('Saving bank accounts:', accounts)
+  }
+
+
+  // Skeleton Loading Component for Wallet
+  const WalletSkeleton = () => {
+    return (
+      <div className="space-y-6 px-4 py-6">
+        {/* Header skeleton */}
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Wallet</h2>
+          <div className="flex space-x-3">
+            <div className="h-10 w-20 bg-gray-200 skeleton-animation rounded-lg"></div>
+            <div className="h-10 w-20 bg-gray-200 skeleton-animation rounded-lg"></div>
+            <div className="h-10 w-10 bg-gray-200 skeleton-animation rounded-lg"></div>
+          </div>
+        </div>
+
+        {/* Balance skeleton */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between">
+            <div>
+              <div className="h-6 w-40 bg-gray-200 skeleton-animation rounded mb-3"></div>
+              <div className="mt-3 flex items-center">
+                <div className="h-10 w-32 bg-gray-200 skeleton-animation rounded mr-2"></div>
+              </div>
+              <div className="mt-2 flex space-x-4">
+                <div className="h-4 w-32 bg-gray-200 skeleton-animation rounded"></div>
+                <div className="h-4 w-32 bg-gray-200 skeleton-animation rounded"></div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="h-4 w-32 bg-gray-200 skeleton-animation rounded mb-2"></div>
+              <div className="h-8 w-24 bg-gray-200 skeleton-animation rounded"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Transactions skeleton */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-4">
+            <div className="h-6 w-40 bg-gray-200 skeleton-animation rounded"></div>
+            <div className="h-6 w-32 bg-gray-200 skeleton-animation rounded"></div>
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="flex items-center justify-between border-b pb-4 last:border-b-0">
+                <div>
+                  <div className="h-5 w-48 bg-gray-200 skeleton-animation rounded mb-2"></div>
+                  <div className="flex items-center space-x-2">
+                    <div className="h-4 w-32 bg-gray-200 skeleton-animation rounded"></div>
+                    <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="text-right">
+                    <div className="h-5 w-20 bg-gray-200 skeleton-animation rounded mb-1"></div>
+                    <div className="h-4 w-16 bg-gray-200 skeleton-animation rounded"></div>
+                  </div>
+                  <div className="h-8 w-8 bg-gray-200 skeleton-animation rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Show skeleton if data is still loading
+  if (isLoading) {
+    return <WalletSkeleton />;
+  }
+
+
 
 
   return (
     <>
-    <div >
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Wallet</h2>
-        <EditButton
-          onClick={() => alert('Edit wallet settings')}
-          className="bg-gray-100 rounded-lg"
-        />
-      </div>
-
-      {/* Balance Card */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6 mt-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-lg font-medium">Available Balance</h3>
-            <p className="text-3xl font-bold mt-2">
-              ${walletBalance?.balance?.toFixed(2) ?? "0.00"}
-              <span className="text-sm text-gray-500 ml-2">{walletBalance?.currency || 'USD'}</span>
-            </p>
-            <div className="mt-2 flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Pending Balance:</span>
-              <span className="text-sm font-medium text-yellow-600">
-                ${pendingBalance > 0 ? pendingBalance : '0.00'}
-              </span>
-              <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">
-                Hold
-              </span>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-500">
-              Last updated: {new Date(walletBalance?.updatedAt).toLocaleString('en-US', {
-                year: 'numeric',
-                month: 'numeric',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              })}
-            </p>
-            <ViewDetailsButton
-              onClick={() => navigate(`/account-settings/wallet/wallet-details/${walletBalance._id}`)}
-              className="mt-2"
+      <div className="space-y-6 px-4 py-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Wallet</h2>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => setIsBankAccountsOpen(true)}
+              className="px-4 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg"
+            >
+              Withdraw
+            </button>
+            <button
+              ref={topUpButtonRef}
+              onClick={() => setIsTopupOpen(true)}
+              className={`px-4 py-2 bg-custom-blue text-white rounded-lg text-sm hover:bg-custom-blue/90 ${animateTopUp ? 'top-up-button-animation pulse-glow' : ''}`}
+            >
+              Top Up
+            </button>
+            <EditButton
+              onClick={() => alert('Edit wallet settings')}
+              className="bg-gray-100 rounded-lg"
             />
           </div>
         </div>
-      </div>
 
-      {/* Transactions */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Transaction History</h3>
-          <button className="text-blue-600 hover:text-blue-800">
-            Export Transactions
-          </button>
-        </div>
-        <div className="space-y-4">
-          {walletBalance?.transactions  ?
-          
-          walletBalance?.transactions.map(transaction => (
-            <div key={transaction._id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
-              <div>
-                <p className="font-medium">{transaction.description || "N/A"}</p>
-                <div className="flex items-center space-x-2">
-                  <p className="text-sm text-gray-500">
-                    {new Date(transaction.createdAt).toLocaleString('en-US', {
-                      year: 'numeric',
-                      month: 'numeric',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
-                  </p>
-                  <span className={`text-sm px-2 py-0.5 rounded-full ${transaction.type.toLowerCase() === 'credit' ? 'bg-green-100 text-green-800' :
-                    transaction.type.toLowerCase() === 'debit' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
-                  </span>
-                </div>
+        {/* Balance */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between">
+            <div>
+              <h3 className="text-lg font-medium">Available Balance</h3>
+              <div className="mt-3 flex items-center">
+                <span className="text-3xl font-bold mr-2">
+                  ${walletBalance?.balance ? walletBalance.balance.toFixed(2) : '0.00'}
+                </span>
+                {/* <button
+                onClick={() => setIsTopupOpen(true)}
+                className="ml-3 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              >
+                Top Up
+              </button>
+              <button
+                onClick={() => setIsBankAccountsOpen(true)}
+                className="ml-2 px-3 py-1 border border-blue-600 text-blue-600 text-sm rounded hover:bg-blue-50"
+              >
+                Withdraw
+              </button> */}
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <p className={`font-medium ${getTransactionTypeStyle(transaction.type.toLowerCase())}`}>
-                    {transaction.type.toLowerCase() === 'credit' ? '+' : transaction.type.toLowerCase() === 'debit' ? '-' : '~'}
-                    ${transaction?.amount.toFixed(2)}
-                  </p>
-                  <span className={`text-sm px-2 py-1 rounded-full ${transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+              <div className="mt-2 flex space-x-4 text-sm">
+                <div>
+                  <span className="text-gray-500">Pending Balance: </span>
+                  <span className="text-sm font-medium">
+                    ${pendingBalance.toFixed(2)}
                   </span>
                 </div>
-                <ViewDetailsButton onClick={() => 
-                  navigate(`/account-settings/wallet/wallet-transaction/${transaction._id}`)
-                  // setSelectedTransaction(transaction)
-                  } 
-                  />
+                <div>
+                  <span className="text-gray-500">Hold Amount: </span>
+                  <span className="text-sm font-medium text-yellow-600">
+                    ${walletBalance?.holdAmount ? walletBalance?.holdAmount.toFixed(2) : 0.00}
+                  </span>
+                </div>
               </div>
             </div>
-          ))
-          : <p className='flex justify-center items-center w-full h-full'>transactions Not found</p>
-          }
+            <div className="text-right">
+              <p className="text-sm text-gray-500">
+                Last updated: {walletBalance?.updatedAt ? new Date(walletBalance.updatedAt).toLocaleString() : 'N/A'}
+              </p>
+              <ViewDetailsButton
+                onClick={() => setViewingBalance(true)}
+                className="mt-2"
+              />
+            </div>
+          </div>
         </div>
-      </div>
 
+        {/* Transactions */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Transaction History</h3>
+            <button className="text-custom-blue hover:text-custom-blue/80">
+              Export Transactions
+            </button>
+          </div>
+          <div className="space-y-4">
+            {walletTransactions && walletTransactions.length > 0 ? (
+              [...walletTransactions]
+                .sort((a, b) => {
+                  const dateA = a.createdAt ? new Date(a.createdAt) : a.createdDate ? new Date(a.createdDate) : new Date(0);
+                  const dateB = b.createdAt ? new Date(b.createdAt) : b.createdDate ? new Date(b.createdDate) : new Date(0);
+                  return dateB - dateA; // Sort in descending order (newest first)
+                })
+                .map(transaction => (
+                  <div key={transaction._id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
+                    <div>
+                      <p className="font-medium">{transaction.description}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm text-gray-500">
+                          {transaction.createdAt ? new Date(transaction.createdAt).toLocaleString() : transaction.createdDate ? new Date(transaction.createdDate).toLocaleString() : 'N/A'}
+                        </p>
+                        <span className={`text-sm px-2 py-0.5 rounded-full ${transaction.type === 'credit' ? 'bg-green-100 text-green-800' :
+                            transaction.type === 'debit' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                          }`}>
+                          {transaction.type ? transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) : 'Unknown'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <p className={`font-medium ${getTransactionTypeStyle(transaction.type)}`}>
+                          {transaction.type === 'credit' ? '+' : transaction.type === 'debit' ? '-' : '~'}
+                          ${transaction.amount ? transaction.amount.toFixed(2) : '0.00'}
+                        </p>
+                        <span className={`text-sm px-2 py-1 rounded-full ${transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                          {transaction.status ? transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1) : 'Pending'}
+                        </span>
+                      </div>
+                      <ViewDetailsButton onClick={() => setSelectedTransaction(transaction)} />
+                    </div>
+                  </div>
+                ))
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                No transaction history available
+              </div>
+            )}
+          </div>
+        </div>
+
+
+      </div>
       {/* Popups */}
-      {/* {viewingBalance && (
+      {viewingBalance && walletBalance && (
         <WalletBalancePopup
           walletBalance={walletBalance}
           onClose={() => setViewingBalance(false)}
         />
-      )} */}
-      {/* 
+      )}
+
       {selectedTransaction && (
         <WalletTransactionPopup
           transaction={selectedTransaction}
           onClose={() => setSelectedTransaction(null)}
         />
-      )} */}
-    </div>
-<Outlet />
+      )}
+
+      {isTopupOpen && (
+        <WalletTopupPopup
+          onClose={() => setIsTopupOpen(false)}
+          onTopup={handleTopup}
+        />
+      )}
+
+      {isBankAccountsOpen && (
+        <BankAccountsPopup
+          onClose={() => setIsBankAccountsOpen(false)}
+          onSave={handleSaveBankAccounts}
+        />
+      )}
+      <Outlet />
     </>
   )
 }
+
+export default Wallet

@@ -1,14 +1,14 @@
 // utils/CandidateValidation.js
-
 const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
 };
 
 const validatePhoneNumber = (phone) => {
-    const re = /^[0-9]+$/;
+    const re = /^[0-9]{10}$/; // ✅ Exactly 10 digits
     return re.test(String(phone));
 };
+
 
 const getErrorMessage = (field, value, formData) => {
     const messages = {
@@ -23,8 +23,8 @@ const getErrorMessage = (field, value, formData) => {
         RelevantExperienceGreater: "Relevant Experience cannot be greater than Current Experience",
         Position: "Position is required",
         skills: "At least one skill is required",
-        invalidEmail: "Invalid email address",
-        invalidPhone: "Invalid phone number",
+        invalidEmail: "Invalid Email address",
+        invalidPhone: "Invalid Phone number",
         CurrentRole: "Current Role is required",
     };
 
@@ -40,54 +40,57 @@ const getErrorMessage = (field, value, formData) => {
         return messages.invalidPhone;
     }
 
-    // Add validation for Relevant Experience
+    // Validate RelevantExperience against CurrentExperience
+    // Validate RelevantExperience against CurrentExperience
     if (field === "RelevantExperience" && formData && formData.CurrentExperience) {
-        const currentExp = parseInt(formData.CurrentExperience);
-        const relevantExp = parseInt(value);
+        const currentExp = parseInt(formData.CurrentExperience, 10);
+        const relevantExp = parseInt(value, 10);
         if (relevantExp > currentExp) {
             return messages.RelevantExperienceGreater;
         }
     }
 
+
     return "";
 };
 
-// Update the validateCandidateForm function to pass formData to getErrorMessage:
+// Validate candidate form. Ensures all field-level errors are caught, including
+// the cross-field constraint that RelevantExperience must not exceed CurrentExperience.
+// Returns { formIsValid, newErrors }
 const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
-    // console.log("formData", formData);
     let formIsValid = true;
     const newErrors = { ...errors };
 
+    // Validate each field
     Object.keys(formData).forEach((field) => {
-        const errorMessage = getErrorMessage(field, formData[field], formData);  // Pass formData here
+        const errorMessage = getErrorMessage(field, formData[field], formData);
         if (errorMessage) {
             newErrors[field] = errorMessage;
             formIsValid = false;
         }
     });
 
+    // Additional validations
     if (!selectedPosition || selectedPosition.length === 0) {
         newErrors.Position = getErrorMessage("Position", null, formData);
         formIsValid = false;
     }
-    
+
     if (entries.length === 0) {
-        newErrors.skills = getErrorMessage("skills", entries.length, formData);
+        newErrors.skills = getErrorMessage("skills", entries.length, entries, formData);
+        formIsValid = false;
+    } else if (entries.some((entry) => !entry.skill || !entry.experience || !entry.expertise)) {
+        newErrors.skills = "All skills must have a value in the skill, experience and expertise fields";
         formIsValid = false;
     }
 
     return { formIsValid, newErrors };
 };
- const countryCodes = [
+
+const countryCodes = [
     { value: '+1', label: '🇺🇸 +1 (USA)' },
     { value: '+44', label: '🇬🇧 +44 (UK)' },
     { value: '+91', label: '🇮🇳 +91 (India)' },
-    // Add more countries as needed
-  ];
-  
+];
 
-module.exports = {
-    validateCandidateForm,
-    getErrorMessage,
-    countryCodes
-};
+export { validateCandidateForm, getErrorMessage, countryCodes };

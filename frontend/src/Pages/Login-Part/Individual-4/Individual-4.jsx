@@ -1,33 +1,43 @@
 import React, { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from 'react-router-dom';
-import { validateSteps } from '../../../utils/IndividualValidation.js';
+import { useNavigate, useLocation } from "react-router-dom";
 import { TailSpin } from "react-loader-spinner";
-import StepIndicator from "./StepIndicator.jsx"
-import BasicDetails from './BasicDetails.jsx'
-import AdditionalDetails from './AdditionalDetails.jsx';
-import InterviewDetails from './InterviewDetails.jsx'
-import AvailabilityDetails from './AvailabilityDetails.jsx'
-import toast from "react-hot-toast";
-import { config } from '../../../config.js';
-import { setAuthCookies } from '../../../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { toast } from "react-toastify";
+import StepIndicator from "./StepIndicator.jsx";
+import BasicDetails from "./BasicDetails.jsx";
+import AdditionalDetails from "./AdditionalDetails.jsx";
+import InterviewDetails from "./InterviewDetails.jsx";
+import AvailabilityDetails from "./AvailabilityDetails.jsx";
+import { config } from "../../../config.js";
+import { setAuthCookies, clearAllAuth } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
+import { useIndividualLogin } from "../../../apiHooks/useIndividualLogin";
+import { uploadFile } from "../../../apiHooks/imageApis.js";
+import Loading from "../../../Components/Loading.js";
 
 const FooterButtons = ({
   onNext,
   onPrev,
   currentStep,
   isFreelancer,
-  isInternalInterviewer
+  isInternalInterviewer,
+  isSubmitting = false,
 }) => {
-  const lastStep = isInternalInterviewer ? 3 : (isFreelancer ? 3 : 1);
+  const lastStep = isInternalInterviewer ? 3 : isFreelancer ? 3 : 1;
   const isLastStep = currentStep === lastStep;
 
   return (
     <div className="flex justify-between space-x-3 mt-4 mb-4 sm:text-sm">
       {currentStep > 0 ? (
-        <button type="button" onClick={onPrev} className="border border-custom-blue rounded px-6 sm:px-3 py-1 text-custom-blue">
+        <button
+          type="button"
+          onClick={onPrev}
+          disabled={isSubmitting}
+          className={`border ${isSubmitting
+            ? "border-gray-300 text-gray-400 cursor-not-allowed"
+            : "border-custom-blue text-custom-blue hover:bg-gray-50"
+            } rounded px-6 sm:px-3 py-1`}
+        >
           Prev
         </button>
       ) : (
@@ -35,33 +45,105 @@ const FooterButtons = ({
       )}
       <button
         onClick={onNext}
-        className='px-6 sm:px-3 py-1 rounded text-white bg-custom-blue'
+        disabled={isSubmitting}
+        className={`px-6 sm:px-3 py-1 rounded text-white flex items-center justify-center ${isSubmitting
+          ? "bg-custom-blue/70 cursor-not-allowed"
+          : "bg-custom-blue hover:bg-custom-blue/90"
+          }`}
         type="button"
       >
-        {isLastStep ? "Save" : "Next"}
+        {isSubmitting ? (
+          <>
+            {/* <svg
+              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg> */}
+            <Loading message="Loading..." />
+
+            {isLastStep ? "Saving..." : "Processing..."}
+          </>
+        ) : isLastStep ? (
+          "Save"
+        ) : (
+          "Next"
+        )}
       </button>
     </div>
   );
 };
 
 const MultiStepForm = () => {
-      console.log('MultiStepForm')
   const navigate = useNavigate();
   const location = useLocation();
-  const { Freelancer, profession, linkedInData } = location.state || {}; //from profile3
-  const { isProfileComplete, roleName, contactDataFromOrg } = location.state || {}; //from organizationlogin page
+
+  // Initialize currentStep from location.state or default to 0
+  const [currentStep, setCurrentStep] = useState(
+    location.state?.currentStep || 0
+  );
+
+  const {
+    Freelancer,
+    profession,
+    linkedInData,
+    userId,
+    contactId,
+    tenantId,
+    token,
+    linkedIn_email,
+  } = location.state || {};
+  const { isProfileCompleteStateOrg, roleName, contactEmailFromOrg } =
+    location.state || {};
+
+  const { matchedContact, loading: contactLoading } = useIndividualLogin(
+    linkedIn_email,
+    isProfileCompleteStateOrg,
+    contactEmailFromOrg
+  );
+
+  const [formLoading, setFormLoading] = useState(false);
+  const loading = contactLoading || formLoading;
+
+  // Keep the form loading state in sync with the contact loading state
+  useEffect(() => {
+    setFormLoading(contactLoading);
+  }, [contactLoading]);
+
   const [selectedTimezone, setSelectedTimezone] = useState({});
   const [errors, setErrors] = useState({});
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [file, setFile] = useState(null);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [loading, setLoading] = useState(false);
+  // const [currentStep, setCurrentStep] = useState(location.state?.currentStep || 0);
+  // const [formLoading, setFormLoading] = useState(false);
+  // const loading = contactLoading || formLoading;
   const [filePreview, setFilePreview] = useState(null);
-
-  // Add these new states:
   const [selectedSkills, setSelectedSkills] = useState([]);
-  const [previousInterviewExperience, setPreviousInterviewExperience] = useState('');
+  const [previousInterviewExperience, setPreviousInterviewExperience] =
+    useState("");
   const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
+  const [selectedTechnologyies, setSelectedTechnologyies] = useState([]);
+
+  const [completionStatus, setCompletionStatus] = useState({
+    basicDetails: false,
+    additionalDetails: false,
+    interviewDetails: false,
+    availabilityDetails: false,
+  });
 
   const [times, setTimes] = useState({
     Sun: [{ startTime: null, endTime: null }],
@@ -70,72 +152,21 @@ const MultiStepForm = () => {
     Wed: [{ startTime: null, endTime: null }],
     Thu: [{ startTime: null, endTime: null }],
     Fri: [{ startTime: null, endTime: null }],
-    Sat: [{ startTime: null, endTime: null }]
+    Sat: [{ startTime: null, endTime: null }],
   });
 
   const [basicDetailsData, setBasicDetailsData] = useState({
-    firstName: linkedInData ? linkedInData.firstName : "",
-    lastName: linkedInData ? linkedInData.lastName : "",
+    firstName: "",
+    lastName: "",
     profileId: "",
-    email: linkedInData ? linkedInData?.email : "",
-    countryCode: "+91" || "",
+    email: "",
+    countryCode: "+91",
     phone: "",
-    linkedinUrl: linkedInData ? linkedInData?.profileUrl : "",
+    linkedinUrl: "",
     portfolioUrl: "",
     dateOfBirth: "",
     gender: "",
   });
-
-  // const checkProfileIdExists = useCallback(async (profileId) => {
-  //   if (!profileId) return false;
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`);
-  //     return response.data.exists;
-  //   } catch (error) {
-  //     console.error("ProfileId check error:", error);
-  //     return false;
-  //   }
-  // }, []);
-
-  // const checkEmailExists = useCallback(async (email) => {
-  //   if (!email) return false;
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/check-email?email=${email}`);
-  //     return response.data.exists;
-  //   } catch (error) {
-  //     console.error("Email check error:", error);
-  //     return false;
-  //   }
-  // }, []);
-
-  // if user created from organization default data will display from here
-  useEffect(() => {
-    if (isProfileComplete && contactDataFromOrg) {
-      setBasicDetailsData((prevData) => ({
-        ...prevData,
-        // name: `${contactDataFromOrg.firstName || ''} ${contactDataFromOrg.lastName || ''}`.trim(),
-        firstName: contactDataFromOrg.firstName || '',
-        lastName: contactDataFromOrg.lastName || '',
-        profileId: contactDataFromOrg.profileId || '',
-        email: contactDataFromOrg.email || '',
-        phone: contactDataFromOrg.phone || '',
-      }));
-    }
-  }, [isProfileComplete, contactDataFromOrg]);
-
-  useEffect(() => {
-    if (linkedInData) {
-      setFilePreview(linkedInData.pictureUrl);
-      setBasicDetailsData(prev => ({
-        ...prev,
-        // name: `${linkedInData.firstName} ${linkedInData.lastName}`,
-        firstName: linkedInData.firstName || '',
-        lastName: linkedInData.lastName || '',
-        email: linkedInData.email,
-        linkedinUrl: linkedInData.profileUrl
-      }));
-    }
-  }, [linkedInData]);
 
   const [additionalDetailsData, setAdditionalDetailsData] = useState({
     currentRole: "",
@@ -144,6 +175,7 @@ const MultiStepForm = () => {
     location: "",
     coverLetterdescription: "",
     resume: null,
+    coverLetter: null,
   });
 
   const [interviewDetailsData, setInterviewDetailsData] = useState({
@@ -153,9 +185,9 @@ const MultiStepForm = () => {
     previousInterviewExperienceYears: "",
     expertiseLevel_ConductingInterviews: "",
     hourlyRate: "",
-    interviewFormatWeOffer: [],
+    interviewFormatWeOffer: [], // This will be mapped to InterviewFormatWeOffer in the backend
     expectedRatePerMockInterview: "",
-    noShowPolicy: "",
+    noShowPolicy: "", // This will be mapped to NoShowPolicy in the backend
     bio: "",
     professionalTitle: "",
   });
@@ -163,55 +195,207 @@ const MultiStepForm = () => {
   const [availabilityDetailsData, setAvailabilityDetailsData] = useState({
     timeZone: "",
     preferredDuration: "",
-    availability: ""
+    availability: "",
   });
 
-  // Determine if we should show limited steps (only 0 and 1) or all steps
-  const showLimitedSteps = isProfileComplete && roleName !== "Internal_Interviewer";
-  const isInternalInterviewer = roleName === "Internal_Interviewer";
+  const [resumeFile, setResumeFile] = useState(null);
+  const [coverLetterFile, setCoverLetterFile] = useState(null);
+  const [isProfileRemoved, setIsProfileRemoved] = useState(false);
+  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+  const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
 
-  const [completed, setCompleted] = useState([false, false, false, false]);
+  // Populate fields with matched contact data, falling back to LinkedIn data or defaults
+  useEffect(() => {
+    if (matchedContact) {
+      setBasicDetailsData({
+        firstName: matchedContact.firstName || linkedInData?.firstName || "",
+        lastName: matchedContact.lastName || linkedInData?.lastName || "",
+        profileId: matchedContact.profileId || "",
+        email: matchedContact.email || linkedInData?.email || "",
+        countryCode: matchedContact.countryCode || "+91",
+        phone: matchedContact.phone || "",
+        linkedinUrl:
+          matchedContact.linkedinUrl || linkedInData?.profileUrl || "",
+        portfolioUrl: matchedContact.portfolioUrl || "",
+        dateOfBirth: matchedContact.dateOfBirth || "",
+        gender: matchedContact.gender || "",
+      });
+      console.log("matchedContact", matchedContact);
 
-  const handleNextStep = async () => {
-    let params = {};
-    let isValid = false;
+      setAdditionalDetailsData({
+        currentRole: matchedContact.currentRole || "",
+        industry: matchedContact.industry || "",
+        yearsOfExperience: matchedContact.yearsOfExperience || "",
+        location: matchedContact.location || "",
+        coverLetterdescription: matchedContact.coverLetterdescription || "",
+        resume: matchedContact.resume || null,
+        coverLetter: matchedContact.coverLetter || null,
+      });
 
-    if (currentStep === 0) {
-      params = {
-        formData: basicDetailsData,
-      };
-      isValid = await validateSteps(
-        currentStep,
-        params,
-        setErrors,
-        // checkProfileIdExists,
-        // checkEmailExists
+      setInterviewDetailsData({
+        skills: matchedContact.skills || [],
+        technologies: matchedContact.technologies || [],
+        previousInterviewExperience:
+          matchedContact.previousInterviewExperience || "",
+        previousInterviewExperienceYears:
+          matchedContact.previousInterviewExperienceYears || "",
+        expertiseLevel_ConductingInterviews:
+          matchedContact.expertiseLevel_ConductingInterviews || "",
+        hourlyRate: matchedContact.hourlyRate || "",
+        interviewFormatWeOffer: matchedContact.interviewFormatWeOffer || [],
+        expectedRatePerMockInterview:
+          matchedContact.expectedRatePerMockInterview || "",
+        noShowPolicy: matchedContact.noShowPolicy || "",
+        bio: matchedContact.bio || "",
+        professionalTitle: matchedContact.professionalTitle || "",
+      });
+
+      setAvailabilityDetailsData({
+        timeZone: matchedContact.timeZone || "",
+        preferredDuration: matchedContact.preferredDuration || "",
+        availability: matchedContact.availability || "",
+      });
+
+      setCompletionStatus(
+        matchedContact.completionStatus || {
+          basicDetails: false,
+          additionalDetails: false,
+          interviewDetails: false,
+          availabilityDetails: false,
+        }
       );
 
+      if (matchedContact.imageData?.path) {
+        setFilePreview(matchedContact.imageData.path);
+      }
+
+      if (linkedInData?.pictureUrl) {
+        setFilePreview(linkedInData.pictureUrl);
+      }
+
+      // Update selectedSkills and times if available
+      setSelectedSkills(matchedContact.skills || []);
+      if (
+        matchedContact.availability &&
+        Array.isArray(matchedContact.availability)
+      ) {
+        const updatedTimes = {
+          Sun: [{ startTime: null, endTime: null }],
+          Mon: [{ startTime: null, endTime: null }],
+          Tue: [{ startTime: null, endTime: null }],
+          Wed: [{ startTime: null, endTime: null }],
+          Thu: [{ startTime: null, endTime: null }],
+          Fri: [{ startTime: null, endTime: null }],
+          Sat: [{ startTime: null, endTime: null }],
+        };
+        matchedContact.availability.forEach(({ day, timeSlots }) => {
+          if (updatedTimes[day] && Array.isArray(timeSlots)) {
+            updatedTimes[day] = timeSlots.map((slot) => ({
+              startTime: slot.startTime || null,
+              endTime: slot.endTime || null,
+            }));
+          }
+        });
+        setTimes(updatedTimes);
+      }
+    } else if (linkedInData) {
+      // Fallback to LinkedIn data if no matched contact
+      setBasicDetailsData((prev) => ({
+        ...prev,
+        firstName: linkedInData.firstName || prev.firstName,
+        lastName: linkedInData.lastName || prev.lastName,
+        email: linkedInData.email || prev.email,
+        linkedinUrl: linkedInData.profileUrl || prev.linkedinUrl,
+      }));
+      setFilePreview(linkedInData.pictureUrl || filePreview);
+    }
+  }, [matchedContact, linkedInData]);
+
+  const showLimitedSteps =
+    isProfileCompleteStateOrg && roleName !== "Internal_Interviewer";
+  const isInternalInterviewer = roleName === "Internal_Interviewer";
+
+  const handleNextStep = async () => {
+    let isValid = false;
+
+    // Validate current step
+    if (currentStep === 0) {
+      const basicDetailsErrors = {};
+      if (!basicDetailsData.email)
+        basicDetailsErrors.email = "Email is required";
+      if (!basicDetailsData.lastName)
+        basicDetailsErrors.lastName = "Last name is required";
+      if (!basicDetailsData.phone)
+        basicDetailsErrors.phone = "Phone number is required";
+      if (!basicDetailsData.linkedinUrl)
+        basicDetailsErrors.linkedinUrl = "LinkedIn URL is required";
+      setErrors({ ...errors, ...basicDetailsErrors });
+      isValid = Object.keys(basicDetailsErrors).length === 0;
     } else if (currentStep === 1) {
-      params = {
-        formData: additionalDetailsData,
-        selectedIndustry: additionalDetailsData.industry,
-        selectedLocation: additionalDetailsData.location,
-      };
-      isValid = validateSteps(currentStep, params, setErrors);
+      const professionalErrors = {};
+      if (!additionalDetailsData.currentRole)
+        professionalErrors.currentRole = "Current role is required";
+      if (!additionalDetailsData.industry)
+        professionalErrors.industry = "Industry is required";
+      if (!additionalDetailsData.yearsOfExperience)
+        professionalErrors.yearsOfExperience =
+          "Years of experience is required";
+      if (!additionalDetailsData.location)
+        professionalErrors.location = "Location is required";
+      setErrors({ ...errors, ...professionalErrors });
+      isValid = Object.keys(professionalErrors).length === 0;
     } else if (currentStep === 2) {
-      params = {
-        selectedCandidates: selectedCandidates,
-        selectedSkills: interviewDetailsData.skills,
-        InterviewPreviousExperience:
-          interviewDetailsData.previousInterviewExperience,
-        expertiseLevel: interviewDetailsData.expertiseLevel_ConductingInterviews,
-        formData2: interviewDetailsData,
-      };
-      isValid = validateSteps(currentStep, params, setErrors);
+      const interviewErrors = {};
+      const validSkills = interviewDetailsData.skills?.filter(skill => skill !== null) || [];
+      if (validSkills.length === 0) {
+        interviewErrors.skills = "Skills are required";
+      }
+      if (!interviewDetailsData.technologies?.length) {
+        interviewErrors.technologies = "Technologies are required";
+      }
+      if (!interviewDetailsData.previousInterviewExperience) {
+        interviewErrors.previousInterviewExperience = "Previous interview experience is required";
+      }
+      if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
+        interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
+      }
+      if (!interviewDetailsData.interviewFormatWeOffer?.length) {
+        interviewErrors.interviewFormatWeOffer = "At least one interview format is required";
+      }
+      if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
+        interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
+      }
+      if (!interviewDetailsData.interviewFormatWeOffer?.length) {
+        interviewErrors.interviewFormatWeOffer = "At least one interview format is required";
+      }
+      if (!interviewDetailsData.noShowPolicy) {
+        interviewErrors.noShowPolicy = "No-show policy is required";
+      }
+      if (!interviewDetailsData.professionalTitle?.trim()) {
+        interviewErrors.professionalTitle = "Professional title is required";
+      } else if (interviewDetailsData.professionalTitle.length < 50) {
+        interviewErrors.professionalTitle = "Professional title must be at least 50 characters";
+      } else if (interviewDetailsData.professionalTitle.length > 100) {
+        interviewErrors.professionalTitle = "Professional title cannot exceed 100 characters";
+      }
+      if (!interviewDetailsData.bio?.trim()) {
+        interviewErrors.bio = "Professional bio is required";
+      } else if (interviewDetailsData.bio.length < 150) {
+        interviewErrors.bio = "Professional bio must be at least 150 characters";
+      }
+
+      setErrors({ ...errors, ...interviewErrors });
+      isValid = Object.keys(interviewErrors).length === 0;
     } else if (currentStep === 3) {
-      params = {
-        times: times,
-        formData3: availabilityDetailsData,
-        selectedOption: availabilityDetailsData.preferredDuration,
-      };
-      isValid = validateSteps(currentStep, params, setErrors);
+      const availabilityErrors = {};
+      if (!availabilityDetailsData.timeZone)
+        availabilityErrors.timeZone = "Timezone is required";
+      if (!availabilityDetailsData.preferredDuration)
+        availabilityErrors.preferredDuration = "Preferred duration is required";
+      setErrors({ ...errors, ...availabilityErrors });
+      isValid = Object.keys(availabilityErrors).length === 0;
+    } else {
+      isValid = true;
     }
 
     if (!isValid) {
@@ -219,178 +403,252 @@ const MultiStepForm = () => {
       return;
     }
 
-    setCompleted((prev) => {
-      const updated = [...prev];
-      updated[currentStep] = true;
-      return updated;
-    });
+    const statusKey =
+      currentStep === 0
+        ? "basicDetails"
+        : currentStep === 1
+          ? "additionalDetails"
+          : currentStep === 2
+            ? "interviewDetails"
+            : "availabilityDetails";
 
-    // For non-freelancer or limited steps profile (EXCLUDING internal interviewers), save at step 1
-    if (
-      (!Freelancer && currentStep === 1 && !isInternalInterviewer) ||
-      (showLimitedSteps && currentStep === 1 && !isInternalInterviewer)
-    ) {
-      await handleSubmit();
-      return;
-    }
-
-    // For freelancer/internal interviewer, save at last step
-    if ((Freelancer || isInternalInterviewer) && currentStep === 3) {
-      await handleSubmit();
-    } else {
-      const nextStep = Math.min(currentStep + 1, showLimitedSteps ? 1 : 3);
-      setCurrentStep(nextStep);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-    setLoading(true);
-  
-    const userData = {
-      firstName: basicDetailsData.firstName,
-      lastName: basicDetailsData.lastName,
-      profileId: basicDetailsData.profileId,
-      isFreelancer: isInternalInterviewer ? true : Freelancer,
-      email: basicDetailsData.email,
-      isProfileCompleted: true,
+    const updatedCompletionStatus = {
+      ...completionStatus,
+      [statusKey]: true,
     };
-  
-    const contactData = {
-      ...basicDetailsData,
-      ...additionalDetailsData,
-      ...(isInternalInterviewer || Freelancer ? interviewDetailsData : {}),
-      LetUsKnowYourProfession: profession,
-      // Add preferredDuration and timeZone to contactData
-      preferredDuration: availabilityDetailsData.preferredDuration,
-      timeZone: availabilityDetailsData.timeZone,
-    };
-  
-    const availabilityData = (isInternalInterviewer || Freelancer)
-      ? Object.keys(availabilityDetailsData.availability || times)
-          .map((day) => ({
-            day,
-            timeSlots: availabilityDetailsData.availability[day]
-              .filter((slot) => slot.startTime && slot.endTime && slot.startTime !== 'unavailable')
-              .map((slot) => ({
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-              })),
-          }))
-          .filter((dayData) => dayData.timeSlots.length > 0)
-      : [];
-  
-    let isProfileCompleteData = {};
-    if (isProfileComplete) {
-      isProfileCompleteData = {
-        isProfileComplete: true,
-        ownerId: contactDataFromOrg.ownerId,
-        contactId: contactDataFromOrg._id,
-        isInternalInterviewer,
-      };
-    }
-  
+
+    setCompletionStatus(updatedCompletionStatus);
+
     try {
-      const response = await axios.post(`${config.REACT_APP_API_URL}/Individual/Signup`, {
-        userData,
-        contactData,
-        availabilityData,
-        Freelancer,
-        isProfileCompleteData,
-      });
-  
-      // Show success toast based on create/update
-      toast.success(
-        response.data.isUpdate 
-          ? "Profile updated successfully!" 
-          : "Profile created successfully!",
-        { autoClose: 5000 }
-      );
-  
-      const { contactId, token } = response.data;
-  
-      // Handle image upload
-      if (file) {
-        const imageData = new FormData();
-        imageData.append('image', file);
-        imageData.append('type', 'contact');
-        imageData.append('id', contactId);
-        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      } else if (linkedInData?.pictureUrl && !filePreview) {
-        const response = await fetch(linkedInData.pictureUrl);
-        const blob = await response.blob();
-        const imageFile = new File([blob], 'linkedin-profile.jpg', { type: 'image/jpeg' });
-        const imageData = new FormData();
-        imageData.append('image', imageFile);
-        imageData.append('type', 'contact');
-        imageData.append('id', contactId);
-        await axios.post(`${config.REACT_APP_API_URL}/upload`, imageData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      }
-  
-      if (!token) {
-        console.error("No token received from server");
-        toast.error("Failed to authenticate. Please try again.", { autoClose: 5000 });
-        setLoading(false);
-        return;
-      }
+      setFormLoading(true);
 
-      // Store JWT in cookies
-      setAuthCookies(token);
-  
-      // Send welcome email
-      try {
-        await axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-          email: userData.email,
-          tenantId: response.data.tenantId,
-          ownerId: response.data.ownerId,
-          lastName: userData.lastName,
-        });
-      } catch (emailError) {
-        console.error('Email error:', emailError);
-        // Don't show error toast for email failure
-      }
-  
-      setLoading(false);
-      navigate('/subscription-plans');
-    } catch (error) {
-      console.error('Submission failed:', error);
-      setLoading(false);
-      toast.error(
-        error.response?.data?.message || "Failed to submit form. Please try again.",
-        { autoClose: 5000 }
+      const userData = {
+        firstName: basicDetailsData.firstName,
+        lastName: basicDetailsData.lastName,
+        profileId: basicDetailsData.profileId,
+        isFreelancer: isInternalInterviewer ? false : Freelancer,
+        email: basicDetailsData.email,
+        ...(isProfileCompleteStateOrg && {
+          isProfileCompleted:
+            currentStep === (isInternalInterviewer ? 3 : Freelancer ? 3 : 1),
+        }),
+      };
+
+      const contactData = {
+        ...(currentStep >= 0 && {
+          firstName: basicDetailsData.firstName,
+          lastName: basicDetailsData.lastName,
+          profileId: basicDetailsData.profileId,
+          email: basicDetailsData.email,
+          countryCode: basicDetailsData.countryCode,
+          phone: basicDetailsData.phone,
+          linkedinUrl: basicDetailsData.linkedinUrl,
+          portfolioUrl: basicDetailsData.portfolioUrl,
+          dateOfBirth: basicDetailsData.dateOfBirth,
+          gender: basicDetailsData.gender,
+        }),
+        ...(currentStep >= 1 && {
+          currentRole: additionalDetailsData.currentRole,
+          industry: additionalDetailsData.industry,
+          yearsOfExperience: additionalDetailsData.yearsOfExperience,
+          location: additionalDetailsData.location,
+          coverLetterdescription: additionalDetailsData.coverLetterdescription,
+          resume: additionalDetailsData.resume,
+          coverLetter: additionalDetailsData.coverLetter,
+        }),
+        ...(currentStep >= 2 && {
+          skills: interviewDetailsData.skills,
+          technologies: interviewDetailsData.technologies,
+          previousInterviewExperience:
+            interviewDetailsData.previousInterviewExperience,
+          previousInterviewExperienceYears:
+            interviewDetailsData.previousInterviewExperienceYears,
+          expertiseLevel_ConductingInterviews:
+            interviewDetailsData.expertiseLevel_ConductingInterviews,
+          hourlyRate: interviewDetailsData.hourlyRate,
+          interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
+          expectedRatePerMockInterview:
+            interviewDetailsData.expectedRatePerMockInterview,
+          noShowPolicy: interviewDetailsData.noShowPolicy,
+          bio: interviewDetailsData.bio,
+          professionalTitle: interviewDetailsData.professionalTitle,
+        }),
+        ...(currentStep >= 3 && {
+          timeZone: availabilityDetailsData.timeZone,
+          preferredDuration: availabilityDetailsData.preferredDuration,
+        }),
+        LetUsKnowYourProfession: profession,
+        completionStatus: updatedCompletionStatus,
+        _id: contactId,
+      };
+
+      const tenantData = {
+        isProfileCompletedForTenant: currentStep === (Freelancer ? 3 : 1),
+      };
+
+      Object.keys(contactData).forEach((key) => {
+        if (contactData[key] === undefined) {
+          delete contactData[key];
+        }
+      });
+
+      const availabilityData =
+        (isInternalInterviewer || Freelancer) && currentStep === 3
+          ? Object.keys(times)
+            .map((day) => ({
+              day,
+              timeSlots: times[day]
+                .filter(
+                  (slot) =>
+                    slot.startTime &&
+                    slot.endTime &&
+                    slot.startTime !== "unavailable"
+                )
+                .map((slot) => ({
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                })),
+            }))
+            .filter((dayData) => dayData.timeSlots.length > 0)
+          : [];
+
+      const requestData = {
+        userData,
+        contactData: {
+          ...contactData,
+          // Map frontend field names to backend field names
+          skills: interviewDetailsData.skills.filter(skill => skill !== null),
+          technologies: interviewDetailsData.technologies,
+          PreviousExperienceConductingInterviews: interviewDetailsData.previousInterviewExperience,  // Map to backend field name
+          PreviousExperienceConductingInterviewsYears: interviewDetailsData.previousInterviewExperienceYears,
+          ExpertiseLevel_ConductingInterviews: interviewDetailsData.expertiseLevel_ConductingInterviews,
+          hourlyRate: interviewDetailsData.hourlyRate,
+          InterviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
+          expectedRatePerMockInterview: interviewDetailsData.expectedRatePerMockInterview,
+          NoShowPolicy: interviewDetailsData.noShowPolicy,
+          bio: interviewDetailsData.bio,
+          professionalTitle: interviewDetailsData.professionalTitle,
+        },
+        ...(availabilityData.length > 0 && { availabilityData }),
+        isInternalInterviewer,
+        isProfileCompleteStateOrg,
+        ownerId: matchedContact.ownerId,
+        tenantData,
+      };
+
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/Individual/Signup`,
+        requestData,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
+      if (response.data.token) {
+        // Clear all cookies and localStorage before setting new ones
+        clearAllAuth();
+        console.log('✅ Cleared all cookies and localStorage for individual signup');
+
+        setAuthCookies({ authToken: response.data.token });
+
+        // CUSTOM PROFILE PIC OR LINKEDIN PROFILE PIC
+        if (
+          currentStep === 0 &&
+          (file ||
+            isProfileRemoved ||
+            (linkedInData?.pictureUrl && !filePreview))
+        ) {
+          let profileFile = null;
+
+          if (file) {
+            profileFile = file;
+          } else if (
+            linkedInData?.pictureUrl &&
+            !filePreview &&
+            !isProfileRemoved
+          ) {
+            try {
+              const imageResponse = await fetch(linkedInData.pictureUrl);
+              const blob = await imageResponse.blob();
+              profileFile = new File([blob], "linkedin-profile.jpg", {
+                type: "image/jpeg",
+              });
+            } catch (err) {
+              console.error("Failed to fetch LinkedIn image", err);
+            }
+          }
+
+          const newContactId = contactId || response.data.contactId;
+
+          if (isProfileRemoved && !profileFile) {
+            await uploadFile(null, "image", "contact", newContactId); // DELETE
+          } else if (profileFile instanceof File) {
+            await uploadFile(profileFile, "image", "contact", newContactId); // UPLOAD
+          }
+        }
+
+        // RESUME AND COVER LETTER UPLOAD
+        if (currentStep >= 1) {
+          const newContactId = contactId || response.data.contactId;
+
+          // Resume
+          if (isResumeRemoved && !resumeFile) {
+            await uploadFile(null, "resume", "contact", newContactId); // DELETE
+          } else if (resumeFile instanceof File) {
+            await uploadFile(resumeFile, "resume", "contact", newContactId);
+          }
+
+          // Cover Letter
+          if (isCoverLetterRemoved && !coverLetterFile) {
+            await uploadFile(null, "coverLetter", "contact", newContactId); // DELETE
+          } else if (coverLetterFile instanceof File) {
+            await uploadFile(
+              coverLetterFile,
+              "coverLetter",
+              "contact",
+              newContactId
+            );
+          }
+        }
+
+        if (currentStep < (isInternalInterviewer ? 3 : Freelancer ? 3 : 1)) {
+          setCurrentStep(currentStep + 1);
+        } else {
+          setTimeout(() => {
+            if (isProfileCompleteStateOrg) {
+              navigate("/home");
+            } else {
+              navigate("/subscription-plans");
+            }
+          }, 2000);
+        }
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    } finally {
+      setFormLoading(false);
     }
   };
 
   const handlePrevStep = () => {
     if (currentStep === 0) {
-      navigate('/select-profession');
-    } else {
-      setCurrentStep((prevStep) => {
-        const previousStep = prevStep - 1;
-        return previousStep >= 0 ? previousStep : 0;
+      navigate("/select-profession", {
+        state: { userId, contactId, tenantId, token },
       });
+    } else {
+      setCurrentStep((prevStep) => (prevStep - 1 >= 0 ? prevStep - 1 : 0));
     }
   };
 
   return (
     <>
-      {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
-          <div className="flex flex-col items-center">
-            <TailSpin color="#ffffff" height={50} width={50} />
-            <span className="mt-2 text-white text-lg font-semibold">Processing...</span>
-          </div>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div className="bg-slate-50 min-h-screen py-6 px-2">
-          <div className="max-w-4xl mx-auto">
+      {/* Removed loading overlay and spinner */}
+      <form>
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <p className="text-2xl font-bold text-gray-900 mb-4">
               Create Profile
             </p>
@@ -400,7 +658,7 @@ const MultiStepForm = () => {
                   currentStep={currentStep}
                   showLimitedSteps={showLimitedSteps}
                   isInternalInterviewer={isInternalInterviewer}
-                  completed={completed}
+                  completed={completionStatus}
                 />
 
                 {currentStep === 0 && (
@@ -414,8 +672,7 @@ const MultiStepForm = () => {
                     filePreview={filePreview}
                     setFilePreview={setFilePreview}
                     linkedInData={linkedInData}
-                    // checkProfileIdExists={checkProfileIdExists}
-                    // checkEmailExists={checkEmailExists}
+                    setIsProfileRemoved={setIsProfileRemoved}
                   />
                 )}
 
@@ -425,6 +682,11 @@ const MultiStepForm = () => {
                     setErrors={setErrors}
                     additionalDetailsData={additionalDetailsData}
                     setAdditionalDetailsData={setAdditionalDetailsData}
+                    setResumeFile={setResumeFile}
+                    setIsResumeRemoved={setIsResumeRemoved}
+                    setIsCoverLetterRemoved={setIsCoverLetterRemoved}
+                    setCoverLetterFile={setCoverLetterFile}
+                    isProfileCompleteStateOrg={isProfileCompleteStateOrg}
                   />
                 )}
 
@@ -434,11 +696,10 @@ const MultiStepForm = () => {
                       <InterviewDetails
                         errors={errors}
                         setErrors={setErrors}
-                        selectedTechnologyies={selectedCandidates}
-                        setSelectedTechnologyies={setSelectedCandidates}
+                        selectedTechnologyies={selectedTechnologyies}  // Change from selectedCandidates
+                        setSelectedTechnologyies={setSelectedTechnologyies}  // Add this line
                         interviewDetailsData={interviewDetailsData}
                         setInterviewDetailsData={setInterviewDetailsData}
-
                         selectedSkills={selectedSkills}
                         setSelectedSkills={setSelectedSkills}
                         previousInterviewExperience={previousInterviewExperience}
@@ -470,10 +731,8 @@ const MultiStepForm = () => {
               onPrev={handlePrevStep}
               currentStep={currentStep}
               isFreelancer={Freelancer || isInternalInterviewer}
-              isProfileComplete={isProfileComplete}
-              roleName={roleName}
-              showLimitedSteps={showLimitedSteps}
               isInternalInterviewer={isInternalInterviewer}
+              isSubmitting={false} // Always false, disables loading state
             />
           </div>
         </div>

@@ -1,8 +1,10 @@
+// v1.0.0  -  Ashraf  -  reduce error solved
+// v1.0.1  -  Ashraf  -  displaying more fileds in result
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ChevronUpIcon, ChevronDownIcon, UserPlusIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
 import ScheduledAssessmentResultView from './ScheduledAssessmentResultView';
+import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 
 function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullscreen, assessmentQuestions }) {
   const [results, setResults] = useState([]);
@@ -10,27 +12,22 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [showResultView, setShowResultView] = useState(false);
+  const { fetchAssessmentResults } = useAssessments();
 
-  useEffect(() => {
-    const fetchAssessmentResults = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/assessments/${assessment._id}/results`
-        );
-        setResults(response.data);
-      } catch (error) {
-        console.error('Error fetching assessment results:', error);
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (assessment) {
-      fetchAssessmentResults();
+useEffect(() => {
+  const getResults = async () => {
+    const { data, error } = await fetchAssessmentResults(assessment._id);
+    if (!error) {
+      setResults(data);
+    } else {
+      console.error('Error loading results:', error);
     }
-  }, [assessment]);
+  };
+
+  if (assessment._id) {
+    getResults();
+  }
+}, [assessment._id]);
 
   const toggleSchedule = (index) => {
     toggleArrow1(index);
@@ -47,14 +44,42 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
     setSelectedCandidate(null);
     setSelectedSchedule(null);
   };
+// <---------------------- v1.0.0
+// <---------------------- v1.0.1
 
   // Calculate statistics
-  const totalCandidates = results.reduce((sum, schedule) => sum + schedule.candidates.length, 0);
-  const passedCandidates = results.reduce(
-    (sum, schedule) => sum + schedule.candidates.filter((c) => c.result === 'pass').length,
-    0
-  );
-  const failedCandidates = totalCandidates - passedCandidates;
+  // Only consider candidates with result 'pass' or 'fail'
+  const allCandidates = results?.flatMap(schedule => schedule.candidates || []) || [];
+  const completedCandidates = allCandidates.filter(c => c.result === 'pass' || c.result === 'fail');
+  const totalCompleted = completedCandidates.length;
+  const passedCandidates = completedCandidates.filter(c => c.result === 'pass').length;
+  const failedCandidates = completedCandidates.filter(c => c.result === 'fail').length;
+
+  // Helper to check if a date is valid
+  const isValidDate = (date) => {
+    const d = new Date(date);
+    return date && !isNaN(d);
+  };
+
+  // Helper to get duration in minutes from assessment
+  const getAssessmentDuration = () => {
+    if (assessment && assessment.Duration) {
+      const parsed = parseInt(assessment.Duration, 10);
+      return !isNaN(parsed) ? parsed : 30;
+    }
+    return 30;
+  };
+
+  // Helper to get time taken for a candidate
+  const getTimeTaken = (candidate) => {
+    const duration = getAssessmentDuration();
+    if (candidate.remainingTime !== undefined && candidate.remainingTime !== null) {
+      return Math.floor((duration * 60 - candidate.remainingTime) / 60);
+    }
+    return '-';
+  };
+ // <-------------------------------v1.0.1
+
 
   if (loading) return <div className="p-4">Loading results...</div>;
 
@@ -78,7 +103,9 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
  <h3 className="text-lg font-medium text-gray-900 mb-6">Assessment Results</h3>
       <div className="grid grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-2xl font-semibold text-blue-600">{totalCandidates}</div>
+{/* // <---------------------- v1.0.1 */}
+          
+          <div className="text-2xl font-semibold text-blue-600">{totalCompleted}</div>
           <div className="text-sm text-gray-500">Total Completed</div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -92,7 +119,7 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
       </div>
 
       <div className="space-y-4">
-        {results.length > 0 ? (
+        {results && results.length > 0 ? (
           results.map((schedule, index) => (
             <div key={schedule.scheduleId} className="bg-white rounded-xl shadow-md overflow-hidden">
               <div
@@ -104,7 +131,7 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
                   <div className="flex items-center mt-2 space-x-4">
                     <span className="text-sm text-gray-600">
                       <span className="font-medium">Expiry:</span>{' '}
-                      {schedule.expiryAt
+                      {isValidDate(schedule.expiryAt)
                         ? format(new Date(schedule.expiryAt), 'MMM dd, yyyy')
                         : 'N/A'}
                     </span>
@@ -158,7 +185,7 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {schedule.candidates.length > 0 ? (
+                        {schedule.candidates && schedule.candidates.length > 0 ? (
                           schedule.candidates.map((candidate) => (
                             <tr key={candidate.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -169,7 +196,7 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
                                 {candidate.answeredQuestions}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {Math.floor((30 * 60 - candidate.remainingTime) / 60)}
+                                {getTimeTaken(candidate)} / {getAssessmentDuration()} mins
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {candidate.totalScore}
@@ -187,6 +214,7 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {candidate.completionDate
+                                  && isValidDate(candidate.completionDate)
                                   ? format(new Date(candidate.completionDate), 'MMM dd, yyyy')
                                   : '-'}
                               </td>
@@ -221,6 +249,8 @@ function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullsc
         )}
       </div>
     </div>
+    // <-------------------------------v1.0.1
+
   );
 }
 

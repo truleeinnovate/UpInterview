@@ -8,6 +8,7 @@ import EmailTemplateDetails from "./EmailTemplateDetails";
 import { SettingsIcon, ToggleLeft, ToggleRight, X } from "lucide-react";
 import Settings from "./Settings";
 import { ArrowLeft, ArrowRight, Search } from 'lucide-react';
+import { config } from "../../../../../config";
 
 const EmailTemplate = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,7 +30,7 @@ const EmailTemplate = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/emailTemplate/get-templates`);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/emailTemplate/get-templates`);
       const emailData = response.data.reverse();
       setEmailRecords(emailData);
     } catch (error) {
@@ -79,7 +80,7 @@ const EmailTemplate = () => {
   const updateTemplateStatus = async (newStatus) => {
     try {
       const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/emailTemplate/templates/${selectedTemplate._id}/status`,
+        `${config.REACT_APP_API_URL}/emailTemplate/templates/${selectedTemplate._id}/status`,
         { isActive: newStatus }
       );
       
@@ -211,7 +212,7 @@ const EmailTemplate = () => {
     {/* Preview Modal */}
     {showPreviewModal && selectedTemplate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[81vh] overflow-hidden">
             {showConfirmation && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -270,7 +271,7 @@ const EmailTemplate = () => {
                 </button>
               </div>
             </div>
-            <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+            <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(81vh-80px)]">
               <div className="rounded-lg p-4 sm:p-6 mb-6 bg-gray-50" > 
               <div className="mb-4 pb-4 border-b">
                <div className="text-sm text-gray-500">Subject:</div>
@@ -314,7 +315,7 @@ const EmailTemplate = () => {
     {/* Settings Modal */}
     {showSettingsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[80vh] overflow-y-auto">
             <Settings onClose={() => setShowSettingsModal(false)} />
           </div>
         </div>

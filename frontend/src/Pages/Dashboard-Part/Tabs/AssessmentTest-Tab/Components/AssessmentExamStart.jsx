@@ -5,6 +5,7 @@ import QuestionDisplay from './AssessmentExamComponents/AssessmentExamQuestionDi
 import SubmitConfirmation from './AssessmentExamComponents/AssessmentExamSubmitConfirmation.jsx';
 import CompletionScreen from './AssessmentExamComponents/AssessmentExamCompletionScreen.jsx';
 import QuestionNavigation from './AssessmentExamComponents/AssessmentExamQuestionNavigation.jsx';
+import { config } from '../../../../../config.js';
 
 function AssessmentTest({ assessment, candidate, questions, duration,candidateAssessmentId }) {
     const [currentSection, setCurrentSection] = useState(0);
@@ -60,15 +61,16 @@ function AssessmentTest({ assessment, candidate, questions, duration,candidateAs
             sections: questions.sections.map(section => ({
                 SectionName: section.sectionName || 'Unnamed Section',
                 Answers: section.questions.map(question => {
-                    console.log("Question ID:", question._id);
-                    console.log("Question:", question);
+                    // Remove console logs to prevent loops
+                    // console.log("Question ID:", question._id);
+                    // console.log("Question:", question);
                     const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
                     const selectedAnswer = answers[question._id];
                     const isCorrect = correctAnswer === selectedAnswer;
                     const score = isCorrect ? question.score ?? 0 : 0;
-                    console.log("Correct Answer:", correctAnswer);
-                    console.log("Selected Answer:", selectedAnswer);
-                    console.log("Score:", score);
+                    // console.log("Correct Answer:", correctAnswer);
+                    // console.log("Selected Answer:", selectedAnswer);
+                    // console.log("Score:", score);
                     return {
                         questionId: question._id,
                         answer: selectedAnswer,
@@ -109,7 +111,7 @@ function AssessmentTest({ assessment, candidate, questions, duration,candidateAs
         };
         console.log("candidateAssessmentData", candidateAssessmentData);
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/candidate-assessment/submit`, {
+        const response = await fetch(`${config.REACT_APP_API_URL}/candidate-assessment/submit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -186,8 +188,8 @@ function AssessmentTest({ assessment, candidate, questions, duration,candidateAs
                         answeredQuestions={answeredQuestions}
                     />
                     <div className="flex-1">
-                        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20">
-                            <div className="p-8 border-b border-gray-100">
+                        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg">
+                            <div className="p-8">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center space-x-4">
                                         <span className="px-4 py-2 bg-blue-100 text-custom-blue rounded-lg text-sm font-medium">

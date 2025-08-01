@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+// v1.0.0  -  Ashraf  - forwarderror solved
+import React, { useState, useEffect, useMemo, useRef, forwardRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { validatePassScoreData } from "../../../../../utils/passScoreValidation";
+  // <---------------------- v1.0.0
 
-const PassScore = ({
+const PassScore = forwardRef(({
+  // ---------------------- v1.0.0 >
   setAddedSections,
   addedSections,
   setFormData,
@@ -17,7 +20,7 @@ const PassScore = ({
   setTotalScores,
   setTotalScore,
   setPassScore,
-}) => {
+}, ref) => {
   const [selectedScore, setSelectedScore] = useState(formData.passScoreType || "Number");
   const [selectedPassScoreBy, setSelectedPassScoreBy] = useState(formData.passScoreBy || "Overall");
   const [localTotalScore, setLocalTotalScore] = useState(initialTotalScore || "");
@@ -280,12 +283,12 @@ const PassScore = ({
   return (
     <div className="fixed inset-0 bg-white flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-200 shadow-sm">
-        <h2 className="text-lg font-semibold">Pass Score</h2>
+      <div className="flex justify-between items-center p-4 border-gray-200">
+        <h2 className="text-lg font-semibold text-custom-blue">Pass Score</h2>
         <button
           type="button"
           onClick={handleClose}
-          className="p-1 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-white"
+          className="p-1 rounded-full focus:outline-none"
         >
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -403,7 +406,7 @@ const PassScore = ({
                         min="1"
                       />
                       {selectedScore === "Percentage" && (
-                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                        <span className="absolute right-7 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
                       )}
                     </div>
                     {touched.totalScore && errors.totalScore && (
@@ -428,7 +431,7 @@ const PassScore = ({
                         max={selectedScore === "Percentage" ? "100" : localTotalScore || undefined}
                       />
                       {selectedScore === "Percentage" && (
-                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                        <span className="absolute right-7 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
                       )}
                     </div>
                     {touched.passScore && errors.passScore && (
@@ -509,7 +512,7 @@ const PassScore = ({
       </div>
 
       {/* Footer Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-sm">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-gray-200 p-4 shadow-sm">
         <div className="max-w-3xl mx-auto flex justify-end">
           <button
             type="button"
@@ -522,6 +525,6 @@ const PassScore = ({
       </div>
     </div>
   );
-};
+});
 
 export default PassScore;

@@ -32,6 +32,8 @@
 //     return { formIsValid, newErrors };
 // };
 
+// v1.0.0 - Ashok - added "location" validation
+
 export const validateForm = (formData, entries, rounds) => {
   let errors = {};
   let formIsValid = true;
@@ -47,20 +49,20 @@ export const validateForm = (formData, entries, rounds) => {
   }
 
   if (!formData.minexperience) {
-    errors.minexperience = "Minimum experience is required";
+    errors.minexperience = "Minimum Experience is required";
     formIsValid = false;
   }
 
   if (!formData.maxexperience) {
-    errors.maxexperience = "Maximum experience is required";
+    errors.maxexperience = "Maximum Experience is required";
     formIsValid = false;
   }
 
   // Validate experience range
   if (formData.minexperience && formData.maxexperience) {
     if (parseInt(formData.minexperience) > parseInt(formData.maxexperience)) {
-      errors.minexperience = "Min experience cannot be greater than max";
-      errors.maxexperience = "Max experience cannot be less than min";
+      errors.minexperience = "Min Experience cannot be greater than Max";
+      errors.maxexperience = "Max Experience cannot be less than Min";
       formIsValid = false;
     }
   }
@@ -87,15 +89,18 @@ export const validateForm = (formData, entries, rounds) => {
   // Validate relationship between min and max salary
   if (formData.minSalary && formData.maxSalary) {
     if (parseInt(formData.minSalary) > parseInt(formData.maxSalary)) {
-      errors.minsalary = "Minimum salary cannot be greater than maximum";
-      errors.maxsalary = "Maximum salary cannot be less than minimum";
+      errors.minsalary = "Minimum Salary cannot be greater than Maximum";
+      errors.maxsalary = "Maximum Salary cannot be less than Minimum";
       formIsValid = false;
     }
   }
 }
 
-  if (!formData.jobDescription.trim()) {
-    errors.jobdescription = "Job description is required";
+  if (!formData.jobDescription || !formData.jobDescription.trim()) {
+    errors.jobdescription = "Job Description is required";
+    formIsValid = false;
+  } else if (formData.jobDescription.trim().length < 50) {
+    errors.jobdescription = `Job Description must be at least 50 characters (currently ${formData.jobDescription.trim().length}/50)`;
     formIsValid = false;
   }
 
@@ -103,14 +108,18 @@ export const validateForm = (formData, entries, rounds) => {
     errors.skills = "At least one skill must be selected";
     formIsValid = false;
   }
+  else if (entries.some((entry) => !entry.skill || !entry.experience || !entry.expertise)) {
+    errors.skills = "All skills must have a value in the skill, experience and expertise fields";
+    formIsValid = false;
+  }
 
     // Add salary validation
     if (formData.minSalary && formData.maxSalary) {
       if (parseInt(formData.minSalary) > parseInt(formData.maxSalary)) {
-        errors.minsalary = "Minimum salary cannot be greater than maximum salary";
+        errors.minsalary = "Minimum Salary cannot be greater than Maximum";
         formIsValid = false;
       } else if (parseInt(formData.maxSalary) < parseInt(formData.minSalary)) {
-        errors.maxsalary = "Maximum salary cannot be less than minimum salary";
+        errors.maxsalary = "Maximum Salary cannot be less than Minimum";
         formIsValid = false;
       }
     }
@@ -119,9 +128,16 @@ export const validateForm = (formData, entries, rounds) => {
 
     // Add No of Positions validation
     if (!formData.NoofPositions || parseInt(formData.NoofPositions) <= 0) {
-      errors.noOfPositions = "Number of positions must be greater than 0";
+      errors.noOfPositions = "Number of Positions must be greater than 0";
       formIsValid = false;
     }
+    // v1.0.0 <----------------------------------------------------------------------
+    // Add location validation
+    if (!formData.Location) {
+      errors.location = "Location is required";
+      formIsValid = false;
+    }
+    // v1.0.0 ---------------------------------------------------------------------->
 
   return { formIsValid, newErrors: errors };
 };

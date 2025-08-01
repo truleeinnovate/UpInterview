@@ -4,15 +4,15 @@ import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDrop
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from "../../../../config.js";
+import { X } from "lucide-react";
 
 const ReschedulePopup = ({ onClose, MockEditData }) => {
     const {
         fetchMockInterviewData,
     } = useCustomContext();
 
-
     console.log("MockEditData", MockEditData);
-
 
     // date and duration
     const getTodayDate = () => {
@@ -29,7 +29,6 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
         const minutes = String(now.getMinutes()).padStart(2, "0");
         return `${hours}:${minutes}`;
     };
-
 
     const calculateEndTime = (startTime, duration) => {
         const [startHour, startMinute] = startTime.split(":").map(Number); // Ensure parsing works with HH:mm format
@@ -53,8 +52,6 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
         return `${formattedEndHour}:${formattedEndMinute} ${ampm}`;
     };
-
-
 
     const [selectedDate, setSelectedDate] = useState(getTodayDate());
     const [startTime, setStartTime] = useState(getCurrentTime());
@@ -108,7 +105,6 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
         setShowPopup(false);
     };
 
-
     const handleDurationSelect = (selectedDuration) => {
         setDuration(selectedDuration);
         const calculatedEndTime = calculateEndTime(startTime, selectedDuration);
@@ -120,7 +116,6 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
     };
-
 
     useEffect(() => {
         if (MockEditData) {
@@ -152,7 +147,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
 
             // Create a new mock interview
             const response = await axios.patch(
-                `${process.env.REACT_APP_API_URL}/updateMockInterview/${MockEditData._id}`,
+                `${config.REACT_APP_API_URL}/updateMockInterview/${MockEditData._id}`,
                 payload
             );
             if (response?.data) {
@@ -171,19 +166,18 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
         <>
             <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
                 <div className="bg-white rounded shadow-lg w-1/3">
-                    <div className="w-full border-b p-2 rounded-t bg-custom-blue">
-                        <div className="flex justify-between items-center  text-white px-1">
+                    <div className="w-full p-2 rounded-t">
+                        <div className="flex justify-between items-center px-1">
                             <p className="text-xl">
-                                <span className="text-white font-semibold">
+                                <span className="font-semibold">
                                     Reschedule
                                 </span>
-
                             </p>
                             <button
                                 onClick={onClose}
-                                className="text-xl font-bold text-white cursor-pointer"
+                                className="text-xl font-bold cursor-pointer"
                             >
-                                &times;
+                                <X className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
@@ -191,7 +185,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                         <div className="mb-5 mt-3 p-3 text-xs">
                             <div>
                                 {/* Date & Time */}
-                                <div className="flex mb-3">
+                                <div className="mb-3">
                                     <div>
                                         <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-black w-32">
                                             Date & Time <span className="text-red-500">*</span>
@@ -203,21 +197,23 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                                             readOnly
                                             value={dateTime || ""}
                                             onClick={handleDateClick}
-                                            className="border-b w-full focus:outline-none cursor-pointer"
-                                        /></div>
+                                            className="border rounded-md w-full focus:outline-none cursor-pointer px-3 py-2"
+                                        />
+                                    </div>
                                 </div>
                                 {/* Duration */}
-                                <div className="flex mb-3">
+                                <div className="mb-3">
                                     <div>
                                         <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-black w-32">
                                             Duration <span className="text-red-500">*</span>
-                                        </label></div>
+                                        </label>
+                                    </div>
                                     <div className="flex-grow relative">
                                         <input
                                             type="text"
                                             value={duration}
                                             readOnly
-                                            className="border-b w-full focus:outline-none cursor-pointer"
+                                            className="border rounded-md w-full focus:outline-none cursor-pointer px-3 py-2"
                                             onClick={toggleDropdown}
                                         />
                                         <div
@@ -243,8 +239,8 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                                     </div>
                                 </div>
 
-                                {/*  Add Interviews */}
-                                <div className="flex">
+                                {/* Add Interviews */}
+                                <div>
                                     <label
                                         htmlFor="Interviewer"
                                         className="block mb-2 text-sm font-medium text-gray-900 dark:text-black w-32"
@@ -253,15 +249,9 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                                     </label>
                                     <div className="relative flex-grow">
                                         <div
-                                            className="border-b border-gray-300 focus:border-black focus:outline-none min-h-6 h-auto mb-5 w-full relative"
-                                            // onClick={handleAddInterviewClick}
+                                            className="border rounded-md w-full focus:outline-none cursor-pointer px-3 py-2"
                                             onClick={toggleSidebar}
                                         ></div>
-                                        {/* {errors.interviewer && (
-                                    <p className="text-red-500 text-sm -mt-5">
-                                        {errors.interviewer}
-                                    </p>
-                                )} */}
                                     </div>
                                 </div>
                             </div>
@@ -274,12 +264,8 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                             >
                                 Save Changes
                             </button>
-
-
                         </div>
-
                     </form>
-
                 </div>
             </div>
             {/* showing date and time */}
@@ -291,7 +277,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                                 <label className="block mb-2 font-bold">Select Date</label>
                                 <input
                                     type="date"
-                                    className="border p-1 w-full"
+                                    className="border rounded-md p-1 w-full"
                                     min={getTodayDate()}
                                     value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
@@ -301,7 +287,7 @@ const ReschedulePopup = ({ onClose, MockEditData }) => {
                                 <label className="block mb-2 font-bold">Start Time</label>
                                 <input
                                     type="time"
-                                    className="border p-1 w-full"
+                                    className="border rounded-md p-1 w-full"
                                     onChange={handleStartTimeChange}
                                     value={startTime}
                                 />

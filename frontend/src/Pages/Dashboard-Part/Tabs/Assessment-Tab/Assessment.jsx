@@ -1,598 +1,485 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+// v1.0.0  -  Ashraf  -  assessment template id not getting issues
+// v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
+// v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
+// v1.0.3  -  Ashraf  -  assessment sections and question api getting in loop issue
+// v1.0.4  -  Ashraf  -  assessment to assessment templates
+import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
-import Tooltip from "@mui/material/Tooltip";
-import { Plus, Search } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Eye, Pencil, Plus } from "lucide-react";
 import ShareAssessment from "./ShareAssessment.jsx";
-import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCustomContext } from "../../../../Context/Contextfetch.js";
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-import { ReactComponent as IoIosArrowBack } from '../../../../icons/IoIosArrowBack.svg';
-import { ReactComponent as IoIosArrowForward } from '../../../../icons/IoIosArrowForward.svg';
-import { ReactComponent as FaList } from '../../../../icons/FaList.svg';
-import { ReactComponent as TbLayoutGridRemove } from '../../../../icons/TbLayoutGridRemove.svg';
-import { ReactComponent as FiFilter } from '../../../../icons/FiFilter.svg';
-import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
-import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
-import { ReactComponent as LuFilterX } from '../../../../icons/LuFilterX.svg';
-
-import AssessmentTable from './AssessmentTable.jsx';
-import AssessmentKanban from './AssessmentKanban.jsx';
-import Loading from '../../../../Components/Loading.js';
-import { Button } from '../CommonCode-AllTabs/ui/button.jsx';
-
-const OffcanvasMenu = ({ isOpen, onFilterChange, closeOffcanvas }) => {
-  const { skills, qualification } = useCustomContext();
-  const [isStatusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const [isTechDropdownOpen, setTechDropdownOpen] = useState(false);
-  const [isStatusMainChecked, setStatusMainChecked] = useState(false);
-  const [isTechMainChecked, setTechMainChecked] = useState(false);
-  const [selectedStatusOptions, setSelectedStatusOptions] = useState([]);
-  const [selectedTechOptions, setSelectedTechOptions] = useState([]);
-  const [minExperience, setMinExperience] = useState('');
-  const [maxExperience, setMaxExperience] = useState('');
-
-  const isAnyOptionSelected = selectedStatusOptions.length > 0 || selectedTechOptions.length > 0;
-
-  const handleUnselectAll = () => {
-    setSelectedStatusOptions([]);
-    setSelectedTechOptions([]);
-    setStatusMainChecked(false);
-    setTechMainChecked(false);
-    setMinExperience('');
-    setMaxExperience('');
-    onFilterChange({ status: [], tech: [], experience: { min: '', max: '' } });
-  };
-
-  useEffect(() => {
-    if (!isStatusMainChecked) setSelectedStatusOptions([]);
-    if (!isTechMainChecked) setSelectedTechOptions([]);
-  }, [isStatusMainChecked, isTechMainChecked]);
-
-  const handleStatusMainToggle = () => {
-    const newStatusMainChecked = !isStatusMainChecked;
-    setStatusMainChecked(newStatusMainChecked);
-    const newSelectedStatus = newStatusMainChecked ? qualification.map(q => q.QualificationName) : [];
-    setSelectedStatusOptions(newSelectedStatus);
-  };
-
-  const handleTechMainToggle = () => {
-    const newTechMainChecked = !isTechMainChecked;
-    setTechMainChecked(newTechMainChecked);
-    const newSelectedTech = newTechMainChecked ? skills.map(s => s.SkillName) : [];
-    setSelectedTechOptions(newSelectedTech);
-  };
-
-  const handleStatusOptionToggle = (option) => {
-    const selectedIndex = selectedStatusOptions.indexOf(option);
-    const updatedOptions = selectedIndex === -1
-      ? [...selectedStatusOptions, option]
-      : selectedStatusOptions.filter((_, index) => index !== selectedIndex);
-    setSelectedStatusOptions(updatedOptions);
-  };
-
-  const handleTechOptionToggle = (option) => {
-    const selectedIndex = selectedTechOptions.indexOf(option);
-    const updatedOptions = selectedIndex === -1
-      ? [...selectedTechOptions, option]
-      : selectedTechOptions.filter((_, index) => index !== selectedIndex);
-    setSelectedTechOptions(updatedOptions);
-  };
-
-  const handleExperienceChange = (e, type) => {
-    const value = Math.max(0, Math.min(15, e.target.value));
-    if (type === 'min') {
-      setMinExperience(value);
-    } else {
-      setMaxExperience(value);
-    }
-  };
-
-  const Apply = () => {
-    onFilterChange({
-      status: selectedStatusOptions,
-      tech: selectedTechOptions,
-      experience: { min: minExperience, max: maxExperience },
-    });
-    if (window.innerWidth < 1023) {
-      closeOffcanvas();
-    }
-  };
-
-  return (
-    <div
-      className="absolute w-72 sm:mt-5 md:w-full sm:w-full text-sm bg-white border right-0 z-30 h-[calc(100vh-200px)]"
-      style={{
-        visibility: isOpen ? "visible" : "hidden",
-        transform: isOpen ? "" : "translateX(50%)",
-      }}
-    >
-      <div className="relative h-full flex flex-col">
-        <div className="absolute w-72 sm:w-full md:w-full border-b flex justify-between p-2 items-center bg-white z-10">
-          <h2 className="text-lg font-bold">Filters</h2>
-          {(isAnyOptionSelected || minExperience || maxExperience) && (
-            <button onClick={handleUnselectAll} className="font-bold text-md">
-              Clear Filters
-            </button>
-          )}
-        </div>
-        <div className="p-4 flex-grow overflow-y-auto mb-20 mt-10">
-          <div className="flex justify-between">
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="form-checkbox h-4 w-4"
-                checked={isStatusMainChecked}
-                onChange={handleStatusMainToggle}
-              />
-              <span className="ml-3 font-bold">Higher Qualification</span>
-            </label>
-            <div
-              className="cursor-pointer mr-3 text-2xl"
-              onClick={() => setStatusDropdownOpen(!isStatusDropdownOpen)}
-            >
-              {isStatusDropdownOpen ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
-            </div>
-          </div>
-          {isStatusDropdownOpen && (
-            <div className="bg-white py-2 mt-1">
-              {qualification.map((option, index) => (
-                <label key={index} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4"
-                    checked={selectedStatusOptions.includes(option.QualificationName)}
-                    onChange={() => handleStatusOptionToggle(option.QualificationName)}
-                  />
-                  <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">{option.QualificationName}</span>
-                </label>
-              ))}
-            </div>
-          )}
-          <div className="flex mt-2 justify-between">
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="form-checkbox h-4 w-4"
-                checked={isTechMainChecked}
-                onChange={handleTechMainToggle}
-              />
-              <span className="ml-3 font-bold">Skill/Technology</span>
-            </label>
-            <div
-              className="cursor-pointer mr-3 text-2xl"
-              onClick={() => setTechDropdownOpen(!isTechDropdownOpen)}
-            >
-              {isTechDropdownOpen ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
-            </div>
-          </div>
-          {isTechDropdownOpen && (
-            <div className="bg-white py-2 mt-1">
-              {skills.map((option, index) => (
-                <label key={index} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4"
-                    checked={selectedTechOptions.includes(option.SkillName)}
-                    onChange={() => handleTechOptionToggle(option.SkillName)}
-                  />
-                  <span className="ml-3 w-56 md:w-72 sm:w-72 text-xs">{option.SkillName}</span>
-                </label>
-              ))}
-            </div>
-          )}
-          <div className="flex justify-between mt-2 ml-5">
-            <label className="inline-flex items-center cursor-pointer">
-              <span className="ml-3 font-bold">Experience</span>
-            </label>
-          </div>
-          <div className="bg-white py-2 mt-1">
-            <div className="flex items-center ml-10">
-              <input
-                type="number"
-                placeholder="Min"
-                value={minExperience}
-                min="0"
-                max="15"
-                onChange={(e) => handleExperienceChange(e, 'min')}
-                className="border-b form-input w-20"
-              />
-              <span className="mx-3">to</span>
-              <input
-                type="number"
-                placeholder="Max"
-                value={maxExperience}
-                min="1"
-                max="15"
-                onChange={(e) => handleExperienceChange(e, 'max')}
-                className="border-b form-input w-20"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="fixed bottom-0 w-72 sm:w-full md:w-full bg-white space-x-3 flex justify-end border-t p-2">
-          <button
-            type="submit"
-            className="bg-custom-blue p-2 rounded-md text-white"
-            onClick={closeOffcanvas}
-          >
-            Close
-          </button>
-          <button
-            type="submit"
-            className="bg-custom-blue p-2 rounded-md text-white"
-            onClick={Apply}
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Header from "../../../../Components/Shared/Header/Header.jsx";
+import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar.jsx";
+import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
+import TableView from "../../../../Components/Shared/Table/TableView.jsx";
+import AssessmentKanban from "./AssessmentKanban.jsx";
+import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
+import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
+import { config } from "../../../../config.js";
+import { useAssessments } from '../../../../apiHooks/useAssessments.js';
+import { usePermissions } from "../../../../Context/PermissionsContext";
 
 const Assessment = () => {
-  const { assessmentData, fetchAssessmentData, loading } = useCustomContext();
-  const [assessmentSections, setAssessmentSections] = useState({});
-
-  useEffect(() => {
-    document.title = "Assessment Tab";
-  }, []);
-
-  // Fetch sections for current page's assessments
-  const rowsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(0);
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const currentAssessments = assessmentData?.slice(startIndex, endIndex) || [];
-
-useEffect(() => {
-  if (currentAssessments.length > 0) {
-    const fetchSections = async () => {
-      try {
-        const sectionPromises = currentAssessments.map(async (assessment) => {
-          const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}/assessment-questions/list/${assessment._id}`
-          );
-          
-          // Handle both new and old response formats
-          const sections = response.data.exists === false 
-            ? 0 
-            : response.data.data?.sections?.length || 0;
-            
-          return {
-            id: assessment._id,
-            sections
-          };
-        });
-
-        const results = await Promise.all(sectionPromises);
-        const newSections = results.reduce((acc, curr) => {
-          acc[curr.id] = curr.sections;
-          return acc;
-        }, {});
-
-        setAssessmentSections(prev => ({ ...prev, ...newSections }));
-      } catch (error) {
-        console.error('Error fetching sections:', error);
-      }
-    };
-
-    fetchSections();
-  }
-}, [currentAssessments]);
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const sidebarRef = useRef(null);
-  const [isShareOpen, setIsShareOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState({
-    status: [],
-    tech: [],
-    experience: [],
-  });
-  const [viewMode, setViewMode] = useState("table");
-  const [isMenuOpen, setMenuOpen] = useState(false);
-  const [isFilterActive, setIsFilterActive] = useState(false);
-
+  // All hooks at the top
+  const { effectivePermissions, isInitialized } = usePermissions();
+  // <---------------------- v1.0.2
+  const { assessmentData, isLoading, fetchAssessmentQuestions } = useAssessments();
+  // <---------------------- v1.0.2 >
   const navigate = useNavigate();
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
-
-  const handleOutsideClick = useCallback((event) => {
-    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-      closeSidebar();
-    }
+  const [assessmentSections, setAssessmentSections] = useState({});
+  const [viewMode, setViewMode] = useState("table");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState({
+    difficultyLevel: [],
+    duration: [],
+  });
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const filterIconRef = useRef(null);
+  // <---------------------- v1.0.3 
+  const sectionsFetchedRef = useRef(false);
+  // ------------------------------ v1.0.3 >
+  // <---------------------- v1.0.0
+  const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
+  const [isDurationOpen, setIsDurationOpen] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState([]);
+  const [selectedDuration, setSelectedDuration] = useState([]);
+  // <---------------------- v1.0.0
+  useEffect(() => {
+    document.title = "Assessment Template";
+    const handleResize = () => {
+      setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
-    if (sidebarOpen) {
-      document.addEventListener("mousedown", handleOutsideClick);
-    } else {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, [sidebarOpen, handleOutsideClick]);
-
-  const handleView = (assessment) => {
-    navigate(`/assessment-details/${assessment._id}`);
-  };
-
-  const handleShareClick = async (assessment) => {
-    if ((assessmentSections[assessment._id] ?? 0) === 0) {
-      toast.error("No questions added to this assessment.");
+    // Only run if assessmentData is loaded and not empty
+    // <---------------------- v1.0.0
+    if (!assessmentData || assessmentData.length === 0) return;
+    
+    // ------------------------------ v1.0.3 >
+    // Prevent running if we already have sections data for all assessments
+    const hasAllSections = assessmentData.every(assessment => 
+      assessmentSections.hasOwnProperty(assessment._id)
+    );
+    if (hasAllSections) {
+      sectionsFetchedRef.current = true;
       return;
     }
-    setIsShareOpen(assessment);
-  };
+    
+    // Prevent multiple simultaneous fetches
+    if (sectionsFetchedRef.current) return;
+    sectionsFetchedRef.current = true;
+    // ------------------------------ v1.0.3 >
+    
+    const fetchSectionsInBatches = async () => {
+      const batchSize = 5; // Process 5 assessments at a time
+      const sectionsCache = {};
+      
+      for (let i = 0; i < assessmentData.length; i += batchSize) {
+        const batch = assessmentData.slice(i, i + batchSize);
+        
+        try {
+          const batchPromises = batch.map(async (assessment) => {
+            // ------------------------------ v1.0.3 >
+            // Skip if we already have sections for this assessment
+            if (assessmentSections.hasOwnProperty(assessment._id)) {
+              return { id: assessment._id, sections: assessmentSections[assessment._id] };
+            }
+            // ------------------------------ v1.0.3 >
+            const { data, error } = await fetchAssessmentQuestions(assessment._id);
+            
+            let sections = 0;
+            if (!error && data && data.sections) {
+              sections = data.sections.length || 0;
+            }
+            
+            return { id: assessment._id, sections };
+          });
+          
+          const batchResults = await Promise.all(batchPromises);
+          
+          // Update state incrementally
+          batchResults.forEach(result => {
+            sectionsCache[result.id] = result.sections;
+          });
+          
+          setAssessmentSections(prev => ({ ...prev, ...sectionsCache }));
+          
+          // Small delay between batches to prevent overwhelming the server
+          if (i + batchSize < assessmentData.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        } catch (error) {
+          console.error("Error fetching sections batch:", error);
+        }
+      }
+    };
+    
+    fetchSectionsInBatches();
+  }, [assessmentData]);
+  // <---------------------- v1.0.2 >
 
-  const handleDataAdded = () => {
-    fetchAssessmentData();
+  // Only after all hooks
+  if (!isInitialized) {
+    return null;
+  }
+
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value);
     setCurrentPage(0);
   };
 
-  const handleFilterChange = useCallback((filters) => {
+  const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
-  }, []);
+    setIsFilterActive(filters.difficultyLevel.length > 0 || filters.duration.length > 0);
+    setFilterPopupOpen(false);
+    setCurrentPage(0);
+  };
 
- const FilteredData = () => {
-    if (!Array.isArray(assessmentData)) return null;
-    const filtered = assessmentData.filter((user) => {
-      const fieldsToSearch = [user.AssessmentTitle, user.Position].filter(
-        (field) => field !== null && field !== undefined
-      );
+  const handleClearFilters = () => {
+    setSelectedFilters({ difficultyLevel: [], duration: [] });
+    setIsFilterActive(false);
+    setFilterPopupOpen(false);
+    setCurrentPage(0);
+    setIsDifficultyOpen(false);
+    setIsDurationOpen(false);
+    setSelectedDifficulty([]);
+    setSelectedDuration([]);
+  };
+
+  const handleFilterIconClick = () => {
+    if (assessmentData?.length !== 0) {
+      setFilterPopupOpen((prev) => !prev);
+    }
+  };
+
+  const FilteredData = () => {
+    if (!Array.isArray(assessmentData)) return [];
+    return assessmentData.filter((assessment) => {
+      const fieldsToSearch = [
+        assessment?.AssessmentTitle,
+        assessment?.Position,
+      ].filter(Boolean);
+
       const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+        field?.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
-      return matchesSearchQuery;
-    });
-    return filtered.length > 0 ? filtered : null;
-  };
-  const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
-   const totalPages = Math.max(1, Math.ceil((FilteredData()?.length || 0) / rowsPerPage));
-  const currentFilteredRows = FilteredData()?.slice(startIndex, endIndex) || [];
 
-  const [activeArrow, setActiveArrow] = useState(null);
+      const matchesDifficultyLevel =
+        selectedFilters.difficultyLevel.length === 0 ||
+        selectedFilters.difficultyLevel.includes(assessment?.DifficultyLevel);
+
+      const matchesDuration =
+        selectedFilters.duration.length === 0 ||
+        selectedFilters.duration.includes(assessment?.Duration);
+
+      return matchesSearchQuery && matchesDifficultyLevel && matchesDuration;
+    });
+  };
+  // <---------------------- v1.0.0
+  const rowsPerPage = 10;
+
+  const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
+  const startIndex = currentPage * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  // <---------------------- v1.0.0
+  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
   const nextPage = () => {
     if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1);
-      setActiveArrow("next");
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
   const prevPage = () => {
     if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-      setActiveArrow("prev");
+      setCurrentPage((prev) => prev - 1);
     }
   };
 
-
-  const handleListViewClick = () => {
-    setViewMode("table");
-  };
-
-  const handleKanbanViewClick = () => {
-    setViewMode("kanban");
-  };
-
-  const toggleMenu = () => {
-    setMenuOpen(!isMenuOpen);
+  // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
+  const handleView = (assessment) => {
+    if (effectivePermissions.AssessmentTemplates?.View) {
+      navigate(`/assessments-template-details/${assessment._id}`);
+    }
   };
 
   const handleEdit = (assessment) => {
-    navigate(`/assessment/edit/${assessment._id}`);
+    if (effectivePermissions.AssessmentTemplates?.Edit) {
+      navigate(`/assessments-template/edit/${assessment._id}`);
+    }
+  };
+  // <---------------------- v1.0.1 >
+
+  const handleShareClick = (assessment) => {
+    if ((assessmentSections[assessment._id] ?? 0) > 0) {
+      // <---------------------- v1.0.0
+      setIsShareOpen(assessment);
+    } else if ((assessmentSections[assessment._id] ?? 0) === 0) {
+      toast.error("No questions added to this assessment.");
+    }
   };
 
   const handleCloseShare = () => {
     setIsShareOpen(false);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setViewMode("kanban");
-      } else {
-        setViewMode("table");
-      }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  const tableColumns = [
+    {
+      key: "AssessmentCode",
+      header: "Assessment Template ID",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => handleView(row)}
+        >
+          {value || "Not Provided"}
+        </div>
+      ),
+    },
+    {
+      key: "AssessmentTitle",
+      header: "Assessment Template Name",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => handleView(row)}
+        >
+          {value.charAt(0).toUpperCase() + value.slice(1) || "Not Provided"}
+        </div>
+      ),
+    },
+    {
+      key: "sections",
+      header: "No. of Sections",
+      render: (value, row) => assessmentSections[row._id] ?? 0,
+    },
+    {
+      key: "NumberOfQuestions",
+      header: "No. of Questions",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "DifficultyLevel",
+      header: "Difficulty Level",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "totalScore",
+      header: "Total Score",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "passScore",
+      header: "Pass Score (Number / %)",
+      render: (value, row) =>
+        row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "Number"}` : "Not Provided",
+    },
+    {
+      key: "Duration",
+      header: "Duration",
+      render: (value) => value || "Not Provided",
+    },
+  ];
+  // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
+  const tableActions = [
+    ...(effectivePermissions.AssessmentTemplates?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: handleView,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.AssessmentTemplates?.Edit
+      // <---------------------- v1.0.0
+      // <---------------------- v1.0.1
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-custom-blue" />,
+            onClick: handleEdit,
+          },
+        ]
+      : []),
+    {
+      key: "share",
+      label: "Create Assessment",
+      icon: <Plus className="w-4 h-4 text-custom-blue" />,
+      onClick: handleShareClick,
+      disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
+    },
+  ];
 
-  const handleFilterIconClick = () => {
-    if (assessmentData.length !== 0) {
-      setIsFilterActive((prev) => !prev);
-      toggleMenu();
-    }
+
+  const difficultyOptions = ["Easy", "Medium", "Hard"];
+  const durationOptions = ["30 minutes", "60 minutes"];
+
+  const handleDifficultyToggle = (option) => {
+    setSelectedDifficulty((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
+    );
+  };
+
+  const handleDurationToggle = (option) => {
+    setSelectedDuration((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
+    );
+  };
+
+  const handleApplyFilters = () => {
+    handleFilterChange({
+      difficultyLevel: selectedDifficulty,
+      duration: selectedDuration,
+    });
   };
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="fixed top-16 left-0 right-0 bg-background">
+      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
-            <motion.div
-              className="flex justify-between items-center py-4"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <h1 className="text-2xl font-semibold text-custom-blue">Assessment Templates</h1>
-              <Link to="/assessment/new">
-                <Button size="sm" className="bg-custom-blue hover:bg-custom-blue/90 text-white">
-                  <Plus className="h-4 w-4 mr-1" />
-                  New
-                </Button>
-              </Link>
-            </motion.div>
-            <motion.div className="lg:flex xl:flex 2xl:flex items-center lg:justify-between xl:justify-between 2xl:justify-between mb-4">
-              <div className="flex items-center sm:hidden md:hidden">
-                <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
-                  <span onClick={handleListViewClick}>
-                    <FaList
-                      className={`text-xl mr-4 ${viewMode === "table" ? "text-custom-blue" : ""}`}
-                    />
-                  </span>
-                </Tooltip>
-                <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
-                  <span onClick={handleKanbanViewClick}>
-                    <TbLayoutGridRemove
-                      className={`text-xl ${viewMode === "kanban" ? "text-custom-blue" : ""}`}
-                    />
-                  </span>
-                </Tooltip>
-              </div>
-              <div className="flex items-center">
-                <div className="sm:mt-0 flex justify-end w-full sm:w-auto">
-                  <div className="max-w-lg w-full">
-                    <label htmlFor="search" className="sr-only">Search</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <input
-                        id="search"
-                        name="search"
-                        className="block w-full pl-10 pr-3 py-2 border border-input rounded-md bg-background placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm"
-                        placeholder="Search assessment..."
-                        type="search"
-                        value={searchQuery}
-                        onChange={handleSearchInputChange}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <span className="p-2 text-xl sm:text-sm md:text-sm">
-                    {currentPage + 1}/{totalPages}
-                  </span>
-                </div>
-                <div className="flex">
-                  <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-                    <span
-                      className={`border p-2 mr-2 text-xl sm:text-md md:text-md rounded-md ${currentPage === 0 ? "cursor-not-allowed" : ""} ${activeArrow === "prev" ? "text-custom-blue" : ""}`}
-                      onClick={prevPage}
-                      disabled={currentPage === 0}
-                    >
-                      <IoIosArrowBack className="text-custom-blue" />
-                    </span>
-                  </Tooltip>
-                  <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-                    <span
-                      className={`border p-2 text-xl sm:text-md md:text-md rounded-md ${currentPage === totalPages - 1 ? "cursor-not-allowed" : ""} ${activeArrow === "next" ? "text-custom-blue" : ""}`}
-                      onClick={nextPage}
-                      disabled={currentPage === totalPages - 1}
-                    >
-                      <IoIosArrowForward className="text-custom-blue" />
-                    </span>
-                  </Tooltip>
-                </div>
-                <div className="ml-2 text-xl sm:text-md md:text-md border rounded-md p-2">
-                  <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
-                    <span
-                      onClick={handleFilterIconClick}
-                      style={{
-                        opacity: assessmentData.length === 0 ? 0.2 : 1,
-                        pointerEvents: assessmentData.length === 0 ? "none" : "auto",
-                      }}
-                    >
-                      {isFilterActive ? (
-                        <LuFilterX className="text-custom-blue" />
-                      ) : (
-                        <FiFilter className="text-custom-blue" />
-                      )}
-                    </span>
-                  </Tooltip>
-                </div>
-              </div>
-            </motion.div>
+            <Header
+              title="Assessment Templates"
+              onAddClick={() => navigate("/assessments-template/new")}
+              addButtonText="New Template"
+              // <---------------------- v1.0.1
+              canCreate={effectivePermissions.AssessmentTemplates?.Create}
+              // <---------------------- v1.0.1 >
+            />
+            <Toolbar
+              view={viewMode}
+              setView={setViewMode}
+              searchQuery={searchQuery}
+              onSearch={handleSearchInputChange}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrevPage={prevPage}
+              onNextPage={nextPage}
+              onFilterClick={handleFilterIconClick}
+              isFilterActive={isFilterActive}
+              isFilterPopupOpen={isFilterPopupOpen}
+              dataLength={assessmentData?.length}
+              searchPlaceholder="Search by Assessments..."
+              filterIconRef={filterIconRef}
+            />
           </div>
         </main>
       </div>
-
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
-          {loading ? (
-            <Loading />
-          ) : (
-            <motion.div className="bg-white">
-                   {FilteredData() === null ? (
-                <div className="flex items-center justify-center h-64">
-                  <p className="text-gray-500 text-lg">No data found</p>
-                </div>
-              ) : viewMode === 'table' ? (
-                <div className="flex relative w-full overflow-hidden">
+          <motion.div className="bg-white">
+            {viewMode === "table" ? (
+              <TableView
+                data={currentFilteredRows}
+                columns={tableColumns}
+                actions={tableActions}
+                loading={isLoading}
+                // <-------------------------------v1.0.4
+                emptyState="No assessments templates found."
+                // ------------------------------v1.0.4 >
+                className="table-fixed w-full"
+              />
+            ) : (
+              <AssessmentKanban
+                assessments={currentFilteredRows}
+                loading={isLoading}
+                onView={handleView}
+                onEdit={handleEdit}
+                onShare={handleShareClick}
+                assessmentSections={assessmentSections}
+                effectivePermissions={effectivePermissions}
+              />
+            )}
+            <FilterPopup
+              isOpen={isFilterPopupOpen}
+              onClose={() => setFilterPopupOpen(false)}
+              onApply={handleApplyFilters}
+              onClearAll={handleClearFilters}
+              filterIconRef={filterIconRef}
+            >
+              <div className="space-y-3">
+                <div>
                   <div
-                    className={`transition-all duration-300 ${isMenuOpen
-                        ? 'mr-1 md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
-                        : 'w-full'
-                      }`}
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsDifficultyOpen(!isDifficultyOpen)}
                   >
-                    <AssessmentTable
-                      assessments={currentFilteredRows}
-                      onView={handleView}
-                      onEdit={handleEdit}
-                      onShare={handleShareClick}
-                      assessmentSections={assessmentSections}
-                    />
+                    <span className="font-medium text-gray-700">Difficulty Level</span>
+                    {isDifficultyOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
                   </div>
-                  {isMenuOpen && (
-                    <div className="h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                      <OffcanvasMenu
-                        isOpen={isMenuOpen}
-                        closeOffcanvas={handleFilterIconClick}
-                        onFilterChange={handleFilterChange}
-                      />
+                  {isDifficultyOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {difficultyOptions.map((option) => (
+                        <label key={option} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedDifficulty.includes(option)}
+                            onChange={() => handleDifficultyToggle(option)}
+                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="flex relative w-full overflow-hidden">
+                <div>
                   <div
-                    className={`transition-all duration-300 ${isMenuOpen
-                        ? 'md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]'
-                        : 'w-full'
-                      }`}
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsDurationOpen(!isDurationOpen)}
                   >
-                    <AssessmentKanban
-                      assessments={currentFilteredRows}
-                      onView={handleView}
-                      onEdit={handleEdit}
-                      onShare={handleShareClick}
-                      assessmentSections={assessmentSections}
-                    />
+                    <span className="font-medium text-gray-700">Duration</span>
+                    {isDurationOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
                   </div>
-                  {isMenuOpen && (
-                    <div className="h-full sm:w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%] 2xl:w-[20%] right-0 top-44 bg-white border-l border-gray-200 shadow-lg z-30">
-                      <OffcanvasMenu
-                        isOpen={isMenuOpen}
-                        closeOffcanvas={handleFilterIconClick}
-                        onFilterChange={handleFilterChange}
-                      />
+                  {isDurationOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {durationOptions.map((option) => (
+                        <label key={option} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedDuration.includes(option)}
+                            onChange={() => handleDurationToggle(option)}
+                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
                     </div>
                   )}
                 </div>
-              )}
-            </motion.div>
-          )}
+              </div>
+            </FilterPopup>
+          </motion.div>
         </div>
       </main>
-
       {isShareOpen && (
         <ShareAssessment
           isOpen={isShareOpen}

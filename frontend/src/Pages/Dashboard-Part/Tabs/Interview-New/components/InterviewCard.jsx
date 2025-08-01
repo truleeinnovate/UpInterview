@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, Briefcase, Clock, ArrowRight, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
 import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
-import EntityDetailsModal from './EntityDetailsModal';
-import EntityDetailsSidebar from './EntityDetailsSidebar';
 import { Card, CardContent, CardFooter } from '../../CommonCode-AllTabs/ui/card';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion } from 'framer-motion';
 import { formatDate } from '../lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 function InterviewCard({ interview, onView, onViewPosition }) {
+  const navigate = useNavigate();
 
 
   const [candidate, setCandidate] = useState(null);
   const [position, setPosition] = useState(null);
   const [template, setTemplate] = useState(null);
-  console.log("candidate", candidate);
 
 
   useEffect(() => {
@@ -89,9 +87,17 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
+                  <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center truncate">
+                      <p className='text-sm font-medium text-custom-blue cursor-pointer'
+                        onClick={() => navigate(`/interviews/${interview._id}`)}
+                      >{interview?.interviewCode || ''}</p>
+                    </div>
+                  </div>
                   <div className="flex items-center space-x-2">
+
                     <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
-                      {candidate?.LastName || 'Unknown Candidate'}
+                      {candidate?.LastName ? candidate?.LastName.charAt(0).toUpperCase() + candidate?.LastName.slice(1) : 'Unknown Candidate'}
                     </h3>
                     {candidate && (
                       <button
@@ -107,7 +113,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                   <div className="flex items-center mt-1 text-sm text-muted-foreground">
                     <Briefcase className="h-4 w-4 mr-1 flex-shrink-0" />
                     <div className="flex items-center truncate">
-                      <span className="truncate">{position?.title || 'Unknown Position'}</span>
+                      <span className="truncate">{position?.title.charAt(0).toUpperCase() + position?.title.slice(1) || 'Unknown Position'}</span>
                       {position && (
                         <button
                           // onClick={() => handleViewEntityDetails(position, 'position', 'sidebar')}
@@ -133,7 +139,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
 
               <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-                <span>Progress: {completedRounds} of {totalRounds} rounds completed</span>
+                <span>Progress: {completedRounds} of {totalRounds} Rounds Completed</span>
               </div>
             </div>
 
@@ -141,8 +147,8 @@ function InterviewCard({ interview, onView, onViewPosition }) {
               <div className="mt-4 p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                 <div className="flex justify-between items-start flex-wrap gap-2">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">Next: {nextRound.name}</h4>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    <h4 className="text-xs sm:text-sm font-medium text-custom-blue dark:text-blue-300">Next: {nextRound.name}</h4>
+                    <p className="text-xs text-custom-blue dark:text-blue-400 mt-1">
                       {nextRound.type} • {nextRound.mode}
                     </p>
                   </div>
@@ -152,7 +158,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                 {nextRoundInterviewers.length > 0 && (
                   <div className="mt-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-blue-600 dark:text-blue-400">Interviewers:</span>
+                      <span className="text-xs text-custom-blue dark:text-blue-400">Interviewers:</span>
                       <div className="flex flex-wrap gap-2">
                         {nextRoundInterviewers.map((interviewer, index) => (
                           <div key={interviewer?.id || index} className="flex items-center bg-white/50 dark:bg-black/10 rounded-full px-2 py-1">
@@ -160,7 +166,7 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                               interviewer={interviewer}
                               size="sm"
                             />
-                            <span className="ml-1 text-xs text-blue-600 dark:text-blue-400 truncate max-w-[120px]">
+                            <span className="ml-1 text-xs text-custom-blue dark:text-blue-400 truncate max-w-[120px]">
                               {interviewer?.name}
                               {interviewer?.isExternal && (
                                 <span className="text-xs text-orange-600 dark:text-orange-400 ml-1">(Outsourced)</span>

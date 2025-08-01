@@ -1,8 +1,6 @@
 /* eslint-disable react/prop-types */
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import RoundCard from './RoundCard';
-import PropTypes from 'prop-types';
 
 const VerticalRoundsView = ({
   rounds,
@@ -17,7 +15,7 @@ const VerticalRoundsView = ({
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
   
   // Track expanded state for the current round
-  const [isExpanded, setIsExpanded] = useState(true);
+  // const [isExpanded, setIsExpanded] = useState(true);
   
   // Find current round index
   const currentIndex = sortedRounds.findIndex(round => round._id === currentRoundId);
@@ -27,14 +25,14 @@ const VerticalRoundsView = ({
   const goToPrevious = () => {
     if (currentIndex > 0) {
       onChangeRound(sortedRounds[currentIndex - 1]._id);
-      setIsExpanded(false); // Expand the new round
+      // setIsExpanded(false); // Expand the new round
     }
   };
   
   const goToNext = () => {
     if (currentIndex < sortedRounds.length - 1) {
       onChangeRound(sortedRounds[currentIndex + 1]._id);
-      setIsExpanded(false); // Expand the new round
+      // setIsExpanded(false); // Expand the new round
     }
   };
 

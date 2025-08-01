@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+// v1.0.0 - Ashok - add first letter capital function
+
+import React, { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   User,
   Plus,
@@ -8,63 +10,58 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
-
+} from "lucide-react";
 import axios from "axios";
-
-import { useCustomContext } from '../../../../Context/Contextfetch.js';
-import StatusBadge from '../CommonCode-AllTabs/StatusBadge.jsx';
-import Breadcrumb from '../CommonCode-AllTabs/Breadcrumb.jsx';
-import MoockRoundCard from './MockInterviewRoundCard.jsx';
-import MockCandidateDetails from './MockinterviewCandidate.jsx';
-
+import StatusBadge from "../CommonCode-AllTabs/StatusBadge.jsx";
+import Breadcrumb from "../CommonCode-AllTabs/Breadcrumb.jsx";
+import MoockRoundCard from "./MockInterviewRoundCard.jsx";
+import MockCandidateDetails from "./MockinterviewCandidate.jsx";
+import { config } from "../../../../config.js";
+import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
 
-  const {
-    mockinterviewData,
-    fetchMockInterviewData
-  } = useCustomContext();
+  const { mockinterviewData } = useMockInterviews();
 
   const mockinterview = mockinterviewData.find((data) => data._id === id);
-
- 
-
-  useEffect(() => {
-    fetchMockInterviewData();
-  }, [fetchMockInterviewData]);
-
 
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [expandedRounds, setExpandedRounds] = useState({});
-  
+
   const handleView = (candidate) => {
     if (!candidate) return; // Prevents error if candidate is undefined
     setSelectedCandidate(candidate);
     setSelectCandidateView(true);
   };
-  
+
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState([]);
   const [rounds, setRounds] = useState([]);
- 
 
-    // Track expanded rounds
-    
+  // Track expanded rounds
 
-  console.log("rounds", rounds)
+  console.log("rounds", rounds);
 
   useEffect(() => {
     if (mockinterview) {
       setCandidate(mockinterview || null);
       const roundsData = mockinterview?.rounds;
-      setRounds(Array.isArray(roundsData) ? roundsData : roundsData ? [roundsData] : []);
-    
+      setRounds(
+        Array.isArray(roundsData) ? roundsData : roundsData ? [roundsData] : []
+      );
     }
   }, [mockinterview]);
 
+  // v1.0.0 <----------------------------------------------------------------
+  useEffect(() => {
+    if (rounds.length > 0) {
+      setExpandedRounds({ [rounds[0]._id]: true }); // Open first round
+    }
+  }, [rounds]);
+
+  // v1.0.0 ---------------------------------------------------------------->
 
   const [activeRound, setActiveRound] = useState(null);
   // const [roundsViewMode, setRoundsViewMode] = useState('vertical');
@@ -72,7 +69,6 @@ const MockInterviewDetails = () => {
   // Entity details state
   const [entityDetailsSidebar, setEntityDetailsSidebar] = useState(null);
   const [entityDetailsModal, setEntityDetailsModal] = useState(null);
-
 
   // useEffect(() => {
   //   if (rounds) {
@@ -95,33 +91,41 @@ const MockInterviewDetails = () => {
 
   // Ensure hooks are always called before any conditional return
   if (!mockinterview) {
-    return <div className='flex justify-center items-center h-screen'>Invalid interview ID</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        No interview found
+      </div>
+    );
   }
 
-    // Toggle round expansion
-    const toggleRound = (roundId) => {
-      setExpandedRounds(prev => ({
-        ...prev,
-        [roundId]: !prev[roundId]
-      }));
-    };
+  // Toggle round expansion
+  const toggleRound = (roundId) => {
+    setExpandedRounds((prev) => ({
+      ...prev,
+      [roundId]: !prev[roundId],
+    }));
+  };
 
-    // Check if a round is expanded
-    const isExpanded = (roundId) => !!expandedRounds[roundId];
-
+  // Check if a round is expanded
+  const isExpanded = (roundId) => !!expandedRounds[roundId];
 
   if (!mockinterview) {
     return (
       <div className="min-h-screen bg-gray-50">
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 sm:px-0">
-            <Breadcrumb items={[
-              { label: 'Interviews', path: '/interviewList' },
-              { label: 'Not Found' }
-            ]} />
+            <Breadcrumb
+              items={[
+                { label: "Interviews", path: "/interviewList" },
+                { label: "Not Found" },
+              ]}
+            />
             <div className="mt-6 text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-500">Interview not found.</p>
-              <Link to="/mockinterview" className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4">
+              <Link
+                to="/mockinterview"
+                className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4"
+              >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Interviews
               </Link>
@@ -132,27 +136,23 @@ const MockInterviewDetails = () => {
     );
   }
 
-
   // Count internal and external interviewers across all rounds
   const allInterviewerIds = new Set();
   const internalInterviewerIds = new Set();
   const externalInterviewerIds = new Set();
 
-
-
-
   const updateInterviewStatus = async (newStatus, reason = null) => {
     if (rounds) {
       const interviewData = {
         status: newStatus,
-        ...(reason && { completionReason: reason }) // Add reason only if provided
+        ...(reason && { completionReason: reason }), // Add reason only if provided
       };
 
       try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/interview`, {
+        await axios.post(`${config.REACT_APP_API_URL}/interview`, {
           ...interviewData,
           interviewId: id,
-          updatingInterviewStatus: true
+          updatingInterviewStatus: true,
         });
       } catch (error) {
         console.error("Error updating interview status:", error);
@@ -167,9 +167,9 @@ const MockInterviewDetails = () => {
   // };
 
   // Call this function for cancellation
- 
+
   const canAddRound = () => {
-    return mockinterview?.status === 'Draft';
+    return mockinterview?.status === "Draft";
   };
 
   // const canEditRound = (round) => {
@@ -196,7 +196,6 @@ const MockInterviewDetails = () => {
   //   ['Pending', 'Scheduled'].includes(round.status)
   // );
 
-
   // const handleViewEntityDetails = (
   //   entity,
   //   type,
@@ -220,27 +219,37 @@ const MockInterviewDetails = () => {
   // Create breadcrumb items with status
   const breadcrumbItems = [
     {
-      label: 'Mock Interview',
-      path: '/mockinterview'
+      label: "Mock Interview",
+      path: "/mockinterview",
     },
     {
-      label: candidate?.candidateName || 'Mock Interview',
+      label: candidate?.candidateName || "Mock Interview",
       path: `/interviews/${id}`,
-      status: mockinterview?.status
-    }
+      status: mockinterview?.status,
+    },
   ];
 
   // Calculate progress percentage
-  const completedRounds = rounds?.filter(round => round.status === 'Completed').length || 0;
+  const completedRounds =
+    rounds?.filter((round) => round.status === "Completed").length || 0;
   const totalRounds = rounds?.length || 0;
-  const progressPercentage = totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
+  const progressPercentage =
+    totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
 
   // Check if all rounds are completed
   const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
 
+  // Normalize rounds for calculations
+  const normalizedRounds = Array.isArray(rounds)
+    ? rounds
+    : rounds
+    ? [rounds]
+    : [];
 
-// Normalize rounds for calculations
-const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : [];
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "";
+    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  };
 
   return (
     <>
@@ -248,7 +257,10 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
         <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center mb-4">
-              <Link to="/mockinterview" className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4">
+              <Link
+                to="/mockinterview"
+                className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4"
+              >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Interviews
               </Link>
@@ -260,22 +272,30 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
               <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
-                   Mock Interview Details <span> <StatusBadge status={mockinterview?.status} size="md" /></span>
+                    Mock Interview Details{" "}
+                    <span>
+                      {" "}
+                      <StatusBadge status={mockinterview?.status} size="md" />
+                    </span>
                   </h3>
+                  {/* v1.0.0 <--------------------------------------------------------------- */}
                   <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                    Created on {mockinterview?.createdDate.split(" ")[0] || "N/A"}
+                    Created on{" "}
+                    {mockinterview?.createdAt
+                      ? new Date(mockinterview?.createdAt)?.toLocaleDateString()
+                      : "N/A"}
                   </p>
+                  {/* v1.0.0 ---------------------------------------------------------------> */}
                 </div>
-
               </div>
 
               <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-1">
                   <div className="sm:col-span-1">
-                    <dt className="text-sm font-medium text-gray-500 flex items-center">
+                    {/* <dt className="text-sm font-medium text-gray-500 flex items-center">
                       <User className="h-5 w-5 mr-1" />
                       Candidate
-                    </dt>
+                    </dt> */}
                     <dd className="mt-1 text-sm text-gray-900">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center">
                         <div className="mr-0 mb-3 sm:mb-0 sm:mr-3">
@@ -292,7 +312,9 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
                           )}
                         </div>
                         <div>
-                          <div className="font-medium">{candidate?.candidateName || 'Unknown'}</div>
+                          <div className="font-medium">
+                            {candidate?.candidateName || "Unknown"}
+                          </div>
                           <div className="text-xs text-gray-500 mt-1">
                             Role: {candidate?.Role}
                           </div>
@@ -305,12 +327,10 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
                                 <button
                                   // onClick={() => handleViewEntityDetails(candidate, 'candidate', 'sidebar')}
                                   onClick={() => handleView(candidate)}
-
                                   className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                   View Details
                                 </button>
-                              
                               </>
                             )}
                           </div>
@@ -318,8 +338,6 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
                       </div>
                     </dd>
                   </div>
-
-                 
 
                   <div className="sm:col-span-1 mt-10">
                     <dt className="text-sm font-medium text-gray-500">
@@ -348,31 +366,36 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <div className="flex items-center mb-2">
                     <Users className="h-5 w-5 text-gray-500 mr-2" />
-                    <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
+                    <h4 className="text-sm font-medium text-gray-700">
+                      Interviewers
+                    </h4>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {/* <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                       <span className="font-medium">{internalInterviewerIds.size}</span> Internal
                     </div> */}
                     <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                      <span className="font-medium">{externalInterviewerIds.size}</span> Outsourced
+                      <span className="font-medium">
+                        {externalInterviewerIds.size}
+                      </span>{" "}
+                      Outsourced
                     </div>
                     <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                      <span className="font-medium">{allInterviewerIds.size}</span> Total
+                      <span className="font-medium">
+                        {allInterviewerIds.size}
+                      </span>{" "}
+                      Total
                     </div>
                   </div>
                 </div>
-
 
                 {/* Interview Rounds Table Header */}
                 <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg leading-6 font-medium text-gray-900">
-                     Mock Interview Round
+                      Mock Interview Round
                     </h3>
                     <div className="flex space-x-2">
-                  
-
                       <Link
                         to={`/mock-interview/${id}/edit`}
                         // onClick={() =>  navigate(`/mock-interview/${mockinterview._id}/edit`, { state: { from: location.pathname }})}
@@ -393,57 +416,67 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
                   {rounds.length > 0 && (
                     <div className="mt-6">
                       <div className="space-y-4">
-                         {normalizedRounds.map((round) => (
-                                <div key={round._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                                  <button
-                                    onClick={() => toggleRound(round._id)}
-                                    className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
-                                  >
-                                    <div className="flex items-center">
-                                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
-                                        <span className="text-sm font-medium">{round.sequence}</span>
-                                      </div>
-                                      <div>
-                                        <h3 className="text-lg font-semibold text-gray-900">{round.roundTitle
-                                        }</h3>
-                                        <div className="flex items-center mt-1 text-sm text-gray-600">
-                                          <span className="mr-2">{round.interviewType}</span>
-                                          <span>•</span>
-                                          <span className="mx-2">{round.interviewMode}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className='flex items-center space-x-4'>
-                                    
-                                      {isExpanded(round.id) ? (
-                                        <ChevronUp className="h-5 w-5 text-gray-400" />
-                                      ) : (
-                                        <ChevronDown className="h-5 w-5 text-gray-400" />
-                                      )}
-                                    </div>
-                                  </button>
-                        
-                                  {isExpanded(round._id) && (
-                                    <div className="px-4 pb-4">
-                                      <MoockRoundCard
-                                        round={round}
-                                        // canEdit={canEditRound(round)}
-                                        // onEdit={() => onEditRound(round)}
-                                        isActive={false}
-                                        hideHeader={true}
-                                      />
-                                    </div>
-                                  )}
+                        {normalizedRounds.map((round) => (
+                          <div
+                            key={round._id}
+                            className="bg-white rounded-lg shadow-md overflow-hidden"
+                          >
+                            <button
+                              onClick={() => toggleRound(round._id)}
+                              className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
+                            >
+                              <div className="flex items-center">
+                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
+                                  <span className="text-sm font-medium">
+                                    {round.sequence}
+                                  </span>
                                 </div>
-                              ))}
+                                <div>
+                                  <h3 className="text-lg font-semibold text-gray-900">
+                                    {round.roundTitle}
+                                  </h3>
+                                  {/* v1.0.0 <-------------------------------------------------------------------------- */}
+                                  <div className="flex items-center mt-1 text-sm text-gray-600">
+                                    <span className="mr-2">
+                                      {capitalizeFirstLetter(
+                                        round?.interviewType
+                                      )}
+                                    </span>
+                                    <span>•</span>
+                                    <span className="mx-2">
+                                      {capitalizeFirstLetter(
+                                        round?.interviewMode
+                                      )}
+                                    </span>
+                                  </div>
+                                  {/* v1.0.0 <-------------------------------------------------------------------------- */}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-4">
+                                {isExpanded(round.id) ? (
+                                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                                ) : (
+                                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                                )}
+                              </div>
+                            </button>
 
-                        </div>
-
+                            {isExpanded(round._id) && (
+                              <div className="px-4 pb-4">
+                                <MoockRoundCard
+                                  round={round}
+                                  // canEdit={canEditRound(round)}
+                                  // onEdit={() => onEditRound(round)}
+                                  isActive={false}
+                                  hideHeader={true}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-
+                    </div>
                   )}
-
-          
 
                   {normalizedRounds.length === 0 && (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
@@ -459,9 +492,6 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
                       )}
                     </div>
                   )}
-
-
-
                 </div>
               </div>
             </div>
@@ -474,7 +504,6 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
             interviewId={id}
           />
         )} */}
-
 
         {/* Confirmation Modal for cancle interview */}
         {/* {isModalOpen && (
@@ -534,7 +563,7 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
             onClose={() => setSelectCandidateView(null)}
           />
         )}
-                  {/* {selectPositionView === true && (
+        {/* {selectPositionView === true && (
         <PositionSlideDetails 
           position={selectedPosition} 
           onClose={() => setSelectPositionView(null)} 
@@ -546,4 +575,3 @@ const normalizedRounds = Array.isArray(rounds) ? rounds : rounds ? [rounds] : []
 };
 
 export default MockInterviewDetails;
-

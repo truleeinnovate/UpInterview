@@ -9,6 +9,7 @@ import axios from "axios";
 import EditCandidateForm from "../Candidate-Tab/CreateCandidate.jsx";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { config } from '../../../../config.js';
 
 const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
     const {
@@ -29,7 +30,7 @@ const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
     //     const fetchCandidate = async () => {
     //         try {
     //             setLoading(true);
-    //             const response = await fetch(`${process.env.REACT_APP_API_URL}/candidate/${Candidatedata}`);
+    //             const response = await fetch(`${config.REACT_APP_API_URL}/candidate/${Candidatedata}`);
     //             if (!response.ok) {
     //                 throw new Error(`Error: ${response.status} - ${response.statusText}`);
     //             }
@@ -58,7 +59,7 @@ const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
     const fetchUserData = async () => {
         setLoading(true);
         try {
-            const matchedUser = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/${candidate.ownerId}`);
+            const matchedUser = await axios.get(`${config.REACT_APP_API_URL}/auth/users/${candidate.ownerId}`);
             setUserProfile(matchedUser.data);
         } catch (error) {
             console.error("Error fetching users data:", error);
@@ -69,7 +70,7 @@ const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
     const handleChangeOwner = async () => {
         try {
             const response = await axios.put(
-                `${process.env.REACT_APP_API_URL}/candidate/${candidate._id}`,
+                `${config.REACT_APP_API_URL}/candidate/${candidate._id}`,
                 { OwnerId: selectedCandidate }
             );
             console.log("Owner updated successfully:", response.data);
@@ -110,7 +111,7 @@ const CandidateViewMiniTab = ({ CandidatedataId, frominternal }) => {
             setLoading(true);
             try {
                 const response = await axios.get(
-                    `${process.env.REACT_APP_API_URL}/api/users/organization/${organizationId}`
+                    `${config.REACT_APP_API_URL}/api/users/organization/${organizationId}`
                 );
                 setUserData(response.data);
             } catch (error) {

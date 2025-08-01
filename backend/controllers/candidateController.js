@@ -5,7 +5,6 @@ const CandidatePosition = require('../models/CandidatePosition.js');
 
 // patch call 
 const updateCandidatePatchCall = async (req, res) => {
-  console.log('getting 4')
 
   res.locals.loggedByController = true;
   res.locals.processName = 'Update Candidate';
@@ -76,8 +75,11 @@ const updateCandidatePatchCall = async (req, res) => {
     // Perform the update
     const updatedCandidate = await Candidate.findByIdAndUpdate(
       candidateId,
-      updateFields,
-      { new: true } // Return the updated candidate document
+      {
+        ...updateFields,
+        updatedBy: ownerId 
+      },
+      { new: true }
     );
 
     if (!updatedCandidate) {
@@ -156,7 +158,6 @@ const addCandidatePostCall = async (req, res) => {
       LastName,
       Email,
       Phone,
-      CountryCode,
       Date_Of_Birth,
       Gender,
       HigherQualification,
@@ -168,7 +169,6 @@ const addCandidatePostCall = async (req, res) => {
       PositionId,
       ownerId,
       tenantId,
-      CreatedBy,
     } = req.body;
 
     if (!ownerId) {
@@ -180,7 +180,6 @@ const addCandidatePostCall = async (req, res) => {
       LastName,
       Email,
       Phone,
-      CountryCode,
       Date_Of_Birth,
       Gender,
       HigherQualification,
@@ -192,11 +191,8 @@ const addCandidatePostCall = async (req, res) => {
       PositionId,
       ownerId,
       tenantId,
-      CreatedBy,
-      CreatedDate: new Date(),
+      createdBy: ownerId,
     });
-
-    console.log("New candidate created:", newCandidate);
 
     await newCandidate.save();
 
@@ -258,14 +254,13 @@ const addCandidatePostCall = async (req, res) => {
 
 
 const getCandidates = async (req, res) => {
-  console.log('[getCandidates] Starting fetch');
   try {
     const { tenantId, ownerId } = req.query;
-    console.log('[getCandidates] Query params:', { tenantId, ownerId });
+    // console.log('[getCandidates] Query params:', { tenantId, ownerId });
     const query = tenantId ? { tenantId } : ownerId ? { ownerId } : {};
-    console.log('[getCandidates] Mongo query:', query);
+    // console.log('[getCandidates] Mongo query:', query);
     const candidates = await Candidate.find(query);
-    console.log('[getCandidates] Candidates found:', candidates.length);
+    // console.log('[getCandidates] Candidates found:', candidates.length);
     res.json(candidates);
   } catch (error) {
     console.error('[getCandidates] Error:', error.message);
@@ -281,10 +276,9 @@ const getCandidates = async (req, res) => {
 const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
-    // console.log("👉 [getCandidateById] Received ID:", id);
 
     if (!id) {
-      console.log("❌ [getCandidateById] No ID provided");
+      // console.log("❌ [getCandidateById] No ID provided");
       return res.status(400).json({ message: "Candidate ID is required" });
     }
 
@@ -348,8 +342,6 @@ const getCandidateById = async (req, res) => {
       appliedPositions: positionDetails || []
     };
 
-    // console.log("🟢 [getCandidateById] Final response:", response);
-
     res.status(200).json(response);
   } catch (error) {
     console.error("🔥 [getCandidateById] Error:", error);
@@ -360,7 +352,7 @@ const getCandidateById = async (req, res) => {
 
 
 
-module.exports = { getCandidates,addCandidatePostCall,updateCandidatePatchCall,getCandidateById}
+module.exports = { getCandidates, addCandidatePostCall, updateCandidatePatchCall, getCandidateById }
 
 
 

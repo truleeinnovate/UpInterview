@@ -1,24 +1,23 @@
-import { Maximize, Minimize, X } from 'lucide-react';
+import { Expand, Minimize, X } from 'lucide-react';
 import classNames from 'classnames';
 import { useState } from 'react';
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { calculatePendingBalance } from './Wallet';
-Modal.setAppElement('#root');
+// Modal.setAppElement('#root');
 
-export function WalletBalancePopup({ onClose }) {
-  const { walletBalance } = useCustomContext();
+const WalletBalancePopup = ({ walletBalance }) => {
   const navigate = useNavigate();
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+ // console.log('Wallet data in popup:', walletBalance);
 
   const pendingBalance = calculatePendingBalance(walletBalance);
   // useEffect(() => {
   //   const fetchData = async () => {
   //     try {
   //       setIsLoading(true);
-  //       const wallet_res = await axios.get(`${process.env.REACT_APP_API_URL}/get-top-up/${userId}`);
+  //       const wallet_res = await axios.get(`${config.REACT_APP_API_URL}/get-top-up/${userId}`);
   //       // Find user based on userId
 
   //       const walletDetailsArray = wallet_res.data.walletDetials;
@@ -82,7 +81,7 @@ export function WalletBalancePopup({ onClose }) {
                 {isFullScreen ? (
                   <Minimize className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <Maximize className="w-5 h-5 text-gray-500" />
+                  <Expand className="w-5 h-5 text-gray-500" />
                 )}
               </button>
               <button
@@ -139,3 +138,6 @@ export function WalletBalancePopup({ onClose }) {
     </Modal>
   )
 }
+
+
+export default WalletBalancePopup

@@ -1,66 +1,78 @@
+// v1.0.0  -  Ashraf  -  fixed position code unique issue
 const mongoose = require("mongoose");
 
 const roundSchema = new mongoose.Schema(
   {
-    roundTitle: String,
     sequence: Number,
+    roundTitle: String,
     interviewMode: String,
     interviewerType: String, // internal or external
-    duration: String,
+    duration: Number,
     instructions: String,
+    interviewerGroupName: { type: String },
+
+    interviewerViewType: { type: String },
     selectedInterviewersType: { type: String },
     interviewers: [
-      mongoose.Schema.Types.ObjectId,
+      { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" },
+      // mongoose.Schema.Types.ObjectId,
     ],
+
+    // interviewers: {type: String}, // mansoor : added this for accepting the numbers and texts.
     //  status: String, // draft - if accept - scheduled, if request sent then (request sent)
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
-    questions: [{
-      questionId: { type: mongoose.Schema.Types.Mixed, required: true },
-      snapshot: { type: mongoose.Schema.Types.Mixed, required: true }
-    }],
-
+    questions: [
+      {
+        questionId: { type: mongoose.Schema.Types.Mixed, required: true },
+        snapshot: { type: mongoose.Schema.Types.Mixed, required: true },
+      },
+    ],
   },
   {
-    timestamps: true // ⏱️ Automatically adds createdAt and updatedAt
+    timestamps: true, // ⏱️ Automatically adds createdAt and updatedAt
   }
 );
 
+const positionSchema = new mongoose.Schema(
+  {
+    // <------------------------------- v1.0.0 
+    positionCode: { type: String },
+    // ------------------------------ v1.0.0 >
+    title: String,
+    companyname: String,
+    jobDescription: String,
+    minexperience: Number,
+    maxexperience: Number,
+    selectedTemplete: String,
+    skills: [
+      {
+        skill: String,
+        experience: String,
+        expertise: String,
+      },
+    ],
+    additionalNotes: String,
 
-const positionSchema = new mongoose.Schema({
-  title: String,
-  companyname: String,
-  jobDescription: String,
-  minexperience: Number,
-  maxexperience: Number,
-  selectedTemplete: String,
-  skills: [
-    {
-      skill: String,
-      experience: String,
-      expertise: String,
-    },
-  ],
-  additionalNotes: String,
+    rounds: [roundSchema],
+    ownerId: String,
+    tenantId: String,
+    // added new feilds ranjith from here
+    minSalary: String,
+    maxSalary: String,
+    // EmployementType:String,
+    NoofPositions: Number,
+    Location: String,
+    // workMode:String,
 
-  rounds: [roundSchema],
-  CreatedBy: String,
-  LastModifiedById: String,
-  ownerId: String,
-  tenantId: String,
-  createdDate: { type: Date, default: Date.now },
-  // added new feilds ranjith from here
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    ownerId: String,
+    tenantId: String,
+  },
+  { timestamps: true }
+);
 
-  minSalary: String,
-  maxSalary: String,
-  // EmployementType:String,
-  NoofPositions: Number,
-  Location: String,
-  // workMode:String,
-
-  // added new feilds ranjith to here
-});
-
-
-const Position = mongoose.model("Position", positionSchema);
+const Position =
+  mongoose.models.Position || mongoose.model("Position", positionSchema);
 
 module.exports = { Position };

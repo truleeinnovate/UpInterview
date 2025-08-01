@@ -6,42 +6,49 @@ import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js'; // Import the utility
 import Cookies from "js-cookie";
+import LoadingButton from "../../../Components/LoadingButton.jsx";
+import { usePositions } from '../../../apiHooks/usePositions.js';
+
+
 const SubscriptionPlan = () => {
-  console.log('subscription plan')
+  // console.log('subscription plan')
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
+
+  const { isMutationLoading } = usePositions();
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
   // Extract user details from token payload
-  const userId = tokenPayload?.userId;
-  const organization = tokenPayload?.organization?.toString();
-  const orgId = tokenPayload?.tenantId;
+  const ownerId = tokenPayload?.userId;
+  const organization = tokenPayload?.organization;
+  console.log("organization ----", organization);
+  const tenantId = tokenPayload?.tenantId;
 
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const [user] = useState({
-    userType: organization === "true" ? "organization" : "individual",
-    tenantId: orgId,
-    ownerId: userId,
+    userType: organization === true ? "organization" : "individual",
+    tenantId: tenantId,
+    ownerId: ownerId,
   });
 
   const navigate = useNavigate();
 
   const toggleBilling = () => setIsAnnual(!isAnnual);
   const [subscriptionData, setSubscriptionData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   // Fetch subscription data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!userId) {
+        if (!ownerId) {
           throw new Error('User ID not found');
         }
-        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${userId}`, {
+        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${ownerId}`, {
           headers: {
             Authorization: `Bearer ${authToken}`, // Include token in request headers
           },
@@ -53,14 +60,14 @@ const SubscriptionPlan = () => {
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
-    if (userId) {
+    if (ownerId) {
       fetchData();
     }
-  }, [userId, authToken]);
+  }, [ownerId, authToken]);
 
   // Fetch subscription plans
   useEffect(() => {
@@ -75,10 +82,13 @@ const SubscriptionPlan = () => {
           }
         );
         const data = response.data;
+        console.log("data ----", data);
 
         const filteredPlans = data.filter(
           (plan) => plan.subscriptionType === user.userType
         );
+        console.log("user.userType ----", user.userType);
+        console.log("filteredPlans ----", filteredPlans);
 
         const formattedPlans = filteredPlans.map((plan) => {
           const monthlyPricing = plan.pricing.find(
@@ -97,6 +107,8 @@ const SubscriptionPlan = () => {
             monthlyPrice: monthlyPricing?.price || 0,
             annualPrice: annualPricing?.price || 0,
             isDefault: plan.name === "Pro",
+            // Add Razorpay plan IDs if available
+            razorpayPlanIds: plan.razorpayPlanIds || {},
             features: plan.features.map(
               (feature) => `${feature.name} (${feature.description})`
             ),
@@ -137,79 +149,6 @@ const SubscriptionPlan = () => {
     fetchPlans();
   }, [user.userType, location.pathname, authToken]);
 
-  // Submit selected plan
-  // const submitPlans = async (plan) => {
-  //   if (!plan) {
-  //     toast.success("No plan is selected");
-  //     return;
-  //   }
-  //   const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;
-
-  //   const payload = {
-  //     planDetails: {
-  //       subscriptionPlanId: plan.planId,
-  //       monthlyPrice: plan.monthlyPrice,
-  //       annualPrice: plan.annualPrice,
-  //       monthDiscount: plan.monthlyDiscount,
-  //       annualDiscount: plan.annualDiscount,
-  //     },
-  //     userDetails: {
-  //       tenantId: user.tenantId,
-  //       ownerId: user.ownerId,
-  //       userType: user.userType,
-  //       membershipType: isAnnual ? "annual" : "monthly",
-  //     },
-  //     totalAmount,
-  //     status: "pending",
-  //   };
-
-  //   try {
-  //     const subscriptionResponse = await axios.post(
-  //       `${config.REACT_APP_API_URL}/create-customer-subscription`,
-  //       payload,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${authToken}`, // Include token in request headers
-  //         },
-  //       }
-  //     );
-
-  //     console.log(
-  //       "Payment and Subscription submitted successfully",
-  //       subscriptionResponse.data
-  //     );
-  //     if (organization === "false" && plan.name === "Base") {
-  //       await axios.post(
-  //         `${config.REACT_APP_API_URL}/emailCommon/afterSubscribeFreePlan`,
-  //         {
-  //           ownerId: userId,
-  //           tenantId: orgId,
-  //         },
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${authToken}`, // Include token in request headers
-  //           },
-  //         }
-  //       );
-
-  //       navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
-  //     } else {
-  //       navigate("/payment-details", {
-  //         state: {
-  //           plan: {
-  //             ...plan,
-  //             billingCycle: isAnnual ? "annual" : "monthly",
-  //             user,
-  //             invoiceId: subscriptionResponse?.data?.invoiceId,
-  //           },
-  //           isUpgrading,
-  //         },
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error submitting subscription:", error);
-  //   }
-  // };
 
   const submitPlans = async (plan) => {
 
@@ -234,9 +173,9 @@ const SubscriptionPlan = () => {
         membershipType: isAnnual ? "annual" : "monthly",
       },
       totalAmount,
-      status: "pending",
+      status: user.userType === "individual" && plan.name === "Base" ? "active" : "pending",
     };
-
+    console.log("payload ----", payload);
     try {
       const subscriptionResponse = await axios.post(
         `${config.REACT_APP_API_URL}/create-customer-subscription`,
@@ -249,10 +188,15 @@ const SubscriptionPlan = () => {
       );
       console.log(organization, plan.name, "organization");
       if ((organization === "false" || !organization) && plan.name === "Base") {
-        await axios.post(`${config.REACT_APP_API_URL}/emails/subscriptions/free`, {
-          ownerId: Cookies.get("userId"),
-          tenantId: Cookies.get("organizationId"),
+        await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
+          ownerId: user.ownerId,
+          tenantId: user.tenantId,
         });
+
+              axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+                tenantId: tenantId,
+                ownerId: ownerId,
+              }).catch((err) => console.error('Email error:', err));
 
         // If upgrading, navigate to a specific page; otherwise, go to home
         navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
@@ -281,7 +225,7 @@ const SubscriptionPlan = () => {
     hoveredPlan ? hoveredPlan === plan.name : plan.isDefault;
 
   return (
-    <div className="h-full w-full flex justify-center items-center">
+    <div className="h-full w-full flex justify-center items-center pt-3">
       <div className="flex flex-col sm:px-[7%] px-[15%] md:px-[2%] rounded-lg">
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -369,19 +313,21 @@ const SubscriptionPlan = () => {
                 {isAnnual ? plan.annualPrice : plan.monthlyPrice}
                 <span className="text-lg font-medium"> /{isAnnual ? "annual" : "month"}</span>
               </p>
-              <button
+              <LoadingButton
                 onClick={() => submitPlans(plan)}
-                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs ${
-                  isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"
-                } ${
-                  subscriptionData.subscriptionPlanId === plan.planId
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-                disabled={subscriptionData.subscriptionPlanId === plan.planId}
+                isLoading={isMutationLoading}
+                loadingText="Processing..."
+                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
+                ${isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"}
+                ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
               >
-                {subscriptionData.subscriptionPlanId === plan.planId ? "Subscribed" : "Choose"}
-              </button>
+                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
+              ? "Subscribed"
+              : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
+              ? "Continue to Payment"
+              : "Choose"}
+              </LoadingButton>
             </div>
           ))}
         </div>

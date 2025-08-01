@@ -1,0 +1,75 @@
+
+/* Subscription animations CSS */
+
+/* Pulsing glow animation for upgrade buttons */
+@keyframes upgradeGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(33, 121, 137, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(33, 121, 137, 0.8), 0 0 20px rgba(33, 121, 137, 0.5);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(33, 121, 137, 0.6);
+    transform: scale(1);
+  }
+}
+
+/* Subtle gradient animation */
+@keyframes gradientShift {
+  0% {
+    background: linear-gradient(45deg, #217989, #dfeec7) !important;
+  }
+  50% {
+    background: linear-gradient(45deg, #dfeec7, #217989) !important;
+  }
+  100% {
+    background: linear-gradient(45deg, #217989, #dfeec7) !important;
+  }
+}
+
+/* Apply animation to upgrade buttons */
+.upgrade-button-animation {
+  animation: upgradeGlow 2s infinite, gradientShift 3s infinite alternate;
+  background: linear-gradient(45deg, #cee8ed, #fafbf8) !important;
+  color: #217989 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Additional hover effect */
+.upgrade-button-animation:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 14px rgba(128, 0, 255, 0.3), 0 3px 6px rgba(0, 0, 0, 0.1) !important;
+  filter: brightness(1.1);
+}
+
+/* Create shine effect on hover */
+.upgrade-button-animation::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.6s ease;
+  opacity: 0;
+}
+
+.upgrade-button-animation:hover::before {
+  opacity: 1;
+  transform: translateX(100%) rotate(30deg);
+  transition: all 0.6s ease;
+}

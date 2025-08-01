@@ -1,7 +1,17 @@
-import { XMarkIcon } from '@heroicons/react/24/outline'
+// import { XMarkIcon } from '@heroicons/react/24/outline'
 import { securitySettings } from '../mockData/securityData'
+import { usePermissions } from '../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../utils/permissionUtils';
 
-export function Security() {
+function Security() {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Security")) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Security Settings</h2>
@@ -24,7 +34,7 @@ export function Security() {
           </div>
         </div>
         <div className="mt-4 flex space-x-4">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80">
             Change Method
           </button>
           <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
@@ -83,3 +93,5 @@ export function Security() {
     </div>
   )
 }
+
+export default Security;

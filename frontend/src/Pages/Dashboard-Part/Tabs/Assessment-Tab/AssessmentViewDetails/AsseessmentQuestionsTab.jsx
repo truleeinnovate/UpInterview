@@ -15,7 +15,7 @@ function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
   };
 
 return (
-  <div className="max-w-6xl">
+  <div className="">
     <div className="space-y-5">
       {sections?.length > 0 ? (
         sections.map((section, index) => (
@@ -27,9 +27,9 @@ return (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3">
                   <span className="bg-white px-3 py-1 rounded-lg border border-gray-200 text-sm font-medium shadow-xs">
-                    {section.questions?.length || 0} Questions
+                    {section.questions?.length || 0} {section.questions?.length <= 1 ? 'Question' : 'Questions'}
                   </span>
-                  <h3 className="font-semibold text-gray-800">{section.sectionName}</h3>
+                  <h3 className="font-semibold text-gray-800">{section.sectionName.charAt(0).toUpperCase() + section.sectionName.slice(1)}</h3>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -87,7 +87,7 @@ return (
                   ))
                 ) : (
                   <div className="py-10 text-center text-gray-500 text-sm">
-                    No questions added
+                    No Questions added
                   </div>
                 )}
               </div>
@@ -96,7 +96,7 @@ return (
         ))
       ) : (
         <div className="py-20 text-center text-gray-500 text-base">
-          No sections added
+          No Sections added
         </div>
       )}
     </div>

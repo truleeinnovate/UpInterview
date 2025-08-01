@@ -1,6 +1,16 @@
 import { usageMetrics } from '../mockData/usageData'
+import { usePermissions } from '../../../../Context/PermissionsContext';
+import { usePermissionCheck } from '../../../../utils/permissionUtils';
 
-export function Usage() {
+const Usage = () => {
+  const { checkPermission, isInitialized } = usePermissionCheck();
+  const { effectivePermissions } = usePermissions();
+
+  // Permission check after all hooks
+  if (!isInitialized || !checkPermission("Usage")) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Usage Analytics</h2>
@@ -26,7 +36,7 @@ export function Usage() {
             </div>
             <div className="mt-2 h-2 bg-gray-200 rounded-full">
               <div
-                className="h-full bg-blue-600 rounded-full"
+                className="h-full bg-custom-blue rounded-full"
                 style={{
                   width: `${(usageMetrics.interviews.total / usageMetrics.interviews.limit) * 100}%`
                 }}
@@ -90,7 +100,7 @@ export function Usage() {
               </div>
               <div className="h-2 bg-gray-200 rounded-full">
                 <div
-                  className="h-full bg-blue-600 rounded-full"
+                  className="h-full bg-custom-blue rounded-full"
                   style={{
                     width: `${(role.count / usageMetrics.activeUsers.current) * 100}%`
                   }}
@@ -117,7 +127,7 @@ export function Usage() {
                 </div>
                 <div className="h-2 bg-gray-200 rounded-full">
                   <div
-                    className="h-full bg-blue-600 rounded-full"
+                    className="h-full bg-custom-blue rounded-full"
                     style={{
                       width: `${(day.count / Math.max(...usageMetrics.interviews.breakdown.map(d => d.count))) * 100}%`
                     }}
@@ -156,3 +166,5 @@ export function Usage() {
     </div>
   )
 }
+
+export default Usage

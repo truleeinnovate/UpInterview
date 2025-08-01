@@ -1,25 +1,25 @@
 // utils/AppTaskValidation.js
-export const validateTaskForm = (formData, selectedPriority, selectedStatus) => {
+export const validateTaskForm = (formData, selectedPriority, selectedStatus, scheduledDate) => {
     const errors = {};
 
     if (!formData.title) errors.title = "Title is required";
-    if (!formData.assignedTo) errors.assignedTo = "Assigned To is required";
+    if (!formData.assignedTo || formData.assignedTo === "") errors.assignedTo = "Assigned To is required";
     if (!selectedPriority) errors.priority = "Priority is required";
     if (!selectedStatus) errors.status = "Status is required";
+    if (!scheduledDate) errors.dueDate = "Due Date is required";
 
     // Check for the category in "Related To"
     if (!formData.relatedTo.objectName) {
-        errors.relatedToCategory = "Choose any tab";
+        errors.relatedToCategory = "Choose Any Tab";
     }
 
     // Check for the record ID in "Related To"
     if (!formData.relatedTo.recordId) {
-        errors.relatedToOption = "Choose any record";
+        errors.relatedToOption = "Choose Any Record";
     } else if (!/^[0-9a-fA-F]{24}$/.test(formData.relatedTo.recordId)) {
-        errors.relatedToOption = "Invalid recordId format";
+        errors.relatedToOption = "Invalid RecordId Format";
     }
 
-    if (!formData.dueDate) errors.dueDate = "Due Date is required";
 
     return errors;
 };

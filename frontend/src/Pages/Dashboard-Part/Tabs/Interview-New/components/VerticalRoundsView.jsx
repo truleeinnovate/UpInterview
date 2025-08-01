@@ -1,59 +1,80 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import RoundCard from './RoundCard';
-import { Button } from '../../CommonCode-AllTabs/ui/button';
-import {
-  Edit,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+// v1.0.0 - Ashok - modified as first card should open by default and added optional chaining(?)
+
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import RoundCard from "./RoundCard";
+import { Button } from "../../CommonCode-AllTabs/ui/button";
+import { Edit, ChevronDown, ChevronUp } from "lucide-react";
 const VerticalRoundsView = ({
   rounds,
   interviewData,
   canEditRound,
-  onEditRound
+  onEditRound,
 }) => {
-  console.log("rounds", rounds)
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
   // Track expanded rounds
   const [expandedRounds, setExpandedRounds] = useState({});
 
+  // v1.0.0 <----------------------------------------------------------
+  // Open first round by default
+  useEffect(() => {
+    if (sortedRounds.length > 0) {
+      setExpandedRounds({ [sortedRounds[0]._id]: true });
+    }
+  }, [rounds]);
+  // v1.0.0 ---------------------------------------------------------->
+
   // Toggle round expansion
   const toggleRound = (roundId) => {
-    setExpandedRounds(prev => ({
+    setExpandedRounds((prev) => ({
       ...prev,
-      [roundId]: !prev[roundId]
+      [roundId]: !prev[roundId],
     }));
   };
 
   // Check if a round is expanded
   const isExpanded = (roundId) => !!expandedRounds[roundId];
 
+  // v1.0.0 <----------------------------------------------------------
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+  // v1.0.0 ---------------------------------------------------------->
+
   return (
     <div className="space-y-4">
       {sortedRounds.map((round) => (
-        <div key={round._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div
+          key={round._id}
+          className="bg-white rounded-lg shadow-md overflow-hidden"
+        >
           <button
-            onClick={() => toggleRound(round._id)}
+            onClick={() => toggleRound(round?._id)}
             className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
           >
             <div className="flex items-center">
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
-                <span className="text-sm font-medium">{round.sequence}</span>
+                <span className="text-sm font-medium">{round?.sequence}</span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">{round.roundTitle
-                }</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {round?.roundTitle}
+                </h3>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
-                  <span className="mr-2">{round.interviewType}</span>
+                  <span className="mr-2">
+                    {capitalizeFirstLetter(round?.interviewType)}
+                  </span>
                   <span>•</span>
-                  <span className="mx-2">{round.interviewMode}</span>
+                  <span className="mx-2">
+                    {capitalizeFirstLetter(round?.interviewMode)}
+                  </span>
                 </div>
               </div>
             </div>
-            <div className='flex items-center space-x-4'>
+            <div className="flex items-center space-x-4">
               {/* {canEditRound(round) && (
                 <Button
                   onClick={() => onEditRound(round)}

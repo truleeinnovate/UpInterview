@@ -62,7 +62,7 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      className="fixed inset-0 top-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
@@ -108,9 +108,7 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
                   </div>
                   <div className="flex items-start space-x-2">
                     <span className="text-sm font-medium text-gray-700 w-12">To:</span>
-                    <span className="text-sm text-gray-600 break-all">
-                      {notification.recipients ? notification.recipients.join(', ') : notification.recipient}
-                    </span>
+                    <span className="text-sm text-gray-600 break-all">{Array.isArray(notification.recipients) ? notification.recipients.join(', ') : notification.recipients}</span>
                   </div>
                   {notification.cc && notification.cc.length > 0 && (
                     <div className="flex items-start space-x-2">
@@ -125,8 +123,8 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
             {/* Message Body */}
             <div className="bg-white rounded-xl">
               <div className="prose max-w-none">
-                <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {formatMessageBody(notification.message)}
+                <div className="text-gray-700 leading-relaxed whitespace-pre-line" dangerouslySetInnerHTML={{__html: notification.message}}>
+            
                 </div>
               </div>
             </div>

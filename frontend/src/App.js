@@ -1,1070 +1,450 @@
-// import React from 'react';
-// import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-// import Cookies from "js-cookie";
-// import Home from './Pages/Dashboard-Part/Dashboard/Home.jsx';
-// import Navbar from './Components/Navbar/Navbar-Sidebar.jsx';
-// import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings.jsx';
-// import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings.jsx';
-// mansoor  
-// import LandingPage from './Pages/Login-Part/Individual-1.jsx';
-// import UserTypeSelection from './Pages/Login-Part/Individual-2.jsx';
-// import SelectProfession from './Pages/Login-Part/Individual-3.jsx';
-// import ProfileWizard from './Pages/Login-Part/Individual-4/Individual-4.jsx';
-// import OrganizationSignUp from './Pages/Login-Part/OrganizationSignUp.jsx';
-// import OrganizationLogin from './Pages/Login-Part/OrganizationLogin.jsx';
-// import SubscriptionPlan from "./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan.jsx";
-// import LinkedInCallback from './Components/LinkedInCallback.jsx';
-// import CardDetails from "./Pages/Login-Part/SubscriptionPlans/CardDetails.jsx";
+// v1.0.0  -  mansoor  -  removed unnecessary comments from this file
+//v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
+//v1.0.2  -  Ashraf  -  added create role path
+// v1.0.3 - Ranjith - new route CandidateDetails to assessment page
+// v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
+import Cookies from "js-cookie";
+import ErrorBoundary from "./Components/ErrorBoundary";
+import { getActivityEmitter } from "./utils/activityTracker";
+import CombinedNavbar from "./Components/Navbar/CombinedNavbar";
+import Logo from "./Pages/Login-Part/Logo";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
+import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
+import {
+  usePermissions,
+  PermissionsProvider,
+} from "./Context/PermissionsContext";
+import { CustomProvider } from "./Context/Contextfetch";
+import PageSetter from "./Components/PageSetter";
+import BillingSubtabs from "./Pages/Dashboard-Part/Accountsettings/account/billing/BillingSubtabs.jsx";
+import UserInvoiceDetails from "./Pages/Dashboard-Part/Tabs/Invoice-Tab/InvoiceDetails.jsx";
+import InvoiceTab from "./Pages/Dashboard-Part/Tabs/Invoice-Tab/Invoice.jsx";
+import SubscriptionSuccess from "./Pages/Login-Part/SubscriptionPlans/SubscriptionSuccess.jsx";
+import AccountSettingsSidebar from "./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx";
+import VerifyUserEmail from "./VerifyUserEmail.jsx";
+import { DocumentsSection } from "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/DocumentsDetails/DocumentsSection.jsx";
+import SessionExpiration from "./Components/SessionExpiration.jsx";
+import Loading from "./Components/Loading.js";
+import UserDataLoader from "./Components/UserDataLoader.jsx";
+import {
+  preloadPermissions,
+  hasValidCachedPermissions,
+} from "./utils/permissionPreloader";
+import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
+
+
+// Lazy-loaded components (unchanged)
+const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
+const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
+const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
+const ProfileWizard = lazy(() =>
+  import("./Pages/Login-Part/Individual-4/Individual-4")
+);
+const OrganizationSignUp = lazy(() =>
+  import("./Pages/Login-Part/OrganizationSignUp")
+);
+const OrganizationLogin = lazy(() =>
+  import("./Pages/Login-Part/OrganizationLogin")
+);
+const SubscriptionPlan = lazy(() =>
+  import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan")
+);
+const LinkedInCallback = lazy(() => import("./Components/LinkedInCallback"));
+const CardDetails = lazy(() =>
+  import("./Pages/Login-Part/SubscriptionPlans/CardDetails")
+);
+const SubscriptionCardDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Subscription/subscriptionCardDetails.jsx"
+  )
+);
+const ForgetPassword = lazy(() => import("./Pages/Login-Part/ForgetPassword"));
+const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
+
+const Home = lazy(() =>
+  import("./Pages/Dashboard-Part/Dashboard/Home/Home.jsx")
+);
+const OutsourceInterviewerRequest = lazy(() =>
+  import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
+);
+const CandidateTab = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate")
+);
+const CandidateTabDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/360MainContent.jsx"
+  )
+);
+const AddCandidateForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm")
+);
+const CandidateDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails"
+  )
+);
+const CandidateFullscreen = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen"
+  )
+);
+const Position = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position")
+);
+const PositionForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form")
+);
+const PositionSlideDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails")
+);
+const RoundFormPosition = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx"
+  )
+);
+const MockInterview = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview")
+);
+const MockInterviewDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails")
+);
+const MockSchedulelater = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm")
+);
+const InterviewList = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList")
+);
+const InterviewDetail = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail")
+);
+const InterviewForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm")
+);
+const RoundForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm")
+);
+const QuestionBank = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank")
+);
+const Assessment = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment")
+);
+const AssessmentForm = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment"
+  )
+);
+const AssessmentDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails"
+  )
+);
+const AssessmentTest = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest")
+);
+const ScheduleAssessment = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssessment")
+);
+const ScheduleAssDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
+);
+const Feedback = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback")
+);
+const MyProfile = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"
+  )
+);
+const BasicDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx"
+  )
+);
+const BasicDetailsEditPage = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx"
+  )
+);
+const AdvancedDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx"
+  )
+);
+const EditAdvacedDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx"
+  )
+);
+const InterviewUserDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx"
+  )
+);
+const EditInterviewDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails"
+  )
+);
+const AvailabilityUser = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser"
+  )
+);
+const EditAvailabilityDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails"
+  )
+);
+const CompanyProfile = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile"
+  )
+);
+const CompanyEditProfile = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit"
+  )
+);
+const Subscription = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription"
+  )
+);
+const Wallet = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet")
+);
+const WalletBalancePopup = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup"
+  )
+);
+const WalletTransactionPopup = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup"
+  )
+);
+const Security = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Security")
+);
+const NotificationsDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Notifications")
+);
+const Usage = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Usage")
+);
+const InterviewerGroups = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups"
+  )
+);
+const InterviewerGroupFormPopup = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup"
+  )
+);
+const InterviewGroupDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails"
+  )
+);
+const UsersLayout = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout"
+  )
+);
+const UserForm = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm"
+  )
+);
+const UserProfileDetails = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails"
+  )
+);
+const EmailTemplate = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate"
+  )
+);
+const Role = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Roles/Role")
+);
+const RoleFormPopup = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup")
+);
+const RoleView = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleView.jsx")
+);
+
+const Sharing = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/Sharing")
+);
+const DomainManagement = lazy(() =>
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement"
+  )
+);
+const Webhooks = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks")
+);
+const HrmsAtsApi = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi")
+);
+const InterviewTemplates = lazy(() =>
+  import("../src/Pages/InteviewTemplates/InterviewTemplates")
+);
+const TemplateDetail = lazy(() =>
+  import("../src/Pages/InteviewTemplates/TemplateDetail")
+);
+const RoundFormTemplate = lazy(() =>
+  import("../src/Pages/InteviewTemplates/RoundForm")
+);
+const InterviewTemplateForm = lazy(() =>
+  import("../src/Pages/InteviewTemplates/InterviewTemplateForm")
+);
+const SupportDesk = lazy(() =>
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
+);
+const SuperSupportDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/SupportDesk/SuperSupportDetails.jsx")
+);
+const SupportForm = lazy(() =>
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm")
+);
+const SupportViewPage = lazy(() =>
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage")
+);
+const InterviewRequest = lazy(() =>
+  import("./Pages/Interview-Request/InterviewRequest.jsx")
+);
+const Task = lazy(() =>
+  import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx")
+);
+const VerifyEmail = lazy(() => import("./VerifyWorkEmail.jsx"));
+
+// Super Admin Lazy-loaded components
+const SuperAdminDashboard = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Dashboard.jsx")
+);
+const TenantsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/TenantsPage.jsx")
+);
+const AddTenantForm = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Tenant/AddTenantForm.jsx")
+);
+const TenantDetailsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx")
+);
+const CandidatesPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
+);
+const PositionsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/PositionsPage.jsx")
+);
+const InterviewsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InterviewsPage.jsx")
+);
+const AssessmentsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/AssessmentsPage.jsx")
+);
+const OutsourceRequestsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/OutsourceRequestsPage.jsx")
+);
+const OutsourceInterviewersPage = lazy(() =>
+  import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
+);
+const InterviewerRequestsPage = lazy(() =>
+  import("./Pages/Interview-Request/InterviewRequest.jsx")
+);
+const BillingPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/BillingPage.jsx")
+);
+const AddInvoiceForm = lazy(() =>
+  import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx")
+);
+const SupportTicketsPage = lazy(() =>
+  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
+);
+const AddSupportForm = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
+);
+const SettingsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
+);
+const InternalLogsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InternalLogsPage.jsx")
+);
+const IntegrationsPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx")
+);
+const ContactProfileDetails = lazy(() =>
+  import(
+    "./Components/SuperAdminComponents/TenantDetails/Contact/ContactProfileDetails.jsx"
+  )
+);
+
+// Custom Suspense component
+const SuspenseWithLoading = ({ fallback, children }) => (
+  <Suspense fallback={<Loading />}>{children}</Suspense>
+);
+
+// Move all logic that uses usePermissions into this component
+const MainAppRoutes = ({
+  location,
+  organization,
+  sessionExpired,
+  setSessionExpired,
+  showLogoPaths,
+  noNavbarPaths,
+}) => {
+  const {
+    effectivePermissions,
+    superAdminPermissions,
+    loading,
+    isInitialized,
+  } = usePermissions();
+  const userType = AuthCookieManager.getUserType();
+
+  // Combine permissions into a single object
+  const combinedPermissions = useMemo(() => {
+    const combined = { ...effectivePermissions, ...superAdminPermissions };
+    return combined;
+  }, [effectivePermissions, superAdminPermissions]);
 
-
-
-// import OutsourceInterviewerAdmin from './Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers.jsx';
-// import Logo from './Pages/Login-Part/Logo.jsx';
-
-// // tabs
-// import CandidateTab from "./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate.jsx";
-// import CandidateTabDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent.jsx';
-// import AddCandidateForm from './Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm.jsx';
-// import CandidateDetails from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails.jsx';
-// import CandidateFullscreen from './Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen.jsx';
-
-// import Position from './Pages/Dashboard-Part/Tabs/Position-Tab/Position.jsx';
-// import PositionForm from './Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form.jsx';
-// import PositionSlideDetails from './Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails.jsx';
-// import RoundFormPosition from './Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx';
-
-// import MockInterview from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterview.jsx';
-// import MockInterviewDetails from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails.jsx';
-// import MockSchedulelater from './Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm.jsx';
-
-// import InterviewList from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList.jsx';
-// import InterviewDetail from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail.jsx';
-// import InterviewForm from './Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm.jsx';
-// import RoundForm from './Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm.jsx';
-
-// import QuestionBank from './Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx';
-
-// import Assessment from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment.jsx";
-// import AssessmentForm from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment.jsx";
-// import AssessmentDetails from "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails.jsx";
-
-// // Assessment test
-// import AssessmentTest from './Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest.jsx';
-
-// //-----------------------------------account settings
-// import UsersLayout from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout.jsx';
-// import UserForm from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm.jsx';
-// import UserProfileDetails from './Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails.jsx';
-// import BasicDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx';
-// import BasicDetailsEditPage from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx';
-// import EditAdvacedDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx';
-// import EditInterviewDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails.jsx';
-// import EditAvailabilityDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails.jsx';
-// import AdvancedDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx';
-// import AvailabilityUser from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser.jsx';
-// import InterviewUserDetails from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx';
-// import { CompanyProfile } from './Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile.jsx';
-// import { BillingDetails } from './Pages/Dashboard-Part/Accountsettings/account/billing/Billing.jsx';
-// import { Subscription } from './Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription.jsx';
-// import { Wallet } from './Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet.jsx';
-// import { Security } from './Pages/Dashboard-Part/Accountsettings/account/Security.jsx';
-// import { Usage } from './Pages/Dashboard-Part/Accountsettings/account/Usage.jsx';
-// import { NotificationsDetails } from './Pages/Dashboard-Part/Accountsettings/account/Notifications.jsx';
-// import { HrmsAtsApi } from './Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi.jsx';
-// import { Webhooks } from './Pages/Dashboard-Part/Accountsettings/integrations/Webhooks.jsx';
-// import { Sharing } from './Pages/Dashboard-Part/Accountsettings/account/Sharing.jsx';
-// import { InterviewerGroups } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups.jsx';
-// import { CompanyEditProfile } from './Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit.jsx';
-// import { InterviewerGroupFormPopup } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup.jsx';
-// import { InterviewGroupDetails } from './Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails.jsx';
-// import { WalletTransactionPopup } from './Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup.jsx';
-// import { WalletBalancePopup } from './Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup.jsx';
-// import { Role } from './Pages/Dashboard-Part/Accountsettings/account/Roles/Role.jsx';
-// import { RoleFormPopup } from './Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup.jsx';
-// import SettingsPage from './Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar.jsx';
-// import { MyProfile } from './Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx';
-// import { DomainManagement } from './Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement.jsx';
-// import EmailTemplate from './Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate.jsx';
-// //-----------------------------------account settings
-
-// import InterviewTemplates from '../src/Pages/InteviewTemplates/InterviewTemplates.jsx';
-// import TemplateDetail from '../src/Pages/InteviewTemplates/TemplateDetail';
-// import RoundFormTemplate from '../src/Pages/InteviewTemplates/RoundForm';
-// import InterviewTemplateForm from '../src/Pages/InteviewTemplates/InterviewTemplateForm.jsx';
-
-// import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
-
-// // Support desk
-// import SupportViewPage from '../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage.jsx';
-// import SupportDesk from '../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk';
-// import SupportDetails from '../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDetails';
-// import SupportForm from '../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm.jsx';
-
-// import ProtectedRoute from './Components/ProtectedRoute.jsx';
-
-// const App = () => {
-//   const location = useLocation();
-//   const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
-//   const pathsWithSidebar = ['/profile', '/availability', '/billing_details', '/invoice', '/user_details', '/company_info', '/invoiceline', '/sharing_settings', '/sharing_rules', '/paymentHistory', '/SubscriptionDetails', '/Paymentmethods', '/emailSettings'];
-//   const pathsWithSidebarAppSettings = ['/connected_apps', '/access_token', '/auth_token', '/apis'];
-//   const shouldRenderLogo = ['/organization-signup', '/organization-login', '/select-user-type', '/select-profession', '/complete-profile', '/subscription-plans', '/payment-details'].includes(location.pathname);
-
-//   const authToken = Cookies.get("authToken");
-//   const tokenPayload = decodeJwt(authToken);
-//   const organization = tokenPayload?.organization;
-
-//   return (
-//     <React.Fragment>
-//       {shouldRenderNavbar && <Navbar />}
-//       {pathsWithSidebar.includes(location.pathname) && <Settingssidebar />}
-//       {pathsWithSidebarAppSettings.includes(location.pathname) && <AppSettings />}
-//       {shouldRenderLogo && <Logo />}
-//       <div className={shouldRenderNavbar ? 'mt-16' : 'mt-12'}>
-//         <Routes>
-//           {/* login pages */}
-//           <Route path="/" element={<LandingPage />} />
-//           <Route path="/select-user-type" element={<UserTypeSelection />} />
-//           <Route path="/select-profession" element={<SelectProfession />} />
-//           <Route path="/complete-profile" element={<ProfileWizard />} />
-//           <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-//           <Route path="/organization-signup" element={<OrganizationSignUp />} />
-//           <Route path="/organization-login" element={<OrganizationLogin />} />
-//           <Route path="/callback" element={<LinkedInCallback />} />
-//           <Route path="/payment-details" element={<CardDetails />} />
-
-//           <Route
-//             path="/home"
-//             element={
-//               // <ProtectedRoute>
-//                 <Home />
-//               // </ProtectedRoute>
-//             }
-//           />
-
-//           <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
-
-//           {/* tabs */}
-
-//           <Route path="/candidate" element={<CandidateTab />} >
-//             <Route index element={null} />
-//             <Route path="new" element={<AddCandidateForm mode="Create" />} />
-//             <Route path="view-details/:id" element={<CandidateDetails />} />
-//             <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
-//           </Route >
-
-//           <Route path="/candidate/:id" element={<CandidateTabDetails />} >
-//             <Route index element={null} />
-//             <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
-//           </Route>
-
-//           <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
-
-//           {/* // position UI  */}
-
-//           <Route path="/position" element={<Position />} />
-//           <Route path="/position/new-position" element={<PositionForm />} />
-//           <Route path="/position/edit-position/:id" element={<PositionForm />} />
-
-//           <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
-
-//           <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
-
-//           <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
-
-//           <Route path="/mockinterview" element={<MockInterview />} />
-//           <Route path="/mockinterview-create" element={<MockSchedulelater />} />
-//           <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
-//           <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
-
-//           <Route path="/interviewList" element={<InterviewList />} />
-//           <Route path="/interviews/new" element={<InterviewForm />} />
-//           <Route path="/interviews/:id" element={<InterviewDetail />} />
-//           <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-//           <Route path="/interviews/:interviewId/rounds/:roundId" element={<RoundForm />} />
-
-//           <Route path="/questionBank" element={<QuestionBank />} />
-
-//           {/* assessment */}
-//           <Route path="/assessments" element={<Assessment />} />
-//           <Route path="/assessment/new" element={<AssessmentForm />} />
-//           <Route path="/assessment-details" element={<AssessmentDetails />} />
-//           <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} />
-//           <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
-
-//           {/* AssessmentTest */}
-//           <Route path="/assessmenttest" element={<AssessmentTest />} />
-
-//           {/* ---------------------------account settings------------------- */}
-
-//           <Route path="/account-settings" element={<SettingsPage />}>
-
-//             {/* <Route index element={<Navigate to="profile" replace />} /> */}
-
-//             {/* Default route based on organization status */}
-
-//             <Route index element={
-//               organization ?
-//                 <>
-//                   <Navigate to="profile" replace />
-//                   <Navigate to="my-profile/basic" replace />
-//                 </>
-//                 :
-//                 <Navigate to="my-profile/basic" replace />
-//             } />
-
-//             {/* Company Profile (Org Only) */}
-
-//             {
-//               organization &&
-
-//               <Route path="profile" element={<CompanyProfile />} >
-
-//                 <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
-//               </Route>
-//             }
-
-//             {/* My Profile & Sub-tabs */}
-//             <Route path="my-profile" element={<MyProfile />}>
-//               {/* Default to /basic */}
-//               {/* <Route index element={<Navigate to="basic" replace />} /> */}
-//               <Route index element={<Navigate to="basic" replace />} />
-//               {/* Sub-tabs under my-profile */}
-//               <Route path="basic" element={<BasicDetails />} />
-//               <Route path="advanced" element={<AdvancedDetails />} />
-//               <Route path="interview" element={<InterviewUserDetails />} />
-//               <Route path="availability" element={<AvailabilityUser />} />
-
-//               {/* Edit forms under each sub-tab */}
-//               <Route path="basic-edit/:id" element={<BasicDetailsEditPage />} />
-//               <Route path="advanced-edit/:id" element={<EditAdvacedDetails />} />
-//               <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
-//               <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
-//             </Route>
-
-//             {/* Wallet Section */}
-//             <Route path="wallet" element={<Wallet />} >
-
-//               <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
-
-//               <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
-
-//             </Route>
-
-//             {/* Interviewer Groups (Org Only) */}
-//             {
-//               organization &&
-//               <Route path="interviewer-groups" element={<InterviewerGroups />} >
-
-//                 <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
-
-//                 <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
-
-//                 <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
-
-//               </Route>
-//             }
-
-//             {/* Users Section (Org Only) */}
-//             {
-//               organization &&
-//               <Route path="users" element={<UsersLayout />}>
-//                 <Route index element={null} />
-//                 <Route path="new" element={<UserForm mode="create" />} />
-//                 <Route path="edit/:id" element={<UserForm mode="edit" />} />
-//                 <Route path="details/:id" element={<UserProfileDetails />} />
-//               </Route>
-//             }
-
-//             {/* Email templates  */}
-//             <Route path="email-settings" element={<EmailTemplate />} />
-
-
-
-//             {/* other tabs */}
-//             <Route path="billing" element={<BillingDetails />} />
-//             <Route path="subscription" element={<Subscription />} />
-//             {/* <Route path="wallet" element={<Wallet />} /> */}
-//             <Route path="security" element={<Security />} />
-//             <Route path="notifications" element={<NotificationsDetails />} />
-//             <Route path="usage" element={<Usage />} />
-
-
-//             {/* Org-Only Tabs */}
-//             {
-//               organization &&
-
-//               <>
-//                 <Route path="roles" element={<Role />} >
-//                   <Route index element={null} />
-//                   <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
-//                 </Route>
-
-//                 <Route path="sharing" element={<Sharing />} />
-//                 <Route path="sub-domain" element={<DomainManagement />} />
-//                 <Route path="webhooks" element={<Webhooks />} />
-//                 <Route path="hrms-ats" element={<HrmsAtsApi />} />
-//               </>
-
-//             }
-
-//           </Route>
-
-//           {/* ---------------------------account settings------------------- */}
-
-//           {/* {/Intervie Templates/} */}
-//           <Route path="/interview-templates" element={<InterviewTemplates />} >
-//           <Route index element={null} />
-//           <Route path="new" element={<InterviewTemplateForm mode="Create" />} />
-//           <Route path="edit/:id" element={<InterviewTemplateForm mode="Edit" />} />
-
-//           </Route >
-
-//           <Route path="/interview-templates/:id" element={<TemplateDetail />} >
-//           <Route index element={null} />
-//           <Route path="edit" element={<InterviewTemplateForm mode="Template Edit" />} />
-
-//           </Route >
-
-//           <Route path="/interview-templates/:id/round/new" element={<RoundFormTemplate />} />
-
-//           <Route path="/interview-templates/:id/round" element={<RoundFormTemplate />} />
-
-//           {/*Support Desk */}
-//           <Route path="/support-desk" element={<SupportDesk />} />
-//           <Route path="/support-desk/view/:id" element={<><SupportDetails /> <SupportDesk /></>} />
-//           <Route path="/support-desk/new-ticket" element={<><SupportForm /> <SupportDesk /></>} />
-//           <Route path="/support-desk/edit-ticket/:id" element={<><SupportForm /> <SupportDesk /></>} />
-//           <Route path="/support-desk/:id" element={<><SupportViewPage /> <SupportDesk /></>} />
-
-//         </Routes>
-//       </div>
-//     </React.Fragment>
-//   );
-// };
-
-// export default App;
-
-
-
-
-
-
-
-
-
-// import React, { lazy, Suspense, useMemo, useState, useEffect } from 'react';
-// import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-// import Cookies from 'js-cookie';
-// import ErrorBoundary from './Components/ErrorBoundary';
-// import Navbar from './Components/Navbar/Navbar-Sidebar';
-// import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings';
-// import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings';
-// import Logo from './Pages/Login-Part/Logo';
-// import ProtectedRoute from './Components/ProtectedRoute';
-// import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
-// import Loading from './Components/Loading';
-// import { CustomProvider } from './Context/Contextfetch';
-
-// // Placeholder PermissionsProvider (implement as needed)
-// const PermissionsProvider = ({ children }) => children; // Replace with actual implementation
-
-// // Lazy-loaded components
-// const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
-// const UserTypeSelection = lazy(() => import('./Pages/Login-Part/Individual-2'));
-// const SelectProfession = lazy(() => import('./Pages/Login-Part/Individual-3'));
-// const ProfileWizard = lazy(() => import('./Pages/Login-Part/Individual-4/Individual-4'));
-// const OrganizationSignUp = lazy(() => import('./Pages/Login-Part/OrganizationSignUp'));
-// const OrganizationLogin = lazy(() => import('./Pages/Login-Part/OrganizationLogin'));
-// const SubscriptionPlan = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan'));
-// const LinkedInCallback = lazy(() => import('./Components/LinkedInCallback'));
-// const CardDetails = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/CardDetails'));
-
-// // Protected route components
-// const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home'));
-// const OutsourceInterviewerAdmin = lazy(() => import('./Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers'));
-// const CandidateTab = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate'));
-// const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent'));
-// const AddCandidateForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm'));
-// const CandidateDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails'));
-// const CandidateFullscreen = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen'));
-// const Position = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position'));
-// const PositionForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form'));
-// const PositionSlideDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails'));
-// const RoundFormPosition = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition'));
-// const MockInterview = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview'));
-// const MockInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails'));
-// const MockSchedulelater = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm'));
-// const InterviewList = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList'));
-// const InterviewDetail = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail'));
-// const InterviewForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm'));
-// const RoundForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm'));
-// const QuestionBank = lazy(() => import('./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank'));
-// const Assessment = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment'));
-// const AssessmentForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment'));
-// const AssessmentDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails'));
-// const AssessmentTest = lazy(() => import('./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest'));
-// const SettingsPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar'));
-// const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile'));
-// const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails'));
-// const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage'));
-// const AdvancedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails'));
-// const EditAdvacedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails'));
-// const InterviewUserDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails'));
-// const EditInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails'));
-// const AvailabilityUser = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser'));
-// const EditAvailabilityDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails'));
-// const CompanyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile'));
-// const CompanyEditProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit'));
-// const BillingDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/billing/Billing'));
-// const Subscription = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription'));
-// const Wallet = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet'));
-// const WalletBalancePopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup'));
-// const WalletTransactionPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup'));
-// const Security = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Security'));
-// const NotificationsDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Notifications'));
-// const Usage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Usage'));
-// const InterviewerGroups = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups'));
-// const InterviewerGroupFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup'));
-// const InterviewGroupDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails'));
-// const UsersLayout = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout'));
-// const UserForm = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm'));
-// const UserProfileDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails'));
-// const EmailTemplate = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate'));
-// const Role = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/Role'));
-// const RoleFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup'));
-// const Sharing = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Sharing'));
-// const DomainManagement = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement'));
-// const Webhooks = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks'));
-// const HrmsAtsApi = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi'));
-// const InterviewTemplates = lazy(() => import('./Pages/InteviewTemplates/InterviewTemplates'));
-// const TemplateDetail = lazy(() => import('./Pages/InteviewTemplates/TemplateDetail'));
-// const RoundFormTemplate = lazy(() => import('./Pages/InteviewTemplates/RoundForm'));
-
-// // Route path constants
-// const PATHS = {
-//   PUBLIC: {
-//     LANDING: '/',
-//     USER_TYPE: '/select-user-type',
-//     PROFESSION: '/select-profession',
-//     PROFILE_WIZARD: '/complete-profile',
-//     ORG_SIGNUP: '/organization-signup',
-//     ORG_LOGIN: '/organization-login',
-//     SUBSCRIPTION: '/subscription-plans',
-//     CALLBACK: '/callback',
-//     PAYMENT: '/payment-details',
-//   },
-//   PROTECTED: {
-//     HOME: '/home',
-//     OUTSOURCE: '/outsource-interviewers',
-//     CANDIDATE: '/candidate',
-//     CANDIDATE_NEW: '/candidate/new',
-//     CANDIDATE_VIEW: '/candidate/view-details/:id',
-//     CANDIDATE_EDIT: '/candidate/edit/:id',
-//     CANDIDATE_DETAILS: '/candidate/:id',
-//     CANDIDATE_DETAILS_EDIT: '/candidate/:id/edit',
-//     CANDIDATE_FULLSCREEN: '/candidate/full-screen/:id',
-//     POSITION: '/position',
-//     POSITION_NEW: '/position/new-position',
-//     POSITION_EDIT: '/position/edit-position/:id',
-//     POSITION_DETAILS: '/position/view-details/:id',
-//     POSITION_ROUNDS_NEW: '/position/view-details/:id/rounds/new',
-//     POSITION_ROUNDS_EDIT: '/position/view-details/:id/rounds/:roundId',
-//     MOCK_INTERVIEW: '/mockinterview',
-//     MOCK_CREATE: '/mockinterview-create',
-//     MOCK_EDIT: '/mock-interview/:id/edit',
-//     MOCK_DETAILS: '/mockinterview-details/:id',
-//     INTERVIEW_LIST: '/interviewList',
-//     INTERVIEW_NEW: '/interviews/new',
-//     INTERVIEW_DETAILS: '/interviews/:id',
-//     INTERVIEW_EDIT: '/interviews/:id/edit',
-//     INTERVIEW_ROUNDS: '/interviews/:interviewId/rounds/:roundId',
-//     QUESTION_BANK: '/questionBank',
-//     ASSESSMENTS: '/assessments',
-//     ASSESSMENT_NEW: '/assessment/new',
-//     ASSESSMENT_DETAILS: '/assessment-details',
-//     ASSESSMENT_DETAILS_ID: '/assessment-details/:id',
-//     ASSESSMENT_EDIT: '/assessment/edit/:id',
-//     ASSESSMENT_TEST: '/assessmenttest',
-//     ACCOUNT_SETTINGS: '/account-settings',
-//     PROFILE: '/account-settings/profile',
-//     PROFILE_EDIT: '/account-settings/profile/company-profile-edit/:id',
-//     MY_PROFILE: '/account-settings/my-profile',
-//     MY_PROFILE_BASIC: '/account-settings/my-profile/basic',
-//     MY_PROFILE_ADVANCED: '/account-settings/my-profile/advanced',
-//     MY_PROFILE_INTERVIEW: '/account-settings/my-profile/interview',
-//     MY_PROFILE_AVAILABILITY: '/account-settings/my-profile/availability',
-//     MY_PROFILE_BASIC_EDIT: '/account-settings/my-profile/basic-edit/:id',
-//     MY_PROFILE_ADVANCED_EDIT: '/account-settings/my-profile/advanced-edit/:id',
-//     MY_PROFILE_INTERVIEW_EDIT: '/account-settings/my-profile/interview-edit/:id',
-//     MY_PROFILE_AVAILABILITY_EDIT: '/account-settings/my-profile/availability-edit/:id',
-//     WALLET: '/account-settings/wallet',
-//     WALLET_DETAILS: '/account-settings/wallet/wallet-details/:id',
-//     WALLET_TRANSACTION: '/account-settings/wallet/wallet-transaction/:id',
-//     INTERVIEWER_GROUPS: '/account-settings/interviewer-groups',
-//     INTERVIEWER_GROUP_FORM: '/account-settings/interviewer-groups/interviewer-group-form',
-//     INTERVIEWER_GROUP_EDIT: '/account-settings/interviewer-groups/interviewer-group-edit-form/:id',
-//     INTERVIEWER_GROUP_DETAILS: '/account-settings/interviewer-groups/interviewer-group-details/:id',
-//     USERS: '/account-settings/users',
-//     USERS_NEW: '/account-settings/users/new',
-//     USERS_EDIT: '/account-settings/users/edit/:id',
-//     USERS_DETAILS: '/account-settings/users/details/:id',
-//     EMAIL_SETTINGS: '/account-settings/email-settings',
-//     BILLING: '/account-settings/billing',
-//     SUBSCRIPTION: '/account-settings/subscription',
-//     SECURITY: '/account-settings/security',
-//     NOTIFICATIONS: '/account-settings/notifications',
-//     USAGE: '/account-settings/usage',
-//     ROLES: '/account-settings/roles',
-//     ROLE_EDIT: '/account-settings/roles/role-edit/:id',
-//     SHARING: '/account-settings/sharing',
-//     SUB_DOMAIN: '/account-settings/sub-domain',
-//     WEBHOOKS: '/account-settings/webhooks',
-//     HRMS_ATS: '/account-settings/hrms-ats',
-//     INTERVIEW_TEMPLATES: '/interview-templates',
-//     TEMPLATE_DETAILS: '/interview-templates/:id',
-//     INTERVIEW_ROUNDS_NEW: '/interviews/:interviewId/rounds/new',
-//     TEMPLATE_ROUNDS: '/interview-templates/:id/rounds',
-//   },
-// };
-
-// // Routes configuration
-// const publicRoutes = [
-//   { path: PATHS.PUBLIC.LANDING, element: <LandingPage /> },
-//   { path: PATHS.PUBLIC.USER_TYPE, element: <UserTypeSelection /> },
-//   { path: PATHS.PUBLIC.PROFESSION, element: <SelectProfession /> },
-//   { path: PATHS.PUBLIC.PROFILE_WIZARD, element: <ProfileWizard /> },
-//   { path: PATHS.PUBLIC.ORG_SIGNUP, element: <OrganizationSignUp /> },
-//   { path: PATHS.PUBLIC.ORG_LOGIN, element: <OrganizationLogin /> },
-//   { path: PATHS.PUBLIC.SUBSCRIPTION, element: <SubscriptionPlan /> },
-//   { path: PATHS.PUBLIC.CALLBACK, element: <LinkedInCallback /> },
-//   { path: PATHS.PUBLIC.PAYMENT, element: <CardDetails /> },
-// ];
-
-// const candidateRoutes = [
-//   {
-//     path: PATHS.PROTECTED.CANDIDATE,
-//     element: <CandidateTab />,
-//     children: [
-//       { path: '', element: null },
-//       { path: 'new', element: <AddCandidateForm mode="Create" /> },
-//       { path: 'view-details/:id', element: <CandidateDetails /> },
-//       { path: 'edit/:id', element: <AddCandidateForm mode="Edit" /> },
-//     ],
-//   },
-//   {
-//     path: PATHS.PROTECTED.CANDIDATE_DETAILS,
-//     element: <CandidateTabDetails />,
-//     children: [
-//       { path: '', element: null },
-//       { path: 'edit', element: <AddCandidateForm mode="Candidate Edit" /> },
-//     ],
-//   },
-//   { path: PATHS.PROTECTED.CANDIDATE_FULLSCREEN, element: <CandidateFullscreen /> },
-// ];
-
-// const positionRoutes = [
-//   { path: PATHS.PROTECTED.POSITION, element: <Position /> },
-//   { path: PATHS.PROTECTED.POSITION_NEW, element: <PositionForm /> },
-//   { path: PATHS.PROTECTED.POSITION_EDIT, element: <PositionForm /> },
-//   { path: PATHS.PROTECTED.POSITION_DETAILS, element: <PositionSlideDetails /> },
-//   { path: PATHS.PROTECTED.POSITION_ROUNDS_NEW, element: <RoundFormPosition /> },
-//   { path: PATHS.PROTECTED.POSITION_ROUNDS_EDIT, element: <RoundFormPosition /> },
-// ];
-
-// const mockInterviewRoutes = [
-//   { path: PATHS.PROTECTED.MOCK_INTERVIEW, element: <MockInterview /> },
-//   { path: PATHS.PROTECTED.MOCK_CREATE, element: <MockSchedulelater /> },
-//   { path: PATHS.PROTECTED.MOCK_EDIT, element: <MockSchedulelater /> },
-//   { path: PATHS.PROTECTED.MOCK_DETAILS, element: <MockInterviewDetails /> },
-// ];
-
-// const interviewRoutes = [
-//   { path: PATHS.PROTECTED.INTERVIEW_LIST, element: <InterviewList /> },
-//   { path: PATHS.PROTECTED.INTERVIEW_NEW, element: <InterviewForm /> },
-//   { path: PATHS.PROTECTED.INTERVIEW_DETAILS, element: <InterviewDetail /> },
-//   { path: PATHS.PROTECTED.INTERVIEW_EDIT, element: <InterviewForm /> },
-//   { path: PATHS.PROTECTED.INTERVIEW_ROUNDS, element: <RoundForm /> },
-//   { path: PATHS.PROTECTED.INTERVIEW_ROUNDS_NEW, element: <RoundForm /> },
-// ];
-
-// const assessmentRoutes = [
-//   { path: PATHS.PROTECTED.ASSESSMENTS, element: <Assessment /> },
-//   { path: PATHS.PROTECTED.ASSESSMENT_NEW, element: <AssessmentForm /> },
-//   { path: PATHS.PROTECTED.ASSESSMENT_DETAILS, element: <AssessmentDetails /> },
-//   {
-//     path: PATHS.PROTECTED.ASSESSMENT_DETAILS_ID,
-//     element: (
-//       <>
-//         <Assessment />
-//         <AssessmentDetails />
-//       </>
-//     ),
-//   },
-//   { path: PATHS.PROTECTED.ASSESSMENT_EDIT, element: <AssessmentForm /> },
-//   { path: PATHS.PROTECTED.ASSESSMENT_TEST, element: <AssessmentTest /> },
-// ];
-
-// const accountSettingsRoutes = ({ organization }) => [
-//   {
-//     path: PATHS.PROTECTED.ACCOUNT_SETTINGS,
-//     element: <SettingsPage />,
-//     children: [
-//       {
-//         path: '',
-//         element: organization ? (
-//           <>
-//             <Navigate to="profile" replace />
-//             <Navigate to="my-profile/basic" replace />
-//           </>
-//         ) : (
-//           <Navigate to="my-profile/basic" replace />
-//         ),
-//       },
-//       ...(organization
-//         ? [
-//             {
-//               path: 'profile',
-//               element: <CompanyProfile />,
-//               children: [{ path: 'company-profile-edit/:id', element: <CompanyEditProfile /> }],
-//             },
-//           ]
-//         : []),
-//       {
-//         path: 'my-profile',
-//         element: <MyProfile />,
-//         children: [
-//           { path: '', element: <Navigate to="basic" replace /> },
-//           { path: 'basic', element: <BasicDetails /> },
-//           { path: 'advanced', element: <AdvancedDetails /> },
-//           { path: 'interview', element: <InterviewUserDetails /> },
-//           { path: 'availability', element: <AvailabilityUser /> },
-//           { path: 'basic-edit/:id', element: <BasicDetailsEditPage /> },
-//           { path: 'advanced-edit/:id', element: <EditAdvacedDetails /> },
-//           { path: 'interview-edit/:id', element: <EditInterviewDetails /> },
-//           { path: 'availability-edit/:id', element: <EditAvailabilityDetails /> },
-//         ],
-//       },
-//       {
-//         path: 'wallet',
-//         element: <Wallet />,
-//         children: [
-//           { path: 'wallet-details/:id', element: <WalletBalancePopup /> },
-//           { path: 'wallet-transaction/:id', element: <WalletTransactionPopup /> },
-//         ],
-//       },
-//       ...(organization
-//         ? [
-//             {
-//               path: 'interviewer-groups',
-//               element: <InterviewerGroups />,
-//               children: [
-//                 { path: 'interviewer-group-form', element: <InterviewerGroupFormPopup /> },
-//                 { path: 'interviewer-group-edit-form/:id', element: <InterviewerGroupFormPopup /> },
-//                 { path: 'interviewer-group-details/:id', element: <InterviewGroupDetails /> },
-//               ],
-//             },
-//             {
-//               path: 'users',
-//               element: <UsersLayout />,
-//               children: [
-//                 { path: '', element: null },
-//                 { path: 'new', element: <UserForm mode="create" /> },
-//                 { path: 'edit/:id', element: <UserForm mode="edit" /> },
-//                 { path: 'details/:id', element: <UserProfileDetails /> },
-//               ],
-//             },
-//             {
-//               path: 'roles',
-//               element: <Role />,
-//               children: [
-//                 { path: '', element: null },
-//                 { path: 'role-edit/:id', element: <RoleFormPopup mode="role-edit" /> },
-//               ],
-//             },
-//             { path: 'sharing', element: <Sharing /> },
-//             { path: 'sub-domain', element: <DomainManagement /> },
-//             { path: 'webhooks', element: <Webhooks /> },
-//             { path: 'hrms-ats', element: <HrmsAtsApi /> },
-//           ]
-//         : []),
-//       { path: 'email-settings', element: <EmailTemplate /> },
-//       { path: 'billing', element: <BillingDetails /> },
-//       { path: 'subscription', element: <Subscription /> },
-//       { path: 'security', element: <Security /> },
-//       { path: 'notifications', element: <NotificationsDetails /> },
-//       { path: 'usage', element: <Usage /> },
-//     ],
-//   },
-// ];
-
-// const interviewTemplateRoutes = [
-//   { path: PATHS.PROTECTED.INTERVIEW_TEMPLATES, element: <InterviewTemplates /> },
-//   { path: PATHS.PROTECTED.TEMPLATE_DETAILS, element: <TemplateDetail /> },
-//   { path: PATHS.PROTECTED.TEMPLATE_ROUNDS, element: <RoundFormTemplate /> },
-// ];
-
-// const otherProtectedRoutes = [
-//   { path: PATHS.PROTECTED.HOME, element: <Home /> },
-//   { path: PATHS.PROTECTED.OUTSOURCE, element: <OutsourceInterviewerAdmin /> },
-//   { path: PATHS.PROTECTED.QUESTION_BANK, element: <QuestionBank /> },
-// ];
-
-// /**
-//  * Renders a route with ProtectedRoute wrapper
-//  * @param {Object} route - Route configuration
-//  * @param {string} route.path - Route path
-//  * @param {React.ReactNode} route.element - Route element
-//  * @param {Array} [route.children] - Nested routes
-//  */
-// const renderProtectedRoute = ({ path, element, children }) => (
-//   <Route
-//     key={path}
-//     path={path}
-//     element={
-//       <ProtectedRoute>
-//         <PermissionsProvider>
-//           <CustomProvider>{element}</CustomProvider>
-//         </PermissionsProvider>
-//       </ProtectedRoute>
-//     }
-//   >
-//     {children?.map((child) =>
-//       child.element ? (
-//         <Route
-//           key={child.path}
-//           path={child.path}
-//           element={
-//             <ProtectedRoute>
-//               <PermissionsProvider>
-//                 <CustomProvider>{child.element}</CustomProvider>
-//               </PermissionsProvider>
-//             </ProtectedRoute>
-//           }
-//         />
-//       ) : (
-//         <Route key={child.path} path={child.path} element={child.element} />
-//       )
-//     )}
-//   </Route>
-// );
-
-// /**
-//  * Custom Suspense component that tracks loading state
-//  * @param {Object} props
-//  * @param {React.ReactNode} props.fallback - Fallback UI during loading
-//  * @param {React.ReactNode} props.children - Content to render when loaded
-//  * @param {Function} props.onLoadingChange - Callback to update loading state
-//  */
-// const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
-//   useEffect(() => {
-//     onLoadingChange(true);
-//     return () => onLoadingChange(false);
-//   }, [onLoadingChange]);
-
-//   return <Suspense fallback={fallback}>{children}</Suspense>;
-// };
-
-// /**
-//  * Main App component
-//  */
-// const App = () => {
-//   const location = useLocation();
-//   const authToken = Cookies.get('authToken');
-//   const tokenPayload = decodeJwt(authToken);
-//   const organization = tokenPayload?.organization;
-//   const [isLoading, setIsLoading] = useState(false);
-
-//   // Define paths where navbar should be hidden
-//   const noNavbarPaths = useMemo(() => [
-//     '/', 
-//     '/select-user-type',
-//     '/select-profession',
-//     '/complete-profile',
-//     '/organization-login',
-//     '/organization-signup',
-//     '/subscription-plans',
-//     '/payment-details',
-//     '/callback'
-//   ], []);
-
-//   // Define paths where logo should be shown
-//   const showLogoPaths = useMemo(() => [
-//     '/organization-signup',
-//     '/organization-login',
-//     '/select-user-type',
-//     '/select-profession',
-//     '/complete-profile',
-//     '/subscription-plans',
-//     '/payment-details'
-//   ], []);
-
-//   // Define paths that need settings sidebar
-//   const settingsSidebarPaths = useMemo(() => [
-//     '/account-settings/profile',
-//     '/account-settings/my-profile',
-//     '/account-settings/wallet',
-//     '/account-settings/interviewer-groups',
-//     '/account-settings/users',
-//     '/account-settings/email-settings',
-//     '/account-settings/billing',
-//     '/account-settings/subscription',
-//     '/account-settings/security',
-//     '/account-settings/notifications',
-//     '/account-settings/usage',
-//     '/account-settings/roles',
-//     '/account-settings/sharing',
-//     '/account-settings/sub-domain',
-//     '/account-settings/webhooks',
-//     '/account-settings/hrms-ats'
-//   ], []);
-
-//   // Define paths that need app settings sidebar
-//   const appSettingsPaths = useMemo(() => [
-//     '/connected_apps',
-//     '/access_token',
-//     '/auth_token',
-//     '/apis'
-//   ], []);
-
-//   // Calculate visibility flags
-//   const showNavbar = useMemo(() => !noNavbarPaths.includes(location.pathname), [location.pathname, noNavbarPaths]);
-//   const showLogo = useMemo(() => showLogoPaths.includes(location.pathname), [location.pathname, showLogoPaths]);
-//   const showSettingsSidebar = useMemo(() => settingsSidebarPaths.some(path => location.pathname.startsWith(path)), [location.pathname, settingsSidebarPaths]);
-//   const showAppSettings = useMemo(() => appSettingsPaths.includes(location.pathname), [location.pathname, appSettingsPaths]);
-
-//   const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
-
-//   return (
-//     <ErrorBoundary>
-//       <SuspenseWithLoading
-//         fallback={<div><Loading /></div>}
-//         onLoadingChange={setIsLoading}
-//       >
-//         {/* {showNavbar && !isLoading && <Navbar />} */}
-//         {shouldRenderNavbar && <Navbar />}
-//         {showSettingsSidebar && <Settingssidebar />}
-//         {showAppSettings && <AppSettings />}
-//         {showLogo && <Logo />}
-
-//         <div className={showNavbar && !isLoading ? 'mt-16' : 'mt-12'}>
-//           <Routes>
-//             {/* Public Routes */}
-//             {publicRoutes.map(({ path, element }) => (
-//               <Route key={path} path={path} element={element} />
-//             ))}
-
-//             {/* Protected Routes */}
-//             {otherProtectedRoutes.map(renderProtectedRoute)}
-//             {candidateRoutes.map(renderProtectedRoute)}
-//             {positionRoutes.map(renderProtectedRoute)}
-//             {mockInterviewRoutes.map(renderProtectedRoute)}
-//             {interviewRoutes.map(renderProtectedRoute)}
-//             {assessmentRoutes.map(renderProtectedRoute)}
-//             {accountSettingsRoutes({ organization }).map(renderProtectedRoute)}
-//             {interviewTemplateRoutes.map(renderProtectedRoute)}
-//           </Routes>
-//         </div>
-//       </SuspenseWithLoading>
-//     </ErrorBoundary>
-//   );
-// };
-
-// export default App;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import React, { lazy, Suspense, useMemo, useState, useEffect } from 'react';
-import { Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
-import Cookies from 'js-cookie';
-import ErrorBoundary from './Components/ErrorBoundary';
-import Navbar from './Components/Navbar/Navbar-Sidebar';
-import Settingssidebar from './Pages/Dashboard-Part/Tabs/Settings-Tab/Settings';
-import AppSettings from './Pages/Dashboard-Part/Tabs/App_Settings-Tab/App_settings';
-import Logo from './Pages/Login-Part/Logo';
-import ProtectedRoute from './Components/ProtectedRoute';
-import { decodeJwt } from './utils/AuthCookieManager/jwtDecode';
-import Loading from './Components/Loading';
-import { PermissionsProvider } from './Context/PermissionsContext';
-import { CustomProvider } from './Context/Contextfetch';
-import PageSetter from './Components/PageSetter';
-
-// Lazy-loaded components
-const LandingPage = lazy(() => import('./Pages/Login-Part/Individual-1'));
-const UserTypeSelection = lazy(() => import('./Pages/Login-Part/Individual-2'));
-const SelectProfession = lazy(() => import('./Pages/Login-Part/Individual-3'));
-const ProfileWizard = lazy(() => import('./Pages/Login-Part/Individual-4/Individual-4'));
-const OrganizationSignUp = lazy(() => import('./Pages/Login-Part/OrganizationSignUp'));
-const OrganizationLogin = lazy(() => import('./Pages/Login-Part/OrganizationLogin'));
-const SubscriptionPlan = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan'));
-const LinkedInCallback = lazy(() => import('./Components/LinkedInCallback'));
-const CardDetails = lazy(() => import('./Pages/Login-Part/SubscriptionPlans/CardDetails'));
-
-const Home = lazy(() => import('./Pages/Dashboard-Part/Dashboard/Home'));
-const OutsourceInterviewerAdmin = lazy(() => import('./Pages/Dashboard-Part/Tabs/Outsource-Interviewer-Admin/OutsourceInterviewers'));
-const CandidateTab = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate'));
-const CandidateTabDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/MainContent'));
-const AddCandidateForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm'));
-const CandidateDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails'));
-const CandidateFullscreen = lazy(() => import('./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen'));
-const Position = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position'));
-const PositionForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form'));
-const PositionSlideDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails'));
-const RoundFormPosition = lazy(() => import('./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition'));
-const MockInterview = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview'));
-const MockInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails'));
-const MockSchedulelater = lazy(() => import('./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm'));
-const InterviewList = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList'));
-const InterviewDetail = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail'));
-const InterviewForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm'));
-const RoundForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm'));
-const QuestionBank = lazy(() => import('./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank'));
-const Assessment = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment'));
-const AssessmentForm = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment'));
-const AssessmentDetails = lazy(() => import('./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails'));
-const AssessmentTest = lazy(() => import('./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest'));
-const SettingsPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/AccountSettingsSidebar'));
-const MyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile'));
-const BasicDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails'));
-const BasicDetailsEditPage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage'));
-const AdvancedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails'));
-const EditAdvacedDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails'));
-const InterviewUserDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails'));
-const EditInterviewDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails'));
-const AvailabilityUser = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser'));
-const EditAvailabilityDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails'));
-const CompanyProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile'));
-const CompanyEditProfile = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit'));
-const BillingDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/billing/Billing'));
-const Subscription = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription'));
-const Wallet = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet'));
-const WalletBalancePopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup'));
-const WalletTransactionPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup'));
-const Security = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Security'));
-const NotificationsDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Notifications'));
-const Usage = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Usage'));
-const InterviewerGroups = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups'));
-const InterviewerGroupFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup'));
-const InterviewGroupDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails'));
-const UsersLayout = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout'));
-const UserForm = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm'));
-const UserProfileDetails = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails'));
-const EmailTemplate = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate'));
-const Role = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/Role'));
-const RoleFormPopup = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup'));
-const Sharing = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/Sharing'));
-const DomainManagement = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement'));
-const Webhooks = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks'));
-const HrmsAtsApi = lazy(() => import('./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi'));
-const InterviewTemplates = lazy(() => import('../src/Pages/InteviewTemplates/InterviewTemplates'));
-const TemplateDetail = lazy(() => import('../src/Pages/InteviewTemplates/TemplateDetail'));
-const RoundFormTemplate = lazy(() => import('../src/Pages/InteviewTemplates/RoundForm'));
-const InterviewTemplateForm = lazy(() => import('../src/Pages/InteviewTemplates/InterviewTemplateForm'));
-const SupportDesk = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk'));
-const SupportDetails = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDetails'));
-const SupportForm = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm'));
-const SupportViewPage = lazy(() => import('../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage'));
-
-// Custom Suspense component to track loading state
-const SuspenseWithLoading = ({ fallback, children, onLoadingChange }) => {
-  useEffect(() => {
-    onLoadingChange(true);
-    return () => onLoadingChange(false);
-  }, [onLoadingChange]);
-
-  return <Suspense fallback={fallback}>{children}</Suspense>;
-};
-
-const App = () => {
-  const location = useLocation();
-  const authToken = Cookies.get('authToken');
-  const tokenPayload = decodeJwt(authToken);
-  const organization = tokenPayload?.organization;
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Define paths for conditional rendering
-  const noNavbarPaths = useMemo(() => [
-    '/',
-    '/select-user-type',
-    '/select-profession',
-    '/complete-profile',
-    '/organization-login',
-    '/organization-signup',
-    '/subscription-plans',
-    '/payment-details',
-    '/callback',
-  ], []);
-
-  const showLogoPaths = useMemo(() => [
-    '/organization-signup',
-    '/organization-login',
-    '/select-user-type',
-    '/select-profession',
-    '/complete-profile',
-    '/subscription-plans',
-    '/payment-details',
-  ], []);
-
-  const settingsSidebarPaths = useMemo(() => [
-    '/account-settings/profile',
-    '/account-settings/my-profile',
-    '/account-settings/wallet',
-    '/account-settings/interviewer-groups',
-    '/account-settings/users',
-    '/account-settings/email-settings',
-    '/account-settings/billing',
-    '/account-settings/subscription',
-    '/account-settings/security',
-    '/account-settings/notifications',
-    '/account-settings/usage',
-    '/account-settings/roles',
-    '/account-settings/sharing',
-    '/account-settings/sub-domain',
-    '/account-settings/webhooks',
-    '/account-settings/hrms-ats',
-  ], []);
-
-  const appSettingsPaths = useMemo(() => [
-    '/connected_apps',
-    '/access_token',
-    '/auth_token',
-    '/apis',
-  ], []);
-
-  const showNavbar = !noNavbarPaths.includes(location.pathname);
   const showLogo = showLogoPaths.includes(location.pathname);
-  const showSettingsSidebar = settingsSidebarPaths.some(path => location.pathname.startsWith(path));
-  const showAppSettings = appSettingsPaths.includes(location.pathname);
+  const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);
 
-  const shouldRenderNavbar = !['/', '/select-user-type', '/price', '/select-profession', '/complete-profile', '/assessmenttest', '/assessmenttext', '/assessmentsubmit', '/candidatevc', '/organization-login', '/organization-signup', '/callback', '/jitsimeetingstart', '/organization', '/payment-details', '/subscription-plans'].includes(location.pathname);
+  // Show loading when permissions are being loaded and not initialized
+  // if (loading || !isInitialized) {
+  //   return (
+  //     <Loading
+  //       message="Loading permissions..."
+  //       size="large"
+  //       className="fixed inset-0 z-50 bg-white"
+  //     />
+  //   );
+  // }
+
+  // Permission check function
+  const hasPermission = (objectName, permissionType = "ViewTab") => {
+    if (!combinedPermissions[objectName]) return false;
+    if (typeof combinedPermissions[objectName] === "boolean") {
+      return combinedPermissions[objectName];
+    }
+    return combinedPermissions[objectName][permissionType] ?? false;
+  };
 
   return (
-    <ErrorBoundary>
-      <SuspenseWithLoading
-        fallback={<div><Loading /></div>}
-        onLoadingChange={setIsLoading}
-      >
-        {shouldRenderNavbar && <Navbar />}
-        {showSettingsSidebar && <Settingssidebar />}
-        {showAppSettings && <AppSettings />}
-        {showLogo && <Logo />}
-        <div className={showNavbar && !isLoading ? 'mt-16' : 'mt-12'}>
+    <>
+      {showLogo && <Logo />}
+      <div>
+        <SessionExpiration />
+        {sessionExpired ? null : (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -1072,163 +452,859 @@ const App = () => {
             <Route path="/select-profession" element={<SelectProfession />} />
             <Route path="/complete-profile" element={<ProfileWizard />} />
             <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-            <Route path="/organization-signup" element={<OrganizationSignUp />} />
+            <Route
+              path="/organization-signup"
+              element={<OrganizationSignUp />}
+            />
             <Route path="/organization-login" element={<OrganizationLogin />} />
+            <Route
+              path="/welcome-page-upinterview-individual"
+              element={<WelcomePageUpinterviewIndividual />}
+            />
             <Route path="/callback" element={<LinkedInCallback />} />
-            <Route path="/payment-details" element={<CardDetails />} />
+            <Route
+              path="/payment-details"
+              element={
+                <>
+                  <CardDetails />
+                  <SubscriptionPlan />
+                </>
+              }
+            />
+            <Route
+              path="/subscription-payment-details"
+              element={
+                <>
+                  <AccountSettingsSidebar />
+                  <div className="ml-80">
+                    <Subscription />
+                  </div>
+                </>
+              }
+            />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-user-email" element={<VerifyUserEmail />} />
+            <Route
+              path="/subscription-success"
+              element={<SubscriptionSuccess />}
+            />
+            <Route path="/resetPassword" element={<ResetPassword />} />
+            <Route path="/forgetPassword" element={<ForgetPassword />} />
+            <Route path="/assessmenttest" element={<AssessmentTest />} />
 
+            {/* Protected Routes */}
             <Route
               element={
                 <ProtectedRoute>
-                  <PermissionsProvider>
-                    <CustomProvider>
+                  <CustomProvider>
+                    <PermissionsProvider>
                       <PageSetter />
+                      {shouldRenderNavbar && <CombinedNavbar />}
                       <Outlet />
-                    </CustomProvider>
-                  </PermissionsProvider>
+                    </PermissionsProvider>
+                  </CustomProvider>
                 </ProtectedRoute>
               }
             >
-              {/* Protected Routes */}
               <Route path="/home" element={<Home />} />
-              <Route path="/outsource-interviewers" element={<OutsourceInterviewerAdmin />} />
 
               {/* Candidate Routes */}
-              <Route path="/candidate" element={<CandidateTab />}>
-                <Route index element={null} />
-                <Route path="new" element={<AddCandidateForm mode="Create" />} />
-                <Route path="view-details/:id" element={<CandidateDetails />} />
-                <Route path="edit/:id" element={<AddCandidateForm mode="Edit" />} />
-              </Route>
-              <Route path="/candidate/:id" element={<CandidateTabDetails />}>
-                <Route index element={null} />
-                <Route path="edit" element={<AddCandidateForm mode="Candidate Edit" />} />
-              </Route>
-              <Route path="/candidate/full-screen/:id" element={<CandidateFullscreen />} />
+              {hasPermission("Candidates") && (
+                <Route path="/candidate" element={<CandidateTab />}>
+                  <Route index element={null} />
+                  {hasPermission("Candidates", "Create") && (
+                    <Route
+                      path="new"
+                      element={<AddCandidateForm mode="Create" />}
+                    />
+                  )}
+                  <Route
+                    path="view-details/:id"
+                    element={<CandidateDetails />}
+                  />
+                  {hasPermission("Candidates", "Edit") && (
+                    <Route
+                      path="edit/:id"
+                      element={<AddCandidateForm mode="Edit" />}
+                    />
+                  )}
+                </Route>
+              )}
+              {hasPermission("Candidates") && (
+                <Route path="/candidate/:id" element={<CandidateTabDetails />}>
+                  <Route index element={null} />
+                  {hasPermission("Candidates", "Edit") && (
+                    <Route
+                      path="edit"
+                      element={<AddCandidateForm mode="Candidate Edit" />}
+                    />
+                  )}
+                </Route>
+              )}
+              {hasPermission("Candidates") && (
+                <Route
+                  path="/candidate/full-screen/:id"
+                  element={<CandidateFullscreen />}
+                />
+              )}
 
               {/* Position Routes */}
-              <Route path="/position" element={<Position />} />
-              <Route path="/position/new-position" element={<PositionForm />} />
-              <Route path="/position/edit-position/:id" element={<PositionForm />} />
-              <Route path="/position/view-details/:id" element={<PositionSlideDetails />} />
-              <Route path="/position/view-details/:id/rounds/new" element={<RoundFormPosition />} />
-              <Route path="/position/view-details/:id/rounds/:roundId" element={<RoundFormPosition />} />
+              {hasPermission("Positions") && (
+                <Route path="/position" element={<Position />} />
+              )}
+              {hasPermission("Positions", "Create") && (
+                <Route
+                  path="/position/new-position"
+                  element={<PositionForm />}
+                />
+              )}
+              {hasPermission("Positions", "Edit") && (
+                <Route
+                  path="/position/edit-position/:id"
+                  element={<PositionForm />}
+                />
+              )}
+              {hasPermission("Positions") && (
+                <Route
+                  path="/position/view-details/:id"
+                  element={<PositionSlideDetails />}
+                />
+              )}
+              {hasPermission("Positions", "Create") && (
+                <Route
+                  path="/position/view-details/:id/rounds/new"
+                  element={<RoundFormPosition />}
+                />
+              )}
+              {hasPermission("Positions", "Edit") && (
+                <Route
+                  path="/position/view-details/:id/rounds/:roundId"
+                  element={<RoundFormPosition />}
+                />
+              )}
 
               {/* Mock Interview Routes */}
-              <Route path="/mockinterview" element={<MockInterview />} />
-              <Route path="/mockinterview-create" element={<MockSchedulelater />} />
-              <Route path="/mock-interview/:id/edit" element={<MockSchedulelater />} />
-              <Route path="/mockinterview-details/:id" element={<MockInterviewDetails />} />
+              {hasPermission("MockInterviews") && (
+                <>
+                  <Route path="/mockinterview" element={<MockInterview />} />
+                  {hasPermission("MockInterviews", "Create") && (
+                    <Route
+                      path="/mockinterview-create"
+                      element={<MockSchedulelater />}
+                    />
+                  )}
+                  {hasPermission("MockInterviews", "Edit") && (
+                    <Route
+                      path="/mock-interview/:id/edit"
+                      element={<MockSchedulelater />}
+                    />
+                  )}
+                  {hasPermission("MockInterviews", "View") && (
+                    <Route
+                      path="/mockinterview-details/:id"
+                      element={<MockInterviewDetails />}
+                    />
+                  )}
+                </>
+              )}
 
               {/* Interview Routes */}
-              <Route path="/interviewList" element={<InterviewList />} />
-              <Route path="/interviews/new" element={<InterviewForm />} />
-              <Route path="/interviews/:id" element={<InterviewDetail />} />
-              <Route path="/interviews/:id/edit" element={<InterviewForm />} />
-              <Route path="/interviews/:id/rounds/:roundId" element={<RoundForm />} />
+              {hasPermission("Interviews") && (
+                <>
+                  <Route path="/interviewList" element={<InterviewList />} />
+                  {hasPermission("Interviews", "Create") && (
+                    <Route path="/interviews/new" element={<InterviewForm />} />
+                  )}
+                  {hasPermission("Interviews", "View") && (
+                    <Route
+                      path="/interviews/:id"
+                      element={<InterviewDetail />}
+                    />
+                  )}
+                  {hasPermission("Interviews", "Edit") && (
+                    <Route
+                      path="/interviews/:id/edit"
+                      element={<InterviewForm />}
+                    />
+                  )}
+                  <Route
+                    path="/interviews/:interviewId/rounds/:roundId"
+                    element={<RoundForm />}
+                  />
+                </>
+              )}
 
               {/* Question Bank */}
-              <Route path="/questionBank" element={<QuestionBank />} />
+              {hasPermission("QuestionBank") && (
+                <Route path="/questionBank" element={<QuestionBank />} />
+              )}
+
+              {/* AssessmentTemplates */}
+              {hasPermission("AssessmentTemplates") && (
+                <>
+                  <Route
+                    path="/assessments-template"
+                    element={<Assessment />}
+                  />
+                  {hasPermission("AssessmentTemplates", "Create") && (
+                    <Route
+                      path="/assessments-template/new"
+                      element={<AssessmentForm />}
+                    />
+                  )}
+                  {hasPermission("AssessmentTemplates", "View") && (
+                    <Route
+                      path="/assessments-template-details"
+                      element={<AssessmentDetails />}
+                    />
+                  )}
+                  {hasPermission("AssessmentTemplates", "Edit") && (
+                    <Route
+                      path="/assessments-template/edit/:id"
+                      element={<AssessmentForm />}
+                    />
+                  )}
+                  <Route
+                    path="/assessments-template-details/:id"
+                    element={
+                      <>
+                        <Assessment />
+                        <AssessmentDetails />
+                      </>
+                    }
+                  >
+                    <Route index element={null} />
+                    <Route
+                      path="candidate-details/:id"
+                      element={<CandidateDetails mode="Assessment" />}
+                    />
+                    {/* // <---------------------- v1.0.1 */}
+                    {hasPermission("AssessmentTemplates", "Edit") && (
+                      // v1.0.1---------------------- >
+                      <Route
+                        path="assessments-template/edit/:id"
+                        element={<AssessmentForm />}
+                      />
+                    )}
+                  </Route>
+                </>
+              )}
 
               {/* Assessment */}
-              <Route path="/assessments" element={<Assessment />} />
-              <Route path="/assessment/new" element={<AssessmentForm />} />
-              <Route path="/assessment-details" element={<AssessmentDetails />} />
-              <Route path="/assessment/edit/:id" element={<AssessmentForm />} />
-              <Route path="/assessment-details/:id" element={<><Assessment /><AssessmentDetails /></>} >
-                <Route index element={null} />
-                <Route path="candidate-details/:id" element={<CandidateDetails mode="Assessment" />} />
-              </Route>
+              {/* Ranjith added this new route CandidateDetails*/}
+              {hasPermission("Assessments") && (
+                <>
+                  <Route path="/assessments" element={<ScheduleAssessment />} />
 
-              {/* Account Settings Routes */}
-              <Route path="/account-settings" element={<SettingsPage />}>
-                <Route index element={
-                  organization ? (
+                  {hasPermission("Assessments", "View") && (
+                    <Route
+                      path="assessment/:id"
+                      element={
+                        <>
+                          <ScheduleAssDetails /> <ScheduleAssessment />
+                        </>
+                      }
+                    />
+                  )}
+
+                  <Route
+                    path="assessment/:assessmentId/view-details/:id"
+                    element={
+                      <>
+                        <CandidateDetails mode="Assessment" />
+                        <ScheduleAssessment />
+                      </>
+                    }
+                  />
+                </>
+              )}
+
+              {/* Wallet */}
+              {hasPermission("Wallet") && (
+                <Route path="/wallet" element={<Wallet />}>
+                  {hasPermission("Wallet", "View") && (
                     <>
-                      <Navigate to="profile" replace />
-                      <Navigate to="my-profile/basic" replace />
+                      <Route
+                        path="wallet-details/:id"
+                        element={<WalletBalancePopup />}
+                      />
+                      <Route
+                        path="wallet-transaction/:id"
+                        element={<WalletTransactionPopup />}
+                      />
                     </>
-                  ) : (
-                    <Navigate to="my-profile/basic" replace />
-                  )
-                } />
-                {organization && (
+                  )}
+                </Route>
+              )}
+
+              {hasPermission("Billing") && (
+                <Route path="billing-details" element={<BillingSubtabs />}>
+                  <Route index element={null} />
+                  <Route path="details/:id" element={<UserInvoiceDetails />} />
+                </Route>
+              )}
+
+              {/* Account Settings Routes from effective user */}
+
+              <Route
+                path="/account-settings"
+                element={<AccountSettingsSidebar />}
+              >
+                <Route
+                  index
+                  element={
+                    organization ? (
+                      <>
+                        <Navigate to="profile" replace />
+                        <Navigate to="my-profile/basic" replace />
+                      </>
+                    ) : (
+                      <Navigate to="my-profile/basic" replace />
+                    )
+                  }
+                />
+                {organization && hasPermission("CompanyProfile") && (
                   <Route path="profile" element={<CompanyProfile />}>
-                    <Route path="company-profile-edit/:id" element={<CompanyEditProfile />} />
-                  </Route>
-                )}
-                <Route path="my-profile" element={<MyProfile />}>
-                  <Route index element={<Navigate to="basic" replace />} />
-                  <Route path="basic" element={<BasicDetails />} />
-                  <Route path="advanced" element={<AdvancedDetails />} />
-                  <Route path="interview" element={<InterviewUserDetails />} />
-                  <Route path="availability" element={<AvailabilityUser />} />
-                  <Route path="basic-edit/:id" element={<BasicDetailsEditPage />} />
-                  <Route path="advanced-edit/:id" element={<EditAdvacedDetails />} />
-                  <Route path="interview-edit/:id" element={<EditInterviewDetails />} />
-                  <Route path="availability-edit/:id" element={<EditAvailabilityDetails />} />
-                </Route>
-                <Route path="wallet" element={<Wallet />}>
-                  <Route path="wallet-details/:id" element={<WalletBalancePopup />} />
-                  <Route path="wallet-transaction/:id" element={<WalletTransactionPopup />} />
-                </Route>
-                {organization && (
-                  <Route path="interviewer-groups" element={<InterviewerGroups />}>
-                    <Route path="interviewer-group-form" element={<InterviewerGroupFormPopup />} />
-                    <Route path="interviewer-group-edit-form/:id" element={<InterviewerGroupFormPopup />} />
-                    <Route path="interviewer-group-details/:id" element={<InterviewGroupDetails />} />
-                  </Route>
-                )}
-                {organization && (
-                  <Route path="users" element={<UsersLayout />}>
                     <Route index element={null} />
-                    <Route path="new" element={<UserForm mode="create" />} />
-                    <Route path="edit/:id" element={<UserForm mode="edit" />} />
-                    <Route path="details/:id" element={<UserProfileDetails />} />
+                    <Route
+                      path="company-profile-edit/:id"
+                      element={<CompanyEditProfile />}
+                    />
                   </Route>
                 )}
-                <Route path="email-settings" element={<EmailTemplate />} />
-                <Route path="billing" element={<BillingDetails />} />
-                <Route path="subscription" element={<Subscription />} />
-                <Route path="security" element={<Security />} />
-                <Route path="notifications" element={<NotificationsDetails />} />
-                <Route path="usage" element={<Usage />} />
-                {organization && (
+                {hasPermission("Wallet") && (
+                  <Route path="wallet" element={<Wallet />}>
+                    <Route
+                      path="wallet-details/:id"
+                      element={<WalletBalancePopup />}
+                    />
+                    <Route
+                      path="wallet-transaction/:id"
+                      element={<WalletTransactionPopup />}
+                    />
+                  </Route>
+                )}
+
+                {hasPermission("MyProfile") && (
+                  <Route path="my-profile" element={<MyProfile />}>
+                    <Route index element={<Navigate to="basic" replace />} />
+                    <Route path="basic" element={<BasicDetails />} />
+                    <Route path="advanced" element={<AdvancedDetails />} />
+                    <Route
+                      path="interview"
+                      element={<InterviewUserDetails />}
+                    />
+                    <Route path="availability" element={<AvailabilityUser />} />
+                    <Route
+                      path="basic-edit/:id"
+                      element={<BasicDetailsEditPage from="my-profile" />}
+                    />
+                    <Route
+                      path="advanced-edit/:id"
+                      element={<EditAdvacedDetails from="my-profile" />}
+                    />
+                    <Route
+                      path="interview-edit/:id"
+                      element={<EditInterviewDetails from="my-profile" />}
+                    />
+                    <Route
+                      path="availability-edit/:id"
+                      element={<EditAvailabilityDetails />}
+                    />
+                    <Route path="documents" element={<DocumentsSection />} />
+                  </Route>
+                )}
+                {organization && hasPermission("InterviewerGroups") && (
+                  <Route
+                    path="interviewer-groups"
+                    element={<InterviewerGroups />}
+                  >
+                    <Route index element={null} />
+                    <Route
+                      path="interviewer-group-form"
+                      element={<InterviewerGroupFormPopup />}
+                    />
+                    <Route
+                      path="interviewer-group-edit-form/:id"
+                      element={<InterviewerGroupFormPopup />}
+                    />
+                    <Route
+                      path="interviewer-group-details/:id"
+                      element={<InterviewGroupDetails />}
+                    />
+                  </Route>
+                )}
+                {hasPermission("Users") && (
+                  <Route path="users" element={<UsersLayout />}>
+                    {hasPermission("Users", "Create") && (
+                      <Route path="new" element={<UserForm mode="create" />} />
+                    )}
+                    {hasPermission("Users", "Edit") && (
+                      <Route
+                        path="edit/:id"
+                        element={<UserForm mode="edit" />}
+                      />
+                    )}
+                    {hasPermission("Users", "View") && (
+                      <Route
+                        path="details/:id"
+                        element={<UserProfileDetails />}
+                      />
+                    )}
+                  </Route>
+                )}
+                {hasPermission("Billing") && (
+                  <Route path="billing-details" element={<BillingSubtabs />}>
+                    <Route index element={null} />
+                    <Route
+                      path="details/:id"
+                      element={<UserInvoiceDetails />}
+                    />
+                  </Route>
+                )}
+                {hasPermission("Subscription") && (
                   <>
-                    <Route path="roles" element={<Role />}>
-                      <Route index element={null} />
-                      <Route path="role-edit/:id" element={<RoleFormPopup mode="role-edit" />} />
-                    </Route>
-                    <Route path="sharing" element={<Sharing />} />
-                    <Route path="sub-domain" element={<DomainManagement />} />
-                    <Route path="webhooks" element={<Webhooks />} />
-                    <Route path="hrms-ats" element={<HrmsAtsApi />} />
+                    <Route path="subscription" element={<Subscription />} />
+                    <Route
+                      path="subscription/card-details"
+                      element={<SubscriptionCardDetails />}
+                    />
                   </>
                 )}
+                {hasPermission("Security") && (
+                  <Route path="security" element={<Security />} />
+                )}
+                {hasPermission("NotificationsSettings") && (
+                  <Route
+                    path="notifications"
+                    element={<NotificationsDetails />}
+                  />
+                )}
+
+                <Route path="email-settings" element={<EmailTemplate />} />
+                {hasPermission("Usage") && (
+                  <Route path="usage" element={<Usage />} />
+                )}
+                {hasPermission("Roles") && (
+                  <Route path="roles" element={<Role />}>
+                    <Route index element={null} />
+                    <Route path="role-edit/:id" element={<RoleFormPopup />} />
+                    <Route path="role-edit/new" element={<RoleFormPopup />} />
+                    {/* v1.0.2  -  Ashraf  -  added create role path */}
+                    <Route path="create" element={<RoleFormPopup />} />
+                    {/* v1.0.2  -  Ashraf  -  added create role path */}
+                    <Route path="view/:id" element={<RoleView />} />
+                  </Route>
+                )}
+                {hasPermission("Sharing") && (
+                  <Route path="sharing" element={<Sharing />} />
+                )}
+                {hasPermission("Subdomain") && (
+                  <Route path="sub-domain" element={<DomainManagement />} />
+                )}
+                <Route path="webhooks" element={<Webhooks />} />
+                <Route path="hrms-ats" element={<HrmsAtsApi />} />
               </Route>
 
               {/* Interview Templates */}
-              <Route path="/interview-templates" element={<InterviewTemplates />}>
-                <Route index element={null} />
-                <Route path="new" element={<InterviewTemplateForm mode="Create" />} />
-                <Route path="edit/:id" element={<InterviewTemplateForm mode="Edit" />} />
-              </Route>
-              <Route path="/interview-templates/:id" element={<TemplateDetail />}>
-                <Route index element={null} />
-                <Route path="edit" element={<InterviewTemplateForm mode="Template Edit" />} />
-              </Route>
-              <Route path="/interview-templates/:id/round/new" element={<RoundFormTemplate />} />
-              <Route path="/interview-templates/:id/round" element={<RoundFormTemplate />} />
+              {hasPermission("InterviewTemplates") && (
+                <Route
+                  path="/interview-templates"
+                  element={<InterviewTemplates />}
+                >
+                  <Route index element={null} />
+                  {hasPermission("InterviewTemplates", "Create") && (
+                    <Route
+                      path="new"
+                      element={<InterviewTemplateForm mode="Create" />}
+                    />
+                  )}
+                  <Route
+                    path="edit/:id"
+                    element={<InterviewTemplateForm mode="Edit" />}
+                  />
+                </Route>
+              )}
+              {hasPermission("InterviewTemplates", "Edit") && (
+                <Route
+                  path="/interview-templates/:id"
+                  element={<TemplateDetail />}
+                >
+                  <Route index element={null} />
+                  <Route
+                    path="edit"
+                    element={<InterviewTemplateForm mode="Template Edit" />}
+                  />
+                </Route>
+              )}
+              {hasPermission("InterviewTemplates") && (
+                <>
+                  <Route
+                    path="/interview-templates/:id/round/new"
+                    element={<RoundFormTemplate />}
+                  />
+                  <Route
+                    path="/interview-templates/:id/round"
+                    element={<RoundFormTemplate />}
+                  />
+                </>
+              )}
+              
+              {/* Feedback */}
+              {hasPermission("Feedback") && (
+                <>
+                  <Route path="/feedback" element={<Feedback />} />
+                  
+                </>
+              )}
 
-              {/* Support Desk */}
-              <Route path="/support-desk" element={<SupportDesk />} />
-              <Route path="/support-desk/view/:id" element={<><SupportDetails /><SupportDesk /></>} />
-              <Route path="/support-desk/new-ticket" element={<><SupportForm /><SupportDesk /></>} />
-              <Route path="/support-desk/edit-ticket/:id" element={<><SupportForm /><SupportDesk /></>} />
-              <Route path="/support-desk/:id" element={<><SupportViewPage /><SupportDesk /></>} />
+              {/* Support Desk Admin*/}
+              {hasPermission("SupportDesk") && (
+                <>
+                  <Route path="/support-desk" element={<SupportDesk />} />
+                  {hasPermission("SupportDesk", "Create") && (
+                    <Route
+                      path="/support-desk/new-ticket"
+                      element={
+                        <>
+                          <SupportForm />
+                          <SupportDesk />
+                        </>
+                      }
+                    />
+                  )}
+                  {hasPermission("SupportDesk", "Edit") && (
+                    <Route
+                      path="/support-desk/edit-ticket/:id"
+                      element={
+                        <>
+                          <SupportForm />
+                          <SupportDesk />
+                        </>
+                      }
+                    />
+                  )}
+                  {hasPermission("SupportDesk", "View") && (
+                    <>
+                      <Route
+                        path="/support-desk/:id"
+                        element={
+                          <>
+                            <SupportViewPage />
+                            <SupportDesk />
+                          </>
+                        }
+                      />
+                      <Route
+                        path="/support-desk/view/:id"
+                        element={
+                          <>
+                            <SuperSupportDetails />
+                            <SupportDesk />
+                          </>
+                        }
+                      />
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* Task */}
+              {hasPermission("Tasks") && (
+                <Route path="/task" element={<Task />} />
+              )}
+
+              {/* Outsource Interviewer Request */}
+              {hasPermission("OutsourceInterviewerRequest") && (
+                <Route
+                  path="/outsource-interviewers-request"
+                  element={<OutsourceInterviewerRequest />}
+                />
+              )}
+
+              {/* Interview Request */}
+              {hasPermission("InterviewRequest") && (
+                <Route
+                  path="/outsource-interview-request"
+                  element={<InterviewRequest />}
+                />
+              )}
+
+              {/* -----------------------------------Super Admin Routes------------------------- */}
+              {hasPermission("Tenants") && (
+                <Route path="/tenants" element={<TenantsPage />}>
+                  <Route index element={null} />
+                  {hasPermission("Tenants", "Create") && (
+                    <Route
+                      path="new"
+                      element={<AddTenantForm mode="Create" />}
+                    />
+                  )}
+                  {hasPermission("Tenants", "Edit") && (
+                    <Route
+                      path="edit/:id"
+                      element={<AddTenantForm mode="Edit" />}
+                    />
+                  )}
+                </Route>
+              )}
+              {hasPermission("Tenants") && (
+                <Route
+                  path="/tenants/:id"
+                  element={
+                    <>
+                      <TenantsPage />
+                      <TenantDetailsPage />
+                    </>
+                  }
+                />
+              )}
+              {hasPermission("OutsourceInterviewerRequest") && (
+                <Route
+                  path="/outsource-requests"
+                  element={<OutsourceRequestsPage />}
+                />
+              )}
+              {hasPermission("OutsourceInterviewerRequest") && (
+                <Route
+                  path="/outsource-interviewers"
+                  element={<OutsourceInterviewersPage />}
+                />
+              )}
+              {hasPermission("InterviewRequest") && (
+                <Route
+                  path="/interviewer-requests"
+                  element={<InterviewerRequestsPage />}
+                />
+              )}
+              {hasPermission("Billing") && (
+                <Route path="/admin-billing" element={<BillingPage />}>
+                  <Route index element={null} />
+                  {hasPermission("Billing", "Manage") && (
+                    <Route
+                      path="new"
+                      element={<AddInvoiceForm mode="Create" />}
+                    />
+                  )}
+                  {hasPermission("Billing", "Manage") && (
+                    <Route
+                      path="edit/:id"
+                      element={<AddInvoiceForm mode="Edit" />}
+                    />
+                  )}
+                </Route>
+              )}
+
+              {/* SuperAdmin Support Desk */}
+              {/* {hasPermission("SupportDesk") && (
+                <>
+                  <Route
+                    exact
+                    path="/super-admin-desk"
+                    element={<SupportDesk />}
+                  />
+                  {hasPermission("SupportDesk", "View") && (
+                    <>
+                      <Route
+                        path="/super-admin-desk/view/:id"
+                        element={
+                          <>
+                            <SuperSupportDetails />
+                            <SupportDesk />
+                          </>
+                        }
+                      />
+                      <Route
+                        path="/super-admin-desk/:id"
+                        element={
+                          <>
+                            <SupportViewPage />
+                            <SupportDesk />
+                          </>
+                        }
+                      />
+                    </>
+                  )}
+                </>
+              )} */}
+
+              {hasPermission("Settings") && (
+                <Route path="/settings" element={<SettingsPage />} />
+              )}
+              {hasPermission("InternalLogs") && (
+                <Route path="/internal-logs" element={<InternalLogsPage />} />
+              )}
+              {hasPermission("IntegrationLogs") && (
+                <Route path="/integrations" element={<IntegrationsPage />} />
+              )}
+
+              <Route
+                path="/contact-profile-details"
+                element={
+                  <>
+                    <TenantsPage />
+                    <ContactProfileDetails />
+                  </>
+                }
+              />
+              <Route
+                path="/admin-dashboard"
+                element={<SuperAdminDashboard />}
+              />
             </Route>
           </Routes>
-        </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+const App = () => {
+  const location = useLocation();
+  // <---------------------- v1.0.4
+  const authToken = getAuthToken(); // Use validated token getter
+  // ---------------------- v1.0.4 >
+  const tokenPayload = decodeJwt(authToken);
+  const organization = tokenPayload?.organization;
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  const showLogoPaths = useMemo(
+    () => [
+      "/organization-signup",
+      "/organization-login",
+      "/welcome-page-upinterview-individual",
+      "/select-user-type",
+      "/select-profession",
+      "/complete-profile",
+      "/subscription-plans",
+      "/payment-details",
+      "/verify-email",
+    ],
+    []
+  );
+
+  const noNavbarPaths = useMemo(
+    () => [
+      "/",
+      "/select-user-type",
+      "/price",
+      "/select-profession",
+      "/complete-profile",
+      "/assessmenttest",
+      "/assessmenttext",
+      "/assessmentsubmit",
+      "/candidatevc",
+      "/organization-login",
+      "/welcome-page-upinterview-individual",
+      "/organization-signup",
+      "/callback",
+      "/jitsimeetingstart",
+      "/organization",
+      "/payment-details",
+      "/subscription-plans",
+      "/verify-email",
+    ],
+    []
+  );
+
+  // Preload permissions on app startup if user is authenticated
+  useEffect(() => {
+    if (authToken && !hasValidCachedPermissions()) {
+      // <--------------------- v1.0.0
+      preloadPermissions().catch(() => {});
+      // v1.0.0 --------------------->
+    }
+
+    // Sync user type with localStorage to ensure consistency
+    if (authToken) {
+      AuthCookieManager.syncUserType();
+    }
+    // <---------------------- v1.0.4
+
+    // Initialize cross-tab authentication sync
+    const cleanupAuthListener = AuthCookieManager.setupCrossTabAuthListener();
+    
+    // Check browser permissions and capabilities
+    const browserPermissions = AuthCookieManager.checkBrowserPermissions();
+    console.log('Browser permissions check:', browserPermissions);
+    
+    // Detect new browser context
+    if (AuthCookieManager.isNewBrowserContext()) {
+      console.log('New browser context detected - syncing auth state');
+      AuthCookieManager.syncAuthAcrossTabs();
+    }
+
+    // Request notification permission if not granted (only for authenticated users)
+    if (authToken && !browserPermissions.notifications) {
+      // Delay the permission request to avoid blocking the UI
+      setTimeout(async () => {
+        try {
+          await AuthCookieManager.requestNotificationPermission();
+        } catch (error) {
+          console.warn('Failed to request notification permission:', error);
+        }
+      }, 2000); // Wait 2 seconds after app loads
+    }
+
+    // Listen for token expiration events
+    const handleTokenExpired = async (event) => {
+      console.log('Token expired event received:', event.detail);
+      
+      // Use the dedicated token expiration handler
+      await AuthCookieManager.handleTokenExpiration();
+    };
+
+    window.addEventListener('tokenExpired', handleTokenExpired);
+
+    // Start token validation if user is authenticated
+    let tokenValidationCleanup = null;
+    if (authToken) {
+      tokenValidationCleanup = AuthCookieManager.startTokenValidation();
+    }
+
+    return () => {
+      if (cleanupAuthListener) {
+        cleanupAuthListener();
+      }
+      if (tokenValidationCleanup) {
+        tokenValidationCleanup();
+      }
+      window.removeEventListener('tokenExpired', handleTokenExpired);
+    };
+  }, [authToken]); // Only run when authToken changes (login/logout)
+  // ---------------------- v1.0.4 >
+
+  useEffect(() => {
+    const emitter = getActivityEmitter();
+    const handleShowExpiration = () => setSessionExpired(true);
+    const handleActivity = () => setSessionExpired(false);
+
+    emitter.on("showExpiration", handleShowExpiration);
+    emitter.on("activity", handleActivity);
+
+    return () => {
+      emitter.off("showExpiration", handleShowExpiration);
+      emitter.off("activity", handleActivity);
+    };
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <SuspenseWithLoading>
+        <CustomProvider>
+          <PermissionsProvider>
+            <UserDataLoader>
+              <MainAppRoutes
+                location={location}
+                organization={organization}
+                sessionExpired={sessionExpired}
+                setSessionExpired={setSessionExpired}
+                showLogoPaths={showLogoPaths}
+                noNavbarPaths={noNavbarPaths}
+              />
+            </UserDataLoader>
+          </PermissionsProvider>
+        </CustomProvider>
       </SuspenseWithLoading>
     </ErrorBoundary>
   );

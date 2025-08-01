@@ -1,21 +1,23 @@
+// v1.0.0 - Ashok - removed show and hide for interviewers
+
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import {
   Calendar,
   Clock,
   Edit,
-  CheckCircle,
   XCircle,
-  ThumbsDown,
+  // CheckCircle,
+  // ThumbsDown,
   ChevronDown,
   ChevronUp,
-  MessageSquare,
-  Users,
+  // MessageSquare,
+  // Users,
   User,
   ExternalLink
 } from 'lucide-react';
 // import { FaChevronUp, FaSearch } from 'react-icons/fa';
-import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
+// import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 
 import { Button } from '../../CommonCode-AllTabs/ui/button';
@@ -23,6 +25,9 @@ import axios from 'axios';
 import toast from "react-hot-toast";
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundTemplates';
+import { config } from '../../../../../config';
+import { useAssessments } from '../../../../../apiHooks/useAssessments';
+import { usePositions } from '../../../../../apiHooks/usePositions';
 
 const PositionRoundCard = ({
   round,
@@ -32,138 +37,83 @@ const PositionRoundCard = ({
   isActive = false,
   hideHeader = false
 }) => {
+  console.log("round-------", round);
 
-    const {
-      assessmentData,
-      loading,
-       sectionQuestions,
-      questionsLoading,
-      questionsError,
-      fetchQuestionsForAssessment,
-      setSectionQuestions,
-    } = useCustomContext();
+  // const {
+  //   sectionQuestions,
+  //   fetchQuestionsForAssessment,
+  //   questionsLoading,
+  //   questionsError,
+  //   setSectionQuestions,
+  // } = useCustomContext();
+  const { deleteRoundMutation } = usePositions();
+  const { fetchAssessmentQuestions } = useAssessments();
 
-  const { resolveInterviewerDetails } = useInterviewerDetails();
-  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const handleDeleteRound = async () => {
+    try {
+      await deleteRoundMutation(round._id);
+      toast.success('Round deleted successfully');
+    } catch (error) {
+      console.error('Error deleting round:', error);
+      toast.error('Failed to delete round');
+    }
+  };
+
   const [showQuestions, setShowQuestions] = useState(false);
   const [showInterviewers, setShowInterviewers] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
-  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  // console.log("sectionQuestions", sectionQuestions);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [loadingQuestions] = useState(false);
 
   const interview = interviewData;
-  const isInterviewCompleted = interview?.status === 'Completed' || interview?.status === 'Cancelled';
 
-  console.log("resolveInterviewerDetails", resolveInterviewerDetails());
-  
+  // useEffect(() => {
+  //   fetchQuestionsForAssessment(round.assessmentId)
+  // }, [round.assessmentId])
 
-  // const fetchQuestionsForAssessment = async (assessmentId) => {
-
-  //   if (!assessmentId) {
-  //     return null;
-  //   }
-  //   setLoadingQuestions(true);
-
-  //   try {
-  //     const response = await axios.get(`${process.env.REACT_APP_API_URL}/assessments/${assessmentId}`);
-  //     const assessmentQuestions = response.data;
-
-  //     // console.log('Full assessment questions structure:', assessmentQuestions);
-
-  //     // Extract sections directly from the response
-  //     const sections = assessmentQuestions.sections || [];
-
-  //     // Check for empty sections or questions
-  //     if (sections.length === 0 || sections.every(section => !section.questions || section.questions.length === 0)) {
-  //       console.warn('No sections or questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Create section questions mapping with all section data
-  //     const newSectionQuestions = {};
-
-  //     sections.forEach((section) => {
-  //       if (!section._id) {
-  //         console.warn('Section missing _id:', section);
-  //         return;
-  //       }
-
-  //       // Store complete section data including sectionName, passScore, totalScore
-  //       newSectionQuestions[section._id] = {
-  //         sectionName: section?.sectionName,
-  //         passScore: Number(section.passScore || 0),
-  //         totalScore: Number(section.totalScore || 0),
-  //         questions: (section.questions || []).map(q => ({
-  //           _id: q._id,
-  //           questionId: q.questionId,
-  //           source: q.source || 'system',
-  //           score: Number(q.score || q.snapshot?.score || 0),
-  //           order: q.order || 0,
-  //           customizations: q.customizations || null,
-  //           snapshot: {
-  //             questionText: q.snapshot?.questionText || '',
-  //             questionType: q.snapshot?.questionType || '',
-  //             score: Number(q.snapshot?.score || q.score || 0),
-  //             options: Array.isArray(q.snapshot?.options) ? q.snapshot.options : [],
-  //             correctAnswer: q.snapshot?.correctAnswer || '',
-  //             difficultyLevel: q.snapshot?.difficultyLevel || '',
-  //             hints: Array.isArray(q.snapshot?.hints) ? q.snapshot.hints : [],
-  //             skill: Array.isArray(q.snapshot?.skill) ? q.snapshot.skill : [],
-  //             tags: Array.isArray(q.snapshot?.tags) ? q.snapshot.tags : [],
-  //             technology: Array.isArray(q.snapshot?.technology) ? q.snapshot.technology : [],
-  //             questionNo: q.snapshot?.questionNo || ''
-  //           }
-  //         }))
-  //       };
-  //     });
-
-  //     // Verify that at least one section has questions
-  //     const hasQuestions = Object.values(newSectionQuestions).some(section => section.questions.length > 0);
-  //     if (!hasQuestions) {
-  //       console.warn('No sections with questions found for assessment:', assessmentId);
-  //       setSectionQuestions({ noQuestions: true });
-  //       return;
-  //     }
-
-  //     // Set the section questions state
-  //     setSectionQuestions(newSectionQuestions);
-  //     // console.log('Updated sectionQuestions:', newSectionQuestions);
-  //   } catch (error) {
-  //     console.error('Error fetching questions:', error);
-  //     setSectionQuestions({ error: 'Failed to load questions' });
-  //   } finally {
-  //     setLoadingQuestions(false);
-  //   }
-  // };
-
+  const [sectionQuestions, setSectionQuestions] = useState({});
+  const [questionsLoading, setQuestionsLoading] = useState(false);
 
   useEffect(() => {
-    fetchQuestionsForAssessment(round.assessmentId)
-  }, [round.assessmentId])
+    if (showQuestions && round?.assessmentId) {
+      // const data = fetchAssessmentQuestions(round.assessmentId);
+      // setSectionQuestions(data)
+      setQuestionsLoading(true)
+      fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+        if (data) {
+          setQuestionsLoading(false)
+          setSectionQuestions(data?.sections);
+          // Only initialize toggleStates if it's empty or length doesn't match sections
+          // setToggleStates((prev) => {
+          //   if (prev.length !== data.sections.length) {
+          //     return new Array(data.sections.length).fill(false);
+          //   }
+          //   return prev; // Preserve existing toggle states
+          // });
+        } else {
+          console.error('Error fetching assessment questions:', error);
+          setQuestionsLoading(false)
+        }
+      });
+    }
+  }, [showQuestions, round?.assessmentId]);
+
+
+  // Remove console.log to prevent loops
+  // console.log("round", round);
 
 
 
-  // const toggleSection = async (sectionId) => {
-  //   setExpandedSections(prev => ({
-  //     ...prev,
-  //     [sectionId]: !prev[sectionId]
-  //   }));
 
-  //   // Fetch questions if the section is being expanded and questions are not already loaded
-  //   if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
-  //     await fetchQuestionsForAssessment(round?.assessmentId);
-  //   }
-  // };
 
   const toggleSection = async (sectionId) => {
     // First close all questions in this section if we're collapsing
     if (expandedSections[sectionId]) {
-      const newExpandedQuestions = {...expandedQuestions};
+      const newExpandedQuestions = { ...expandedQuestions };
       const section = sectionQuestions[sectionId];
       if (section && section.questions) {
         section.questions.forEach(question => {
@@ -172,17 +122,17 @@ const PositionRoundCard = ({
       }
       setExpandedQuestions(newExpandedQuestions);
     }
-  
+
     // Then toggle the section
     setExpandedSections(prev => ({
       ...prev,
       [sectionId]: !prev[sectionId]
     }));
-  
+
     // Fetch questions if expanding and not already loaded
-    if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
-      await fetchQuestionsForAssessment(round?.assessmentId);
-    }
+    // if (!expandedSections[sectionId] && !sectionQuestions[sectionId] && !sectionQuestions.noSections && !sectionQuestions.error) {
+    //   await fetchQuestionsForAssessment(round?.assessmentId);
+    // }
   };
 
 
@@ -195,7 +145,7 @@ const PositionRoundCard = ({
     setShowQuestions(!showQuestions);
   };
 
- 
+
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not scheduled';
@@ -225,7 +175,7 @@ const PositionRoundCard = ({
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/interview/save-round`,
+        `${config.REACT_APP_API_URL}/interview/save-round`,
         payload
       );
       console.log("Status updated:", response.data);
@@ -244,31 +194,14 @@ const PositionRoundCard = ({
     setShowConfirmModal(false);
   };
 
-  const handleReject = (reason) => {
-    handleStatusChange("Rejected", reason);
-    setShowRejectionModal(false);
-  };
-
-  // const handleRemoveInterviewer = (interviewerId) => {
-  //   const updatedRound = {
-  //     interviewers: round.interviewers.filter(id => id !== interviewerId)
-  //   };
-  // };
 
   // Get interviewers based on interviewerType
   const internalInterviewers =
-    round?.interviewerType === "internal" ? round?.interviewers || [] : [];
+    round?.interviewerType === "Internal" ? round?.interviewers || [] : [];
 
   const externalInterviewers =
-    round?.interviewerType === "external" ? round?.interviewers || [] : [];
+    round?.interviewerType === "External" ? round?.interviewers || [] : [];
 
-  // Get questions
-  const questions = round?.questions || [];
-  // console.log("questions", questions);
-
-
-  // Check if round is active (can be modified)
-  // const isRoundActive = round.status !== 'Completed' && round.status !== 'Cancelled' && round.status !== 'Rejected' && !isInterviewCompleted;
 
   // Check if round has feedback
   const hasFeedback = round?.detailedFeedback || (round?.feedbacks && round.feedbacks.length > 0);
@@ -284,7 +217,7 @@ const PositionRoundCard = ({
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
 
-  console.log("internalInterviewers",internalInterviewers,round);
+  // console.log("internalInterviewers", internalInterviewers, round);
 
 
   return (
@@ -328,7 +261,9 @@ const PositionRoundCard = ({
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Schedule</h4>
                   <div className="flex items-center text-sm text-gray-500 mb-1">
                     <Calendar className="h-4 w-4 mr-1" />
-                    <span>Scheduled: {formatDate(round.scheduledDate)}</span>
+                    {/* v1.0.0 <------------------------------------------------------------------ */}
+                    <span>Scheduled: {formatDate(round?.updatedAt)}</span>
+                    {/* v1.0.0 ------------------------------------------------------------------> */}
                     {isInstantInterview() && (
                       <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
                         Instant
@@ -344,56 +279,69 @@ const PositionRoundCard = ({
                   {round.duration && (
                     <div className="flex items-center text-sm text-gray-500 mt-1">
                       <Clock className="h-4 w-4 mr-1" />
-                      <span>Duration: {round.duration} minutes</span>
+                      <span>Duration: {round.duration} Minutes</span>
                     </div>
                   )}
                 </div>
                 {round.assessmentId ? <div></div>
                   : <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-sm font-medium text-gray-700">Interviewers</h4>
-                      <button
-                        onClick={() => {setShowInterviewers(!showInterviewers)
-                       
+                    {/* v1.0.0 <----------------------------------------------------------------------------- */}
+                    <div className="flex justify-between items-center ">
+                      <h4 className="text-sm font-medium text-gray-700"> {
+                        <>
+                          <span>{round?.interviewerType || ""}</span>
+                          <span>{round?.interviewerGroupName ? " Group" : ""}</span>
+                        </>
+                      } Interviewers </h4>
+                      {/* <button
+                        onClick={() => {
+                          setShowInterviewers(!showInterviewers)
+
                         }}
                         className="text-sm text-custom-blue hover:text-custom-blue flex items-center"
                       >
                         {showInterviewers ? 'Hide' : 'Show'}
                         {showInterviewers ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
-                      </button>
+                      </button> */}
                     </div>
 
-                    {showInterviewers && round?.interviewers && (
+
+                    {/* {showInterviewers && round?.interviewers && ( */}
+                    {round?.interviewers && (
+                    //  v1.0.0 ----------------------------------------------------------------------->
                       <div className="space-y-2">
                         {internalInterviewers.length > 0 && (
-                          <div>
-                            <div className="flex items-center text-xs text-gray-500 mb-1">
-                              <User className="h-3 w-3 mr-1" />
-                              <span>
-                                {/* Internal ({round?.interviewers.length}) */}
-                                {round?.interviewers.length} interviewer {resolveInterviewerDetails(round?.interviewers).length !== 1 ? 's' : ''}
+                          <div >
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2 mt-1">
+                              <span className='flex items-center'>
+                                <User className="h-3 w-3 mr-1" />
+                                <span>
+
+                                  {/* Internal ({round?.interviewers.length}) */}
+                                  {round?.interviewers.length} Interviewer{round?.interviewers.length !== 1 ? 's' : ''}
+                                </span>
                               </span>
-                            </div>
-                             {showInterviewers && round.interviewers && (
-                            <div className="flex flex-wrap gap-2">
-                              {resolveInterviewerDetails(round?.interviewers).map((interviewer, index) => (
-                                <div key={index} className="flex items-center">
-                                  <InterviewerAvatar interviewer={interviewer} size="sm" />
-                                  <span className="ml-1 text-xs text-gray-600">
-                                    {interviewer.name}
-                                  </span>
-                                  {/* {isRoundActive && canEdit && (
-                                  <button
-                                    onClick={() => handleRemoveInterviewer(interviewer._id)}
-                                    className="ml-1 text-gray-400 hover:text-red-500"
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </button>
-                                )} */}
+                              {round?.interviewerGroupName &&
+                                <div className="flex items-center   gap-1 text-xs text-gray-500 ">
+                                  <span>Group Name: </span>
+                                  <span className='text-black '>{round?.interviewerGroupName ? round?.interviewerGroupName : ""}</span>
                                 </div>
-                              ))}
+                              }
                             </div>
-                              )}
+
+                            {showInterviewers && round.interviewers && (
+                              <div className="flex flex-wrap gap-2">
+                                {round?.interviewers.map((interviewer, index) => (
+                                  <div key={index} className="flex items-center">
+                                    <InterviewerAvatar interviewer={interviewer} size="sm" />
+                                    <span className="ml-1 text-xs text-gray-600">
+                                      {interviewer?.firstName + " " + interviewer?.lastName}
+                                    </span>
+
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -410,19 +358,18 @@ const PositionRoundCard = ({
                                   <span className="ml-1 text-xs text-gray-600">
                                     {interviewer.name}
                                   </span>
-                                  {/* {isRoundActive && canEdit && (
-                                  <button
-                                    onClick={() => handleRemoveInterviewer(interviewer._id)}
-                                    className="ml-1 text-gray-400 hover:text-red-500"
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </button>
-                                )} */}
+
                                 </div>
                               ))}
                             </div>
                           </div>
-                        )}
+
+                        )
+                        }
+
+                        {externalInterviewers.length === 0 && round?.interviewerType === "External" &&
+                          <span className='text-gray-600 text-xs'>No External Interviewers selected</span>
+                        }
                       </div>
                     )}
                   </div>
@@ -431,10 +378,10 @@ const PositionRoundCard = ({
               </div>
 
 
-              {round.roundTitle === 'Technical' && (
+              {round.roundTitle !== 'Assessment' && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">Questions</h4>
+                    <h4 className="text-sm font-medium text-gray-700">Interview Questions</h4>
                     <button
                       onClick={() => setShowQuestions(!showQuestions)}
                       className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
@@ -449,12 +396,12 @@ const PositionRoundCard = ({
                       {round?.questions.length > 0 ? (
                         <ul className="mt-2 space-y-1">
                           {round.questions.map((question, qIndex) => {
-                            const isMandatory = question?.mandatory === "true";
+                            // const isMandatory = question?.mandatory === "true";
                             const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                             return (
                               <li
                                 key={qIndex}
-                              className="text-gray-600 font-sm"
+                                className="text-gray-600 font-sm"
 
                               >
                                 <span >
@@ -466,7 +413,7 @@ const PositionRoundCard = ({
                           })}
                         </ul>
                       ) : (
-                        <p className="mt-2 text-gray-500 flex justify-center">No questions added yet.</p>
+                        <p className="mt-2 text-gray-500 flex justify-center">No Questions added yet.</p>
                       )}
 
                     </div>
@@ -640,7 +587,7 @@ const PositionRoundCard = ({
                                           ))
                                         ) : (
                                           <div className="text-center py-4 text-gray-500">
-                                            No questions found in this section
+                                            No Questions found in this section
                                           </div>
                                         )}
                                       </div>
@@ -650,7 +597,7 @@ const PositionRoundCard = ({
                               })
                             ) : (
                               <div className="text-center py-4 text-gray-500">
-                                No sections available for this assessment
+                                No sections available for this Assessment
                               </div>
                             )}
                           </div>
@@ -668,30 +615,41 @@ const PositionRoundCard = ({
         </div>
 
         {/* {isRoundActive && ( */}
-            <div className="m-4 flex justify-end space-x-3">
-              {canEdit && (
-                <Button
-                  onClick={onEdit}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit Round
-                </Button>
-              )}
-            </div>
-          {/* )} */}
+        <div className="m-4 flex justify-end space-x-3">
+          {canEdit && (
+            <Button
+              onClick={onEdit}
+              variant="outline"
+              size="sm"
+              className="flex items-center"
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit Round
+            </Button>
+          )}
+          {canEdit && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowDeleteConfirmModal(true)}
+              className="flex items-center"
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              Delete Round
+            </Button>
+          )}
+        </div>
+        {/* )} */}
 
       </div>
 
- 
+
 
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <div className="bg-white p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-3">
-              Are you sure you want to {confirmAction.toLowerCase()} this round?
+              Are you sure you want to {confirmAction.toLowerCase()} this Round?
             </h3>
             <div className="flex justify-end space-x-3">
               <Button variant="outline" onClick={() => setShowConfirmModal(false)}>
@@ -699,6 +657,24 @@ const PositionRoundCard = ({
               </Button>
               <Button variant="success" onClick={handleConfirmStatusChange}>
                 Yes, Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+          <div className="bg-white p-5 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-3">
+              Are you sure you want to delete this Round?
+            </h3>
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteRound}>
+                Delete
               </Button>
             </div>
           </div>

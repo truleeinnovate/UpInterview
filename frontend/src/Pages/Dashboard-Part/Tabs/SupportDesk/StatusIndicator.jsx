@@ -6,7 +6,7 @@ function StatusIndicator({ currentStatus }) {
   const currentStepIndex = statusSteps.indexOf(currentStatus);
 
   return (
-    <div className="flex justify-center items-center w-full max-w-4xl sm:max-w-2xl mx-auto mt-8 mb-8">
+    <div className="flex justify-center items-center w-full  mx-auto mt-8 mb-8">
       {statusSteps.map((step, index) => (
         <div key={step || `step-${index}`} className="flex items-center flex-1 last:flex-initial">
           <div className="flex flex-col items-center relative">

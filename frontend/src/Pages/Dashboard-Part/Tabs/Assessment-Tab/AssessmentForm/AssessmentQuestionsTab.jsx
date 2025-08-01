@@ -1,5 +1,6 @@
-import React from "react";
-import Popup from "reactjs-popup";
+// v1.0.0  -  Ashraf  -  popup position alignmet issue solved (mansoor: it got issues in the online that is not solved correctly)
+// v1.0.1  -  mansoor  -  popup position alignmet issue solved
+import React, { useState } from 'react';
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank";
 import { ReactComponent as MdMoreVert } from "../../../../../icons/MdMoreVert.svg";
 import {
@@ -10,8 +11,8 @@ import {
   PlusIcon,
   CheckCircleIcon,
   PencilIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
+import { X } from "lucide-react";
 
 const AssessmentQuestionsTab = ({
   assessmentId,
@@ -50,23 +51,74 @@ const AssessmentQuestionsTab = ({
   isPassScoreSubmitted,
   setIsQuestionLimitErrorPopupOpen
 }) => {
-  // Toggle action menu for sections and questions
-  const toggleActionMenu = (type, sectionIndex, questionIndex = null) => {
-    if (
-      actionViewMore?.type === type &&
-      actionViewMore?.index === sectionIndex &&
-      (!questionIndex || actionViewMore?.questionIndex === questionIndex)
-    ) {
-      setActionViewMore(null);
-    } else {
+  const [isQuestionPopup, setIsQuestionPopup] = useState(false);
+  const [selectedSection, setSelectedSection] = useState(null);
+  // <---------------------- v1.0.0
+  // <---------------------- v1.0.1
+
+  // const addSectionRef = useRef(null);
+  const [activeMenu, setActiveMenu] = useState(null);
+
+  // Click outside handler for Add Section popup
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (addSectionRef.current && !addSectionRef.current.contains(event.target)) {
+  //       setIsAddQuestionModalOpen(false);
+  //     }
+  //   };
+
+  //   if (isAddQuestionModalOpen) {
+  //     document.addEventListener('mousedown', handleClickOutside);
+  //   }
+
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleClickOutside);
+  //   };
+  // }, [isAddQuestionModalOpen, setIsAddQuestionModalOpen]);
+  // ---------------------- v1.0.0 >
+  // v1.0.1 ---------------------->
+
+  const handlePopupToggle = (section = null) => {
+    setIsQuestionPopup(!isQuestionPopup);
+    setSelectedSection(section);
+  };
+
+  //   // <---------------------- v1.0.1
+  const toggleActionMenu = (type, sectionIndex, questionIndex, e) => {
+    e.stopPropagation();
+
+    const menuKey = type === 'section'
+      ? `section-${sectionIndex}`
+      : `question-${sectionIndex}-${questionIndex}`;
+
+    setActiveMenu(activeMenu === menuKey ? null : menuKey);
+
+    if (type === 'section') {
+      setActionViewMore({ type, index: sectionIndex });
+    } else if (type === 'question') {
       setActionViewMore({
         type,
-        index: sectionIndex,
-        ...(questionIndex !== null && { questionIndex }),
-        ...(type === "question" && { sectionName: addedSections[sectionIndex].SectionName }),
+        sectionIndex,
+        questionIndex,
+        sectionName: addedSections[sectionIndex].SectionName
       });
+    } else {
+      setActionViewMore(null);
     }
   };
+  // v1.0.1 ---------------------->
+
+  // Close menu when clicking outside
+  // useEffect(() => {
+  //   const handleClickOutside = (e) => {
+  //     if (activeMenu && !e.target.closest('.action-menu-container')) {
+  //       setActiveMenu(null);
+  //     }
+  //   };
+
+  //   document.addEventListener('mousedown', handleClickOutside);
+  //   return () => document.removeEventListener('mousedown', handleClickOutside);
+  // }, [activeMenu]);
 
   // Calculate total questions and question score for "Overall" type
   const totalQuestions = addedSections.reduce(
@@ -75,8 +127,13 @@ const AssessmentQuestionsTab = ({
   );
   const questionScoreOverall = totalScore && totalQuestions ? (Number(totalScore) / totalQuestions).toFixed(2) : 0;
 
+
+  // const handlePopupToggle = (index) => {
+  //   setIsQuestionPopup(!isQuestionPopup);
+  // };
+
   return (
-    <div className="">
+    <>
       {/* Header Section */}
       <div className="px-6">
         {passScoreType === "Overall" && (
@@ -96,7 +153,7 @@ const AssessmentQuestionsTab = ({
             <div className="h-10 w-px bg-gray-200 mx-4"></div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-gray-500">Passing Score</p>
-              <p className="text-2xl font-semibold text-blue-600">{overallPassScore || "0"}</p>
+              <p className="text-2xl font-semibold text-custom-blue">{overallPassScore || "0"}</p>
             </div>
           </div>
         )}
@@ -110,62 +167,64 @@ const AssessmentQuestionsTab = ({
             <p className="text-sm text-gray-500 mt-1">Manage sections and questions</p>
           </div>
           <div className="flex gap-2">
-            <Popup
-              trigger={
-                <button
-                  className="flex items-center gap-2 rounded-lg px-4 py-2 bg-custom-blue text-white text-sm font-medium hover:bg-custom-blue/90 transition-colors shadow-sm"
-                  onClick={toggleSidebarForSection}
-                >
-                  <PlusIcon className="w-4 h-4" />
-                  Add Section
-                </button>
-              }
-              onClose={() => setIsAlreadyExistingSection("")}
-              offsetX={-50}
-              position="bottom right"
-            >
-              {(closeAddSectionPopup) => (
-                <div className="bg-white rounded-xl shadow-lg p-5 w-72 z-50">
-                  <h3 className="font-medium text-gray-800 mb-3">Create New Section</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="assessment-section-name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Section Name
-                      </label>
-                      <input
-                        value={sectionNameProp}
-                        id="assessment-section-name"
-                        type="text"
-                        placeholder="e.g. Technical Skills"
-                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none"
-                        onChange={(e) => {
-                          setSectionName(e.target.value);
-                          setIsAlreadyExistingSection("");
-                        }}
-                        autoComplete="off"
-                      />
-                      {isAlreadyExistingSection && (
-                        <p className="text-red-500 text-xs mt-1">{isAlreadyExistingSection}</p>
-                      )}
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        className="px-4 py-2 text-sm font-medium text-gray-700 border border-custom-blue hover:bg-gray-100 rounded-lg transition-colors"
-                        onClick={closeAddSectionPopup}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-custom-blue text-sm font-medium text-white hover:bg-custom-blue/90 rounded-lg transition-colors"
-                        onClick={() => handleAddSection(closeAddSectionPopup)}
-                      >
-                        Create Section
-                      </button>
+            {/* <---------------------- v1.0.0 */}
+            <div className="relative">
+              <button
+                className="flex items-center gap-2 rounded-lg px-4 py-2 bg-custom-blue text-white text-sm font-medium hover:bg-custom-blue/90 transition-colors shadow-sm"
+                onClick={() => setIsAddQuestionModalOpen(!isAddQuestionModalOpen)}
+              >
+                <PlusIcon className="w-4 h-4" />
+                Add Section
+              </button>
+
+              {isAddQuestionModalOpen && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black bg-opacity-25" onClick={() => setIsAddQuestionModalOpen(false)}></div>
+                  <div className="relative w-[35%] bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div className="p-5">
+                      <h3 className="font-medium text-gray-800 mb-3">Create New Section</h3>
+                      <div className="space-y-6">
+                        <div>
+                          <label htmlFor="assessment-section-name" className="block text-sm font-medium text-gray-700 mb-1">
+                            Section Name
+                          </label>
+                          <input
+                            value={sectionNameProp}
+                            id="assessment-section-name"
+                            type="text"
+                            placeholder="e.g. Technical Skills"
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none"
+                            onChange={(e) => {
+                              setSectionName(e.target.value);
+                              setIsAlreadyExistingSection("");
+                            }}
+                            autoComplete="off"
+                          />
+                          {isAlreadyExistingSection && (
+                            <p className="text-red-500 text-xs mt-1">{isAlreadyExistingSection}</p>
+                          )}
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            className="px-4 py-2 text-sm font-medium text-gray-700 border border-custom-blue hover:bg-gray-100 rounded-lg transition-colors"
+                            onClick={() => setIsAddQuestionModalOpen(false)}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="px-4 py-2 bg-custom-blue text-sm font-medium text-white hover:bg-custom-blue/90 rounded-lg transition-colors"
+                            onClick={() => handleAddSection(() => setIsAddQuestionModalOpen(false))}
+                          >
+                            Create Section
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
-            </Popup>
+            </div>
+            {/* ---------------------- v1.0.0 > */}
             {isPassScoreSubmitted && (
               <button
                 onClick={() => setSidebarOpen(true)}
@@ -198,66 +257,70 @@ const AssessmentQuestionsTab = ({
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-3">
                       <span className="bg-white px-3 py-1 rounded-lg border border-gray-200 text-sm font-medium shadow-xs">
-                        {section.Questions?.length || 0} Questions
+                        {section.Questions?.length || 0} {section.Questions?.length <= 1 ? 'Question' : 'Questions'}
                       </span>
-                      <h3 className="font-semibold text-gray-800">{section.SectionName}</h3>
+                      <h3 className="font-semibold text-gray-800">{section.SectionName ? section.SectionName.charAt(0).toUpperCase() + section.SectionName.slice(1) : ""}</h3>
                     </div>
 
-                    <Popup
-                      trigger={
-                        <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
-                          <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
-                          Add Questions
-                        </button>
-                      }
-                      modal
-                      closeOnDocumentClick={false}
-                      overlayStyle={{
-                        backgroundColor: "rgba(0, 0, 0, 0.5)",
-                        backdropFilter: "blur(5px)",
-                        WebkitBackdropFilter: "blur(5px)",
-                      }}
-                      contentStyle={{
-                        width: "90%",
-                        maxWidth: "1200px",
-                        height: "90vh",
-                        borderRadius: "0.5rem",
-                        padding: "0",
-                        border: "none",
-                        backgroundColor: "white",
-                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                      }}
+                    <button
+                      className="flex items-center gap-1 text-sm text-custom-blue hover:text-custom-blue/90 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                      onClick={() => handlePopupToggle(section)}
                     >
-                      {(close) => (
-                        <div className="w-full h-full">
-                          <QuestionBank
-                            assessmentId={assessmentId}
-                            sectionName={section.SectionName}
-                            updateQuestionsInAddedSectionFromQuestionBank={
-                              updateQuestionsInAddedSectionFromQuestionBank
-                            }
-                            closeQuestionBank={close}
-                            addedSections={addedSections}
-                            questionsLimit={questionsLimit}
-                            checkedCount={checkedCount}
-                            section="assessment"
-                          />
+                      <PlusIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
+                      Add Questions
+                    </button>
+
+
+                    {/* Question Popup */}
+                    {/* {isQuestionPopup && (
+                      <div
+                        className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                        onClick={() => setIsQuestionPopup(false)}
+                      >
+                        <div
+                          className="bg-white rounded-md w-[95%] h-[90%]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="py-3 px-4  flex items-center justify-between">
+                            <h2 className="text-xl text-custom-blue font-semibold">Add Assessment Questions</h2>
+                            <button>
+                              <X
+                                className="text-2xl text-red-500"
+                                onClick={() => handlePopupToggle()}
+                              />
+                            </button>
+                          </div>
+                          {isQuestionPopup &&
+                            <QuestionBank
+                              assessmentId={assessmentId}
+                              sectionName={section.SectionName}
+                              updateQuestionsInAddedSectionFromQuestionBank={
+                                updateQuestionsInAddedSectionFromQuestionBank
+                              }
+                              addedSections={addedSections}
+                              questionsLimit={questionsLimit}
+                              checkedCount={checkedCount}
+                              type="assessment"
+                            />
+                          }
+
                         </div>
-                      )}
-                    </Popup>
+                      </div>
+                    )}                    */}
+
                   </div>
 
                   <div className="flex items-center space-x-4">
                     {passScoreType === "Each Section" && (
                       <>
                         <div className="flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-lg">
-                          <span className="text-sm font-medium text-blue-600">
+                          <span className="text-sm font-medium text-custom-blue">
                             Total: {totalScores[section.SectionName] || "0"}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-lg">
-                          <CheckCircleIcon className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-600">
+                          <CheckCircleIcon className="w-4 h-4 text-custom-blue" />
+                          <span className="text-sm font-medium text-custom-blue">
                             Pass: {passScores[section.SectionName] || "0"}
                           </span>
                         </div>
@@ -265,39 +328,17 @@ const AssessmentQuestionsTab = ({
                     )}
 
                     {/* Section Actions */}
-                    <div className="relative">
+                    <div className="relative action-menu-container">
                       <button
-                        onClick={() => toggleActionMenu("section", sectionIndex)}
+                        onClick={(e) => toggleActionMenu("section", sectionIndex, null, e)}
                         className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
                       >
                         <MdMoreVert className="text-xl" />
                       </button>
 
-                      {actionViewMore?.type === "section" && actionViewMore.index === sectionIndex && (
-                        <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg shadow-md bg-white border border-gray-200 overflow-hidden">
-                          <button
-                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            onClick={() => {
-                              openEditSection(sectionIndex, section.SectionName);
-                              setActionViewMore(null);
-                            }}
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                            Edit Section
-                          </button>
-                          <button
-                            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-                            onClick={() => {
-                              openDeleteConfirmation("section", sectionIndex);
-                              setActionViewMore(null);
-                            }}
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                            Delete Section
-                          </button>
-                        </div>
-                      )}
                     </div>
+
+
 
                     <button
                       className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
@@ -311,6 +352,36 @@ const AssessmentQuestionsTab = ({
                     </button>
                   </div>
                 </div>
+
+                {/* <---------------------- v1.0.1 */}
+                {/* Section Actions popup */}
+                {activeMenu === `section-${sectionIndex}` && (
+                  <div className="absolute right-[115px] z-10 w-48 -mt-3 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden">
+                    <button
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      onClick={() => {
+                        openEditSection(sectionIndex, addedSections[sectionIndex].SectionName);
+                        setActiveMenu(null);
+                      }}
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                      Edit Section
+                    </button>
+                    <button
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+                      onClick={() => {
+                        openDeleteConfirmation("section", sectionIndex);
+                        setActiveMenu(null);
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete Section
+                    </button>
+                  </div>
+                )}
+                {/* v1.0.1 ----------------------> */}
 
                 {/* Questions List */}
                 {toggleStates[sectionIndex] && (
@@ -342,7 +413,7 @@ const AssessmentQuestionsTab = ({
                                 onChange={() =>
                                   handleQuestionSelection(section.SectionName, questionIndex)
                                 }
-                                className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                className="mt-1 h-4 w-4 text-custom-blue rounded border-gray-300 focus:ring-blue-500"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-baseline gap-2">
@@ -372,36 +443,40 @@ const AssessmentQuestionsTab = ({
 
                           {/* Question Actions */}
                           <div className="flex items-center gap-4 ml-2">
-                            <div className="relative">
+                            <div className="relative action-menu-container">
                               <button
-                                onClick={() => toggleActionMenu("question", sectionIndex, questionIndex)}
+                                onClick={(e) => toggleActionMenu("question", sectionIndex, questionIndex, e)}
                                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                               >
                                 <MdMoreVert className="text-xl" />
                               </button>
-                              {actionViewMore?.type === "question" &&
-                                actionViewMore.index === sectionIndex &&
-                                actionViewMore.questionIndex === questionIndex && (
-                                  <div className="absolute right-0 z-50 mt-2 w-40 rounded-lg shadow-md bg-white border border-gray-200 overflow-hidden">
-                                    <button
-                                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-                                      onClick={() => {
-                                        openDeleteConfirmation(
-                                          "question",
-                                          questionIndex,
-                                          section.SectionName
-                                        );
-                                        setActionViewMore(null);
-                                      }}
-                                    >
-                                      <TrashIcon className="w-4 h-4" />
-                                      Delete
-                                    </button>
-                                  </div>
-                                )}
+
+
                             </div>
                           </div>
                         </div>
+                        {/* <---------------------- v1.0.1 */}
+                        {activeMenu === `question-${sectionIndex}-${questionIndex}` && (
+                          <div className="absolute right-[70px] z-10 w-40 -mt-2 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden">
+                            <button
+                              className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+                              onClick={() => {
+                                openDeleteConfirmation(
+                                  "question",
+                                  questionIndex,
+                                  section.SectionName
+                                );
+                                setActiveMenu(null);
+                              }}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                        {/* v1.0.1 ----------------------> */}
                       </div>
                     ))}
                   </div>
@@ -411,7 +486,39 @@ const AssessmentQuestionsTab = ({
           })}
         </div>
       </div>
-    </div>
+      {isQuestionPopup && selectedSection && (
+        <div
+          className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+          onClick={() => setIsQuestionPopup(false)}
+        >
+          <div
+            className="bg-white rounded-md w-[85%] h-[80%]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="py-3 px-4  flex items-center justify-between">
+              <h2 className="text-xl text-custom-blue font-semibold">Add Assessment Questions</h2>
+              <button>
+                <X
+                  className="text-2xl text-red-500"
+                  onClick={() => handlePopupToggle()}
+                />
+              </button>
+            </div>
+            <QuestionBank
+              assessmentId={assessmentId}
+              sectionName={selectedSection.SectionName}
+              updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+              addedSections={addedSections}
+              questionsLimit={questionsLimit}
+              checkedCount={checkedCount}
+              type="assessment"
+            />
+          </div>
+        </div>
+      )}
+      {/* // <---------------------- v1.0.0 */}
+
+    </>
   );
 };
 

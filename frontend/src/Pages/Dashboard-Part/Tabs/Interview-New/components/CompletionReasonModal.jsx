@@ -6,8 +6,8 @@ import InterviewerAvatar from '../../CommonCode-AllTabs/InterviewerAvatar';
 import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion } from 'framer-motion';
 
-const CompletionReasonModal = ({ 
-  onClose, 
+const CompletionReasonModal = ({
+  onClose,
   onComplete,
   pendingRoundsCount,
   interviewId,
@@ -18,11 +18,11 @@ const CompletionReasonModal = ({
   const [pendingRoundActions, setPendingRoundActions] = useState({});
   const modalRef = useRef(null);
 
-  
-  const pendingRounds = useMemo(() => 
-    interview?.rounds.filter(round => 
+
+  const pendingRounds = useMemo(() =>
+    interview?.rounds.filter(round =>
       ['Pending', 'Scheduled'].includes(round.status)
-    ) || [], 
+    ) || [],
     [interview]
   );
 
@@ -51,7 +51,7 @@ const CompletionReasonModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!reason.trim()) {
       setError('Please provide a completion reason');
       return;
@@ -68,12 +68,12 @@ const CompletionReasonModal = ({
     //         completedDate: action === 'Completed' ? now : round.completedDate,
     //         rejectionReason: action === 'Rejected' ? 'Rejected during interview completion' : round.rejectionReason
     //       };
-          
+
     //       // updateRound(interviewId, updatedRound);
     //     }
     //   }
     // });
-    
+
     onComplete(reason);
   };
 
@@ -86,11 +86,11 @@ const CompletionReasonModal = ({
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not scheduled';
-    
+
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -99,8 +99,8 @@ const CompletionReasonModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50 overflow-y-auto">
-      <motion.div 
-        ref={modalRef} 
+      <motion.div
+        ref={modalRef}
         className="bg-card h-full w-1/2 shadow-xl p-6 overflow-y-auto glass-sidebar"
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
@@ -108,7 +108,7 @@ const CompletionReasonModal = ({
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-foreground">Complete Interview</h2>
+          <h2 className="text-xl font-semibold text-custom-blue">Complete Interview</h2>
           <Button
             onClick={onClose}
             variant="ghost"
@@ -117,7 +117,7 @@ const CompletionReasonModal = ({
             <X className="h-5 w-5" />
           </Button>
         </div>
-        
+
         {pendingRoundsCount > 0 && (
           <div className="mb-6">
             <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md mb-4">
@@ -131,15 +131,15 @@ const CompletionReasonModal = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <h3 className="text-md font-medium text-foreground">Pending Rounds</h3>
-              
+
               {pendingRounds.map(round => {
                 // const interviewers = round.interviewers
                 //   .map(id => getInterviewerById(id))
                 //   .filter(Boolean);
-                
+
                 return (
                   <div key={round.id} className="border border-border rounded-md p-4 bg-secondary/50">
                     <div className="flex justify-between items-start">
@@ -151,14 +151,14 @@ const CompletionReasonModal = ({
                           <span className="mx-2">{round.mode}</span>
                           <StatusBadge status={round.status} size="sm" />
                         </div>
-                        
+
                         <div className="mt-2 text-sm text-muted-foreground">
                           <div className="flex items-center mb-1">
                             <Clock className="h-4 w-4 mr-1" />
                             <span>Scheduled: {formatDate(round.scheduledDate)}</span>
                           </div>
                         </div>
-                        
+
                         {/* {interviewers.length > 0 && (
                           <div className="mt-2">
                             <p className="text-sm text-muted-foreground mb-1">Interviewers:</p>
@@ -175,7 +175,7 @@ const CompletionReasonModal = ({
                           </div>
                         )} */}
                       </div>
-                      
+
                       <div className="ml-4">
                         <select
                           value={pendingRoundActions[round.id] || 'keep'}
@@ -195,7 +195,7 @@ const CompletionReasonModal = ({
             </div>
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div className="mb-4">
             <label htmlFor="reason" className="block text-sm font-medium text-foreground mb-1">
@@ -210,7 +210,7 @@ const CompletionReasonModal = ({
             />
             {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
           </div>
-          
+
           <div className="flex justify-end space-x-3">
             <Button
               type="button"
@@ -219,12 +219,13 @@ const CompletionReasonModal = ({
             >
               Cancel
             </Button>
-            <Button
+            <button
+              className='bg-custom-blue text-white rounded-md px-4 py-2'
               type="submit"
               variant="default"
             >
               Complete Interview
-            </Button>
+            </button>
           </div>
         </form>
       </motion.div>

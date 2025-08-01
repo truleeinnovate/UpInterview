@@ -1,32 +1,53 @@
+// v1.0.0  -  Ashraf  - fixed add candidate click navigate to add form
+// v1.0.1  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code),added dropdown to show assessment when user is from shedule assessment true. STOPPED LOOPS: Replaced bulk section fetching with lazy loading to prevent performance issues
+// v1.0.2  -  Ashraf  -  called sections function to load data fast
+// v1.0.3  -  Ashraf  -  removed already selected cant select logic because very new schedule we can select same candidate
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { useCustomContext } from '../../../../Context/Contextfetch';
 import { shareAssessmentAPI } from './AssessmentShareAPI.jsx';
 import { IoMdClose } from 'react-icons/io';
 import { FiX } from 'react-icons/fi';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDropDown.svg';
-import { ReactComponent as IoIosAddCircle } from '../../../../icons/IoIosAddCircle.svg';
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
+import { config } from '../../../../config.js';
+import { useCandidates } from '../../../../apiHooks/useCandidates';
+import Loading from '../../../../Components/Loading.js';
+// <------------------------------- v1.0.0 
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+// ------------------------------ v1.0.0 >
+// <---------------------- v1.0.1
+import { useAssessments } from '../../../../apiHooks/useAssessments.js';
+import { useQueryClient } from '@tanstack/react-query';
+// <---------------------- v1.0.1 >
+
 
 const ShareAssessment = ({
   isOpen,
   onCloseshare,
-  assessment
+  assessment,
+  fromscheduleAssessment
 }) => {
+  // <---------------------- v1.0.1
+  const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  const { candidateData, loading, refetch: refetchCandidates } = useCandidates();
+  const queryClient = useQueryClient();
+  // <---------------------- v1.0.1 >
 
+  // <------------------------------- v1.0.0 
+  const navigate = useNavigate();
+  // ------------------------------ v1.0.0 >
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const organizationId = tokenPayload?.tenantId;
   const userId = tokenPayload?.userId;
 
-  const { candidateData } = useCustomContext();
   const [linkExpiryDays, setLinkExpiryDays] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [assignedCandidates, setAssignedCandidates] = useState([]);
   const [showMainContent, setShowMainContent] = useState(true);
-  const [showNewCandidateContent, setShowNewCandidateContent] = useState(false);
   const [filteredCandidates, setFilteredCandidates] = useState([]);
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [candidateInput, setCandidateInput] = useState('');
@@ -34,36 +55,125 @@ const ShareAssessment = ({
   const [errors, setErrors] = useState({});
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
+  // <---------------------- v1.0.1 >
+
+  // Assessment selection state for fromscheduleAssessment
+  const [selectedAssessment, setSelectedAssessment] = useState(fromscheduleAssessment ? null : assessment);
+  const [assessmentInput, setAssessmentInput] = useState('');
+  const [showDropdownAssessment, setShowDropdownAssessment] = useState(false);
+  const [filteredAssessments, setFilteredAssessments] = useState([]);
+  const assessmentDropdownRef = useRef(null);
+  const assessmentInputRef = useRef(null);
+
+  // Assessment sections state - LAZY LOADING APPROACH
+  const [assessmentSections, setAssessmentSections] = useState({});
+  const [sectionsLoading, setSectionsLoading] = useState({});
+  const [sectionsCache, setSectionsCache] = useState({});
 
   // Fetch assigned candidates
-  const fetchAssignedCandidates = async () => {
+  const fetchAssignedCandidates = async (assessmentId) => {
+    // <---------------------- v1.0.1
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/schedule-assessment/${assessment._id}/schedules`
+        `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
       );
-      const assigned = response.data.flatMap((schedule) =>
-        schedule.candidates.map((candidate) => ({
-          candidateId: candidate.candidateId._id.toString(),
-          scheduleOrder: schedule.order,
-        }))
-      );
-      setAssignedCandidates(assigned);
+      
+      // Check if response has the expected structure
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        const assigned = response.data.data.flatMap((schedule) =>
+          schedule.candidates.map((candidate) => ({
+            candidateId: candidate.candidateId._id.toString(),
+            scheduleOrder: schedule.order,
+          }))
+        );
+        setAssignedCandidates(assigned);
+      } else {
+        // Handle case where no schedules exist or different response structure
+        setAssignedCandidates([]);
+      }
     } catch (error) {
       console.error('Error fetching assigned candidates:', error);
-      toast.error('Failed to fetch assigned candidates');
+      setAssignedCandidates([]);
     }
   };
 
-  useEffect(() => {
-    if (assessment._id) {
-      fetchAssignedCandidates();
+  // <---------------------- v1.0.1 >
+
+  // LAZY LOADING: Fetch sections for a specific assessment only when needed
+  const fetchAssessmentSections = async (assessmentId) => {
+    // Check if already cached
+    if (sectionsCache[assessmentId] !== undefined) {
+      return sectionsCache[assessmentId];
     }
-  }, [assessment._id]);
+
+    // Check if already loading
+    if (sectionsLoading[assessmentId]) {
+      return;
+    }
+
+    setSectionsLoading(prev => ({ ...prev, [assessmentId]: true }));
+
+    try {
+      const { data, error } = await fetchAssessmentQuestions(assessmentId);
+      
+      let sections = 0;
+      if (!error && data && data.sections) {
+        sections = data.sections.length || 0;
+      }
+      
+      const result = { id: assessmentId, sections };
+      
+      // Cache the result
+      setSectionsCache(prev => ({ ...prev, [assessmentId]: result }));
+      setAssessmentSections(prev => ({ ...prev, [assessmentId]: sections }));
+      
+      return result;
+    } catch (error) {
+      console.error("Error fetching sections for assessment:", assessmentId, error);
+      const result = { id: assessmentId, sections: 0 };
+      setSectionsCache(prev => ({ ...prev, [assessmentId]: result }));
+      setAssessmentSections(prev => ({ ...prev, [assessmentId]: 0 }));
+      return result;
+    } finally {
+      setSectionsLoading(prev => ({ ...prev, [assessmentId]: false }));
+    }
+  };
+
+//
+  useEffect(() => {
+    if (fromscheduleAssessment) {
+      // When fromscheduleAssessment is true, we don't have an assessment initially
+      setSelectedAssessment(null);
+      setAssignedCandidates([]);
+    } else if (assessment._id) {
+      // When fromscheduleAssessment is false, we have an assessment
+      setSelectedAssessment(assessment);
+      fetchAssignedCandidates(assessment._id);
+      // Pre-fetch sections for the current assessment
+      fetchAssessmentSections(assessment._id);
+    }
+  }, [assessment._id, fromscheduleAssessment]);
+
+  // Load candidates when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      // Refetch candidates to ensure we have the latest data
+      refetchCandidates();
+      // ------------------------------ v1.0.2 >
+      fetchAssessmentQuestions();
+      // ------------------------------ v1.0.2 >
+    }
+  }, [isOpen, refetchCandidates]);
+
+  // REMOVED: The problematic bulk section fetching useEffect that was causing performance issues
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdownCandidate(false);
+      }
+      if (assessmentDropdownRef.current && !assessmentDropdownRef.current.contains(event.target)) {
+        setShowDropdownAssessment(false);
       }
     };
 
@@ -72,6 +182,88 @@ const ShareAssessment = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Assessment selection handlers
+  const handleAssessmentInputChange = (e) => {
+    const inputValue = e.target.value;
+    setAssessmentInput(inputValue);
+
+    // LAZY LOADING: Only filter based on cached data or fetch as needed
+    const filterAssessments = async () => {
+      const filtered = [];
+      
+      for (const assessment of assessmentData) {
+        const hasSections = assessmentSections[assessment._id] ?? 0;
+        const matchesInput = assessment.AssessmentTitle.toLowerCase().includes(inputValue.toLowerCase());
+        
+        if (matchesInput) {
+          if (hasSections > 0) {
+            filtered.push(assessment);
+          } else if (sectionsCache[assessment._id] === undefined && !sectionsLoading[assessment._id]) {
+            // Fetch sections for this assessment if not cached
+            const result = await fetchAssessmentSections(assessment._id);
+            if (result.sections > 0) {
+              filtered.push(assessment);
+            }
+          }
+        }
+      }
+      
+      setFilteredAssessments(filtered);
+    };
+
+    filterAssessments();
+    setShowDropdownAssessment(true);
+  };
+
+  const handleAssessmentDropdownToggle = () => {
+    if (showDropdownAssessment) {
+      setShowDropdownAssessment(false);
+    } else {
+      setShowDropdownAssessment(true);
+      if (!assessmentInput) {
+        // LAZY LOADING: Filter assessments with sections using cached data
+        const filterAssessmentsWithSections = async () => {
+          const filteredAssessmentsWithSections = [];
+          
+          for (const assessment of assessmentData) {
+            const sectionCount = assessmentSections[assessment._id] ?? 0;
+            if (sectionCount > 0) {
+              filteredAssessmentsWithSections.push(assessment);
+            } else if (sectionsCache[assessment._id] === undefined && !sectionsLoading[assessment._id]) {
+              // Fetch sections if not cached
+              const result = await fetchAssessmentSections(assessment._id);
+              if (result.sections > 0) {
+                filteredAssessmentsWithSections.push(assessment);
+              }
+            }
+          }
+          
+          setFilteredAssessments(filteredAssessmentsWithSections);
+        };
+
+        filterAssessmentsWithSections();
+      }
+      // Focus input when dropdown is opened
+      setTimeout(() => {
+        if (assessmentInputRef.current) assessmentInputRef.current.focus();
+      }, 0);
+    }
+  };
+
+  const handleAssessmentSelect = (assessment) => {
+    if (assessment) {
+      setSelectedAssessment(assessment);
+      setAssessmentInput(assessment.AssessmentTitle);
+      setErrors({ ...errors, Assessment: '' });
+      // Fetch assigned candidates for the selected assessment
+      fetchAssignedCandidates(assessment._id);
+      // Pre-fetch sections for the selected assessment
+      fetchAssessmentSections(assessment._id);
+    }
+    setShowDropdownAssessment(false);
+  };
+  // <---------------------- v1.0.1 >
 
   const handleCandidateInputChange = (e) => {
     const inputValue = e.target.value;
@@ -92,7 +284,9 @@ const ShareAssessment = ({
     } else {
       setShowDropdownCandidate(true);
       if (!candidateInput) {
-        setFilteredCandidates(candidateData);
+        // <---------------------- v1.0.1
+        // Use already loaded candidate data
+        setFilteredCandidates(candidateData || []);
       }
       // Focus input when dropdown is opened
       setTimeout(() => {
@@ -103,16 +297,23 @@ const ShareAssessment = ({
 
   const handleCandidateSelect = (candidate) => {
     if (candidate && !selectedCandidates.some((selected) => selected._id === candidate._id)) {
-      const assignedSchedules = assignedCandidates.filter(
-        (ac) => ac.candidateId === candidate._id.toString()
-      );
-      if (assignedSchedules.length > 0) {
-        const scheduleNames = assignedSchedules.map((ac) => ac.scheduleOrder).join(', ');
-        toast.error(
-          `${candidate.LastName} is already assigned to ${scheduleNames}.`
-        );
-        return;
-      }
+      // <-------------------------------v1.0.3
+      // const assignedSchedules = assignedCandidates.
+      // filter(
+      //   (ac) => ac.candidateId === candidate._id.
+      //   toString()
+      // );
+      // if (assignedSchedules.length > 0) {
+      //   const scheduleNames = assignedSchedules.map
+      //   ((ac) => ac.scheduleOrder).join(', ');
+      //   toast.error(
+      //     `${candidate.LastName} is already assigned 
+      //     to ${scheduleNames}.`
+      //   );
+      //   return;
+      // }
+      // Remove the restriction that prevents selecting already assigned candidates
+      // This allows creating multiple schedule assessments for the same assessment template
       setSelectedCandidates([...selectedCandidates, candidate]);
       setErrors({ ...errors, Candidate: '' });
     }
@@ -124,8 +325,12 @@ const ShareAssessment = ({
   const handleSelectAllVisible = () => {
     const newCandidates = filteredCandidates.filter(
       candidate =>
-        !selectedCandidates.some(selected => selected._id === candidate._id) &&
-        !assignedCandidates.some(ac => ac.candidateId === candidate._id.toString())
+        // !selectedCandidates.some(selected => selected.
+        //   _id === candidate._id) &&
+        //   !assignedCandidates.some(ac => ac.candidateId 
+        //   === candidate._id.toString())
+        !selectedCandidates.some(selected => selected._id === candidate._id)
+        // Remove the restriction that prevents selecting already assigned candidates
     );
 
     if (newCandidates.length > 0) {
@@ -147,13 +352,21 @@ const ShareAssessment = ({
   const handleClearAllCandidates = () => {
     setSelectedCandidates([]);
   };
-
+//
   const handleAddNewCandidateClick = () => {
     setShowMainContent(false);
-    setShowNewCandidateContent(true);
+    // <------------------------------- v1.0.0 
+    navigate('/candidate/new');
+    // ------------------------------ v1.0.0 >
   };
-
+  // <---------------------- v1.0.1 >
   const handleShareClick = async () => {
+    // Validate assessment selection when fromscheduleAssessment is true
+    if (fromscheduleAssessment && !selectedAssessment) {
+      setErrors({ ...errors, Assessment: 'Please select an assessment template.' });
+      return;
+    }
+
     if (selectedCandidates.length === 0) {
       setErrors({ ...errors, Candidate: 'Please select at least one candidate.' });
       return;
@@ -161,39 +374,39 @@ const ShareAssessment = ({
 
     setIsLoading(true);
     const result = await shareAssessmentAPI({
-      assessmentId: assessment._id,
+      assessmentId: fromscheduleAssessment ? selectedAssessment._id : assessment._id,
       selectedCandidates,
       linkExpiryDays,
       onClose: onCloseshare,
       setErrors,
       setIsLoading,
       organizationId,
-      userId
+      userId,
+      queryClient
     });
 
     if (result.success) {
-      await fetchAssignedCandidates();
+      // React Query will handle data refresh automatically
+      // No need to manually fetch data
     } else {
       toast.error(result.message || 'Failed to schedule assessment');
     }
     setIsLoading(false);
   };
-
+// <-------------------------------v1.0.3 >
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center">
+    <div 
+      className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center"
+      onClick={onCloseshare}
+    >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative"
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {isLoading && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 rounded-lg">
-            <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-              <p className="text-lg font-medium">Sending emails...</p>
-            </div>
-          </div>
+            <Loading message='Sending emails...' />
         )}
 
         {isSuccess && (
@@ -222,12 +435,13 @@ const ShareAssessment = ({
             </div>
           </div>
         )}
+        {/* <------------------------------- v1.0.0  */}
+        {showMainContent && (
 
-        {showMainContent ? (
           <>
-            <div className="sticky top-0 p-4 rounded-t-lg flex justify-between items-center z-10 border-b">
+            <div className="sticky top-0 p-4 rounded-t-lg flex justify-between items-center z-10">
               <div>
-                <h2 className="text-xl font-semibold">Share Assessment</h2>
+                <h2 className="text-xl font-bold">Share Assessment</h2>
               </div>
               <button
                 className=" transition-colors p-1 rounded-full"
@@ -238,10 +452,105 @@ const ShareAssessment = ({
             </div>
 
             <div className="p-4">
-              <p className='font-semibold mb-2'>Assessment Template Title: <span className="text-sm text-custom-blue">{assessment.AssessmentTitle}</span></p>
+              {/* <---------------------- v1.0.1 */}
+              {/* Assessment Template Selection */}
+              {fromscheduleAssessment ? (
+                <div className="mb-6">
+                  <label
+                    htmlFor="Assessment"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Assessment Template <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative" ref={assessmentDropdownRef}>
+                    <div
+                      className={`flex items-center border rounded-lg px-3 py-2 ${errors.Assessment ? 'border-red-500' : 'border-gray-300'
+                        } focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors`}
+                      onClick={() => setShowDropdownAssessment(true)}
+                    >
+                      <input
+                        ref={assessmentInputRef}
+                        type="text"
+                        className="flex-grow outline-none text-sm bg-transparent"
+                        value={assessmentInput}
+                        onChange={handleAssessmentInputChange}
+                        onFocus={() => {
+                          setShowDropdownAssessment(true);
+                          if (!assessmentInput) {
+                            // LAZY LOADING: Filter assessments with sections using cached data
+                            const filterAssessmentsWithSections = async () => {
+                              const filteredAssessmentsWithSections = [];
+                              
+                              for (const assessment of assessmentData) {
+                                const sectionCount = assessmentSections[assessment._id] ?? 0;
+                                if (sectionCount > 0) {
+                                  filteredAssessmentsWithSections.push(assessment);
+                                } else if (sectionsCache[assessment._id] === undefined && !sectionsLoading[assessment._id]) {
+                                  // Fetch sections if not cached
+                                  const result = await fetchAssessmentSections(assessment._id);
+                                  if (result.sections > 0) {
+                                    filteredAssessmentsWithSections.push(assessment);
+                                  }
+                                }
+                              }
+                              
+                              setFilteredAssessments(filteredAssessmentsWithSections);
+                            };
 
+                            filterAssessmentsWithSections();
+                          }
+                        }}
+                        placeholder="Search assessment templates..."
+                        autoComplete="off"
+                      />
+                      <MdArrowDropDown
+                        onClick={handleAssessmentDropdownToggle}
+                        className={`text-gray-500 hover:text-gray-700 cursor-pointer transition-transform ${showDropdownAssessment ? 'transform rotate-180' : ''
+                          }`}
+                      />
+                    </div>
+
+                    {errors.Assessment && (
+                      <p className="mt-1 text-sm text-red-500">{errors.Assessment}</p>
+                    )}
+
+                    {showDropdownAssessment && (
+                      <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                        <div className="sticky top-0 p-2 border-b border-gray-200 bg-gray-50">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Available Assessment Templates ({filteredAssessments.length})
+                          </p>
+                        </div>
+                        <ul className="divide-y divide-gray-100">
+                          {filteredAssessments.length > 0 ? (
+                            filteredAssessments.map((assessment) => (
+                              <li
+                                key={assessment._id}
+                                className="px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                                onClick={() => handleAssessmentSelect(assessment)}
+                              >
+                                <span className="text-sm font-medium text-gray-900">
+                                  {assessment.AssessmentTitle}
+                                </span>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-4 py-2 text-sm text-gray-500">
+                              No matching assessment templates found
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                
+                <p className='font-semibold mb-2'>Assessment Template Title: <span className="text-sm text-custom-blue">{assessment.AssessmentTitle}</span></p>
+              )}
+         {/* <---------------------- v1.0.1 > */}
               <div className="mb-6">
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center justify-between mb-2">
                   <label
                     htmlFor="Candidate"
                     className="block text-sm font-medium text-gray-700"
@@ -250,9 +559,9 @@ const ShareAssessment = ({
                   </label>
                   <button
                     onClick={handleAddNewCandidateClick}
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                    className="flex items-center text-sm text-custom-blue hover:text-custom-blue/90"
                   >
-                    <IoIosAddCircle className="mr-1" />
+                    <Plus className="mr-1 w-5 h-5"/>
                     Add New Candidate
                   </button>
                 </div>
@@ -272,8 +581,12 @@ const ShareAssessment = ({
                       onFocus={() => {
                         setShowDropdownCandidate(true);
                         if (!candidateInput) {
-                          setFilteredCandidates(candidateData);
+                        // <---------------------- v1.0.1
+                          
+                          // Use already loaded candidate data
+                          setFilteredCandidates(candidateData || []);
                         }
+                        // <---------------------- v1.0.1 >
                       }}
                       placeholder="Search by name or email..."
                       autoComplete="off"
@@ -317,20 +630,17 @@ const ShareAssessment = ({
                       <ul className="divide-y divide-gray-100">
                         {filteredCandidates.length > 0 ? (
                           filteredCandidates.map((candidate) => {
-                            const assignedSchedules = assignedCandidates.filter(
-                              (ac) => ac.candidateId === candidate._id.toString()
-                            );
-                            const isAssigned = assignedSchedules.length > 0;
                             const isSelected = selectedCandidates.some(
                               (selected) => selected._id === candidate._id
                             );
 
                             return (
+                              // <-------------------------------v1.0.3
                               <li
                                 key={candidate._id}
-                                className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${isAssigned ? 'bg-yellow-50' :
+                                className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
                                   isSelected ? 'bg-blue-50' : ''
-                                  }`}
+                                }`}
                                 onClick={() => handleCandidateSelect(candidate)}
                               >
                                 <div className="flex items-center">
@@ -343,11 +653,8 @@ const ShareAssessment = ({
                                     </span>
                                   )}
                                 </div>
-                                {isAssigned ? (
-                                  <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                                    Assigned
-                                  </span>
-                                ) : isSelected ? (
+                                {isSelected ? (
+                                  // <-------------------------------v1.0.3
                                   <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full">
                                     Selected
                                   </span>
@@ -407,8 +714,10 @@ const ShareAssessment = ({
               </button>
               <button
                 onClick={handleShareClick}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-                disabled={isLoading || selectedCandidates.length === 0}
+                className="px-6 py-2 bg-custom-blue hover:bg-custom-blue/90 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                // <---------------------- v1.0.1
+                disabled={isLoading || selectedCandidates.length === 0 || (fromscheduleAssessment && !selectedAssessment)}
+                // <---------------------- v1.0.1 >
               >
                 {isLoading ? (
                   <span className="flex items-center">
@@ -440,9 +749,8 @@ const ShareAssessment = ({
               </button>
             </div>
           </>
-        ) : (
-          <>{showNewCandidateContent && <div>{/* Add New Candidate Form */}</div>}</>
         )}
+        {/* ------------------------------ v1.0.0 > */}
       </div>
     </div>
   );

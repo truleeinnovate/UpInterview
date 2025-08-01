@@ -23,11 +23,11 @@ const RoleSchema = new Schema({
     level: {
         type: Number,
     },
-    inherits: {
-        type: [Schema.Types.ObjectId],
-        ref: 'Role',
-        default: [],
-    },
+inherits: {
+    type: [Schema.Types.ObjectId],
+    ref: 'Role',
+    default: [],
+},
     // canAssign: {
     //     type: [Schema.Types.ObjectId],
     //     ref: 'Role',
@@ -42,8 +42,10 @@ const RoleSchema = new Schema({
     },
     tenantId: { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization',
+        ref: 'Tenant',
     }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Role', RoleSchema);
+
+

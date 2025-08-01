@@ -1,6 +1,12 @@
-
+// v1.0.0  -  Ashraf  -  fixed name assessment to assessment template
 const AssessmentQuestionsSchema = require('../models/AssessmentQuestions')
 const mongoose = require('mongoose');
+ // <-------------------------------v1.0.0
+const Assessment = require("../models/assessmentTemplates");
+// ------------------------------v1.0.0 >
+
+
+
 
 // exports.getByAssessmentQuestionsId = async (req, res) => {
 //   try {
@@ -138,3 +144,37 @@ exports.upsertAssessmentQuestions = async (req, res) => {
     });
   }
 };
+
+
+// // assessment questions position, interview, intevriew template
+// // get assessment questions By ID
+// exports.getAssessmentById = async (req, res) => {
+//     try {
+//       if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+//         return res.status(400).json({ success: false, message: 'Invalid assessment ID format', sections: [] });
+//       }
+ 
+//       // Fetch the assessment
+//       const assessment = await Assessment.findById(req.params.id);
+//       if (!assessment) {
+//         return res.status(404).json({ success: false, message: 'Assessment not found', sections: [] });
+//       }
+ 
+//       // Fetch associated questions with full structure
+//       const assessmentQuestions = await AssessmentQuestionsSchema.findOne({ assessmentId: req.params.id }).lean();
+ 
+//       // if (!assessmentQuestions) {
+//       //   return res.status(404).json({ success: false, message: 'Questions not found for assessment' });
+//       // }
+     
+//       // Return combined data
+//       res.status(200).json({
+//         ...assessment.toObject(),
+//          sections: (assessmentQuestions && assessmentQuestions.sections) ? assessmentQuestions.sections : [],
+//         // sections: assessmentQuestions?.sections || [], // Return full section/question structure
+//       });
+//     } catch (error) {
+//       console.error("Error fetching assessment:", error);
+//       res.status(500).json({ success: false, error: "Internal server error", message: error.message });
+//     }
+//   };

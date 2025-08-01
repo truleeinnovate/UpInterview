@@ -1,28 +1,28 @@
-import React from 'react';
+// v1.0.0 - Ashok - fixed the default profile icon issue
+import React from "react";
 
 import {
-  User ,
-  Mail ,
-  Phone ,
+  User,
+  Mail,
+  Phone,
   Building2,
   Pencil,
-  Check ,
+  Check,
   X,
-  ArrowLeft ,
-  GraduationCap
-} from 'lucide-react';
+  ArrowLeft,
+  GraduationCap,
+} from "lucide-react";
 
-import { useNavigate } from 'react-router-dom';
-
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
-  
   const navigate = useNavigate();
 
   if (!candidate) return null;
 
   return (
-    <aside className={`
+    <aside
+      className={`
       fixed lg:relative  lg:block xl:relative 2xl:relative
       w-[100%] sm:w-[100%] md:w-[100%] lg:w-[25%] xl:w-[25%] 2xl:w-[25%]
        h-full md:h-screen lg:h-screen xl:h-screen 2xl:h-screen sm:pt-4 
@@ -31,49 +31,71 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
       shadow-md lg:shadow-lg 
       transition-transform duration-300
       z-40
-      ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 xl:translate-x-0 2xl:translate-x-0'}
-    `}>
+      ${
+        isOpen
+          ? "translate-x-0"
+          : "-translate-x-full lg:translate-x-0 xl:translate-x-0 2xl:translate-x-0"
+      }
+    `}
+    >
       <div className="h-full overflow-y-auto ">
         <div className="px-9 py-2 border-b border-gray-100">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() =>navigate('/candidate')}
+                onClick={() => navigate("/candidate")}
                 className="p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
                 title="Back to Dashboard"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-5 h-5" />
               </button>
-              <h2 className="text-lg font-bold  text-custom-blue">
-                Profile
-              </h2>
+              <h2 className="text-lg font-bold  text-custom-blue">Profile</h2>
             </div>
             <div className="flex gap-1.5">
               <button
-                onClick={() =>   navigate(`edit`)}
+                onClick={() => navigate(`edit`)}
                 className="p-1.5 rounded-full bg-custom-bg text-custom-blue  transition-colors"
               >
-                {editMode ? <Check className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+                {editMode ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Pencil className="w-5 h-5" />
+                )}
               </button>
               <button
-               onClick={() => onClose()}
+                onClick={() => onClose()}
                 className="sm:block md:block lg:hidden xl:hidden 2xl:hidden p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
           <div className="mb-3">
             <div className="w-16 h-16 bg-custom-blue rounded-full mx-auto flex items-center justify-center mb-2 shadow-lg">
-              <User className="w-8 h-8 text-custom-bg opacity-75" />
+              {/* v1.0.0 ------------------------------------------------- */}
+              {candidate?.ImageData ? (
+                <img
+                  className="w-full h-full object-cover rounded-full"
+                  src={candidate?.ImageData?.path}
+                  alt={candidate?.FirstName || "candidate"}
+                />
+              ) : (
+                <User className="w-8 h-8 text-custom-bg opacity-75" />
+              )}
+              {/* v1.0.0 ------------------------------------------------- */}
             </div>
-           
-              <h3 className="text-center font-bold text-lg">{candidate?.FirstName || ''} {candidate.LastName || 'N/A'}</h3>
 
-          
-              <p className="text-center text-base  pt-1 pb-2 text-gray-600">{candidate.CurrentRole || 'position'}</p>
-           
+            <h3 className="text-center font-bold text-lg">
+              {candidate?.FirstName.charAt(0).toUpperCase() +
+                candidate?.FirstName.slice(1)}{" "}
+              {candidate?.LastName.charAt(0).toUpperCase() +
+                candidate?.LastName.slice(1)}
+            </h3>
+
+            <p className="text-center text-base  pt-1 pb-2 text-gray-600">
+              {candidate.CurrentRole || "position"}
+            </p>
           </div>
         </div>
 
@@ -83,45 +105,45 @@ const Sidebar = ({ candidate, editMode, onEdit, isOpen, onClose }) => {
               <div className="flex items-center">
                 <Mail className="text-gray-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
                 <div className="min-w-0 flex-1 pb-2 pt-2">
-                
-                    <span className="block truncate text-sm">{candidate?.Email || '?'}</span>
-                 
+                  <span className="block truncate text-sm">
+                    {candidate?.Email || "?"}
+                  </span>
                 </div>
               </div>
-              
+
               <div className="flex items-center">
                 <Phone className="text-green-500 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
                 <div className="min-w-0 flex-1  pb-2 pt-2">
-                
-                    <span className="block truncate text-sm">{candidate?.Phone || 'N/A'}</span>
-                
+                  <span className="block truncate text-sm">
+                    {candidate?.Phone || "N/A"}
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center">
-              <GraduationCap  className="text-black mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
+                <GraduationCap className="text-black mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
                 <div className="min-w-0 flex-1 pb-2 pt-2">
-              
-                    <span className="block truncate text-sm">{candidate?.HigherQualification ||'?'}</span>
-         
+                  <span className="block truncate text-sm">
+                    {candidate?.HigherQualification || "?"}
+                  </span>
                 </div>
               </div>
-              
 
-              
               <div className="flex items-center">
-                <Building2  className="text-blue-600 mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0"  />
+                <Building2 className="text-custom-blue mr-4 ml-3 w-5 h-5 sm:h-4 flex-shrink-0" />
                 <div className="min-w-0 flex-1  pb-2 pt-2">
-                    <span className="block truncate text-sm">{candidate?.UniversityCollege ||'?'}</span>
+                  <span className="block truncate text-sm">
+                    {candidate?.UniversityCollege || "?"}
+                  </span>
                 </div>
               </div>
-
-
             </div>
           </div>
 
           <div className="bg-white  rounded-lg p-3 sm:p-4 shadow-sm border  border-gray-100">
-            <h3 className="font-bold mb-2 sm:mb-3 text-gray-700 text-lg text-center sm:text-base">Skills</h3>
+            <h3 className="font-bold mb-2 sm:mb-3 text-gray-700 text-lg text-center sm:text-base">
+              Skills
+            </h3>
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {candidate.skills?.map((skill, index) => (
                 <span

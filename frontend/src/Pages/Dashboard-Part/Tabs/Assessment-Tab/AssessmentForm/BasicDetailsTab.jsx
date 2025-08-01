@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+// v1.0.0  -  Ashraf  -  assessment to assesment templates added in fileds
+// v1.0.1  -  Ashok   -  Added scroll to first error functionality
+
+import React, { useEffect, useRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { ReactComponent as CgInfo } from "../../../../../icons/CgInfo.svg";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
@@ -25,6 +28,7 @@ const BasicDetailsTab = ({
   handleChange,
   handleIconClick,
   showMessage,
+  setShowMessage,
   selectedPosition,
   // toggleDropdownPosition,
   showDropdownPosition,
@@ -51,6 +55,9 @@ const BasicDetailsTab = ({
   setShowDropdownDuration,
   positions,
   errors,
+  // v1.0.1 <----------------------------------------
+  fieldRefs,
+  // v1.0.1 <----------------------------------------
 }) => {
   // Refs for dropdown containers
   const linkExpiryRef = useRef(null);
@@ -70,13 +77,19 @@ const BasicDetailsTab = ({
 
   // Handle click outside dropdowns
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleClickOutside = (event) => {
       if (
-        (linkExpiryRef.current && !linkExpiryRef.current.contains(event.target)) &&
-        (assessmentTypeRef.current && !assessmentTypeRef.current.contains(event.target)) &&
-        (positionRef.current && !positionRef.current.contains(event.target)) &&
-        (difficultyRef.current && !difficultyRef.current.contains(event.target)) &&
-        (durationRef.current && !durationRef.current.contains(event.target))
+        linkExpiryRef.current &&
+        !linkExpiryRef.current.contains(event.target) &&
+        assessmentTypeRef.current &&
+        !assessmentTypeRef.current.contains(event.target) &&
+        positionRef.current &&
+        !positionRef.current.contains(event.target) &&
+        difficultyRef.current &&
+        !difficultyRef.current.contains(event.target) &&
+        durationRef.current &&
+        !durationRef.current.contains(event.target)
       ) {
         closeAllDropdowns();
       }
@@ -116,20 +129,29 @@ const BasicDetailsTab = ({
   return (
     <div>
       <form>
+        {/* // <---------------------- v1.0.0 */}
+
         <div className="space-y-6 px-12">
-          <div className="font-semibold text-xl mb-5">Assessment Details:</div>
+          <div className="font-semibold text-xl mb-5">
+            Assessment Template Details:
+          </div>
+          {/* // <---------------------- v1.0.0 */}
 
           {/* Assessment Name and Type */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             <div>
+              {/* // <---------------------- v1.0.0 */}
               <label
                 htmlFor="AssessmentTitle"
                 className="block text-sm font-medium text-gray-700"
               >
-                Assessment Name <span className="text-red-500">*</span>
+                Assessment Template Name <span className="text-red-500">*</span>
               </label>
+              {/* // <---------------------- v1.0.0 */}
               <div className="mt-1">
                 <input
+                  // v1.0.1 <---------------------------------------------------------------------
+                  ref={fieldRefs.AssessmentTitle}
                   type="text"
                   name="AssessmentTitle"
                   id="AssessmentTitle"
@@ -138,16 +160,29 @@ const BasicDetailsTab = ({
                   onChange={(e) =>
                     handleInputChange("AssessmentTitle", e.target.value)
                   }
+                  placeholder="Enter Assessment Name"
                   autoComplete="off"
-                  className={`block w-full border ${errors.AssessmentTitle ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  // className={`block w-full border ${
+                  //   errors.AssessmentTitle
+                  //     ? "border-red-500"
+                  //     : "border-gray-300"
+                  // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                    border ${
+                      errors.AssessmentTitle
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
+                    }
+                    focus:outline-gray-300
+                  `}
                 />
+                {/* v1.0.1 <---------------------------------------------------------------------- */}
                 {formData?.AssessmentTitle?.length >=
                   assessmentTitleLimit * 0.75 && (
-                    <div className="text-right text-xs text-gray-500">
-                      {formData?.AssessmentTitle?.length}/{assessmentTitleLimit}
-                    </div>
-                  )}
+                  <div className="text-right text-xs text-gray-500">
+                    {formData?.AssessmentTitle?.length}/{assessmentTitleLimit}
+                  </div>
+                )}
                 {errors.AssessmentTitle && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.AssessmentTitle}
@@ -155,7 +190,6 @@ const BasicDetailsTab = ({
                 )}
               </div>
             </div>
-
 
             <div>
               <label
@@ -165,7 +199,9 @@ const BasicDetailsTab = ({
                 No. of Questions <span className="text-red-500">*</span>
               </label>
               <div className="mt-1">
+                {/* v1.0.1 <----------------------------------------------------------------------------- */}
                 <input
+                  ref={fieldRefs.NumberOfQuestions}
                   type="number"
                   name="NumberOfQuestions"
                   value={formData.NumberOfQuestions}
@@ -175,11 +211,23 @@ const BasicDetailsTab = ({
                   max="100"
                   step="1"
                   autoComplete="off"
-                  placeholder="Enter number of questions"
-                  className={`block w-full border ${errors.NumberOfQuestions ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  placeholder="Enter Number of Questions"
+                  // className={`block w-full border ${
+                  //   errors.NumberOfQuestions
+                  //     ? "border-red-500"
+                  //     : "border-gray-300"
+                  // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                    border ${
+                      errors.NumberOfQuestions
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
+                    }
+                    focus:outline-gray-300
+                  `}
                   onKeyDown={(e) => e.preventDefault()} // 👈 Prevent typing
                 />
+                {/* v1.0.1 -----------------------------------------------------------------------------> */}
 
                 {errors.NumberOfQuestions && (
                   <p className="text-red-500 text-sm mt-1">
@@ -189,91 +237,72 @@ const BasicDetailsTab = ({
               </div>
             </div>
 
-            {/* Assessment Type */}
-            {/* <div ref={assessmentTypeRef}>
-        <label
-          htmlFor="AssessmentType"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Assessment Type <span className="text-red-500">*</span>
-        </label>
-        <div className="relative mt-1">
-          <div
-            className={`flex items-center justify-between border ${errors.AssessmentType ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-            onClick={modifiedToggleAssessment}
-          >
-            <div className="flex flex-wrap gap-1">
-              {Array.isArray(selectedAssessmentType) &&
-                selectedAssessmentType.map((type) => (
-                  <div
-                    key={type}
-                    className="flex items-center bg-gray-200 rounded text-xs px-2 py-1"
-                  >
-                    {type}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveAssessmentType(type);
-                      }}
-                      className="ml-1 text-gray-500 hover:text-gray-700"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              {selectedAssessmentType?.length === 0 && (
-                <span className="text-gray-400">Select assessment type</span>
-              )}
-            </div>
-            <div className="flex items-center">
-              {selectedAssessmentType?.length > 0 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedAssessmentType([]);
-                    setFormData((prevData) => ({
-                      ...prevData,
-                      AssessmentType: [],
-                    }));
-                  }}
-                  className="text-gray-500 hover:text-gray-700 mr-2"
-                >
-                  ×
-                </button>
-              )}
-              <MdArrowDropDown className="text-gray-500 text-lg" />
-            </div>
-          </div>
-          {showDropdownAssessment && (
-            <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-60 overflow-y-auto">
-              {assessmentTypes.map((questionType) => (
+            {/* Assessment Type - Commented out for now */}
+            {/* 
+            <div ref={assessmentTypeRef}>
+              <label
+                htmlFor="AssessmentType"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Assessment Type <span className="text-red-500">*</span>
+              </label>
+              <div className="relative mt-1">
                 <div
-                  key={questionType}
-                  className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm"
-                  onClick={() => {
-                    handleAssessmentTypeSelect(questionType);
-                    setShowDropdownAssessment(false);
-                  }}
+                  className={`flex items-center justify-between border ${errors.AssessmentType ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  onClick={modifiedToggleAssessment}
                 >
-                  {questionType}
+                  <div className="flex flex-wrap gap-1">
+                    {Array.isArray(selectedAssessmentType) &&
+                      selectedAssessmentType.map((type) => (
+                        <div
+                          key={type}
+                          className="flex items-center bg-gray-200 rounded text-xs px-2 py-1"
+                        >
+                          {type}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveAssessmentType(type);
+                            }}
+                            className="ml-1 text-gray-500 hover:text-gray-700"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    {selectedAssessmentType?.length === 0 && (
+                      <span className="text-gray-400">Select assessment type</span>
+                    )}
+                  </div>
+                  <div className="flex items-center">
+                    {selectedAssessmentType?.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAssessmentType([]);
+                          setFormData((prevData) => ({
+                            ...prevData,
+                            AssessmentType: [],
+                          }));
+                        }}
+                        className="text-gray-500 hover:text-gray-700 mr-2"
+                      >
+                        ×
+                      </button>
+                    )}
+                    <MdArrowDropDown className="text-gray-500 text-lg" />
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
-          {errors.AssessmentType && (
-            <p className="text-red-500 text-sm mt-1">{errors.AssessmentType}</p>
-          )}
-        </div>
-      </div> */}
+            */}
           </div>
 
           {/* No. of Questions and Assessment Status */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
-
-
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Assessment Status
@@ -303,7 +332,6 @@ const BasicDetailsTab = ({
                 </span>
               </div>
             </div>
-
           </div>
 
           <div className="font-semibold text-xl mb-5">Additional Details:</div>
@@ -328,17 +356,25 @@ const BasicDetailsTab = ({
                   <CgInfo className="w-4 h-4" />
                 </button>
                 {showMessage && (
-                  <div className="absolute mt-6 ml-0 max-w-xs bg-white text-gray-700 text-sm border border-gray-200 rounded-md p-2 shadow-lg z-10">
-                    Depending on the position, we can offer sections with tailored questions.
+                  <div
+                    onClick={() => setShowMessage(false)}
+                    className="absolute mt-6 ml-0 max-w-xs bg-white text-gray-700 text-sm border border-gray-200 rounded-md p-2 shadow-lg z-10 cursor-pointer"
+                  >
+                    Depending on the position, we can offer sections with
+                    tailored questions.
                   </div>
                 )}
               </div>
 
               <div className="mt-1 relative">
                 <div
-                  className={`relative w-full cursor-default rounded-md border ${errors.Position ? 'border-red-500' : 'border-gray-300'
-                    } bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 ${errors.Position ? 'focus:ring-red-500' : 'focus:ring-blue-500'
-                    } sm:text-sm min-h-[42px] flex items-center`}
+                  className={`relative w-full cursor-default rounded-md border ${
+                    errors.Position ? "border-red-500" : "border-gray-300"
+                  } bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 ${
+                    errors.Position
+                      ? "focus:ring-red-500"
+                      : "focus:ring-blue-500"
+                  } sm:text-sm min-h-[42px] flex items-center`}
                   onClick={modifiedTogglePosition}
                   aria-haspopup="listbox"
                   aria-expanded={showDropdownPosition}
@@ -357,41 +393,63 @@ const BasicDetailsTab = ({
                           aria-label="Remove selection"
                         >
                           <span className="sr-only">Remove</span>
-                          <svg className="h-2.5 w-2.5" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                            <path strokeLinecap="round" strokeWidth="1.5" d="M1 1l6 6m0-6L1 7" />
+                          <svg
+                            className="h-2.5 w-2.5"
+                            stroke="currentColor"
+                            fill="none"
+                            viewBox="0 0 8 8"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeWidth="1.5"
+                              d="M1 1l6 6m0-6L1 7"
+                            />
                           </svg>
                         </button>
                       </span>
                     </span>
                   ) : (
-                    <span className="text-gray-500">Select position</span>
+                    <span className="text-gray-500">Select Position</span>
                   )}
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <MdArrowDropDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <MdArrowDropDown
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
                   </span>
                 </div>
 
                 {showDropdownPosition && (
                   <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-60 overflow-auto focus:outline-none sm:text-sm">
                     <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-2">
-                      <p className="font-medium text-gray-700 text-sm">Recent Positions</p>
+                      <p className="font-medium text-gray-700 text-sm">
+                        Recent Positions
+                      </p>
                     </div>
-                    <ul className="py-1">
-                      {positions.map((position) => (
-                        <li
-                          key={position._id}
-                          className="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-50"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePositionSelect(position);
-                            setShowDropdownPosition(false);
-                          }}
-                        >
-                          <div className="flex items-center">
-                            <span className="ml-3 block truncate">{position.title}</span>
-                          </div>
-                        </li>
-                      ))}
+                    <ul>
+                      {positions.length === 0 ? (
+                        <div className="text-gray-500 py-2 px-4">
+                          No recent positions found
+                        </div>
+                      ) : (
+                        positions.map((position) => (
+                          <li
+                            key={position._id}
+                            className="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePositionSelect(position);
+                              setShowDropdownPosition(false);
+                            }}
+                          >
+                            <div className="flex items-center">
+                              <span className="ml-3 block truncate">
+                                {position.title}
+                              </span>
+                            </div>
+                          </li>
+                        ))
+                      )}
                     </ul>
                     <div className="border-t border-gray-200 px-4 py-2">
                       <button
@@ -421,13 +479,28 @@ const BasicDetailsTab = ({
                 Difficulty Level <span className="text-red-500">*</span>
               </label>
               <div className="relative mt-1">
+                {/* v1.0.1 <---------------------------------------------------------------------- */}
                 <div
-                  className={`flex items-center border ${errors.DifficultyLevel ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  ref={fieldRefs.DifficultyLevel}
+                  // className={`flex items-center border ${
+                  //   errors.DifficultyLevel
+                  //     ? "border-red-500"
+                  //     : "border-gray-300"
+                  // } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  className={`mt-1 flex items-center w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                    border ${
+                      errors.DifficultyLevel
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
+                    }
+                    focus:outline-gray-300
+                  `}
                   onClick={modifiedToggleDifficulty}
                 >
                   {selectedDifficulty || (
-                    <span className="text-gray-400">Select difficulty level</span>
+                    <span className="text-gray-400">
+                      Select Difficulty Level
+                    </span>
                   )}
                   <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
                 </div>
@@ -450,6 +523,7 @@ const BasicDetailsTab = ({
                   </p>
                 )}
               </div>
+              {/* v1.0.1 <---------------------------------------------------------------------- */}
             </div>
           </div>
 
@@ -465,12 +539,13 @@ const BasicDetailsTab = ({
               </label>
               <div className="relative mt-1">
                 <div
-                  className={`flex items-center border ${errors.Duration ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  className={`flex items-center border ${
+                    errors.Duration ? "border-red-500" : "border-gray-300"
+                  } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
                   onClick={modifiedToggleDuration}
                 >
                   {selectedDuration || (
-                    <span className="text-gray-400">Select duration</span>
+                    <span className="text-gray-400">Select Duration</span>
                   )}
                   <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
                 </div>
@@ -488,21 +563,21 @@ const BasicDetailsTab = ({
                   </div>
                 )}
                 {errors.Duration && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.Duration}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.Duration}</p>
                 )}
               </div>
             </div>
 
             {/* Expiry Date */}
             <div>
+              {/* // <---------------------- v1.0.0 */}
               <label
                 htmlFor="expiry"
                 className="block text-sm font-medium text-gray-700"
               >
-                Expiry Date
+                Template Expiry Date
               </label>
+              {/* // <---------------------- v1.0.0 */}
               <div className="mt-1">
                 <DatePicker
                   selected={startDate}
@@ -518,7 +593,6 @@ const BasicDetailsTab = ({
                 )}
               </div>
             </div>
-
           </div>
 
           {/* Link Expiry Days */}
@@ -532,8 +606,9 @@ const BasicDetailsTab = ({
               </label>
               <div className="relative mt-1">
                 <div
-                  className={`flex items-center border ${errors.LinkExpiryDays ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
+                  className={`flex items-center border ${
+                    errors.LinkExpiryDays ? "border-red-500" : "border-gray-300"
+                  } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
                   onClick={modifiedToggleLinkExpiry}
                 >
                   {linkExpiryDays || (
@@ -543,7 +618,8 @@ const BasicDetailsTab = ({
                 </div>
                 {showLinkExpiryDay && (
                   <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-24 overflow-y-auto">
-                    {Array.from({ length: 15 }, (_, index) => index + 1).map(
+                    {/* // <---------------------- v1.0.0 */}
+                    {Array.from({ length: 10 }, (_, index) => index + 1).map(
                       (days) => (
                         <div
                           key={days}
@@ -563,6 +639,7 @@ const BasicDetailsTab = ({
                     )}
                   </div>
                 )}
+                {/* // <---------------------- v1.0.0 */}
                 {errors.LinkExpiryDays && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.LinkExpiryDays}
@@ -572,7 +649,6 @@ const BasicDetailsTab = ({
             </div>
             <div></div> {/* Empty div to maintain grid structure */}
           </div>
-
         </div>
       </form>
 

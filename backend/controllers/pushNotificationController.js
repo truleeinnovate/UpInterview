@@ -5,7 +5,7 @@ exports.getNotifications = async (req, res) => {
   try {
     const ownerId = req.params.ownerId;
     const notifications = await PushNotification.find({ ownerId })
-      .sort({ updatedAt: -1 });
+      .sort({ _id: -1 });
     res.json(notifications);
   } catch (error) {
     res.status(500).json({ message: error.message });
