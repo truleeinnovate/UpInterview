@@ -53,6 +53,7 @@ const ScheduleAssessment = () => {
   const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [selectedAction, setSelectedAction] = useState(''); // 'extend', 'cancel', or 'resend'
+  const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] = useState(null);
   // Function to check if action buttons should be shown based on schedule status
   const shouldShowActionButtons = (schedule) => {
     const status = schedule.status?.toLowerCase();
@@ -194,25 +195,33 @@ const ScheduleAssessment = () => {
     setIsShareOpen(false);
   };
 
+  // Simple helper to get assessment template ID
+  const getAssessmentTemplateId = (row) => {
+    return row?.assessmentId?._id || row?.assessmentId;
+  };
+
   const handleResendClick = (schedule) => {
+    // Get assessment template ID directly from the row data
+    const assessmentTemplateId = getAssessmentTemplateId(schedule);
+    console.log('Debug - Resend Assessment Template ID:', assessmentTemplateId);
+    
     // Use the same logic as handleActionClick since candidate data is already available
     handleActionClick(schedule, 'resend');
-    console.log();
-    
   };
 
   // <---------------------- v1.0.3
   const handleActionClick = async (schedule, action) => {
     try {
+      // Get and store the assessment template ID from the original row data
+      const assessmentTemplateId = getAssessmentTemplateId(schedule);
+      setSelectedAssessmentTemplateId(assessmentTemplateId);
+      console.log('Debug - Stored Assessment Template ID:', assessmentTemplateId);
+      
       // Fetch candidate data for this schedule if not already available
       if (!schedule.candidates || schedule.candidates.length === 0) {
-        const assessmentId =
-          typeof schedule.assessmentId === "object"
-            ? schedule.assessmentId._id
-            : schedule.assessmentId;
-        if (assessmentId) {
+        if (assessmentTemplateId) {
           const response = await axios.get(
-            `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
+            `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentTemplateId}/schedules`
           );
           if (response.data.success && response.data.data) {
             const scheduleWithCandidates = response.data.data.find(
@@ -584,24 +593,24 @@ const ScheduleAssessment = () => {
       )}
       {/* <---------------------- v1.0.1 > */}
       {/* <---------------------- v1.0.3 */}
-      {isActionPopupOpen && selectedSchedule && (
-        <AssessmentActionPopup
-          isOpen={isActionPopupOpen}
-          onClose={() => {
-            setIsActionPopupOpen(false);
-            setSelectedSchedule(null);
-            setSelectedAction("");
-          }}
-          schedule={{
-            ...selectedSchedule, 
-            assessmentId: selectedSchedule.assessmentId
-
-          }}
-          candidates={selectedSchedule.candidates || []}
-          onSuccess={handleActionSuccess}
-          defaultAction={selectedAction}
-        />
-      )}
+             {isActionPopupOpen && selectedSchedule && (
+         <AssessmentActionPopup
+           isOpen={isActionPopupOpen}
+           onClose={() => {
+             setIsActionPopupOpen(false);
+             setSelectedSchedule(null);
+             setSelectedAction("");
+             setSelectedAssessmentTemplateId(null);
+           }}
+           schedule={{
+             ...selectedSchedule, 
+             assessmentId: selectedAssessmentTemplateId
+           }}
+           candidates={selectedSchedule.candidates || []}
+           onSuccess={handleActionSuccess}
+           defaultAction={selectedAction}
+         />
+       )}
       {/* ------------------------------ v1.0.3 > */}
     </div>
   );
