@@ -112,12 +112,12 @@
            animate={{ x: 0, opacity: 1 }}
            transition={{ duration: 0.3 }}
          >
-           <h3 className="text-xl font-semibold text-gray-800">All Feedbacks</h3>
+           <h3 className="text-xl font-semibold text-gray-800">All Feedback</h3>
            <motion.span
              className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200"
              whileHover={{ scale: 1.05 }}
            >
-             {feedbacks?.length} Feedbacks
+             {feedbacks?.length} Feedback
            </motion.span>
          </motion.div>
          {/*<-----v1.0.0----- */}
@@ -126,7 +126,7 @@
            {feedbacks.length === 0 ? (
              <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
                <Briefcase className="w-16 h-16 text-gray-300 mb-4" />
-               <h3 className="text-lg font-medium text-gray-700 mb-2">No Feedbacks Found</h3>
+               <h3 className="text-lg font-medium text-gray-700 mb-2">No Feedback Found</h3>
                <p className="text-gray-500 text-center max-w-md">
                  There are no feedbacks to display at the moment.
                </p>

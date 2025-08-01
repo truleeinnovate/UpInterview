@@ -40,7 +40,27 @@ const CustomProvider = ({ children }) => {
   // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   // const [createdLists, setCreatedLists] = useState([]);
 
-  // const [interviewerSectionData, setInterviewerSectionData] = useState([]);
+  const [interviewerSectionData, setInterviewerSectionData] = useState([
+    {
+      id: 1,
+      question: "Tell me about your experience with React",
+      answer: "Sample answer about React experience",
+      mandatory: true,
+      isAnswered: "Not Answered",
+      notesBool: false,
+      note: ""
+    },
+    {
+      id: 2,
+      question: "How do you handle state management?",
+      answer: "Sample answer about state management",
+      mandatory: false,
+      isAnswered: "Not Answered",
+      notesBool: false,
+      note: ""
+    }
+  ]);
+  const [SchedulerSectionData, setSchedulerSectionData] = useState([]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
     skills: true,
@@ -733,6 +753,14 @@ const CustomProvider = ({ children }) => {
 
         interviewRounds,
         fetchInterviewRounds,
+        
+        // interviewer section data
+        interviewerSectionData,
+        setInterviewerSectionData,
+        
+        // scheduler section data
+        SchedulerSectionData,
+        setSchedulerSectionData,
         // superAdminProfile,
       }}
     >

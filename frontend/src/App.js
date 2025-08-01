@@ -36,6 +36,8 @@ import {
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 
 
+
+
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
@@ -950,10 +952,10 @@ const MainAppRoutes = ({
                 </>
               )}
               
-              {/* Feedback */}
+              {/* Feedbacks */}
               {hasPermission("Feedback") && (
                 <>
-                  <Route path="/feedback" element={<Feedback />} />
+                  <Route path="/feedback" element={<Feedback/>} />
                   
                 </>
               )}
@@ -1127,6 +1129,8 @@ const MainAppRoutes = ({
                   )}
                 </>
               )} */}
+
+            
 
               {hasPermission("Settings") && (
                 <Route path="/settings" element={<SettingsPage />} />
