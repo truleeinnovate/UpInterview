@@ -356,9 +356,9 @@ const CombinedNavbar = () => {
           permissionKey: "QuestionBank.ViewTab",
         },
         {
-          path: "/feedbacks",
-          label: "Feedbacks",
-          permissionKey: "Feedbacks.ViewTab",
+          path: "/feedback",
+          label: "Feedback",
+          permissionKey: "Feedback.ViewTab",
         },
         {
           path: "/support-desk",
@@ -987,7 +987,7 @@ const CombinedNavbar = () => {
                             )}
                             {(isActive("/analytics") ||
                               isActive("/support-desk") ||
-                              isActive("/feedbacks") ||
+                              isActive("/feedback") ||
                               isActive("/questionBank")) && (
                                 <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                               )}
@@ -1007,8 +1007,8 @@ const CombinedNavbar = () => {
                                       },
                                     ]
                                     : []),
-                                  ...(enhancedCheckPermission("Feedbacks")
-                                    ? [{ to: "/feedbacks", label: "Feedbacks" }]
+                                  ...(enhancedCheckPermission("Feedback")
+                                    ? [{ to: "/feedback", label: "Feedback" }]
                                     : []),
                                   ...(enhancedCheckPermission("SupportDesk")
                                     ? [{ to: "/support-desk", label: "Support Desk" }]
@@ -1299,11 +1299,13 @@ const CombinedNavbar = () => {
 
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
+                      enhancedCheckPermission("Feedback") ||
                       enhancedCheckPermission("QuestionBank")) && (
                         <div className="relative" ref={moreRef}>
                           <button
                             className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") ||
                               isActive("/support-desk") ||
+                              isActive("/feedback") ||
                               isActive("/questionBank")
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
@@ -1323,9 +1325,6 @@ const CombinedNavbar = () => {
                                 ...(enhancedCheckPermission("Analytics")
                                   ? [{ to: "/analytics", label: "Analytics" }]
                                   : []),
-                                ...(enhancedCheckPermission("SupportDesk")
-                                  ? [{ to: "/support-desk", label: "Support Desk" }]
-                                  : []),
                                 ...(enhancedCheckPermission("QuestionBank")
                                   ? [
                                     {
@@ -1333,6 +1332,12 @@ const CombinedNavbar = () => {
                                       label: "Question Bank",
                                     },
                                   ]
+                                  : []),
+                                ...(enhancedCheckPermission("Feedback")
+                                  ? [{ to: "/feedback", label: "Feedback" }]
+                                  : []),
+                                ...(enhancedCheckPermission("SupportDesk")
+                                  ? [{ to: "/support-desk", label: "Support Desk" }]
                                   : []),
                               ].map(({ to, label }) => (
                                 <NavLink

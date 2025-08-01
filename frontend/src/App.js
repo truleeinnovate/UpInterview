@@ -36,6 +36,8 @@ import {
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 
 
+
+
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
@@ -151,8 +153,8 @@ const ScheduleAssessment = lazy(() =>
 const ScheduleAssDetails = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
 );
-const Feedbacks = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Feedbacks/Feedbacks")
+const Feedback = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback")
 );
 const MyProfile = lazy(() =>
   import(
@@ -951,9 +953,9 @@ const MainAppRoutes = ({
               )}
               
               {/* Feedbacks */}
-              {hasPermission("Feedbacks") && (
+              {hasPermission("Feedback") && (
                 <>
-                  <Route path="/feedbacks" element={<Feedbacks />} />
+                  <Route path="/feedback" element={<Feedback/>} />
                   
                 </>
               )}
@@ -1127,6 +1129,8 @@ const MainAppRoutes = ({
                   )}
                 </>
               )} */}
+
+            
 
               {hasPermission("Settings") && (
                 <Route path="/settings" element={<SettingsPage />} />

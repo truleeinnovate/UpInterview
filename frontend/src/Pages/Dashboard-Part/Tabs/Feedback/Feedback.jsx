@@ -16,8 +16,32 @@ import FeedbackKanban from './FeedbackKanban.jsx';
 import { Eye, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
+import { IoMdClose } from 'react-icons/io';
+import CandidateMiniTab from './MiniTabs/Candidate';
+import InterviewsMiniTabComponent from './MiniTabs/Interviews';
+import SkillsTabComponent from './MiniTabs/Skills';
+import OverallImpressions from './MiniTabs/OverallImpressions';
 
-const Feedbacks = () => {
+const tabsList = [
+  {
+    id: 1,
+    tab: "Candidate",
+  },
+  {
+    id: 2,
+    tab: "Interview Questions",
+  },
+  {
+    id: 3,
+    tab: "Skills",
+  },
+  {
+    id: 4,
+    tab: "Overall Impression",
+  },
+];
+
+const Feedback = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,6 +57,30 @@ const Feedbacks = () => {
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [activeTab, setActiveTab] = useState(1);
+  
+  // Sample data for mini tabs
+  const [skillsTabData, setSkillsTabData] = useState([
+    {
+      id: 1,
+      category: "Mandatory skills",
+      skillsList: [
+        { name: "Technical Skills", rating: 4, note: "", notesBool: false, required: true, error: false },
+        { name: "Communication", rating: 3, note: "", notesBool: false, required: true, error: false },
+      ],
+    },
+  ]);
+  
+  const [overallImpressionTabData, setOverallImpressionTabData] = useState({
+    rating: 4,
+    note: "Good candidate overall",
+    recommendation: "hire",
+    notesBool: false,
+    required: true,
+    error: false
+  });
 
   useEffect(() => {
     // Dummy data for testing - replacing API calls
@@ -60,7 +108,7 @@ const Feedbacks = () => {
   const endIndex = startIndex + rowsPerPage;
 
   useEffect(() => {
-    document.title = 'Feedbacks';
+    document.title = 'Feedback';
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? 'kanban' : 'table');
     };
@@ -122,9 +170,12 @@ const Feedbacks = () => {
   };
 
   const handleView = (feedback) => {
-    navigate(`/feedback/${feedback._id}`, {
-      state: { feedback: feedback }
-    });
+    // navigate(`/feedback/${feedback._id}`, {
+    //   state: { feedback: feedback }
+    // });
+    setSelectedFeedback(feedback);
+    setShowFeedbackModal(true);
+    setActiveTab(1);
   };
 
   const handleEdit = (feedback) => {
@@ -195,6 +246,69 @@ const Feedbacks = () => {
     },
   ];
 
+  // Modal helper functions
+  const displayData = () => {
+    const roundDetails = { questions: [] }; // Sample round details
+    const interviewDetails = selectedFeedback ? {
+      Candidate: selectedFeedback.interview,
+      Position: "Software Developer",
+      _id: selectedFeedback._id
+    } : {};
+    
+    switch (activeTab) {
+      case 1: 
+        return <CandidateMiniTab 
+          roundDetails={roundDetails} 
+          interviewDetails={interviewDetails} 
+          skillsTabData={skillsTabData} 
+          tab={true} 
+          page="Popup"
+        />;
+      case 2: 
+        return <InterviewsMiniTabComponent 
+          roundDetails={roundDetails} 
+          tab={true} 
+          page="Popup" 
+          closePopup={() => setShowFeedbackModal(false)}
+        />;
+      case 3: 
+        return <SkillsTabComponent 
+          setSkillsTabData={setSkillsTabData} 
+          skillsTabData={skillsTabData} 
+          tab={true} 
+          page="Popup"
+        />;
+      case 4: 
+        return <OverallImpressions 
+          overallImpressionTabData={overallImpressionTabData} 
+          setOverallImpressionTabData={setOverallImpressionTabData} 
+          tab={true} 
+          page="Popup"
+        />;
+      default: 
+        return null;
+    }
+  };
+
+  const ReturnTabsSection = () => {
+    return (
+      <ul className="flex items-center gap-8 cursor-pointer py-1 px-8 border-b">
+        {tabsList.map((EachTab) => (
+          <li
+            style={{
+              borderBottom: activeTab === EachTab.id ? "2px solid #227a8a" : "",
+            }}
+            onClick={() => setActiveTab(EachTab.id)}
+            key={EachTab.id}
+            className="pb-2"
+          >
+            {EachTab.tab}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   if (loading) return <div className="text-center p-6">Loading...</div>;
   //if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
 
@@ -204,7 +318,7 @@ const Feedbacks = () => {
         <main className="px-6">
           <div className="sm:px-0">
             <Header 
-              title="Feedbacks"
+              title="Feedback"
               addButtonText="Add Feedback"
               onAddClick={handleAddFeedback}
               canCreate={false}
@@ -223,7 +337,7 @@ const Feedbacks = () => {
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
               dataLength={filteredFeedbacks.length}
-              searchPlaceholder="Search Feedbacks..."
+              searchPlaceholder="Search Feedback..."
               filterIconRef={filterIconRef}
             />
           </div>
@@ -240,7 +354,7 @@ const Feedbacks = () => {
                 columns={tableColumns}
                 actions={tableActions}
                 loading={loading}
-                emptyState="No feedbacks found."
+                emptyState="No feedback found."
                 className="table-fixed w-full"
               />
             ) : (
@@ -293,8 +407,34 @@ const Feedbacks = () => {
           </motion.div>
         </div>
       </main>
+      
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
+          <div className="bg-white  w-[100%] max-w-4xl h-[100%] flex flex-col">
+            {/* Modal Header */}
+            <div className="px-8 flex items-center justify-between py-4">
+              <h1 className="text-xl font-semibold text-[#227a8a]">Interview Feedback</h1>
+              <button 
+                onClick={() => setShowFeedbackModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <IoMdClose size={24} />
+              </button>
+            </div>
+            
+            {/* Tabs Section */}
+            <ReturnTabsSection />
+            
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto border-2 border-gray-200 border-solid rounded-md mx-8 mb-8 mt-4">
+              {displayData()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Feedbacks;
+export default Feedback;
