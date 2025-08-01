@@ -17,7 +17,7 @@ import { Eye, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
 
-const Feedbacks = () => {
+const Feedback = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,7 +60,7 @@ const Feedbacks = () => {
   const endIndex = startIndex + rowsPerPage;
 
   useEffect(() => {
-    document.title = 'Feedbacks';
+    document.title = 'Feedback';
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? 'kanban' : 'table');
     };
@@ -297,4 +297,4 @@ const Feedbacks = () => {
   );
 };
 
-export default Feedbacks;
+export default Feedback;

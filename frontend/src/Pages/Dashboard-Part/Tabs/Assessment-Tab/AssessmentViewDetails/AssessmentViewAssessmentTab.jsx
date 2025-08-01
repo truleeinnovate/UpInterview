@@ -108,7 +108,7 @@ function AssessmentsTab({ assessment }) {
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/emails/resend-link`,
         {
-          candidateAssessmentId,
+          candidateAssessmentIds: [candidateAssessmentId],
           userId,
           organizationId,
           assessmentId: assessment._id,
@@ -148,11 +148,11 @@ function AssessmentsTab({ assessment }) {
     // React Query will automatically refresh the data when mutations invalidate queries
     // No manual refresh needed
   };
-  // Function to check if action buttons should be shown based on schedule status
-  const shouldShowActionButtons = (schedule) => {
+  // Function to check if action buttons should be disabled based on schedule status
+  const shouldDisableActionButtons = (schedule) => {
     const status = schedule.status?.toLowerCase();
-    // Hide buttons for completed, cancelled, expired, and failed statuses
-    return !['completed', 'cancelled', 'expired', 'failed'].includes(status);
+    // Disable buttons for completed, cancelled, expired, and failed statuses
+    return ['completed', 'cancelled', 'expired', 'failed'].includes(status);
   };
 
   // <-------------------------------v1.0.3
@@ -240,32 +240,42 @@ function AssessmentsTab({ assessment }) {
                 </div>
                 {/* ------------------------------v1.0.3 > */}
                 <div className="flex items-center space-x-2">
-                  {shouldShowActionButtons(schedule) && (
-                    <>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleActionClick(schedule, 'extend');
-                        }}
-                        className="flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        title="Extend Assessment"
-                      >
-                        <CalendarIcon className="w-4 h-4 mr-1" />
-                        Extend
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleActionClick(schedule, 'cancel');
-                        }}
-                        className="flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                        title="Cancel Assessment"
-                      >
-                        <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
-                        Cancel
-                      </button>
-                    </>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!shouldDisableActionButtons(schedule)) {
+                        handleActionClick(schedule, 'extend');
+                      }
+                    }}
+                    disabled={shouldDisableActionButtons(schedule)}
+                    className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      shouldDisableActionButtons(schedule)
+                        ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                        : 'text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500'
+                    }`}
+                    title={shouldDisableActionButtons(schedule) ? 'Action not available for this status' : 'Extend Assessment'}
+                  >
+                    <CalendarIcon className="w-4 h-4 mr-1" />
+                    Extend
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!shouldDisableActionButtons(schedule)) {
+                        handleActionClick(schedule, 'cancel');
+                      }
+                    }}
+                    disabled={shouldDisableActionButtons(schedule)}
+                    className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      shouldDisableActionButtons(schedule)
+                        ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                        : 'text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500'
+                    }`}
+                    title={shouldDisableActionButtons(schedule) ? 'Action not available for this status' : 'Cancel Assessment'}
+                  >
+                    <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+                    Cancel
+                  </button>
                   {/* ------------------------------v1.0.3 > */}
                   {openSchedules[schedule._id] ? (
                     <ChevronUpIcon className="w-5 h-5 text-gray-500" />
@@ -322,7 +332,7 @@ function AssessmentsTab({ assessment }) {
           setSelectedSchedule(null);
           setSelectedAction('');
         }}
-        schedule={{...selectedSchedule, assessmentId: assessment}}
+        schedule={{...selectedSchedule, assessmentId: assessment._id}}
         candidates={formattedCandidates(selectedSchedule.candidates)}
         onSuccess={handleActionSuccess}
         defaultAction={selectedAction}

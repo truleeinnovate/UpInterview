@@ -151,8 +151,8 @@ const ScheduleAssessment = lazy(() =>
 const ScheduleAssDetails = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
 );
-const Feedbacks = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Feedbacks/Feedbacks")
+const Feedback = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback")
 );
 const MyProfile = lazy(() =>
   import(
@@ -950,10 +950,10 @@ const MainAppRoutes = ({
                 </>
               )}
               
-              {/* Feedbacks */}
-              {hasPermission("Feedbacks") && (
+              {/* Feedback */}
+              {hasPermission("Feedback") && (
                 <>
-                  <Route path="/feedbacks" element={<Feedbacks />} />
+                  <Route path="/feedback" element={<Feedback />} />
                   
                 </>
               )}

@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  fixed assessment code unique issue
+// v1.0.1  -  Ashraf  -  added index to calculate the total number of assessments
 const mongoose = require("mongoose");
 
 const assessmentSchema = new mongoose.Schema(
@@ -45,6 +46,11 @@ const assessmentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+// <-------------------------------v1.0.1
+
+// Add index for AssessmentCode sorting within tenantId
+assessmentSchema.index({ tenantId: 1, AssessmentCode: -1 }); 
+// ------------------------------v1.0.1 >
 
 const Assessment = mongoose.model("assessment", assessmentSchema);
 module.exports = Assessment;

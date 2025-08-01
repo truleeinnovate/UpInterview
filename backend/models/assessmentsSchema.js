@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  fixed scheduled assessment code unique issue
 // v1.0.1 -   removed cretedat because we wre already using timestamp
 // v1.0.2 -   added expired and failed statuses to enum
+// v1.0.3 -   added index to calculate the total number of scheduled assessments
 const mongoose = require("mongoose");
 
 const ScheduledAssessmentSchema = new mongoose.Schema(
@@ -45,7 +46,13 @@ const ScheduledAssessmentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+// <-------------------------------v1.0.3
 
+
+// Add index for scheduledAssessmentCode to support potential sorting operations
+ScheduledAssessmentSchema.index({ scheduledAssessmentCode: -1 });
+
+// ------------------------------v1.0.3 >
 module.exports = mongoose.model(
   "ScheduledAssessment",
   ScheduledAssessmentSchema
