@@ -413,7 +413,7 @@ const Feedback = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
           <div className="bg-white  w-[100%] max-w-4xl h-[100%] flex flex-col">
             {/* Modal Header */}
-            <div className="px-8 flex items-center justify-between py-4">
+            <div className="px-8 flex items-center justify-between py-4 ">
               <h1 className="text-xl font-semibold text-[#227a8a]">Interview Feedback</h1>
               <button 
                 onClick={() => setShowFeedbackModal(false)}
