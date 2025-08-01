@@ -1,6 +1,7 @@
 //  verison 0.01 changes done by Ranjith related to some feilds like company size properly binded
 // v1.0.2 changes done by Venky related to error msg scroll into view
 // v1.0.3 changes done by Venkatesh related to error msg scroll into view
+// v1.0.4 - Ashok - Improved scroll to first error functionality
 
 // import { companyProfile, companySizes, industries } from '../mockData/companyData'
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
@@ -315,7 +316,9 @@ const CompanyEditProfile = () => {
     const validationErrors = validateCompanyProfile(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      scrollToFirstError(errors, fieldRefs);//<----v1.0.3----
+      // v1.0.4 <-----------------------------------------------------------
+      scrollToFirstError(validationErrors, fieldRefs); //<----v1.0.3----
+      // v1.0.4 <-----------------------------------------------------------
       return;
     }
     console.log("validationErrors", validationErrors);
@@ -492,11 +495,21 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="company"
-                      ref={fieldRefs.company}//<----v1.0.3----
+                      ref={fieldRefs.company} //<----v1.0.3----
                       value={formData.company}
                       placeholder="Company Name"
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                      // v1.0.4 <----------------------------------------------------------------------------------
+                      // className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.company
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 ---------------------------------------------------------------------------------->
                     />
                     {errors.company && (
                       <span className="text-red-500 text-xs">
@@ -519,15 +532,25 @@ const CompanyEditProfile = () => {
                         name="industry"
                         type="text"
                         id="industry"
-                        ref={fieldRefs.industry}//<----v1.0.3----
+                        ref={fieldRefs.industry} //<----v1.0.3----
                         value={formData.industry}
                         placeholder="Information Technology"
                         autoComplete="off"
                         onClick={toggleIndustry}
                         readOnly
-                        className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                          errors.industry ? "border-red-500" : "border-gray-300"
-                        }`}
+                        // v1.0.4 <------------------------------------------------------------------------------------------------------
+                        // className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                        //   errors.industry ? "border-red-500" : "border-gray-300"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.industry
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
+                        // v1.0.4 ------------------------------------------------------------------------------------------------------>
                       />
                       <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
                         <ChevronDown
@@ -595,10 +618,20 @@ const CompanyEditProfile = () => {
                     <select
                       name="employees"
                       value={formData.employees}
-                      ref={fieldRefs.employees}//<----v1.0.3----
+                      ref={fieldRefs.employees} //<----v1.0.3----
                       placeholder="Select Size"
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      // v1.0.4 <----------------------------------------------------------------------------------------------------------------------
+                      // className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.employees
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 ---------------------------------------------------------------------------------------------------------------------->
                     >
                       <option value="">Select Size</option>
                       {companySizes.map((size, index) => (
@@ -620,11 +653,21 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="website"
-                      ref={fieldRefs.website}//<----v1.0.3----
+                      ref={fieldRefs.website} //<----v1.0.3----
                       value={formData.website}
                       placeholder="Website URL"
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      // v1.0.4 <---------------------------------------------------------------------------------------------------------------------
+                      // className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.website
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 --------------------------------------------------------------------------------------------------------------------->
                     />
                     {errors.website && (
                       <span className="text-red-500 text-xs">
@@ -728,11 +771,21 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="firstName"
-                      ref={fieldRefs.firstName}//<----v1.0.3----
+                      ref={fieldRefs.firstName} //<----v1.0.3----
                       value={formData.firstName}
                       placeholder="First Name"
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      // v1.0.4 <-------------------------------------------------------------------------------------------------------------------
+                      // className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.firstName
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 ------------------------------------------------------------------------------------------------------------------->
                     />
                     {errors.firstName && (
                       <span className="text-red-500 text-xs">
@@ -747,11 +800,21 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="lastName"
-                      ref={fieldRefs.lastName}//<----v1.0.3----
+                      ref={fieldRefs.lastName} //<----v1.0.3----
                       value={formData.lastName}
                       placeholder="Last Name"
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      // v1.0.4 <-------------------------------------------------------------------------------------------------------------------
+                      // className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.lastName
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 ------------------------------------------------------------------------------------------------------------------->
                     />
                     {errors.lastName && (
                       <span className="text-red-500 text-xs">
@@ -769,11 +832,21 @@ const CompanyEditProfile = () => {
                     <input
                       type="email"
                       name="email"
-                      ref={fieldRefs.email}//<----v1.0.3----
+                      ref={fieldRefs.email} //<----v1.0.3----
                       value={formData.email}
                       placeholder="Email"
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      // v1.0.4 <---------------------------------------------------------------------------------------------------------------------
+                      // className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.email
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 ----------------------------------------------------------------------------------------------------------------------
                     />
                     {errors.email && (
                       <span className="text-red-500 text-xs">
@@ -788,7 +861,7 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="phone"
-                      ref={fieldRefs.phone}//<----v1.0.3----
+                      ref={fieldRefs.phone} //<----v1.0.3----
                       value={formData.phone}
                       placeholder="Phone Number"
                       onChange={(e) => {
@@ -800,7 +873,17 @@ const CompanyEditProfile = () => {
                         }
                       }}
                       // onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      // v1.0.4 <---------------------------------------------------------------------------------------------------------------------
+                      // className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.phone
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 --------------------------------------------------------------------------------------------------------------------->
                     />
                     {errors.phone && (
                       <span className="text-red-500 text-xs">
@@ -818,11 +901,21 @@ const CompanyEditProfile = () => {
                     <input
                       type="text"
                       name="jobTitle"
-                      ref={fieldRefs.jobTitle}//<----v1.0.3----
+                      ref={fieldRefs.jobTitle} //<----v1.0.3----
                       value={formData.jobTitle}
                       placeholder="Job Title"
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      // v1.0.4 <--------------------------------------------------------------------------------------------------------------------
+                      // className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.jobTitle
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                      // v1.0.4 ---------------------------------------------------------------------------------------------------------------------
                     />
                     {errors.jobTitle && (
                       <span className="text-red-500 text-xs">
