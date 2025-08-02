@@ -3,6 +3,7 @@
 // v1.0.0------Venkatesh------add attachments tab
 // v1.0.1 - Ashok - disabled outer scrollbar using custom hook
 // v1.0.2 - Ashok - added optional chaining to prevent errors when accessing properties of undefined
+// v1.0.3 - Venkatesh - ticket code and status in align center
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MdOutlineCancel } from "react-icons/md";
@@ -270,24 +271,33 @@ function SupportDetails() {
       </div>
 
       <div className="p-6">
-        <div className="flex items-center justify-center mb-4">
-          <div className="relative">
-            <div className="w-16 h-16 flex items-center justify-center bg-custom-blue/10 text-custom-blue rounded-full">
-              <FaTicketAlt className="w-8 h-8" />
-            </div>
+        {/*<-------v1.0.3------*/}
+      <div className="flex items-center justify-center gap-2 mb-4">
+          
+          <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
+            <FaTicketAlt className="w-8 h-8" />
           </div>
-        </div>
-        {/* v1.0.2 <------------------------------------------------------------------- */}
-        <div className="text-center mb-4">
-          <h3 className="text-2xl font-bold text-gray-900">
-            {currentTicket?.ticketCode}
-          </h3>
-          <span
-            className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full mt-2 ${statusClass}`}
-          >
-            {currentTicket?.status}
-          </span>
-        </div>
+          <div className="items-center text-center mb-4">
+        <h3 className="text-2xl font-bold text-gray-900">
+          {currentTicket?.ticketCode}
+        </h3>
+        <span
+          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ml-2 ${
+            currentTicket?.status === "Open"
+              ? "bg-green-100 text-green-800"
+              : currentTicket?.status === "In Progress"
+              ? "bg-blue-100 text-blue-800"
+              : currentTicket?.status === "Resolved"
+              ? "bg-gray-100 text-gray-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {currentTicket?.status}
+        </span>
+        {/*-------v1.0.3------>*/}
+        {/*-------v1.0.1-------------->*/}
+      </div>
+      </div>
         {/* v1.0.2 -------------------------------------------------------------------> */}
 
         <div className="flex justify-between border-b border-gray-200">

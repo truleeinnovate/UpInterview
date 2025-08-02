@@ -1,5 +1,6 @@
 // v1.0.0 ------ Venkatesh--- check list name using ternary operator
 // v1.0.1  -  Ashraf  -  fixed toast error
+// v1.0.2  -  Venkatesh  -  fixed selected label issue now default first label is selected
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
@@ -155,6 +156,16 @@ const MyQuestionsList = ({
       const matchingQuestion = allQuestions.find((q) => q.listId === lastSelectedListId);
       if (matchingQuestion) {
         setSelectedLabel(matchingQuestion.label);
+        return; // Exit early if cookie match found
+      }
+    }
+    //<---------------------- v1.0.2------
+    // If no cookie or no matching label found, set first available option as default
+    if (myQuestionsList && typeof myQuestionsList === "object") {
+      const availableLabels = Object.keys(myQuestionsList);
+      if (availableLabels.length > 0 && !selectedLabel) {
+        setSelectedLabel(availableLabels[0]);
+        //------------------v1.0.2------>
       }
     }
   }, [myQuestionsList]);
@@ -607,7 +618,7 @@ const selectedLabelId = useMemo(() => {
                 className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <span className="truncate">{selectedLabel || "Select a label"}</span>
+                <span className="truncate">{selectedLabel || "Select Label"}</span>
                 <svg
                   className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"}`}
                   xmlns="http://www.w3.org/2000/svg"

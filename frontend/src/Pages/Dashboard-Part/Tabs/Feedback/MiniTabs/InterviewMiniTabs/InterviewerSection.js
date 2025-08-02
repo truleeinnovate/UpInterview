@@ -14,6 +14,7 @@ const InterviewerSectionComponent = ({closePopup}) => {
     useCustomContext();
 
   const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
 
 
 
@@ -49,6 +50,16 @@ const InterviewerSectionComponent = ({closePopup}) => {
     );
   };
 
+  // Handler to open QuestionBank modal
+  const openQuestionBank = () => {
+    setIsQuestionBankOpen(true);
+  };
+
+  // Handler to close QuestionBank modal
+  const closeQuestionBank = () => {
+    setIsQuestionBankOpen(false);
+  };
+
   const onClickDeleteNote = (id) => {
     setInterviewerSectionData((prev) =>
       prev.map((question) =>
@@ -62,6 +73,7 @@ const InterviewerSectionComponent = ({closePopup}) => {
 
 
   return (
+    <>
     <div className="relative h-[53vh] px-2 pt-2">
       <div className="flex items-center gap-4 mt-4">
         <p>
@@ -229,7 +241,7 @@ const InterviewerSectionComponent = ({closePopup}) => {
           </li>
         ))}
       </ul>
-      <Popup
+      {/* <Popup
         trigger={
           <button className="absolute text-white text-[30px] bottom-[-25px] right-0 aspect-square rounded-full bg-[#227a8a] w-10  flex justify-center items-center cursor-pointer">
             +
@@ -253,9 +265,32 @@ const InterviewerSectionComponent = ({closePopup}) => {
         </div>}
         
         
-      </Popup>
+      </Popup> */}
+      <button 
+        className="absolute text-white text-[30px] bottom-[-25px] right-0 aspect-square rounded-full bg-[#227a8a] w-10  flex justify-center items-center cursor-pointer"
+        onClick={openQuestionBank}
+      >
+        +
+      </button>
     </div>
     </div>
+    
+    {/* QuestionBank Modal */}
+    {isQuestionBankOpen && (
+      <div className="fixed z-50 bg-black bg-opacity-50 left-0 top-0 bottom-0 h-full w-full flex flex-col items-center justify-center">
+        <div className="relative bg-white rounded-lg w-[95%] h-[95%] max-w-8xl">
+          {/* Close button */}
+          <button 
+            onClick={closeQuestionBank}
+            className="absolute top-4 right-4 z-[9999] bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-red-600 transition-colors text-xl font-bold shadow-lg"
+          >
+            ×
+          </button>
+          <QuestionBank closeQuestionBank={closeQuestionBank} type={"interviewerSection"} />
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 
