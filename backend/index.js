@@ -94,8 +94,8 @@ const mongooseOptions = {
   maxPoolSize: 20, // Increased pool size for Azure
   minPoolSize: 5, // Increased minimum pool size
   maxIdleTimeMS: 60000, // 60 seconds
-  retryWrites: true,
-  w: 'majority',
+  retryWrites: false, // Disabled for compatibility with older MongoDB versions
+  w: 1, // Changed from 'majority' to 1 for better compatibility
   // Azure-specific optimizations
   bufferCommands: false, // Disable mongoose buffering
   // Connection retry settings
@@ -104,8 +104,8 @@ const mongooseOptions = {
   heartbeatFrequencyMS: 10000,
   // Write concern settings
   writeConcern: {
-    w: 'majority',
-    j: true,
+    w: 1, // Changed from 'majority' to 1
+    j: false, // Changed to false for better compatibility
     wtimeout: 30000
   }
 };
