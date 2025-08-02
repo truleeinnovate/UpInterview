@@ -30,6 +30,7 @@ import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { Minimize, Expand, X, Eye } from "lucide-react";
 // v1.0.1 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 // v1.0.1 ------------------------------------------------------------------------->
 
 const getStatusColor = (status) => {
@@ -281,19 +282,7 @@ function SupportDetails() {
         <h3 className="text-2xl font-bold text-gray-900">
           {currentTicket?.ticketCode}
         </h3>
-        <span
-          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ml-2 ${
-            currentTicket?.status === "Open"
-              ? "bg-green-100 text-green-800"
-              : currentTicket?.status === "In Progress"
-              ? "bg-blue-100 text-blue-800"
-              : currentTicket?.status === "Resolved"
-              ? "bg-gray-100 text-gray-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {currentTicket?.status}
-        </span>
+        <StatusBadge status={currentTicket?.status} text={currentTicket?.status ? currentTicket?.status.charAt(0).toUpperCase() + currentTicket?.status.slice(1) : "Not Provided"}/>{/*common status code add by Venkatesh*/}
         {/*-------v1.0.3------>*/}
         {/*-------v1.0.1-------------->*/}
       </div>

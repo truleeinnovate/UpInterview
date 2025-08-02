@@ -1,3 +1,5 @@
+//<--v1.0.0------Venkatesh------add edit mode overall impressions tab
+
 import React from "react";
 import { IoIosStar } from "react-icons/io";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
@@ -15,25 +17,54 @@ const options = [
   { value: "Maybe", label: "Maybe" },
 ];
 
-const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabData,tab }) => {
-  const { page} = useCustomContext();
+//<--v1.0.0------
+const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabData, page: pageProp, tab, isEditMode }) => {
+  const { page } = useCustomContext();
+  //----v1.0.0------>
   const { rating, note, recommendation, notesBool } =
     overallImpressionTabData;
 
   const getColorByRating = (rating) =>
     ratingLst.find((r) => r.stars === rating)?.color || "gray";
 
-  const handleInputChange = (field, value) => {
-    console.log(`Field: ${field}, Value: ${value}`);
-    setOverallImpressionTabData((prev) => ({
-      ...prev,
-        [field]: value,
-    
-    }));
+ //<--v1.0.0------
+  const handleRatingChange = (newRating) => {
+    if (isEditMode) {
+      setOverallImpressionTabData((prevData) => ({
+        ...prevData,
+        rating: newRating,
+      }));
+    }
   };
-  
 
-  const handleNoteToggle = () => handleInputChange("notesBool", !overallImpressionTabData.notesBool);
+  const handleNoteToggle = () => {
+    if (isEditMode) {
+      setOverallImpressionTabData((prevData) => ({
+        ...prevData,
+        notesBool: !prevData.notesBool,
+      }));
+    }
+  };
+
+  const handleNoteChange = (e) => {
+    if (isEditMode) {
+      const value = e.target.value;
+      setOverallImpressionTabData((prevData) => ({
+        ...prevData,
+        note: value,
+      }));
+    }
+  };
+
+  const handleRecommendationChange = (recommendation) => {
+    if (isEditMode) {
+      setOverallImpressionTabData((prevData) => ({
+        ...prevData,
+        recommendation: recommendation,
+      }));
+    }
+  };
+  //--v1.0.0------>
 
   return (
     <div className="flex flex-col gap-8 px-2 pt-2">
@@ -56,60 +87,51 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
       )}
 
       <div className="w-[75%] flex justify-between items-center gap-4">
-        <p className=''>
-          Overall Rating{tab && <span className="text-red-500">*</span>}
-        </p>
+        {/*<----v1.0.0------*/}
+        <p className="">Overall Rating{tab && <span className="text-red-500">*</span>}</p>
         <div className="flex gap-3">
-            {Array.from({ length: 5 }, (_, index) => {
-              const isSelected = index + 1 <= rating;
-              return (
-                <IoIosStar
-                  key={index}
-                  onClick={
-                    tab ? () => handleInputChange("rating", index + 1) : null
-                  }
-                  className="cursor-pointer transform transition-transform hover:scale-110"
-                  size={20}
-                  style={{
-                    color: isSelected ? getColorByRating(rating) : "gray",
-                  }}
-                />
-              );
-            })}
-          </div>
-          
+          {[1, 2, 3, 4, 5].map((star) => (
             <button
-              onClick={handleNoteToggle}
-              className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[200px]"
-              style={{visibility:tab?"visible":"hidden" }}
+              key={star}
+              className={`text-2xl ${star <= overallImpressionTabData.rating ? "text-yellow-400" : "text-gray-300"} ${isEditMode ? "" : "cursor-not-allowed"}`}
+              onClick={() => handleRatingChange(star)}
+              disabled={!isEditMode}
             >
-              {notesBool ? "Delete Note" : "Add Note"}
+              ★
             </button>
-          
-
-       
+          ))}
+        </div>
+        {isEditMode ? (
+          <button
+            onClick={handleNoteToggle}
+            className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[200px]"
+            style={{ visibility: tab ? "visible" : "hidden" }}
+          >
+            {overallImpressionTabData.notesBool ? "Delete Note" : "Add Note"}
+          </button>
+        ) : <div></div>}
       </div>
 
       {notesBool && tab && (
         <div className="flex justify-between">
           <label
             htmlFor="overall-note"
-            className=''
+            className="w-[30%]"
           >
             Note
           </label>
-          {page === "Home" ? (
+          {pageProp === "Home" ? (
             <div
               className="flex flex-col  items-center"
-              style={{ width: page === "Home" && "80%" }}
+              style={{ width: pageProp === "Home" && "70%" }}
             >
               <input
                 id="overall-note"
                 type="text"
                 value={note}
-                readOnly={!tab}
+                readOnly={!isEditMode}
                 onChange={(e) =>
-                  handleInputChange("note", e.target.value.slice(0, 250))
+                  handleNoteChange(e)
                 }
                 className="w-[100%]  rounded-md text-[gray]  p-2 outline-none border border-gray-500"
                 placeholder="Add Note"
@@ -123,9 +145,9 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
               <textarea
                 rows={5}
                 value={note}
-                readOnly={!tab}
+                readOnly={!isEditMode}
                 onChange={(e) =>
-                  handleInputChange("note", e.target.value.slice(0, 250))
+                  handleNoteChange(e)
                 }
                 className="w-full text-gray rounded-md outline-none border-[1px] py-1 px-1 text-[gray] border-[gray]"
                 placeholder="Add note here"
@@ -142,7 +164,7 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
         <div className="flex w-full ">
           <label
             htmlFor="skill-id"
-            className=''
+            className=""
           >
             Note
           </label>
@@ -151,43 +173,30 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
       )}
 
       <div className="flex gap-7">
-        <label
-          className=''
-        >
-          Recommendation{ tab && <span className="text-[red]">*</span>}
-        </label>
-        <ul className="flex w-1/2 gap-8">
-          {options.map(({ value, label }) => (
-            <li key={value} className="flex gap-x-2 items-center">
-              <input
-                id={`${value}-id`}
-                name="recommendation"
-                type="radio"
-                value={value}
-                disabled={!tab && recommendation !== value}
-                checked={recommendation === value}
-                onChange={(e) =>
-                  handleInputChange("recommendation", e.target.value)
-                }
-                className={
-                  !tab && recommendation !== value
-                    ? "text-gray-400"
-                    : "text-black"
-                }
-              />
-              <label
-                htmlFor={`${value}-id`}
-                className={
-                  !tab && recommendation !== value
-                    ? "text-gray-400"
-                    : "text-black"
-                }
-              >
-                {label}
-              </label>
-            </li>
-          ))}
-        </ul>
+        <label className="">Recommendation{tab && <span className="text-[red]">*</span>}</label>
+        {isEditMode ? (
+          <div className="flex gap-4 w-full">
+            {["hire", "hold", "reject"].map((option) => (
+              <div key={option} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id={`recommendation-${option}`}
+                  name="recommendation"
+                  checked={overallImpressionTabData.recommendation === option}
+                  onChange={() => handleRecommendationChange(option)}
+                />
+                <label htmlFor={`recommendation-${option}`} className="cursor-pointer">
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </label>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex pl-28 items-center">
+            <span className="font-medium">{overallImpressionTabData.recommendation.charAt(0).toUpperCase() + overallImpressionTabData.recommendation.slice(1)}</span>
+          </div>
+        )}
+        {/*----v1.0.0------>*/}
       </div>
     </div>
   );

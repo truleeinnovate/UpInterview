@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+//<----v1.0.0---Venkatesh-----open selected question on load
+
+import React, { useState, useEffect } from "react";
 import Popup from "reactjs-popup";
 import { IoCodeSlash } from "react-icons/io5";
 import { RxText } from "react-icons/rx";
@@ -13,8 +15,16 @@ const InterviewerSectionComponent = ({closePopup}) => {
   const { interviewerSectionData, setInterviewerSectionData ,page} =
     useCustomContext();
 
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  //<----v1.0.0---
+    const [selectedQuestion, setSelectedQuestion] = useState(interviewerSectionData.length > 0 ? interviewerSectionData[0].id : null);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
+
+  useEffect(() => {
+    if (interviewerSectionData.length > 0 && selectedQuestion === null) {
+      setSelectedQuestion(interviewerSectionData[0].id);
+    }
+  }, []);
+  //----v1.0.0--->
 
 
 
