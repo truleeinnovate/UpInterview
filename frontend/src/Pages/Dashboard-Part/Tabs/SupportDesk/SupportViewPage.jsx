@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - disabled outer scrollbar using custom hook
+// v1.0.1 - Venkatesh - ticket code and status in align center
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
@@ -102,21 +103,19 @@ const SupportViewPage = () => {
         </div>
       </div>
 
+      {/* <-------v1.0.1--------------Ticket Code and Status */}
       <div className="p-6">
-        <div className="flex items-center justify-center mb-4">
-          <div className="relative">
-            <div className="w-16 h-16 flex items-center justify-center bg-custom-blue/10 text-custom-blue rounded-full">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          
+            <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
               <FaTicketAlt className="w-8 h-8" />
             </div>
-          </div>
-        </div>
-
-        <div className="text-center mb-4">
+            <div className="items-center text-center mb-4">
           <h3 className="text-2xl font-bold text-gray-900">
             {ticketData?.ticketCode}
           </h3>
           <span
-            className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full mt-2 ${
+            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ml-2 ${
               ticketData?.status === "Open"
                 ? "bg-green-100 text-green-800"
                 : ticketData?.status === "In Progress"
@@ -128,7 +127,11 @@ const SupportViewPage = () => {
           >
             {ticketData?.status}
           </span>
+          {/*-------v1.0.1-------------->*/}
         </div>
+        </div>
+
+        
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
           <div className="flex justify-between items-center mb-4">

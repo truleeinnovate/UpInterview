@@ -162,7 +162,7 @@ const SkillsTabComponent = ({skillsTabData,setSkillsTabData ,tab }) => {
                     <div className="flex justify-between w-full">
                       <label
                         htmlFor="skill-id"
-                        className={` ${ page === "Home" ? "w-[460px]" : "w-[470px]"  } `}  > Note</label>
+                        className='w-[25%]'  > Note</label>
                       {page === "Home" ? (
                         <div className=" flex flex-col w-full">
                           <input
@@ -215,9 +215,7 @@ const SkillsTabComponent = ({skillsTabData,setSkillsTabData ,tab }) => {
                     skill.note )&& <div className="flex w-full " >
                   <label
                     htmlFor="skill-id"
-                    className={` ${
-                      page === "Home" ? "w-[350px]" : "w-[40%]"
-                    }`}
+                    className='w-[25%]'
                   >
                     Note
                   </label>

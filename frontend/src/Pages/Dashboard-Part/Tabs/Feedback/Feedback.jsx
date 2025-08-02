@@ -13,7 +13,7 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useNavigate } from 'react-router-dom';
 import FeedbackKanban from './FeedbackKanban.jsx';
-import { Eye, Pencil } from 'lucide-react';
+import { Expand, Eye, Minimize, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
 import { IoMdClose } from 'react-icons/io';
@@ -41,7 +41,6 @@ const tabsList = [
   },
 ];
 
-
 const Feedback = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('table');
@@ -61,6 +60,7 @@ const Feedback = () => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [activeTab, setActiveTab] = useState(1);
+   const [isFullScreen, setIsFullScreen] = useState(false);
   
   // Sample data for mini tabs
   const [skillsTabData, setSkillsTabData] = useState([
@@ -82,7 +82,6 @@ const Feedback = () => {
     required: true,
     error: false
   });
-
 
   useEffect(() => {
     // Dummy data for testing - replacing API calls
@@ -248,7 +247,6 @@ const Feedback = () => {
     },
   ];
 
-
   // Modal helper functions
   const displayData = () => {
     const roundDetails = { questions: [] }; // Sample round details
@@ -295,7 +293,7 @@ const Feedback = () => {
 
   const ReturnTabsSection = () => {
     return (
-      <ul className="flex items-center gap-8 cursor-pointer py-1 px-8 border-b">
+      <ul className="flex items-center gap-8 cursor-pointer py-1 px-8">
         {tabsList.map((EachTab) => (
           <li
             style={{
@@ -311,7 +309,6 @@ const Feedback = () => {
       </ul>
     );
   };
-
 
   if (loading) return <div className="text-center p-6">Loading...</div>;
   //if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
@@ -411,20 +408,32 @@ const Feedback = () => {
           </motion.div>
         </div>
       </main>
-   
+      
       {/* Feedback Modal */}
       {showFeedbackModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
-          <div className="bg-white  w-[100%] max-w-4xl h-[100%] flex flex-col">
+          <div className={`${isFullScreen ? "w-[100%]" : "w-[50%]"} bg-white  h-[100%] flex flex-col`}>
             {/* Modal Header */}
-            <div className="px-8 flex items-center justify-between py-4 ">
+            <div className="px-8 flex items-center justify-between py-4">
               <h1 className="text-xl font-semibold text-[#227a8a]">Interview Feedback</h1>
+              <div className='flex items-center space-x-2'>
+              <button
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+              >
+              {isFullScreen ? (
+                <Minimize className="w-5 h-5 text-gray-500" />
+                  ) : (
+                <Expand className="w-5 h-5 text-gray-500" />
+              )}
+              </button>
               <button 
                 onClick={() => setShowFeedbackModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
               >
-                <IoMdClose size={24} />
+                <IoMdClose size={20} />
               </button>
+              </div>
             </div>
             
             {/* Tabs Section */}

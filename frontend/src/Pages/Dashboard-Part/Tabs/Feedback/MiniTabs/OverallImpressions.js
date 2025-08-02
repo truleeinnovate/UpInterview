@@ -55,8 +55,8 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
         </ul>
       )}
 
-      <div className={`${page==="Home"?"w-[50%] justify-between":"w-[100%]"} flex justify-between items-center gap-4`}>
-        <p className={` ${page === "Home" ? "w-[250px]" : "w-[25%]"}`}>
+      <div className="w-[75%] flex justify-between items-center gap-4">
+        <p className=''>
           Overall Rating{tab && <span className="text-red-500">*</span>}
         </p>
         <div className="flex gap-3">
@@ -80,7 +80,7 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
           
             <button
               onClick={handleNoteToggle}
-              className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[150px]"
+              className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[200px]"
               style={{visibility:tab?"visible":"hidden" }}
             >
               {notesBool ? "Delete Note" : "Add Note"}
@@ -94,7 +94,7 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
         <div className="flex justify-between">
           <label
             htmlFor="overall-note"
-            className={` ${page === "Home" ? "w-[360px]" : "w-[450px] "}`}
+            className=''
           >
             Note
           </label>
@@ -142,7 +142,7 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
         <div className="flex w-full ">
           <label
             htmlFor="skill-id"
-            className={` ${page === "Home" ? "w-[345px]" : "w-[40%]"}`}
+            className=''
           >
             Note
           </label>
@@ -150,11 +150,9 @@ const OverallImpressions = ({ overallImpressionTabData,setOverallImpressionTabDa
         </div>
       )}
 
-      <div className="flex">
+      <div className="flex gap-7">
         <label
-          className={` ${
-            page === "Home" ? "w-[340px]" : "w-[265px]"
-          } `}
+          className=''
         >
           Recommendation{ tab && <span className="text-[red]">*</span>}
         </label>
