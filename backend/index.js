@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  fixed feeds api issues.removed /api
 // v1.0.2  -  Ashraf  -  fixed name assessment to assessment template
 // this is new
+// v1.0.3  -  Ashraf  -  added health check endpoints for monitoring
 require('dotenv').config();
 
 // Debug environment variables
@@ -80,11 +81,104 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+  // <---------------------- v1.0.3
 
-mongoose
-  .connect(process.env.MONGODB_URI, {})
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
+
+// Enhanced MongoDB connection with Azure-specific configurations
+const mongooseOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 60000, // 60 seconds - increased for Azure
+  socketTimeoutMS: 90000, // 90 seconds - increased for Azure
+  connectTimeoutMS: 60000, // 60 seconds - increased for Azure
+  maxPoolSize: 20, // Increased pool size for Azure
+  minPoolSize: 5, // Increased minimum pool size
+  maxIdleTimeMS: 60000, // 60 seconds
+  retryWrites: true,
+  w: 'majority',
+  // Azure-specific optimizations
+  bufferMaxEntries: 0, // Disable mongoose buffering
+  bufferCommands: false, // Disable mongoose buffering
+  // Connection retry settings
+  retryReads: true,
+  // Heartbeat settings
+  heartbeatFrequencyMS: 10000,
+  // Server selection settings
+  serverSelectionTimeoutMS: 60000,
+  // Socket settings
+  socketTimeoutMS: 90000,
+  // Write concern settings
+  writeConcern: {
+    w: 'majority',
+    j: true,
+    wtimeout: 30000
+  }
+};
+
+// MongoDB connection with retry mechanism
+const connectWithRetry = async (retries = 5, delay = 5000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`🔄 Attempting MongoDB connection (attempt ${i + 1}/${retries})...`);
+      await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
+      console.log('✅ MongoDB connected successfully');
+      console.log('MongoDB URI:', process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED');
+      return;
+    } catch (err) {
+      console.error(`❌ MongoDB connection attempt ${i + 1} failed:`, err.message);
+      if (i === retries - 1) {
+        console.error('❌ All MongoDB connection attempts failed');
+        console.error('MongoDB URI status:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+        process.exit(1);
+      }
+      console.log(`⏳ Retrying in ${delay/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
+// Initialize MongoDB connection
+connectWithRetry();
+
+// Handle MongoDB connection events with enhanced logging
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB connection error:', err);
+  console.error('Error details:', {
+    name: err.name,
+    message: err.message,
+    code: err.code,
+    stack: err.stack
+  });
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB disconnected - attempting to reconnect...');
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('✅ MongoDB reconnected successfully');
+});
+
+mongoose.connection.on('connected', () => {
+  console.log('✅ MongoDB connected successfully');
+  console.log('Connection state:', mongoose.connection.readyState);
+});
+
+mongoose.connection.on('connecting', () => {
+  console.log('🔄 MongoDB connecting...');
+});
+
+// Add connection monitoring
+setInterval(() => {
+  const state = mongoose.connection.readyState;
+  const states = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
+}, 30000); // Log every 30 seconds
 
 // Middleware to capture raw body for webhook endpoints
 const rawBodyParser = require('body-parser').raw({ type: '*/*' });
@@ -103,6 +197,152 @@ app.use((req, res, next) => {
 // Standard middleware
 app.use(bodyParser.json());
 
+// Enhanced health check endpoints for monitoring
+
+// Main health check endpoint
+app.get('/health', (req, res) => {
+  const isHealthy = mongoose.connection.readyState === 1;
+  const healthCheck = {
+    status: isHealthy ? 'OK' : 'UNHEALTHY',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0',
+    mongodb: {
+      status: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host || 'unknown',
+      port: mongoose.connection.port || 'unknown',
+      name: mongoose.connection.name || 'unknown'
+    },
+    memory: {
+      ...process.memoryUsage(),
+      heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+      heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB',
+      external: Math.round(process.memoryUsage().external / 1024 / 1024) + ' MB'
+    },
+    system: {
+      platform: process.platform,
+      nodeVersion: process.version,
+      pid: process.pid
+    },
+    env: {
+      MONGODB_URI: process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED',
+      NODE_ENV: process.env.NODE_ENV || 'development',
+      COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || 'NOT SET'
+    }
+  };
+  
+  res.status(isHealthy ? 200 : 503).json(healthCheck);
+});
+
+// Simple health check for load balancers
+app.get('/health/simple', (req, res) => {
+  const isHealthy = mongoose.connection.readyState === 1;
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'OK' : 'UNHEALTHY',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Detailed health check with database test
+app.get('/health/detailed', async (req, res) => {
+  try {
+    const isConnected = mongoose.connection.readyState === 1;
+    let dbTest = { status: 'not_connected', error: null };
+    
+    if (isConnected) {
+      try {
+        // Test database connection with a simple ping
+        await mongoose.connection.db.admin().ping();
+        dbTest = { status: 'connected', ping: 'success' };
+      } catch (pingError) {
+        dbTest = { status: 'connected_but_ping_failed', error: pingError.message };
+      }
+    }
+    
+    const detailedHealth = {
+      status: isConnected && dbTest.status === 'connected' ? 'OK' : 'UNHEALTHY',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      mongodb: {
+        connection: {
+          status: isConnected ? 'connected' : 'disconnected',
+          readyState: mongoose.connection.readyState,
+          host: mongoose.connection.host || 'unknown',
+          port: mongoose.connection.port || 'unknown',
+          name: mongoose.connection.name || 'unknown'
+        },
+        test: dbTest
+      },
+      memory: {
+        ...process.memoryUsage(),
+        heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+        heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB',
+        external: Math.round(process.memoryUsage().external / 1024 / 1024) + ' MB'
+      },
+      system: {
+        platform: process.platform,
+        nodeVersion: process.version,
+        pid: process.pid,
+        cpuUsage: process.cpuUsage()
+      }
+    };
+    
+    const isHealthy = isConnected && dbTest.status === 'connected';
+    res.status(isHealthy ? 200 : 503).json(detailedHealth);
+    
+  } catch (error) {
+    res.status(503).json({
+      status: 'ERROR',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+      mongodb: {
+        connection: {
+          status: 'error',
+          readyState: mongoose.connection.readyState
+        }
+      }
+    });
+  }
+});
+
+// Readiness probe for Kubernetes/Azure
+app.get('/ready', (req, res) => {
+  const isReady = mongoose.connection.readyState === 1;
+  res.status(isReady ? 200 : 503).json({
+    ready: isReady,
+    timestamp: new Date().toISOString(),
+    mongodb: {
+      status: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      readyState: mongoose.connection.readyState
+    }
+  });
+});
+
+// Liveness probe for Kubernetes/Azure
+app.get('/live', (req, res) => {
+  res.status(200).json({
+    alive: true,
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Database connection check middleware
+const dbConnectionMiddleware = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.error('❌ Database not connected. ReadyState:', mongoose.connection.readyState);
+    return res.status(503).json({
+      error: 'Database connection unavailable',
+      message: 'Service temporarily unavailable. Please try again later.',
+      timestamp: new Date().toISOString()
+    });
+  }
+  next();
+};
+// ------------------------------v1.0.3 >
 // Apply permission middleware to all routes except authentication routes
 const { permissionMiddleware } = require('./middleware/permissionMiddleware');
 
@@ -148,9 +388,12 @@ const usersRoutes = require('./routes/usersRoutes.js');
 const agoraRoomRoute = require('./routes/agoraRoomRoute.js');
 
 app.use('/api/agora', agoraRoomRoute);
-app.use('/api', apiRoutes);
-app.use('/linkedin', linkedinAuthRoutes);
-app.use('/Individual', individualLoginRoutes);
+// ------------------------------v1.0.3 >
+// Apply database connection middleware to all API routes except health check
+app.use('/api', dbConnectionMiddleware, apiRoutes);
+app.use('/linkedin', dbConnectionMiddleware, linkedinAuthRoutes);
+app.use('/Individual', dbConnectionMiddleware, individualLoginRoutes);
+// ------------------------------v1.0.3 >
 app.use('/', SubscriptionRouter);
 app.use('/', CustomerSubscriptionRouter);
 app.use('/Organization', organizationRoutes);
