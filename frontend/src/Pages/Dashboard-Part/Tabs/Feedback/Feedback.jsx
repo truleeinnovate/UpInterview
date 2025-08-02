@@ -1,5 +1,6 @@
 // v1.0.0  -  Venkatesh  -  Initial setup for Feedbacks with table and kanban views
 // v1.0.1  -  Venkatesh  -  Added toolbar with search, pagination, and filter functionality
+// v1.0.2  -  Venkatesh  -  Added edit modes for Candidate, Interviews, Skills, and Overall Impressions tabs
 
 import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
@@ -21,6 +22,7 @@ import CandidateMiniTab from './MiniTabs/Candidate';
 import InterviewsMiniTabComponent from './MiniTabs/Interviews';
 import SkillsTabComponent from './MiniTabs/Skills';
 import OverallImpressions from './MiniTabs/OverallImpressions';
+import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js';
 
 const tabsList = [
   {
@@ -43,6 +45,7 @@ const tabsList = [
 
 const Feedback = () => {
   const navigate = useNavigate();
+  useScrollLock(true);
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -60,8 +63,9 @@ const Feedback = () => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [activeTab, setActiveTab] = useState(1);
-   const [isFullScreen, setIsFullScreen] = useState(false);
-  
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);//<----v1.0.2---
+
   // Sample data for mini tabs
   const [skillsTabData, setSkillsTabData] = useState([
     {
@@ -73,7 +77,7 @@ const Feedback = () => {
       ],
     },
   ]);
-  
+
   const [overallImpressionTabData, setOverallImpressionTabData] = useState({
     rating: 4,
     note: "Good candidate overall",
@@ -82,6 +86,16 @@ const Feedback = () => {
     required: true,
     error: false
   });
+
+  ////<----v1.0.2--- Static data for view mode
+  const staticFeedbackData = {
+    _id: selectedFeedback?._id || "N/A",
+    interview: selectedFeedback?.interview || "John Doe",
+    interviewType: selectedFeedback?.interviewType || "Technical",
+    scheduledDate: selectedFeedback?.scheduledDate || "2025-08-01",
+    status: selectedFeedback?.status || "Active",
+    feedback: selectedFeedback?.feedback || "Good performance",
+  };
 
   useEffect(() => {
     // Dummy data for testing - replacing API calls
@@ -171,18 +185,19 @@ const Feedback = () => {
   };
 
   const handleView = (feedback) => {
-    // navigate(`/feedback/${feedback._id}`, {
-    //   state: { feedback: feedback }
-    // });
     setSelectedFeedback(feedback);
     setShowFeedbackModal(true);
+    setIsEditMode(false);//<----v1.0.2---
     setActiveTab(1);
   };
 
   const handleEdit = (feedback) => {
-    navigate(`/feedback/edit/${feedback._id}`, {
-      state: { feedback: feedback }
-    });
+    //<----v1.0.2---
+    setSelectedFeedback(feedback);
+    setShowFeedbackModal(true);
+    setIsEditMode(true);
+    setActiveTab(1);
+    //----v1.0.2--->
   };
 
   const handleAddFeedback = () => {
@@ -264,6 +279,8 @@ const Feedback = () => {
           skillsTabData={skillsTabData} 
           tab={true} 
           page="Popup"
+          data={isEditMode ? selectedFeedback : staticFeedbackData}//<----v1.0.2---
+          isEditMode={isEditMode}//<----v1.0.2---
         />;
       case 2: 
         return <InterviewsMiniTabComponent 
@@ -271,6 +288,8 @@ const Feedback = () => {
           tab={true} 
           page="Popup" 
           closePopup={() => setShowFeedbackModal(false)}
+          data={isEditMode ? selectedFeedback : staticFeedbackData}//<----v1.0.2---
+          isEditMode={isEditMode}//<----v1.0.2---
         />;
       case 3: 
         return <SkillsTabComponent 
@@ -278,6 +297,7 @@ const Feedback = () => {
           skillsTabData={skillsTabData} 
           tab={true} 
           page="Popup"
+          isEditMode={isEditMode}//<----v1.0.2---
         />;
       case 4: 
         return <OverallImpressions 
@@ -285,6 +305,7 @@ const Feedback = () => {
           setOverallImpressionTabData={setOverallImpressionTabData} 
           tab={true} 
           page="Popup"
+          isEditMode={isEditMode}//<----v1.0.2---
         />;
       default: 
         return null;

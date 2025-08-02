@@ -20,6 +20,7 @@ import { Minimize, Expand, X, Eye } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 // v1.0.0 ------------------------------------------------------------------------->
 //import SupportForm from "./SupportForm";
 
@@ -114,19 +115,7 @@ const SupportViewPage = () => {
           <h3 className="text-2xl font-bold text-gray-900">
             {ticketData?.ticketCode}
           </h3>
-          <span
-            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ml-2 ${
-              ticketData?.status === "Open"
-                ? "bg-green-100 text-green-800"
-                : ticketData?.status === "In Progress"
-                ? "bg-blue-100 text-blue-800"
-                : ticketData?.status === "Resolved"
-                ? "bg-gray-100 text-gray-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {ticketData?.status}
-          </span>
+          <StatusBadge status={ticketData?.status} text={ticketData?.status ? ticketData?.status.charAt(0).toUpperCase() + ticketData?.status.slice(1) : "Not Provided"}/>{/*common status code add by Venkatesh*/}
           {/*-------v1.0.1-------------->*/}
         </div>
         </div>

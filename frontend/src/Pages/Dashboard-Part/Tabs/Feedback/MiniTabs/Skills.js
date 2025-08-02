@@ -1,3 +1,5 @@
+//<--v1.0.0------Venkatesh------add edit mode skills tab
+
 import React, { useState } from "react";
 import { IoIosStar } from "react-icons/io";
 import { useCustomContext } from "../../../../../Context/Contextfetch";
@@ -9,62 +11,72 @@ const ratingLst = [
   { id: 4, name: "Excellent", stars: 5, color: "green" },
 ];
 
-const SkillsTabComponent = ({skillsTabData,setSkillsTabData ,tab }) => {
-  const {page} = useCustomContext();
+//<--v1.0.0------
+const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEditMode }) => {
+  const { page: currentPage } = useCustomContext();
+  //----v1.0.0------>
   const getColorByRating = (rating) => {
     const ratingItem = ratingLst.find((r) => r.stars === rating);
     return ratingItem ? ratingItem.color : "gray";
   };
   const onClickRating = (catId, skillIndex, rating) => {
+    if(isEditMode){//<-----v1.0.0
     setSkillsTabData((prev) => {
       const updatedData = prev.map(category=>
         category.id===catId ? {
-          ...category,
+                ...category,
           skillsList:category.skillsList.map((skill,index)=>
           index===skillIndex?{...skill,rating,error: (skill.required && rating<=1)?true:false}:skill
         )
         }:category
-      )
+        )
 
     
       return updatedData;
     });
+    }
   };
   
 
   const onChangeNoteText = (catId, skillIndex, value) => {
+    if(isEditMode){//<-----v1.0.0
     setSkillsTabData((prev) => (
       prev.map(category=>
         category.id===catId ? {
-          ...category,
+                ...category,
                   skillsList: category.skillsList.map((skill, index) =>
                     index === skillIndex ? { ...skill, note: value } : skill
-                  ),
+                ),
         }:category
-      )
+        )
     ));
+    }
   };
 
   const onClickAddNote = (catId, skillIndex) => {
-
-    setSkillsTabData(prev=>
-      prev.map(category=>
-        category.id===catId?{
-          ...category,
-              skillsList: category.skillsList.map((skill, index) =>
-                index === skillIndex ? { ...skill, notesBool: true } : skill
-              ),
-        }:category
+    if(isEditMode){//<-----v1.0.0
+      setSkillsTabData(prev=>
+        prev.map(category=>
+          category.id===catId?{
+                  ...category,
+                skillsList: category.skillsList.map((skill, index) =>
+                  index === skillIndex ? { ...skill, notesBool: true } : skill
+                  ),
+          }:category
+          )
       )
-    )
+    }
+
+    
   };
 
   const onClickDeleteNote = (catId, skillIndex) => {
+    if(isEditMode){//<-----v1.0.0
     console.log("delte note is clicked");
     setSkillsTabData(prev=>
       prev.map(category=>
         category.id===catId? {
-          ...category,
+                ...category,
               skillsList: category.skillsList.map((skill, index) =>
                 index === skillIndex
                   ? { ...skill, notesBool: false, note: "" }
@@ -73,7 +85,7 @@ const SkillsTabComponent = ({skillsTabData,setSkillsTabData ,tab }) => {
         }:category
       )
     )
-    
+    }
     
   };
 
@@ -124,7 +136,7 @@ const SkillsTabComponent = ({skillsTabData,setSkillsTabData ,tab }) => {
                                       )
                                   : null
                               }
-                              className="cursor-pointer transform transition-transform hover:scale-110"
+                              className={`cursor-pointer transform transition-transform hover:scale-110 ${isEditMode ? "" : "cursor-not-allowed"}`}
                               size={20}
                               style={{
                                 color: isSelected
@@ -136,6 +148,8 @@ const SkillsTabComponent = ({skillsTabData,setSkillsTabData ,tab }) => {
                           );
                         })}
                       </div>
+                      {/*<----v1.0.0------*/}
+                      {isEditMode ? (
                         <div className={tab ?"visibility-visible" : "visibility-hidden"} style={{visibility:tab? "visible":"hidden"}}>
                           {skill.notesBool ? (
                             <button
@@ -157,13 +171,15 @@ const SkillsTabComponent = ({skillsTabData,setSkillsTabData ,tab }) => {
                             </button>
                           )}
                         </div>
+                      ) : <div></div>}
                   </div>
+                  {/*----v1.0.0------>*/}
                   {(skill.notesBool && tab ) && (
                     <div className="flex justify-between w-full">
                       <label
                         htmlFor="skill-id"
                         className='w-[25%]'  > Note</label>
-                      {page === "Home" ? (
+                      {currentPage === "Home" ? (
                         <div className=" flex flex-col w-full">
                           <input
                             value={skill.note}
