@@ -16,6 +16,7 @@ MongooseError: Operation `users.findOne()` buffering timed out after 10000ms
 - ✅ **Updated connection timeouts** in `index.js` (60-90 seconds)
 - ✅ **Increased connection pool size** (20 max, 5 min)
 - ✅ **Added retry mechanism** with 5 attempts
+- ✅ **Fixed invalid MongoDB options** (removed `bufferMaxEntries`)
 - ✅ **Disabled mongoose buffering** to prevent timeout issues
 
 ### 2. Environment Variables
@@ -98,8 +99,7 @@ const mongooseOptions = {
   connectTimeoutMS: 60000, // 60 seconds
   maxPoolSize: 20, // Increased for Azure
   minPoolSize: 5,
-  bufferMaxEntries: 0, // Disable buffering
-  bufferCommands: false,
+  bufferCommands: false, // Disable buffering
   retryReads: true,
   heartbeatFrequencyMS: 10000
 };

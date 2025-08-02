@@ -24,7 +24,6 @@ const mongooseOptions = {
   maxIdleTimeMS: 30000,
   retryWrites: true,
   w: 'majority',
-  bufferMaxEntries: 0,
   bufferCommands: false,
   retryReads: true,
   heartbeatFrequencyMS: 10000
