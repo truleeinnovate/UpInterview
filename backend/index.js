@@ -97,16 +97,11 @@ const mongooseOptions = {
   retryWrites: true,
   w: 'majority',
   // Azure-specific optimizations
-  bufferMaxEntries: 0, // Disable mongoose buffering
   bufferCommands: false, // Disable mongoose buffering
   // Connection retry settings
   retryReads: true,
   // Heartbeat settings
   heartbeatFrequencyMS: 10000,
-  // Server selection settings
-  serverSelectionTimeoutMS: 60000,
-  // Socket settings
-  socketTimeoutMS: 90000,
   // Write concern settings
   writeConcern: {
     w: 'majority',
