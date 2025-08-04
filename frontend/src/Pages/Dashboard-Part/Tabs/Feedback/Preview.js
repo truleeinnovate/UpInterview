@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import CandidateMiniTab from "./MiniTabs/Candidate";
 import SkillsTabComponent from "./MiniTabs/Skills";
 import OverallImpressions from "./MiniTabs/OverallImpressions";
@@ -24,13 +24,30 @@ const Preview = () => {
   const previewRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const  {setPage} = useCustomContext()
+  const { setPage, skillsTabData, overallImpressionTabData, interviewerSectionData, candidateData } = useCustomContext();
+  
+  // Get feedback data from navigation state or fallback to context
+  const feedbackData = useMemo(() => {
+    return state?.feedbackData || {
+      candidateData,
+      skillsTabData,
+      overallImpressionTabData,
+      interviewerSectionData
+    };
+  }, [state, candidateData, skillsTabData, overallImpressionTabData, interviewerSectionData]);
 
   useEffect(()=>{
     document.title="Job Portal - Interview Feedback Preview"
     setPage("Home")
     
-  },[setPage])
+    // Debug logs to check data
+    console.log('Preview - Navigation state:', state);
+    console.log('Preview - Context skillsTabData:', skillsTabData);
+    console.log('Preview - Context overallImpressionTabData:', overallImpressionTabData);
+    console.log('Preview - Context candidateData:', candidateData);
+    console.log('Preview - Final feedbackData:', feedbackData);
+    
+  },[setPage, state, skillsTabData, overallImpressionTabData, candidateData, feedbackData])
 
   const handleDownload = async () => {
     setIsLoading(true);
@@ -74,12 +91,12 @@ const Preview = () => {
         </h2>
         <div className="p-8 border border-gray-500 rounded-md m-8 ">
           <div className="border-b-2 border-[#80808075] pb-12 h-[82vh]">
-            <CandidateMiniTab />
+            <CandidateMiniTab candidateData={feedbackData.candidateData} />
           </div>
           <div className="relative my-4 border-b-2 border-[#80808075] pb-12">
             <div className="">
               <h2 className="font-semibold text-xl">Skills:</h2>
-              <SkillsTabComponent tab={state?.tab} />
+              <SkillsTabComponent tab={false} isEditMode={false} />
             </div>
             <div className="absolute right-0 top-[0%] col-span-2 flex flex-col items-center">
               <ul className="stars-container flex gap-8">
@@ -105,7 +122,7 @@ const Preview = () => {
           </div>
           <div className="">
             <h2 className="font-semibold text-xl mb-4 w-[250px]">Overall Impressions:</h2>
-            <OverallImpressions />
+            <OverallImpressions tab={false} isEditMode={false} />
           </div>
         </div>
       </div>

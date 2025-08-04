@@ -25,6 +25,7 @@ import SkillsTabComponent from './MiniTabs/Skills';
 import OverallImpressions from './MiniTabs/OverallImpressions';
 import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js';
 import SummarizedFeedbackModal from './SummarizedFeedbackModal.jsx';
+import { useCustomContext } from '../../../../Context/Contextfetch.js';
 
 const tabsList = [
   {
@@ -48,6 +49,16 @@ const tabsList = [
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
+  
+  // Get context data
+  const {
+    skillsTabData,
+    setSkillsTabData,
+    overallImpressionTabData,
+    setOverallImpressionTabData,
+    interviewerSectionData,
+    candidateData
+  } = useCustomContext();
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -73,55 +84,36 @@ const Feedback = () => {
     overallImpression: false
   });
 
-  const areAllValidationsMet = () => {
-    return feedbackTabErrors.interviewQuestion && feedbackTabErrors.skills && feedbackTabErrors.overallImpression;
-  };
+  // const areAllValidationsMet = () => {
+  //   return feedbackTabErrors.interviewQuestion && feedbackTabErrors.skills && feedbackTabErrors.overallImpression;
+  // };
 
-  const onClickPreviewButton = () => {
-    navigate("/feedback-preview", { state: { tab: activeTab } });
-  };
+  // const onClickPreviewButton = () => {
+  //   navigate("/feedback-preview", { state: { tab: activeTab } });
+  // };
 
-  const onClickSubmit = async () => {
-    // Implementation for form submission will be added here
-    console.log("Submit button clicked");
-    // Placeholder for actual submission logic
-    toast.success("Feedback Submitted!");
-    setShowFeedbackModal(false);
-  };
+  // const onClickSubmit = async () => {
+  //   // Implementation for form submission will be added here
+  //   console.log("Submit button clicked");
+  //   // Placeholder for actual submission logic
+  //   toast.success("Feedback Submitted!");
+  //   setShowFeedbackModal(false);
+  // };
 
-  const onClickNextButton = () => {
-    // Add validation logic for the current tab if needed
-    if (activeTab === 2) {
-      // Validate interview questions
-      console.log("Validate interview questions");
-    } else if (activeTab === 3) {
-      // Validate skills
-      console.log("Validate skills");
-    }
-    setActiveTab((prev) => prev <= 3 && prev + 1);
-  };
-  //----v1.0.2--->
+  // const onClickNextButton = () => {
+  //   // Add validation logic for the current tab if needed
+  //   if (activeTab === 2) {
+  //     // Validate interview questions
+  //     console.log("Validate interview questions");
+  //   } else if (activeTab === 3) {
+  //     // Validate skills
+  //     console.log("Validate skills");
+  //   }
+  //   setActiveTab((prev) => prev <= 3 && prev + 1);
+  // };
+  // //----v1.0.2--->
 
-  // Sample data for mini tabs
-  const [skillsTabData, setSkillsTabData] = useState([
-    {
-      id: 1,
-      category: "Mandatory skills",
-      skillsList: [
-        { name: "Technical Skills", rating: 4, note: "", notesBool: false, required: true, error: false },
-        { name: "Communication", rating: 3, note: "", notesBool: false, required: true, error: false },
-      ],
-    },
-  ]);
-
-  const [overallImpressionTabData, setOverallImpressionTabData] = useState({
-    rating: 4,
-    note: "Good candidate overall",
-    recommendation: "hire",
-    notesBool: false,
-    required: true,
-    error: false
-  });
+  // Local state data is now managed by context
 
   ////<----v1.0.2--- Static data for view mode
   const staticFeedbackData = {
@@ -254,6 +246,45 @@ const handleSummarize = (feedback) => {
 
   const handleAddFeedback = () => {
     navigate('/dashboard/feedbacks/add');
+  };
+
+  // Button handler functions for the feedback modal
+  const onClickPreviewButton = () => {
+    // Navigate to preview page with current feedback data
+    navigate('/feedback-preview', {
+      state: {
+        feedbackData: {
+          candidateData: selectedFeedback,
+          skillsTabData,
+          overallImpressionTabData,
+          interviewerSectionData
+        }
+      }
+    });
+  };
+
+  const onClickSubmit = () => {
+    // Handle feedback submission
+    console.log('Submitting feedback:', {
+      candidateData: selectedFeedback,
+      skillsTabData,
+      overallImpressionTabData,
+      interviewerSectionData
+    });
+    // Add your submission logic here
+    setShowFeedbackModal(false);
+  };
+
+  const onClickNextButton = () => {
+    // Move to next tab
+    if (activeTab < 4) {
+      setActiveTab(activeTab + 1);
+    }
+  };
+
+  const areAllValidationsMet = () => {
+    // Add your validation logic here
+    return true;
   };
 
   const tableColumns = [
@@ -594,9 +625,9 @@ const handleSummarize = (feedback) => {
               {activeTab === 4 && isEditMode && (
                 <>
                   <button 
-                    disabled={!areAllValidationsMet()} 
+                    //disabled={!areAllValidationsMet()} 
                     onClick={onClickPreviewButton} 
-                    className={`bg-white text-[#227a8a] border-[1px] border-[#227a8a] py-[0.5rem] px-[2rem] rounded-lg ${!areAllValidationsMet() && "cursor-not-allowed"}`}
+                    className={`bg-white text-[#227a8a] border-[1px] border-[#227a8a] py-[0.5rem] px-[2rem] rounded-lg `}//${!areAllValidationsMet() && "cursor-not-allowed"}
                   >
                     Preview
                   </button>

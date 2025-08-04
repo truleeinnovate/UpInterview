@@ -113,11 +113,11 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
         </ul>
       )}
       <ul className="mt-8 flex flex-col gap-4 w-[full]">
-        {skillsTabData.map((skillCat) => (
+        {(skillsTabData || []).map((skillCat) => (
           <li key={skillCat.id} className="flex flex-col gap-4 ">
             <h2 className="font-bold">{skillCat.category}:</h2>
             <ul className="flex flex-col gap-4" >
-              {skillCat.skillsList.map((skill, skillIndex) => (
+              {(skillCat.skillsList || []).map((skill, skillIndex) => (
                 <li key={skill.name} className="flex flex-col gap-4" >
                   <div className="flex  items-center " >
                     <p  className='w-[25%]' >  {skill.name}  {(skill.required && tab) && <span className="text-[red]">*</span>}</p>

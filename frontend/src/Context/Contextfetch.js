@@ -61,6 +61,60 @@ const CustomProvider = ({ children }) => {
     }
   ]);
   const [SchedulerSectionData, setSchedulerSectionData] = useState([]);
+  
+  // Overall impression tab data
+  const [overallImpressionTabData, setOverallImpressionTabData] = useState({
+    rating: 0,
+    note: '',
+    recommendation: '',
+    notesBool: false
+  });
+  
+  // Candidate data
+  const [candidateData, setCandidateData] = useState({
+    name: "John Doe",
+    email: "john.doe@example.com",
+    phone: "+1 (555) 123-4567",
+    location: "San Francisco, CA",
+    experience: "5 years",
+    currentRole: "Senior Developer",
+    companyName: "Tech Corp",
+    skillsList: "React, JavaScript, Node.js"
+  });
+  
+  // Skills tab data
+  const [skillsTabData, setSkillsTabData] = useState([
+    {
+      id: 1,
+      category: "Technical Skills",
+      skillsList: [
+        {
+          name: "React",
+          rating: 4,
+          required: true,
+          note: ""
+        },
+        {
+          name: "JavaScript",
+          rating: 5,
+          required: true,
+          note: ""
+        }
+      ]
+    },
+    {
+      id: 2,
+      category: "Soft Skills",
+      skillsList: [
+        {
+          name: "Communication",
+          rating: 3,
+          required: false,
+          note: ""
+        }
+      ]
+    }
+  ]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
     skills: true,
@@ -761,6 +815,19 @@ const CustomProvider = ({ children }) => {
         // scheduler section data
         SchedulerSectionData,
         setSchedulerSectionData,
+        
+        // overall impression tab data
+        overallImpressionTabData,
+        setOverallImpressionTabData,
+        
+        // skills tab data
+        skillsTabData,
+        setSkillsTabData,
+        
+        // candidate data
+        candidateData,
+        setCandidateData,
+        
         // superAdminProfile,
       }}
     >
