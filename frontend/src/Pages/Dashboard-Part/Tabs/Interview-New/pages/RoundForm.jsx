@@ -30,7 +30,9 @@ import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import LoadingButton from "../../../../../Components/LoadingButton";
 // v1.0.1 <----------------------------------------------------------------------------
+
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
 
@@ -149,11 +151,13 @@ const RoundFormInterviews = () => {
   // console.log("internalInterviewers selected", internalInterviewers);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
 
+
   console.log("externalInterviewers 0000000000000000", externalInterviewers);
 
   console.log("internalInterviewers", internalInterviewers);
   console.log("interviewerViewType", interviewerViewType);
   console.log("interviewerGroupName", interviewerGroupName);
+
 
   // v1.0.1 <-------------------------------------------------------------------------
   const fieldRefs = {
@@ -593,7 +597,9 @@ const RoundFormInterviews = () => {
       return;
     }
 
+
     console.log("interviwers", interviewers, viewType, groupName);
+
 
     // Clear existing interviewers when view type changes
 
@@ -650,7 +656,7 @@ const RoundFormInterviews = () => {
   };
 
   const handleRemoveInternalInterviewer = (interviewerId) => {
-    console.log("Clearing interviewer");
+    // console.log("Clearing interviewer");
     setInternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter((i) => i._id !== interviewerId);
 
@@ -689,7 +695,7 @@ const RoundFormInterviews = () => {
   };
 
   const handleClearAllInterviewers = () => {
-    console.log("not clearing");
+    // console.log("not clearing");
 
     setInternalInterviewers([]);
     setExternalInterviewers([]);
@@ -793,27 +799,27 @@ const RoundFormInterviews = () => {
   // );
 
   const handleSubmit = async (e) => {
-    console.log("handleSubmit() called");
+    // console.log("handleSubmit() called");
     e.preventDefault();
 
-    console.log("roundEditData", roundEditData);
-    console.log("interviewId", interviewId);
-    console.log("roundId", roundId);
-    console.log("roundTitle", roundTitle);
-    console.log("interviewMode", interviewMode);
-    console.log("sequence", sequence);
-    console.log("assessmentTemplate", assessmentTemplate);
-    console.log("instructions", instructions);
-    console.log("status", status);
-    console.log("duration", duration);
-    console.log("combinedDateTime", combinedDateTime);
-    console.log("interviewType", interviewType);
-    console.log("selectedInterviewType", selectedInterviewType);
-    // console.log("selectedInterviewersData", selectedInterviewersData);
-    console.log("interviewQuestionsList", interviewQuestionsList);
+    // console.log("roundEditData", roundEditData);
+    // console.log("interviewId", interviewId);
+    // console.log("roundId", roundId);
+    // console.log("roundTitle", roundTitle);
+    // console.log("interviewMode", interviewMode);
+    // console.log("sequence", sequence);
+    // console.log("assessmentTemplate", assessmentTemplate);
+    // console.log("instructions", instructions);
+    // console.log("status", status);
+    // console.log("duration", duration);
+    // console.log("combinedDateTime", combinedDateTime);
+    // console.log("interviewType", interviewType);
+    // console.log("selectedInterviewType", selectedInterviewType);
+    // // console.log("selectedInterviewersData", selectedInterviewersData);
+    // console.log("interviewQuestionsList", interviewQuestionsList);
 
     try {
-      console.log("Preparing round data for validation");
+      // console.log("Preparing round data for validation");
       // Clean interviewers data to remove undefined fields
       const cleanInterviewer = (interviewer) => {
         const { availability, ...rest } = interviewer;
@@ -881,9 +887,10 @@ const RoundFormInterviews = () => {
         }),
       };
 
-      console.log("Validating the round data");
+      // console.log("Validating the round data");
       const validationErrors = validateInterviewRoundData(roundData);
       setErrors(validationErrors);
+
 
       console.log("Validation errors:", validationErrors);
       if (Object.keys(validationErrors).length > 0) {
@@ -891,9 +898,10 @@ const RoundFormInterviews = () => {
         scrollToFirstError(validationErrors, fieldRefs);
         return;
       }
+
       // v1.0.1 --------------------------------------------------------------------------------->
 
-      console.log("roundData", roundData);
+      // console.log("roundData", roundData);
       const payload = isEditing
         ? {
             interviewId,
@@ -914,10 +922,11 @@ const RoundFormInterviews = () => {
               })) || [],
           };
 
-      console.log("Payload for submission:", payload);
+      // console.log("Payload for submission:", payload);
 
       // Use saveInterviewRound mutation from useInterviews hook
       const response = await saveInterviewRound(payload);
+
 
       console.log("Response from selectedInterviewers:", selectedInterviewers);
       console.log(
@@ -931,9 +940,10 @@ const RoundFormInterviews = () => {
           `Sending ${selectedInterviewers.length} outsource requests`
         );
         console.log("selectedInterviewers", selectedInterviewers);
+
         for (const interviewer of selectedInterviewers) {
-          console.log("interviewer", interviewer);
-          console.log("interviewer contactId", interviewer.contact?._id);
+          // console.log("interviewer", interviewer);
+          // console.log("interviewer contactId", interviewer.contact?._id);
           const outsourceRequestData = {
             tenantId: orgId,
             ownerId: userId,
@@ -954,7 +964,7 @@ const RoundFormInterviews = () => {
             ).toISOString(),
           };
 
-          console.log("Sending outsource request:", outsourceRequestData);
+          // console.log("Sending outsource request:", outsourceRequestData);
           await axios.post(
             `${config.REACT_APP_API_URL}/interviewrequest`,
             outsourceRequestData,
@@ -968,7 +978,9 @@ const RoundFormInterviews = () => {
         }
       }
 
+
       console.log("response", response);
+
 
       // don't remove this code related to agora video room
       // if (response.status === 'ok'){
@@ -982,8 +994,176 @@ const RoundFormInterviews = () => {
 
       // }
 
-      console.log("Navigating to the interview details page");
-      navigate(`/interviews/${interviewId}`);
+      console.log("response",response);
+      
+
+      //  google meet link creation  
+      if (response.status === 'ok'){
+        console.log("Generating Google Meet link for the interview");
+        
+        try {
+          // Google OAuth configuration
+          const GOOGLE_CLIENT_ID = "173597320825-mbfkah9a2rub0a1onu237rg4r94fhmus.apps.googleusercontent.com";
+          const REDIRECT_URI = "http://localhost:3000/oauth2callback";
+          const SCOPES = ["https://www.googleapis.com/auth/calendar"];
+          
+          // Step 1: Get authorization code
+          const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+            `client_id=${GOOGLE_CLIENT_ID}` +
+            `&redirect_uri=${REDIRECT_URI}` +
+            `&response_type=code` +
+            `&access_type=offline&prompt=consent` +
+            `&scope=${SCOPES.join(" ")}`;
+          
+          console.log("Redirecting to Google OAuth for authorization...");
+          console.log("Auth URL:", authUrl);
+          console.log("Client ID:", GOOGLE_CLIENT_ID);
+          console.log("Redirect URI:", REDIRECT_URI);
+          
+          // Open OAuth popup
+          const popup = window.open(authUrl, 'googleOAuth', 'width=500,height=600');
+          
+          // Listen for the OAuth callback
+          const handleOAuthCallback = async (event) => {
+            if (event.origin !== window.location.origin) return;
+            
+            const { code, error } = event.data;
+            
+            if (error) {
+              console.error("OAuth error:", error);
+              return;
+            }
+            
+            if (code) {
+              console.log("Received authorization code, exchanging for tokens...");
+              
+              try {
+                // Step 2: Exchange code for tokens
+                const tokenResponse = await axios.post(`${config.REACT_APP_API_URL}/googlemeet/exchange_token`, { code });
+                console.log("Token exchange successful");
+                
+                // Step 3: Create Google Meet event
+                console.log("Creating meet with data:", {
+                  startDateTime: combinedDateTime,
+                  duration,
+                  roundTitle,
+                  instructions,
+                  selectedInterviewers: selectedInterviewers,
+                  selectedInterviewersLength: selectedInterviewers?.length || 0
+                });
+                
+                // Handle case where combinedDateTime might be empty or invalid
+                if (!combinedDateTime) {
+                  console.log("No combinedDateTime, using current time + 15 minutes");
+                  const now = new Date();
+                  now.setMinutes(now.getMinutes() + 15);
+                  combinedDateTime = now.toISOString();
+                }
+                
+                // Parse the combinedDateTime format: "05-08-2025 11:30 AM - 12:00 PM"
+                console.log("combinedDateTime value:", combinedDateTime);
+                console.log("combinedDateTime type:", typeof combinedDateTime);
+                
+                let startDate;
+                if (combinedDateTime.includes(" - ")) {
+                  // Format: "05-08-2025 11:30 AM - 12:00 PM"
+                  const startTimePart = combinedDateTime.split(" - ")[0]; // "05-08-2025 11:30 AM"
+                  console.log("Extracted start time part:", startTimePart);
+                  
+                  // Parse DD-MM-YYYY HH:MM AM/PM format
+                  const dateTimeMatch = startTimePart.match(/(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)/);
+                  if (dateTimeMatch) {
+                    const [, day, month, year, hour, minute, ampm] = dateTimeMatch;
+                    let hour24 = parseInt(hour);
+                    if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                    if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+                    
+                    // Create date in YYYY-MM-DDTHH:MM:SS format
+                    const isoDateString = `${year}-${month}-${day}T${hour24.toString().padStart(2, '0')}:${minute}:00`;
+                    console.log("Converted to ISO format:", isoDateString);
+                    startDate = new Date(isoDateString);
+                  } else {
+                    throw new Error(`Could not parse date format: ${startTimePart}`);
+                  }
+                } else {
+                  // Try to parse as regular date
+                  startDate = new Date(combinedDateTime);
+                }
+                
+                console.log("startDate:", startDate);
+                console.log("startDate.getTime():", startDate.getTime());
+                if (isNaN(startDate.getTime())) {
+                  throw new Error(`Invalid start date: ${combinedDateTime}`);
+                }
+                
+                const endDate = new Date(startDate.getTime() + duration * 60000);
+                if (isNaN(endDate.getTime())) {
+                  throw new Error(`Invalid end date calculation`);
+                }
+                
+                console.log("Final start date ISO:", startDate.toISOString());
+                console.log("Final end date ISO:", endDate.toISOString());
+                console.log("Duration in minutes:", duration);
+                
+                const meetData = {
+                  refreshToken: tokenResponse.data.refresh_token,
+                  summary: `${roundTitle} - Interview Round`,
+                  description: `Interview round: ${roundTitle}\nInstructions: ${instructions}`,
+                  startDateTime: startDate.toISOString(),
+                  endDateTime: endDate.toISOString(),
+                  timeZone: "Asia/Kolkata",
+                  attendees: selectedInterviewers && selectedInterviewers.length > 0 ? selectedInterviewers.map(interviewer => {
+                    const email = interviewer.contact?.email || interviewer.email;
+                    console.log("Interviewer email:", email, "for interviewer:", interviewer);
+                    return { email };
+                  }).filter(attendee => attendee.email) : []
+                };
+                
+                console.log("Final attendees array:", meetData.attendees);
+                
+                const meetResponse = await axios.post(`${config.REACT_APP_API_URL}/googlemeet/create_event`, meetData);
+                
+                console.log("Google Meet created successfully:", meetResponse.data.meetLink);
+                console.log("Meet Link:", meetResponse.data.meetLink);
+                
+                // Close popup
+                popup.close();
+                window.removeEventListener('message', handleOAuthCallback);
+               
+                
+                             } catch (err) {
+                 console.error("Error creating Google Meet:", err.response?.data || err.message);
+                 console.error("Full error object:", err);
+                 if (err.response) {
+                   console.error("Response status:", err.response.status);
+                   console.error("Response data:", err.response.data);
+                 }
+                 popup.close();
+                 window.removeEventListener('message', handleOAuthCallback);
+               }
+            }
+          };
+          
+          window.addEventListener('message', handleOAuthCallback);
+          
+          // Handle popup closed
+          const checkClosed = setInterval(() => {
+            if (popup.closed) {
+              clearInterval(checkClosed);
+              window.removeEventListener('message', handleOAuthCallback);
+              console.log("OAuth popup closed");
+              navigate(`/interviews/${interviewId}`);
+            }
+              //  navigate(`/interviews/${interviewId}`);
+          }, 1000);
+       
+        } catch (err) {
+          console.error("Error in Google Meet creation:", err);
+        }
+      }
+
+   
+
     } catch (err) {
       console.error("Error submitting the form:", err);
       setErrors({
@@ -2078,6 +2258,7 @@ const RoundFormInterviews = () => {
                                                                               ))} */}
                                               </ul>
                                             </div>
+
                                           </div>
                                         );
                                       }
@@ -2098,6 +2279,7 @@ const RoundFormInterviews = () => {
                                               }`.trim() || interviewer.email}
                                             </span>
                                           </div>
+
                                           <button
                                             type="button"
                                             onClick={() =>

@@ -1227,4 +1227,8 @@ app.use("/receipts", ReceiptsRoute);
 // <================ getting the availability by contact id to show in the account settings user profile ==============>
 const interviewAvailabilityRoutes = require("./routes/interviewAvailabilityRoutes");
 app.use("/interview-availability", interviewAvailabilityRoutes);
+
+// Google Meet routes
+const googlemeetRoutes = require("./routes/googlemeetRoutes");
+app.use("/googlemeet", googlemeetRoutes);
  // v1.0.0 ---------------------->
