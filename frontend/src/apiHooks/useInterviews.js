@@ -1,3 +1,4 @@
+// v1.0.0 - Ashraf - added sending interview email link update in rounds api
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useMemo, useRef } from 'react';
@@ -6,6 +7,7 @@ import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
+import toast from 'react-hot-toast';
 
 export const useInterviews = (filters = {}) => {
   const queryClient = useQueryClient();
@@ -114,13 +116,99 @@ export const useInterviews = (filters = {}) => {
       );
       return response.data;
     },
+    // v1.0.2 <-----------------------------------------
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['interviews']);
+      // Toast notifications are now handled in the frontend after meeting links are generated
+    },
+    onError: (error) => {
+      console.error('Round save error:', error);
+      // Error toast will be handled in the frontend
+    }
+  });
+
+  // Update round with meeting links mutation
+  const updateRoundWithMeetingLinks = useMutation({
+    mutationFn: async ({ interviewId, roundId, roundData, meetingUrls }) => {
+      console.log('=== updateRoundWithMeetingLinks mutation START ===');
+      console.log('Input interviewId:', interviewId);
+      console.log('Input roundId:', roundId);
+      console.log('Input roundData:', roundData);
+      console.log('Input meetingUrls:', meetingUrls);
+      console.log('meetLink field:', meetingUrls.meetLink);
+      console.log('meetLink structure:', meetingUrls.meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
+      
+      // Clean up roundData by removing undefined values and fields that might cause issues
+      const cleanedRoundData = Object.fromEntries(
+        Object.entries(roundData).filter(([key, value]) => {
+          // Remove undefined, null, and questions field (handled separately)
+          return value !== undefined && value !== null && key !== 'questions';
+        })
+      );
+
+      // Convert interviewers array to proper ObjectId format if it exists
+      if (cleanedRoundData.interviewers && Array.isArray(cleanedRoundData.interviewers)) {
+        cleanedRoundData.interviewers = cleanedRoundData.interviewers.map(id => 
+          typeof id === 'string' ? id : id.toString()
+        );
+      }
+
+      console.log('Original roundData keys:', Object.keys(roundData));
+      console.log('Cleaned roundData keys:', Object.keys(cleanedRoundData));
+
+      // Update round data with meeting links
+      const updatedRoundData = {
+        ...cleanedRoundData,
+        meetingId: meetingUrls.meetingId, // Original meeting link
+        meetLink: meetingUrls.meetLink // Three URLs with parameters in correct format
+      };
+
+      console.log('Updated round data:', updatedRoundData);
+      console.log('Updated round data keys:', Object.keys(updatedRoundData));
+
+      // Use the existing saveInterviewRound API endpoint which handles both create and update
+      const updatePayload = {
+        interviewId,
+        roundId, // This will trigger an update if roundId exists
+        round: updatedRoundData
+      };
+
+      console.log('API payload:', updatePayload);
+      console.log('API payload round keys:', Object.keys(updatePayload.round));
+      console.log('API URL:', `${config.REACT_APP_API_URL}/interview/save-round`);
+
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/interview/save-round`,
+        updatePayload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Cookies.get("authToken")}`,
+          },
+        }
+      );
+      
+      console.log('API response:', response.data);
+      console.log('=== updateRoundWithMeetingLinks mutation END ===');
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['interviews']);
     },
     onError: (error) => {
-      console.error('Round save error:', error);
+      console.error('=== Round update with meeting links ERROR ===');
+      console.error('Round update with meeting links error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data,
+        status: error.response?.status,
+        responseText: error.response?.data?.message || error.response?.data
+      });
+      console.error('=== Round update with meeting links ERROR END ===');
     }
   });
+  // v1.0.2 <-----------------------------------------
 
   // Update interview status mutation
   const updateInterviewStatus = useMutation({
@@ -179,7 +267,7 @@ export const useInterviews = (filters = {}) => {
   });
 
   // Calculate loading states
-  const isMutationLoading = createInterview.isPending || saveInterviewRound.isPending || updateInterviewStatus.isPending || deleteRoundMutation.isPending;
+  const isMutationLoading = createInterview.isPending || saveInterviewRound.isPending || updateRoundWithMeetingLinks.isPending || updateInterviewStatus.isPending || deleteRoundMutation.isPending;
   const isLoading = isQueryLoading || isMutationLoading;
 
   // Controlled logging
@@ -208,10 +296,13 @@ export const useInterviews = (filters = {}) => {
     createError: createInterview.error,
     isSaveRoundError: saveInterviewRound.isError,
     saveRoundError: saveInterviewRound.error,
+    isUpdateRoundWithMeetingLinksError: updateRoundWithMeetingLinks.isError,
+    updateRoundWithMeetingLinksError: updateRoundWithMeetingLinks.error,
     isUpdateStatusError: updateInterviewStatus.isError,
     updateStatusError: updateInterviewStatus.error,
     createInterview: createInterview.mutateAsync,
     saveInterviewRound: saveInterviewRound.mutateAsync,
+    updateRoundWithMeetingLinks: updateRoundWithMeetingLinks.mutateAsync,
     updateInterviewStatus: updateInterviewStatus.mutateAsync,
     // refetchInterviews,
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
