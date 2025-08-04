@@ -38,6 +38,7 @@ import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upi
 
 
 
+
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
@@ -155,6 +156,9 @@ const ScheduleAssDetails = lazy(() =>
 );
 const Feedback = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback")
+);
+const Preview = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/Preview.js")
 );
 const MyProfile = lazy(() =>
   import(
@@ -956,6 +960,7 @@ const MainAppRoutes = ({
               {hasPermission("Feedback") && (
                 <>
                   <Route path="/feedback" element={<Feedback/>} />
+                  <Route path="/feedback-preview" element={<Preview/>} />
                   
                 </>
               )}

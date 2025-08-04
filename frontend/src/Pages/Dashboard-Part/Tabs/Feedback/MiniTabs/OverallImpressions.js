@@ -24,8 +24,14 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
   const { rating, note, recommendation, notesBool } =
     overallImpressionTabData;
 
-  const getColorByRating = (rating) =>
-    ratingLst.find((r) => r.stars === rating)?.color || "gray";
+  const getColorByRating = (rating) => {
+    const item = ratingLst.find((r) => r.stars === rating);
+    if (!item) {
+      if (rating === 1) return "red"; // Fallback for rating 1
+      return "gray"; // Default fallback
+    }
+    return item.color;
+  };
 
  //<--v1.0.0------
   const handleRatingChange = (newRating) => {
@@ -73,11 +79,12 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
           {ratingLst.map(({ id, name, stars, color }) => (
             <li
               key={id}
-              className={`text-${color} flex flex-col items-center cursor-pointer gap-3`}
+              className="flex flex-col items-center cursor-pointer gap-3"
+              style={{ color: color }}
             >
               <div className="flex">
                 {Array.from({ length: stars }, (_, idx) => (
-                  <IoIosStar key={idx} style={{ color }} className="text-2xl" />
+                  <IoIosStar key={idx} className="text-2xl" />
                 ))}
               </div>
               <p>{name}</p>
@@ -90,16 +97,20 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
         {/*<----v1.0.0------*/}
         <p className="">Overall Rating{tab && <span className="text-red-500">*</span>}</p>
         <div className="flex gap-3">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              className={`text-2xl ${star <= overallImpressionTabData.rating ? "text-yellow-400" : "text-gray-300"} ${isEditMode ? "" : "cursor-not-allowed"}`}
-              onClick={() => handleRatingChange(star)}
-              disabled={!isEditMode}
-            >
-              ★
-            </button>
-          ))}
+          {[1, 2, 3, 4, 5].map((star) => {
+            const color = star <= overallImpressionTabData.rating ? getColorByRating(overallImpressionTabData.rating) : "gray";
+            return (
+              <button
+                key={star}
+                className={`text-2xl ${isEditMode ? "" : "cursor-not-allowed"}`}
+                style={{ color: color }}
+                onClick={() => handleRatingChange(star)}
+                disabled={!isEditMode}
+              >
+                ★
+              </button>
+            );
+          })}
         </div>
         {isEditMode ? (
           <button
@@ -133,14 +144,15 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
                 onChange={(e) =>
                   handleNoteChange(e)
                 }
-                className="w-[100%]  rounded-md text-[gray]  p-2 outline-none border border-gray-500"
+                className={isEditMode ? "w-[100%]  rounded-md text-[gray]  p-2 outline-none border border-gray-500" : "outline-none"}
                 placeholder="Add Note"
               />
-              <span className="text-gray-500 self-end">
+              {isEditMode && <span className="text-gray-500 self-end">
                 {note?.length || 0}/250
-              </span>
+              </span>}
             </div>
           ) : (
+            isEditMode ? (
             <div className="flex flex-col w-full justify-end  flex-grow-1">
               <textarea
                 rows={5}
@@ -156,6 +168,11 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
                 {note?.length || 0}/250
               </span>
             </div>
+          ) : (
+            <div className="flex flex-col w-full justify-end  flex-grow-1 break-words">
+            <p className="text-[gray]">{note}</p>
+            </div>
+          )
           )}
         </div>
       )}

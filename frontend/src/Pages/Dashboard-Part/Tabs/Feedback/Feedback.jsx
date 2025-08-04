@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
 import '../styles/tabs.scss';
 import { motion } from 'framer-motion';
+import { Tooltip } from '@mantine/core';
 import Header from '../../../../Components/Shared/Header/Header.jsx';
 import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar.jsx';
 import TableView from '../../../../Components/Shared/Table/TableView.jsx';
@@ -65,6 +66,40 @@ const Feedback = () => {
   const [activeTab, setActiveTab] = useState(1);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);//<----v1.0.2---
+  const [feedbackTabErrors, setFeedbackTabError] = useState({
+    interviewQuestion: false,
+    skills: false,
+    overallImpression: false
+  });
+
+  const areAllValidationsMet = () => {
+    return feedbackTabErrors.interviewQuestion && feedbackTabErrors.skills && feedbackTabErrors.overallImpression;
+  };
+
+  const onClickPreviewButton = () => {
+    navigate("/feedback-preview", { state: { tab: activeTab } });
+  };
+
+  const onClickSubmit = async () => {
+    // Implementation for form submission will be added here
+    console.log("Submit button clicked");
+    // Placeholder for actual submission logic
+    toast.success("Feedback Submitted!");
+    setShowFeedbackModal(false);
+  };
+
+  const onClickNextButton = () => {
+    // Add validation logic for the current tab if needed
+    if (activeTab === 2) {
+      // Validate interview questions
+      console.log("Validate interview questions");
+    } else if (activeTab === 3) {
+      // Validate skills
+      console.log("Validate skills");
+    }
+    setActiveTab((prev) => prev <= 3 && prev + 1);
+  };
+  //----v1.0.2--->
 
   // Sample data for mini tabs
   const [skillsTabData, setSkillsTabData] = useState([
@@ -218,19 +253,86 @@ const Feedback = () => {
       ),
     },
     {
-      key: 'interview',
-      header: 'Interview',
+      key: 'mode',
+      header: 'Mode',
       render: (value) => (
         <div className="text-sm">{value || "Not Provided"}</div>
       ),
     },
     {
-      key: 'interviewType',
-      header: 'Interview Type',
+          key: 'candidateName',
+          header: 'Candidate Name',
+          render: (value, row) => {
+            const candidate = row.candidateId;
+            return (
+              <Tooltip label={`${candidate?.FirstName || ''} ${candidate?.LastName || ''}`}>
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-8 w-8">
+                    {candidate?.imageUrl ? (
+                      <img
+                        src={candidate.imageUrl}
+                        alt={candidate.LastName}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
+                        {candidate?.LastName ? candidate?.LastName?.charAt(0).toUpperCase() : '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="ml-3 truncate max-w-[120px]">
+                    <div
+                      className="text-sm font-medium text-custom-blue cursor-pointer truncate"
+                      onClick={() => handleView(candidate)}
+                    >
+                      {((candidate?.FirstName ? candidate.FirstName.charAt(0).toUpperCase() + candidate.FirstName.slice(1) : '') + ' ' + (candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : ''))}
+                    </div>
+                    <div className="text-sm text-gray-500 truncate">{candidate?.Email || 'No Email'}</div>
+                  </div>
+                </div>
+              </Tooltip>
+            );
+          },
+        },
+        {
+          key: 'position',
+          header: 'Position',
+          render: (value, row) => {
+            const position = row.positionId;
+            return (
+              <Tooltip label={`${position?.title || 'Unknown'} • ${position?.companyname || 'No Company'} • ${position?.Location || 'No location'}`}>
+                <div className="truncate max-w-[120px]">
+                  <div
+                    className="text-sm font-medium text-custom-blue cursor-pointer truncate"
+                    //onClick={() => handleViewPosition(position)}
+                  >
+                    {position?.title
+                      ? position.title.charAt(0).toUpperCase() + position.title.slice(1)
+                      : 'Unknown'}
+                  </div>
+                  <div className="text-sm text-gray-500 truncate">
+                    {position?.companyname || 'No Company'} • {position?.Location || 'No location'}
+                  </div>
+                </div>
+              </Tooltip>
+            );
+          },
+    },
+    {
+      key: 'interview',
+      header: 'Interviewer',
       render: (value) => (
         <div className="text-sm">{value || "Not Provided"}</div>
       ),
     },
+    
+    // {
+    //   key: 'interviewType',
+    //   header: 'Interview Type',
+    //   render: (value) => (
+    //     <div className="text-sm">{value || "Not Provided"}</div>
+    //   ),
+    // },
     {
       key: 'scheduledDate',
       header: 'Scheduled Date',
@@ -463,6 +565,33 @@ const Feedback = () => {
             {/* Tab Content */}
             <div className="flex-1 overflow-y-auto border-2 border-gray-200 border-solid rounded-md mx-8 mb-8 mt-4">
               {displayData()}
+            </div>
+            <div className="next-button--container flex justify-end py-1 pr-8 gap-4">
+              {activeTab === 4 && isEditMode && (
+                <>
+                  <button 
+                    disabled={!areAllValidationsMet()} 
+                    onClick={onClickPreviewButton} 
+                    className={`bg-white text-[#227a8a] border-[1px] border-[#227a8a] py-[0.5rem] px-[2rem] rounded-lg ${!areAllValidationsMet() && "cursor-not-allowed"}`}
+                  >
+                    Preview
+                  </button>
+                  <button 
+                    onClick={onClickSubmit} 
+                    className="bg-[#227a8a] text-white py-[0.5rem] px-[2rem] rounded-lg"
+                  >
+                    Submit
+                  </button>
+                </>
+              )}
+              {activeTab <= 3 && isEditMode && (
+                <button 
+                  onClick={onClickNextButton} 
+                  className="bg-[#227a8a] text-white py-[0.5rem] px-[2rem] rounded-lg"
+                >
+                  Next
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -194,13 +194,14 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
                             id="skill-id"
                             type="text"
                             placeholder="Enter Note"
-                            className="w-full  text-gray-500 p-1 rounded-md border border-gray-500"
+                            className={`${isEditMode ? "w-full  text-gray-500 p-1 rounded-md border border-gray-500" : "outline-none"}`}
                           />
-                          <span
+                          {isEditMode && <span
                             className="text-gray-500 mt-[5px] self-end "
                           >
                             {skill.note?.length || 0}/250
                           </span>
+                          }
                         </div>
                       ) : (
                         <div className="flex flex-col w-full">
@@ -216,13 +217,15 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
                             }
                             value={skill.note}
                             placeholder="Add note here"
-                            className="w-full text-[gray] rounded-md outline-none border-[1px] py-1 px-1 border-[gray]"
+                            className={`${isEditMode ? "w-full text-[gray] rounded-md outline-none border-[1px] py-1 px-1 border-[gray]" : "outline-none"}`}
                           ></textarea>
-                          <span
+
+                         {isEditMode && <span
                             className="text-gray-500 self-end mt-[5px] w-max"
                           >
                             {skill.note?.length || 0}/250
                           </span>
+                          }
                         </div>
                       )}
                     </div>

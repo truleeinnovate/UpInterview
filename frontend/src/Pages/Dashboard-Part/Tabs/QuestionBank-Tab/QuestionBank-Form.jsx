@@ -51,6 +51,7 @@ const optionLabels = Array.from({ length: 26 }, (_, i) =>
 
 const QuestionBankForm = ({
   sectionName,
+  roundId,
   assessmentId,
   onClose,
   questionBankPopupVisibility,
@@ -142,7 +143,7 @@ const QuestionBankForm = ({
   const [selectedDifficultyLevel, setSelectedDifficultyLevel] = useState("");
   const [showDropdownDifficultyLevel, setShowDropdownDifficultyLevel] =
     useState(false);
-  const [selectedQuestionType, setSelectedQuestionType] = useState("");
+  const [selectedQuestionType, setSelectedQuestionType] = useState((type === "Feedback")? "Interview Questions" :  "" );
   const [showDropdownQuestionType, setShowDropdownQuestionType] =
     useState(false);
   const [showMcqFields, setShowMcqFields] = useState(false);
@@ -452,6 +453,9 @@ const QuestionBankForm = ({
         questionId: isEdit ? question._id : undefined,
       });
       console.log("tenant question response", questionResponse);
+      if (type === "Feedback"){
+
+      }
 
       // Handle adding question to assessment if type is 'assessment'
       // <----------v1.0.1----------
@@ -939,7 +943,7 @@ const QuestionBankForm = ({
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                           border ${
-                            errors.questionType
+                            errors.questionType && (type !== "Feedback")
                               ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
                               : "border-gray-300 focus:ring-red-300"
                           }
@@ -949,7 +953,7 @@ const QuestionBankForm = ({
                         onClick={toggleDropdownQuestionType}
                         readOnly
                       />
-                      {errors.questionType && (
+                      {errors.questionType && (type !== "Feedback") && (
                         <p className="text-red-500 text-sm">
                           {errors.questionType}
                         </p>
@@ -960,7 +964,7 @@ const QuestionBankForm = ({
                       </div>
                       {/* <MdArrowDropDown className="absolute top-3 right-1 text-gray-500 text-lg mt-1 cursor-pointer " /> */}
 
-                      {showDropdownQuestionType && (
+                      {showDropdownQuestionType && (type !== "Feedback") && (
                         <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg h-40 overflow-y-auto text-sm">
                           {questionTypeOptions.map((questionType) => (
                             <div
@@ -980,7 +984,7 @@ const QuestionBankForm = ({
                   </div>
 
                   {/* My Question List */}
-                  <div className="mb-4">
+                  {type === "Feedback" ? null : <div className="mb-4">
                     {/* v1.0.4 <---------------------------------------------------------- */}
                     <MyQuestionList
                       ref={fieldRefs.listRef}
@@ -995,6 +999,7 @@ const QuestionBankForm = ({
                     />
                     {/* v1.0.4 -----------------------------------------------------------> */}
                   </div>
+                  }
                   {/* Skill/Technology */}
 
                   <div className="flex flex-col gap-1 mb-4">
