@@ -38,6 +38,7 @@ import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upi
 
 
 
+
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
@@ -154,8 +155,15 @@ const ScheduleAssessment = lazy(() =>
 const ScheduleAssDetails = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
 );
-const Feedback = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback")
+// Feedback Components
+const FeedbackTab = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback.jsx")
+);
+ const FeedbackFormModel = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx")
+);
+const FeedbackPreview = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/Preview.js")
 );
 const MyProfile = lazy(() =>
   import(
@@ -957,7 +965,10 @@ const MainAppRoutes = ({
               {/* Feedbacks */}
               {hasPermission("Feedback") && (
                 <>
-                  <Route path="/feedback" element={<Feedback/>} />
+                  <Route path="/feedback" element={<FeedbackTab/>} />
+                  <Route path="/feedback/view/:id" element={<><FeedbackFormModel/> <FeedbackTab/></>} />
+                  <Route path="/feedback/edit/:id" element={<><FeedbackFormModel/> <FeedbackTab/></>} />
+                  <Route path="/feedback-preview" element={<FeedbackPreview/>} />
                   
                 </>
               )}

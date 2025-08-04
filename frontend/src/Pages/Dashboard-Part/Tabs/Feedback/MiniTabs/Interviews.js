@@ -27,9 +27,7 @@ const InterviewsMiniTabComponent = ({ roundDetails, tab, page, closePopup, data,
   const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext()
 
   const handleTabChange = (tab) => {
-    if (isEditMode) {
       setInterviewMiniTab(tab);
-    }
   };
   //----v1.0.0--->
 
@@ -38,7 +36,7 @@ const InterviewsMiniTabComponent = ({ roundDetails, tab, page, closePopup, data,
       case 1:
         return <SchedulerSectionComponent roundDetails={roundDetails} setSchedulerSectionData={setSchedulerSectionData} SchedulerSectionData={SchedulerSectionData} tab={tab} page={page} />;//<----v1.0.0---
       case 2:
-        return <InterviewerSectionComponent closePopup={closePopup} tab={tab} page={page} />;//<----v1.0.0---
+        return <InterviewerSectionComponent closePopup={closePopup} tab={tab} page={page}  isEditMode={isEditMode}/>;//<----v1.0.0---
       default:
         return ""
     }
@@ -50,9 +48,8 @@ const InterviewsMiniTabComponent = ({ roundDetails, tab, page, closePopup, data,
         <ul className="flex items-center gap-2 cursor-pointer md:text-sm px-2 mt-2">
         {interviewMiniTabsList.map((each) => (
             <li
-            className={`px-4 py-2 rounded-t-md text-sm font-medium transition-colors ${interviewMiniTab === each.id ? "bg-[#227a8a] text-white" : "text-gray-700 hover:bg-gray-100"} ${isEditMode ? "" : "cursor-not-allowed"}`}
+            className={`px-4 py-2 rounded-t-md text-sm font-medium transition-colors ${interviewMiniTab === each.id ? "bg-[#227a8a] text-white" : "text-gray-700 hover:bg-gray-100"}`}
             onClick={() => handleTabChange(each.id)}
-            disabled={!isEditMode}
             key={each.id}
           >
             {each.name}

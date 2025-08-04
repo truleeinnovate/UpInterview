@@ -113,11 +113,11 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
         </ul>
       )}
       <ul className="mt-8 flex flex-col gap-4 w-[full]">
-        {skillsTabData.map((skillCat) => (
+        {(skillsTabData || []).map((skillCat) => (
           <li key={skillCat.id} className="flex flex-col gap-4 ">
             <h2 className="font-bold">{skillCat.category}:</h2>
             <ul className="flex flex-col gap-4" >
-              {skillCat.skillsList.map((skill, skillIndex) => (
+              {(skillCat.skillsList || []).map((skill, skillIndex) => (
                 <li key={skill.name} className="flex flex-col gap-4" >
                   <div className="flex  items-center " >
                     <p  className='w-[25%]' >  {skill.name}  {(skill.required && tab) && <span className="text-[red]">*</span>}</p>
@@ -194,13 +194,14 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
                             id="skill-id"
                             type="text"
                             placeholder="Enter Note"
-                            className="w-full  text-gray-500 p-1 rounded-md border border-gray-500"
+                            className={`${isEditMode ? "w-full  text-gray-500 p-1 rounded-md border border-gray-500" : "outline-none"}`}
                           />
-                          <span
+                          {isEditMode && <span
                             className="text-gray-500 mt-[5px] self-end "
                           >
                             {skill.note?.length || 0}/250
                           </span>
+                          }
                         </div>
                       ) : (
                         <div className="flex flex-col w-full">
@@ -216,13 +217,15 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
                             }
                             value={skill.note}
                             placeholder="Add note here"
-                            className="w-full text-[gray] rounded-md outline-none border-[1px] py-1 px-1 border-[gray]"
+                            className={`${isEditMode ? "w-full text-[gray] rounded-md outline-none border-[1px] py-1 px-1 border-[gray]" : "outline-none"}`}
                           ></textarea>
-                          <span
+
+                         {isEditMode && <span
                             className="text-gray-500 self-end mt-[5px] w-max"
                           >
                             {skill.note?.length || 0}/250
                           </span>
+                          }
                         </div>
                       )}
                     </div>

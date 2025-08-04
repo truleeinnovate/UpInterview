@@ -51,10 +51,10 @@ const overallImpressionSchema = new mongoose.Schema({
 // InterviewFeedback
 const feedbackSchema = new mongoose.Schema(
   {
-    tenantId:String, // reference to  tenant
-    interviewRoundId:String, // reference to interview session
-    candidateId: String, //candidate information
-    interviewerId:String, //interviewer information
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' }, // reference to tenant
+    interviewRoundId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewRound' }, // reference to interview session
+    candidateId: { type: mongoose.Schema.Types.ObjectId, ref: 'Candidate' }, //candidate information
+    interviewerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }, //interviewer information
     skills: [skillsSchema], //overall skill ratings
     questionFeedback:[questionFeedbackSchema], //feedback for each question
     generalComments:String, //general comments about the interview session
