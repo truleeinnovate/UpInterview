@@ -51,6 +51,7 @@ const SubscriptionPlan = lazy(() =>
   import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan")
 );
 const LinkedInCallback = lazy(() => import("./Components/LinkedInCallback"));
+const OAuthCallback = lazy(() => import("./Components/OAuthCallback"));
 const CardDetails = lazy(() =>
   import("./Pages/Login-Part/SubscriptionPlans/CardDetails")
 );
@@ -457,6 +458,7 @@ const MainAppRoutes = ({
               element={<WelcomePageUpinterviewIndividual />}
             />
             <Route path="/callback" element={<LinkedInCallback />} />
+            <Route path="/oauth2callback" element={<OAuthCallback />} />
             <Route
               path="/payment-details"
               element={

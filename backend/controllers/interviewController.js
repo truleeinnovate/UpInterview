@@ -928,6 +928,7 @@ const saveInterviewRound = async (req, res) => {
         ? "Round updated successfully."
         : "Interview round created successfully.",
       savedRound,
+      status:'ok'
     });
 
     async function reorderInterviewRounds(interviewId) {
