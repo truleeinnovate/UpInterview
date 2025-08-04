@@ -25,9 +25,9 @@ export const config = {
   REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND || "http://localhost:3000",
           // Google OAuth configuration
         REACT_APP_GOOGLE_AUTH_URL: process.env.REACT_APP_GOOGLE_AUTH_URL || "https://accounts.google.com/o/oauth2/v2/auth?",
-        REACT_APP_GOOGLE_CLIENT_ID: process.env.REACT_APP_GOOGLE_CLIENT_ID || "173597320825-mbfkah9a2rub0a1onu237rg4r94fhmus.apps.googleusercontent.com",
-        REACT_APP_GOOGLE_REDIRECT_URI: process.env.REACT_APP_GOOGLE_REDIRECT_URI || "http://localhost:3000/oauth2callback",
-        REACT_APP_GOOGLE_SCOPES: process.env.REACT_APP_GOOGLE_SCOPES || "https://www.googleapis.com/auth/calendar"
+        REACT_APP_GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "173597320825-mbfkah9a2rub0a1onu237rg4r94fhmus.apps.googleusercontent.com",
+        REACT_APP_GOOGLE_REDIRECT_URI: process.env.REDIRECT_URI || "http://localhost:3000/oauth2callback",
+        REACT_APP_GOOGLE_SCOPES: process.env.SCOPES || "https://www.googleapis.com/auth/calendar"
 };
 
 export const linkedInConfig = {
