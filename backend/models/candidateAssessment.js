@@ -77,7 +77,8 @@
 
 
 
-// v1.0.0  -  Ashraf  -  removed cretedat because we wre already using timestamp
+// v1.0.0  -  Ashraf  -  removed cretedat because we are already using timestamp
+// v1.0.1  -  Ashraf  -  removed reschedule and added extended in enum
 
 const mongoose = require('mongoose');
 
@@ -130,7 +131,9 @@ const CandidateAssessmentSchema = new mongoose.Schema({
     status: {
         type: String,
         // enum: ['pending', 'in_progress', 'completed', 'cancelled', 'failed','pass', 'rescheduled'],
-        enum: ['pending', 'in_progress', 'completed', 'cancelled', 'failed','pass', 'rescheduled',"expired"],
+        // <-------------------------------v1.0.1
+        enum: ['pending', 'in_progress', 'completed', 'cancelled', 'failed','pass', 'extended',"expired"],
+        // ------------------------------v1.0.1 >
         default: 'pending'
     },
     isActive: { type: Boolean, default: true }, // Control individual schedules

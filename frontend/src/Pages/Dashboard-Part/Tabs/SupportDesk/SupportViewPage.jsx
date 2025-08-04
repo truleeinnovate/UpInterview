@@ -1,3 +1,6 @@
+// v1.0.0 - Ashok - disabled outer scrollbar using custom hook
+// v1.0.1 - Venkatesh - ticket code and status in align center
+
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -15,6 +18,10 @@ import {
 } from "react-icons/fa";
 import { Minimize, Expand, X, Eye } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
+// v1.0.0 <-------------------------------------------------------------------------
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+// v1.0.0 ------------------------------------------------------------------------->
 //import SupportForm from "./SupportForm";
 
 //const validReopenStatus = ["resolved", "cancel"];
@@ -36,6 +43,10 @@ const SupportViewPage = () => {
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
   };
+
+  // v1.0.0 <-------------------------------------------------------------------------
+  useScrollLock(true);
+  // v1.0.0 ------------------------------------------------------------------------->
 
   const formatDate = useCallback((dateString) => {
     if (!dateString) return "N/A";
@@ -93,33 +104,23 @@ const SupportViewPage = () => {
         </div>
       </div>
 
+      {/* <-------v1.0.1--------------Ticket Code and Status */}
       <div className="p-6">
-        <div className="flex items-center justify-center mb-4">
-          <div className="relative">
-            <div className="w-16 h-16 flex items-center justify-center bg-custom-blue/10 text-custom-blue rounded-full">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          
+            <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
               <FaTicketAlt className="w-8 h-8" />
             </div>
-          </div>
-        </div>
-
-        <div className="text-center mb-4">
+            <div className="items-center text-center mb-4">
           <h3 className="text-2xl font-bold text-gray-900">
             {ticketData?.ticketCode}
           </h3>
-          <span
-            className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full mt-2 ${
-              ticketData?.status === "Open"
-                ? "bg-green-100 text-green-800"
-                : ticketData?.status === "In Progress"
-                ? "bg-blue-100 text-blue-800"
-                : ticketData?.status === "Resolved"
-                ? "bg-gray-100 text-gray-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {ticketData?.status}
-          </span>
+          <StatusBadge status={ticketData?.status} text={ticketData?.status ? ticketData?.status.charAt(0).toUpperCase() + ticketData?.status.slice(1) : "Not Provided"}/>{/*common status code add by Venkatesh*/}
+          {/*-------v1.0.1-------------->*/}
         </div>
+        </div>
+
+        
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
           <div className="flex justify-between items-center mb-4">

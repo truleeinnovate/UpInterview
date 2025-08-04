@@ -2,11 +2,12 @@
 // v1.0.1  -  Ashraf  -  AssessmentTemplates permission name changed to AssessmentTemplates
 // v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 // v1.0.3  -  Ashraf  -  assessment sections and question api getting in loop issue
+// v1.0.4  -  Ashraf  -  assessment to assessment templates
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
 import { motion } from "framer-motion";
-import { Eye, Pencil, Share2 } from "lucide-react";
+import { Eye, Pencil, Plus } from "lucide-react";
 import ShareAssessment from "./ShareAssessment.jsx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -312,15 +313,15 @@ const Assessment = () => {
           {
             key: "edit",
             label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            icon: <Pencil className="w-4 h-4 text-custom-blue" />,
             onClick: handleEdit,
           },
         ]
       : []),
     {
       key: "share",
-      label: "Share",
-      icon: <Share2 className="w-4 h-4 text-green-600" />,
+      label: "Create Assessment",
+      icon: <Plus className="w-4 h-4 text-custom-blue" />,
       onClick: handleShareClick,
       disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
     },
@@ -394,7 +395,9 @@ const Assessment = () => {
                 columns={tableColumns}
                 actions={tableActions}
                 loading={isLoading}
-                emptyState="No assessments found."
+                // <-------------------------------v1.0.4
+                emptyState="No assessments templates found."
+                // ------------------------------v1.0.4 >
                 className="table-fixed w-full"
               />
             ) : (

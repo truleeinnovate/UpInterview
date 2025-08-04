@@ -39,7 +39,7 @@ const QuestionBank = ({ assessmentId,
   };
 
   return (
-    <div className={`sm:pt-10 md:pt-10 lg:pt-3 xl:pt-3 2xl:pt-3 ${type === "interviewerSection" || type === "assessment" ? "h-[95%] bg-white rounded-lg flex flex-col" : ""}`}>
+    <div className={`sm:pt-10 md:pt-10 lg:pt-3 xl:pt-3 2xl:pt-3 ${type === "interviewerSection" || type === "assessment" ? "h-[85%] bg-white rounded-lg flex flex-col" : ""}`}>
       {/* Header Section */}
       {/* <div className={`${type === "interviewerSection" || type === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}
       ${type === "interviewerSection" ? 'hidden' : ""}`}>
@@ -65,7 +65,7 @@ const QuestionBank = ({ assessmentId,
         className={`fixed bg-white px-5 z-40
         ${activeTab === "SuggesstedQuestions" && type !== "interviewerSection" && type !== "assessment" ? "h-[180px]" : "h-[110px]"}
         ${activeTab === "MyQuestionsList" && type !== "interviewerSection" && type !== "assessment" ? "h-[170px]" : ""}
-        ${type === "interviewerSection" || type === "assessment" ? "w-[95%] px-4" : "w-full z-40 top-16 sm:top-0 md:top-0 lg:top-0 xl:top-0 2xl:top-0 left-0 right-0 pt-16"}`}
+        ${type === "interviewerSection" || type === "assessment" ? `${type === "assessment" ? "w-[85%]" : "w-[95%]"} px-4 ` : "w-full z-40 top-16 sm:top-0 md:top-0 lg:top-0 xl:top-0 2xl:top-0 left-0 right-0 pt-16"}`}
       >
         <div className="flex">
           <button

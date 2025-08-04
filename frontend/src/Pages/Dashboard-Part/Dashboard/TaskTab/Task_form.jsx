@@ -1,3 +1,6 @@
+//<---v1.0.0------venkatesh------add scroll into view for error msg
+//<---v1.0.1------venkatesh------update scroll into view for error msg
+
 import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-modal';
 import classNames from 'classnames';
@@ -20,6 +23,7 @@ import LoadingButton from "../../../../Components/LoadingButton.jsx";
 
 
 import "react-datepicker/dist/react-datepicker.css";
+import { scrollToFirstError } from '../../../../utils/ScrollToFirstError/scrollToFirstError.js';
 
 
 
@@ -271,6 +275,19 @@ const TaskForm = ({
     ? getNameFromId(selectedOptionIdRelatedTo) 
     : "";
 
+  //<---v1.0.1------
+  const fieldRefs = {
+    title: useRef(null),
+    description: useRef(null),
+    priority: useRef(null),
+    status: useRef(null),
+    assignedTo: useRef(null),
+    relatedTo: useRef(null),
+    relatedToOption: useRef(null),
+    dueDate: useRef(null),
+  }
+  //---v1.0.1------>
+      
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -289,6 +306,7 @@ const TaskForm = ({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      scrollToFirstError(newErrors, fieldRefs)//<---v1.0.1------>
       console.log("Form validation failed:", newErrors);
       return;
     }
@@ -424,6 +442,7 @@ const TaskForm = ({
               <label className="block text-sm font-medium text-gray-700">Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
+                ref={fieldRefs.title}//<---v1.0.1------
                 value={formData.title}
                 placeholder="Enter Title"
                 onChange={(e) => handleInputChange('title', e.target.value)}
@@ -438,6 +457,7 @@ const TaskForm = ({
               <div className="relative">
                 <select
                   value={formData.assignedToId || ''}
+                  ref={fieldRefs.assignedTo}//<---v1.0.1------
                   onChange={(e) => {
                     const selectedUserId = e.target.value;
                     const selectedUser = usersRes.find(user => user._id === selectedUserId);
@@ -479,6 +499,7 @@ const TaskForm = ({
               <input
                 type="text"
                 value={formData.assignedTo}
+                ref={fieldRefs.assignedTo}//<---v1.0.1------
                 onChange={(e) => handleInputChange('assignedTo', e.target.value)}
                 className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
               />
@@ -497,6 +518,7 @@ const TaskForm = ({
               <div className="relative">
                 <select
                   value={selectedPriority}
+                  ref={fieldRefs.priority}//<---v1.0.1------
                   onChange={handlePriorityChange}
                   className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.priority && 'border-red-500'}`}
                 >
@@ -520,6 +542,7 @@ const TaskForm = ({
               <div className="relative">
                 <select
                   value={selectedStatus}
+                  ref={fieldRefs.status}//<---v1.0.1------
                   onChange={handleStatusChange}
                   className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.status && 'border-red-500'}`}
                 >
@@ -539,6 +562,7 @@ const TaskForm = ({
                 <div className="relative w-1/2">
                   <input
                     type="text"
+                    ref={fieldRefs.relatedToCategory}//<---v1.0.1------
                     value={selectedCategoryRelatedTo}
                     onClick={toggleDropdownCategoryRelatedTo}
                     placeholder="Select Category"
@@ -571,6 +595,7 @@ const TaskForm = ({
                   <input
                     type="text"
                     value={taskId ? formData.relatedTo.recordName : displayName}
+                    ref={fieldRefs.relatedToOption}//<---v1.0.1------
                     onClick={() =>
                       toggleDropdownOptionRelatedTo()
                     }
@@ -617,6 +642,7 @@ const TaskForm = ({
               type="datetime-local"
               id="scheduledDate"
               name="scheduledDate"
+              ref={fieldRefs.dueDate}//<---v1.0.1------
               placeholder="DD-MM-YYYY"
               value={taskId && formData.dueDate && !isNaN(new Date(formData.dueDate).getTime()) ? new Date(formData.dueDate).toISOString().slice(0, 16) : scheduledDate}
               onChange={(e) => {

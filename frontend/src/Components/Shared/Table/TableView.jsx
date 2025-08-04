@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  added auto height when isassesment is true
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu } from '@headlessui/react';
@@ -9,6 +10,9 @@ const TableView = ({
   loading = false,
   actions = [],
   emptyState = 'No data found.',
+  // <-------------------------------v1.0.0
+  autoHeight = false,
+  // ------------------------------v1.0.0 >
 }) => {
   const menuRefs = useRef({});
   const menuButtonRefs = useRef({});
@@ -80,7 +84,7 @@ const TableView = ({
     >
       <div className="inline-block min-w-full align-middle">
         <div
-          className="h-[calc(100vh-12rem)] overflow-y-auto pb-6 scrollbar-thin"
+          className={`${autoHeight ? 'h-auto' : 'h-[calc(100vh-12rem)]'} overflow-y-auto pb-6 scrollbar-thin`}
           style={{ scrollbarWidth: 'thin' }}
           ref={scrollContainerRef}
         >
@@ -170,32 +174,43 @@ const TableView = ({
                                 menuRefs.current[rowId] = el;
                               }}
                             >
-                              {actions.map((action) => (
-                                <Menu.Item key={action.key}>
-                                  {({ active }) => (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        action.onClick(row);
-                                        setOpenMenuIndex(null);
-                                      }}
-                                      className={`${
-                                        active ? 'bg-gray-50' : ''
-                                      } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed`}
-                                      disabled={action.disabled ? action.disabled(row) : false}
-                                    >
-                                      {/* Render icon as a function if it is one, otherwise render directly */}
-                                      {typeof action.icon === 'function'
-                                        ? action.icon(row)
-                                        : action.icon}
-                                      {/* Render label as a function if it is one, otherwise render directly */}
-                                      {typeof action.label === 'function'
-                                        ? action.label(row)
-                                        : action.label}
-                                    </button>
-                                  )}
-                                </Menu.Item>
-                              ))}
+                              {/* <-------------------------------v1.0.0 */}
+                              {actions
+                                .filter((action) => {
+                                  // If show function exists, use it to determine visibility
+                                  if (action.show) {
+                                    return action.show(row);
+                                  }
+                                  // If no show function, always show the action
+                                  return true;
+                                })
+                                // ------------------------------v1.0.0 >
+                                .map((action) => (
+                                  <Menu.Item key={action.key}>
+                                    {({ active }) => (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          action.onClick(row);
+                                          setOpenMenuIndex(null);
+                                        }}
+                                        className={`${
+                                          active ? 'bg-gray-50' : ''
+                                        } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                        disabled={action.disabled ? action.disabled(row) : false}
+                                      >
+                                        {/* Render icon as a function if it is one, otherwise render directly */}
+                                        {typeof action.icon === 'function'
+                                          ? action.icon(row)
+                                          : action.icon}
+                                        {/* Render label as a function if it is one, otherwise render directly */}
+                                        {typeof action.label === 'function'
+                                          ? action.label(row)
+                                          : action.label}
+                                      </button>
+                                    )}
+                                  </Menu.Item>
+                                ))}
                             </Menu.Items>
                           )}
                         </Menu>

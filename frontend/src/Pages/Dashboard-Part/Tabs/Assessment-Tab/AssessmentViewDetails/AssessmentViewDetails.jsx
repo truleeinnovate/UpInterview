@@ -1,6 +1,8 @@
 // v1.0.0  -  Ashraf  -  assessment view name changed
 // v1.0.1  -  Ashraf  -  assessment top border removed
 // v1.0.2  -  Venkatesh  -  assessment questions tab first index is open by default
+// v1.0.3  -  Ashok  - Implemented scroll lock hook for conditionally disable outer scrollbar
+// v1.0.4  -  Ashraf  -  assessment view default expand true
 import { useState, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import { Minimize, Expand, X } from 'lucide-react';
@@ -14,17 +16,25 @@ import QuestionsTab from './AsseessmentQuestionsTab.jsx';
 import Activity from '../../../Tabs/CommonCode-AllTabs/Activity.jsx';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 import { Pencil } from "lucide-react";
+import { useScrollLock } from '../../../../../apiHooks/scrollHook/useScrollLock.js';
 
 function AssessmentView() {
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { id } = useParams();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // <-------------------------------v1.0.4
+  const [isFullscreen, setIsFullscreen] = useState(true);
+  // ------------------------------v1.0.4 >
   const [selectedTab, setSelectedTab] = useState(0);
   const [assessment, setAssessment] = useState(null);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
   const [toggleStates, setToggleStates] = useState([]);
+
+  // v1.0.3 <-------------------------------------------------------------------------
+  useScrollLock(true); // This will lock the outer scrollbar when the form is open
+  // v1.0.3 ------------------------------------------------------------------------->
+
 
   const toggleArrow1 = (index) => {
     setToggleStates((prevState) => {

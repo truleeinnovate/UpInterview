@@ -32,6 +32,7 @@ import { useCallback } from "react";
 import { validateFile } from "../../../../../../utils/FileValidation/FileValidation.js";
 import { uploadFile } from "../../../../../../apiHooks/imageApis.js";
 import { useRolesQuery } from "../../../../../../apiHooks/useRoles.js";
+import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 Modal.setAppElement("#root");
 
 const BasicDetailsEditPage = ({
@@ -306,9 +307,24 @@ const BasicDetailsEditPage = ({
     }
   };
 
+  const fieldRefs = {
+    email: useRef(null),
+    firstName: useRef(null),
+    lastName: useRef(null),
+    phone: useRef(null),
+    profileId: useRef(null),
+    roleLabel: useRef(null),
+    roleId: useRef(null),
+    dateOfBirth: useRef(null),
+    gender: useRef(null),
+    linkedinUrl: useRef(null),
+    portfolioUrl: useRef(null),
+    image: useRef(null),
+    };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    //setLoading(true);
     //   if (formData.profileId !== originalProfileId) {
     //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
     //  console.log("profileIdError",profileIdError);
@@ -352,7 +368,10 @@ const BasicDetailsEditPage = ({
 
     console.log("validationErrors", validationErrors);
 
-    if (!isEmptyObject(validationErrors)) return;
+    if (!isEmptyObject(validationErrors)) {
+      scrollToFirstError(validationErrors, fieldRefs);
+      return;
+    }
 
     const cleanFormData = {
       email: formData.email.trim() || "",
@@ -459,6 +478,8 @@ const BasicDetailsEditPage = ({
       setLoading(false);
     }
   };
+
+  
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -695,6 +716,7 @@ const BasicDetailsEditPage = ({
                     type="email"
                     name="email"
                     placeholder="Email"
+                    ref={fieldRefs.email}
                     value={formData.email || ""}
                     onChange={handleInputChange}
                     onBlur={() =>
@@ -725,6 +747,7 @@ const BasicDetailsEditPage = ({
                   type="text"
                   name="firstName"
                   placeholder="First Name"
+                  ref={fieldRefs.firstName}
                   value={formData.firstName || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -746,6 +769,7 @@ const BasicDetailsEditPage = ({
                   type="text"
                   name="lastName"
                   placeholder="Last Name"
+                  ref={fieldRefs.lastName}
                   value={formData.lastName || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -784,6 +808,7 @@ const BasicDetailsEditPage = ({
                   type="text"
                   name="profileId"
                   placeholder="Profile ID"
+                  ref={fieldRefs.profileId}
                   // disabled={from === 'users'}
                   value={formData.profileId || ""}
                   onChange={handleInputChange}
@@ -842,6 +867,7 @@ const BasicDetailsEditPage = ({
                     type="text"
                     name="phone"
                     placeholder="Phone"
+                    ref={fieldRefs.phone}
                     value={formData.phone || ""}
                     onChange={handleInputChange}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -862,6 +888,7 @@ const BasicDetailsEditPage = ({
                   type="text"
                   name="linkedinUrl"
                   placeholder="LinkedIn URL"
+                  ref={fieldRefs.linkedinUrl}
                   value={formData.linkedinUrl || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
@@ -887,6 +914,7 @@ const BasicDetailsEditPage = ({
                     type="text"
                     readOnly
                     value={selectedCurrentRole}
+                    ref={fieldRefs.roleId}
                     onClick={toggleDropdownRole}
                     className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
                       errors.roleId ? "border-red-500" : "border-gray-300"
@@ -936,6 +964,7 @@ const BasicDetailsEditPage = ({
                   type="text"
                   name="portfolioUrl"
                   placeholder="Portfolio URL"
+                  ref={fieldRefs.portfolioUrl}
                   value={formData.portfolioUrl || ""}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"

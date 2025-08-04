@@ -30,7 +30,9 @@ import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import LoadingButton from "../../../../../Components/LoadingButton";
 // v1.0.1 <----------------------------------------------------------------------------
-// import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+
+import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
 
@@ -149,11 +151,13 @@ const RoundFormInterviews = () => {
   // console.log("internalInterviewers selected", internalInterviewers);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
 
-  // console.log("externalInterviewers 0000000000000000", externalInterviewers);
 
-  // console.log("internalInterviewers", internalInterviewers);
-  // console.log("interviewerViewType", interviewerViewType);
-  // console.log("interviewerGroupName", interviewerGroupName);
+  console.log("externalInterviewers 0000000000000000", externalInterviewers);
+
+  console.log("internalInterviewers", internalInterviewers);
+  console.log("interviewerViewType", interviewerViewType);
+  console.log("interviewerGroupName", interviewerGroupName);
+
 
   // v1.0.1 <-------------------------------------------------------------------------
   const fieldRefs = {
@@ -593,7 +597,9 @@ const RoundFormInterviews = () => {
       return;
     }
 
-    // console.log("interviwers", interviewers, viewType, groupName);
+
+    console.log("interviwers", interviewers, viewType, groupName);
+
 
     // Clear existing interviewers when view type changes
 
@@ -885,12 +891,14 @@ const RoundFormInterviews = () => {
       const validationErrors = validateInterviewRoundData(roundData);
       setErrors(validationErrors);
 
-      // console.log("Validation errors:", validationErrors);
-      // if (Object.keys(validationErrors).length > 0) {
-      //   // console.log("Validation errors found, stopping submission");
-      //   scrollToFirstError(validationErrors, fieldRefs);
-      //   return;
-      // }
+
+      console.log("Validation errors:", validationErrors);
+      if (Object.keys(validationErrors).length > 0) {
+        console.log("Validation errors found, stopping submission");
+        scrollToFirstError(validationErrors, fieldRefs);
+        return;
+      }
+
       // v1.0.1 --------------------------------------------------------------------------------->
 
       // console.log("roundData", roundData);
@@ -919,18 +927,20 @@ const RoundFormInterviews = () => {
       // Use saveInterviewRound mutation from useInterviews hook
       const response = await saveInterviewRound(payload);
 
-      // console.log("Response from selectedInterviewers:", selectedInterviewers);
-      // console.log(
-      //   "Response from selectedInterviewType:",
-      //   selectedInterviewType
-      // );
+
+      console.log("Response from selectedInterviewers:", selectedInterviewers);
+      console.log(
+        "Response from selectedInterviewType:",
+        selectedInterviewType
+      );
       // Handle outsource request if interviewers are selected
       if (selectedInterviewers && selectedInterviewers.length > 0) {
         const isInternal = selectedInterviewType === "Internal";
-        // console.log(
-        //   `Sending ${selectedInterviewers.length} outsource requests`
-        // );
-        // console.log("selectedInterviewers", selectedInterviewers);
+        console.log(
+          `Sending ${selectedInterviewers.length} outsource requests`
+        );
+        console.log("selectedInterviewers", selectedInterviewers);
+
         for (const interviewer of selectedInterviewers) {
           // console.log("interviewer", interviewer);
           // console.log("interviewer contactId", interviewer.contact?._id);
@@ -968,7 +978,9 @@ const RoundFormInterviews = () => {
         }
       }
 
-      // console.log("response", response);
+
+      console.log("response", response);
+
 
       // don't remove this code related to agora video room
       // if (response.status === 'ok'){
@@ -981,6 +993,7 @@ const RoundFormInterviews = () => {
       //   console.log("video_call_res",video_call_res.data);
 
       // }
+
       console.log("response",response);
       
 
@@ -1150,6 +1163,7 @@ const RoundFormInterviews = () => {
       }
 
    
+
     } catch (err) {
       console.error("Error submitting the form:", err);
       setErrors({
@@ -2244,6 +2258,7 @@ const RoundFormInterviews = () => {
                                                                               ))} */}
                                               </ul>
                                             </div>
+
                                           </div>
                                         );
                                       }
@@ -2264,6 +2279,7 @@ const RoundFormInterviews = () => {
                                               }`.trim() || interviewer.email}
                                             </span>
                                           </div>
+
                                           <button
                                             type="button"
                                             onClick={() =>

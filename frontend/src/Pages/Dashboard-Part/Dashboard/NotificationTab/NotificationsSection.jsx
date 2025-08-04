@@ -55,7 +55,7 @@ const NotificationsSection = () => {
         });
         
         setNotificationsData(categorizedNotifications);
-        console.log('Processed notifications:', categorizedNotifications);
+        // console.log('Processed notifications:', categorizedNotifications);
       } catch (err) {
         console.error('Error fetching notifications:', err);
       }

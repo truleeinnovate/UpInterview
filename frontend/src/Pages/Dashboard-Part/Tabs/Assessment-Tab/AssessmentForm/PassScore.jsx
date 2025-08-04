@@ -406,7 +406,7 @@ const PassScore = forwardRef(({
                         min="1"
                       />
                       {selectedScore === "Percentage" && (
-                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                        <span className="absolute right-7 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
                       )}
                     </div>
                     {touched.totalScore && errors.totalScore && (
@@ -431,7 +431,7 @@ const PassScore = forwardRef(({
                         max={selectedScore === "Percentage" ? "100" : localTotalScore || undefined}
                       />
                       {selectedScore === "Percentage" && (
-                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                        <span className="absolute right-7 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
                       )}
                     </div>
                     {touched.passScore && errors.passScore && (

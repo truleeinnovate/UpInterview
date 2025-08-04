@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - added sort by _id to get the latest at getLogsSummary controller
 const InternalLog = require("../models/InternalLog");
 
 exports.createLog = async (logDetails) => {
@@ -97,7 +98,9 @@ exports.deleteLog = async (req, res) => {
 // SUPER ADMIN added by Ashok ------------------------------------->
 exports.getLogsSummary = async (req, res) => {
   try {
-    const logs = await InternalLog.find();
+    // v1.0.0 <---------------------------------------------------------------
+    const logs = await InternalLog.find().sort({ _id: -1 });
+    // v1.0.0 <---------------------------------------------------------------
 
     const totalLogs = logs.length;
     const errorLogs = logs.filter((log) => log.status === "error").length;

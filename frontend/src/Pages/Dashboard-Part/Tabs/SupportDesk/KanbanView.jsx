@@ -7,6 +7,7 @@ import { FaEye, FaPencilAlt } from 'react-icons/fa';
 import { format, isValid, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase } from "lucide-react";
+import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge';
 
 
 const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, effectivePermissions_RoleName, impersonatedUser_roleName, impersonationPayloadID }) => {
@@ -254,9 +255,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                       className="flex items-center gap-1.5"
                       whileHover={{ scale: 1.05 }}
                     >
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
-                        {ticket.status || 'N/A'}
-                      </span>
+                      <StatusBadge status={ticket.status} text={ticket.status ? ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1) : "Not Provided"}/>
                     </motion.div>
                     {(impersonatedUser_roleName === 'Super_Admin' || impersonatedUser_roleName === 'Support_Team') && (
                       <motion.div

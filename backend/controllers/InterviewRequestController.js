@@ -1,8 +1,11 @@
+// v1.0.0 - Ashok - changed createdAt to _id for customRequestId generation
+// v1.0.1 - Venkatesh - added wallet functionality deduction and hold amount
 const mongoose = require("mongoose");
 const Interview = require("../models/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest");
 const { Contacts } = require("../models/Contacts");
 const { InterviewRounds } = require("../models/InterviewRounds");
+const Wallet = require("../models/WalletTopup");
 
 //old mansoor code i have changed this code because each interviwer send one request
 
@@ -71,9 +74,11 @@ exports.createRequest = async (req, res) => {
     const isInternal = interviewerType === "internal";
 
     // Step 1: Get the last created request to determine the last number used
+    // v1.0.0 <------------------------------------------------------------------------
     const lastRequest = await InterviewRequest.findOne({})
-      .sort({ createdAt: -1 }) // ensure you have timestamps enabled
+      .sort({ _id: -1 }) // ensure you have timestamps enabled
       .select("customRequestId");
+    // v1.0.0 ------------------------------------------------------------------------>
 
     let latestNumber = 0;
     if (lastRequest && lastRequest.customRequestId) {
@@ -129,7 +134,14 @@ exports.getAllRequests = async (req, res) => {
         path: "candidateId",
         model: "Candidate",
         select: "skills",
+      })
+      // v1.0.0 <------------------------------------------------------------------------
+      .populate({
+        path: "interviewerId",
+        model: "Contacts",
+        select: "firstName lastName email phone currentRole imageData skills", // customize fields
       });
+    // v1.0.0 ------------------------------------------------------------------------>
     res.status(200).json(requests);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -169,7 +181,7 @@ exports.updateRequestStatus = async (req, res) => {
       return res.status(404).json({ message: "Interview request not found" });
     }
     let isAccepted = false;
-    request.interviewerIds = request.interviewerIds.map((interviewer) => {
+    request.interviewerId = request.interviewerId.map((interviewer) => {
       const updatedInterviewer = interviewerIds.find(
         (i) => String(i.id) === String(interviewer.id)
       );
@@ -182,7 +194,7 @@ exports.updateRequestStatus = async (req, res) => {
       return interviewer;
     });
     if (isAccepted) {
-      request.interviewerIds = request.interviewerIds.map((interviewer) => ({
+      request.interviewerId = request.interviewerId.map((interviewer) => ({
         ...interviewer,
         status: interviewer.status === "accepted" ? "accepted" : "cancelled",
       }));
@@ -194,6 +206,8 @@ exports.updateRequestStatus = async (req, res) => {
           Status: "scheduled",
         }));
         await interview.save();
+
+      
       } else {
         return res.status(404).json({
           message: "Interview not found for the scheduledInterviewId",
@@ -215,8 +229,60 @@ exports.updateRequestStatus = async (req, res) => {
 
 exports.getInterviewRequests = async (req, res) => {
   try {
-    const { ownerId } = req.query;
+    const { ownerId, interviewerId } = req.query;
 
+    // If interviewerId is provided, fetch requests for that interviewer only
+    if (interviewerId) {
+      if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
+        return res.status(400).json({ message: 'Invalid interviewerId' });
+      }
+      const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
+      const requests = await InterviewRequest.find({ interviewerId: interviewerObjectId })
+        .populate("candidateId")
+        .populate("positionId")
+        .populate("tenantId")
+        .populate("roundId")
+        .populate("interviewerId")
+        .lean();
+      const formattedRequests = requests.map((request) => ({
+        ...request,
+        _id: request._id,
+        id: request._id,
+        positionId: request.positionId || null,
+        tenantId: request.tenantId || null,
+        roundId: request.roundId || null,
+        contactId: request.interviewerId || null,
+        status: request.status,
+        requestedDate: request.requestedAt
+          ? new Date(request.requestedAt).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        urgency: request.expiryDateTime
+          ? new Date(request.expiryDateTime) < new Date()
+            ? "High"
+            : "Medium"
+          : "Low",
+        type: request.roundId?.interviewType || "Unknown Type",
+        roundId: request.roundId?._id || null,
+        roundDetails: request.roundId
+          ? {
+            roundTitle: request.roundId.roundTitle,
+            interviewType: request.roundId.interviewType,
+            duration: request.roundId.duration,
+            dateTime: request.roundId.dateTime,
+          }
+          : null,
+        originalRequest: {
+          dateTime: request.dateTime,
+          duration: request.duration,
+          status: request.status,
+          interviewerType: request.interviewerType,
+          expiryDateTime: request.expiryDateTime,
+        },
+      }));
+      return res.status(200).json(formattedRequests);
+    }
+
+    // Default: use ownerId logic
     if (!ownerId) {
       return res.status(400).json({ message: "ownerId is required" });
     }
@@ -284,11 +350,11 @@ exports.getInterviewRequests = async (req, res) => {
         roundId: request.roundId?._id || null,
         roundDetails: request.roundId
           ? {
-              roundTitle: request.roundId.roundTitle,
-              interviewType: request.roundId.interviewType,
-              duration: request.roundId.duration,
-              dateTime: request.roundId.dateTime,
-            }
+            roundTitle: request.roundId.roundTitle,
+            interviewType: request.roundId.interviewType,
+            duration: request.roundId.duration,
+            dateTime: request.roundId.dateTime,
+          }
           : null,
         originalRequest: {
           dateTime: request.dateTime,
@@ -306,14 +372,12 @@ exports.getInterviewRequests = async (req, res) => {
 
     res.status(200).json(formattedRequests);
   } catch (error) {
-    console.error("[getInterviewRequests] Error:", error);
+    console.error("[getInterviewRequests] Error:", error, error.stack);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 exports.acceptInterviewRequest = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
     const { requestId, contactId, roundId } = req.body;
 
@@ -335,13 +399,11 @@ exports.acceptInterviewRequest = async (req, res) => {
     }
 
     // Update InterviewRounds: Add contactId to interviewers array
-    const round = await InterviewRounds.findById(roundId).session(session);
+    const round = await InterviewRounds.findById(roundId);
     if (!round) {
       console.log(
         `acceptInterviewRequest: Interview round not found for roundId ${roundId}`
       );
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({ message: "Interview round not found" });
     }
 
@@ -350,18 +412,18 @@ exports.acceptInterviewRequest = async (req, res) => {
     if (!round.interviewers.includes(contactId)) {
       round.interviewers.push(contactId);
       round.status = "scheduled";
-      await round.save({ session });
+      await round.save();
     } else {
       console.log(
         `acceptInterviewRequest: Contact ${contactId} already in round ${roundId}`
       );
     }
 
-    // Delete all interview requests with the same roundId
+    // Delete all interview requests with the same roundId except the accepted one
     const deleteResult = await InterviewRequest.deleteMany({
       roundId: roundId,
       _id: { $ne: requestId }, // Don't delete the accepted request
-    }).session(session);
+    });
 
     console.log(
       `Deleted ${deleteResult.deletedCount} other interview requests for round ${roundId}`
@@ -371,11 +433,48 @@ exports.acceptInterviewRequest = async (req, res) => {
     await InterviewRequest.findByIdAndUpdate(
       requestId,
       { status: "accepted" },
-      { session, new: true }
+      { new: true }
     );
 
-    await session.commitTransaction();
-    session.endSession();
+    //<-----------v1.0.1-----------------------
+    // add hourly rate to the request
+    const findHourlyRate = await Contacts.findById(contactId);
+    const hourlyRate = findHourlyRate.hourlyRate;
+
+    const request = await InterviewRequest.findById(requestId);
+    const duration = request.duration;
+    const durationInMinutes = parseInt(duration.split(" ")[0]);
+    // if hourlyRate is 100$ and duration is 45 minutes, totalAmount is 75$
+    const totalAmount = (hourlyRate * durationInMinutes) / 60;
+  
+    const wallet = await Wallet.findById(request.tenantId);
+    const walletBalance = wallet.balance;
+  
+    // Check if there is enough balance in the wallet
+    if (walletBalance < totalAmount) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient balance in wallet to accept this interview request."
+      });
+    }
+  
+    // Deduct the total amount from wallet balance
+    const updatedWallet = await Wallet.findByIdAndUpdate(
+      request.tenantId,
+      { 
+        $inc: { 
+          balance: -totalAmount,
+          holdAmount: totalAmount
+        } 
+      },
+      { new: true }
+    );
+  
+    // Log the transaction or update any other necessary fields
+    console.log(`Deducted ${totalAmount} from wallet balance. New balance: ${updatedWallet.balance}`);
+    console.log(`Added ${totalAmount} to hold amount. New hold amount: ${updatedWallet.holdAmount}`);
+    //-----------v1.0.1------------------------------>
+  
     res.status(200).json({
       message:
         "Interview request accepted and other requests for this round removed",
@@ -383,8 +482,6 @@ exports.acceptInterviewRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("[acceptInterviewRequest] Error:", error);
-    await session.abortTransaction();
-    session.endSession();
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -393,7 +490,19 @@ exports.getSingleInterviewRequest = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const request = await InterviewRequest.findById(id);
+    const request = await InterviewRequest.findById(id)
+      .populate({
+        path: "candidateId",
+        model: "Candidate",
+        select: "skills",
+      })
+      // v1.0.0 <------------------------------------------------------------------------
+      .populate({
+        path: "interviewerId",
+        model: "Contacts",
+        select: "firstName lastName email phone currentRole imageData skills", // customize fields
+      });
+    // v1.0.0 ------------------------------------------------------------------------>
 
     return res.status(200).json(request);
   } catch (error) {

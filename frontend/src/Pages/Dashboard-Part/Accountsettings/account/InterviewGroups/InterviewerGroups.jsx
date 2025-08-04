@@ -1,4 +1,5 @@
 // v1.0.0  -  mansoor  -  added skeleton structure loading
+// v1.0.1  -  Ashok    -  changed the styles at bullet points
 
 // import { useState } from 'react'
 import { ViewDetailsButton, EditButton } from '../../common/Buttons'
@@ -166,12 +167,15 @@ const InterviewerGroups = () => {
               <h3 className="text-sm font-medium text-custom-blue">Interviewer Groups</h3>
               <div className="mt-2 text-sm text-custom-blue">
                 <p>Create specialized interviewer groups for different assessment types:</p>
-                <ul className="list-disc list-inside mt-1">
+                {/* v1.0.1 <---------------------------------------------------------------------------------------------------------------------------- */}
+                <ul className="list-disc list-inside mt-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-1 gap-x-16">
+                {/* v1.0.1 -----------------------------------------------------------------------------------------------------------------------------> */}
                   <li>Group interviewers by expertise (Frontend, Backend, etc.)</li>
                   <li>Manage technical and non-technical interview panels</li>
                   <li>Organize interviewers by seniority levels</li>
                   <li>Track group-specific interview metrics</li>
                 </ul>
+                
               </div>
             </div>
           </div>
@@ -194,17 +198,17 @@ const InterviewerGroups = () => {
             <div key={group._id} className="bg-white p-4 sm:p-6 rounded-lg shadow">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-medium">{group.name}</h3>
+                  <h3 className="text-lg font-medium">{group.name ? group.name.charAt(0).toUpperCase() + group.name.slice(1) : "N/A"}</h3>
                   {/* <p className="text-gray-500 mt-1 text-sm">{group.description}</p> */}
                 </div>
                 <span className={`px-2 py-1 text-xs rounded-full ${group.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                   }`}>
-                  {group.status}
+                  {group.status ? group.status.charAt(0).toUpperCase() + group.status.slice(1) : "N/A"}
                 </span>
               </div>
 
               <div className="mt-4">
-                <p className="text-sm text-gray-500">Members: {group.numberOfUsers}</p>
+                <p className="text-sm text-gray-500">{group.numberOfUsers > 1 ? "Members:" : "Member:"} {group.numberOfUsers}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {group.usersNames.map((member, index) => (
                     <span key={index} className="px-2 py-1 bg-gray-100 rounded-full text-sm">

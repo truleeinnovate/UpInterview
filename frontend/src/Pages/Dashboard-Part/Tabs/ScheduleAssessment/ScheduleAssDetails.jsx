@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  removed expity date
 //v1.0.1 - Ranjith -- added properly navigating to candidate view page proeprly
+//v1.0.2 - Ashraf -- correct data getting structure to get candidate assesment from schedule assessment correctly
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -23,7 +24,7 @@ function ScheduleAssDetails() {
   const { fetchScheduledAssessments } = useAssessments();
   const [candidates, setCandidates] = useState(schedule?.candidates || []);
   const [loading, setLoading] = useState(false);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(true);
 
   // If the user accesses this route directly without schedule data, go back
   useEffect(() => {
@@ -57,26 +58,41 @@ function ScheduleAssDetails() {
   if (!schedule) {
     return null;
   }
-
+// <-------------------------------v1.0.2
   const formattedCandidates = (raw) =>
-    (raw || []).map((candidate) => ({
-      id: candidate._id,
-      _id: candidate.candidateId?._id,
-      FirstName: candidate.candidateId?.FirstName || "Unknown",
-      LastName: candidate.candidateId?.LastName || "",
-      Email: candidate.candidateId?.Email || "No email",
-      status: candidate.status,
-      totalScore: candidate.totalScore,
-      endedAt: candidate.endedAt,
-      result:
-        candidate.status === "completed" ? candidate.totalScore ?? null : null,
-      Phone: candidate.candidateId?.Phone || "N/A",
-      HigherQualification: candidate.candidateId?.HigherQualification || "N/A",
-      CurrentExperience: candidate.candidateId?.CurrentExperience || "N/A",
-      skills: candidate.candidateId?.skills || [],
-      assessmentId: schedule?.assessmentId?._id || schedule?.assessmentId,
-    }));
+    (raw || []).map((candidate) => {
+      // Get the assessment ID properly
+      let assessmentId = null;
+      if (schedule?.assessmentId) {
+        if (typeof schedule.assessmentId === 'object' && schedule.assessmentId._id) {
+          assessmentId = schedule.assessmentId._id;
+        } else if (typeof schedule.assessmentId === 'string') {
+          assessmentId = schedule.assessmentId;
+        }
+      }
+      
 
+      
+      return {
+        id: candidate._id,
+        _id: candidate.candidateId?._id,
+        FirstName: candidate.candidateId?.FirstName || "Unknown",
+        LastName: candidate.candidateId?.LastName || "",
+        Email: candidate.candidateId?.Email || "No email",
+        status: candidate.status,
+        totalScore: candidate.totalScore,
+        endedAt: candidate.endedAt,
+        expiryAt: candidate.expiryAt, // Add expiry date
+        result:
+          candidate.status === "completed" ? candidate.totalScore ?? null : null,
+        Phone: candidate.candidateId?.Phone || "N/A",
+        HigherQualification: candidate.candidateId?.HigherQualification || "N/A",
+        CurrentExperience: candidate.candidateId?.CurrentExperience || "N/A",
+        skills: candidate.candidateId?.skills || [],
+        assessmentId: assessmentId,
+      };
+    });
+// ------------------------------v1.0.2 >
   const handleResendLink = () => {};
 
   const modalClass = classNames(
@@ -100,13 +116,13 @@ function ScheduleAssDetails() {
     >
       <div
         className={classNames("flex flex-col h-full", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
+          "mx-auto": isFullScreen,
         })}
       >
-        <div className="px-4 pt-4 sm:p-6 flex justify-between items-center bg-white z-50">
+        <div className="px-4 pt-4 sm:p-6 flex justify-between items-center z-50">
           <div>
             <h2 className="text-lg font-semibold text-custom-blue">
-              Schedule / {schedule.scheduledAssessmentCode}
+            {schedule.scheduledAssessmentCode}
             </h2>
             {/* // <---------------------- v1.0.0 */}
             {/* {schedule.expiryAt && (
@@ -117,7 +133,7 @@ function ScheduleAssDetails() {
             {/* // <---------------------- v1.0.0 */}
           </div>
           <div className="flex items-center space-x-2">
-            <button
+            {/* <button
               onClick={() => setIsFullScreen(!isFullScreen)}
               className="p-2 text-gray-600 hover:text-gray-800"
             >
@@ -126,7 +142,7 @@ function ScheduleAssDetails() {
               ) : (
                 <ArrowsPointingOutIcon className="h-5 w-5" />
               )}
-            </button>
+            </button> */}
             <button
               onClick={handleClose}
               className="p-2 text-gray-600 hover:text-gray-800"
@@ -135,9 +151,9 @@ function ScheduleAssDetails() {
             </button>
           </div>
         </div>
-        <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
+        <div className="flex-grow overflow-y-auto pt-6">
           {/* Candidates list */}
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto">
             {loading ? (
               <div className="text-center py-8 text-gray-500">
                 Loading Candidates...

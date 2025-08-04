@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  added tansak query to get data without reload
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
@@ -11,6 +12,9 @@ export const shareAssessmentAPI = async ({
   onClose = () => {},
   setErrors = () => {},
   setIsLoading = () => {},
+  // <-------------------------------v1.0.0
+  queryClient = null, // Add queryClient parameter for invalidation
+  // ------------------------------v1.0.0 >
 }) => {
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   const organizationId = tokenPayload?.tenantId;
@@ -53,30 +57,37 @@ export const shareAssessmentAPI = async ({
     }
 
     toast.success(response.data?.message || 'Assessment shared successfully');
+    // <-------------------------------v1.0.0
+    
+    // Invalidate related queries to refresh data
+    if (queryClient) {
+      // Invalidate all related queries to ensure data refreshes
+      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
+      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      
+      // Force refetch to ensure immediate update with a small delay
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['Assessments'] });
+        queryClient.refetchQueries({ queryKey: ['scheduleassessment'] });
+        queryClient.refetchQueries({ queryKey: ['scheduledAssessments'] });
+      }, 100);
+    }
+    
+    // Close the popup on success
+    onClose();
+    
     return { success: true, message: response.data.message, data: response.data.data };
   } catch (error) {
-    console.error('Assessment sharing failed:', error);
-    
-    // Handle specific error cases
-    let errorMessage = 'Failed to share assessment';
-    if (error.response) {
-      if (error.response.status === 500) {
-        errorMessage = 'Server error occurred. Please try again later.';
-      } else if (error.response.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-    } else if (error.message.includes('timeout')) {
-      errorMessage = 'Request timed out. Please check your connection and try again.';
-    }
-
+    console.error('Error sharing assessment:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Failed to share assessment';
     toast.error(errorMessage);
-    return {
-      success: false,
-      error: errorMessage,
-      response: error.response?.data,
-    };
+    setErrors((prev) => ({ ...prev, general: errorMessage }));
+    return { success: false, error: errorMessage };
+    // ------------------------------v1.0.0 >
   } finally {
     setIsLoading(false);
-    onClose();
   }
 };

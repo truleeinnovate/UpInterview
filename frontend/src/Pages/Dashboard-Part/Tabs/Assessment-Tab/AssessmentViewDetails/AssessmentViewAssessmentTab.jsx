@@ -1,9 +1,14 @@
 // v1.0.0  -  Ashraf  -  commented expiry date because we dont have expiry date in schedule assessment
 // v1.0.1  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 // v1.0.2  -  Ashraf  -  called sections function to load data fast
+// v1.0.3  -  Ashraf  -  added extend/cancel functionality for candidate assessments,assed cancel,extend popup
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { UserPlusIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+// <-------------------------------v1.0.3
+import { UserPlusIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import AssessmentActionPopup from './AssessmentActionPopup.jsx';
+// <-------------------------------v1.0.3 >
 import Candidate from '../../Candidate-Tab/Candidate.jsx';
 import ShareAssessment from '../ShareAssessment.jsx';
 import axios from 'axios';
@@ -14,9 +19,9 @@ import { config } from '../../../../../config.js';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 
 function AssessmentsTab({ assessment }) {
-  
-  const { fetchScheduledAssessments, fetchAssessmentQuestions } = useAssessments();
-
+  // <-------------------------------v1.0.3
+  const { useScheduledAssessments, fetchAssessmentQuestions } = useAssessments();
+  // ------------------------------v1.0.3 >
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
   // Remove console.log to prevent loops
   // useEffect(() => {
@@ -28,13 +33,21 @@ function AssessmentsTab({ assessment }) {
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
 
-  const [scheduledAssessments, setScheduledAssessments] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [openSchedules, setOpenSchedules] = useState({});
   // <---------------------- v1.0.1
   const [hasSections, setHasSections] = useState(false);
   const [checkingSections, setCheckingSections] = useState(false);
+  // ------------------------------v1.0.3 >
+  // <---------------------- v1.0.1 >
+  const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selectedAction, setSelectedAction] = useState(''); // 'extend' or 'cancel'
+  const [resendLoading, setResendLoading] = useState({}); // Track loading state for each resend button
+
+  // Use React Query for scheduled assessments
+  const { data: scheduledAssessments = [], isLoading: loading } = useScheduledAssessments(assessment?._id);
+  // ------------------------------v1.0.3 >
 
   // Check if assessment has sections
   useEffect(() => {
@@ -61,29 +74,19 @@ function AssessmentsTab({ assessment }) {
   }, [assessment?._id]);
   // <---------------------- v1.0.1 >
 
+  // Initialize openSchedules when scheduledAssessments data changes
   useEffect(() => {
-    const fetchData = async () => {
-      if (assessment?._id) {
-        const { data, error } = await fetchScheduledAssessments(assessment._id);
-        if (!error) {
-          // Ensure we always work with an array, even if the API returns null or a non-array value
-          const schedulesArray = Array.isArray(data) ? data : [];
-          setScheduledAssessments(schedulesArray);
-          const initialOpenState = schedulesArray.reduce((acc, schedule) => {
-            acc[schedule._id] = false;
-            return acc;
-          }, {});
-          setOpenSchedules(initialOpenState);
-        } else {
-          console.error('Failed to fetch scheduled assessments:', error);
-          toast.error('Failed to load scheduled assessments');
-        }
-      }
-    };
-
-    fetchData();
-  }, [assessment]);
-
+    // <-------------------------------v1.0.3
+    if (scheduledAssessments && scheduledAssessments.length > 0) {
+      const initialOpenState = scheduledAssessments.reduce((acc, schedule) => {
+        acc[schedule._id] = false;
+        return acc;
+      }, {});
+      setOpenSchedules(initialOpenState);
+      setOpenSchedules((prev) => ({ ...prev, [scheduledAssessments[0]._id]: true }));
+    }
+  }, [scheduledAssessments]);
+  // ------------------------------v1.0.3 >
 
   const handleResendLink = async (candidateAssessmentId) => {
     try {
@@ -100,11 +103,12 @@ function AssessmentsTab({ assessment }) {
         toast.error('User or organization information missing');
         return;
       }
-
+      // <-------------------------------v1.0.3
+      setResendLoading((prev) => ({ ...prev, [candidateAssessmentId]: true }));
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/emails/resend-link`,
         {
-          candidateAssessmentId,
+          candidateAssessmentIds: [candidateAssessmentId],
           userId,
           organizationId,
           assessmentId: assessment._id,
@@ -113,10 +117,7 @@ function AssessmentsTab({ assessment }) {
 
       if (response.data.success) {
         toast.success('Assessment link resent successfully');
-        // ------------------------------ v1.0.2 >
-        fetchAssessmentQuestions();
-        fetchScheduledAssessments();
-        // ------------------------------ v1.0.2 >
+        // React Query will automatically refresh the data when needed
       } else {
         toast.error(response.data.message || 'Failed to resend link');
       }
@@ -124,6 +125,8 @@ function AssessmentsTab({ assessment }) {
       console.error('Error resending link:', error);
       console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.message || 'Failed to resend assessment link');
+    } finally {
+      setResendLoading((prev) => ({ ...prev, [candidateAssessmentId]: false }));
     }
   };
 
@@ -134,11 +137,25 @@ function AssessmentsTab({ assessment }) {
     }));
   };
 
-  useEffect(() => {
-    if (assessment?._id) {
-      fetchScheduledAssessments(assessment._id);
-    }
-  }, [assessment]);
+  // <---------------------- v1.0.3
+  const handleActionClick = (schedule, action) => {
+    setSelectedSchedule(schedule);
+    setSelectedAction(action);
+    setIsActionPopupOpen(true);
+  };
+
+  const handleActionSuccess = () => {
+    // React Query will automatically refresh the data when mutations invalidate queries
+    // No manual refresh needed
+  };
+  // Function to check if action buttons should be disabled based on schedule status
+  const shouldDisableActionButtons = (schedule) => {
+    const status = schedule.status?.toLowerCase();
+    // Disable buttons for completed, cancelled, expired, and failed statuses
+    return ['completed', 'cancelled', 'expired', 'failed'].includes(status);
+  };
+
+  // <-------------------------------v1.0.3
 
   if (loading) return <div className="p-4 text-gray-600">Loading Assessments...</div>;
 
@@ -152,6 +169,9 @@ function AssessmentsTab({ assessment }) {
       status: candidate.status,
       totalScore: candidate.totalScore,
       endedAt: candidate.endedAt,
+      // <-------------------------------v1.0.3
+      expiryAt: candidate.expiryAt, 
+      // ------------------------------v1.0.3 >
       result:
         candidate.status === 'completed'
           ? assessment.passScoreBy === 'Each Section'
@@ -218,7 +238,45 @@ function AssessmentsTab({ assessment }) {
                     </span>
                   </div>
                 </div>
-                <div>
+                {/* ------------------------------v1.0.3 > */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!shouldDisableActionButtons(schedule)) {
+                        handleActionClick(schedule, 'extend');
+                      }
+                    }}
+                    disabled={shouldDisableActionButtons(schedule)}
+                    className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      shouldDisableActionButtons(schedule)
+                        ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                        : 'text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500'
+                    }`}
+                    title={shouldDisableActionButtons(schedule) ? 'Action not available for this status' : 'Extend Assessment'}
+                  >
+                    <CalendarIcon className="w-4 h-4 mr-1" />
+                    Extend
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!shouldDisableActionButtons(schedule)) {
+                        handleActionClick(schedule, 'cancel');
+                      }
+                    }}
+                    disabled={shouldDisableActionButtons(schedule)}
+                    className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      shouldDisableActionButtons(schedule)
+                        ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                        : 'text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500'
+                    }`}
+                    title={shouldDisableActionButtons(schedule) ? 'Action not available for this status' : 'Cancel Assessment'}
+                  >
+                    <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+                    Cancel
+                  </button>
+                  {/* ------------------------------v1.0.3 > */}
                   {openSchedules[schedule._id] ? (
                     <ChevronUpIcon className="w-5 h-5 text-gray-500" />
                   ) : (
@@ -234,6 +292,8 @@ function AssessmentsTab({ assessment }) {
                         candidates={formattedCandidates(schedule.candidates)}
                         onResendLink={handleResendLink}
                         isAssessmentView={true}
+                        
+                        resendLoading={resendLoading}
                       />
                     </div>
                   </div>
@@ -263,6 +323,22 @@ function AssessmentsTab({ assessment }) {
         // assessmentId={assessment._id}
         />
       )}
+    {/* <---------------------- v1.0.3 */}
+    {isActionPopupOpen && selectedSchedule && (
+      <AssessmentActionPopup
+        isOpen={isActionPopupOpen}
+        onClose={() => {
+          setIsActionPopupOpen(false);
+          setSelectedSchedule(null);
+          setSelectedAction('');
+        }}
+        schedule={{...selectedSchedule, assessmentId: assessment._id}}
+        candidates={formattedCandidates(selectedSchedule.candidates)}
+        onSuccess={handleActionSuccess}
+        defaultAction={selectedAction}
+      />
+    )}
+    {/* ------------------------------ v1.0.3 > */}
     </>
   );
 }

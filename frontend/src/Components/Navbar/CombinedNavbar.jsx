@@ -2,6 +2,8 @@
 // v1.0.1  -  Ashraf  -  Assessment_Template permission name changed to AssessmentTemplates
 // v1.0.2  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout
 // v1.0.3  -  Ashraf  -  updated loading tabs issue
+// v1.0.4  -  Ashok   -  changed tab name from "Integrations" to "Integration Logs" in super admin navbar
+// v1.0.5  -  Ashraf  -  using authcookie manager to get current tokein 
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -28,15 +30,19 @@ import { usePermissionCheck } from "../../utils/permissionUtils";
 import AuthCookieManager from "../../utils/AuthCookieManager/AuthCookieManager";
 import { useSingleContact } from "../../apiHooks/useUsers";
 import Loading from "../Loading.js";
-
+// <---------------------- v1.0.5
+import { getAuthToken, getImpersonationToken } from "../../utils/AuthCookieManager/AuthCookieManager";
+// ---------------------- v1.0.5 >
 
 const CombinedNavbar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
   // <---------------------- v1.0.2
   const { effectivePermissions_RoleName } = usePermissions();
   // ---------------------- v1.0.2 >
+  // <---------------------- v1.0.5
   const location = useLocation();
-  const authToken = Cookies.get("authToken");
+  const authToken = getAuthToken();
+  // ---------------------- v1.0.5 >
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const { userProfile } = useCustomContext();
@@ -329,11 +335,13 @@ const CombinedNavbar = () => {
           label: "Internal Logs",
           permissionKey: "InternalLogs.ViewTab",
         },
+        // v1.0.4 <-----------------------------------------------------
         {
           path: "/integrations",
-          label: "Integrations",
+          label: "Integration Logs",
           permissionKey: "IntegrationLogs.ViewTab",
         },
+        // v1.0.4 ----------------------------------------------------->
       ];
     } else {
       return [
@@ -343,14 +351,19 @@ const CombinedNavbar = () => {
           permissionKey: "Analytics.ViewTab",
         },
         {
-          path: "/support-desk",
-          label: "Support Desk",
-          permissionKey: "SupportDesk.ViewTab",
-        },
-        {
           path: "/questionBank",
           label: "Question Bank",
           permissionKey: "QuestionBank.ViewTab",
+        },
+        {
+          path: "/feedback",
+          label: "Feedback",
+          permissionKey: "Feedback.ViewTab",
+        },
+        {
+          path: "/support-desk",
+          label: "Support Desk",
+          permissionKey: "SupportDesk.ViewTab",
         },
       ];
     }
@@ -974,6 +987,7 @@ const CombinedNavbar = () => {
                             )}
                             {(isActive("/analytics") ||
                               isActive("/support-desk") ||
+                              isActive("/feedback") ||
                               isActive("/questionBank")) && (
                                 <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                               )}
@@ -985,9 +999,6 @@ const CombinedNavbar = () => {
                                   ...(enhancedCheckPermission("Analytics")
                                     ? [{ to: "/analytics", label: "Analytics" }]
                                     : []),
-                                  ...(enhancedCheckPermission("SupportDesk")
-                                    ? [{ to: "/support-desk", label: "Support Desk" }]
-                                    : []),
                                   ...(enhancedCheckPermission("QuestionBank")
                                     ? [
                                       {
@@ -995,6 +1006,12 @@ const CombinedNavbar = () => {
                                         label: "Question Bank",
                                       },
                                     ]
+                                    : []),
+                                  ...(enhancedCheckPermission("Feedback")
+                                    ? [{ to: "/feedback", label: "Feedback" }]
+                                    : []),
+                                  ...(enhancedCheckPermission("SupportDesk")
+                                    ? [{ to: "/support-desk", label: "Support Desk" }]
                                     : []),
                                 ].map(({ to, label }) => (
                                   <NavLink
@@ -1282,11 +1299,13 @@ const CombinedNavbar = () => {
 
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
+                      enhancedCheckPermission("Feedback") ||
                       enhancedCheckPermission("QuestionBank")) && (
                         <div className="relative" ref={moreRef}>
                           <button
                             className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") ||
                               isActive("/support-desk") ||
+                              isActive("/feedback") ||
                               isActive("/questionBank")
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
@@ -1306,9 +1325,6 @@ const CombinedNavbar = () => {
                                 ...(enhancedCheckPermission("Analytics")
                                   ? [{ to: "/analytics", label: "Analytics" }]
                                   : []),
-                                ...(enhancedCheckPermission("SupportDesk")
-                                  ? [{ to: "/support-desk", label: "Support Desk" }]
-                                  : []),
                                 ...(enhancedCheckPermission("QuestionBank")
                                   ? [
                                     {
@@ -1316,6 +1332,12 @@ const CombinedNavbar = () => {
                                       label: "Question Bank",
                                     },
                                   ]
+                                  : []),
+                                ...(enhancedCheckPermission("Feedback")
+                                  ? [{ to: "/feedback", label: "Feedback" }]
+                                  : []),
+                                ...(enhancedCheckPermission("SupportDesk")
+                                  ? [{ to: "/support-desk", label: "Support Desk" }]
                                   : []),
                               ].map(({ to, label }) => (
                                 <NavLink

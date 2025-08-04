@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Added optional chaining to prevent errors
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -52,12 +53,13 @@ const OutsourceInterviewers = () => {
 
   const { outsourceInterviewers, isLoading, isError, error, refetch } =
     useOutsourceInterviewers();
-
+  // v1.0.0 <-------------------------------------------------------------------------
   useEffect(() => {
     if (selectedInterviewerId && outsourceInterviewers?.length) {
-      const foundUser = outsourceInterviewers.find(
+      const foundUser = outsourceInterviewers?.find(
         (user) => user._id === selectedInterviewerId
       );
+  // v1.0.0 -------------------------------------------------------------------------
       setSelectedInterviewer(foundUser || null);
     }
   }, [selectedInterviewerId, outsourceInterviewers]);
@@ -213,17 +215,19 @@ const OutsourceInterviewers = () => {
       header: "Interviewer ID",
       render: (vale, row) => (
         <span
+        // v1.0.0 <---------------------------------------------------------
           className={`font-medium ${
-            superAdminPermissions.OutsourceInterviewerRequest.View
+            superAdminPermissions?.OutsourceInterviewerRequest.View
               ? "text-custom-blue cursor-pointer"
               : "text-gray-900"
           }`}
           onClick={(e) => {
             e.stopPropagation(); // Prevents row-level handlers (if any)
-            if (superAdminPermissions.OutsourceInterviewerRequest.View && row) {
+            if (superAdminPermissions?.OutsourceInterviewerRequest.View && row) {
               handleOpenPopup(row);
               setIsPopupOpen(true);
             }
+        // v1.0.0 --------------------------------------------------------->
           }}
         >
           {row?.interviewerNo ? row?.interviewerNo : "N/A"}

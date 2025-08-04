@@ -1,5 +1,6 @@
 // v1.0.0 ------ Venkatesh--- check list name using ternary operator
-
+// v1.0.1  -  Ashraf  -  fixed toast error
+// v1.0.2  -  Venkatesh  -  fixed selected label issue now default first label is selected
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
@@ -11,7 +12,7 @@ import { ReactComponent as MdMoreVert } from "../../../../icons/MdMoreVert.svg";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import Editassesmentquestion from "./QuestionBank-Form.jsx";
 import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
-import toast from "react-hot-toast";
+import { toast, Toaster } from 'react-hot-toast'; 
 import Cookies from "js-cookie";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
@@ -155,6 +156,16 @@ const MyQuestionsList = ({
       const matchingQuestion = allQuestions.find((q) => q.listId === lastSelectedListId);
       if (matchingQuestion) {
         setSelectedLabel(matchingQuestion.label);
+        return; // Exit early if cookie match found
+      }
+    }
+    //<---------------------- v1.0.2------
+    // If no cookie or no matching label found, set first available option as default
+    if (myQuestionsList && typeof myQuestionsList === "object") {
+      const availableLabels = Object.keys(myQuestionsList);
+      if (availableLabels.length > 0 && !selectedLabel) {
+        setSelectedLabel(availableLabels[0]);
+        //------------------v1.0.2------>
       }
     }
   }, [myQuestionsList]);
@@ -340,7 +351,9 @@ const MyQuestionsList = ({
         // 4. Show remaining questions count
         const remaining = questionsLimit - (checkedCount + 1);
         if (remaining > 0) {
-          toast.info(`${remaining} questions remaining to reach the limit`);
+          // <-------------------------------v1.0.1
+          toast(`${remaining} questions remaining to reach the limit`);
+          // ------------------------------v1.0.1 >
         } else {
           toast.success('You have reached the required number of questions!');
         }
@@ -595,324 +608,327 @@ const selectedLabelId = useMemo(() => {
   );
 
   return (
-    <div className="w-full px-4 py-2 mt-10 bg-white">
-      <div className={`flex items-center justify-between fixed z-40 ${type === "interviewerSection" || type === "assessment" ? "left-12 right-12" : "left-7 right-7"}`}>
-        <div className="flex items-center gap-2">
-          <div className="relative inline-block w-48">
-            <button
-              className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              <span className="truncate">{selectedLabel || "Select a label"}</span>
-              <svg
-                className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"}`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+    <>
+      <Toaster />
+      <div className="w-full px-4 py-2 mt-10 bg-white">
+        <div className={`flex items-center justify-between fixed z-40 ${type === "interviewerSection" || type === "assessment" ? `${type === "assessment" ? "left-40 right-40" : "left-16 right-16"}` : "left-7 right-7"}`}>
+          <div className="flex items-center gap-2">
+            <div className="relative inline-block w-48">
+              <button
+                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                {Object.keys(groupedQuestions).length > 0 ? (
-                  Object.keys(groupedQuestions).map((listName, idx) => (
-                    <div
-                      key={idx}
-                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
-                        selectedLabel === listName
-                          ? "bg-blue-50 text-custom-blue font-semibold"
-                          : groupedQuestions[listName].length === 0
-                          ? "text-gray-400"
-                          : ""
-                      }`}
-                      onClick={() => handleLabelChange(listName)}
-                      title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
-                    >
-                      <div className="flex justify-between items-center">
-                        {/*<-------v1.0.0------ */}
-                        <span className="truncate">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</span>
-                        {/*-------v1.0.0------>*/}
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            groupedQuestions[listName].length === 0
-                              ? "text-gray-500 bg-gray-100"
-                              : "text-gray-500 bg-gray-100"
-                          }`}
-                        >
-                          {groupedQuestions[listName].length}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-4 py-3 text-sm text-gray-500">
-                    No labels found. Create a new list to get started.
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <button
-            className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
-            onClick={openListPopup}
-          >
-            <Plus size={14} /> Create New List
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            className="text-md bg-custom-blue text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
-            onClick={toggleSidebar}
-          >
-            <Plus /> Add Question
-          </button>
-          <div
-            ref={filterIconRef}
-            onClick={() => setIsPopupOpen(!isPopupOpen)}
-            className="border p-2 text-xl rounded-md cursor-pointer"
-          >
-            {isPopupOpen ? (
-              <LuFilterX className="text-custom-blue" />
-            ) : (
-              <FiFilter className="text-custom-blue" />
-            )}
-          </div>
-
-        </div>
-      </div>
-
-      <div className={`${type === "interviewerSection" || type === "assessment" || activeTab === "MyQuestionsList" ? "mt-[60px]" : ""}`}>
-        {selectedLabel && groupedQuestions[selectedLabel]?.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[400px]">
-            <div className="text-center max-w-md">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-16 w-16 mx-auto text-gray-400 mb-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <h3 className="text-lg font-medium text-gray-500 mb-2">No Questions in {selectedLabel}</h3>
-              <p className="text-gray-400">This label has no questions. Add questions to this list or select another label.</p>
-            </div>
-          </div>
-        ) : !selectedLabel ? (
-          <div className="flex flex-col items-center justify-center min-h-[400px]">
-            <div className="text-center max-w-md">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-16 w-16 mx-auto text-gray-400 mb-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <h3 className="text-lg font-medium text-gray-500 mb-2">No Label Selected</h3>
-              <p className="text-gray-400">Please select a label from the dropdown to view questions</p>
-            </div>
-          </div>
-        ) : null}
-        {isLoading ? (
-          <>
-            <SkeletonLoader />
-          </>
-        ) : (!selectedLabel || groupedQuestions[selectedLabel]?.length > 0) && (
-          <>
-            {Object.entries(groupedQuestions).map(([listName, items]) => (
-              selectedLabel === listName && (
-                <div key={listName} className="mt-4">
-                  <div
-                    className={`flex justify-between items-center bg-blue-50 p-2 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
-                      }`}
-                  >
-                    <div className="flex items-baseline gap-3">
-                      <h3 className="font-semibold truncate max-w-xs text-custom-blue ml-1">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</h3>
-                      <span className="bg-white bg-opacity-20 rounded-full px-2.5 py-0.5 text-xs font-medium">
-                        {items.length} {items.length > 1 ? "Questions" : "Question"}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="relative">
-                        <div className="flex items-center">
-                          {isOpen[listName] && items.length > 0 && (
-                            <button
-                              onClick={() => toggleActionSection(listName)}
-                              className="p-1 rounded-full"
-                            >
-                              <MdMoreVert className="text-xl" />
-                            </button>
-                          )}
-                          {items.length > 0 && (
-                            <button
-                              onClick={() => toggleSection(listName)}
-                              className="p-1 rounded-full ml-2"
-                            >
-                              {isOpen[listName] ? (
-                                <IoIosArrowUp className="text-2xl" />
-                              ) : (
-                                <IoIosArrowDown className="text-2xl" />
-                              )}
-                            </button>
-                          )}
+                <span className="truncate">{selectedLabel || "Select Label"}</span>
+                <svg
+                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                  {Object.keys(groupedQuestions).length > 0 ? (
+                    Object.keys(groupedQuestions).map((listName, idx) => (
+                      <div
+                        key={idx}
+                        className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+                          selectedLabel === listName
+                            ? "bg-blue-50 text-custom-blue font-semibold"
+                            : groupedQuestions[listName].length === 0
+                            ? "text-gray-400"
+                            : ""
+                        }`}
+                        onClick={() => handleLabelChange(listName)}
+                        title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
+                      >
+                        <div className="flex justify-between items-center">
+                          {/*<-------v1.0.0------ */}
+                          <span className="truncate">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</span>
+                          {/*-------v1.0.0------>*/}
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              groupedQuestions[listName].length === 0
+                                ? "text-gray-500 bg-gray-100"
+                                : "text-gray-500 bg-gray-100"
+                            }`}
+                          >
+                            {groupedQuestions[listName].length}
+                          </span>
                         </div>
-                        {actionViewMoreSection === listName && (
-                          <div className="absolute right-10 w-24 bg-white hover:bg-gray-200 rounded-md shadow-lg border border-gray-200 z-10">
-                            <p
-                              className="px-2 py-1 flex items-center gap-2 text-sm text-gray-700 cursor-pointer transition-colors"
-                              onClick={() => {
-                                items.forEach((item) => {
-                                  handleEdit(item.listId, item.label);
-                                });
-                              }}
-                            >
-                              <Pencil className="w-4 h-4 text-blue-600" /> Edit List
-                            </p>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  </div>
-
-                  {isOpen[listName] && items.length > 0 && (
-                    <div
-                      className={`p-4  rounded-b-lg border border-t-0 border-gray-300 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-250px)]"
-                        } overflow-y-auto`}
-                    >
-                      {items.map((question, index) => (
-                        <div
-                          key={index}
-                          className="border border-gray-300 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex justify-between items-center p-4 border-b border-gray-300">
-                            <div className="flex items-start w-3/4">
-                              <span className="font-semibold w-8">{index + 1}.</span>
-                              <p className="text-gray-700">{question.questionText}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`text-xs px-2 py-1 rounded-md ${question.isCustom ? "bg-[#BBDEFB] text-blue-800" : "bg-[#D1C4E9] text-blue-800"
-                                  }`}
-                                title="Question Type"
-                              >
-                                {question.isCustom ? "Custom" : "System"}
-                              </span>
-                              <span
-                                className={`text-xs px-2 py-1 rounded-md ${getDifficultyStyles(question.difficultyLevel)}`}
-                                title="Difficulty Level"
-                              >
-                                {question.difficultyLevel}
-                              </span>
-                              {type === "interviewerSection" && (
-                                <div>
-                                  {interviewQuestionsLists?.some((q) => q.questionId === question._id) ? (
-                                    <button
-                                     type="button"
-                                      onClick={() => onClickRemoveQuestion(question, listName, index)}
-                                      className="rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
-                                    >
-                                      Remove
-                                    </button>
-                                  ) : (
-                                    <button
-                                     type="button"
-                                      className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
-                                      onClick={() => onClickAddButton(question, listName, index)}
-                                    >
-                                      Add
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                              {type === "assessment" && (
-                                <div>
-                                  {addedSections.some((s) => s.Questions.some((q) => q.questionId === question._id)) ? (
-                                    <span className="text-green-600 text-sm font-medium py-1 px-1">✓ Added</span>
-                                  ) : (
-                                    <button
-                                      className={`bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
-                                        }`}
-                                      onClick={() => onClickAddButton(question, listName, index)}
-                                      disabled={addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit}
-                                    >
-                                      Add
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                              {question.isCustom && (
-                                <div className="relative">
-                                  <button
-                                    onClick={() => toggleDropdown(question._id)}
-                                    className="hover:bg-gray-100 p-1 rounded-full transition-colors"
-                                  >
-                                    <MdMoreVert className="text-gray-600" />
-                                  </button>
-                                  {dropdownOpen === question._id && (
-                                    <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                                      <p
-                                        className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
-                                        onClick={() => handleEditClick(question)}
-                                      >
-                                        <Pencil className="w-4 h-4 text-blue-600" /> Edit
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {question.questionType === "MCQ" && question.options && (
-                            <div className="mb-2 ml-12 mt-2">
-                              <ul className="list-none">
-                                {(() => {
-                                  const isAnyOptionLong = question.options.some((option) => option.length > 55);
-                                  return question.options.map((option, idx) => (
-                                    <li key={idx} className={`${isAnyOptionLong ? "block w-full" : "inline-block w-1/2"} mb-2`}>
-                                      <span className="mr-2 text-gray-500">{String.fromCharCode(97 + idx)})</span>
-                                      <span className="text-gray-700">{option}</span>
-                                    </li>
-                                  ));
-                                })()}
-                              </ul>
-                            </div>
-                          )}
-                          <div className="p-4 pt-0">
-                            <p className="text-sm break-words whitespace-pre-wrap">
-                              <span className="font-medium text-gray-700">Answer: </span>
-                              <span className="text-gray-600">
-                                {question.questionType === "MCQ" && question.options
-                                  ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer))}) `
-                                  : ""}
-                                {question.correctAnswer}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-gray-500">
+                      No labels found. Create a new list to get started.
                     </div>
                   )}
                 </div>
-              )
-            ))}
-          </>
-        )}
+              )}
+            </div>
+            <button
+              className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
+              onClick={openListPopup}
+            >
+              <Plus size={14} /> Create New List
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="text-md bg-custom-blue text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
+              onClick={toggleSidebar}
+            >
+              <Plus /> Add Question
+            </button>
+            <div
+              ref={filterIconRef}
+              onClick={() => setIsPopupOpen(!isPopupOpen)}
+              className="border p-2 text-xl rounded-md cursor-pointer"
+            >
+              {isPopupOpen ? (
+                <LuFilterX className="text-custom-blue" />
+              ) : (
+                <FiFilter className="text-custom-blue" />
+              )}
+            </div>
+
+          </div>
+        </div>
+
+        <div className={`${type === "interviewerSection" || type === "assessment" || activeTab === "MyQuestionsList" ? "mt-[60px]" : ""}`}>
+          {selectedLabel && groupedQuestions[selectedLabel]?.length === 0 ? (
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              <div className="text-center max-w-md">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-16 w-16 mx-auto text-gray-400 mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <h3 className="text-lg font-medium text-gray-500 mb-2">No Questions in {selectedLabel}</h3>
+                <p className="text-gray-400">This label has no questions. Add questions to this list or select another label.</p>
+              </div>
+            </div>
+          ) : !selectedLabel ? (
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              <div className="text-center max-w-md">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-16 w-16 mx-auto text-gray-400 mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <h3 className="text-lg font-medium text-gray-500 mb-2">No Label Selected</h3>
+                <p className="text-gray-400">Please select a label from the dropdown to view questions</p>
+              </div>
+            </div>
+          ) : null}
+          {isLoading ? (
+            <>
+              <SkeletonLoader />
+            </>
+          ) : (!selectedLabel || groupedQuestions[selectedLabel]?.length > 0) && (
+            <>
+              {Object.entries(groupedQuestions).map(([listName, items]) => (
+                selectedLabel === listName && (
+                  <div key={listName} className="mt-4">
+                    <div
+                      className={`flex justify-between items-center bg-blue-50 p-2 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
+                        }`}
+                    >
+                      <div className="flex items-baseline gap-3">
+                        <h3 className="font-semibold truncate max-w-xs text-custom-blue ml-1">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</h3>
+                        <span className="bg-white bg-opacity-20 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                          {items.length} {items.length > 1 ? "Questions" : "Question"}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="relative">
+                          <div className="flex items-center">
+                            {isOpen[listName] && items.length > 0 && (
+                              <button
+                                onClick={() => toggleActionSection(listName)}
+                                className="p-1 rounded-full"
+                              >
+                                <MdMoreVert className="text-xl" />
+                              </button>
+                            )}
+                            {items.length > 0 && (
+                              <button
+                                onClick={() => toggleSection(listName)}
+                                className="p-1 rounded-full ml-2"
+                              >
+                                {isOpen[listName] ? (
+                                  <IoIosArrowUp className="text-2xl" />
+                                ) : (
+                                  <IoIosArrowDown className="text-2xl" />
+                                )}
+                              </button>
+                            )}
+                          </div>
+                          {actionViewMoreSection === listName && (
+                            <div className="absolute right-10 w-24 bg-white hover:bg-gray-200 rounded-md shadow-lg border border-gray-200 z-10">
+                              <p
+                                className="px-2 py-1 flex items-center gap-2 text-sm text-gray-700 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  items.forEach((item) => {
+                                    handleEdit(item.listId, item.label);
+                                  });
+                                }}
+                              >
+                                <Pencil className="w-4 h-4 text-blue-600" /> Edit List
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {isOpen[listName] && items.length > 0 && (
+                      <div
+                        className={`p-4  rounded-b-lg border border-t-0 border-gray-300 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-250px)]"
+                          } overflow-y-auto`}
+                      >
+                        {items.map((question, index) => (
+                          <div
+                            key={index}
+                            className="border border-gray-300 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex justify-between items-center p-4 border-b border-gray-300">
+                              <div className="flex items-start w-3/4">
+                                <span className="font-semibold w-8">{index + 1}.</span>
+                                <p className="text-gray-700">{question.questionText}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`text-xs px-2 py-1 rounded-md ${question.isCustom ? "bg-[#BBDEFB] text-blue-800" : "bg-[#D1C4E9] text-blue-800"
+                                    }`}
+                                  title="Question Type"
+                                >
+                                  {question.isCustom ? "Custom" : "System"}
+                                </span>
+                                <span
+                                  className={`text-xs px-2 py-1 rounded-md ${getDifficultyStyles(question.difficultyLevel)}`}
+                                  title="Difficulty Level"
+                                >
+                                  {question.difficultyLevel}
+                                </span>
+                                {type === "interviewerSection" && (
+                                  <div>
+                                    {interviewQuestionsLists?.some((q) => q.questionId === question._id) ? (
+                                      <button
+                                       type="button"
+                                        onClick={() => onClickRemoveQuestion(question, listName, index)}
+                                        className="rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
+                                      >
+                                        Remove
+                                      </button>
+                                    ) : (
+                                      <button
+                                       type="button"
+                                        className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
+                                        onClick={() => onClickAddButton(question, listName, index)}
+                                      >
+                                        Add
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                                {type === "assessment" && (
+                                  <div>
+                                    {addedSections.some((s) => s.Questions.some((q) => q.questionId === question._id)) ? (
+                                      <span className="text-green-600 text-sm font-medium py-1 px-1">✓ Added</span>
+                                    ) : (
+                                      <button
+                                        className={`bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                          ? "opacity-50 cursor-not-allowed"
+                                          : ""
+                                          }`}
+                                        onClick={() => onClickAddButton(question, listName, index)}
+                                        disabled={addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit}
+                                      >
+                                        Add
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                                {question.isCustom && (
+                                  <div className="relative">
+                                    <button
+                                      onClick={() => toggleDropdown(question._id)}
+                                      className="hover:bg-gray-100 p-1 rounded-full transition-colors"
+                                    >
+                                      <MdMoreVert className="text-gray-600" />
+                                    </button>
+                                    {dropdownOpen === question._id && (
+                                      <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                        <p
+                                          className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
+                                          onClick={() => handleEditClick(question)}
+                                        >
+                                          <Pencil className="w-4 h-4 text-blue-600" /> Edit
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {question.questionType === "MCQ" && question.options && (
+                              <div className="mb-2 ml-12 mt-2">
+                                <ul className="list-none">
+                                  {(() => {
+                                    const isAnyOptionLong = question.options.some((option) => option.length > 55);
+                                    return question.options.map((option, idx) => (
+                                      <li key={idx} className={`${isAnyOptionLong ? "block w-full" : "inline-block w-1/2"} mb-2`}>
+                                        <span className="mr-2 text-gray-500">{String.fromCharCode(97 + idx)})</span>
+                                        <span className="text-gray-700">{option}</span>
+                                      </li>
+                                    ));
+                                  })()}
+                                </ul>
+                              </div>
+                            )}
+                            <div className="p-4 pt-0">
+                              <p className="text-sm break-words whitespace-pre-wrap pt-2">
+                                <span className="font-medium text-gray-700">Answer: </span>
+                                <span className="text-gray-600">
+                                  {question.questionType === "MCQ" && question.options
+                                    ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer))}) `
+                                    : ""}
+                                  {question.correctAnswer}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              ))}
+            </>
+          )}
+        </div>
         <FilterPopup
           isOpen={isPopupOpen}
           onClose={() => setIsPopupOpen(false)}
@@ -950,7 +966,7 @@ const selectedLabelId = useMemo(() => {
           />
         )}
       </div>
-    </div>
+    </>
   );
 };
 

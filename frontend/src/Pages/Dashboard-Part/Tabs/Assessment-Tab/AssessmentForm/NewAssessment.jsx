@@ -1,6 +1,8 @@
 // v1.0.0  -  Ashraf  -  assessment template id not getting issues,on save or save next 2 button loading issues.only load wich button u have clicked
 // v1.0.1  -  Ashraf  -  assessment file name changed
 // v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
+// v1.0.3  -  Ashok   -  Added scroll to first error functionality
+
 import React, {
   useState,
   useRef,
@@ -16,29 +18,35 @@ import { validateAssessmentData } from "../../../../../utils/assessmentValidatio
 import Cookies from "js-cookie";
 import { format } from "date-fns";
 import ConfirmationPopup from "../ConfirmationPopup.jsx";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from "react-router-dom";
 import BasicDetailsTab from "./BasicDetailsTab.jsx";
 import AssessmentTestDetailsTab from "./AssessmentTestDetailsTab.jsx";
 import AssessmentQuestionsTab from "./AssessmentQuestionsTab.jsx";
 // <---------------------- v1.0.1
-import AssessmentsTab from '../AssessmentViewDetails/AssessmentViewAssessmentTab.jsx';
+import AssessmentsTab from "../AssessmentViewDetails/AssessmentViewAssessmentTab.jsx";
 // <---------------------- v1.0.1 >
 import PassScore from "./PassScore.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from "../../../../../config.js";
-import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
-import { usePositions } from '../../../../../apiHooks/usePositions';
-import LoadingButton from '../../../../../Components/LoadingButton';
+import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
+import { usePositions } from "../../../../../apiHooks/usePositions";
+import LoadingButton from "../../../../../Components/LoadingButton";
 import { Button } from "@mui/material";
 import { X } from "lucide-react";
-
-
+import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 
 const NewAssessment = () => {
-  const { assessmentData, addOrUpdateAssessment, upsertAssessmentQuestions, isMutationLoading, fetchAssessmentQuestions } = useAssessments();
+  const formRef = useRef(null);
+  const {
+    assessmentData,
+    addOrUpdateAssessment,
+    upsertAssessmentQuestions,
+    isMutationLoading,
+    fetchAssessmentQuestions,
+  } = useAssessments();
   const { positionData } = usePositions();
 
-  const tokenPayload = decodeJwt(Cookies.get('authToken'));
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
 
@@ -48,7 +56,9 @@ const NewAssessment = () => {
   const { id } = useParams();
 
   const isEditing = !!id;
-  const assessment = isEditing ? assessmentData.find(assessment => assessment._id === id) : null;
+  const assessment = isEditing
+    ? assessmentData.find((assessment) => assessment._id === id)
+    : null;
 
   const [activeTab, setActiveTab] = useState("Basicdetails");
   const [startDate, setStartDate] = useState(new Date());
@@ -107,9 +117,17 @@ const NewAssessment = () => {
     status: "Active",
     passScoreType: "",
     passScoreBy: "",
-    passScore: '',
+    passScore: "",
     linkExpiryDays: "",
   });
+
+  // v1.0.3 <---------------------------------------------------------
+  const fieldRefs = {
+    AssessmentTitle: useRef(null),
+    NumberOfQuestions: useRef(null),
+    DifficultyLevel: useRef(null),
+  };
+  // v1.0.3 --------------------------------------------------------->
 
   // Initialize checkedState based on addedSections
   useEffect(() => {
@@ -126,7 +144,9 @@ const NewAssessment = () => {
   // Load basic assessment data
   useEffect(() => {
     if (isEditing && assessment) {
-      const matchedPosition = positionData.find((pos) => pos._id === assessment.Position);
+      const matchedPosition = positionData.find(
+        (pos) => pos._id === assessment.Position
+      );
       console.log("matchedPosition", matchedPosition);
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
@@ -134,7 +154,9 @@ const NewAssessment = () => {
         DifficultyLevel: assessment.DifficultyLevel || "",
         Duration: assessment.Duration || "60 Minutes",
         NumberOfQuestions: assessment.NumberOfQuestions || "",
-        ExpiryDate: assessment.ExpiryDate ? new Date(assessment.ExpiryDate) : new Date(),
+        ExpiryDate: assessment.ExpiryDate
+          ? new Date(assessment.ExpiryDate)
+          : new Date(),
         status: assessment.status || "Active",
         passScoreType: assessment.passScoreType || "Number",
         passScoreBy: assessment.passScoreBy || "Overall",
@@ -151,7 +173,9 @@ const NewAssessment = () => {
       // Set CandidateDetails fields if they exist
       if (assessment.CandidateDetails) {
         setIncludePhone(assessment.CandidateDetails.includePhone || false);
-        setIncludePosition(assessment.CandidateDetails.includePosition || false);
+        setIncludePosition(
+          assessment.CandidateDetails.includePosition || false
+        );
       } else {
         setIncludePhone(false);
         setIncludePosition(false);
@@ -178,12 +202,12 @@ const NewAssessment = () => {
       const loadAssessmentQuestions = async () => {
         try {
           const { data, error } = await fetchAssessmentQuestions(id);
-          
+
           if (error) {
             console.error("Error fetching assessment questions:", error);
             return;
           }
-          
+
           if (data && data.sections) {
             const responseData = data;
             // console.log("Received assessment questions data:", responseData);
@@ -206,14 +230,20 @@ const NewAssessment = () => {
 
             // If passScoreBy is "Each Section", populate totalScores and passScores
             if (assessment.passScoreBy === "Each Section") {
-              const sectionTotalScores = formattedSections.reduce((acc, section) => ({
-                ...acc,
-                [section.SectionName]: section.totalScore || "",
-              }), {});
-              const sectionPassScores = formattedSections.reduce((acc, section) => ({
-                ...acc,
-                [section.SectionName]: section.passScore || "",
-              }), {});
+              const sectionTotalScores = formattedSections.reduce(
+                (acc, section) => ({
+                  ...acc,
+                  [section.SectionName]: section.totalScore || "",
+                }),
+                {}
+              );
+              const sectionPassScores = formattedSections.reduce(
+                (acc, section) => ({
+                  ...acc,
+                  [section.SectionName]: section.passScore || "",
+                }),
+                {}
+              );
 
               setTotalScores(sectionTotalScores);
               setPassScores(sectionPassScores);
@@ -224,10 +254,13 @@ const NewAssessment = () => {
           }
         } catch (error) {
           console.error("Error fetching assessment questions:", error);
-          console.error("Error details:", error.response?.data || error.message);
+          console.error(
+            "Error details:",
+            error.response?.data || error.message
+          );
         }
       };
-      
+
       loadAssessmentQuestions();
     }
   }, [id, isEditing, assessment]);
@@ -241,7 +274,7 @@ const NewAssessment = () => {
     Basicdetails: false,
     Details: false,
     Questions: false,
-    Candidates: false
+    Candidates: false,
   });
   // <---------------------- v1.0.0
   const [isSaving, setIsSaving] = useState(false);
@@ -255,7 +288,7 @@ const NewAssessment = () => {
     hasResponseId: !!tabsSubmitStatus.responseId,
     responseIdType: typeof tabsSubmitStatus.responseId,
     activeTab,
-    currentDateTime: new Date().toISOString()
+    currentDateTime: new Date().toISOString(),
   });
 
   // Track state changes
@@ -269,7 +302,7 @@ const NewAssessment = () => {
       isEditing,
       id,
       tabsSubmitStatus,
-      activeTab
+      activeTab,
     });
   }, []);
 
@@ -358,6 +391,16 @@ const NewAssessment = () => {
     return { assessmentData };
   };
 
+  const handleValidationErrors = (errors) => {
+    setErrors(errors);
+    setTimeout(() => {
+      const firstErrorField = document.querySelector(".text-red-500");
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+  };
+
   // const handleSave = async (event, currentTab, actionType) => {
   //   event.preventDefault();
   //   console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
@@ -381,7 +424,6 @@ const NewAssessment = () => {
   //       assessmentData,
   //       tabsSubmitStatus
   //     });
-
 
   //     setTabsSubmitStatus((prev) => ({
   //       ...prev,
@@ -417,7 +459,6 @@ const NewAssessment = () => {
   //       console.log("✅ Questions saved successfully:", questionsResponse.message);
   //     }
 
-
   //     // 🧠 Action after save
   //     if (actionType === "close") {
   //       console.log("🛑 Closing form after save");
@@ -447,49 +488,64 @@ const NewAssessment = () => {
   // <---------------------- v1.0.0
   const handleSave = async (event, currentTab, actionType) => {
     event.preventDefault();
-    
+
     // Prevent multiple simultaneous saves
     if (isSaving) {
-      console.log('⏳ Already saving, skipping...');
+      console.log("⏳ Already saving, skipping...");
       return;
     }
-    
+
     // Set which button was clicked
-    setActiveButton(actionType === 'close' ? 'save' : 'next');
+    setActiveButton(actionType === "close" ? "save" : "next");
     setIsSaving(true);
-    console.log(`🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`);
+    console.log(
+      `🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`
+    );
 
     const { errors, assessmentData } = validateAndPrepareData(currentTab);
 
     if (errors) {
-      console.warn('❗ Validation failed:', errors);
-      setErrors(errors);
+      console.warn("❗ Validation failed:", errors);
+      handleValidationErrors(errors);
       setActiveButton(null); // Reset active button on validation failure
+      // v1.0.3 <--------------------------------------------------------------------
+      scrollToFirstError(errors, fieldRefs);
+      // v1.0.3 -------------------------------------------------------------------->
       setIsSaving(false);
       return;
     }
 
-    console.log('✅ Validation passed. Prepared assessment data:', assessmentData);
+    console.log(
+      "✅ Validation passed. Prepared assessment data:",
+      assessmentData
+    );
 
     try {
       // Determine if we should be in editing mode
-      const hasExistingAssessment = tabsSubmitStatus.responseId && tabsSubmitStatus.responseId !== null && tabsSubmitStatus.responseId !== "";
+      const hasExistingAssessment =
+        tabsSubmitStatus.responseId &&
+        tabsSubmitStatus.responseId !== null &&
+        tabsSubmitStatus.responseId !== "";
       const shouldEdit = isEditing || hasExistingAssessment;
-      
+
       // Get the correct assessment ID
-      const assessmentId = isEditing ? id : (hasExistingAssessment ? tabsSubmitStatus.responseId : null);
-      
-      console.log('📋 Current assessment ID:', assessmentId);
-      console.log('📋 Is editing (URL):', isEditing);
-      console.log('📋 Has existing assessment:', hasExistingAssessment);
-      console.log('📋 Should edit:', shouldEdit);
-      console.log('📋 URL ID:', id);
-      console.log('📋 Tabs response ID:', tabsSubmitStatus.responseId);
+      const assessmentId = isEditing
+        ? id
+        : hasExistingAssessment
+        ? tabsSubmitStatus.responseId
+        : null;
+
+      console.log("📋 Current assessment ID:", assessmentId);
+      console.log("📋 Is editing (URL):", isEditing);
+      console.log("📋 Has existing assessment:", hasExistingAssessment);
+      console.log("📋 Should edit:", shouldEdit);
+      console.log("📋 URL ID:", id);
+      console.log("📋 Tabs response ID:", tabsSubmitStatus.responseId);
 
       // Validate that we have a valid ID when editing from URL
       if (isEditing && !id) {
-        console.error('❌ Editing mode but no valid ID found');
-        setErrors({ general: 'Invalid assessment ID for editing' });
+        console.error("❌ Editing mode but no valid ID found");
+        setErrors({ general: "Invalid assessment ID for editing" });
         setActiveButton(null);
         setIsSaving(false);
         return;
@@ -497,8 +553,8 @@ const NewAssessment = () => {
 
       // Validate that we have a valid ID when updating existing assessment
       if (shouldEdit && !assessmentId) {
-        console.error('❌ Should edit but no valid assessment ID found');
-        setErrors({ general: 'Invalid assessment ID for updating' });
+        console.error("❌ Should edit but no valid assessment ID found");
+        setErrors({ general: "Invalid assessment ID for updating" });
         setActiveButton(null);
         setIsSaving(false);
         return;
@@ -510,19 +566,23 @@ const NewAssessment = () => {
         assessmentData,
         tabsSubmitStatus,
       };
-      
-      console.log('🚀 Calling mutation with params:', mutationParams);
-      
+
+      console.log("🚀 Calling mutation with params:", mutationParams);
+
       const response = await addOrUpdateAssessment(mutationParams);
 
-      console.log('📦 API Response:', response);
-      console.log('📦 Response data:', response?.data);
-      console.log('📦 Response data._id:', response?.data?._id);
+      console.log("📦 API Response:", response);
+      console.log("📦 Response data:", response?.data);
+      console.log("📦 Response data._id:", response?.data?._id);
 
       // Extract the correct ID from response
-      const newAssessmentId = shouldEdit ? (isEditing ? id : assessmentId) : response?.data?._id;
-      
-      console.log('🆔 New/Updated assessment ID:', newAssessmentId);
+      const newAssessmentId = shouldEdit
+        ? isEditing
+          ? id
+          : assessmentId
+        : response?.data?._id;
+
+      console.log("🆔 New/Updated assessment ID:", newAssessmentId);
 
       // Update tabs submit status with the correct ID
       setTabsSubmitStatus((prev) => {
@@ -532,16 +592,20 @@ const NewAssessment = () => {
           responseId: newAssessmentId,
           responseData: response?.data || response,
         };
-        console.log('🔄 Updated tabs submit status:', updated);
+        console.log("🔄 Updated tabs submit status:", updated);
         return updated;
       });
 
-      if (currentTab === 'Questions') {
+      if (currentTab === "Questions") {
         // Use the updated assessment ID for questions
-        const questionsAssessmentId = shouldEdit ? (isEditing ? id : assessmentId) : newAssessmentId;
+        const questionsAssessmentId = shouldEdit
+          ? isEditing
+            ? id
+            : assessmentId
+          : newAssessmentId;
 
         if (!questionsAssessmentId) {
-          console.error('❌ Missing assessmentId before saving questions.');
+          console.error("❌ Missing assessmentId before saving questions.");
           return;
         }
 
@@ -550,10 +614,10 @@ const NewAssessment = () => {
           questionsAssessmentId
         );
 
-        console.log('📦 Prepared questions data:', assessmentQuestionsData);
+        console.log("📦 Prepared questions data:", assessmentQuestionsData);
 
         if (!assessmentQuestionsData.sections?.length) {
-          console.error('❌ Sections array is empty. Cannot proceed.');
+          console.error("❌ Sections array is empty. Cannot proceed.");
           return;
         }
 
@@ -561,15 +625,15 @@ const NewAssessment = () => {
           assessmentQuestionsData
         );
 
-        console.log('✅ Questions saved successfully:', questionsResponse);
+        console.log("✅ Questions saved successfully:", questionsResponse);
       }
 
       // 🧠 Action after save
-      if (actionType === 'close') {
-        console.log('🛑 Closing form after save');
-        navigate('/assessments-template');
-      } else if (actionType === 'next') {
-        const tabOrder = ['Basicdetails', 'Details', 'Questions', 'Candidates'];
+      if (actionType === "close") {
+        console.log("🛑 Closing form after save");
+        navigate("/assessments-template");
+      } else if (actionType === "next") {
+        const tabOrder = ["Basicdetails", "Details", "Questions", "Candidates"];
         const currentIndex = tabOrder.indexOf(currentTab);
         const nextTab = tabOrder[currentIndex + 1];
 
@@ -577,11 +641,11 @@ const NewAssessment = () => {
           console.log(`➡️ Navigating to next tab: ${nextTab}`);
           setActiveTab(nextTab);
         } else {
-          console.log('🚫 No next tab found');
+          console.log("🚫 No next tab found");
         }
       }
     } catch (error) {
-      console.error('❌ Error saving data:', {
+      console.error("❌ Error saving data:", {
         message: error.message,
         response: error.response?.data,
         stack: error.stack,
@@ -590,28 +654,42 @@ const NewAssessment = () => {
       setIsSaving(false);
       setActiveButton(null); // Reset active button regardless of success or failure
     }
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   // <---------------------- v1.0.0
   const gatherDataUpToCurrentTab = (currentTab) => {
     let assessmentData = {};
 
     // Basic details
-    if (currentTab === "Basicdetails" || currentTab === "Details" ||
-      currentTab === "Questions" || currentTab === "Candidates") {
+    if (
+      currentTab === "Basicdetails" ||
+      currentTab === "Details" ||
+      currentTab === "Questions" ||
+      currentTab === "Candidates"
+    ) {
       assessmentData = {
         ...assessmentData,
-        ...(formData.AssessmentTitle && { AssessmentTitle: formData.AssessmentTitle }),
+        ...(formData.AssessmentTitle && {
+          AssessmentTitle: formData.AssessmentTitle,
+        }),
         ...(formData.Position && { Position: formData.Position }),
         ...(formData.Duration && { Duration: formData.Duration }),
-        ...(formData.DifficultyLevel && { DifficultyLevel: formData.DifficultyLevel }),
-        ...(formData.NumberOfQuestions && { NumberOfQuestions: formData.NumberOfQuestions }),
+        ...(formData.DifficultyLevel && {
+          DifficultyLevel: formData.DifficultyLevel,
+        }),
+        ...(formData.NumberOfQuestions && {
+          NumberOfQuestions: formData.NumberOfQuestions,
+        }),
         ...(formData.ExpiryDate && { ExpiryDate: formData.ExpiryDate }),
-        ...(formData.linkExpiryDays && { linkExpiryDays: formData.linkExpiryDays }),
-        ...({ status: formData.status }),
+        ...(formData.linkExpiryDays && {
+          linkExpiryDays: formData.linkExpiryDays,
+        }),
+        ...{ status: formData.status },
         passScoreType: formData.passScoreType, // Always include
         passScoreBy: formData.passScoreBy, // Always include
         ...(formData.passScoreBy === "Overall" && { totalScore: totalScore }),
-        ...(formData.passScoreBy === "Overall" && formData.passScore && { passScore: formData.passScore })
+        ...(formData.passScoreBy === "Overall" &&
+          formData.passScore && { passScore: formData.passScore }),
       };
 
       // Include pass score only if it's overall
@@ -621,15 +699,21 @@ const NewAssessment = () => {
     }
 
     // Other details (Instructions, CandidateDetails, etc.)
-    if (currentTab === "Details" || currentTab === "Questions" || currentTab === "Candidates") {
+    if (
+      currentTab === "Details" ||
+      currentTab === "Questions" ||
+      currentTab === "Candidates"
+    ) {
       assessmentData = {
         ...assessmentData,
-        ...(includePosition || includePhone ? {
-          CandidateDetails: {
-            ...(includePosition ? { includePosition } : {}),
-            ...(includePhone ? { includePhone } : {}),
-          },
-        } : {}),
+        ...(includePosition || includePhone
+          ? {
+              CandidateDetails: {
+                ...(includePosition ? { includePosition } : {}),
+                ...(includePhone ? { includePhone } : {}),
+              },
+            }
+          : {}),
         ...(instructions ? { Instructions: instructions } : {}),
         ...(additionalNotes ? { AdditionalNotes: additionalNotes } : {}),
       };
@@ -646,15 +730,15 @@ const NewAssessment = () => {
         totalScore: section.totalScore || 0,
         questions: section.Questions.map((question, questionIndex) => ({
           questionId: question.questionId || question._id,
-          source: question.source || 'system',
+          source: question.source || "system",
           snapshot: {
             ...question.snapshot,
           },
           score: question.Score || 1, // Ensure at least 1 score
           order: question.order || questionIndex + 1,
-          customizations: question.customizations || null
-        }))
-      }))
+          customizations: question.customizations || null,
+        })),
+      })),
     };
   };
 
@@ -662,23 +746,23 @@ const NewAssessment = () => {
     isOpen: false,
     type: null, // 'section' or 'question' or 'bulk'
     data: null,
-    sectionName: null
+    sectionName: null,
   });
 
   const [editSectionData, setEditSectionData] = useState({
     isOpen: false,
     index: null,
-    name: ""
+    name: "",
   });
 
   // Handle question selection for bulk delete
   const handleQuestionSelection = (sectionName, questionIndex) => {
-    setCheckedState(prev => ({
+    setCheckedState((prev) => ({
       ...prev,
       [sectionName]: {
         ...(prev[sectionName] || {}),
-        [questionIndex]: !(prev[sectionName]?.[questionIndex] || false)
-      }
+        [questionIndex]: !(prev[sectionName]?.[questionIndex] || false),
+      },
     }));
   };
 
@@ -695,7 +779,7 @@ const NewAssessment = () => {
       isOpen: true,
       type,
       data,
-      sectionName
+      sectionName,
     });
   };
 
@@ -703,42 +787,56 @@ const NewAssessment = () => {
   const confirmDelete = () => {
     const { type, data, sectionName } = deleteConfirmation;
 
-    if (type === 'section') {
+    if (type === "section") {
       // Delete entire section
-      setAddedSections(prev => prev.filter((_, index) => index !== data));
-    } else if (type === 'question') {
+      setAddedSections((prev) => prev.filter((_, index) => index !== data));
+    } else if (type === "question") {
       // Delete single question
-      setAddedSections(prev => prev.map(section => {
-        if (section.SectionName === sectionName) {
-          return {
-            ...section,
-            Questions: section.Questions.filter((_, idx) => idx !== data)
-          };
-        }
-        return section;
-      }));
-    } else if (type === 'bulk') {
+      setAddedSections((prev) =>
+        prev.map((section) => {
+          if (section.SectionName === sectionName) {
+            return {
+              ...section,
+              Questions: section.Questions.filter((_, idx) => idx !== data),
+            };
+          }
+          return section;
+        })
+      );
+    } else if (type === "bulk") {
       // Bulk delete selected questions
-      setAddedSections(prev => prev.map(section => {
-        if (checkedState[section.SectionName]) {
-          return {
-            ...section,
-            Questions: section.Questions.filter(
-              (_, idx) => !checkedState[section.SectionName][idx]
-            )
-          };
-        }
-        return section;
-      }));
+      setAddedSections((prev) =>
+        prev.map((section) => {
+          if (checkedState[section.SectionName]) {
+            return {
+              ...section,
+              Questions: section.Questions.filter(
+                (_, idx) => !checkedState[section.SectionName][idx]
+              ),
+            };
+          }
+          return section;
+        })
+      );
       setCheckedState({}); // Reset checked state
     }
 
-    setDeleteConfirmation({ isOpen: false, type: null, data: null, sectionName: null });
+    setDeleteConfirmation({
+      isOpen: false,
+      type: null,
+      data: null,
+      sectionName: null,
+    });
   };
 
   // Cancel deletion
   const cancelDelete = () => {
-    setDeleteConfirmation({ isOpen: false, type: null, data: null, sectionName: null });
+    setDeleteConfirmation({
+      isOpen: false,
+      type: null,
+      data: null,
+      sectionName: null,
+    });
   };
 
   // Open section edit modal
@@ -746,7 +844,7 @@ const NewAssessment = () => {
     setEditSectionData({
       isOpen: true,
       index,
-      name: currentName
+      name: currentName,
     });
   };
 
@@ -754,9 +852,11 @@ const NewAssessment = () => {
   const saveSectionName = () => {
     const { index, name } = editSectionData;
     if (index !== null && name.trim()) {
-      setAddedSections(prev => prev.map((section, idx) =>
-        idx === index ? { ...section, SectionName: name.trim() } : section
-      ));
+      setAddedSections((prev) =>
+        prev.map((section, idx) =>
+          idx === index ? { ...section, SectionName: name.trim() } : section
+        )
+      );
       setEditSectionData({ isOpen: false, index: null, name: "" });
     }
   };
@@ -934,26 +1034,31 @@ const NewAssessment = () => {
     const { SectionName, Questions } = data;
 
     if (SectionName) {
-      setMatchingSection(prevSections => [...new Set([...prevSections, SectionName])]);
+      setMatchingSection((prevSections) => [
+        ...new Set([...prevSections, SectionName]),
+      ]);
 
-      setAddedSections(prevSections => {
-        const newSections = [...prevSections, {
-          ...data,
-          passScore: 0 // Initialize pass score for new section
-        }];
+      setAddedSections((prevSections) => {
+        const newSections = [
+          ...prevSections,
+          {
+            ...data,
+            passScore: 0, // Initialize pass score for new section
+          },
+        ];
         return newSections;
       });
 
-      setQuestionsBySection(prevQuestions => ({
+      setQuestionsBySection((prevQuestions) => ({
         ...prevQuestions,
-        [SectionName]: Questions || []
+        [SectionName]: Questions || [],
       }));
 
       // Initialize pass score for this section if using section-wise pass scores
       if (formData.passScoreBy === "Each Section") {
-        setPassScores(prev => ({
+        setPassScores((prev) => ({
           ...prev,
-          [SectionName]: 0
+          [SectionName]: 0,
         }));
       }
     }
@@ -1041,7 +1146,8 @@ const NewAssessment = () => {
     setIsLimitReachedPopupOpen(false);
   };
 
-  const [isSelectCandidatePopupOpen, setIsSelectCandidatePopupOpen] = useState(false);
+  const [isSelectCandidatePopupOpen, setIsSelectCandidatePopupOpen] =
+    useState(false);
 
   // Handle checkbox changes
   const handleCheckboxChange = (e) => {
@@ -1073,7 +1179,6 @@ const NewAssessment = () => {
     setActiveTab("Basicdetails");
   };
 
-
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState("");
 
@@ -1091,8 +1196,8 @@ const NewAssessment = () => {
   const toggleAction = (sectionName, questionIndex) => {
     setActionViewMore((prev) =>
       prev &&
-        prev.sectionName === sectionName &&
-        prev.questionIndex === questionIndex
+      prev.sectionName === sectionName &&
+      prev.questionIndex === questionIndex
         ? null
         : { sectionName, questionIndex }
     );
@@ -1141,15 +1246,18 @@ const NewAssessment = () => {
     closeAddSectionPopup();
   };
 
-  const updateQuestionsInAddedSectionFromQuestionBank = (sectionName, question) => {
+  const updateQuestionsInAddedSectionFromQuestionBank = (
+    sectionName,
+    question
+  ) => {
     console.log("Updating questions in section:", sectionName);
 
-    setAddedSections(prevSections => {
-      return prevSections.map(section => {
+    setAddedSections((prevSections) => {
+      return prevSections.map((section) => {
         if (section.SectionName === sectionName) {
           return {
             ...section,
-            Questions: [...(section.Questions || []), question]
+            Questions: [...(section.Questions || []), question],
           };
         }
         return section;
@@ -1160,7 +1268,7 @@ const NewAssessment = () => {
   const navigate = useNavigate();
 
   const NavigateToAssessmentList = () => {
-    navigate('/assessments-template');
+    navigate("/assessments-template");
   };
 
   const TabFooter = ({ currentTab }) => {
@@ -1215,9 +1323,9 @@ const NewAssessment = () => {
                 <>
                   <LoadingButton
                     onClick={(e) => handleSave(e, "Questions", "close")}
-                   // <---------------------- v1.0.0
+                    // <---------------------- v1.0.0
 
-                    isLoading={isMutationLoading && activeButton === 'save'}
+                    isLoading={isMutationLoading && activeButton === "save"}
                     // ---------------------- v1.0.0 >
                     loadingText={id ? "Updating..." : "Saving..."}
                   >
@@ -1226,9 +1334,9 @@ const NewAssessment = () => {
 
                   <LoadingButton
                     onClick={(e) => handleSave(e, "Questions", "next")}
-  // <---------------------- v1.0.0
+                    // <---------------------- v1.0.0
 
-                    isLoading={isMutationLoading && activeButton === 'next'}
+                    isLoading={isMutationLoading && activeButton === "next"}
                     // ---------------------- v1.0.0 >
                     loadingText={id ? "Updating..." : "Saving..."}
                   >
@@ -1259,9 +1367,9 @@ const NewAssessment = () => {
             <>
               <LoadingButton
                 onClick={(e) => handleSave(e, currentTab, "close")}
-  // <---------------------- v1.0.0
+                // <---------------------- v1.0.0
 
-                isLoading={isMutationLoading && activeButton === 'save'}
+                isLoading={isMutationLoading && activeButton === "save"}
                 loadingText={id ? "Updating..." : "Saving..."}
               >
                 {isEditing ? "Update" : "Save"}
@@ -1270,8 +1378,8 @@ const NewAssessment = () => {
               {getNextTab() && (
                 <LoadingButton
                   onClick={(e) => handleSave(e, currentTab, "next")}
-                  isLoading={isMutationLoading && activeButton === 'next'}
-  // <---------------------- v1.0.0
+                  isLoading={isMutationLoading && activeButton === "next"}
+                  // <---------------------- v1.0.0
                   loadingText={id ? "Updating..." : "Saving..."}
                 >
                   {isEditing ? "Update & Next" : "Save & Next"}
@@ -1285,28 +1393,30 @@ const NewAssessment = () => {
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50">
+    <div ref={formRef}>
+      <div className="bg-gray-50">
         <main className=" mx-auto py-4 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg">
               <div className="flex justify-between px-12 py-4 sm:px-6">
                 <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  {isEditing ? 'Edit Assessment Template' : 'Add New Assessment Template'}
-                </h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                  {isEditing
-                    ? 'Update the Assessment Template details'
-                    : 'Fill in the details to add a new assessment template'}
-                </p>
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    {isEditing
+                      ? "Edit Assessment Template"
+                      : "Add New Assessment Template"}
+                  </h3>
+                  <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                    {isEditing
+                      ? "Update the Assessment Template details"
+                      : "Fill in the details to add a new assessment template"}
+                  </p>
                 </div>
                 <div>
                   <button
                     onClick={() => navigate(-1)}
                     className="text-gray-500 hover:text-gray-700"
                   >
-                    <X/>
+                    <X />
                   </button>
                 </div>
               </div>
@@ -1362,6 +1472,7 @@ const NewAssessment = () => {
                           errors={errors}
                           isEditing={isEditing}
                           setActiveTab={setActiveTab}
+                          fieldRefs={fieldRefs}
                         />
                         <p className="flex justify-end">
                           <TabFooter currentTab="Basicdetails" />
@@ -1398,7 +1509,9 @@ const NewAssessment = () => {
                         <AssessmentQuestionsTab
                           assessmentId={tabsSubmitStatus.responseId}
                           isAlreadyExistingSection={isAlreadyExistingSection}
-                          setIsAlreadyExistingSection={setIsAlreadyExistingSection}
+                          setIsAlreadyExistingSection={
+                            setIsAlreadyExistingSection
+                          }
                           actionViewMore={actionViewMore}
                           setActionViewMore={setActionViewMore}
                           toggleAction={toggleAction}
@@ -1427,7 +1540,9 @@ const NewAssessment = () => {
                           handleQuestionSelection={handleQuestionSelection}
                           handleBackButtonClick={handleBackButtonClick}
                           handleSave={handleSave}
-                          updateQuestionsInAddedSectionFromQuestionBank={updateQuestionsInAddedSectionFromQuestionBank}
+                          updateQuestionsInAddedSectionFromQuestionBank={
+                            updateQuestionsInAddedSectionFromQuestionBank
+                          }
                           getDifficultyColorClass={getDifficultyColorClass}
                           getSelectedQuestionsCount={getSelectedQuestionsCount}
                           matchingSection={matchingSection}
@@ -1436,7 +1551,9 @@ const NewAssessment = () => {
                           isEditing={isEditing}
                           setSidebarOpen={setSidebarOpen}
                           isPassScoreSubmitted={isPassScoreSubmitted}
-                          setIsQuestionLimitErrorPopupOpen={setIsQuestionLimitErrorPopupOpen}
+                          setIsQuestionLimitErrorPopupOpen={
+                            setIsQuestionLimitErrorPopupOpen
+                          }
                         />
                         <TabFooter currentTab="Questions" />
                       </>
@@ -1445,7 +1562,13 @@ const NewAssessment = () => {
                     {activeTab === "Candidates" && (
                       <>
                         <div className="px-6">
-                          <AssessmentsTab assessment={isEditing ? assessment : tabsSubmitStatus.responseData} />
+                          <AssessmentsTab
+                            assessment={
+                              isEditing
+                                ? assessment
+                                : tabsSubmitStatus.responseData
+                            }
+                          />
                           <TabFooter currentTab="Candidates" />
                         </div>
                       </>
@@ -1457,16 +1580,18 @@ const NewAssessment = () => {
                 <ConfirmationPopup
                   isOpen={deleteConfirmation.isOpen}
                   title={
-                    deleteConfirmation.type === 'section' ? "Delete Section?" :
-                      deleteConfirmation.type === 'bulk' ? "Delete Selected Questions?" :
-                        "Delete Question?"
+                    deleteConfirmation.type === "section"
+                      ? "Delete Section?"
+                      : deleteConfirmation.type === "bulk"
+                      ? "Delete Selected Questions?"
+                      : "Delete Question?"
                   }
                   message={
-                    deleteConfirmation.type === 'section' ?
-                      "Are you sure you want to delete this section and all its questions?" :
-                      deleteConfirmation.type === 'bulk' ?
-                        `Are you sure you want to delete ${getSelectedQuestionsCount()} selected questions?` :
-                        "Are you sure you want to delete this question?"
+                    deleteConfirmation.type === "section"
+                      ? "Are you sure you want to delete this section and all its questions?"
+                      : deleteConfirmation.type === "bulk"
+                      ? `Are you sure you want to delete ${getSelectedQuestionsCount()} selected questions?`
+                      : "Are you sure you want to delete this question?"
                   }
                   onConfirm={confirmDelete}
                   onCancel={cancelDelete}
@@ -1479,12 +1604,19 @@ const NewAssessment = () => {
                     <input
                       type="text"
                       value={editSectionData.name}
-                      onChange={(e) => setEditSectionData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setEditSectionData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   }
                   onConfirm={saveSectionName}
-                  onCancel={() => setEditSectionData({ isOpen: false, index: null, name: "" })}
+                  onCancel={() =>
+                    setEditSectionData({ isOpen: false, index: null, name: "" })
+                  }
                 />
 
                 {isLimitReachedPopupOpen && (
@@ -1558,7 +1690,7 @@ const NewAssessment = () => {
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 };
 

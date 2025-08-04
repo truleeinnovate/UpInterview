@@ -1,4 +1,6 @@
 // v1.0.0  -  Ashraf  -  added data reverse to load updated first
+// v1.0.1 - Ashok - fixing Interviews and availability issues for users
+// v1.0.2 - Ashok - changes style of bullet points of user management, interviewer groups
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -54,7 +56,7 @@ const UsersAccountTab = () => {
   // Select data and loading state based on type
   const dataSource = userType === 'superAdmin' ? superAdminUsers : usersRes;
   const loading = userType === 'superAdmin' ? superAdminLoading : usersLoading;
-
+  console.log("SETTINGS USERS =================================> : ", usersRes)
   // Fetch super admin users when type is superAdmin
   useEffect(() => {
     if (userType === 'superAdmin') {
@@ -321,7 +323,9 @@ const UsersAccountTab = () => {
                       <h3 className="text-sm font-medium text-custom-blue">User Management</h3>
                       <div className="mt-2 text-sm text-custom-blue">
                         <p>Manage all users who can conduct interviews, including:</p>
-                        <ul className="list-disc list-inside mt-1">
+                        {/* v1.0.1 <--------------------------------------------------------------------------------------------------------- */}
+                        <ul className="list-disc list-inside mt-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-1 gap-x-16">
+                        {/* v1.0.1 ---------------------------------------------------------------------------------------------------------> */}
                           <li>Create and manage interviewer accounts</li>
                           <li>Set user roles and permissions</li>
                           <li>Configure interview availability and expertise</li>

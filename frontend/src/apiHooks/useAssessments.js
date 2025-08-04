@@ -3,6 +3,7 @@
 //v1.0.2  -  Ashraf  -  assessment question api data get when exist is true
 //v1.0.3  -  Ashraf  -  assessment data getting loop so added usecallback
 //v1.0.4  -  Ashraf  -  assessment data added reverse to get updated data first
+//v1.0.5  -  Ashraf  -  converted fetchScheduledAssessments to use React Query for proper caching,added cancel,extend,check expired,update all schedule statuses api code
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
   // <---------------------- v1.0.3
@@ -12,6 +13,9 @@ import { useEffect, useRef, useCallback } from 'react';
 import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
+// <---------------------- v1.0.5
+import toast from 'react-hot-toast';
+// ------------------------------ v1.0.5 >
 
 export const useAssessments = (filters = {}) => {
   const queryClient = useQueryClient();
@@ -121,6 +125,100 @@ export const useAssessments = (filters = {}) => {
       console.error('Assessment questions save error:', err.message);
     },
   });
+  // ------------------------------ v1.0.5 >
+
+  // Assessment Actions - Combined from useAssessmentActions
+  const extendAssessment = useMutation({
+    mutationFn: async ({ candidateAssessmentIds, extensionDays }) => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/candidate-assessment/extend`,
+        { candidateAssessmentIds, extensionDays }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Assessment extended successfully');
+      // Invalidate all related queries to ensure data refresh
+      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
+      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to extend assessment');
+    },
+  });
+
+  const cancelAssessment = useMutation({
+    mutationFn: async ({ candidateAssessmentIds }) => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/candidate-assessment/cancel`,
+        { candidateAssessmentIds }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Assessment cancelled successfully');
+      // Invalidate all related queries to ensure data refresh
+      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
+      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to cancel assessment');
+    },
+  });
+
+  const checkExpiredAssessments = useMutation({
+    mutationFn: async () => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/candidate-assessment/check-expired`
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Expiry check completed successfully');
+      // Invalidate all related queries to ensure data refresh
+      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
+      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to check expired assessments');
+    },
+  });
+
+  const updateAllScheduleStatuses = useMutation({
+    mutationFn: async () => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/candidate-assessment/update-all-schedule-statuses`
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'All schedule statuses updated successfully');
+      // Invalidate all related queries to ensure data refresh
+      queryClient.invalidateQueries({ queryKey: ['Assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['assessmentResults'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleassessment'] });
+      queryClient.invalidateQueries({ queryKey: ['AssessmentTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledAssessments'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to update schedule statuses');
+    },
+  });
+  // ------------------------------ v1.0.5 >
+
   // <---------------------- v1.0.3
   const fetchAssessmentQuestions = useCallback(async (assessmentId) => {
   // ------------------------------ v1.0.3 >
@@ -160,8 +258,11 @@ export const useAssessments = (filters = {}) => {
       return { data: null, error: error.message };
     }
   };
-
-  const fetchScheduledAssessments = async (assessmentId) => {
+  // ------------------------------ v1.0.5 >
+  // <---------------------- v1.0.5
+  // Convert fetchScheduledAssessments to use React Query for proper caching
+  const fetchScheduledAssessments = useCallback(async (assessmentId) => {
+  // ------------------------------ v1.0.5 >
     try {
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/schedule-assessment/${assessmentId}/schedules`
@@ -175,10 +276,32 @@ export const useAssessments = (filters = {}) => {
       console.error('Error fetching scheduled assessments:', error);
       return { data: null, error: error.message };
     }
+  }, []);
+  // ------------------------------ v1.0.5 >
+  // React Query hook for scheduled assessments
+  const useScheduledAssessments = (assessmentId) => {
+    return useQuery({
+      queryKey: ['scheduledAssessments', assessmentId],
+      queryFn: async () => {
+        const { data, error } = await fetchScheduledAssessments(assessmentId);
+        if (error) {
+          throw new Error(error);
+        }
+        return data || [];
+      },
+      enabled: !!assessmentId && !!hasViewPermission,
+      retry: 1,
+      staleTime: 0, // Always consider data stale for immediate updates
+      cacheTime: 1000 * 60 * 5, // 5 minutes cache
+      refetchOnWindowFocus: false,
+      refetchOnMount: true, // Refetch when component mounts
+      refetchOnReconnect: false,
+    });
   };
 
-  const isMutationLoading = addOrUpdateAssessment.isPending || upsertAssessmentQuestions.isPending;
 
+  const isMutationLoading = addOrUpdateAssessment.isPending || upsertAssessmentQuestions.isPending || extendAssessment.isPending || cancelAssessment.isPending || checkExpiredAssessments.isPending || updateAllScheduleStatuses.isPending;
+  // ------------------------------ v1.0.5 >
   // Controlled logging
   useEffect(() => {
     if (initialLoad.current) {
@@ -208,7 +331,15 @@ export const useAssessments = (filters = {}) => {
     upsertAssessmentQuestions: upsertAssessmentQuestions.mutateAsync,
     fetchAssessmentQuestions, // assessment questions getting 
     fetchAssessmentResults,
-    fetchScheduledAssessments,
+    // ------------------------------ v1.0.5 >
+    fetchScheduledAssessments, // Keep for backward compatibility
+    useScheduledAssessments, // New React Query hook
     refetch,
+    // Assessment Actions
+    extendAssessment,
+    cancelAssessment,
+    checkExpiredAssessments,
+    updateAllScheduleStatuses,
+    // ------------------------------ v1.0.5 >  
   };
 };

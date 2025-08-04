@@ -541,6 +541,7 @@
 
 // v1.0.0  -  Ashraf  -  edit is not working
 // v1.0.1  -  Ashraf  -  super admin and non super admin edit and create role issues fixed
+// v1.0.2  -  Ashok   -  border b removed
 
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
@@ -1227,7 +1228,9 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             </div>
 
             {userType !== 'superAdmin' && (
-              <div className="mb-8 border-b pb-6">
+              // v1.0.2 <------------------------------------------------------------------------------------------------------------------
+              <div className="mb-8 pb-6">
+                {/* v1.0.2 -------------------------------------------------------------------------------------------------------> */}
                 <h3 className="text-base sm:text-lg font-medium mb-4">Role Hierarchy</h3>
                 <div className="mb-6">
                   <h4 className="font-medium mb-2">Inherits Permissions From</h4>

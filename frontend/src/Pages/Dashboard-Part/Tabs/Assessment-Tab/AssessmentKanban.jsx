@@ -1,3 +1,4 @@
+// v1.0.0  -  Ashraf  -  assessments to assessment templates
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -157,7 +158,9 @@ const AssessmentKanban = ({
         transition={{ duration: 0.3 }}
       >
         <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-          {assessments.length} {assessments.length <= 1 ? 'Assessment' : 'Assessments'}
+          {/* <-------------------------------v1.0.0 */}
+          {assessments.length} {assessments.length <= 1 ? 'Assessment template' : 'Assessment templates'}
+          {/* ------------------------------v1.0.0 > */}
         </span>
       </motion.div>
 
@@ -322,12 +325,14 @@ const AssessmentKanban = ({
                       <div className="col-span-full flex flex-col items-center justify-center py-8 text-gray-500">
                         <DocumentTextIcon className="w-12 h-12 text-gray-300 mb-3" />
                         <h3 className="text-lg font-medium text-gray-700 mb-1">
-                          No {column.title} Assessments Found
+                          {/* <-------------------------------v1.0.0 */}
+                          No {column.title} Assessments Templates Found
                         </h3>
                         <p className="text-gray-500 text-center max-w-md text-sm">
                           {column.title === 'Active' 
-                            ? 'There are no active assessments to display.'
-                            : 'There are no inactive assessments at the moment.'}
+                            ? 'There are no active assessments templates to display.'
+                            : 'There are no inactive assessments templates at the moment.'}
+                            {/* ------------------------------v1.0.0 > */}
                         </p>
                       </div>
                     )}

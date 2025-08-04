@@ -1,6 +1,9 @@
+// v1.0.0  -  Ashraf  -  fixed name schedule assessment to assessment schema
 const { CandidateAssessment } = require("../models/candidateAssessment");
 const Otp = require("../models/Otp");
-const scheduledAssessmentsSchema = require("../models/scheduledAssessmentsSchema");
+// <-------------------------------v1.0.0
+const scheduledAssessmentsSchema = require("../models/assessmentsSchema");
+// ------------------------------v1.0.0 >
 const mongoose = require("mongoose");
 
 exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
@@ -53,11 +56,14 @@ exports.getScheduledAssessmentsWithCandidates = async (req, res) => {
     }
 
     // Fetch candidate assessments for all scheduled assessments
+     // <-------------------------------v1.0.0
+    // Remove isActive filter to show cancelled candidates as well
     const scheduledIds = scheduledAssessments.map((sa) => sa._id);
     const candidateAssessments = await CandidateAssessment.find({
       scheduledAssessmentId: { $in: scheduledIds },
-      isActive: true,
+      // Removed isActive: true filter to show cancelled candidates
     })
+     // <-------------------------------v1.0.0
       .populate("candidateId");
 
     // Group candidate assessments by scheduledAssessmentId

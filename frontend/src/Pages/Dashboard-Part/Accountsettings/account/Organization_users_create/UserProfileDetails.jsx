@@ -69,7 +69,7 @@ const UserProfileDetails = ({ type }) => {
   const location = useLocation();
   const userData = location.state?.userData;
   const { toggleUserStatus, refetchUsers } = useCustomContext();
-
+  console.log("SETTINGS SELECTED USER DATA ============================> : ", userData);
   const [activeTab, setActiveTab] = useState("basic");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
