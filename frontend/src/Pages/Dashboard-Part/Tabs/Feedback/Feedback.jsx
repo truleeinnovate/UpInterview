@@ -15,7 +15,7 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useNavigate } from 'react-router-dom';
 import FeedbackKanban from './FeedbackKanban.jsx';
-import { Expand, Eye, Minimize, Pencil } from 'lucide-react';
+import { Expand, Eye, FileTextIcon, Minimize, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
 import { IoMdClose } from 'react-icons/io';
@@ -24,6 +24,7 @@ import InterviewsMiniTabComponent from './MiniTabs/Interviews';
 import SkillsTabComponent from './MiniTabs/Skills';
 import OverallImpressions from './MiniTabs/OverallImpressions';
 import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js';
+import SummarizedFeedbackModal from './SummarizedFeedbackModal.jsx';
 
 const tabsList = [
   {
@@ -235,6 +236,22 @@ const Feedback = () => {
     //----v1.0.2--->
   };
 
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+const [summaryData, setSummaryData] = useState(null);
+
+const handleSummarize = (feedback) => {
+  console.log("Summarize clicked", feedback); // Debug log to check the feedback object structure
+  setSummaryData({
+    candidate_name: feedback.candidateName || 'Unknown',
+    candidate_job_title: feedback.positionId || 'Unknown Position',
+    overall_impression: feedback.overallImpression || 'No overall impression provided',
+    recommendation: feedback.recommendation || 'Not specified',
+    skills: feedback.skills ||  ["Unknown Skill"]
+  });
+  setShowSummaryModal(true);
+};
+
+
   const handleAddFeedback = () => {
     navigate('/dashboard/feedbacks/add');
   };
@@ -357,6 +374,12 @@ const Feedback = () => {
       onClick: handleView,
     },
     {
+      key: 'summarize',
+      label: 'Summarize',
+      icon: <FileTextIcon className="w-4 h-4 text-custom-blue" />,
+      onClick: handleSummarize,
+    },
+    {
       key: 'edit',
       label: 'Edit',
       icon: <Pencil className="w-4 h-4 text-custom-blue" />,
@@ -437,6 +460,7 @@ const Feedback = () => {
   //if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
 
   return (
+    <>
     <div className="bg-background min-h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
@@ -597,6 +621,13 @@ const Feedback = () => {
         </div>
       )}
     </div>
+    <SummarizedFeedbackModal
+    open={showSummaryModal}
+    onClose={() => setShowSummaryModal(false)}
+    data={summaryData}
+    />
+   </>
+  
   );
 };
 
