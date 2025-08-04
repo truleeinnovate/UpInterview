@@ -15,50 +15,19 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useNavigate } from 'react-router-dom';
 import FeedbackKanban from './FeedbackKanban.jsx';
-import { Expand, Eye, FileTextIcon, Minimize, Pencil } from 'lucide-react';
+import { Eye, FileTextIcon, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
-import { IoMdClose } from 'react-icons/io';
-import CandidateMiniTab from './MiniTabs/Candidate';
-import InterviewsMiniTabComponent from './MiniTabs/Interviews';
-import SkillsTabComponent from './MiniTabs/Skills';
-import OverallImpressions from './MiniTabs/OverallImpressions';
 import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js';
 import SummarizedFeedbackModal from './SummarizedFeedbackModal.jsx';
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
-
-const tabsList = [
-  {
-    id: 1,
-    tab: "Candidate",
-  },
-  {
-    id: 2,
-    tab: "Interview Questions",
-  },
-  {
-    id: 3,
-    tab: "Skills",
-  },
-  {
-    id: 4,
-    tab: "Overall Impression",
-  },
-];
 
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
   
-  // Get context data
-  const {
-    skillsTabData,
-    setSkillsTabData,
-    overallImpressionTabData,
-    setOverallImpressionTabData,
-    interviewerSectionData,
-    candidateData
-  } = useCustomContext();
+  // Get context data (removed unused variables)
+  const { user } = useCustomContext();
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -73,57 +42,7 @@ const Feedback = () => {
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [selectedFeedback, setSelectedFeedback] = useState(null);
-  const [activeTab, setActiveTab] = useState(1);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);//<----v1.0.2---
-  const [feedbackTabErrors, setFeedbackTabError] = useState({
-    interviewQuestion: false,
-    skills: false,
-    overallImpression: false
-  });
-
-  // const areAllValidationsMet = () => {
-  //   return feedbackTabErrors.interviewQuestion && feedbackTabErrors.skills && feedbackTabErrors.overallImpression;
-  // };
-
-  // const onClickPreviewButton = () => {
-  //   navigate("/feedback-preview", { state: { tab: activeTab } });
-  // };
-
-  // const onClickSubmit = async () => {
-  //   // Implementation for form submission will be added here
-  //   console.log("Submit button clicked");
-  //   // Placeholder for actual submission logic
-  //   toast.success("Feedback Submitted!");
-  //   setShowFeedbackModal(false);
-  // };
-
-  // const onClickNextButton = () => {
-  //   // Add validation logic for the current tab if needed
-  //   if (activeTab === 2) {
-  //     // Validate interview questions
-  //     console.log("Validate interview questions");
-  //   } else if (activeTab === 3) {
-  //     // Validate skills
-  //     console.log("Validate skills");
-  //   }
-  //   setActiveTab((prev) => prev <= 3 && prev + 1);
-  // };
-  // //----v1.0.2--->
-
-  // Local state data is now managed by context
-
-  ////<----v1.0.2--- Static data for view mode
-  const staticFeedbackData = {
-    _id: selectedFeedback?._id || "N/A",
-    interview: selectedFeedback?.interview || "John Doe",
-    interviewType: selectedFeedback?.interviewType || "Technical",
-    scheduledDate: selectedFeedback?.scheduledDate || "2025-08-01",
-    status: selectedFeedback?.status || "Active",
-    feedback: selectedFeedback?.feedback || "Good performance",
-  };
+  // Removed modal-related state variables as modal is now in separate component
 
   useEffect(() => {
     // Dummy data for testing - replacing API calls
@@ -144,6 +63,26 @@ const Feedback = () => {
     setFeedbacks(dummyFeedbacks);
     setFilteredFeedbacks(dummyFeedbacks);
     setLoading(false);
+
+    // const fetchFeedbackData = async () => {
+    //   try {
+    //     setLoading(true);
+    //     // Replace with actual tenantId from your auth context or user data
+    //     const tenantId = '685bb9a00abf677d3ae9ec56'; 
+    //     const response = await fetch(`${process.env.REACT_APP_API_URL}/feedback/${tenantId}`);
+    //     if (!response.ok) {
+    //       throw new Error('Failed to fetch feedback data');
+    //     }
+    //     const data = await response.json();
+    //     setFeedbacks(data.data);
+    //     setFilteredFeedbacks(data.data);
+    //   } catch (err) {
+    //     setError(err.message || 'An error occurred while fetching data');
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+    // fetchFeedbackData();
   }, []);
 
   const rowsPerPage = 10;
@@ -212,21 +151,34 @@ const Feedback = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 0));
   };
 
+  // const handleView = (feedback) => {
+  //   setSelectedFeedback(feedback);
+  //   setShowFeedbackModal(true);
+  //   setIsEditMode(false);//<----v1.0.2---
+  //   setActiveTab(1);
+  // };
+
+  // const handleEdit = (feedback) => {
+  //   //<----v1.0.2---
+  //   setSelectedFeedback(feedback);
+  //   setShowFeedbackModal(true);
+  //   setIsEditMode(true);
+  //   setActiveTab(1);
+  //   //----v1.0.2--->
+  // };
+
   const handleView = (feedback) => {
-    setSelectedFeedback(feedback);
-    setShowFeedbackModal(true);
-    setIsEditMode(false);//<----v1.0.2---
-    setActiveTab(1);
+    navigate(`/feedback/view/${feedback._id}`, {
+      state: { feedback, mode: 'view' }
+    });
   };
 
   const handleEdit = (feedback) => {
-    //<----v1.0.2---
-    setSelectedFeedback(feedback);
-    setShowFeedbackModal(true);
-    setIsEditMode(true);
-    setActiveTab(1);
-    //----v1.0.2--->
+    navigate(`/feedback/edit/${feedback._id}`, {
+      state: { feedback, mode: 'edit' }
+    });
   };
+
 
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 const [summaryData, setSummaryData] = useState(null);
@@ -248,44 +200,44 @@ const handleSummarize = (feedback) => {
     navigate('/dashboard/feedbacks/add');
   };
 
-  // Button handler functions for the feedback modal
-  const onClickPreviewButton = () => {
-    // Navigate to preview page with current feedback data
-    navigate('/feedback-preview', {
-      state: {
-        feedbackData: {
-          candidateData: selectedFeedback,
-          skillsTabData,
-          overallImpressionTabData,
-          interviewerSectionData
-        }
-      }
-    });
-  };
+  // // Button handler functions for the feedback modal
+  // const onClickPreviewButton = () => {
+  //   // Navigate to preview page with current feedback data
+  //   navigate('/feedback-preview', {
+  //     state: {
+  //       feedbackData: {
+  //         candidateData: selectedFeedback,
+  //         skillsTabData,
+  //         overallImpressionTabData,
+  //         interviewerSectionData
+  //       }
+  //     }
+  //   });
+  // };
 
-  const onClickSubmit = () => {
-    // Handle feedback submission
-    console.log('Submitting feedback:', {
-      candidateData: selectedFeedback,
-      skillsTabData,
-      overallImpressionTabData,
-      interviewerSectionData
-    });
-    // Add your submission logic here
-    setShowFeedbackModal(false);
-  };
+  // const onClickSubmit = () => {
+  //   // Handle feedback submission
+  //   console.log('Submitting feedback:', {
+  //     candidateData: selectedFeedback,
+  //     skillsTabData,
+  //     overallImpressionTabData,
+  //     interviewerSectionData
+  //   });
+  //   // Add your submission logic here
+  //   setShowFeedbackModal(false);
+  // };
 
-  const onClickNextButton = () => {
-    // Move to next tab
-    if (activeTab < 4) {
-      setActiveTab(activeTab + 1);
-    }
-  };
+  // const onClickNextButton = () => {
+  //   // Move to next tab
+  //   if (activeTab < 4) {
+  //     setActiveTab(activeTab + 1);
+  //   }
+  // };
 
-  const areAllValidationsMet = () => {
-    // Add your validation logic here
-    return true;
-  };
+  // const areAllValidationsMet = () => {
+  //   // Add your validation logic here
+  //   return true;
+  // };
 
   const tableColumns = [
     {
@@ -418,74 +370,7 @@ const handleSummarize = (feedback) => {
     },
   ];
 
-  // Modal helper functions
-  const displayData = () => {
-    const roundDetails = { questions: [] }; // Sample round details
-    const interviewDetails = selectedFeedback ? {
-      Candidate: selectedFeedback.interview,
-      Position: "Software Developer",
-      _id: selectedFeedback._id
-    } : {};
-    
-    switch (activeTab) {
-      case 1: 
-        return <CandidateMiniTab 
-          roundDetails={roundDetails} 
-          interviewDetails={interviewDetails} 
-          skillsTabData={skillsTabData} 
-          tab={true} 
-          page="Popup"
-          data={isEditMode ? selectedFeedback : staticFeedbackData}//<----v1.0.2---
-          isEditMode={isEditMode}//<----v1.0.2---
-        />;
-      case 2: 
-        return <InterviewsMiniTabComponent 
-          roundDetails={roundDetails} 
-          tab={true} 
-          page="Popup" 
-          closePopup={() => setShowFeedbackModal(false)}
-          data={isEditMode ? selectedFeedback : staticFeedbackData}//<----v1.0.2---
-          isEditMode={isEditMode}//<----v1.0.2---
-        />;
-      case 3: 
-        return <SkillsTabComponent 
-          setSkillsTabData={setSkillsTabData} 
-          skillsTabData={skillsTabData} 
-          tab={true} 
-          page="Popup"
-          isEditMode={isEditMode}//<----v1.0.2---
-        />;
-      case 4: 
-        return <OverallImpressions 
-          overallImpressionTabData={overallImpressionTabData} 
-          setOverallImpressionTabData={setOverallImpressionTabData} 
-          tab={true} 
-          page="Popup"
-          isEditMode={isEditMode}//<----v1.0.2---
-        />;
-      default: 
-        return null;
-    }
-  };
-
-  const ReturnTabsSection = () => {
-    return (
-      <ul className="flex items-center gap-8 cursor-pointer py-1 px-8">
-        {tabsList.map((EachTab) => (
-          <li
-            style={{
-              borderBottom: activeTab === EachTab.id ? "2px solid #227a8a" : "",
-            }}
-            onClick={() => setActiveTab(EachTab.id)}
-            key={EachTab.id}
-            className="pb-2"
-          >
-            {EachTab.tab}
-          </li>
-        ))}
-      </ul>
-    );
-  };
+  // Modal functions removed - now handled in separate FeedbackFormModel component
 
   if (loading) return <div className="text-center p-6">Loading...</div>;
   //if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
@@ -586,71 +471,7 @@ const handleSummarize = (feedback) => {
           </motion.div>
         </div>
       </main>
-      
-      {/* Feedback Modal */}
-      {showFeedbackModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
-          <div className={`${isFullScreen ? "w-[100%]" : "w-[50%]"} bg-white  h-[100%] flex flex-col`}>
-            {/* Modal Header */}
-            <div className="px-8 flex items-center justify-between py-4">
-              <h1 className="text-xl font-semibold text-[#227a8a]">Interview Feedback</h1>
-              <div className='flex items-center space-x-2'>
-              <button
-              onClick={() => setIsFullScreen(!isFullScreen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-              >
-              {isFullScreen ? (
-                <Minimize className="w-5 h-5 text-gray-500" />
-                  ) : (
-                <Expand className="w-5 h-5 text-gray-500" />
-              )}
-              </button>
-              <button 
-                onClick={() => setShowFeedbackModal(false)}
-                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-              >
-                <IoMdClose size={20} />
-              </button>
-              </div>
-            </div>
-            
-            {/* Tabs Section */}
-            <ReturnTabsSection />
-            
-            {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto border-2 border-gray-200 border-solid rounded-md mx-8 mb-8 mt-4">
-              {displayData()}
-            </div>
-            <div className="next-button--container flex justify-end py-1 pr-8 gap-4">
-              {activeTab === 4 && isEditMode && (
-                <>
-                  <button 
-                    //disabled={!areAllValidationsMet()} 
-                    onClick={onClickPreviewButton} 
-                    className={`bg-white text-[#227a8a] border-[1px] border-[#227a8a] py-[0.5rem] px-[2rem] rounded-lg `}//${!areAllValidationsMet() && "cursor-not-allowed"}
-                  >
-                    Preview
-                  </button>
-                  <button 
-                    onClick={onClickSubmit} 
-                    className="bg-[#227a8a] text-white py-[0.5rem] px-[2rem] rounded-lg"
-                  >
-                    Submit
-                  </button>
-                </>
-              )}
-              {activeTab <= 3 && isEditMode && (
-                <button 
-                  onClick={onClickNextButton} 
-                  className="bg-[#227a8a] text-white py-[0.5rem] px-[2rem] rounded-lg"
-                >
-                  Next
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
     <SummarizedFeedbackModal
     open={showSummaryModal}

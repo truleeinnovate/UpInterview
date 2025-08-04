@@ -2,6 +2,7 @@
 
 
 const FeedbackModel = require('../models/feedback.js')
+const mongoose = require('mongoose'); // Import mongoose to use ObjectId
 
 const createFeedback =async(req,res)=>{
     try {
@@ -27,28 +28,46 @@ const createFeedback =async(req,res)=>{
 const getFeedbackByTenantId = async (req, res) => {
   try {
     const { tenantId } = req.params;
-    
+
     if (!tenantId) {
       return res.status(400).json({
         success: false,
         message: "Tenant ID is required"
       });
     }
-    
-    const feedback = await FeedbackModel.find({ tenantId });
-    
-    if (!feedback || feedback.length === 0) {
+
+    console.log('Received tenantId:', tenantId);
+
+    let feedback;
+    try {
+      // Convert tenantId string to ObjectId since database stores it as ObjectId
+      const tenantObjectId = new mongoose.Types.ObjectId(tenantId);
+      feedback = await FeedbackModel.find({ tenantId: tenantObjectId })
+        .populate('candidateId', 'firstName lastName email')
+        .populate('interviewRoundId', 'roundTitle interviewMode status');
+
+      console.log('Feedback found:', feedback.length, 'documents');
+    } catch (err) {
+      console.error('Invalid tenantId format:', err.message);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Tenant ID format: " + err.message
+      });
+    }
+
+    if (!feedback) {
       return res.status(404).json({
         success: false,
         message: "No feedback found for this tenant"
       });
     }
-    
+
     return res.status(200).json({
       success: true,
       message: "Feedback retrieved successfully",
       data: feedback
     });
+
   } catch (error) {
     console.error("Error getting feedback by tenant ID:", error);
     return res.status(500).json({
@@ -59,6 +78,32 @@ const getFeedbackByTenantId = async (req, res) => {
   }
 };
 
+const getfeedbackById =async(req,res)=>{
+    try {
+        const {id} = req.params
+        const feedback = await FeedbackModel.findById(id)
+        if(!feedback){
+            return res.status(404).json({
+                success:false,
+                message:"Feedback not found"
+            })
+        }
+        return res.status(200).json({
+            success:true,
+            message:"Feedback retrieved successfully",
+            data:feedback
+        })
+    } catch (error) {
+        console.error("Error getting feedback by ID:", error);
+        return res.status(500).json({
+            success:false,
+            message:"Internal server error while getting feedback",
+            error:error.message
+        })
+    }
+}
+
+
 //----v1.0.0--->
 
-module.exports={createFeedback, getFeedbackByTenantId}
+module.exports={createFeedback, getFeedbackByTenantId,getfeedbackById}

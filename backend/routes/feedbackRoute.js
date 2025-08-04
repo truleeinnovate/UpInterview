@@ -6,7 +6,7 @@ const { createFeedback, getFeedbackByTenantId } = require('../controllers/feedba
 const router = express.Router()
 
 // Route to get feedback by tenant ID
-router.get('/feedback/:tenantId', getFeedbackByTenantId);//<----v1.0.0---
+router.get('/:tenantId', getFeedbackByTenantId);//<----v1.0.0---
 
 router.post('/create',createFeedback)
 
