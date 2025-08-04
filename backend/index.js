@@ -1221,8 +1221,9 @@ app.use("/receipts", ReceiptsRoute);
 
 // ==================================================================================>
 
+  const feedbackRoutes = require('./routes/feedbackRoute')
 
-
+app.use('/feedback',feedbackRoutes)
 
 // <================ getting the availability by contact id to show in the account settings user profile ==============>
 const interviewAvailabilityRoutes = require("./routes/interviewAvailabilityRoutes");

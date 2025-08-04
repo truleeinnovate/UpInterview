@@ -1063,6 +1063,11 @@ const RoundFormInterviews = () => {
                 // Parse the combinedDateTime format: "05-08-2025 11:30 AM - 12:00 PM"
                 console.log("combinedDateTime value:", combinedDateTime);
                 console.log("combinedDateTime type:", typeof combinedDateTime);
+                console.log("Duration in minutes:", duration);
+                
+                // Get user's local timezone
+                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                console.log("User timezone:", userTimeZone);
                 
                 let startDate;
                 if (combinedDateTime.includes(" - ")) {
@@ -1078,10 +1083,14 @@ const RoundFormInterviews = () => {
                     if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
                     if (ampm === 'AM' && hour24 === 12) hour24 = 0;
                     
-                    // Create date in YYYY-MM-DDTHH:MM:SS format
-                    const isoDateString = `${year}-${month}-${day}T${hour24.toString().padStart(2, '0')}:${minute}:00`;
-                    console.log("Converted to ISO format:", isoDateString);
-                    startDate = new Date(isoDateString);
+                    // Create date in user's local timezone
+                    const localDateString = `${year}-${month}-${day}T${hour24.toString().padStart(2, '0')}:${minute}:00`;
+                    console.log("Local date string:", localDateString);
+                    
+                    // Create date object (JavaScript Date objects are always in local timezone)
+                    startDate = new Date(localDateString);
+                    console.log("Created start date in local timezone:", startDate.toString());
+                    
                   } else {
                     throw new Error(`Could not parse date format: ${startTimePart}`);
                   }
@@ -1096,7 +1105,8 @@ const RoundFormInterviews = () => {
                   throw new Error(`Invalid start date: ${combinedDateTime}`);
                 }
                 
-                const endDate = new Date(startDate.getTime() + duration * 60000);
+                // Calculate end time based on duration
+                const endDate = new Date(startDate.getTime() + (duration * 60 * 1000)); // duration in milliseconds
                 if (isNaN(endDate.getTime())) {
                   throw new Error(`Invalid end date calculation`);
                 }
@@ -1104,22 +1114,33 @@ const RoundFormInterviews = () => {
                 console.log("Final start date ISO:", startDate.toISOString());
                 console.log("Final end date ISO:", endDate.toISOString());
                 console.log("Duration in minutes:", duration);
+                console.log("End time calculation: start +", duration, "minutes");
+                console.log("Start time in local timezone:", startDate.toLocaleString());
+                console.log("End time in local timezone:", endDate.toLocaleString());
+                console.log("Timezone being used:", userTimeZone);
                 
-                const meetData = {
-                  refreshToken: tokenResponse.data.refresh_token,
-                  summary: `${roundTitle} - Interview Round`,
-                  description: `Interview round: ${roundTitle}\nInstructions: ${instructions}`,
-                  startDateTime: startDate.toISOString(),
-                  endDateTime: endDate.toISOString(),
-                  timeZone: "Asia/Kolkata",
-                  attendees: selectedInterviewers && selectedInterviewers.length > 0 ? selectedInterviewers.map(interviewer => {
-                    const email = interviewer.contact?.email || interviewer.email;
-                    console.log("Interviewer email:", email, "for interviewer:", interviewer);
-                    return { email };
-                  }).filter(attendee => attendee.email) : []
-                };
+                                  const meetData = {
+                    refreshToken: tokenResponse.data.refresh_token,
+                    summary: `${roundTitle} - Interview Round`,
+                    description: `Interview round: ${roundTitle}\nInstructions: ${instructions}`,
+                    startDateTime: startDate.toISOString(),
+                    endDateTime: endDate.toISOString(),
+                    timeZone: userTimeZone, // Use user's local timezone
+                    attendees: selectedInterviewers && selectedInterviewers.length > 0 ? selectedInterviewers.map(interviewer => {
+                      const email = interviewer.contact?.email || interviewer.email;
+                      console.log("Interviewer email:", email, "for interviewer:", interviewer);
+                      return { email };
+                    }).filter(attendee => attendee.email) : []
+                  };
                 
                 console.log("Final attendees array:", meetData.attendees);
+                console.log("=== Meeting Summary ===");
+                console.log("Title:", meetData.summary);
+                console.log("Start:", startDate.toLocaleString(), "in", userTimeZone);
+                console.log("End:", endDate.toLocaleString(), "in", userTimeZone);
+                console.log("Duration:", duration, "minutes");
+                console.log("Attendees:", meetData.attendees.length, "people");
+                console.log("=======================");
                 
                 const meetResponse = await axios.post(`${config.REACT_APP_API_URL}/googlemeet/create_event`, meetData);
                 
@@ -1162,8 +1183,8 @@ const RoundFormInterviews = () => {
         }
       }
 
-   
 
+   
     } catch (err) {
       console.error("Error submitting the form:", err);
       setErrors({
