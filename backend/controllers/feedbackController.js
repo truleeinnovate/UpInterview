@@ -340,7 +340,7 @@ const getFeedbackByRoundId = async (req, res) => {
 };
 
 
-module.exports={createFeedback, getFeedbackByTenantId,getfeedbackById,getFeedbackByRoundId}
+module.exports={createFeedback, getFeedbackByTenantId,getfeedbackById,getFeedbackByRoundId,getAllFeedback}
 
 
 
