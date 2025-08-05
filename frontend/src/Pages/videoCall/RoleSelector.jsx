@@ -13,7 +13,7 @@ const RoleSelector = ({ onRoleSelect }) => {
           <p className="text-gray-600 mt-2">Select your role to continue</p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 xl:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Candidate Instructions */}
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">

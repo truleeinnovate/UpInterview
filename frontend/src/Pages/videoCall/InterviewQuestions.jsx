@@ -1,5 +1,5 @@
 import React from 'react';
-import { mockData } from './mockData';
+import { mockData } from '../mockData';
 
 const InterviewQuestions = () => {
   return (

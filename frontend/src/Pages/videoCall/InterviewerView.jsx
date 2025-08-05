@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';
-import { mockData } from './mockData';
+import { mockData } from '../mockData';
 import CandidateDetails from './CandidateDetails';
 import InterviewQuestions from './InterviewQuestions';
 import FeedbackForm from './FeedbackForm';
+import FeedbackManagement from './FeedbackManagement';
 
 const InterviewerView = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState('candidate');
@@ -12,7 +13,8 @@ const InterviewerView = ({ onBack }) => {
   const tabs = [
     { id: 'candidate', label: 'Candidate Details', icon: User },
     { id: 'questions', label: 'Interview Questions', icon: MessageSquare },
-    { id: 'feedback', label: 'Feedback Form', icon: FileText }
+    { id: 'feedback', label: 'Feedback Form', icon: FileText },
+    { id: 'management', label: 'Feedback Management', icon: Users }
   ];
 
   return (
@@ -76,6 +78,7 @@ const InterviewerView = ({ onBack }) => {
             {activeTab === 'candidate' && <CandidateDetails candidate={selectedCandidate} />}
             {activeTab === 'questions' && <InterviewQuestions />}
             {activeTab === 'feedback' && <FeedbackForm />}
+            {activeTab === 'management' && <FeedbackManagement />}
           </div>
         </div>
       </div>
