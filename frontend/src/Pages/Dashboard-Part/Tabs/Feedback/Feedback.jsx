@@ -46,43 +46,43 @@ const Feedback = () => {
 
   useEffect(() => {
     // Dummy data for testing - replacing API calls
-    const dummyFeedbacks = [
-      { _id: 1, interview: "John Doe", interviewType: "Technical", scheduledDate: "2025-08-01", status: "Active", feedback: "Good performance" },
-      { _id: 2, interview: "Jane Smith", interviewType: "HR", scheduledDate: "2025-08-02", status: "Inactive", feedback: "Needs improvement" },
-      { _id: 3, interview: "Mike Johnson", interviewType: "Behavioral", scheduledDate: "2025-08-03", status: "Active", feedback: "Excellent communication" },
-      { _id: 4, interview: "Sarah Williams", interviewType: "Technical", scheduledDate: "2025-08-04", status: "Other", feedback: "Average skills" },
-      { _id: 5, interview: "Robert Brown", interviewType: "HR", scheduledDate: "2025-08-05", status: "Active", feedback: "Positive attitude" },
-      { _id: 6, interview: "Emily Davis", interviewType: "Behavioral", scheduledDate: "2025-08-06", status: "Inactive", feedback: "Lacks confidence" },
-      { _id: 7, interview: "William Wilson", interviewType: "Technical", scheduledDate: "2025-08-07", status: "Other", feedback: "Good problem-solving" },
-      { _id: 8, interview: "Lisa Anderson", interviewType: "HR", scheduledDate: "2025-08-08", status: "Active", feedback: "Team player" },
-      { _id: 9, interview: "James Taylor", interviewType: "Behavioral", scheduledDate: "2025-08-09", status: "Inactive", feedback: "Needs better time management" },
-      { _id: 10, interview: "Emma Martinez", interviewType: "Technical", scheduledDate: "2025-08-10", status: "Active", feedback: "Quick learner" },
-      { _id: 11, interview: "David Thompson", interviewType: "HR", scheduledDate: "2025-08-11", status: "Other", feedback: "Good leadership potential" },
-      { _id: 12, interview: "Olivia Garcia", interviewType: "Behavioral", scheduledDate: "2025-08-12", status: "Active", feedback: "Strong analytical skills" }
-    ];
-    setFeedbacks(dummyFeedbacks);
-    setFilteredFeedbacks(dummyFeedbacks);
-    setLoading(false);
+    // const dummyFeedbacks = [
+    //   { _id: 1, interview: "John Doe", interviewType: "Technical", scheduledDate: "2025-08-01", status: "Active", feedback: "Good performance" },
+    //   { _id: 2, interview: "Jane Smith", interviewType: "HR", scheduledDate: "2025-08-02", status: "Inactive", feedback: "Needs improvement" },
+    //   { _id: 3, interview: "Mike Johnson", interviewType: "Behavioral", scheduledDate: "2025-08-03", status: "Active", feedback: "Excellent communication" },
+    //   { _id: 4, interview: "Sarah Williams", interviewType: "Technical", scheduledDate: "2025-08-04", status: "Other", feedback: "Average skills" },
+    //   { _id: 5, interview: "Robert Brown", interviewType: "HR", scheduledDate: "2025-08-05", status: "Active", feedback: "Positive attitude" },
+    //   { _id: 6, interview: "Emily Davis", interviewType: "Behavioral", scheduledDate: "2025-08-06", status: "Inactive", feedback: "Lacks confidence" },
+    //   { _id: 7, interview: "William Wilson", interviewType: "Technical", scheduledDate: "2025-08-07", status: "Other", feedback: "Good problem-solving" },
+    //   { _id: 8, interview: "Lisa Anderson", interviewType: "HR", scheduledDate: "2025-08-08", status: "Active", feedback: "Team player" },
+    //   { _id: 9, interview: "James Taylor", interviewType: "Behavioral", scheduledDate: "2025-08-09", status: "Inactive", feedback: "Needs better time management" },
+    //   { _id: 10, interview: "Emma Martinez", interviewType: "Technical", scheduledDate: "2025-08-10", status: "Active", feedback: "Quick learner" },
+    //   { _id: 11, interview: "David Thompson", interviewType: "HR", scheduledDate: "2025-08-11", status: "Other", feedback: "Good leadership potential" },
+    //   { _id: 12, interview: "Olivia Garcia", interviewType: "Behavioral", scheduledDate: "2025-08-12", status: "Active", feedback: "Strong analytical skills" }
+    // ];
+    // setFeedbacks(dummyFeedbacks);
+    // setFilteredFeedbacks(dummyFeedbacks);
+    // setLoading(false);
 
-    // const fetchFeedbackData = async () => {
-    //   try {
-    //     setLoading(true);
-    //     // Replace with actual tenantId from your auth context or user data
-    //     const tenantId = '685bb9a00abf677d3ae9ec56'; 
-    //     const response = await fetch(`${process.env.REACT_APP_API_URL}/feedback/${tenantId}`);
-    //     if (!response.ok) {
-    //       throw new Error('Failed to fetch feedback data');
-    //     }
-    //     const data = await response.json();
-    //     setFeedbacks(data.data);
-    //     setFilteredFeedbacks(data.data);
-    //   } catch (err) {
-    //     setError(err.message || 'An error occurred while fetching data');
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    // fetchFeedbackData();
+    const fetchFeedbackData = async () => {
+      try {
+        setLoading(true);
+        // Replace with actual tenantId from your auth context or user data
+        const tenantId = '685bb9a00abf677d3ae9ec56'; 
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/feedback/${tenantId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch feedback data');
+        }
+        const data = await response.json();
+        setFeedbacks(data.data);
+        setFilteredFeedbacks(data.data);
+      } catch (err) {
+        setError(err.message || 'An error occurred while fetching data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFeedbackData();
   }, []);
 
   const rowsPerPage = 10;
@@ -151,93 +151,37 @@ const Feedback = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 0));
   };
 
-  // const handleView = (feedback) => {
-  //   setSelectedFeedback(feedback);
-  //   setShowFeedbackModal(true);
-  //   setIsEditMode(false);//<----v1.0.2---
-  //   setActiveTab(1);
-  // };
-
-  // const handleEdit = (feedback) => {
-  //   //<----v1.0.2---
-  //   setSelectedFeedback(feedback);
-  //   setShowFeedbackModal(true);
-  //   setIsEditMode(true);
-  //   setActiveTab(1);
-  //   //----v1.0.2--->
-  // };
-
   const handleView = (feedback) => {
     navigate(`/feedback/view/${feedback._id}`, {
-      state: { feedback, mode: 'view' }
+      state: { feedback: { ...feedback }, mode: 'view' }
     });
   };
 
   const handleEdit = (feedback) => {
     navigate(`/feedback/edit/${feedback._id}`, {
-      state: { feedback, mode: 'edit' }
+      state: { feedback: { ...feedback }, mode: 'edit' }
     });
   };
 
 
-  const [showSummaryModal, setShowSummaryModal] = useState(false);
-const [summaryData, setSummaryData] = useState(null);
+  
 
-const handleSummarize = (feedback) => {
-  console.log("Summarize clicked", feedback); // Debug log to check the feedback object structure
-  setSummaryData({
-    candidate_name: feedback.candidateName || 'Unknown',
-    candidate_job_title: feedback.positionId || 'Unknown Position',
-    overall_impression: feedback.overallImpression || 'No overall impression provided',
-    recommendation: feedback.recommendation || 'Not specified',
-    skills: feedback.skills ||  ["Unknown Skill"]
-  });
-  setShowSummaryModal(true);
-};
-
+  const handleSummarize = (feedback) => {
+    console.log("Summarize clicked", feedback); // Debug log to check the feedback object structure
+    setSummaryData({
+      candidate_name: feedback.candidateName || 'Unknown',
+      candidate_job_title: feedback.positionId || 'Unknown Position',
+      overall_impression: feedback.overallImpression || 'No overall impression provided',
+      recommendation: feedback.recommendation || 'Not specified',
+      skills: feedback.skills ||  ["Unknown Skill"]
+    });
+    setShowSummaryModal(true);
+  };
 
   const handleAddFeedback = () => {
     navigate('/dashboard/feedbacks/add');
   };
 
-  // // Button handler functions for the feedback modal
-  // const onClickPreviewButton = () => {
-  //   // Navigate to preview page with current feedback data
-  //   navigate('/feedback-preview', {
-  //     state: {
-  //       feedbackData: {
-  //         candidateData: selectedFeedback,
-  //         skillsTabData,
-  //         overallImpressionTabData,
-  //         interviewerSectionData
-  //       }
-  //     }
-  //   });
-  // };
-
-  // const onClickSubmit = () => {
-  //   // Handle feedback submission
-  //   console.log('Submitting feedback:', {
-  //     candidateData: selectedFeedback,
-  //     skillsTabData,
-  //     overallImpressionTabData,
-  //     interviewerSectionData
-  //   });
-  //   // Add your submission logic here
-  //   setShowFeedbackModal(false);
-  // };
-
-  // const onClickNextButton = () => {
-  //   // Move to next tab
-  //   if (activeTab < 4) {
-  //     setActiveTab(activeTab + 1);
-  //   }
-  // };
-
-  // const areAllValidationsMet = () => {
-  //   // Add your validation logic here
-  //   return true;
-  // };
 
   const tableColumns = [
     {
@@ -253,10 +197,10 @@ const handleSummarize = (feedback) => {
       ),
     },
     {
-      key: 'mode',
+      key: 'interviewRoundId.interviewMode',
       header: 'Mode',
-      render: (value) => (
-        <div className="text-sm">{value || "Not Provided"}</div>
+      render: (value, row) => (
+        <div className="text-sm">{row.interviewRoundId?.interviewMode || "Not Provided"}</div>
       ),
     },
     {
@@ -334,17 +278,17 @@ const handleSummarize = (feedback) => {
     //   ),
     // },
     {
-      key: 'scheduledDate',
-      header: 'Scheduled Date',
-      render: (value) => (
-        <div className="text-sm">{value || "Not Provided"}</div>
+      key: 'interviewRoundId.dateTime',
+      header: 'Scheduled Date&Time',
+      render: (value,row) => (
+        <div className="text-sm">{row.interviewRoundId?.dateTime || "Not Provided"}</div>
       ),
     },
     {
-      key: 'status',
+      key: 'interviewRoundId.status',
       header: 'Status',
-      render: (value) => (
-        <StatusBadge status={value} text={value ? value.charAt(0).toUpperCase() + value.slice(1) : "Not Provided"}/>
+      render: (value,row) => (
+        <StatusBadge status={row.interviewRoundId?.status} text={row.interviewRoundId?.status ? row.interviewRoundId?.status.charAt(0).toUpperCase() + row.interviewRoundId?.status.slice(1) : "Not Provided"}/>
       ),
     },
   ];
@@ -370,7 +314,8 @@ const handleSummarize = (feedback) => {
     },
   ];
 
-  // Modal functions removed - now handled in separate FeedbackFormModel component
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
 
   if (loading) return <div className="text-center p-6">Loading...</div>;
   //if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
