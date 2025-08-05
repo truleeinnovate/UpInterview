@@ -1,6 +1,6 @@
 import React from 'react';
 import DoughnutChart from './PieChart';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
+import { useLocation } from 'react-router-dom';
 
 const instructions = [
   "Access the Link: Click the provided link at least 5 minutes before the scheduled time to test your connection.",
@@ -9,13 +9,11 @@ const instructions = [
   "Join Promptly: Join the call on time and ensure your camera and microphone are working properly.",
 ]
 
-const CandidateMiniTab = ({roundDetails, interviewDetails,skillsTabData,page,tab, candidateData}) => {
-  
-  // Use candidateData if provided (from Preview), otherwise use context
-  const { candidateData: contextCandidateData } = useCustomContext();
-  const finalCandidateData = candidateData || contextCandidateData || {};
-
-
+const CandidateMiniTab = ({roundDetails, interviewDetails, skillsTabData, page, tab}) => {
+  const location = useLocation();
+  const feedback = location.state?.feedback || {};
+  const candidateData = feedback.candidateId || {};
+  const interviewRoundData = feedback.interviewRoundId || {};
 
   const KeyValueRow = ({ label, value }) => (
     <div className="flex items-center w-[45%]">
@@ -83,19 +81,19 @@ const CandidateMiniTab = ({roundDetails, interviewDetails,skillsTabData,page,tab
       <div    className={`border-b-2 border-[#8080808a] flex ${tab ? "flex-row":"flex-col"} relative`}>
         <div className={`pb-4 flex  flex-wrap gap-6 ${tab ? "flex-row":"flex-col"}`}>
           
-          <KeyValueRow label="Candidate Name" value={finalCandidateData?.name || interviewDetails?.Candidate || "N/A"} />
-          {/* <KeyValueRow label="Email" value={finalCandidateData?.email || "N/A"} />
-          <KeyValueRow label="Phone" value={finalCandidateData?.phone || "N/A"} />
-          <KeyValueRow label="Location" value={finalCandidateData?.location || "N/A"} />
-          <KeyValueRow label="Experience" value={finalCandidateData?.experience || "N/A"} />
-          <KeyValueRow label="Current Role" value={finalCandidateData?.currentRole || "N/A"} />
-          <KeyValueRow label="Company" value={finalCandidateData?.companyName || "N/A"} />
-          <KeyValueRow label="Skills" value={finalCandidateData?.skillsList || "N/A"} /> */}
+          <KeyValueRow label="Candidate Name" value={candidateData?.FirstName + " " + candidateData?.LastName || "N/A"} />
+          {/* <KeyValueRow label="Email" value={candidateData?.email || "N/A"} />
+          <KeyValueRow label="Phone" value={candidateData?.phone || "N/A"} />
+          <KeyValueRow label="Location" value={candidateData?.location || "N/A"} />
+          <KeyValueRow label="Experience" value={candidateData?.experience || "N/A"} />
+          <KeyValueRow label="Current Role" value={candidateData?.currentRole || "N/A"} />
+          <KeyValueRow label="Company" value={candidateData?.companyName || "N/A"} />
+          <KeyValueRow label="Skills" value={candidateData?.skillsList || "N/A"} /> */}
           <KeyValueRow label="Position" value={interviewDetails?.Position || "N/A"} />
           <KeyValueRow label="Interviewers" value={roundDetails?.interviewers?.map(i=>i.name).join(", ") || "N/A"} />
           <KeyValueRow label="Interviewer ID" value={interviewDetails?._id || "N/A"} />
-          <KeyValueRow label="Interview Date" value={formatDate(roundDetails?.dateTime) || "N/A"} />
-          <KeyValueRow label="Interview Type" value={roundDetails?.mode || "N/A"} />
+          <KeyValueRow label="Interview Date" value={interviewRoundData?.dateTime || "N/A"} />
+          <KeyValueRow label="Interview Type" value={interviewRoundData?.interviewMode || "N/A"} />
         </div>
        {!tab && categoryRatings.length > 0 ? (
          <div style={{ width: "500px",aspectRatio:"1" }} className='absolute right-0 top-[-150px]'>
