@@ -2,22 +2,32 @@
 
 import React, { useState } from "react";
 import { IoIosStar } from "react-icons/io";
-import { useCustomContext } from "../../../../../Context/Contextfetch";
-
-const ratingLst = [
-  { id: 1, name: "Poor", stars: 2, color: "red" },
-  { id: 2, name: "Ok", stars: 3, color: "yellow" },
-  { id: 3, name: "Good", stars: 4, color: "orange" },
-  { id: 4, name: "Excellent", stars: 5, color: "green" },
-];
+import { useLocation } from 'react-router-dom';
 
 //<--v1.0.0------
 const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEditMode }) => {
-  const { page: currentPage } = useCustomContext();
+  const location = useLocation();
+  const feedback = location.state?.feedback || {};
+  const skillsData = feedback.skills || [];
+
+  const ratingLst = [
+    { id: 1, name: "Poor", stars: 2, color: "red" },
+    { id: 2, name: "Ok", stars: 3, color: "yellow" },
+    { id: 3, name: "Good", stars: 4, color: "orange" },
+    { id: 4, name: "Excellent", stars: 5, color: "green" },
+  ];
   //----v1.0.0------>
+  // const getColorByRating = (rating) => {
+  //   const ratingItem = ratingLst.find((r) => r.stars === rating);
+  //   return ratingItem ? ratingItem.color : "gray";
+  // };
   const getColorByRating = (rating) => {
-    const ratingItem = ratingLst.find((r) => r.stars === rating);
-    return ratingItem ? ratingItem.color : "gray";
+    const item = ratingLst.find((r) => r.stars === rating);
+    if (!item) {
+      if (rating === 1) return "red"; // Fallback for rating 1
+      return "gray"; // Default fallback
+    }
+    return item.color;
   };
   const onClickRating = (catId, skillIndex, rating) => {
     if(isEditMode){//<-----v1.0.0
@@ -89,6 +99,8 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
     
   };
 
+  
+
   return (
     <div className="px-2 pt-2">
       {tab && (
@@ -113,80 +125,57 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
         </ul>
       )}
       <ul className="mt-8 flex flex-col gap-4 w-[full]">
-        {(skillsTabData || []).map((skillCat) => (
-          <li key={skillCat.id} className="flex flex-col gap-4 ">
-            <h2 className="font-bold">{skillCat.category}:</h2>
-            <ul className="flex flex-col gap-4" >
-              {(skillCat.skillsList || []).map((skill, skillIndex) => (
-                <li key={skill.name} className="flex flex-col gap-4" >
-                  <div className="flex  items-center " >
-                    <p  className='w-[25%]' >  {skill.name}  {(skill.required && tab) && <span className="text-[red]">*</span>}</p>
-                    <div className="flex gap-4 justify-between px-3">
-                        {Array.from({ length: 5 }, (_, index) => {
-                          const isSelected = index + 1 <= skill.rating;
-                          return (
-                            <IoIosStar
-                              onClick={
-                                tab
-                                  ? () =>
-                                      onClickRating(
-                                        skillCat.id,
-                                        skillIndex,
-                                        index + 1
-                                      )
-                                  : null
-                              }
-                              className={`cursor-pointer transform transition-transform hover:scale-110 ${isEditMode ? "" : "cursor-not-allowed"}`}
-                              size={20}
-                              style={{
-                                color: isSelected
-                                  ? getColorByRating(skill.rating)
-                                  : "gray",
-                              }}
-                              key={index}
-                            />
-                          );
-                        })}
-                      </div>
-                      {/*<----v1.0.0------*/}
-                      {isEditMode ? (
-                        <div className={tab ?"visibility-visible" : "visibility-hidden"} style={{visibility:tab? "visible":"hidden"}}>
-                          {skill.notesBool ? (
-                            <button
-                              className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[120px]"
-                              onClick={() =>
-                                onClickDeleteNote(skillCat.id, skillIndex)
-                              }
-                            >
-                              Delete Note
-                            </button>
-                          ) : (
-                            <button
-                              className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[150px]"
-                              onClick={() =>
-                                onClickAddNote(skillCat.id, skillIndex)
-                              }
-                            >
-                              Add a Note
-                            </button>
-                          )}
-                        </div>
-                      ) : <div></div>}
-                  </div>
-                  {/*----v1.0.0------>*/}
-                  {(skill.notesBool && tab ) && (
-                    <div className="flex justify-between w-full">
-                      <label
-                        htmlFor="skill-id"
-                        className='w-[25%]'  > Note</label>
-                      {currentPage === "Home" ? (
+        {(skillsData || []).map((skill) => (
+          <li key={skill._id} className="flex flex-col gap-4 ">
+            <h2 className="font-bold">{skill.skillType}:</h2>
+            <div className="flex items-center">
+              <p className='w-[25%]' >{skill.skillName}</p>
+              <div className="flex gap-3">
+             {[1, 2, 3, 4, 5].map((star) => {
+            const color = star <= skill.rating ? getColorByRating(skill.rating) : "gray";
+            return (
+              <button
+                key={star}
+                className={`text-2xl ${isEditMode ? "" : "cursor-not-allowed"}`}
+                style={{ color: color }}
+                onClick={() => onClickRating(skill._id,star,skill.rating)}
+                disabled={!isEditMode}
+              >
+                ★
+              </button>
+            );
+          })}
+        </div>
+              {isEditMode ? (
+                <div className={tab ? "visibility-visible" : "visibility-hidden"} style={{visibility: tab ? "visible" : "hidden"}}>
+                  {skill.notesBool ? (
+                    <button
+                      className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[120px]"
+                      onClick={() => onClickDeleteNote(skill._id)}
+                    >
+                      Delete Note
+                    </button>
+                  ) : (
+                    <button
+                      className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[150px]"
+                      onClick={() => onClickAddNote(skill._id)}
+                    >
+                      Add a Note
+                    </button>
+                  )}
+                </div>
+              ) : <div></div>}
+            </div>
+            <div className="flex justify-between w-full">
+              <label htmlFor="skill-id" className='w-[25%]' >Note</label>
+              {isEditMode ? (
                         <div className=" flex flex-col w-full">
                           <input
                             value={skill.note}
                             onChange={(e) =>
                               onChangeNoteText(
-                                skillCat.id,
-                                skillIndex,
+                                skill._id,
+                                // skillIndex,
                                 e.target.value.slice(0, 250)
                               )
                             }
@@ -202,49 +191,13 @@ const SkillsTabComponent = ({ skillsTabData, setSkillsTabData, page, tab, isEdit
                             {skill.note?.length || 0}/250
                           </span>
                           }
-                        </div>
-                      ) : (
-                        <div className="flex flex-col w-full">
-                          <textarea
-                            rows={5}
-                            readOnly={!tab} 
-                            onChange={(e) =>
-                              onChangeNoteText(
-                                skillCat.id,
-                                skillIndex,
-                                e.target.value.slice(0, 250)
-                              )
-                            }
-                            value={skill.note}
-                            placeholder="Add note here"
-                            className={`${isEditMode ? "w-full text-[gray] rounded-md outline-none border-[1px] py-1 px-1 border-[gray]" : "outline-none"}`}
-                          ></textarea>
-
-                         {isEditMode && <span
-                            className="text-gray-500 self-end mt-[5px] w-max"
-                          >
-                            {skill.note?.length || 0}/250
-                          </span>
-                          }
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {(!tab && 
-                    skill.note )&& <div className="flex w-full " >
-                  <label
-                    htmlFor="skill-id"
-                    className='w-[25%]'
-                  >
-                    Note
-                  </label>
-                  <p className="text-[gray]"  >{skill.note}</p>
-                  </div>
-                  }
-                  {(skill.error && tab) && <p className="text-[red] text-sm">{skill.name} is required</p>}
-                </li>
-              ))}
-            </ul>
+                </div>
+              ) : (
+                <div className=" flex flex-col w-full text-gray-500 break-words">
+                <p>{skill.note}</p>
+                </div>
+              )}
+            </div>
           </li>
         ))}
       </ul>

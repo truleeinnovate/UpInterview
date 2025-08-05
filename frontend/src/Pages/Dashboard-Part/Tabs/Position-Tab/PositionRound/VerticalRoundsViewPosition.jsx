@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - modified as first round should open by default
+// v1.0.1 - Ashok - fixed unique key error
 
 import React, { useState, useEffect } from "react";
 // import PropTypes from 'prop-types';
@@ -24,19 +25,39 @@ const VerticalRoundsViewPosition = ({
   const [expandedRounds, setExpandedRounds] = useState({});
 
   // v1.0.0 <-------------------------------------------------------------------
+  // v1.0.1 <-------------------------------------------------------------------------------
   // Automatically expand the first round
+  // useEffect(() => {
+  //   if (sortedRounds.length > 0) {
+  //     setExpandedRounds((prev) => {
+  //       // Only set if nothing is expanded yet
+  //       if (Object.keys(prev).length === 0) {
+  //         return { [sortedRounds[0]._id]: true };
+  //       }
+  //       return prev;
+  //     });
+  //   }
+  // }, [sortedRounds]);
+
+  // Always expand the first round whenever the sorted list changes
   useEffect(() => {
-    if (sortedRounds.length > 0) {
+  if (sortedRounds.length > 0) {
+    const firstRoundId = sortedRounds[0]._id;
+
       setExpandedRounds((prev) => {
-        // Only set if nothing is expanded yet
-        if (Object.keys(prev).length === 0) {
-          return { [sortedRounds[0]._id]: true };
+        const alreadyExpanded = Object.values(prev).some((v) => v);
+        // If nothing is currently expanded OR the first round changed, expand the new first
+        if (!alreadyExpanded || !prev[firstRoundId]) {
+          return { [firstRoundId]: true };
         }
         return prev;
       });
     }
-  }, [sortedRounds]);
+  }, [sortedRounds[0]?._id]); // Track the first round specifically
 
+
+
+  // v1.0.1 ------------------------------------------------------------------------------->
   // v1.0.0 ------------------------------------------------------------------->
 
   // Toggle round expansion
@@ -58,7 +79,10 @@ const VerticalRoundsViewPosition = ({
     <div className="space-y-4 ">
       {sortedRounds.map((round) => (
         <div
-          key={round._id}
+          // v1.0.1 <--------------------------------------------
+          // key={round._id}
+           key={`${round._id}-${round.sequence}`} // Fix applied here
+          //  v1.0.1 ------------------------------------------->
           className="bg-white rounded-lg shadow-md overflow-hidden"
         >
           <button

@@ -38,17 +38,19 @@ const getFeedbackByTenantId = async (req, res) => {
       });
     }
 
-    console.log('Received tenantId:', tenantId);
+    //console.log('Received tenantId:', tenantId);
 
     let feedback;
     try {
       // Convert tenantId string to ObjectId since database stores it as ObjectId
-      const tenantObjectId = new mongoose.Types.ObjectId(tenantId);
-      feedback = await FeedbackModel.find({ tenantId: tenantObjectId })
-        .populate('candidateId', 'firstName lastName email')
-        .populate('interviewRoundId', 'roundTitle interviewMode status');
+      //const tenantObjectId = new mongoose.Types.ObjectId(tenantId);
+      feedback = await FeedbackModel.find({ tenantId })
+        .populate('candidateId', 'FirstName LastName Email Phone skills')
+        .populate('positionId', 'title companyname jobDescription Location')
+        .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
+        .populate('interviewerId','firstName lastName');
 
-      console.log('Feedback found:', feedback.length, 'documents');
+      //console.log('Feedback found:', feedback.length, 'documents');
     } catch (err) {
       console.error('Invalid tenantId format:', err.message);
       return res.status(400).json({
@@ -71,7 +73,7 @@ const getFeedbackByTenantId = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error getting feedback by tenant ID:", error);
+    //console.error("Error getting feedback by tenant ID:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error while getting feedback",
@@ -105,11 +107,32 @@ const getfeedbackById =async(req,res)=>{
     }
 }
 
+const getAllFeedback = async(req,res)=>{
+    try {
+        const feedback = await FeedbackModel.find()
+        if(!feedback){
+            return res.status(404).json({
+                success:false,
+                message:"Feedback not found"
+            })
+        }
+        return res.status(200).json({
+            success:true,
+            message:"Feedback retrieved successfully",
+            data:feedback
+        })
+    } catch (error) {
+        console.error("Error getting feedback by ID:", error);
+        return res.status(500).json({
+            success:false,
+            message:"Internal server error while getting feedback",
+            error:error.message
+        })
+    }
+}
+
 
 //----v1.0.0--->
-
-
-
 
 const getFeedbackByRoundId = async (req, res) => {
   try {
@@ -318,3 +341,6 @@ const getFeedbackByRoundId = async (req, res) => {
 
 
 module.exports={createFeedback, getFeedbackByTenantId,getfeedbackById,getFeedbackByRoundId}
+
+
+

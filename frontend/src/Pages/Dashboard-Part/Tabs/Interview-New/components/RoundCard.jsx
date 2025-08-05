@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - removed show and hide toggle
+// v1.0.1 - Ashok - disabled outer scrollbar using hook for better user experience
 
 import React, { useState, useEffect } from "react";
 import {
@@ -27,6 +28,9 @@ import { useCustomContext } from "../../../../../Context/Contextfetch";
 import { config } from "../../../../../config";
 import { useAssessments } from "../../../../../apiHooks/useAssessments";
 import { useInterviews } from "../../../../../apiHooks/useInterviews";
+// v1.0.1 <------------------------------------------------------------
+import {useScrollLock} from "../../../../../apiHooks/scrollHook/useScrollLock"
+// v1.0.1 ------------------------------------------------------------>
 
 const RoundCard = ({
   round,
@@ -56,6 +60,10 @@ const RoundCard = ({
   const [confirmAction, setConfirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+
+  // v1.0.1 <--------------------------------------------
+  useScrollLock(showDeleteConfirmModal);
+  // v1.0.1 -------------------------------------------->
 
   // useEffect(() => {
   //   if (round.assessmentId) {

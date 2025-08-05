@@ -176,8 +176,50 @@ exports.updateTemplate = async (req, res) => {
     }
 
     // Validate and process rounds if present
+    // v1.0.0 <-------------------------------------------------------------------------------
+    // if (req.body.rounds) {
+    //   // Validate rounds is an array
+    //   if (!Array.isArray(req.body.rounds)) {
+    //     return res.status(400).json({
+    //       status: false,
+    //       message: "Rounds must be an array",
+    //     });
+    //   }
+
+    //   // Process each round
+    //   const processedRounds = req.body.rounds.map((round, index) => {
+    //     // Ensure sequence is set - use provided or default to position
+    //     const sequence =
+    //       typeof round.sequence === "number" ? round.sequence : index + 1;
+
+    //     console.log("req.body.rounds", req.body.rounds);
+
+    //     // Return the processed round with required fields
+    //     return {
+    //       roundTitle: round.roundTitle || `Round ${index + 1}`,
+    //       sequence,
+    //       duration: round.duration || 60,
+    //       instructions: round.instructions || "",
+    //       interviewMode: round.interviewMode || "virtual",
+    //       interviewerType: round.interviewerType || "",
+    //       selectedInterviewersType: round.selectedInterviewersType || "",
+    //       // selectedInterviewerIds: round.selectedInterviewerIds || [],
+    //       interviewQuestionsList: round.interviewQuestionsList || [],
+    //       interviewers: round.interviewers || [],
+    //       assessmentId: round.assessmentId || null,
+    //       // interviewerGroupId: round.interviewerGroupId || null,
+    //       interviewers: round.interviewers || [],
+    //       // minimumInterviewers: round.minimumInterviewers || '1',
+    //       // Include any other fields from the original round
+    //       ...round,
+    //     };
+    //   });
+
+    //   // Replace the rounds in the request body with processed rounds
+    //   updateData.rounds = processedRounds;
+    // }
+
     if (req.body.rounds) {
-      // Validate rounds is an array
       if (!Array.isArray(req.body.rounds)) {
         return res.status(400).json({
           status: false,
@@ -185,39 +227,41 @@ exports.updateTemplate = async (req, res) => {
         });
       }
 
-      // Process each round
-      const processedRounds = req.body.rounds.map((round, index) => {
-        // Ensure sequence is set - use provided or default to position
-        const sequence =
-          typeof round.sequence === "number" ? round.sequence : index + 1;
+      // Remove _id duplicates and insert based on sequence
+      const uniqueRoundsMap = new Map();
+      req.body.rounds.forEach((round) => {
+        if (round._id) {
+          uniqueRoundsMap.set(round._id, round);
+        } else {
+          uniqueRoundsMap.set(Math.random().toString(), round); // Fallback for new rounds
+        }
+      });
 
-        console.log("req.body.rounds", req.body.rounds);
+      // Convert to array and sort by sequence
+      let uniqueRounds = Array.from(uniqueRoundsMap.values());
+      uniqueRounds.sort((a, b) => (a.sequence || 999) - (b.sequence || 999));
 
-        // Return the processed round with required fields
+      // Normalize + enrich rounds
+      const processedRounds = uniqueRounds.map((round, index) => {
         return {
           roundTitle: round.roundTitle || `Round ${index + 1}`,
-          sequence,
+          sequence: index + 1,
           duration: round.duration || 60,
           instructions: round.instructions || "",
           interviewMode: round.interviewMode || "virtual",
           interviewerType: round.interviewerType || "",
           selectedInterviewersType: round.selectedInterviewersType || "",
-          // selectedInterviewerIds: round.selectedInterviewerIds || [],
           interviewQuestionsList: round.interviewQuestionsList || [],
           interviewers: round.interviewers || [],
           assessmentId: round.assessmentId || null,
-          // interviewerGroupId: round.interviewerGroupId || null,
-          interviewers: round.interviewers || [],
-          // minimumInterviewers: round.minimumInterviewers || '1',
-          // Include any other fields from the original round
           ...round,
         };
       });
 
-      // Replace the rounds in the request body with processed rounds
       updateData.rounds = processedRounds;
     }
 
+    // v1.0.0 ------------------------------------------------------------------------------->
     // console.log("req", req.body);
 
     // Update the template

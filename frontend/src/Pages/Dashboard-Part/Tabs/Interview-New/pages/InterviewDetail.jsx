@@ -1,5 +1,5 @@
 // v1.0.0 - Ranjith added the interview details tab new things relaetd path set for candidate and postion view tab show proeprly
-
+// v1.0.1 - Ashok - commented extra user icon and user name
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
@@ -325,11 +325,13 @@ const InterviewDetail = () => {
             <div className="border-t border-gray-200 px-5 py-5 sm:px-6">
               <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-1">
                 <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500 flex items-center">
+                  {/* v1.0.1 <-------------------------------------------------------------------- */}
+                  {/* <dt className="text-sm font-medium text-gray-500 flex items-center">
                     <User className="h-5 w-5 mr-1" />
                     Candidate
-                  </dt>
-                  <dd className="mt-1 text-sm text-gray-900">
+                  </dt> */}
+                  <dd className="text-sm text-gray-900">
+                  {/* v1.0.1 ---------------------------------------------------------------------> */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center">
                       <div className="mr-0 mb-3 sm:mb-0 sm:mr-3">
                         {candidate?.imageUrl ? (

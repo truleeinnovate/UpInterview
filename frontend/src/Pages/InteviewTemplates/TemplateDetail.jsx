@@ -1,4 +1,7 @@
 // v1.0.0  -  mansoor  -  navbar is not showing in this page now it is showing
+/* v1.0.1  -  Ashok    -  when the view mode is vertical deleting all the rounds and remaining is one
+   in that case view should be vertical fixed
+*/
 import { useState, useEffect } from "react";
 import {
   Plus,
@@ -30,29 +33,56 @@ const TemplateDetail = () => {
 
   const [isActive, setIsActive] = useState(template?.status === "active");
 
+  // useEffect(() => {
+  //   const foundTemplate = templatesData.find((tem) => tem._id === id);
+  //   console.log("foundTemplate", foundTemplate);
+  //   // setIsLoading(true)
+  //   if (foundTemplate && foundTemplate) {
+  //     setTemplate(foundTemplate);
+  //     // Set the first round as active by default
+  //     if (foundTemplate.rounds?.length > 0) {
+  //       setActiveRound(foundTemplate?.rounds[0]._id);
+  //     }
+
+  //     setIsActive(foundTemplate.status === "active"); // ✅ Sync here
+  //     setIsLoading(false);
+  //     // setEditedTemplate({
+  //     //   templateName: foundTemplate?.templateName || '',
+  //     //   description: foundTemplate?.description || '',
+  //     //   label: foundTemplate?.label || '',
+  //     //   status: foundTemplate?.status || ''
+  //     // });
+  //     setIsLoading(false);
+  //   } else {
+  //     setTemplate(null); // Ensure position is null if not found
+  //     // setEditedTemplate(null); // Reset rounds to empty array
+  //   }
+  // }, [id, templatesData]);
+
   useEffect(() => {
     const foundTemplate = templatesData.find((tem) => tem._id === id);
     console.log("foundTemplate", foundTemplate);
-    // setIsLoading(true)
-    if (foundTemplate && foundTemplate) {
+
+    if (foundTemplate) {
       setTemplate(foundTemplate);
-      // Set the first round as active by default
-      if (foundTemplate.rounds?.length > 0) {
-        setActiveRound(foundTemplate?.rounds[0]._id);
+
+      const roundsList = foundTemplate.rounds || [];
+
+      // Set first round as active and expanded
+      if (roundsList.length > 0) {
+        setActiveRound(roundsList[0]._id);
       }
 
-      setIsActive(foundTemplate.status === "active"); // ✅ Sync here
-      setIsLoading(false);
-      // setEditedTemplate({
-      //   templateName: foundTemplate?.templateName || '',
-      //   description: foundTemplate?.description || '',
-      //   label: foundTemplate?.label || '',
-      //   status: foundTemplate?.status || ''
-      // });
+      // Set view mode to vertical only if one round
+      if (roundsList.length === 1) {
+        setRoundsViewMode("vertical");
+      }
+
+      setIsActive(foundTemplate.status === "active");
       setIsLoading(false);
     } else {
-      setTemplate(null); // Ensure position is null if not found
-      // setEditedTemplate(null); // Reset rounds to empty array
+      setTemplate(null);
+      setIsLoading(false);
     }
   }, [id, templatesData]);
 

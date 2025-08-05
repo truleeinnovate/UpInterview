@@ -141,8 +141,8 @@ const InterviewRequests = () => {
                     <User size={18} className="text-custom-blue" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900">{request.contactId.firstName + " " + request.contactId.lastName}</h4>
-                    <p className="text-xs text-gray-600">{request.positionId.title}</p>
+                    <h4 className="text-sm font-semibold text-gray-900">{request.contactId?.firstName + " " + request.contactId?.lastName}</h4>
+                    <p className="text-xs text-gray-600">{request.positionId?.title || 'N/A'}</p>
                   </div>
                 </div>
                 <span
@@ -160,7 +160,7 @@ const InterviewRequests = () => {
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="flex items-center gap-1.5">
                   <Building size={14} className="text-gray-400" />
-                  <span className="text-xs text-gray-600 truncate">{request.positionId.companyname}</span>
+                  <span className="text-xs text-gray-600 truncate">{request.positionId?.companyname || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Video size={14} className="text-gray-400" />
