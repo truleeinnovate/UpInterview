@@ -1,6 +1,7 @@
 // v1.0.0  - mansoor - added the path in the top to go back
 // v1.0.1 - Ranjith - added the mode to the postion tab for the inetrview mode
 // v1.0.2 - Ashok - modified some styles
+// v1.0.3 - Ashok - fixed default view and unique key issue
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
@@ -57,25 +58,55 @@ const PositionSlideDetails = () => {
   // const userId = tokenPayload?.userId;
   // const tenantId = tokenPayload?.tenantId;
 
-  useEffect(() => {
-    const fetchPosition = async () => {
-      try {
-        console.log('started position')
-        const foundPosition = positionData?.find((pos) => pos._id === id);
-        console.log("Found Position:", foundPosition);
+  // v1.0.3 <----------------------------------------------------------------------
+  // useEffect(() => {
+  //   const fetchPosition = async () => {
+  //     try {
+  //       console.log('started position')
+  //       const foundPosition = positionData?.find((pos) => pos._id === id);
+  //       console.log("Found Position:", foundPosition);
 
-        if (foundPosition) {
-          setPosition(foundPosition || []);
-          setRounds(foundPosition.rounds || []);
-          console.log(`position roumds ------- ${foundPosition.rounds}`);
-          setActiveRound(foundPosition.rounds[0]?._id);
+  //       if (foundPosition) {
+  //         setPosition(foundPosition || []);
+  //         setRounds(foundPosition.rounds || []);
+  //         console.log(`position roumds ------- ${foundPosition.rounds}`);
+  //         setActiveRound(foundPosition.rounds[0]?._id);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching template:", error);
+  //     }
+  //   };
+  //   fetchPosition();
+  // }, [id, positionData]);
+
+  useEffect(() => {
+  const fetchPosition = async () => {
+    try {
+      console.log('started position');
+      const foundPosition = positionData?.find((pos) => pos._id === id);
+      console.log("Found Position:", foundPosition);
+
+      if (foundPosition) {
+        const roundsList = foundPosition.rounds || [];
+
+        setPosition(foundPosition);
+        setRounds(roundsList);
+        setActiveRound(roundsList[0]?._id);
+
+        // If only one round exists, switch to vertical view
+        if (roundsList.length === 1) {
+          setRoundsViewMode("vertical");
         }
-      } catch (error) {
-        console.error("Error fetching template:", error);
       }
-    };
-    fetchPosition();
-  }, [id, positionData]);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+    }
+  };
+
+  fetchPosition();
+}, [id, positionData]);
+
+  // v1.0.3 ---------------------------------------------------------------------->
 
   const handleAddRound = () => {
     navigate(`/position/view-details/${id}/rounds/new`);
@@ -271,10 +302,12 @@ const PositionSlideDetails = () => {
                   Skills
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {position?.skills ? (
+                  {/* <------v1.0.0 ------ */}
+                  {/* v1.0.3 <---------------------------------------------------------- */}
+                  {/* {position?.skills ? (
                     position.skills.map((skill, index) => (
                       <>
-                        {/* <------v1.0.0 ------*/}
+                        
                         <div className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100">
                           <span
                             key={index}
@@ -295,12 +328,35 @@ const PositionSlideDetails = () => {
                             {skill.expertise}
                           </span>
                         </div>
-                        {/* v1.0.0 ------->*/}
+                        
                       </>
                     ))
                   ) : (
                     <span>No skills found</span>
+                  )} */}
+                  {position?.skills?.length > 0 ? (
+                    position.skills.map((skill, index) => (
+                      <div
+                        key={`skill-${index}`}
+                        className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100"
+                      >
+                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                          {skill.skill}
+                        </span>
+                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                          {skill.experience}
+                        </span>
+                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                          {skill.expertise}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <span>No skills found</span>
                   )}
+
+                  {/* v1.0.3 -----------------------------------------------------------> */}
+                  {/* v1.0.0 -------> */}
                 </div>
               </div>
             </div>

@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - fixed issue while updating or adding a new round with sequence
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { fetchFilterData } from "../api";
@@ -66,6 +68,15 @@ export const usePositions = (filters = {}) => {
     },
   });
 
+  // v1.0.0 <------------------------------------------------------------------------------
+  const mergeUniqueRounds = (existingRounds, newRounds) => {
+    const existingMap = new Map(existingRounds.map(round => [round._id, round]));
+    for (const newRound of newRounds) {
+      existingMap.set(newRound._id, newRound); // This will replace if _id exists
+    }
+    return Array.from(existingMap.values());
+  };
+
   const addRoundsMutation = useMutation({
     mutationFn: async (payload) => {
       const response = await axios.post(
@@ -74,23 +85,44 @@ export const usePositions = (filters = {}) => {
       );
       return response.data;
     },
+    
+    // onSuccess: (data, variables) => {
+    //   // Optimistically update the cache
+    //   queryClient.setQueryData(['positions', filters], (oldData) => {
+    //     if (!oldData) return oldData;
+    //     return oldData.map(position => 
+    //       position._id === variables.positionId 
+    //         ? { ...position, rounds: [...(position.rounds || []), ...(Array.isArray(data.data) ? data.data : [data.data])] }
+    //         : position
+    //     );
+    //   });
+      
+    //   queryClient.invalidateQueries(['positions']);
+    // },
     onSuccess: (data, variables) => {
-      // Optimistically update the cache
       queryClient.setQueryData(['positions', filters], (oldData) => {
         if (!oldData) return oldData;
         return oldData.map(position => 
           position._id === variables.positionId 
-            ? { ...position, rounds: [...(position.rounds || []), ...(Array.isArray(data.data) ? data.data : [data.data])] }
+            ? {
+                ...position,
+                rounds: mergeUniqueRounds(
+                  position.rounds || [],
+                  Array.isArray(data.data) ? data.data : [data.data]
+                )
+              }
             : position
         );
       });
-      
       queryClient.invalidateQueries(['positions']);
     },
+
     onError: (error) => {
       console.log('Error adding rounds:', error);
     },
   });
+  // v1.0.0 ------------------------------------------------------------------------------>
+
 
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId) => {

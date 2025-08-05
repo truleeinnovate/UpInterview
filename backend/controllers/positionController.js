@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - fixed updating rounds based on sequence
+
 const { mongoose } = require("mongoose");
 const { Position } = require("../models/position.js");
 
@@ -501,212 +503,213 @@ const updatePosition = async (req, res) => {
   }
 };
 
-const saveInterviewRoundPosition = async (req, res) => {
-  try {
-    const { positionId, round, roundId } = req.body;
+// v1.0.0 <-----------------------------------------------------------------------------------
+// const saveInterviewRoundPosition = async (req, res) => {
+//   try {
+//     const { positionId, round, roundId } = req.body;
 
-    if (!positionId || !round) {
-      return res
-        .status(400)
-        .json({ message: "Interview ID and round data are required." });
-    }
+//     if (!positionId || !round) {
+//       return res
+//         .status(400)
+//         .json({ message: "Interview ID and round data are required." });
+//     }
 
-    // Find the position document
-    const position = await Position.findById(positionId);
-    if (!position) {
-      return res.status(404).json({ message: "Position not found." });
-    }
+//     // Find the position document
+//     const position = await Position.findById(positionId);
+//     if (!position) {
+//       return res.status(404).json({ message: "Position not found." });
+//     }
 
-    if (roundId) {
-      // **Edit an existing round**
-      const roundIndex = position.rounds.findIndex(
-        (r) => r._id.toString() === roundId
-      );
-      if (roundIndex === -1) {
-        return res.status(404).json({ message: "Round not found." });
-      }
+//     if (roundId) {
+//       // **Edit an existing round**
+//       const roundIndex = position.rounds.findIndex(
+//         (r) => r._id.toString() === roundId
+//       );
+//       if (roundIndex === -1) {
+//         return res.status(404).json({ message: "Round not found." });
+//       }
 
-      // if (round.interviewers && Array.isArray(round.interviewers)) {
-      //   round.interviewers = round.interviewers
-      //     .filter(id => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
-      //     .map(id => new mongoose.Types.ObjectId(id));
-      // } else {
-      //   round.interviewers = [];
-      // }
+//       // if (round.interviewers && Array.isArray(round.interviewers)) {
+//       //   round.interviewers = round.interviewers
+//       //     .filter(id => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
+//       //     .map(id => new mongoose.Types.ObjectId(id));
+//       // } else {
+//       //   round.interviewers = [];
+//       // }
 
-      // Update the existing round with new data
-      position.rounds[roundIndex] = {
-        ...position.rounds[roundIndex],
-        ...round,
-      };
+//       // Update the existing round with new data
+//       position.rounds[roundIndex] = {
+//         ...position.rounds[roundIndex],
+//         ...round,
+//       };
 
-      // **Reorder all rounds based on sequence**
-      await reorderInterviewRounds(position);
+//       // **Reorder all rounds based on sequence**
+//       await reorderInterviewRounds(position);
 
-      console.log("Position rounds 508", positionId, round, roundId);
+//       console.log("Position rounds 508", positionId, round, roundId);
 
-      await position.save();
+//       await position.save();
 
-      return res.status(200).json({
-        message: "Round updated successfully.",
-        data: position.rounds[roundIndex],
-      });
-    } else {
-      // **Add a new round**
-      const totalRounds = position.rounds.length;
-      const newSequence = round.sequence || totalRounds + 1; // Default to next sequence
+//       return res.status(200).json({
+//         message: "Round updated successfully.",
+//         data: position.rounds[roundIndex],
+//       });
+//     } else {
+//       // **Add a new round**
+//       const totalRounds = position.rounds.length;
+//       const newSequence = round.sequence || totalRounds + 1; // Default to next sequence
 
-      // **Shift existing rounds if inserting at a lower sequence**
-      position.rounds.forEach((r) => {
-        if (r.sequence >= newSequence) {
-          r.sequence += 1;
-        }
-      });
+//       // **Shift existing rounds if inserting at a lower sequence**
+//       position.rounds.forEach((r) => {
+//         if (r.sequence >= newSequence) {
+//           r.sequence += 1;
+//         }
+//       });
 
-      // if (round.interviewers && Array.isArray(round.interviewers)) {
-      //   round.interviewers = round.interviewers
-      //     .filter(id => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
-      //     .map(id => new mongoose.Types.ObjectId(id));
-      // } else {
-      //   round.interviewers = [];
-      // }
+//       // if (round.interviewers && Array.isArray(round.interviewers)) {
+//       //   round.interviewers = round.interviewers
+//       //     .filter(id => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
+//       //     .map(id => new mongoose.Types.ObjectId(id));
+//       // } else {
+//       //   round.interviewers = [];
+//       // }
 
-      console.log("Position rounds 540", positionId, round, roundId);
+//       console.log("Position rounds 540", positionId, round, roundId);
 
-      // **Add the new round**
-      const newRound = {
-        ...round,
-        sequence: newSequence,
-      };
-      position.rounds.push(newRound);
-      await position.save();
+//       // **Add the new round**
+//       const newRound = {
+//         ...round,
+//         sequence: newSequence,
+//       };
+//       position.rounds.push(newRound);
+//       await position.save();
 
-      // **Reorder rounds after adding**
-      await reorderInterviewRounds(position);
+//       // **Reorder rounds after adding**
+//       await reorderInterviewRounds(position);
 
-      await position.save();
+//       await position.save();
 
-      return res.status(201).json({
-        message: "Interview round created successfully.",
-        data: position.rounds[position.rounds.length - 1],
-      });
-    }
+//       return res.status(201).json({
+//         message: "Interview round created successfully.",
+//         data: position.rounds[position.rounds.length - 1],
+//       });
+//     }
 
-    /**
-     * Reorders interview rounds based on sequence.
-     */
-    function reorderInterviewRounds(positionId) {
-      position.rounds.sort((a, b) => a.sequence - b.sequence);
+//     /**
+//      * Reorders interview rounds based on sequence.
+//      */
+//     function reorderInterviewRounds(positionId) {
+//       position.rounds.sort((a, b) => a.sequence - b.sequence);
 
-      // Reassign sequence numbers starting from 1
-      position.rounds.forEach((round, index) => {
-        round.sequence = index + 1;
-      });
-    }
+//       // Reassign sequence numbers starting from 1
+//       position.rounds.forEach((round, index) => {
+//         round.sequence = index + 1;
+//       });
+//     }
 
-    // Sending emails to interviewers
-    // const emailPromises = [];
+//     // Sending emails to interviewers
+//     // const emailPromises = [];
 
-    // for (const interviewRounds of rounds) {
-    //     console.log("Processing Round:", JSON.stringify(round, null, 2));
+//     // for (const interviewRounds of rounds) {
+//     //     console.log("Processing Round:", JSON.stringify(round, null, 2));
 
-    //     if (round.mode === "Virtual" && Array.isArray(round.interviewers)) {
-    //         console.log("Virtual Round Detected:", round.round);
+//     //     if (round.mode === "Virtual" && Array.isArray(round.interviewers)) {
+//     //         console.log("Virtual Round Detected:", round.round);
 
-    //         // Validate interviewers
-    //         if (!Array.isArray(round.interviewers) || round.interviewers.length === 0) {
-    //             console.error("Invalid interviewers data:", round);
-    //             continue;
-    //         }
+//     //         // Validate interviewers
+//     //         if (!Array.isArray(round.interviewers) || round.interviewers.length === 0) {
+//     //             console.error("Invalid interviewers data:", round);
+//     //             continue;
+//     //         }
 
-    //         // Generate meetLink for the round
-    //         const ecryptArgRound = { user: "host", details: { teamId, round: round.round } };
+//     //         // Generate meetLink for the round
+//     //         const ecryptArgRound = { user: "host", details: { teamId, round: round.round } };
 
-    //         try {
-    //             console.log("Encrypting MeetLink Data:", JSON.stringify(ecryptArgRound, null, 2));
-    //             const encryptedMeetLink = encrypt(ecryptArgRound, 'meet');
-    //             console.log("Encrypted MeetLink:", encryptedMeetLink);
+//     //         try {
+//     //             console.log("Encrypting MeetLink Data:", JSON.stringify(ecryptArgRound, null, 2));
+//     //             const encryptedMeetLink = encrypt(ecryptArgRound, 'meet');
+//     //             console.log("Encrypted MeetLink:", encryptedMeetLink);
 
-    //             for (const interviewer of round.interviewers) {
-    //                 if (!interviewer._id) {
-    //                     console.error("Skipping invalid interviewer:", interviewer);
-    //                     continue;
-    //                 }
+//     //             for (const interviewer of round.interviewers) {
+//     //                 if (!interviewer._id) {
+//     //                     console.error("Skipping invalid interviewer:", interviewer);
+//     //                     continue;
+//     //                 }
 
-    //                 const ecryptArg = {
-    //                     user: "host",
-    //                     details: { id: interviewer._id, candidateId, round: round.round }
-    //                 };
-    //                 console.log("Encrypting Host Data:", JSON.stringify(ecryptArg, null, 2));
+//     //                 const ecryptArg = {
+//     //                     user: "host",
+//     //                     details: { id: interviewer._id, candidateId, round: round.round }
+//     //                 };
+//     //                 console.log("Encrypting Host Data:", JSON.stringify(ecryptArg, null, 2));
 
-    //                 const encryptedHost = encrypt(ecryptArg, 'meet');
-    //                 console.log("Encrypted Host Data:", encryptedHost);
+//     //                 const encryptedHost = encrypt(ecryptArg, 'meet');
+//     //                 console.log("Encrypted Host Data:", encryptedHost);
 
-    //                 round.meetLink = `http://localhost:3000/meetId/${teamId}/${savedInterview._id}?user=${encryptedHost}`;
-    //                 console.log("Generated Meet Link:", round.meetLink);
+//     //                 round.meetLink = `http://localhost:3000/meetId/${teamId}/${savedInterview._id}?user=${encryptedHost}`;
+//     //                 console.log("Generated Meet Link:", round.meetLink);
 
-    //                 try {
-    //                     const user = await Users.findById(interviewer._id);
-    //                     if (user && user.Email) {
-    //                         console.log("Sending Email to:", user.Email);
-    //                         emailPromises.push(
-    //                             sendEmail(
-    //                                 user.Email,
-    //                                 "Interview Scheduled",
-    //                                 `Your scheduled interview can be accessed using this link: ${round.meetLink}`
-    //                             )
-    //                         );
-    //                     }
-    //                 } catch (err) {
-    //                     console.error(`Error fetching interviewer ${interviewer._id}:`, err);
-    //                 }
-    //             }
-    //         } catch (encryptionError) {
-    //             console.error("Encryption Error:", encryptionError);
-    //         }
-    //     }
-    // }
+//     //                 try {
+//     //                     const user = await Users.findById(interviewer._id);
+//     //                     if (user && user.Email) {
+//     //                         console.log("Sending Email to:", user.Email);
+//     //                         emailPromises.push(
+//     //                             sendEmail(
+//     //                                 user.Email,
+//     //                                 "Interview Scheduled",
+//     //                                 `Your scheduled interview can be accessed using this link: ${round.meetLink}`
+//     //                             )
+//     //                         );
+//     //                     }
+//     //                 } catch (err) {
+//     //                     console.error(`Error fetching interviewer ${interviewer._id}:`, err);
+//     //                 }
+//     //             }
+//     //         } catch (encryptionError) {
+//     //             console.error("Encryption Error:", encryptionError);
+//     //         }
+//     //     }
+//     // }
 
-    // // Generate and store OTP for candidate
-    // const otp = generateOTP(CandidateId);
-    // console.log("Generated OTP:", otp);
+//     // // Generate and store OTP for candidate
+//     // const otp = generateOTP(CandidateId);
+//     // console.log("Generated OTP:", otp);
 
-    // const otpInstance = new TeamsOtpSchema({
-    //     teamId,
-    //     candidateId,
-    //     otp,
-    //     expiresAt: new Date(Date.now() + 90 * 1000), // 90 seconds expiration
-    // });
+//     // const otpInstance = new TeamsOtpSchema({
+//     //     teamId,
+//     //     candidateId,
+//     //     otp,
+//     //     expiresAt: new Date(Date.now() + 90 * 1000), // 90 seconds expiration
+//     // });
 
-    // console.log("OTP Instance:", otpInstance);
-    // await otpInstance.save();
+//     // console.log("OTP Instance:", otpInstance);
+//     // await otpInstance.save();
 
-    // // Sending email to candidate
-    // if (candidate.Email) {
-    //     console.log("Sending email to candidate:", candidate.Email);
+//     // // Sending email to candidate
+//     // if (candidate.Email) {
+//     //     console.log("Sending email to candidate:", candidate.Email);
 
-    //     const ecryptArg = { user: "public", details: { id: candidateId } };
-    //     console.log("Encrypting Candidate Data:", JSON.stringify(ecryptArg, null, 2));
+//     //     const ecryptArg = { user: "public", details: { id: candidateId } };
+//     //     console.log("Encrypting Candidate Data:", JSON.stringify(ecryptArg, null, 2));
 
-    //     const encryptedUser = encrypt(ecryptArg, 'meet');
-    //     console.log("Encrypted Candidate Data:", encryptedUser);
+//     //     const encryptedUser = encrypt(ecryptArg, 'meet');
+//     //     console.log("Encrypted Candidate Data:", encryptedUser);
 
-    //     emailPromises.push(
-    //         sendEmail(
-    //             candidate.Email,
-    //             "Interview Invitation",
-    //             `You are invited to attend a virtual interview with this link: http://localhost:3000/meetId/${teamId}/${savedInterview._id}?user=${encryptedUser}. Your OTP is: ${otp}`
-    //         )
-    //     );
-    // }
+//     //     emailPromises.push(
+//     //         sendEmail(
+//     //             candidate.Email,
+//     //             "Interview Invitation",
+//     //             `You are invited to attend a virtual interview with this link: http://localhost:3000/meetId/${teamId}/${savedInterview._id}?user=${encryptedUser}. Your OTP is: ${otp}`
+//     //         )
+//     //     );
+//     // }
 
-    // // Wait for all emails to be sent
-    // await Promise.all(emailPromises);
-  } catch (error) {
-    console.error("Error saving interview round:", error);
-    return res.status(500).json({ message: "Internal server error." });
-  }
-};
+//     // // Wait for all emails to be sent
+//     // await Promise.all(emailPromises);
+//   } catch (error) {
+//     console.error("Error saving interview round:", error);
+//     return res.status(500).json({ message: "Internal server error." });
+//   }
+// };
 
 // const getPositionById = async (req, res) => {
 
@@ -775,6 +778,86 @@ const saveInterviewRoundPosition = async (req, res) => {
 //   }
 // };
 
+const saveInterviewRoundPosition = async (req, res) => {
+  try {
+    const { positionId, round, roundId } = req.body;
+
+    if (!positionId || !round) {
+      return res
+        .status(400)
+        .json({ message: "Position ID and round data are required." });
+    }
+
+    const position = await Position.findById(positionId);
+    if (!position) {
+      return res.status(404).json({ message: "Position not found." });
+    }
+
+    if (roundId) {
+      // === Editing Existing Round ===
+      const roundIndex = position.rounds.findIndex(
+        (r) => r._id.toString() === roundId
+      );
+
+      if (roundIndex === -1) {
+        return res.status(404).json({ message: "Round not found." });
+      }
+
+      // Remove the existing round
+      const existingRound = position.rounds.splice(roundIndex, 1)[0];
+      const updatedRound = {
+        ...existingRound.toObject(),
+        ...round,
+      };
+
+      // Insert updated round at desired sequence (minus 1 due to zero-based index)
+      const desiredIndex = Math.max((updatedRound.sequence || 1) - 1, 0);
+      position.rounds.splice(desiredIndex, 0, updatedRound);
+
+      // Reorder sequences
+      reorderInterviewRounds(position);
+
+      await position.save();
+
+      return res.status(200).json({
+        message: "Round updated successfully.",
+        data: updatedRound,
+      });
+    } else {
+      // === Adding New Round ===
+      const newSequence = round.sequence || position.rounds.length + 1;
+      const newIndex = Math.max(newSequence - 1, 0);
+
+      const newRound = {
+        ...round,
+        sequence: newSequence,
+      };
+
+      // Insert at proper index
+      position.rounds.splice(newIndex, 0, newRound);
+
+      reorderInterviewRounds(position);
+
+      await position.save();
+
+      return res.status(201).json({
+        message: "Interview round created successfully.",
+        data: newRound,
+      });
+    }
+
+    // === Utility to Normalize Sequence ===
+    function reorderInterviewRounds(positionDoc) {
+      positionDoc.rounds.forEach((r, idx) => {
+        r.sequence = idx + 1;
+      });
+    }
+  } catch (error) {
+    console.error("Error saving interview round:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+// v1.0.0 ----------------------------------------------------------------------------------->
 const deleteRound = async (req, res) => {
   const { roundId } = req.params;
 

@@ -10,11 +10,29 @@ const VerticalRoundsView = ({ rounds, onEditRound }) => {
   // Track expanded rounds
   const [expandedRounds, setExpandedRounds] = useState({});
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   if (sortedRounds.length > 0) {
+  //     setExpandedRounds({ [sortedRounds[0]._id]: true });
+  //   }
+  // }, [rounds]);
+
+    useEffect(() => {
     if (sortedRounds.length > 0) {
-      setExpandedRounds({ [sortedRounds[0]._id]: true });
+      const firstRoundId = sortedRounds[0]._id;
+
+      setExpandedRounds((prev) => {
+        const isAnyExpanded = Object.values(prev).some((v) => v);
+        const isFirstExpanded = prev[firstRoundId];
+
+        // Expand first round if nothing expanded or first round changed
+        if (!isAnyExpanded || !isFirstExpanded) {
+          return { [firstRoundId]: true };
+        }
+
+        return prev;
+      });
     }
-  }, [rounds]);
+  }, [sortedRounds[0]?._id]); // Track only when first round changes
 
   // Toggle round expansion
   const toggleRound = (roundId) => {

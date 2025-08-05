@@ -1,4 +1,10 @@
 // v1.0.0 - Ashok - removed show and hide for interviewers
+/* 
+  v1.0.1 - Ashok - In Horizontal view when deleting the round is deleting a round but not closing 
+  the "showDeleteConfirmModal" and after deleting all the rounds then only it's closing the popup
+  closing but deleting the round and added userScrollLock hook to disable outer scrollbar when the
+  popup is open
+*/
 
 import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
@@ -28,6 +34,7 @@ import { useInterviewerDetails } from '../../../../../utils/CommonFunctionRoundT
 import { config } from '../../../../../config';
 import { useAssessments } from '../../../../../apiHooks/useAssessments';
 import { usePositions } from '../../../../../apiHooks/usePositions';
+import {useScrollLock} from "../../../../../apiHooks/scrollHook/useScrollLock"
 
 const PositionRoundCard = ({
   round,
@@ -52,6 +59,9 @@ const PositionRoundCard = ({
   const handleDeleteRound = async () => {
     try {
       await deleteRoundMutation(round._id);
+      // v1.0.1 <----------------------------------------------------------------------
+      setShowDeleteConfirmModal(false); // close the modal here
+      // v1.0.1 ---------------------------------------------------------------------->
       toast.success('Round deleted successfully');
     } catch (error) {
       console.error('Error deleting round:', error);
@@ -74,6 +84,10 @@ const PositionRoundCard = ({
   // useEffect(() => {
   //   fetchQuestionsForAssessment(round.assessmentId)
   // }, [round.assessmentId])
+
+  // v1.0.1 <-------------------------------------------------------------
+  useScrollLock(showDeleteConfirmModal); // it disable outer scrollbar when popup is open
+  // v1.0.1 ------------------------------------------------------------->
 
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
@@ -328,10 +342,10 @@ const PositionRoundCard = ({
                                 </div>
                               }
                             </div>
-
+                            {/* v1.0.1 <----------------------------------------------- */}
                             {showInterviewers && round.interviewers && (
                               <div className="flex flex-wrap gap-2">
-                                {round?.interviewers.map((interviewer, index) => (
+                                {round?.interviewers?.map((interviewer, index) => (
                                   <div key={index} className="flex items-center">
                                     <InterviewerAvatar interviewer={interviewer} size="sm" />
                                     <span className="ml-1 text-xs text-gray-600">
@@ -344,7 +358,7 @@ const PositionRoundCard = ({
                             )}
                           </div>
                         )}
-
+                        {/* v1.0.1 <---------------------------------------------------------- */}
                         {externalInterviewers.length > 0 && (
                           <div>
                             <div className="flex items-center text-xs text-gray-500 mb-1">
@@ -352,7 +366,7 @@ const PositionRoundCard = ({
                               <span>External ({externalInterviewers.length})</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                              {externalInterviewers.map(interviewer => (
+                              {externalInterviewers?.map(interviewer => (
                                 <div key={interviewer._id} className="flex items-center">
                                   <InterviewerAvatar interviewer={interviewer} size="sm" />
                                   <span className="ml-1 text-xs text-gray-600">
@@ -390,12 +404,12 @@ const PositionRoundCard = ({
                       {showQuestions ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
                     </button>
                   </div>
-
+                  {/* v1.0.1 <--------------------------------------------------------- */}
                   {showQuestions && round.questions && (
                     <div className="space-y-2">
                       {round?.questions.length > 0 ? (
                         <ul className="mt-2 space-y-1">
-                          {round.questions.map((question, qIndex) => {
+                          {round?.questions?.map((question, qIndex) => {
                             // const isMandatory = question?.mandatory === "true";
                             const questionText = question?.snapshot?.questionText || 'No Question Text Available';
                             return (
@@ -446,10 +460,11 @@ const PositionRoundCard = ({
                         </div>
                       ) :
                         (
+                          // v1.0.1 <-----------------------------------------------------------
                           <div className="space-y-4">
                             {/* Check if sectionQuestions is properly structured */}
                             {Object.keys(sectionQuestions).length > 0 ? (
-                              Object.entries(sectionQuestions).map(([sectionId, sectionData]) => {
+                              Object.entries(sectionQuestions)?.map(([sectionId, sectionData]) => {
                                 // Find section details from assessmentData
                                 // const selectedAssessment = assessmentData.find(
                                 //   a => a._id === formData.assessmentTemplate[0].assessmentId
@@ -471,11 +486,11 @@ const PositionRoundCard = ({
                                           }`}
                                       />
                                     </button>
-
+                                    {/* v1.0.1 <------------------------------------------------ */}
                                     {expandedSections[sectionId] && (
                                       <div className="mt-4 space-y-3">
                                         {Array.isArray(sectionData.questions) && sectionData.questions.length > 0 ? (
-                                          sectionData.questions.map((question, idx) => (
+                                          sectionData?.questions?.map((question, idx) => (
                                             <div
                                               key={question._id || idx}
                                               className="border rounded-md shadow-sm overflow-hidden"
