@@ -1,4 +1,7 @@
 // v1.0.0 - Ashok - removed show and hide toggle
+/* v1.0.1 - Ashok - fixed the sequence issue and when the view is Horizontal
+   click on delete deleting the card but not closing the delete confirmation popup
+*/
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
@@ -34,6 +37,9 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
   const handleDeleteRound = async () => {
     try {
       await deleteRoundMutation(round._id);
+      // v1.0.1 <----------------------------------------------------------------------
+      setShowDeleteConfirmModal(false); // close the modal here
+      // v1.0.1 ---------------------------------------------------------------------->
       toast.success("Round deleted successfully");
     } catch (error) {
       console.error("Error deleting round:", error);
@@ -618,7 +624,11 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
       </div>
 
       {showDeleteConfirmModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        // <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <div
+          className="fixed top-0 left-0 w-screen h-screen z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          style={{ pointerEvents: "auto" }}
+        >
           <div className="bg-white p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-3">
               Are you sure you want to delete this round?
