@@ -18,14 +18,21 @@ const options = [
 ];
 
 //<--v1.0.0------
-const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabData, page: pageProp, tab, isEditMode }) => {
+const OverallImpressions = ({ tab, isEditMode }) => {
+  const { overallImpressionTabData, setOverallImpressionTabData } = useCustomContext();
   const { page } = useCustomContext();
-  //----v1.0.0------>
-  const { rating, note, recommendation, notesBool } =
-    overallImpressionTabData;
 
-  const getColorByRating = (rating) =>
-    ratingLst.find((r) => r.stars === rating)?.color || "gray";
+  // Add default values to prevent destructuring errors
+  const { rating = 0, note = '', recommendation = '', notesBool = false } = overallImpressionTabData || {};
+
+  const getColorByRating = (rating) => {
+    const item = ratingLst.find((r) => r.stars === rating);
+    if (!item) {
+      if (rating === 1) return "red"; // Fallback for rating 1
+      return "gray"; // Default fallback
+    }
+    return item.color;
+  };
 
  //<--v1.0.0------
   const handleRatingChange = (newRating) => {
@@ -73,11 +80,12 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
           {ratingLst.map(({ id, name, stars, color }) => (
             <li
               key={id}
-              className={`text-${color} flex flex-col items-center cursor-pointer gap-3`}
+              className="flex flex-col items-center cursor-pointer gap-3"
+              style={{ color: color }}
             >
               <div className="flex">
                 {Array.from({ length: stars }, (_, idx) => (
-                  <IoIosStar key={idx} style={{ color }} className="text-2xl" />
+                  <IoIosStar key={idx} className="text-2xl" />
                 ))}
               </div>
               <p>{name}</p>
@@ -90,16 +98,20 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
         {/*<----v1.0.0------*/}
         <p className="">Overall Rating{tab && <span className="text-red-500">*</span>}</p>
         <div className="flex gap-3">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              className={`text-2xl ${star <= overallImpressionTabData.rating ? "text-yellow-400" : "text-gray-300"} ${isEditMode ? "" : "cursor-not-allowed"}`}
-              onClick={() => handleRatingChange(star)}
-              disabled={!isEditMode}
-            >
-              ★
-            </button>
-          ))}
+          {[1, 2, 3, 4, 5].map((star) => {
+            const color = star <= rating ? getColorByRating(rating) : "gray";
+            return (
+              <button
+                key={star}
+                className={`text-2xl ${isEditMode ? "" : "cursor-not-allowed"}`}
+                style={{ color: color }}
+                onClick={() => handleRatingChange(star)}
+                disabled={!isEditMode}
+              >
+                ★
+              </button>
+            );
+          })}
         </div>
         {isEditMode ? (
           <button
@@ -107,7 +119,7 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
             className="p-1 text-[#227a8a] border border-[#227a8a] rounded-md w-[200px]"
             style={{ visibility: tab ? "visible" : "hidden" }}
           >
-            {overallImpressionTabData.notesBool ? "Delete Note" : "Add Note"}
+            {notesBool ? "Delete Note" : "Add Note"}
           </button>
         ) : <div></div>}
       </div>
@@ -120,43 +132,25 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
           >
             Note
           </label>
-          {pageProp === "Home" ? (
-            <div
-              className="flex flex-col  items-center"
-              style={{ width: pageProp === "Home" && "70%" }}
-            >
-              <input
-                id="overall-note"
-                type="text"
-                value={note}
-                readOnly={!isEditMode}
-                onChange={(e) =>
-                  handleNoteChange(e)
-                }
-                className="w-[100%]  rounded-md text-[gray]  p-2 outline-none border border-gray-500"
-                placeholder="Add Note"
-              />
-              <span className="text-gray-500 self-end">
-                {note?.length || 0}/250
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col w-full justify-end  flex-grow-1">
-              <textarea
-                rows={5}
-                value={note}
-                readOnly={!isEditMode}
-                onChange={(e) =>
-                  handleNoteChange(e)
-                }
-                className="w-full text-gray rounded-md outline-none border-[1px] py-1 px-1 text-[gray] border-[gray]"
-                placeholder="Add note here"
-              ></textarea>
-              <span className="text-gray-500 self-end mt-[5px] w-max">
-                {note?.length || 0}/250
-              </span>
-            </div>
-          )}
+          <div
+            className="flex flex-col  items-center"
+            style={{ width: "70%" }}
+          >
+            <input
+              id="overall-note"
+              type="text"
+              value={note}
+              readOnly={!isEditMode}
+              onChange={(e) =>
+                handleNoteChange(e)
+              }
+              className={isEditMode ? "w-[100%]  rounded-md text-[gray]  p-2 outline-none border border-gray-500" : "outline-none"}
+              placeholder="Add Note"
+            />
+            {isEditMode && <span className="text-gray-500 self-end">
+              {note?.length || 0}/250
+            </span>}
+          </div>
         </div>
       )}
 
@@ -182,7 +176,7 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
                   type="radio"
                   id={`recommendation-${option}`}
                   name="recommendation"
-                  checked={overallImpressionTabData.recommendation === option}
+                  checked={recommendation === option}
                   onChange={() => handleRecommendationChange(option)}
                 />
                 <label htmlFor={`recommendation-${option}`} className="cursor-pointer">
@@ -193,7 +187,7 @@ const OverallImpressions = ({ overallImpressionTabData, setOverallImpressionTabD
           </div>
         ) : (
           <div className="flex pl-28 items-center">
-            <span className="font-medium">{overallImpressionTabData.recommendation.charAt(0).toUpperCase() + overallImpressionTabData.recommendation.slice(1)}</span>
+            <span className="font-medium">{recommendation.charAt(0).toUpperCase() + recommendation.slice(1)}</span>
           </div>
         )}
         {/*----v1.0.0------>*/}

@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
 import '../styles/tabs.scss';
 import { motion } from 'framer-motion';
+import { Tooltip } from '@mantine/core';
 import Header from '../../../../Components/Shared/Header/Header.jsx';
 import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar.jsx';
 import TableView from '../../../../Components/Shared/Table/TableView.jsx';
@@ -14,38 +15,19 @@ import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboar
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useNavigate } from 'react-router-dom';
 import FeedbackKanban from './FeedbackKanban.jsx';
-import { Expand, Eye, Minimize, Pencil } from 'lucide-react';
+import { Eye, FileTextIcon, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
-import { IoMdClose } from 'react-icons/io';
-import CandidateMiniTab from './MiniTabs/Candidate';
-import InterviewsMiniTabComponent from './MiniTabs/Interviews';
-import SkillsTabComponent from './MiniTabs/Skills';
-import OverallImpressions from './MiniTabs/OverallImpressions';
 import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js';
-
-const tabsList = [
-  {
-    id: 1,
-    tab: "Candidate",
-  },
-  {
-    id: 2,
-    tab: "Interview Questions",
-  },
-  {
-    id: 3,
-    tab: "Skills",
-  },
-  {
-    id: 4,
-    tab: "Overall Impression",
-  },
-];
+import SummarizedFeedbackModal from './SummarizedFeedbackModal.jsx';
+import { useCustomContext } from '../../../../Context/Contextfetch.js';
 
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
+  
+  // Get context data (removed unused variables)
+  const { user } = useCustomContext();
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -60,42 +42,7 @@ const Feedback = () => {
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [selectedFeedback, setSelectedFeedback] = useState(null);
-  const [activeTab, setActiveTab] = useState(1);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);//<----v1.0.2---
-
-  // Sample data for mini tabs
-  const [skillsTabData, setSkillsTabData] = useState([
-    {
-      id: 1,
-      category: "Mandatory skills",
-      skillsList: [
-        { name: "Technical Skills", rating: 4, note: "", notesBool: false, required: true, error: false },
-        { name: "Communication", rating: 3, note: "", notesBool: false, required: true, error: false },
-      ],
-    },
-  ]);
-
-  const [overallImpressionTabData, setOverallImpressionTabData] = useState({
-    rating: 4,
-    note: "Good candidate overall",
-    recommendation: "hire",
-    notesBool: false,
-    required: true,
-    error: false
-  });
-
-  ////<----v1.0.2--- Static data for view mode
-  const staticFeedbackData = {
-    _id: selectedFeedback?._id || "N/A",
-    interview: selectedFeedback?.interview || "John Doe",
-    interviewType: selectedFeedback?.interviewType || "Technical",
-    scheduledDate: selectedFeedback?.scheduledDate || "2025-08-01",
-    status: selectedFeedback?.status || "Active",
-    feedback: selectedFeedback?.feedback || "Good performance",
-  };
+  // Removed modal-related state variables as modal is now in separate component
 
   useEffect(() => {
     // Dummy data for testing - replacing API calls
@@ -116,6 +63,26 @@ const Feedback = () => {
     setFeedbacks(dummyFeedbacks);
     setFilteredFeedbacks(dummyFeedbacks);
     setLoading(false);
+
+    // const fetchFeedbackData = async () => {
+    //   try {
+    //     setLoading(true);
+    //     // Replace with actual tenantId from your auth context or user data
+    //     const tenantId = '685bb9a00abf677d3ae9ec56'; 
+    //     const response = await fetch(`${process.env.REACT_APP_API_URL}/feedback/${tenantId}`);
+    //     if (!response.ok) {
+    //       throw new Error('Failed to fetch feedback data');
+    //     }
+    //     const data = await response.json();
+    //     setFeedbacks(data.data);
+    //     setFilteredFeedbacks(data.data);
+    //   } catch (err) {
+    //     setError(err.message || 'An error occurred while fetching data');
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+    // fetchFeedbackData();
   }, []);
 
   const rowsPerPage = 10;
@@ -184,25 +151,93 @@ const Feedback = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 0));
   };
 
+  // const handleView = (feedback) => {
+  //   setSelectedFeedback(feedback);
+  //   setShowFeedbackModal(true);
+  //   setIsEditMode(false);//<----v1.0.2---
+  //   setActiveTab(1);
+  // };
+
+  // const handleEdit = (feedback) => {
+  //   //<----v1.0.2---
+  //   setSelectedFeedback(feedback);
+  //   setShowFeedbackModal(true);
+  //   setIsEditMode(true);
+  //   setActiveTab(1);
+  //   //----v1.0.2--->
+  // };
+
   const handleView = (feedback) => {
-    setSelectedFeedback(feedback);
-    setShowFeedbackModal(true);
-    setIsEditMode(false);//<----v1.0.2---
-    setActiveTab(1);
+    navigate(`/feedback/view/${feedback._id}`, {
+      state: { feedback, mode: 'view' }
+    });
   };
 
   const handleEdit = (feedback) => {
-    //<----v1.0.2---
-    setSelectedFeedback(feedback);
-    setShowFeedbackModal(true);
-    setIsEditMode(true);
-    setActiveTab(1);
-    //----v1.0.2--->
+    navigate(`/feedback/edit/${feedback._id}`, {
+      state: { feedback, mode: 'edit' }
+    });
   };
+
+
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+const [summaryData, setSummaryData] = useState(null);
+
+const handleSummarize = (feedback) => {
+  console.log("Summarize clicked", feedback); // Debug log to check the feedback object structure
+  setSummaryData({
+    candidate_name: feedback.candidateName || 'Unknown',
+    candidate_job_title: feedback.positionId || 'Unknown Position',
+    overall_impression: feedback.overallImpression || 'No overall impression provided',
+    recommendation: feedback.recommendation || 'Not specified',
+    skills: feedback.skills ||  ["Unknown Skill"]
+  });
+  setShowSummaryModal(true);
+};
+
 
   const handleAddFeedback = () => {
     navigate('/dashboard/feedbacks/add');
   };
+
+  // // Button handler functions for the feedback modal
+  // const onClickPreviewButton = () => {
+  //   // Navigate to preview page with current feedback data
+  //   navigate('/feedback-preview', {
+  //     state: {
+  //       feedbackData: {
+  //         candidateData: selectedFeedback,
+  //         skillsTabData,
+  //         overallImpressionTabData,
+  //         interviewerSectionData
+  //       }
+  //     }
+  //   });
+  // };
+
+  // const onClickSubmit = () => {
+  //   // Handle feedback submission
+  //   console.log('Submitting feedback:', {
+  //     candidateData: selectedFeedback,
+  //     skillsTabData,
+  //     overallImpressionTabData,
+  //     interviewerSectionData
+  //   });
+  //   // Add your submission logic here
+  //   setShowFeedbackModal(false);
+  // };
+
+  // const onClickNextButton = () => {
+  //   // Move to next tab
+  //   if (activeTab < 4) {
+  //     setActiveTab(activeTab + 1);
+  //   }
+  // };
+
+  // const areAllValidationsMet = () => {
+  //   // Add your validation logic here
+  //   return true;
+  // };
 
   const tableColumns = [
     {
@@ -218,19 +253,86 @@ const Feedback = () => {
       ),
     },
     {
-      key: 'interview',
-      header: 'Interview',
+      key: 'mode',
+      header: 'Mode',
       render: (value) => (
         <div className="text-sm">{value || "Not Provided"}</div>
       ),
     },
     {
-      key: 'interviewType',
-      header: 'Interview Type',
+          key: 'candidateName',
+          header: 'Candidate Name',
+          render: (value, row) => {
+            const candidate = row.candidateId;
+            return (
+              <Tooltip label={`${candidate?.FirstName || ''} ${candidate?.LastName || ''}`}>
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-8 w-8">
+                    {candidate?.imageUrl ? (
+                      <img
+                        src={candidate.imageUrl}
+                        alt={candidate.LastName}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
+                        {candidate?.LastName ? candidate?.LastName?.charAt(0).toUpperCase() : '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="ml-3 truncate max-w-[120px]">
+                    <div
+                      className="text-sm font-medium text-custom-blue cursor-pointer truncate"
+                      onClick={() => handleView(candidate)}
+                    >
+                      {((candidate?.FirstName ? candidate.FirstName.charAt(0).toUpperCase() + candidate.FirstName.slice(1) : '') + ' ' + (candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() + candidate.LastName.slice(1) : ''))}
+                    </div>
+                    <div className="text-sm text-gray-500 truncate">{candidate?.Email || 'No Email'}</div>
+                  </div>
+                </div>
+              </Tooltip>
+            );
+          },
+        },
+        {
+          key: 'position',
+          header: 'Position',
+          render: (value, row) => {
+            const position = row.positionId;
+            return (
+              <Tooltip label={`${position?.title || 'Unknown'} • ${position?.companyname || 'No Company'} • ${position?.Location || 'No location'}`}>
+                <div className="truncate max-w-[120px]">
+                  <div
+                    className="text-sm font-medium text-custom-blue cursor-pointer truncate"
+                    //onClick={() => handleViewPosition(position)}
+                  >
+                    {position?.title
+                      ? position.title.charAt(0).toUpperCase() + position.title.slice(1)
+                      : 'Unknown'}
+                  </div>
+                  <div className="text-sm text-gray-500 truncate">
+                    {position?.companyname || 'No Company'} • {position?.Location || 'No location'}
+                  </div>
+                </div>
+              </Tooltip>
+            );
+          },
+    },
+    {
+      key: 'interview',
+      header: 'Interviewer',
       render: (value) => (
         <div className="text-sm">{value || "Not Provided"}</div>
       ),
     },
+    
+    // {
+    //   key: 'interviewType',
+    //   header: 'Interview Type',
+    //   render: (value) => (
+    //     <div className="text-sm">{value || "Not Provided"}</div>
+    //   ),
+    // },
     {
       key: 'scheduledDate',
       header: 'Scheduled Date',
@@ -255,6 +357,12 @@ const Feedback = () => {
       onClick: handleView,
     },
     {
+      key: 'summarize',
+      label: 'Summarize',
+      icon: <FileTextIcon className="w-4 h-4 text-custom-blue" />,
+      onClick: handleSummarize,
+    },
+    {
       key: 'edit',
       label: 'Edit',
       icon: <Pencil className="w-4 h-4 text-custom-blue" />,
@@ -262,79 +370,13 @@ const Feedback = () => {
     },
   ];
 
-  // Modal helper functions
-  const displayData = () => {
-    const roundDetails = { questions: [] }; // Sample round details
-    const interviewDetails = selectedFeedback ? {
-      Candidate: selectedFeedback.interview,
-      Position: "Software Developer",
-      _id: selectedFeedback._id
-    } : {};
-    
-    switch (activeTab) {
-      case 1: 
-        return <CandidateMiniTab 
-          roundDetails={roundDetails} 
-          interviewDetails={interviewDetails} 
-          skillsTabData={skillsTabData} 
-          tab={true} 
-          page="Popup"
-          data={isEditMode ? selectedFeedback : staticFeedbackData}//<----v1.0.2---
-          isEditMode={isEditMode}//<----v1.0.2---
-        />;
-      case 2: 
-        return <InterviewsMiniTabComponent 
-          roundDetails={roundDetails} 
-          tab={true} 
-          page="Popup" 
-          closePopup={() => setShowFeedbackModal(false)}
-          data={isEditMode ? selectedFeedback : staticFeedbackData}//<----v1.0.2---
-          isEditMode={isEditMode}//<----v1.0.2---
-        />;
-      case 3: 
-        return <SkillsTabComponent 
-          setSkillsTabData={setSkillsTabData} 
-          skillsTabData={skillsTabData} 
-          tab={true} 
-          page="Popup"
-          isEditMode={isEditMode}//<----v1.0.2---
-        />;
-      case 4: 
-        return <OverallImpressions 
-          overallImpressionTabData={overallImpressionTabData} 
-          setOverallImpressionTabData={setOverallImpressionTabData} 
-          tab={true} 
-          page="Popup"
-          isEditMode={isEditMode}//<----v1.0.2---
-        />;
-      default: 
-        return null;
-    }
-  };
-
-  const ReturnTabsSection = () => {
-    return (
-      <ul className="flex items-center gap-8 cursor-pointer py-1 px-8">
-        {tabsList.map((EachTab) => (
-          <li
-            style={{
-              borderBottom: activeTab === EachTab.id ? "2px solid #227a8a" : "",
-            }}
-            onClick={() => setActiveTab(EachTab.id)}
-            key={EachTab.id}
-            className="pb-2"
-          >
-            {EachTab.tab}
-          </li>
-        ))}
-      </ul>
-    );
-  };
+  // Modal functions removed - now handled in separate FeedbackFormModel component
 
   if (loading) return <div className="text-center p-6">Loading...</div>;
   //if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
 
   return (
+    <>
     <div className="bg-background min-h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
@@ -429,45 +471,15 @@ const Feedback = () => {
           </motion.div>
         </div>
       </main>
-      
-      {/* Feedback Modal */}
-      {showFeedbackModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
-          <div className={`${isFullScreen ? "w-[100%]" : "w-[50%]"} bg-white  h-[100%] flex flex-col`}>
-            {/* Modal Header */}
-            <div className="px-8 flex items-center justify-between py-4">
-              <h1 className="text-xl font-semibold text-[#227a8a]">Interview Feedback</h1>
-              <div className='flex items-center space-x-2'>
-              <button
-              onClick={() => setIsFullScreen(!isFullScreen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-              >
-              {isFullScreen ? (
-                <Minimize className="w-5 h-5 text-gray-500" />
-                  ) : (
-                <Expand className="w-5 h-5 text-gray-500" />
-              )}
-              </button>
-              <button 
-                onClick={() => setShowFeedbackModal(false)}
-                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-              >
-                <IoMdClose size={20} />
-              </button>
-              </div>
-            </div>
-            
-            {/* Tabs Section */}
-            <ReturnTabsSection />
-            
-            {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto border-2 border-gray-200 border-solid rounded-md mx-8 mb-8 mt-4">
-              {displayData()}
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
+    <SummarizedFeedbackModal
+    open={showSummaryModal}
+    onClose={() => setShowSummaryModal(false)}
+    data={summaryData}
+    />
+   </>
+  
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Table, Kanban, Search, Filter, Eye, Edit, Trash2, Calendar, User, Star, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
-import { mockData } from '../mockData';
+import { mockData } from './mockData';
 
 const FeedbackManagement = () => {
   const [viewMode, setViewMode] = useState('table');

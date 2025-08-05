@@ -37,8 +37,6 @@
 
 const mongoose = require('mongoose');
 
-
-
 const interviewRoundSchema = new mongoose.Schema({
     interviewId: { type: mongoose.Schema.Types.ObjectId, ref: "Interview" },
     sequence: Number,
@@ -56,16 +54,17 @@ const interviewRoundSchema = new mongoose.Schema({
     ],
     status:  { type: String }, // draft - if accept - scheduled, if request sent then (request sent)
     meetingId: String,
-    meetLink: [
-        { 
-            type: String, // candidate, host, interviewers
-            link: String
-        }
-    ],
+            meetLink: {
+            type: [{
+                linkType: String, // candidate, host, interviewers
+                link: String
+            }],
+            default: []
+        },
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "assessment" },
      questions: [{
-                questionId: { type: mongoose.Schema.Types.Mixed, required: true },
-                snapshot: { type: mongoose.Schema.Types.Mixed, required: true }
+                questionId: { type: mongoose.Schema.Types.Mixed },
+                snapshot: { type: mongoose.Schema.Types.Mixed }
             }],
     
     rejectionReason:String

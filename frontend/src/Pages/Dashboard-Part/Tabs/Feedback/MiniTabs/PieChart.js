@@ -2,35 +2,70 @@ import React from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 
-
 // Register the required components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const DoughnutChart = ({skillsTabData}) => {
-  const calculateCategoryRatings =()=>{
-    const categoryRatings = skillsTabData.map(category=>{
-      const totalRatings = category.skillsList.reduce((acc,skill)=>acc+skill.rating,0)
-      const avgRating = category.skillsList.length>0 ? totalRatings/category.skillsList.length : 0 
-      return {
-        category:category.category,
-        avgRating,
-      }
-    })
+const DoughnutChart = ({ skillsTabData, data }) => {
+  const calculateCategoryRatings = () => {
+    // If data is passed directly, use it; otherwise try to calculate from skillsTabData
+    if (data && Array.isArray(data)) {
+      return data.map((item) => ({
+        category: item.category,
+        percentage: Math.round(item.averageRating * 20), // Convert 1-5 rating to percentage
+      }));
+    }
 
-    const totalAvgRating = categoryRatings.reduce((acc,cat)=>acc+cat.avgRating,0)
-    const percentages = categoryRatings.map((cat)=>({
-        category:cat.category,
-        percentage: totalAvgRating > 0? Math.round((cat.avgRating/totalAvgRating)* 100,3) : 0,
-    }))
-    return percentages
+    // Fallback to skillsTabData calculation with null checks
+    if (!skillsTabData || !Array.isArray(skillsTabData)) {
+      return [];
+    }
+
+    const categoryRatings = skillsTabData.map((category) => {
+      if (!category.skillsList || !Array.isArray(category.skillsList)) {
+        return { category: category.category || "Unknown", avgRating: 0 };
+      }
+
+      const totalRatings = category.skillsList.reduce(
+        (acc, skill) => acc + (skill.rating || 0),
+        0
+      );
+      const avgRating =
+        category.skillsList.length > 0
+          ? totalRatings / category.skillsList.length
+          : 0;
+      return {
+        category: category.category || "Unknown",
+        avgRating,
+      };
+    });
+
+    const totalAvgRating = categoryRatings.reduce((acc, cat) => acc + cat.avgRating, 0);
+    const percentages = categoryRatings.map((cat) => ({
+      category: cat.category,
+      percentage:
+        totalAvgRating > 0
+          ? Math.round((cat.avgRating / totalAvgRating) * 100, 3)
+          : 0,
+    }));
+    return percentages;
+  };
+
+  const categoryData = calculateCategoryRatings();
+
+  // If no data available, show default message
+  if (!categoryData || categoryData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">No performance data available</p>
+      </div>
+    );
   }
- 
-  
-  const data = {
-    labels: calculateCategoryRatings().map(cat=>cat.category), 
+
+  const chartData = {
+    labels: categoryData.map((cat) => cat.category),
     datasets: [
       {
-        data: calculateCategoryRatings().map(cat=>cat.percentage) || [40,30,20,20],
+        data: categoryData.map((cat) => cat.percentage) || [25, 25, 25, 25],
         backgroundColor: [
           "#F8D9A0", // Mandatory skills color
           "#B0C9F3", // Optional skills color
@@ -93,7 +128,7 @@ const DoughnutChart = ({skillsTabData}) => {
     },
   };
 
-      return <Doughnut data={data} options={options} plugins={[centerText]} />
+  return <Doughnut data={chartData} options={options} plugins={[centerText]} />;
 };
 
 export default DoughnutChart;

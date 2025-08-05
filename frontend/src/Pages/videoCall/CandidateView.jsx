@@ -1,8 +1,9 @@
 import React from 'react';
-import { Video, LogOut, MessageSquare } from 'lucide-react';
-import { mockData } from '../mockData';
+import { Video, LogOut, MessageSquare, Clock, MapPin } from 'lucide-react';
+import { mockData } from './mockData';
+import { formatToLocalTime, formatDuration, getTimeUntilInterview, getDateStatus } from '../../utils/timezoneUtils';
 
-const CandidateView = ({ onBack }) => {
+const CandidateView = ({ onBack,feedbackData,decodedData }) => {
   const candidate = mockData.candidates[0];
   const interview = mockData.interviews[0];
 
@@ -26,8 +27,27 @@ const CandidateView = ({ onBack }) => {
                 <div className="w-20 h-20 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-6">
                   <Video className="w-10 h-10 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome, {candidate.name}!</h1>
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome, {feedbackData?.candidate?.FirstName || feedbackData?.candidate?.LastName ? feedbackData?.candidate?.FirstName + " " + feedbackData?.candidate?.LastName : "Not Available"}!</h1>
                 <p className="text-gray-600 text-base">Ready to join your interview?</p>
+                {feedbackData?.interviewRound?.dateTime && (
+                  <div className="mt-3">
+                    {(() => {
+                      const status = getDateStatus(feedbackData?.interviewRound?.dateTime);
+                      const statusConfig = {
+                        future: { text: 'Interview is scheduled', color: 'text-blue-600 bg-blue-100' },
+                        present: { text: 'Interview is starting soon', color: 'text-green-600 bg-green-100' },
+                        past: { text: 'Interview time has passed', color: 'text-red-600 bg-red-100' }
+                      };
+                      const config = statusConfig[status] || { text: 'Interview status unknown', color: 'text-gray-600 bg-gray-100' };
+                      
+                      return (
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${config.color}`}>
+                          {config.text}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
 
               {/* Interview Details */}
@@ -37,21 +57,33 @@ const CandidateView = ({ onBack }) => {
                   <div className="space-y-3">
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Position</p>
-                      <p className="text-base font-semibold text-gray-900">{interview.position}</p>
+                      <p className="text-base font-semibold text-gray-900">{feedbackData?.position?.title || "Not Available"}</p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Company</p>
-                      <p className="text-base font-semibold text-gray-900">{interview.company}</p>
+                      <p className="text-base font-semibold text-gray-900">{feedbackData?.position?.companyname || "Not Available"}</p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Time</p>
-                      <p className="text-base font-semibold text-gray-900">{interview.scheduledTime}</p>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <p className="text-base font-semibold text-gray-900">
+                          {formatToLocalTime(feedbackData?.interviewRound?.dateTime, 'start-only')}
+                        </p>
+                      </div>
+                      {feedbackData?.interviewRound?.dateTime && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {getTimeUntilInterview(feedbackData?.interviewRound?.dateTime)}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</p>
-                      <p className="text-base font-semibold text-gray-900">{interview.duration}</p>
+                      <p className="text-base font-semibold text-gray-900">
+                        {formatDuration(feedbackData?.interviewRound?.dateTime || feedbackData?.interviewRound?.duration)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -59,7 +91,7 @@ const CandidateView = ({ onBack }) => {
 
               {/* Join Meeting Button */}
               <button
-                onClick={() => window.open(interview.meetingUrl, '_blank')}
+                onClick={() => window.open(decodedData?.meetLink, '_blank')}
                 className="w-full bg-[#217989] hover:bg-[#1a616e] text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg mb-4"
               >
                 <Video className="w-6 h-6" />

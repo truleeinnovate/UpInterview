@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';
-import { mockData } from '../mockData';
+import { mockData } from './mockData';
 import CandidateDetails from './CandidateDetails';
 import InterviewQuestions from './InterviewQuestions';
 import FeedbackForm from './FeedbackForm';

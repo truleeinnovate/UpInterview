@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - removed extra status text
 // v1.0.1 - Ashok - Added scroll to first error functionality
+// v1.0.2 - Ashraf - Added sending interview email,creating custom url for each user
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -28,6 +29,9 @@ import QuestionBank from "../../QuestionBank-Tab/QuestionBank.jsx";
 import Loading from "../../../../../Components/Loading.js";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
+import toast from 'react-hot-toast';
+// Test import to see if the file can be imported
+// import { processMeetingUrls } from "../../../../../utils/meetingUrlGenerator.js";
 import LoadingButton from "../../../../../Components/LoadingButton";
 // v1.0.1 <----------------------------------------------------------------------------
 
@@ -64,9 +68,17 @@ const formatDateTime = (date, showDate = true) => {
 };
 
 const RoundFormInterviews = () => {
-  const { interviewData, isMutationLoading, saveInterviewRound } =
+  const { interviewData, isMutationLoading, saveInterviewRound, updateRoundWithMeetingLinks } =
     useInterviews();
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
+  // v1.0.2 <-----------------------------------------
+
+  // State for meeting creation loading
+  const [isMeetingCreationLoading, setIsMeetingCreationLoading] = useState(false);
+  const [meetingCreationProgress, setMeetingCreationProgress] = useState('');
+  const [selectedMeetingPlatform, setSelectedMeetingPlatform] = useState('googlemeet'); // Default to Google Meet
+  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
+  // v1.0.2 <-----------------------------------------
 
   const { interviewId, roundId } = useParams();
   const authToken = Cookies.get("authToken");
@@ -218,7 +230,7 @@ const RoundFormInterviews = () => {
         // ✅ Ensure start shows date & time, but end shows only time
         const formattedStart = formatDateTime(start, true);
         const formattedEnd = formatDateTime(end, false);
-        const combinedDateTime = `${formattedStart} - ${formattedEnd}`;
+        let combinedDateTime = `${formattedStart} - ${formattedEnd}`;
 
         // console.log("Combined DateTime:", combinedDateTime);
         setCombinedDateTime(combinedDateTime);
@@ -799,8 +811,27 @@ const RoundFormInterviews = () => {
   // );
 
   const handleSubmit = async (e) => {
-    // console.log("handleSubmit() called");
+    // v1.0.2 <-----------------------------------------
+    console.log("=== handleSubmit START ===");
+    console.log("Form submission started");
+    console.log("Current form data:", {
+      roundTitle,
+      interviewType,
+      scheduledDate,
+      duration,
+      instructions,
+      selectedInterviewers: selectedInterviewers?.length || 0,
+      selectedMeetingPlatform
+    });
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      console.log("Form is already submitting, ignoring this submission");
+      return;
+    }
+    
+    setIsSubmitting(true);
 
     // console.log("roundEditData", roundEditData);
     // console.log("interviewId", interviewId);
@@ -922,10 +953,17 @@ const RoundFormInterviews = () => {
               })) || [],
           };
 
-      // console.log("Payload for submission:", payload);
+      console.log("=== Round Saving Process ===");
+      console.log("Payload for submission:", payload);
 
       // Use saveInterviewRound mutation from useInterviews hook
+      console.log("Calling saveInterviewRound...");
       const response = await saveInterviewRound(payload);
+      console.log("Round saved successfully:", response);
+      console.log("Saved round ID:", response.savedRound._id);
+      
+      // Show success toast for round creation
+      toast.success('Interview round created successfully!');
 
 
       console.log("Response from selectedInterviewers:", selectedInterviewers);
@@ -997,205 +1035,147 @@ const RoundFormInterviews = () => {
       console.log("response",response);
       
 
-      //  google meet link creation  
-      if (response.status === 'ok'){
-        console.log("Generating Google Meet link for the interview");
+      // Meeting platform link creation
+      if (response.status === 'ok') {
+        console.log("Generating meeting link for the interview");
         
         try {
-          // Google OAuth configuration
-          const GOOGLE_CLIENT_ID = "173597320825-mbfkah9a2rub0a1onu237rg4r94fhmus.apps.googleusercontent.com";
-          const REDIRECT_URI = "http://localhost:3000/oauth2callback";
-          const SCOPES = ["https://www.googleapis.com/auth/calendar"];
+          setIsMeetingCreationLoading(true);
+          setMeetingCreationProgress('Starting meeting creation...');
           
-          // Step 1: Get authorization code
-          const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-            `client_id=${GOOGLE_CLIENT_ID}` +
-            `&redirect_uri=${REDIRECT_URI}` +
-            `&response_type=code` +
-            `&access_type=offline&prompt=consent` +
-            `&scope=${SCOPES.join(" ")}`;
+          // Import the meeting platform utility
+          const { createMeeting } = await import('../../../../../utils/meetingPlatforms.js');
           
-          console.log("Redirecting to Google OAuth for authorization...");
-          console.log("Auth URL:", authUrl);
-          console.log("Client ID:", GOOGLE_CLIENT_ID);
-          console.log("Redirect URI:", REDIRECT_URI);
+          console.log("Selected interviewers for meeting creation:", selectedInterviewers);
           
-          // Open OAuth popup
-          const popup = window.open(authUrl, 'googleOAuth', 'width=500,height=600');
+          // Create meeting using the platform utility
+          const meetingLink = await createMeeting(selectedMeetingPlatform, {
+            roundTitle,
+            instructions,
+            combinedDateTime,
+            duration,
+            selectedInterviewers: selectedInterviewers
+          }, (progress) => {
+            setMeetingCreationProgress(progress);
+          });
           
-          // Listen for the OAuth callback
-          const handleOAuthCallback = async (event) => {
-            if (event.origin !== window.location.origin) return;
+          console.log("Meeting created successfully:", meetingLink);
+          console.log("Meeting link type:", typeof meetingLink);
+          console.log("Meeting link value:", meetingLink);
+          
+          // Use the new utility to generate and save meeting URLs
+          try {
+            console.log("=== Starting meeting URL processing ===");
             
-            const { code, error } = event.data;
+            // Dynamic import to avoid import issues
+            const { processMeetingUrls } = await import("../../../../../utils/meetingUrlGenerator.js");
+            console.log("Dynamic import successful, processMeetingUrls type:", typeof processMeetingUrls);
             
-            if (error) {
-              console.error("OAuth error:", error);
-              return;
-            }
+            console.log("Calling processMeetingUrls with:", {
+              meetingLink,
+              roundId: response.savedRound._id,
+              interviewId,
+              roundData,
+              updateRoundWithMeetingLinks: typeof updateRoundWithMeetingLinks
+            });
+            console.log("updateRoundWithMeetingLinks function:", updateRoundWithMeetingLinks);
+            console.log("roundData details:", roundData);
             
-            if (code) {
-              console.log("Received authorization code, exchanging for tokens...");
+            const result = await processMeetingUrls(
+              meetingLink, // meetingLink
+              response.savedRound._id, // roundId
+              interviewId, // interviewId
+              roundData, // roundData
+              updateRoundWithMeetingLinks // Function from useInterviews hook
+            );
+            
+            console.log("Meeting URL processing completed successfully:", result);
+            
+            // Send emails after meeting links are generated
+            try {
+              console.log("=== Sending interview round emails ===");
+              const emailResponse = await axios.post(
+                `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
+                {
+                  interviewId: interviewId,
+                  roundId: response.savedRound._id,
+                  sendEmails: true
+                },
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${Cookies.get("authToken")}`,
+                  },
+                }
+              );
               
-              try {
-                // Step 2: Exchange code for tokens
-                const tokenResponse = await axios.post(`${config.REACT_APP_API_URL}/googlemeet/exchange_token`, { code });
-                console.log("Token exchange successful");
-                
-                // Step 3: Create Google Meet event
-                console.log("Creating meet with data:", {
-                  startDateTime: combinedDateTime,
-                  duration,
-                  roundTitle,
-                  instructions,
-                  selectedInterviewers: selectedInterviewers,
-                  selectedInterviewersLength: selectedInterviewers?.length || 0
-                });
-                
-                // Handle case where combinedDateTime might be empty or invalid
-                if (!combinedDateTime) {
-                  console.log("No combinedDateTime, using current time + 15 minutes");
-                  const now = new Date();
-                  now.setMinutes(now.getMinutes() + 15);
-                  combinedDateTime = now.toISOString();
+              console.log("Email sending response:", emailResponse.data);
+              
+              // Show success toast for emails
+              if (emailResponse.data.success) {
+                toast.success('Interview round created and emails sent successfully!');
+                if (emailResponse.data.data.emailsSent > 0) {
+                  toast.success(`Emails sent to ${emailResponse.data.data.emailsSent} recipients`);
                 }
-                
-                // Parse the combinedDateTime format: "05-08-2025 11:30 AM - 12:00 PM"
-                console.log("combinedDateTime value:", combinedDateTime);
-                console.log("combinedDateTime type:", typeof combinedDateTime);
-                console.log("Duration in minutes:", duration);
-                
-                // Get user's local timezone
-                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                console.log("User timezone:", userTimeZone);
-                
-                let startDate;
-                if (combinedDateTime.includes(" - ")) {
-                  // Format: "05-08-2025 11:30 AM - 12:00 PM"
-                  const startTimePart = combinedDateTime.split(" - ")[0]; // "05-08-2025 11:30 AM"
-                  console.log("Extracted start time part:", startTimePart);
-                  
-                  // Parse DD-MM-YYYY HH:MM AM/PM format
-                  const dateTimeMatch = startTimePart.match(/(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)/);
-                  if (dateTimeMatch) {
-                    const [, day, month, year, hour, minute, ampm] = dateTimeMatch;
-                    let hour24 = parseInt(hour);
-                    if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                    if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-                    
-                    // Create date in user's local timezone
-                    const localDateString = `${year}-${month}-${day}T${hour24.toString().padStart(2, '0')}:${minute}:00`;
-                    console.log("Local date string:", localDateString);
-                    
-                    // Create date object (JavaScript Date objects are always in local timezone)
-                    startDate = new Date(localDateString);
-                    console.log("Created start date in local timezone:", startDate.toString());
-                    
-                  } else {
-                    throw new Error(`Could not parse date format: ${startTimePart}`);
-                  }
-                } else {
-                  // Try to parse as regular date
-                  startDate = new Date(combinedDateTime);
-                }
-                
-                console.log("startDate:", startDate);
-                console.log("startDate.getTime():", startDate.getTime());
-                if (isNaN(startDate.getTime())) {
-                  throw new Error(`Invalid start date: ${combinedDateTime}`);
-                }
-                
-                // Calculate end time based on duration
-                const endDate = new Date(startDate.getTime() + (duration * 60 * 1000)); // duration in milliseconds
-                if (isNaN(endDate.getTime())) {
-                  throw new Error(`Invalid end date calculation`);
-                }
-                
-                console.log("Final start date ISO:", startDate.toISOString());
-                console.log("Final end date ISO:", endDate.toISOString());
-                console.log("Duration in minutes:", duration);
-                console.log("End time calculation: start +", duration, "minutes");
-                console.log("Start time in local timezone:", startDate.toLocaleString());
-                console.log("End time in local timezone:", endDate.toLocaleString());
-                console.log("Timezone being used:", userTimeZone);
-                
-                                  const meetData = {
-                    refreshToken: tokenResponse.data.refresh_token,
-                    summary: `${roundTitle} - Interview Round`,
-                    description: `Interview round: ${roundTitle}\nInstructions: ${instructions}`,
-                    startDateTime: startDate.toISOString(),
-                    endDateTime: endDate.toISOString(),
-                    timeZone: userTimeZone, // Use user's local timezone
-                    attendees: selectedInterviewers && selectedInterviewers.length > 0 ? selectedInterviewers.map(interviewer => {
-                      const email = interviewer.contact?.email || interviewer.email;
-                      console.log("Interviewer email:", email, "for interviewer:", interviewer);
-                      return { email };
-                    }).filter(attendee => attendee.email) : []
-                  };
-                
-                console.log("Final attendees array:", meetData.attendees);
-                console.log("=== Meeting Summary ===");
-                console.log("Title:", meetData.summary);
-                console.log("Start:", startDate.toLocaleString(), "in", userTimeZone);
-                console.log("End:", endDate.toLocaleString(), "in", userTimeZone);
-                console.log("Duration:", duration, "minutes");
-                console.log("Attendees:", meetData.attendees.length, "people");
-                console.log("=======================");
-                
-                const meetResponse = await axios.post(`${config.REACT_APP_API_URL}/googlemeet/create_event`, meetData);
-                
-                console.log("Google Meet created successfully:", meetResponse.data.meetLink);
-                console.log("Meet Link:", meetResponse.data.meetLink);
-                
-                // Close popup
-                popup.close();
-                window.removeEventListener('message', handleOAuthCallback);
-               
-                
-                             } catch (err) {
-                 console.error("Error creating Google Meet:", err.response?.data || err.message);
-                 console.error("Full error object:", err);
-                 if (err.response) {
-                   console.error("Response status:", err.response.status);
-                   console.error("Response data:", err.response.data);
-                 }
-                 popup.close();
-                 window.removeEventListener('message', handleOAuthCallback);
-               }
+              } else {
+                toast.error('Round created but email sending failed');
+              }
+            } catch (emailError) {
+              console.error("Error sending emails:", emailError);
+              toast.error('Round created but email sending failed');
             }
-          };
+          } catch (urlError) {
+            console.error("Error processing meeting URLs:", urlError);
+            console.error("URL Error details:", {
+              message: urlError.message,
+              stack: urlError.stack,
+              response: urlError.response?.data
+            });
+          }
           
-          window.addEventListener('message', handleOAuthCallback);
+          // Navigate to interview page after successful creation
+          console.log("Navigating to interview page:", `/interviews/${interviewId}`);
+          console.log("Navigation function type:", typeof navigate);
+          navigate(`/interviews/${interviewId}`);
+          console.log("Navigation called successfully");
           
-          // Handle popup closed
-          const checkClosed = setInterval(() => {
-            if (popup.closed) {
-              clearInterval(checkClosed);
-              window.removeEventListener('message', handleOAuthCallback);
-              console.log("OAuth popup closed");
-              navigate(`/interviews/${interviewId}`);
-            }
-              //  navigate(`/interviews/${interviewId}`);
-          }, 1000);
-       
         } catch (err) {
-          console.error("Error in Google Meet creation:", err);
+          console.error("Error in meeting creation:", err);
+          setErrors({
+            meetingCreation: err.message || "Failed to create meeting"
+          });
+        } finally {
+          console.log("Meeting creation process finished");
+          setIsMeetingCreationLoading(false);
+          setMeetingCreationProgress('');
         }
       }
 
 
    
     } catch (err) {
+      console.error("=== Form Submission Error ===");
       console.error("Error submitting the form:", err);
+      console.error("Error details:", {
+        message: err.message,
+        stack: err.stack,
+        response: err.response?.data
+      });
+      
+      // Show error toast
+      toast.error('Failed to create interview round. Please try again.');
+      
       setErrors({
         submit:
           err instanceof Error ? err.message : "An unknown error occurred",
       });
     } finally {
-      console.log("handleSubmit() finished");
+      console.log("=== handleSubmit END ===");
+      console.log("Form submission process completed");
+      setIsSubmitting(false);
     }
   };
-
+  // v1.0.2 <-----------------------------------------
   // useEffect(() => {
   //   const date = new Date();
   //   date.setMinutes(date.getMinutes() + 15);
@@ -2528,14 +2508,23 @@ const RoundFormInterviews = () => {
                     >
                       Cancel
                     </button>
+                    {/* v1.0.2 <----------------------------------------- */}
 
                     <LoadingButton
                       onClick={handleSubmit}
-                      isLoading={isMutationLoading}
-                      loadingText={isEditing ? "Updating..." : "Saving..."}
+                      isLoading={isMutationLoading || isMeetingCreationLoading || isSubmitting}
+                      loadingText={
+                        isMeetingCreationLoading 
+                          ? meetingCreationProgress || "Creating meeting..." 
+                          : isSubmitting
+                          ? "Submitting..."
+                          : isEditing ? "Updating..." : "Saving..."
+                      }
+                      disabled={isSubmitting}
                     >
                       {isEditing ? "Update Round" : "Add Round"}
                     </LoadingButton>
+                    {/* v1.0.2 <----------------------------------------- */}
                   </div>
                 </div>
               </form>

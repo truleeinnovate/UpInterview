@@ -1,6 +1,5 @@
 // console.log('process.env.REACT_APP_API_URL frontend api link:', process.env.REACT_APP_API_URL)
 // console.log('process.env.REACT_APP_REDIRECT_URI frontend api link:', process.env.REACT_APP_REDIRECT_URI)
-
 // export const config = {
 //   REACT_APP_CLIENT_ID: "86vj2ix33jf4aq",
 //   REACT_APP_CLIENT_SECRET: "WPL_AP1.dEr0dEfWdtgyK9ER.5Fe8uA==",
@@ -22,7 +21,13 @@ export const config = {
   // REACT_APP_REDIRECT_URI: process.env.REACT_APP_REDIRECT_URI,
   // online linked in redirect uri
   REACT_APP_REDIRECT_URI: "https://app.upinterview.io/callback",
-  REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000'
+  REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+  REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND || "http://localhost:3000",
+          // Google OAuth configuration
+        REACT_APP_GOOGLE_AUTH_URL: process.env.REACT_APP_GOOGLE_AUTH_URL || "https://accounts.google.com/o/oauth2/v2/auth?",
+        REACT_APP_GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "173597320825-mbfkah9a2rub0a1onu237rg4r94fhmus.apps.googleusercontent.com",
+        REACT_APP_GOOGLE_REDIRECT_URI: process.env.REDIRECT_URI || "http://localhost:3000/oauth2callback",
+        REACT_APP_GOOGLE_SCOPES: process.env.SCOPES || "https://www.googleapis.com/auth/calendar"
 };
 
 export const linkedInConfig = {
