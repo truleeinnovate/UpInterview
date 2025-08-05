@@ -16,7 +16,6 @@ router.get('/round/:roundId', getFeedbackByRoundId)
 // Route to get feedback by tenant ID
 router.get('/:tenantId', getFeedbackByTenantId);//<----v1.0.0---
 router.get('/', getAllFeedback);//<----v1.0.0---
-router.post('/create',createFeedback)
 
 
 
