@@ -9,8 +9,7 @@ const router = express.Router();
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${config.REACT_APP_API_URL_FRONTEND}/oauth2callback`
-    // "http://localhost:3000/oauth2callback"
+    process.env.GOOGLE_REDIRECT_URI || `${config.REACT_APP_API_URL_FRONTEND}/oauth2callback`
   );
   
   const SCOPES = ["https://www.googleapis.com/auth/calendar"];

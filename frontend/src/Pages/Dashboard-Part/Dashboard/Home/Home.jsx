@@ -118,7 +118,7 @@ const Home = () => {
               </motion.div>
             </div>
             {/* v1.0.1 -----------> */}
-             <InterviewRequests />
+             {freelancer && !isOrganization && <InterviewRequests />}
             {/* v1.0.1 -----------> */}
 
             <motion.div
