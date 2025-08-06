@@ -8,6 +8,7 @@ function StatusBadge({ status, text }) {
       case "approved":
       case "paid":
       case "success":
+      case "hire":
       case "created":
       case "accepted":
         return "badge-success";
@@ -22,6 +23,7 @@ function StatusBadge({ status, text }) {
       case "draft":
       case "assigned":
       case "contacted":
+      case "hold":
       case "expired":
         return "badge-warning";
       case "inactive":

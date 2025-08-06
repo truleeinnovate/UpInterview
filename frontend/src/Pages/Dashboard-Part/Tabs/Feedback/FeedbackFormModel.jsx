@@ -5,15 +5,12 @@ import { Expand, Minimize } from 'lucide-react';
 import { IoMdClose } from 'react-icons/io';
 import CandidateMiniTab from './MiniTabs/Candidate';
 import InterviewsMiniTabComponent from './MiniTabs/Interviews';
-import SkillsTabComponent from './MiniTabs/Skills';
-import OverallImpressions from './MiniTabs/OverallImpressions';
-import { useCustomContext } from '../../../../Context/Contextfetch.js';
+import FeedbackForm from './MiniTabs/FeedbackForm.jsx';
 
 const tabsList = [
   { id: 1, tab: "Candidate" },
   { id: 2, tab: "Interview Questions" },
-  { id: 3, tab: "Skills" },
-  { id: 4, tab: "Overall Impression" },
+  { id: 3, tab: "Feedback Form" },
 ];
 
 const FeedbackFormModal = () => {
@@ -22,15 +19,7 @@ const FeedbackFormModal = () => {
   const location = useLocation();
   const { state } = location;
   const { mode = 'view', feedback } = state || {};
-
-  // Get context data
-  const {
-    skillsTabData,
-    setSkillsTabData,
-    overallImpressionTabData,
-    setOverallImpressionTabData,
-    interviewerSectionData
-  } = useCustomContext();
+    
 
   const [isFullScreen, setIsFullScreen] = useState(true);
   const [activeTab, setActiveTab] = useState(1);
@@ -57,9 +46,6 @@ const FeedbackFormModal = () => {
       state: {
         feedbackData: {
           candidateData: feedback,
-          skillsTabData,
-          overallImpressionTabData,
-          interviewerSectionData
         }
       }
     });
@@ -67,19 +53,14 @@ const FeedbackFormModal = () => {
 
   const onClickSubmit = () => {
     // Handle feedback submission
-    console.log('Submitting feedback:', {
-      candidateData: feedback,
-      skillsTabData,
-      overallImpressionTabData,
-      interviewerSectionData
-    });
+    
     // Add your submission logic here
     handleClose();
   };
 
   const onClickNextButton = () => {
     // Move to next tab
-    if (activeTab < 4) {
+    if (activeTab < 3) {
       setActiveTab(activeTab + 1);
     }
   };
@@ -100,15 +81,7 @@ const FeedbackFormModal = () => {
 
     switch (activeTab) {
       case 1: 
-        return <CandidateMiniTab 
-          roundDetails={roundDetails} 
-          interviewDetails={interviewDetails} 
-          skillsTabData={skillsTabData}
-          tab={true} 
-          page="Popup"
-          data={isEditMode ? feedback : staticFeedbackData}
-          isEditMode={isEditMode}
-        />;
+        return <CandidateMiniTab />;
       case 2: 
         return <InterviewsMiniTabComponent 
           roundDetails={roundDetails} 
@@ -119,21 +92,12 @@ const FeedbackFormModal = () => {
           isEditMode={isEditMode}
         />;
       case 3: 
-        return <SkillsTabComponent 
-          setSkillsTabData={setSkillsTabData}
-          skillsTabData={skillsTabData}
+        return <FeedbackForm 
           tab={true} 
           page="Popup"
           isEditMode={isEditMode}
         />;
-      case 4: 
-        return <OverallImpressions 
-          overallImpressionTabData={overallImpressionTabData}
-          setOverallImpressionTabData={setOverallImpressionTabData}
-          tab={true} 
-          page="Popup"
-          isEditMode={isEditMode}
-        />;
+      
       default: 
         return null;
     }
@@ -143,7 +107,7 @@ const FeedbackFormModal = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
-      <div className={`${isFullScreen ? "w-[100%]" : "w-[50%]"} bg-white h-[100%] flex flex-col`}>
+      <div className={`${isFullScreen ? "w-[100%]" : "w-[50%]"} bg-gray-50 h-[100%] flex flex-col`}>
         <div className="px-8 flex items-center justify-between py-4">
           <h1 className="text-xl font-semibold text-[#227a8a]">Interview Feedback</h1>
           <div className='flex items-center space-x-2'>
@@ -178,11 +142,11 @@ const FeedbackFormModal = () => {
           ))}
         </ul>
         
-        <div className="flex-1 overflow-y-auto border-2 border-gray-200 border-solid rounded-md mx-8 mb-8 mt-4">
+        <div className="flex-1 overflow-y-auto mx-8 mb-8 mt-4">
           {displayData()}
         </div>
         <div className="next-button--container flex justify-end py-1 pr-8 gap-4">
-              {activeTab === 4 && isEditMode && (
+              {activeTab === 3 && isEditMode && (
                 <>
                   <button 
                     //disabled={!areAllValidationsMet()} 
@@ -199,7 +163,7 @@ const FeedbackFormModal = () => {
                   </button>
                 </>
               )}
-              {activeTab <= 3 && isEditMode && (
+              {activeTab <= 2 && isEditMode && (
                 <button 
                   onClick={onClickNextButton} 
                   className="bg-[#227a8a] text-white py-[0.5rem] px-[2rem] rounded-lg"

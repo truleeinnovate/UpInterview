@@ -1,120 +1,172 @@
-import React from 'react';
-import DoughnutChart from './PieChart';
+import React, { useState } from 'react';
+
 import { useLocation } from 'react-router-dom';
+import { Award, Briefcase, ChevronDown, ChevronUp, GraduationCap, User } from 'lucide-react';
 
-const instructions = [
-  "Access the Link: Click the provided link at least 5 minutes before the scheduled time to test your connection.",
-  "Prepare Your Setups: Ensure a quiet, well-lit environment with a stable internet connection. Use headphones if possible.",
-  "Have Essentials Ready: Keep your resume, ID, and any necessary documents easily accessible.",
-  "Join Promptly: Join the call on time and ensure your camera and microphone are working properly.",
-]
-
-const CandidateMiniTab = ({roundDetails, interviewDetails, skillsTabData, page, tab}) => {
+const CandidateMiniTab = ({}) => {
   const location = useLocation();
   const feedback = location.state?.feedback || {};
   const candidateData = feedback.candidateId || {};
+  const positionData = feedback.positionId || {};
   const interviewRoundData = feedback.interviewRoundId || {};
 
-  const KeyValueRow = ({ label, value }) => (
-    <div className="flex items-center w-[45%]">
-      <p className="w-[250px]">{label}</p>
-      <p className="para-value w-[250px] text-gray-500">{value}</p>
-    </div>
-  );
+  const [expandedSections, setExpandedSections] = useState({
+    skills: false,
+    certificates: false,
+    projects: false
+  });
 
-  const SectionWrapper = ({ title, children, className = "" }) => (
-    <div className={`mb-4 ${className}`}>
-      <h3 className="font-semibold text-lg mb-2">{title}</h3>
-      <div>{children}</div>
-    </div>
-  );
-
-  const InstructionsList = ({ instructions }) => (
-    <div className="mb-4">
-      <h3 className="font-semibold text-lg mb-2">Instructions:</h3>
-      <ul className="list-disc list-inside space-y-1">
-        {instructions?.map((instruction, index) => (
-          <li key={index} className="text-gray-600">{instruction}</li>
-        ))}
-      </ul>
-    </div>
-  );
-  // Removed duplicate components - using the ones defined above
-
-  const formatDate = (dateTimeStr) => {
-    if (typeof dateTimeStr !== "string") return dateTimeStr;
-    const datePart = dateTimeStr.split(" ")[0]; // Extract "21-02-2025"
-    const [day, month, year] = datePart.split("-"); // Split into day, month, year
-    return `${year}-${month}-${day}`; // Convert to "YYYY-MM-DD"
-  };
-
-  const calculateCategoryRatings = () => {
-    if (!skillsTabData || !skillsTabData.skills || !skillsTabData.skills.skills) {
-      return [];
-    }
-    
-    const categoryTotals = {};
-    const categoryCounts = {};
-
-    skillsTabData.skills.skills.forEach((skill) => {
-      if (skill.category) {
-        if (!categoryTotals[skill.category]) {
-          categoryTotals[skill.category] = 0;
-          categoryCounts[skill.category] = 0;
-        }
-        categoryTotals[skill.category] += skill.rating;
-        categoryCounts[skill.category] += 1;
-      }
-    });
-
-    return Object.keys(categoryTotals).map((category) => ({
-      category,
-      averageRating: categoryTotals[category] / categoryCounts[category],
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
     }));
   };
 
-  const categoryRatings = calculateCategoryRatings();
+  // Mock position data since it's not in the candidate object
+  const position = {
+    title: positionData.title,
+    //department: "Engineering"
+  };
+
+  // Use candidate data directly
+  const candidateDetails = {
+    skills: candidateData.skills || [],
+    certificates: candidateData.certificates || [],
+    projects: candidateData.projects || []
+  };
+
+
+  
+
+  
 
   return (
-    <div className="h-[70vh] flex flex-col gap-4 px-2 py-4" >
-        <h2 className="text-black font-bold">Candidate Details:</h2>
-      <div    className={`border-b-2 border-[#8080808a] flex ${tab ? "flex-row":"flex-col"} relative`}>
-        <div className={`pb-4 flex  flex-wrap gap-6 ${tab ? "flex-row":"flex-col"}`}>
-          
-          <KeyValueRow label="Candidate Name" value={candidateData?.FirstName + " " + candidateData?.LastName || "N/A"} />
-          {/* <KeyValueRow label="Email" value={candidateData?.email || "N/A"} />
-          <KeyValueRow label="Phone" value={candidateData?.phone || "N/A"} />
-          <KeyValueRow label="Location" value={candidateData?.location || "N/A"} />
-          <KeyValueRow label="Experience" value={candidateData?.experience || "N/A"} />
-          <KeyValueRow label="Current Role" value={candidateData?.currentRole || "N/A"} />
-          <KeyValueRow label="Company" value={candidateData?.companyName || "N/A"} />
-          <KeyValueRow label="Skills" value={candidateData?.skillsList || "N/A"} /> */}
-          <KeyValueRow label="Position" value={interviewDetails?.Position || "N/A"} />
-          <KeyValueRow label="Interviewers" value={roundDetails?.interviewers?.map(i=>i.name).join(", ") || "N/A"} />
-          <KeyValueRow label="Interviewer ID" value={interviewDetails?._id || "N/A"} />
-          <KeyValueRow label="Interview Date" value={interviewRoundData?.dateTime || "N/A"} />
-          <KeyValueRow label="Interview Type" value={interviewRoundData?.interviewMode || "N/A"} />
+    <div className="space-y-6">
+      {/* Basic Info */}
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="flex items-center mb-4">
+          <User className="h-5 w-5 mr-2" style={{ color: 'rgb(33, 121, 137)' }} />
+          <h3 className="text-lg font-medium text-gray-900">Candidate Information</h3>
         </div>
-       {!tab && categoryRatings.length > 0 ? (
-         <div style={{ width: "500px",aspectRatio:"1" }} className='absolute right-0 top-[-150px]'>
-           <DoughnutChart data={categoryRatings}/>
-         </div>
-       ) : (
-         !tab && (
-           <div className='absolute right-0 top-[-150px] text-center p-4 text-gray-500'>
-             No performance data available
-           </div>
-         )
-       )}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-500">Name</p>
+            <p className="text-gray-900">{candidateData?.FirstName}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Experience</p>
+            <p className="text-gray-900">{candidateData?.CurrentExperience}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Position Applied</p>
+            <p className="text-gray-900">{position?.title}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Department</p>
+            <p className="text-gray-900">{position?.department || 'Unknown'}</p>
+          </div>
         </div>
-        <InstructionsList instructions={instructions}/>
-        <SectionWrapper title="Question Details:">
-        <div className="questions-items-container flex gap-8">
-          <KeyValueRow label="Mandatory Questions" value={roundDetails?.questions?.length} />
-          <KeyValueRow label="Optional Questions" value="N/A" />
-        </div>
-      </SectionWrapper>
       </div>
+      
+      {/* Skills */}
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <button
+          onClick={() => toggleSection('skills')}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <div className="flex items-center">
+            <Award className="h-5 w-5 mr-2" style={{ color: 'rgb(33, 121, 137)' }} />
+            <h3 className="text-lg font-medium text-gray-900">Skills & Expertise</h3>
+          </div>
+          {expandedSections.skills ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+        </button>
+        
+        {expandedSections.skills && (
+          <div className="mt-4 space-y-3">
+            {candidateDetails.skills.map((skill, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                <div>
+                  <p className="font-medium text-gray-900">{skill.skill}</p>
+                  <p className="text-sm text-gray-500">{skill.experience} years experience</p>
+                </div>
+                <span 
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    skill.expertise === 'Expert' ? 'bg-green-100 text-green-800' :
+                    skill.expertise === 'Advanced' ? 'bg-blue-100 text-blue-800' :
+                    skill.expertise === 'Basic' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {skill.expertise}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Certificates */}
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <button
+          onClick={() => toggleSection('certificates')}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <div className="flex items-center">
+            <GraduationCap className="h-5 w-5 mr-2" style={{ color: 'rgb(33, 121, 137)' }} />
+            <h3 className="text-lg font-medium text-gray-900">Certifications</h3>
+          </div>
+          {expandedSections.certificates ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+        </button>
+        
+        {expandedSections.certificates && (
+          <div className="mt-4 space-y-3">
+            {candidateDetails.certificates.map((cert, index) => (
+              <div key={index} className="p-3 bg-gray-50 rounded-md">
+                <p className="font-medium text-gray-900">{cert.name}</p>
+                <p className="text-sm text-gray-500">{cert.issuer} • {new Date(cert.date).getFullYear()}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Projects */}
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <button
+          onClick={() => toggleSection('projects')}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <div className="flex items-center">
+            <Briefcase className="h-5 w-5 mr-2" style={{ color: 'rgb(33, 121, 137)' }} />
+            <h3 className="text-lg font-medium text-gray-900">Projects</h3>
+          </div>
+          {expandedSections.projects ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+        </button>
+        
+        {expandedSections.projects && (
+          <div className="mt-4 space-y-4">
+            {candidateDetails.projects.map((project, index) => (
+              <div key={index} className="p-4 bg-gray-50 rounded-md">
+                <h4 className="font-medium text-gray-900">{project.name}</h4>
+                <p className="text-sm text-gray-600 mt-1">{project.description}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {project.technologies.map((tech, techIndex) => (
+                    <span 
+                      key={techIndex}
+                      className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Duration: {project.duration}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 

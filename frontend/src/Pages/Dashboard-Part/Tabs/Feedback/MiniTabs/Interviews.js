@@ -34,7 +34,7 @@ const InterviewsMiniTabComponent = ({ roundDetails, tab, page, closePopup, data,
   const InterviewDisplayData = () => {
     switch (interviewMiniTab) {
       case 1:
-        return <SchedulerSectionComponent roundDetails={roundDetails} setSchedulerSectionData={setSchedulerSectionData} SchedulerSectionData={SchedulerSectionData} tab={tab} page={page} />;//<----v1.0.0---
+        return <SchedulerSectionComponent isEditMode={isEditMode} />;//<----v1.0.0---
       case 2:
         return <InterviewerSectionComponent closePopup={closePopup} tab={tab} page={page}  isEditMode={isEditMode}/>;//<----v1.0.0---
       default:
@@ -44,7 +44,7 @@ const InterviewsMiniTabComponent = ({ roundDetails, tab, page, closePopup, data,
 
   //<----v1.0.0----
   return (
-    <div>
+    <div >
         <ul className="flex items-center gap-2 cursor-pointer md:text-sm px-2 mt-2">
         {interviewMiniTabsList.map((each) => (
             <li
@@ -56,7 +56,7 @@ const InterviewsMiniTabComponent = ({ roundDetails, tab, page, closePopup, data,
           </li>
         ))}
         </ul>
-        <div>{InterviewDisplayData()}</div>
+        <div className='px-2 py-2'>{InterviewDisplayData()}</div>
     </div>
   )
 }
