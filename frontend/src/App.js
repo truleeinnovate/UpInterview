@@ -4,6 +4,9 @@
 // v1.0.3 - Ranjith - new route CandidateDetails to assessment page
 // v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
 // v1.0.5 - Mansoor - Added custom video call application routes
+// v1.0.5 - Ashok - Added Analytics related pages
+
+
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -350,6 +353,24 @@ const Task = lazy(() =>
   import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx")
 );
 const VerifyEmail = lazy(() => import("./VerifyWorkEmail.jsx"));
+
+// v1.0.5 <--------------------------------------------------------------------------------
+const AnalyticsLayout = lazy(() => 
+  import("./Components/Analytics/Layout.jsx")
+);
+const AnalyticsDashboard = lazy(() => 
+  import("./Pages/Dashboard-Part/Tabs/Analytics/Dashboard.jsx")
+);
+const AnalyticsReports = lazy(() => 
+  import("./Pages/Dashboard-Part/Tabs/Analytics/Reports.jsx")
+);
+const AnalyticsReportDetail= lazy(() => 
+  import("./Pages/Dashboard-Part/Tabs/Analytics/ReportDetail.jsx")
+);
+const AnalyticsTrends = lazy(() => 
+  import("./Pages/Dashboard-Part/Tabs/Analytics/Trends.jsx")
+);
+// v1.0.5 -------------------------------------------------------------------------------->
 
 // Super Admin Lazy-loaded components
 const SuperAdminDashboard = lazy(() =>
@@ -1050,7 +1071,26 @@ const MainAppRoutes = ({
                   )}
                 </>
               )}
-
+              {/* v1.0.6 <--------------------------------------------------------------------------- */}
+              {hasPermission("Analytics") && (
+                <>
+                <Route path="/analytics" element={<AnalyticsLayout />}>
+                  {hasPermission("Analytics") && (
+                    <Route index element={<AnalyticsDashboard />} />
+                  )}
+                  {hasPermission("Analytics") && (
+                    <Route path="reports" element={<AnalyticsReports />} />
+                  )}
+                  {hasPermission("Analytics") && (
+                    <Route path="reports/:reportId" element={<AnalyticsReportDetail />} />
+                  )}
+                  {hasPermission("Analytics") && (
+                    <Route path="trends" element={<AnalyticsTrends />} />
+                  )}
+                </Route>
+                </>
+              )}
+              {/* v1.0.6 <--------------------------------------------------------------------------- */}
               {/* Task */}
               {hasPermission("Tasks") && (
                 <Route path="/task" element={<Task />} />
