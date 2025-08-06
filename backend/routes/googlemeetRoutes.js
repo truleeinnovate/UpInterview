@@ -5,6 +5,45 @@ const config = require("../config");
 
 const router = express.Router();
 
+// Health check endpoint for debugging
+router.get("/health", (req, res) => {
+  const healthStatus = {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    environment: {
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET",
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET",
+      GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || "NOT SET",
+      REACT_APP_API_URL_FRONTEND: config.REACT_APP_API_URL_FRONTEND
+    },
+    configuration: {
+      hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      hasRedirectUri: !!process.env.GOOGLE_REDIRECT_URI
+    }
+  };
+  
+  console.log("Google Meet Health Check:", healthStatus);
+  res.json(healthStatus);
+});
+
+// Debug environment variables
+console.log("=== Google Meet Environment Variables Debug ===");
+console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET");
+console.log("GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET");
+console.log("GOOGLE_REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI || "NOT SET");
+console.log("REACT_APP_API_URL_FRONTEND:", config.REACT_APP_API_URL_FRONTEND);
+console.log("==============================================");
+
+// Validate required environment variables
+if (!process.env.GOOGLE_CLIENT_ID) {
+  console.error("ERROR: GOOGLE_CLIENT_ID is not set!");
+}
+
+if (!process.env.GOOGLE_CLIENT_SECRET) {
+  console.error("ERROR: GOOGLE_CLIENT_SECRET is not set!");
+}
+
 // OAuth2 Client
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -16,6 +55,18 @@ const oauth2Client = new google.auth.OAuth2(
   
   // 👉 Step 1: Login redirect
   router.get("/google", (req, res) => {
+    console.log("=== Google OAuth Redirect Debug ===");
+    console.log("Client ID:", process.env.GOOGLE_CLIENT_ID ? "Present" : "Missing");
+    console.log("Client Secret:", process.env.GOOGLE_CLIENT_SECRET ? "Present" : "Missing");
+    console.log("Redirect URI:", process.env.GOOGLE_REDIRECT_URI || `${config.REACT_APP_API_URL_FRONTEND}/oauth2callback`);
+    console.log("===================================");
+    
+    // Check if required environment variables are set
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error("Missing required Google OAuth environment variables");
+      return res.status(500).json({ error: "Google OAuth configuration is missing" });
+    }
+    
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",
       prompt: "consent",
@@ -27,14 +78,35 @@ const oauth2Client = new google.auth.OAuth2(
   // 👉 Step 2: Handle redirect and return tokens
   router.post("/exchange_token", async (req, res) => {
     const { code } = req.body;
+    console.log("=== Token Exchange Debug ===");
     console.log("Received exchange_token request with code:", code ? code.substring(0, 10) + "..." : "no code");
+    console.log("Client ID:", process.env.GOOGLE_CLIENT_ID ? "Present" : "Missing");
+    console.log("Client Secret:", process.env.GOOGLE_CLIENT_SECRET ? "Present" : "Missing");
+    console.log("Redirect URI:", process.env.GOOGLE_REDIRECT_URI || `${config.REACT_APP_API_URL_FRONTEND}/oauth2callback`);
+    console.log("=============================");
+    
+    // Check if required environment variables are set
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error("Missing required Google OAuth environment variables");
+      return res.status(500).json({ error: "Google OAuth configuration is missing" });
+    }
+    
+    if (!code) {
+      console.error("No authorization code provided");
+      return res.status(400).json({ error: "Authorization code is required" });
+    }
+    
     try {
       const { tokens } = await oauth2Client.getToken(code);
       oauth2Client.setCredentials(tokens);
       console.log("Token exchange successful, refresh_token:", tokens.refresh_token ? "present" : "missing");
       res.json(tokens); // includes refresh_token
     } catch (err) {
-      console.error("Token exchange error:", err.message);
+      console.error("=== Token Exchange Error ===");
+      console.error("Error message:", err.message);
+      console.error("Error code:", err.code);
+      console.error("Error details:", err);
+      console.error("============================");
       res.status(400).json({ error: err.message });
     }
   });
