@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FileText, Plus, Trash2 } from 'lucide-react';
+import axios from 'axios';
 
 const FeedbackForm = ({ tab, page, isEditMode }) => {
   const location = useLocation();
@@ -38,19 +39,19 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
   };
 
   const handleAddSkill = () => {
-    if (!isEditMode) {
+    if (isEditMode) {
       setSkillRatings([...skillRatings, { skill: '', rating: 0, comments: '' }]);
     }
   };
 
   const handleRemoveSkill = (index) => {
-    if (!isEditMode && skillRatings.length > 1) {
+    if (isEditMode && skillRatings.length > 1) {
       setSkillRatings(skillRatings.filter((_, i) => i !== index));
     }
   };
 
   const handleSkillChange = (index, field, value) => {
-    if (!isEditMode) {
+    if (isEditMode) {
       const updatedSkills = skillRatings.map((skill, i) => 
         i === index ? { ...skill, [field]: value } : skill
       );
@@ -59,19 +60,19 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
   };
 
   const handleAddQuestion = () => {
-    if (!isEditMode) {
+    if (isEditMode) {
       setQuestionsAsked([...questionsAsked, '']);
     }
   };
 
   const handleRemoveQuestion = (index) => {
-    if (!isEditMode && questionsAsked.length > 1) {
+    if (isEditMode && questionsAsked.length > 1) {
       setQuestionsAsked(questionsAsked.filter((_, i) => i !== index));
     }
   };
 
   const handleQuestionChange = (index, value) => {
-    if (!isEditMode) {
+    if (isEditMode) {
       const updatedQuestions = questionsAsked.map((question, i) => 
         i === index ? value : question
       );
@@ -80,7 +81,7 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
   };
 
   const submitFeedback = () => {
-    if (!isEditMode) {
+    if (isEditMode) {
       const feedbackData = {
         overallRating,
         communicationRating,
@@ -95,19 +96,47 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
     }
   };
 
-  const saveFeedback = () => {
-    if (!isEditMode) {
+  const saveFeedback = async () => {
+    if (isEditMode) {
       const feedbackData = {
         overallRating,
         communicationRating,
-        skillRatings,
-        questionsAsked,
-        comments,
-        recommendation
+        skills: skillRatings.map(skill => ({
+          skillName: skill.skill,
+          rating: skill.rating,
+          note: skill.comments
+        })),
+        questionFeedback: questionsAsked.map(question => ({
+          question,
+          answer: '',
+          rating: 0
+        })),
+        generalComments: comments,
+        overallImpression: {
+          overallRating,
+          recommendation,
+          note: comments
+        }
       };
       console.log('Feedback saved as draft:', feedbackData);
-      // Here you would typically save the data as draft to your backend
-      alert('Feedback saved as draft!');
+      
+      try {
+        // Assuming we have a feedback ID from the initial data
+        const feedbackId = feedbackData._id || location.state?.feedback?._id;
+        if (feedbackId) {
+          const response = await axios.put(`${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`, feedbackData);
+          if (response.data.success) {
+            alert('Feedback saved as draft successfully!');
+          } else {
+            alert('Failed to save feedback as draft: ' + response.data.message);
+          }
+        } else {
+          alert('No feedback ID found, cannot save draft.');
+        }
+      } catch (error) {
+        console.error('Error saving feedback draft:', error);
+        alert('Error saving feedback as draft.');
+      }
     }
   };
 
@@ -138,7 +167,7 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div className="bg-white rounded-lg p-6 shadow-sm mx-4">
       <div className="flex items-center mb-6">
         <FileText className="h-5 w-5 mr-2" style={{ color: 'rgb(33, 121, 137)' }} />
         <h3 className="text-lg font-medium text-gray-900">Interview Feedback</h3>
@@ -147,7 +176,7 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Overall Rating *
+            Overall Rating {isEditMode && <span className="text-red-500">*</span>}
           </label>
           <div className="flex items-center">
             {renderStarRating(overallRating, setOverallRating)}
@@ -157,7 +186,7 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Communication Rating *
+            Communication Rating {isEditMode && <span className="text-red-500">*</span>}
           </label>
           <div className="flex items-center">
             {renderStarRating(communicationRating, setCommunicationRating)}
@@ -168,7 +197,7 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
         <div>
           <div className="flex justify-between items-center mb-3">
             <label className="block text-sm font-medium text-gray-700">
-              Skill Ratings *
+              Skill Ratings {isEditMode && <span className="text-red-500">*</span>}
             </label>
             {isEditMode && (
             <Button
@@ -194,9 +223,9 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
                     type="text"
                     value={skill.skill}
                     onChange={(e) => handleSkillChange(index, 'skill', e.target.value)}
-                    placeholder="Skill name"
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={isEditMode}
+                    disabled={!isEditMode}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Skill"
                   />
                   <div className="flex items-center">
                     {renderStarRating(skill.rating, (rating) => handleSkillChange(index, 'rating', rating))}
@@ -205,11 +234,11 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
                   <div className="flex items-center">
                     <input
                       type="text"
-                      value={skill.comments || ''}
+                      value={skill.comments}
                       onChange={(e) => handleSkillChange(index, 'comments', e.target.value)}
-                      placeholder="Comments (optional)"
-                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      disabled={isEditMode}
+                      disabled={!isEditMode}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                      placeholder="Comments"
                     />
                     <Button
                       type="button"
@@ -252,7 +281,7 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
         <div>
           <div className="flex justify-between items-center mb-3">
             <label className="block text-sm font-medium text-gray-700">
-              Questions Asked *
+              Questions Asked {isEditMode && <span className="text-red-500">*</span>}
             </label>
             {isEditMode && (
             <Button
@@ -277,9 +306,9 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
                   type="text"
                   value={question}
                   onChange={(e) => handleQuestionChange(index, e.target.value)}
-                  placeholder="Question asked during interview"
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={isEditMode}
+                  disabled={!isEditMode}
+                  className="flex-1 p-2 border border-gray-300 rounded-md"
+                  placeholder="Question asked"
                 />
                 <Button
                   type="button"
@@ -310,16 +339,16 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Overall Comments *
+            Overall Comments {isEditMode && <span className="text-red-500">*</span>}
           </label>
           { isEditMode ? (
           <textarea
-            rows={4}
             value={comments}
             onChange={(e) => setComments(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Provide overall feedback about the candidate's performance..."
-            disabled={isEditMode}
+            disabled={!isEditMode}
+            className="w-full p-2 border border-gray-300 rounded-md"
+            rows="4"
+            placeholder="Additional comments"
           />
           ) : (
             <div className="text-sm text-gray-800">
@@ -330,14 +359,14 @@ const FeedbackForm = ({ tab, page, isEditMode }) => {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Recommendation *
+            Recommendation {isEditMode && <span className="text-red-500">*</span>}
           </label>
           { isEditMode ? (
           <select
             value={recommendation}
             onChange={(e) => setRecommendation(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={isEditMode}
+            className="w-full p-2 border border-gray-300 rounded-md"
+            disabled={!isEditMode}
           >
             <option value="Yes">Hire</option>
             <option value="Maybe">Maybe</option>
