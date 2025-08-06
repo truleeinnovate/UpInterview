@@ -52,9 +52,11 @@ const feedbackSchema = new mongoose.Schema(
   {
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: false }, // reference to tenant
     interviewRoundId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewRounds' }, // reference to interview session
+
     candidateId: { type: mongoose.Schema.Types.ObjectId, ref: 'Candidate', required: false }, //candidate information
     positionId:{ type: mongoose.Schema.Types.ObjectId, ref: 'Position', required: false },
     interviewerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts', required: false }, //interviewer information
+
     skills: [skillsSchema], //overall skill ratings
     questionFeedback:[questionFeedbackSchema], //feedback for each question
     generalComments:String, //general comments about the interview session

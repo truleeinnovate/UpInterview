@@ -45,9 +45,9 @@ const CandidateMiniTab = ({selectedData}) => {
   
 
   return (
-    <div className="space-y-6">
+    <div className="px-5 space-y-6 min-h-screen">
       {/* Basic Info */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
+      <div className="bg-white rounded-lg p-6 shadow-sm mt-2">
         <div className="flex items-center mb-4">
           <User className="h-5 w-5 mr-2" style={{ color: 'rgb(33, 121, 137)' }} />
           <h3 className="text-lg font-medium text-gray-900">Candidate Information</h3>

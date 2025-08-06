@@ -10,6 +10,9 @@ console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('COOKIE_DOMAIN:', process.env.COOKIE_DOMAIN);
 console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
+console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
+console.log('GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI || 'NOT SET');
 console.log('=== END ENVIRONMENT VARIABLES DEBUG ===');
 
 const cors = require('cors');

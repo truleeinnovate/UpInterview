@@ -474,6 +474,22 @@ exports.acceptInterviewRequest = async (req, res) => {
     console.log(`Deducted ${totalAmount} from wallet balance. New balance: ${updatedWallet.balance}`);
     console.log(`Added ${totalAmount} to hold amount. New hold amount: ${updatedWallet.holdAmount}`);
     //-----------v1.0.1------------------------------>
+
+    // Send emails after successful acceptance
+    try {
+      const emailController = require('./EmailsController/interviewEmailController');
+      await emailController.sendInterviewRoundEmails({
+        body: {
+          interviewId: request.scheduledInterviewId,
+          roundId: roundId,
+          sendEmails: true
+        }
+      });
+      console.log('Interview round emails sent successfully after acceptance');
+    } catch (emailError) {
+      console.error('Failed to send interview round emails after acceptance:', emailError);
+      // Don't fail the request if email sending fails
+    }
   
     res.status(200).json({
       message:

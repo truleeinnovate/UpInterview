@@ -6,14 +6,18 @@ import { config } from '../config';
  */
 export class GoogleMeetPlatform {
   constructor() {
+    console.log('1 config.REACT_APP_GOOGLE_AUTH_URL', config.REACT_APP_GOOGLE_AUTH_URL);
+    console.log('2 config.REACT_APP_GOOGLE_CLIENT_ID', config.REACT_APP_GOOGLE_CLIENT_ID);
+    console.log('3 config.REACT_APP_GOOGLE_REDIRECT_URI', config.REACT_APP_GOOGLE_REDIRECT_URI);
+    console.log('4 config.REACT_APP_GOOGLE_SCOPES', config.REACT_APP_GOOGLE_SCOPES);
     this.GOOGLE_AUTH_URL = config.REACT_APP_GOOGLE_AUTH_URL;
     this.GOOGLE_CLIENT_ID = config.REACT_APP_GOOGLE_CLIENT_ID;
     this.REDIRECT_URI = config.REACT_APP_GOOGLE_REDIRECT_URI;
     this.SCOPES = config.REACT_APP_GOOGLE_SCOPES;
-    console.log("GOOGLE_AUTH_URL:", this.GOOGLE_AUTH_URL);
-    console.log("GOOGLE_CLIENT_ID:", this.GOOGLE_CLIENT_ID);
-    console.log("REDIRECT_URI:", this.REDIRECT_URI);
-    console.log("SCOPES:", this.SCOPES);
+    // console.log("GOOGLE_AUTH_URL:", this.GOOGLE_AUTH_URL);
+    // console.log("GOOGLE_CLIENT_ID:", this.GOOGLE_CLIENT_ID);
+    // console.log("REDIRECT_URI:", this.REDIRECT_URI);
+    // console.log("SCOPES:", this.SCOPES);
   }
 
   /**

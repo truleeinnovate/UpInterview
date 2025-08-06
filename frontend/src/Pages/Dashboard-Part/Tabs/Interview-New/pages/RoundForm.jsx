@@ -1014,6 +1014,50 @@ const RoundFormInterviews = () => {
             }
           );
         }
+
+        // Send outsource interview request emails if this is an outsource round
+        if (!isInternal && selectedInterviewers && selectedInterviewers.length > 0) {
+          try {
+            console.log("=== Sending outsource interview request emails ===");
+            const interviewerIds = selectedInterviewers.map(interviewer => 
+              interviewer.contact?._id || interviewer._id
+            );
+            
+            const emailResponse = await axios.post(
+              `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
+              {
+                interviewId: interviewId,
+                roundId: response.savedRound._id,
+                interviewerIds: interviewerIds,
+                candidateId: candidate?._id,
+                positionId: position?._id,
+                dateTime: combinedDateTime,
+                duration: duration,
+                roundTitle: roundTitle
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${Cookies.get("authToken")}`,
+                },
+              }
+            );
+            
+            console.log("Outsource email sending response:", emailResponse.data);
+            
+            if (emailResponse.data.success) {
+              toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
+              if (emailResponse.data.data.failedEmails > 0) {
+                toast.warning(`${emailResponse.data.data.failedEmails} emails failed to send`);
+              }
+            } else {
+              toast.error('Failed to send outsource interview request emails');
+            }
+          } catch (emailError) {
+            console.error("Error sending outsource interview request emails:", emailError);
+            toast.error('Failed to send outsource interview request emails');
+          }
+        }
       }
 
 

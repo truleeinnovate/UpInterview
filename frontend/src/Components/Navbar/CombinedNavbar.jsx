@@ -18,7 +18,6 @@ import { LiaWalletSolid } from "react-icons/lia";
 import { NavLink, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import "./Navbar-Sidebar.scss";
 import Cookies from "js-cookie";
 import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
