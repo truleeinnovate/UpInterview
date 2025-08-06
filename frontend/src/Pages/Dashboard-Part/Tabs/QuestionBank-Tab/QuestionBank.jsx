@@ -39,34 +39,9 @@ const QuestionBank = ({ assessmentId,
   };
 
   return (
-    <div className={`sm:pt-10 md:pt-10 lg:pt-3 xl:pt-3 2xl:pt-3 ${type === "interviewerSection" || type === "assessment" ? "h-[85%] bg-white rounded-lg flex flex-col" : ""}`}>
-      {/* Header Section */}
-      {/* <div className={`${type === "interviewerSection" || type === "assessment" ? "" : "top-16 sm:top-20 md:top-24 left-0 right-0"}
-      ${type === "interviewerSection" ? 'hidden' : ""}`}>
-        {(type === "interviewerSection" || type === "assessment") && (
-          <div className={`flex justify-between items-center p-4 ${type === "interviewerSection" || type === "assessment" ? "bg-custom-blue text-white rounded-t-lg" : " text-white"}`}>
-            <div>
-              <span className="text-xl font-semibold">Question Bank</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                className="p-2 rounded-full hover:bg-blue-700/80 transition-all duration-200"
-                onClick={() => closeQuestionBank()}
-              >
-                <XCircle className="text-xl transition-transform duration-200 hover:scale-110" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div> */}
-
-      {/* Tab Navigation - keep this outside the scrollable area */}
-      <div
-        className={`fixed bg-white px-5 z-40
-        ${activeTab === "SuggesstedQuestions" && type !== "interviewerSection" && type !== "assessment" ? "h-[180px]" : "h-[110px]"}
-        ${activeTab === "MyQuestionsList" && type !== "interviewerSection" && type !== "assessment" ? "h-[170px]" : ""}
-        ${type === "interviewerSection" || type === "assessment" ? `${type === "assessment" ? "w-[85%]" : "w-[95%]"} px-4 ` : "w-full z-40 top-16 sm:top-0 md:top-0 lg:top-0 xl:top-0 2xl:top-0 left-0 right-0 pt-16"}`}
-      >
+    <div className={`h-full bg-white rounded-lg flex flex-col ${type === "interviewerSection" || type === "assessment" ? "" : ""}`}>
+      {/* Tab Navigation - Fixed at top for modal context */}
+      <div className="bg-white px-4 py-3 border-b border-gray-200 flex-shrink-0">
         <div className="flex">
           <button
             className={`px-6 py-3 font-medium text-sm ${activeTab === "SuggesstedQuestions" ? "text-custom-blue border-b-2 border-custom-blue" : "text-gray-500 hover:text-gray-700 transition-colors duration-200"}`}
@@ -83,8 +58,8 @@ const QuestionBank = ({ assessmentId,
         </div>
       </div>
 
-      {/* Tab Content - only this should scroll */}
-      <div className={`flex-1 mt-3 overflow-auto ${type === "interviewerSection" || type === "assessment" ? "" : ""} transition-all duration-300`}>
+      {/* Tab Content - Scrollable area */}
+      <div className="flex-1 overflow-auto transition-all duration-300">
         {activeTab === "SuggesstedQuestions" && (
           <SuggesstedQuestions
             sectionName={sectionName}
