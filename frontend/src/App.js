@@ -3,6 +3,7 @@
 //v1.0.2  -  Ashraf  -  added create role path
 // v1.0.3 - Ranjith - new route CandidateDetails to assessment page
 // v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
+// v1.0.5 - Mansoor - Added custom video call application routes
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -70,6 +71,14 @@ const SubscriptionCardDetails = lazy(() =>
 );
 const ForgetPassword = lazy(() => import("./Pages/Login-Part/ForgetPassword"));
 const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
+
+
+// <------------------------------- v1.0.5
+//  Video Call Application Components
+const VideoCallLanding = lazy(() => import("./Pages/CustomVideoCall/Landing.jsx"));
+const VideoCallJoinRoom = lazy(() => import("./Pages/CustomVideoCall/JoinRoom.jsx"));
+const VideoCallRoom = lazy(() => import("./Pages/CustomVideoCall/Room.jsx"));
+// v1.0.5 ------------------------------>
 
 const Home = lazy(() =>
   import("./Pages/Dashboard-Part/Dashboard/Home/Home.jsx")
@@ -512,6 +521,14 @@ const MainAppRoutes = ({
             <Route path="/resetPassword" element={<ResetPassword />} />
             <Route path="/forgetPassword" element={<ForgetPassword />} />
             <Route path="/assessmenttest" element={<AssessmentTest />} />
+
+            {/* <------------------------------- v1.0.5 */}
+            {/* Video Call Public Routes */}
+            <Route path="/video-call" element={<VideoCallLanding />} />
+            <Route path="/video-call/join" element={<VideoCallJoinRoom />} />
+            <Route path="/video-call/join/:roomID" element={<VideoCallJoinRoom />} />
+            <Route path="/video-call/room/:roomID/:userName" element={<VideoCallRoom />} />
+            {/* v1.0.5 ------------------------------> */}
 
             {/* Protected Routes */}
             <Route
@@ -1152,8 +1169,6 @@ const MainAppRoutes = ({
                 </>
               )} */}
 
-            
-
               {hasPermission("Settings") && (
                 <Route path="/settings" element={<SettingsPage />} />
               )}
@@ -1229,6 +1244,9 @@ const App = () => {
       "/payment-details",
       "/subscription-plans",
       "/verify-email",
+      "/video-call",
+      "/video-call/join",
+      "/video-call/room",
     ],
     []
   );
@@ -1249,11 +1267,11 @@ const App = () => {
 
     // Initialize cross-tab authentication sync
     const cleanupAuthListener = AuthCookieManager.setupCrossTabAuthListener();
-    
+
     // Check browser permissions and capabilities
     const browserPermissions = AuthCookieManager.checkBrowserPermissions();
     console.log('Browser permissions check:', browserPermissions);
-    
+
     // Detect new browser context
     if (AuthCookieManager.isNewBrowserContext()) {
       console.log('New browser context detected - syncing auth state');
@@ -1275,7 +1293,7 @@ const App = () => {
     // Listen for token expiration events
     const handleTokenExpired = async (event) => {
       console.log('Token expired event received:', event.detail);
-      
+
       // Use the dedicated token expiration handler
       await AuthCookieManager.handleTokenExpiration();
     };
