@@ -10,6 +10,10 @@ export class GoogleMeetPlatform {
     this.GOOGLE_CLIENT_ID = config.REACT_APP_GOOGLE_CLIENT_ID;
     this.REDIRECT_URI = config.REACT_APP_GOOGLE_REDIRECT_URI;
     this.SCOPES = config.REACT_APP_GOOGLE_SCOPES;
+    console.log("GOOGLE_AUTH_URL:", this.GOOGLE_AUTH_URL);
+    console.log("GOOGLE_CLIENT_ID:", this.GOOGLE_CLIENT_ID);
+    console.log("REDIRECT_URI:", this.REDIRECT_URI);
+    console.log("SCOPES:", this.SCOPES);
   }
 
   /**

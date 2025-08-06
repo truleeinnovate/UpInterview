@@ -34,6 +34,9 @@ import {
   hasValidCachedPermissions,
 } from "./utils/permissionPreloader";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
+// import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
+import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
+
 
 
 
@@ -474,6 +477,12 @@ const MainAppRoutes = ({
             />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/oauth2callback" element={<OAuthCallback />} />
+           
+           <Route path='/join-meeting' element={<JoinMeeting />} />
+
+            {/* <Route path ='/join-meeting' element={<VideoCAllActionButtons />} /> */}
+           
+           
             <Route
               path="/payment-details"
               element={

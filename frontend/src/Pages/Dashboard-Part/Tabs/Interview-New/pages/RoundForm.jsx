@@ -1041,7 +1041,7 @@ const RoundFormInterviews = () => {
         
         try {
           setIsMeetingCreationLoading(true);
-          setMeetingCreationProgress('Starting meeting creation...');
+          setMeetingCreationProgress('Creating meeting...');
           
           // Import the meeting platform utility
           const { createMeeting } = await import('../../../../../utils/meetingPlatforms.js');
@@ -1151,8 +1151,8 @@ const RoundFormInterviews = () => {
         }
       }
 
-   
 
+   
     } catch (err) {
       console.error("=== Form Submission Error ===");
       console.error("Error submitting the form:", err);
