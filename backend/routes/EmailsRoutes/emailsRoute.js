@@ -3,7 +3,7 @@ const express = require('express')
 const {afterSubscribePlan,afterSubscribeFreePlan} = require('../../controllers/EmailsController/subscriptionEmailController')
 const { sendSignUpEmail,forgotPasswordSendEmail,resendVerification,requestEmailChangeVerification,verifyEmailChange} = require('../../controllers/EmailsController/signUpEmailController')
 const { shareAssessment, resendAssessmentLink,sendOtp } = require('../../controllers/EmailsController/assessmentEmailController')
-const { sendInterviewRoundEmails } = require('../../controllers/EmailsController/interviewEmailController')
+const { sendInterviewRoundEmails, sendOutsourceInterviewRequestEmails } = require('../../controllers/EmailsController/interviewEmailController')
 
 const router = express.Router()
 
@@ -25,6 +25,7 @@ router.post('/send-otp/:scheduledAssessmentId/:candidateId/:candidateAssessmentI
 
 //interview related
 router.post('/interview/round-emails', sendInterviewRoundEmails);
+router.post('/interview/outsource-request-emails', sendOutsourceInterviewRequestEmails);
 
 //users tab emails
 

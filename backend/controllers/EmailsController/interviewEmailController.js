@@ -416,3 +416,265 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     return errorResult;
   }
 }; 
+
+/**
+ * Send outsource interview request emails to selected outsource interviewers
+ * @param {Object} req - Request object containing outsource interview request data
+ * @param {Object} res - Response object (optional, for direct API calls)
+ */
+exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
+  try {
+    const {
+      interviewId,
+      roundId,
+      interviewerIds, // Array of interviewer IDs
+      candidateId,
+      positionId,
+      dateTime,
+      duration,
+      roundTitle
+    } = req.body;
+
+    // Set company name and support email from environment variables or defaults
+    const companyName = process.env.COMPANY_NAME || 'UpInterview';
+    const supportEmail = process.env.SUPPORT_EMAIL || 'support@upinterview.com';
+
+    // Validate input
+    if (!interviewId || !mongoose.isValidObjectId(interviewId)) {
+      const error = { 
+        success: false, 
+        message: 'Invalid or missing interview ID' 
+      };
+      if (res) {
+        return res.status(400).json(error);
+      }
+      return error;
+    }
+
+    if (!roundId || !mongoose.isValidObjectId(roundId)) {
+      const error = { 
+        success: false, 
+        message: 'Invalid or missing round ID' 
+      };
+      if (res) {
+        return res.status(400).json(error);
+      }
+      return error;
+    }
+
+    if (!interviewerIds || !Array.isArray(interviewerIds) || interviewerIds.length === 0) {
+      const error = { 
+        success: false, 
+        message: 'Invalid or missing interviewer IDs' 
+      };
+      if (res) {
+        return res.status(400).json(error);
+      }
+      return error;
+    }
+
+    // Fetch interview with candidate details
+    const interview = await Interview.findById(interviewId)
+      .populate('candidateId')
+      .populate('ownerId');
+
+    if (!interview) {
+      const error = { 
+        success: false, 
+        message: 'Interview not found' 
+      };
+      if (res) {
+        return res.status(404).json(error);
+      }
+      return error;
+    }
+
+    // Fetch candidate details
+    const candidate = interview.candidateId;
+    if (!candidate) {
+      const error = { 
+        success: false, 
+        message: 'Candidate not found' 
+      };
+      if (res) {
+        return res.status(404).json(error);
+      }
+      return error;
+    }
+
+    // Get candidate name
+    const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
+
+    // Get outsource interview request email template
+    const outsourceRequestTemplate = await emailTemplateModel.findOne({ 
+      category: 'outsource_interview_request', 
+      isSystemTemplate: true, 
+      isActive: true 
+    });
+
+    if (!outsourceRequestTemplate) {
+      const error = { 
+        success: false, 
+        message: 'Outsource interview request email template not found' 
+      };
+      if (res) {
+        return res.status(404).json(error);
+      }
+      return error;
+    }
+
+    // Fetch interviewer details from Contacts
+    const interviewers = await Contacts.find({ 
+      _id: { $in: interviewerIds } 
+    });
+
+    if (!interviewers || interviewers.length === 0) {
+      const error = { 
+        success: false, 
+        message: 'No valid interviewers found' 
+      };
+      if (res) {
+        return res.status(404).json(error);
+      }
+      return error;
+    }
+
+    const notifications = [];
+    const emailPromises = [];
+
+    // Send email to each outsource interviewer
+    for (const interviewer of interviewers) {
+      if (!interviewer.email) {
+        console.warn(`No email found for interviewer ${interviewer._id}`);
+        continue;
+      }
+
+      const interviewerName = [interviewer.firstName, interviewer.lastName].filter(Boolean).join(' ') || 'Interviewer';
+      const roundTitleText = roundTitle || 'Interview Round';
+      const interviewMode = 'Online'; // Default for outsource interviews
+      const dateTimeText = dateTime || 'To be scheduled';
+      const durationText = duration || '60 minutes';
+      const instructions = 'Please review the interview request and accept if you are available.';
+
+      const emailSubject = outsourceRequestTemplate.subject
+        .replace('{{companyName}}', companyName)
+        .replace('{{roundTitle}}', roundTitleText)
+        .replace('{{candidateName}}', candidateName);
+
+      let emailBody = outsourceRequestTemplate.body
+        .replace('{{companyName}}', companyName)
+        .replace('{{roundTitle}}', roundTitleText)
+        .replace('{{candidateName}}', candidateName)
+        .replace('{{interviewerName}}', interviewerName)
+        .replace('{{interviewMode}}', interviewMode)
+        .replace('{{dateTime}}', dateTimeText)
+        .replace('{{duration}}', durationText)
+        .replace('{{instructions}}', instructions)
+        .replace('{{supportEmail}}', supportEmail);
+
+      // Add dashboard link for outsource interviewers to accept/decline
+      const dashboardLink = `${process.env.FRONTEND_URL}/interview-requests`;
+      emailBody = emailBody.replace('{{dashboardLink}}', dashboardLink);
+
+      emailPromises.push(
+        sendEmail(interviewer.email, emailSubject, emailBody)
+          .then(response => ({ 
+            email: interviewer.email, 
+            recipient: 'outsource_interviewer', 
+            interviewerId: interviewer._id,
+            success: true 
+          }))
+          .catch(error => ({ 
+            email: interviewer.email, 
+            recipient: 'outsource_interviewer', 
+            interviewerId: interviewer._id,
+            success: false, 
+            error: error.message 
+          }))
+      );
+
+      notifications.push({
+        title: emailSubject,
+        body: emailBody,
+        notificationType: 'email',
+        object: {
+          objectName: 'outsource_interview_request',
+          objectId: roundId,
+        },
+        status: 'Pending',
+        tenantId: interview.tenantId,
+        ownerId: interview.ownerId,
+        recipientId: interviewer._id,
+        createdBy: interview.ownerId,
+        updatedBy: interview.ownerId,
+      });
+    }
+
+    // Save notifications
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    // Send emails
+    const emailResults = await Promise.all(emailPromises);
+    const successfulEmails = emailResults.filter(r => r.success);
+    const failedEmails = emailResults.filter(r => !r.success);
+
+    // Update notification status for successful emails
+    if (successfulEmails.length > 0) {
+      const successfulEmailsList = successfulEmails.map(r => r.email);
+      await Notification.updateMany(
+        { 
+          objectName: 'outsource_interview_request',
+          objectId: roundId,
+          recipientId: { $in: successfulEmails.map(r => r.interviewerId) }
+        },
+        { status: 'Success' }
+      );
+    }
+
+    // Update notification status for failed emails
+    if (failedEmails.length > 0) {
+      const failedEmailsList = failedEmails.map(r => r.email);
+      await Notification.updateMany(
+        { 
+          objectName: 'outsource_interview_request',
+          objectId: roundId,
+          recipientId: { $in: failedEmails.map(r => r.interviewerId) }
+        },
+        { status: 'Failed' }
+      );
+    }
+
+    const result = {
+      success: true,
+      message: `Outsource interview request emails sent successfully`,
+      data: {
+        totalInterviewers: interviewers.length,
+        successfulEmails: successfulEmails.length,
+        failedEmails: failedEmails.length,
+        roundId: roundId,
+        successfulEmailsList: successfulEmails.map(r => ({ email: r.email, interviewerId: r.interviewerId })),
+        failedEmailsList: failedEmails.map(r => ({ email: r.email, interviewerId: r.interviewerId, error: r.error }))
+      }
+    };
+
+    if (res) {
+      return res.status(200).json(result);
+    }
+    return result;
+
+  } catch (error) {
+    console.error('Error sending outsource interview request emails:', error);
+    const errorResult = { 
+      success: false, 
+      message: 'Failed to send outsource interview request emails',
+      error: error.message 
+    };
+    
+    if (res) {
+      return res.status(500).json(errorResult);
+    }
+    return errorResult;
+  }
+}; 

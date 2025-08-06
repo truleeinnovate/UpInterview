@@ -40,81 +40,7 @@ const CustomProvider = ({ children }) => {
   // const [feedbackCloseFlag, setFeedbackCloseFlag] = useState(false);
   // const [createdLists, setCreatedLists] = useState([]);
 
-  const [interviewerSectionData, setInterviewerSectionData] = useState([
-    {
-      id: 1,
-      question: "Tell me about your experience with React",
-      answer: "Sample answer about React experience",
-      mandatory: true,
-      isAnswered: "Not Answered",
-      notesBool: false,
-      note: ""
-    },
-    {
-      id: 2,
-      question: "How do you handle state management?",
-      answer: "Sample answer about state management",
-      mandatory: false,
-      isAnswered: "Not Answered",
-      notesBool: false,
-      note: ""
-    }
-  ]);
-  const [SchedulerSectionData, setSchedulerSectionData] = useState([]);
   
-  // Overall impression tab data
-  const [overallImpressionTabData, setOverallImpressionTabData] = useState({
-    rating: 0,
-    note: '',
-    recommendation: '',
-    notesBool: false
-  });
-  
-  // Candidate data
-  const [candidateData, setCandidateData] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    experience: "5 years",
-    currentRole: "Senior Developer",
-    companyName: "Tech Corp",
-    skillsList: "React, JavaScript, Node.js"
-  });
-  
-  // Skills tab data
-  const [skillsTabData, setSkillsTabData] = useState([
-    {
-      id: 1,
-      category: "Technical Skills",
-      skillsList: [
-        {
-          name: "React",
-          rating: 4,
-          required: true,
-          note: ""
-        },
-        {
-          name: "JavaScript",
-          rating: 5,
-          required: true,
-          note: ""
-        }
-      ]
-    },
-    {
-      id: 2,
-      category: "Soft Skills",
-      skillsList: [
-        {
-          name: "Communication",
-          rating: 3,
-          required: false,
-          note: ""
-        }
-      ]
-    }
-  ]);
   const [feedbackTabErrors, setFeedbackTabError] = useState({
     interviewQuestion: true,
     skills: true,
@@ -808,25 +734,7 @@ const CustomProvider = ({ children }) => {
         interviewRounds,
         fetchInterviewRounds,
         
-        // interviewer section data
-        interviewerSectionData,
-        setInterviewerSectionData,
         
-        // scheduler section data
-        SchedulerSectionData,
-        setSchedulerSectionData,
-        
-        // overall impression tab data
-        overallImpressionTabData,
-        setOverallImpressionTabData,
-        
-        // skills tab data
-        skillsTabData,
-        setSkillsTabData,
-        
-        // candidate data
-        candidateData,
-        setCandidateData,
         
         // superAdminProfile,
       }}

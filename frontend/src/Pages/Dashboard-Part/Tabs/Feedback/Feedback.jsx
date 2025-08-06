@@ -14,13 +14,13 @@ import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPop
 import { ReactComponent as MdKeyboardArrowUp } from '../../../../icons/MdKeyboardArrowUp.svg';
 import { ReactComponent as MdKeyboardArrowDown } from '../../../../icons/MdKeyboardArrowDown.svg';
 import { useNavigate } from 'react-router-dom';
-import FeedbackKanban from './FeedbackKanban.jsx';
-import { Eye, FileTextIcon, Pencil } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Eye, FileTextIcon, Pencil, Star, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
 import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js';
 import SummarizedFeedbackModal from './SummarizedFeedbackModal.jsx';
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
+import FeedbackKanban from './FeedbackKanban.jsx';
 
 const Feedback = () => {
   const navigate = useNavigate();
@@ -182,6 +182,34 @@ const Feedback = () => {
     navigate('/dashboard/feedbacks/add');
   };
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const renderStars = (rating) => {
+    return (
+      <div className="flex">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${
+              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
+
 
   const tableColumns = [
     {
@@ -263,10 +291,10 @@ const Feedback = () => {
           },
     },
     {
-      key: 'interview',
+      key: 'interviewerId.firstName',
       header: 'Interviewer',
-      render: (value) => (
-        <div className="text-sm">{value || "Not Provided"}</div>
+      render: (value,row) => (
+        <div className="text-sm">{row.interviewerId?.firstName + " " + row.interviewerId?.lastName || "Not Provided"}</div>
       ),
     },
     
@@ -285,10 +313,27 @@ const Feedback = () => {
       ),
     },
     {
+      key: 'overallImpression.overallRating',
+      header: 'Rating',
+      render: (value,row) => (
+        <div className="text-sm">{ row.overallImpression?.overallRating ? renderStars(row.overallImpression?.overallRating) : <span className="text-gray-400">Pending</span>}</div>
+      ),
+    },
+    {
       key: 'interviewRoundId.status',
       header: 'Status',
       render: (value,row) => (
-        <StatusBadge status={row.interviewRoundId?.status} text={row.interviewRoundId?.status ? row.interviewRoundId?.status.charAt(0).toUpperCase() + row.interviewRoundId?.status.slice(1) : "Not Provided"}/>
+        <div className="flex items-center">
+            {getStatusIcon(row.interviewRoundId?.status)}
+          <span className="ml-2 text-sm capitalize">{row.interviewRoundId?.status}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'overallImpression.recommendation',
+      header: 'Recommendation',
+      render: (value,row) => (
+        <StatusBadge status={row.overallImpression?.recommendation} text={row.overallImpression?.recommendation ? row.overallImpression?.recommendation.charAt(0).toUpperCase() + row.overallImpression?.recommendation.slice(1) : "Not Provided"}/>
       ),
     },
   ];

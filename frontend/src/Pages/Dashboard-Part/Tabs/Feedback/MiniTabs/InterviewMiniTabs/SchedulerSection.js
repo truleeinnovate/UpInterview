@@ -1,10 +1,13 @@
-import React, { useState, useRef, useCallback } from "react";
-import { FaAngleDown, FaAngleUp } from "react-icons/fa";
+/* eslint-disable no-lone-blocks */
+import React, { useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
+import { FaAngleDown, FaAngleUp, FaTrash } from "react-icons/fa";
 import Popup from "reactjs-popup";
-import { useCustomContext } from "../../../../../../Context/Contextfetch";
 import { SlLike } from "react-icons/sl";
 import { SlDislike } from "react-icons/sl";
 import { IoIosCloseCircleOutline } from "react-icons/io";
+
+// Define dislike options
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
   { value: "Wrong experience level", label: "Wrong experience level" },
@@ -15,110 +18,161 @@ const dislikeOptions = [
   { value: "Too basic", label: "Too basic" },
 ];
 
-// const SchedulerSectionComponent = ({setSchedulerSectionData,SchedulerSectionData, tab }) => {
-const SchedulerSectionComponent = ({roundDetails, tab }) => {
-  console.log("round details",roundDetails)
-  const {page,SchedulerSectionData, setSchedulerSectionData}= useCustomContext()
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [dislikeQuestionId, setDislikeQuestionId] = useState("");
-  const questionRef = useRef();
+// Define SchedulerSectionComponent
+const SchedulerSectionComponent = ({ isEditMode }) => {
+  // Get location and feedback data
+  const location = useLocation();
+  const feedbackData = location.state?.feedback || {};
+  const schedulerQuestions = feedbackData.preSelectedQuestions || [];
+  const questionsfeedback = feedbackData.questionFeedback || [];
 
+  // Initialize state variables
+  const [dislikeQuestionId, setDislikeQuestionId] = useState("");
+  const [schedulerQuestionsData, setSchedulerQuestionsData] = useState(() => {
+    return schedulerQuestions.map((q) => {
+      // Find feedback for this question
+      const feedback = questionsfeedback.find((f) => f.questionId === q.questionId);
+      if (feedback) {
+        return {
+          ...q,
+          candidateAnswer: feedback.candidateAnswer || null,
+          interviewerFeedback: feedback.interviewerFeedback || null,
+          isAnswered: feedback.candidateAnswer?.answerType
+            ? feedback.candidateAnswer.answerType === "correct"
+              ? "Fully Answered"
+              : feedback.candidateAnswer.answerType === "partial"
+                ? "Partially Answered"
+                : feedback.candidateAnswer.answerType === "incorrect"
+                  ? "Not Answered"
+                  : "Not Answered"
+            : "Not Answered",
+          isLiked: feedback.interviewerFeedback?.liked || "",
+          whyDislike: feedback.interviewerFeedback?.dislikeReason || "",
+          notesBool: !!feedback.interviewerFeedback?.note,
+          note: feedback.interviewerFeedback?.note || "",
+        };
+      } else {
+        return {
+          ...q,
+          candidateAnswer: null,
+          interviewerFeedback: null,
+          isAnswered: "Not Answered",
+          isLiked: "",
+          whyDislike: "",
+          notesBool: false,
+          note: "",
+        };
+      }
+    });
+  });
+
+  // Initialize questionRef
+  const questionRef = useRef(); // For future use, e.g., scrolling to a specific question
+
+  // Function to handle radio input changes if needed
   const onChangeRadioInput = (questionId, value) => {
-    setSchedulerSectionData((prev) =>
+    setSchedulerQuestionsData((prev) =>
       prev.map((question) =>
-        question.id === questionId
-          ? { ...question, isAnswered: value, error: false }
-          : question
+        question._id === questionId ? { ...question, isAnswered: value } : question
       )
     );
   };
+
+  // Function to handle dislike radio input changes
   const onChangeDislikeRadioInput = (questionId, value) => {
-    setSchedulerSectionData((prev) =>
+    setSchedulerQuestionsData((prev) =>
       prev.map((question) => {
-        if (question.id === questionId) {
-          return { ...question, whyDislike: value, isLiked: false };
+        if (question._id === questionId) {
+          return { ...question, whyDislike: value, isLiked: "disliked" };
         }
         return question;
       })
     );
   };
 
+  // Function to handle dislike toggle
   const handleDislikeToggle = (id) => {
-    setDislikeQuestionId((prev) => (prev === id ? null : id));
-    setSchedulerSectionData((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, isLiked: "disliked" } : q))
+    if (dislikeQuestionId === id) setDislikeQuestionId(null);
+    else setDislikeQuestionId(id);
+    setSchedulerQuestionsData((prev) =>
+      prev.map((q) =>
+        q._id === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
+      )
     );
   };
 
-  const handleLikeToggle = useCallback((id) => {
-    setSchedulerSectionData((prev) =>
+  // Function to handle like toggle
+  const handleLikeToggle = (id) => {
+    setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
-        q.id === id ? { ...q, isLiked: "liked" } : q
+        q._id === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
       )
     );
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
-  }, [dislikeQuestionId]);
+  };
 
-  const onClickAddNote = useCallback((id) => {
-    setSchedulerSectionData((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, notesBool: !q.notesBool } : q))
+  // Function to handle add note
+  const onClickAddNote = (id) => {
+    setSchedulerQuestionsData((prev) =>
+      prev.map((q) => (q._id === id ? { ...q, notesBool: !q.notesBool } : q))
     );
-  },[setSchedulerSectionData]);
+  };
 
-  const onClickDeleteNote =useCallback((id) => {
-    setSchedulerSectionData((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, notesBool: false, note: "" } : q))
+  // Function to handle delete note
+  const onClickDeleteNote = (id) => {
+    setSchedulerQuestionsData((prev) =>
+      prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
     );
-  },[setSchedulerSectionData])
+  };
 
+  // Function to handle interview question notes
   const onChangeInterviewQuestionNotes = (questionId, notes) => {
-    setSchedulerSectionData((prev) =>
+    setSchedulerQuestionsData((prev) =>
       prev.map((question) =>
-        question.id === questionId ? { ...question, note: notes } : question
+        question._id === questionId ? { ...question, note: notes } : question
       )
     );
   };
 
-  const onClickQuestionItem =(question)=>{
-    selectedQuestion === question._id
-    ? setSelectedQuestion(null)
-    : setSelectedQuestion(question._id);
-  }
-
-  //sections
+  // Define DisLikeSection component
   const DisLikeSection = React.memo(({ each }) => {
     return (
-      <div className="border border-gray-500 w-full p-3 rounded-md">
-        <div className="flex justify-between w-full mb-4">
+    <>
+    {isEditMode ? (
+    <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
+        <div className="flex justify-between items-center mb-2">
           <h1>Tell us more :</h1>
-          <button onClick={() => setDislikeQuestionId(null)}><IoIosCloseCircleOutline/></button>
+          <button onClick={() => setDislikeQuestionId(null)}>
+            <IoIosCloseCircleOutline />
+          </button>
         </div>
         <ul className="flex flex-wrap gap-3">
           {dislikeOptions.map((option) => (
-            <li key={option.value} className="flex items-center gap-x-2 w-[30%]">
+            <li key={option.value} className="flex items-center gap-2">
               <input
-                onChange={(e) => onChangeDislikeRadioInput(each.id, e.target.value)}
-                name={`dislike-input-${each.id}`}
-                checked={each.whyDislike === option.value}
-                id={`${option.value.toLowerCase().replace(/ /g, "-")}-${each.id}`}
                 type="radio"
+                id={`dislike-${each._id}-${option.value}`}
+                name={`dislike-${each._id}`}
                 value={option.value}
+                checked={each.whyDislike === option.value}
+                onChange={(e) => onChangeDislikeRadioInput(each._id, e.target.value)}
               />
-              <label
-                className="cursor-pointer"
-                htmlFor={`${option.value.toLowerCase().replace(/ /g, "-")}-${each.id}`}
-              >
+              <label htmlFor={`dislike-${each._id}-${option.value}`} className="cursor-pointer">
                 {option.label}
               </label>
             </li>
           ))}
         </ul>
-
       </div>
+    ) : (
+     <p className="w-full flex gap-x-8 gap-y-2 ">{each.interviewerFeedback?.dislikeReason || "N/A"}</p>
+    )}
+    </>
+      
     );
   });
-  
 
+  // Define SharePopupSection component
   const SharePopupSection = () => {
     return (
       <Popup
@@ -128,7 +182,7 @@ const SchedulerSectionComponent = ({roundDetails, tab }) => {
         position={"top center"}
         offsetY={5}
         arrowStyle={{
-          color: "gray", 
+          color: "gray",
         }}
       >
         <p className="bg-[gray] text-xs text-white px-2 p-1 rounded-md">
@@ -138,171 +192,133 @@ const SchedulerSectionComponent = ({roundDetails, tab }) => {
     );
   };
 
+  // Define RadioGroupInput component
   const RadioGroupInput = React.memo(({ each }) => {
     return (
-      <div className="flex rounded-md">
+      <div className="flex rounded-md mt-2">
         <p className="w-[200px] font-bold text-gray-700">
-          Response Type {each.mandatory && <span className="text-[red]">*</span>}
+          Response Type {each.mandatory === "true" && <span className="text-[red]">*</span>}
         </p>
-        <div
-  className={`w-full flex gap-x-8 gap-y-2 ${
-    page === "Home" ? "flex-row" : "flex-col"
-  }`}>
-  {["Not Answered", "Partially Answered", "Fully Answered"].map((option) => (
-    <span key={option} className="flex items-center gap-2">
-      <input
-        checked={each.isAnswered === option}
-        value={option}
-        name={`isAnswered-${each.id}`} 
-        type="radio"
-        id={`isAnswered-${each.id}-${option}`}
-        onChange={(e) => onChangeRadioInput(each.id, e.target.value)}
-        className="whitespace-nowrap"
-      />
-      <label
-        htmlFor={`isAnswered-${each.id}-${option}`}
-        className="cursor-pointer"
-      >
-        {option}
-      </label>
-    </span>
-  ))}
-</div>
-
+        { isEditMode ? (
+        <div className={`w-full flex gap-x-8 gap-y-2 `}>
+          {["Not Answered", "Partially Answered", "Fully Answered"].map((option) => (
+            <span key={option} className="flex items-center gap-2">
+              <input
+                checked={each.isAnswered === option}
+                value={option}
+                name={`isAnswered-${each._id}`}
+                type="radio"
+                id={`isAnswered-${each._id}-${option}`}
+                onChange={(e) => onChangeRadioInput(each._id, e.target.value)}
+                className="whitespace-nowrap"
+              />
+              <label htmlFor={`isAnswered-${each._id}-${option}`} className="cursor-pointer">
+                {option}
+              </label>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="w-full flex gap-x-8 gap-y-2 ">{each.isAnswered || "Not Answered"}</p>
+      )}
       </div>
     );
   });
 
+  // Return JSX
   return (
-    <div className="px-2 pt-2">
-      <div className="flex items-start gap-4 mt-4">
-        <p> <b>Note:</b> </p>
-        <p className="para-value text-gray-500">  This question was selected by the organizer during scheduling. Questions marked in <span className="font-bold text-[red]">Red</span> are mandatory and must be answered by the candidates, while questions marked in{" "}<span className="font-bold text-green-600">Green</span> are optional.</p>
-      </div>
-      <ul className={`${page==="Popup"?" h-[65vh]":"h-[45vh]"} overflow-auto pr-4 flex flex-col gap-4 mt-4`}>
-        {/* {SchedulerSectionData.map((each) => ( */}
-        {!roundDetails?.questions || roundDetails.questions.length === 0 ? 
-          <div>There are no questions added</div> :
-          roundDetails.questions.map((eachQuestionId) => {
-          const each = eachQuestionId.questionId
-          
-          return(
-          <li className={`rounded-md w-full   cursor-pointer border-[1px] ${each.mandatory ? "border-[red]":" border-[green]"}`} ref={questionRef}key={each.id}>
-            <div  className="px-2 pt-3 pb-3 flex items-center justify-between cursor-pointer transition-transform duration-300s ease-in-out"onClick={()=>onClickQuestionItem(each)}  >
-              {/* <p >{each.question}</p> */}
-              <p >{each.snapshot.questionText}</p>
-              <span> {selectedQuestion === each._id ? <FaAngleUp /> : <FaAngleDown />}</span>
+    <div className="space-y-4">
+      {schedulerQuestionsData.map((question) => (
+        <div key={question._id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
+          <div className="flex items-start justify-between mb-3">
+            <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+              {question.snapshot.technology && question.snapshot.technology.length > 0
+                ? question.snapshot.technology[0]
+                : "N/A"}
+            </span>
+            <span className="text-sm text-gray-500">{question.snapshot.difficultyLevel}</span>
+          </div>
+          <h3 className="font-semibold text-gray-800 mb-2">{question.snapshot.questionText}</h3>
+          {question.snapshot.correctAnswer && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
+              <p className="text-sm text-gray-700">{question.snapshot.correctAnswer}</p>
             </div>
-            {selectedQuestion === each._id && (
-              <div className="p-2 pb-2" >
-                {/* <p className="para-value text-gray-500">{each.answer}</p> */}
-                <p className="para-value text-gray-500">{each.snapshot.correctAnswer}</p>
-                <div className="w-full flex  justify-between items-start my-4 gap-8">
-                  <RadioGroupInput each={each} />
-
-                  <div className="flex  items-center gap-4 ">
-                    {!each.notesBool && (
-                      <button
-                        className={`${page==="Home"?"py-[0.2rem] px-[0.8rem]":"p-1 "} question-add-note-button cursor-pointer font-bold  text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
-                        onClick={() => onClickAddNote(each._id)}
-                      >
-                        Add a Note
-                      </button>
-                    )}
-                    {each.notesBool && (
-                      <button
-                      onClick={()=>onClickDeleteNote(each._id)}
-                      className={`${page==="Home"?"py-[0.2rem] px-[0.8rem]":"p-1 "} question-add-note-button cursor-pointer font-bold  text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}>
-                        Delete Note
-                      </button>
-                    )}
-                    <SharePopupSection />
-                    <span
-                      className={`${
-                        each.isLiked ==="liked" ? "text-green-700" : ""
-                      } transition-transform hover:scale-110 duration-300 ease-in-out`}
-                      onClick={() => handleLikeToggle(each.id)}
-                    >
-                      <SlLike/>
-                    </span>
-                    <span
-                      className={`${
-                        each.isLiked==="disliked" ? "text-red-500" : ""
-                      } transition-transform hover:scale-110 duration-300 ease-in-out`}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleDislikeToggle(each.id)}
-                    >
-                      <SlDislike/>
+          )}
+          {isEditMode && (
+            <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
+              <span>Mandatory: {question.mandatory === "true" ? "Yes" : "No"}</span>
+            </div>
+          )}
+          <RadioGroupInput each={question} />
+          <div className="flex items-center gap-4 mt-2">
+          {isEditMode && (
+            <button
+              className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
+              onClick={() => onClickAddNote(question._id)}
+            >
+              Add a Note
+            </button>
+          )}
+            <SharePopupSection />
+            <span
+              className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                question.isLiked === "liked" ? "text-green-700" : ""
+              }`}
+              onClick={() => handleLikeToggle(question._id)}
+            >
+              <SlLike />
+            </span>
+            <span
+              className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                question.isLiked === "disliked" ? "text-red-500" : ""
+              }`}
+              style={{ cursor: "pointer" }}
+              onClick={() => handleDislikeToggle(question._id)}
+            >
+              <SlDislike />
+            </span>
+          </div>
+          {dislikeQuestionId === question._id && <DisLikeSection each={question} />}
+          {question.notesBool && (
+            <div>
+              <div className="flex justify-start mt-4">
+                <label htmlFor={`note-input-${question._id}`} className="w-[200px]">
+                  Note
+                </label>
+              { isEditMode ? (
+                <div className="flex items-start w-full">
+                  <div className="w-full relative mr-5 rounded-md h-[80px]">
+                    <input
+                      className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
+                      id={`note-input-${question._id}`}
+                      type="text"
+                      value={question.note}
+                      onChange={(e) => onChangeInterviewQuestionNotes(question._id, e.target.value.slice(0, 250))}
+                      placeholder="Add your note here"
+                    />
+                    <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
+                      {question.note?.length || 0}/250
                     </span>
                   </div>
+                  <button
+                    onClick={() => onClickDeleteNote(question._id)}
+                    className="text-red-500 text-lg mt-2"
+                  >
+                    <FaTrash size={20}/>
+                  </button>
                 </div>
-                {each.notesBool ? (
-  page === "Home" ? (
-    <div className="flex justify-start mt-4">
-      <label htmlFor="note-input" className="w-[200px]">Note</label>
-      <div className="w-full relative mr-5 rounded-md h-[80px]">
-        <input
-          className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-          id="note-input"
-          type="text"
-          value={each.note}
-          onChange={(e) =>
-            onChangeInterviewQuestionNotes(
-              each._id,
-              e.target.value.slice(0, 250)
-            )
-          }
-          placeholder="Add your note here"
-        />
-        <span className="absolute right-[1rem] bottom-[0.2rem]  text-gray-500">
-          {each.note?.length || 0}/250
-        </span>
-      </div>
-    </div>
-  ) : page === "Popup" ? (
-    <div className="flex justify-start mt-4">
-    <label htmlFor="note-input" className="w-[200px]">
-      Note
-    </label>
-    <div className="w-full relative mr-5 rounded-md h-[100px]">
-      <textarea
-      rows="3"
-        className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-        id="note-input"
-        type="text"
-        value={each.note}
-        onChange={(e) =>
-          onChangeInterviewQuestionNotes(
-            each._id,
-            e.target.value.slice(0, 250)
-          )
-        }
-        placeholder="Add your note here"
-      ></textarea>
-      <span className="absolute right-[1rem] bottom-[0.2rem]  text-gray-500">
-        {each.note?.length || 0}/250
-      </span>
-    </div>
-  </div>
-  ) : null 
-) : null}
-
-                {dislikeQuestionId === each._id && (
-                  <DisLikeSection each={each} />
-                )}
+              ) : (
+                <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">{question.note}</p>
+              )}
               </div>
-            )}
-            {each.error && (
-              <p className="text-red-500 text-sm">
-                This mandatory question must be answered.
-              </p>
-            )}
-          </li>
-        )})
-      }
-      </ul>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 };
 
-export default React.memo(SchedulerSectionComponent)
+// Export SchedulerSectionComponent
+export default SchedulerSectionComponent;
