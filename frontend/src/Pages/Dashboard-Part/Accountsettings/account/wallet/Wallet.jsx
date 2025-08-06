@@ -281,7 +281,7 @@ const Wallet = () => {
                 <div>
                   <span className="text-gray-500">Hold Amount: </span>
                   <span className="text-sm font-medium text-yellow-600">
-                    ${pendingBalance.toFixed(2)}
+                    ${walletBalance?.holdAmount ? walletBalance?.holdAmount.toFixed(2) : 0.00}
                   </span>
                 </div>
               </div>

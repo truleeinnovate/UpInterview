@@ -35,6 +35,13 @@ import {
   hasValidCachedPermissions,
 } from "./utils/permissionPreloader";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
+// import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
+import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
+
+
+
+
+
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
@@ -53,6 +60,7 @@ const SubscriptionPlan = lazy(() =>
   import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan")
 );
 const LinkedInCallback = lazy(() => import("./Components/LinkedInCallback"));
+const OAuthCallback = lazy(() => import("./Components/OAuthCallback"));
 const CardDetails = lazy(() =>
   import("./Pages/Login-Part/SubscriptionPlans/CardDetails")
 );
@@ -158,6 +166,16 @@ const ScheduleAssessment = lazy(() =>
 );
 const ScheduleAssDetails = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
+);
+// Feedback Components
+const FeedbackTab = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback.jsx")
+);
+ const FeedbackFormModel = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx")
+);
+const FeedbackPreview = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Feedback/Preview.js")
 );
 const MyProfile = lazy(() =>
   import(
@@ -467,6 +485,13 @@ const MainAppRoutes = ({
               element={<WelcomePageUpinterviewIndividual />}
             />
             <Route path="/callback" element={<LinkedInCallback />} />
+            <Route path="/oauth2callback" element={<OAuthCallback />} />
+           
+           <Route path='/join-meeting' element={<JoinMeeting />} />
+
+            {/* <Route path ='/join-meeting' element={<VideoCAllActionButtons />} /> */}
+           
+           
             <Route
               path="/payment-details"
               element={
@@ -962,6 +987,17 @@ const MainAppRoutes = ({
                   />
                 </>
               )}
+              
+              {/* Feedbacks */}
+              {hasPermission("Feedback") && (
+                <>
+                  <Route path="/feedback" element={<FeedbackTab/>} />
+                  <Route path="/feedback/view/:id" element={<><FeedbackFormModel/> <FeedbackTab/></>} />
+                  <Route path="/feedback/edit/:id" element={<><FeedbackFormModel/> <FeedbackTab/></>} />
+                  <Route path="/feedback-preview" element={<FeedbackPreview/>} />
+                  
+                </>
+              )}
 
               {/* Support Desk Admin*/}
               {hasPermission("SupportDesk") && (
@@ -1132,7 +1168,6 @@ const MainAppRoutes = ({
                   )}
                 </>
               )} */}
-
 
               {hasPermission("Settings") && (
                 <Route path="/settings" element={<SettingsPage />} />

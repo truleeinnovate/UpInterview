@@ -347,10 +347,16 @@ const MyQuestionsList1 = forwardRef(
               </div>
               <div className="relative" ref={popupRef}>
                 <input
+                ref={ref}
                 placeholder="Select Question List"
-                  className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 cursor-pointer ${
-                    error ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                  }`}
+                  // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 cursor-pointer ${
+                  //   error ? 'border-red-500' : 'border-gray-300 focus:border-black'
+                  // }`}
+                    className={`w-full px-3 py-2 border sm:text-sm rounded-md cursor-pointer ${
+                  error
+                    ? 'border-red-500 focus:ring-red-500 focus:outline-red-300'
+                    : 'border-gray-300 focus:border-black'
+                }`}
                   onClick={togglePopup}
                   readOnly
                 />

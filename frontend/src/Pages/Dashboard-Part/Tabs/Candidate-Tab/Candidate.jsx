@@ -420,7 +420,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
     ...(isAssessmentView ? [
       {
         key: "status",
-        header: "Assessment Status",
+        header: "Status",
         render: (value, row) => {
           const status = row.status || 'pending';
           return (

@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - updated addOrUpdateRound
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useMemo } from 'react';
@@ -130,33 +131,124 @@ export const useInterviewTemplates = () => {
     });
 
     // Add/edit round mutation
+    // v1.0.0 <-------------------------------------------------------------------------
+    // const addOrUpdateRound = useMutation({
+    //     mutationFn: async ({ id, roundData, roundId, template }) => {
+    //         const headers = { Authorization: `Bearer ${queryParams.authToken}` };
+    //         const currentRounds = template?.rounds || [];
+    //         const updatedRounds = roundId
+    //             ? currentRounds.map((round) =>
+    //                 round._id === roundId ? { ...round, ...roundData } : round
+    //             )
+    //             : [...currentRounds, roundData];
+
+    //         const response = await axios.patch(
+    //             `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
+    //             {
+    //                 tenantId: queryParams.tenantId,
+    //                 rounds: updatedRounds,
+    //             },
+    //             { headers }
+    //         );
+    //         return response.data;
+    //     },
+    //     onSuccess: () => {
+    //         queryClient.invalidateQueries(['interviewTemplates']);
+    //     },
+    //     onError: (error) => {
+    //         console.error('Error adding/updating round:', error);
+    //     },
+    // });
+
+    // const addOrUpdateRound = useMutation({
+    //     mutationFn: async ({ id, roundData, roundId, template }) => {
+    //         const headers = { Authorization: `Bearer ${queryParams.authToken}` };
+    //         const currentRounds = template?.rounds || [];
+
+    //         // Remove existing round if editing
+    //         const filteredRounds = roundId
+    //         ? currentRounds.filter((round) => round._id !== roundId)
+    //         : [...currentRounds];
+
+    //         // Push the new or updated round
+    //         const updatedRounds = [...filteredRounds, roundData];
+
+    //         // Let backend sort and normalize by sequence
+    //         const response = await axios.patch(
+    //         `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
+    //         {
+    //             tenantId: queryParams.tenantId,
+    //             rounds: updatedRounds,
+    //         },
+    //         { headers }
+    //         );
+
+    //         return response.data;
+    //     },
+    //     onSuccess: () => {
+    //         queryClient.invalidateQueries(['interviewTemplates']);
+    //     },
+    //     onError: (error) => {
+    //         console.error('Error adding/updating round:', error);
+    //     },
+    // });
+
     const addOrUpdateRound = useMutation({
         mutationFn: async ({ id, roundData, roundId, template }) => {
             const headers = { Authorization: `Bearer ${queryParams.authToken}` };
             const currentRounds = template?.rounds || [];
-            const updatedRounds = roundId
-                ? currentRounds.map((round) =>
-                    round._id === roundId ? { ...round, ...roundData } : round
-                )
-                : [...currentRounds, roundData];
+
+            // Remove the round being edited
+            const filteredRounds = roundId
+            ? currentRounds.filter((r) => r._id !== roundId)
+            : [...currentRounds];
+
+            // Insert the updated round at the correct sequence index (sequence is 1-based)
+            const newIndex = Math.max((roundData.sequence || 1) - 1, 0);
+            filteredRounds.splice(newIndex, 0, roundData);
+
+            // Normalize all sequence values before sending
+            const reorderedRounds = filteredRounds.map((round, index) => ({
+            ...round,
+            sequence: index + 1,
+            }));
 
             const response = await axios.patch(
-                `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
-                {
-                    tenantId: queryParams.tenantId,
-                    rounds: updatedRounds,
-                },
-                { headers }
+            `${config.REACT_APP_API_URL}/interviewTemplates/${id}`,
+            {
+                tenantId: queryParams.tenantId,
+                rounds: reorderedRounds,
+            },
+            { headers }
             );
+
             return response.data;
         },
-        onSuccess: () => {
+
+
+        onSuccess: (data, variables) => {
+            queryClient.setQueryData(['interviewTemplates'], (oldData) => {
+                if (!oldData) return oldData;
+
+                return oldData.map(template =>
+                template._id === variables.id
+                    ? {
+                        ...template,
+                        rounds: data?.data?.rounds || [], // Backend will return ordered rounds
+                    }
+                    : template
+                );
+            });
+
             queryClient.invalidateQueries(['interviewTemplates']);
         },
+
+
         onError: (error) => {
             console.error('Error adding/updating round:', error);
         },
-    });
+        });
+    // v1.0.0 ------------------------------------------------------------------------->
 
     const deleteRoundMutation = useMutation({
         mutationFn: async (roundId) => {

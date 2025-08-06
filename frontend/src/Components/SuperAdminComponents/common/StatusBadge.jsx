@@ -4,9 +4,11 @@ function StatusBadge({ status, text }) {
     switch (normalizedStatus) {
       case "active":
       case "completed":
+      case "resolved":
       case "approved":
       case "paid":
       case "success":
+      case "hire":
       case "created":
       case "accepted":
         return "badge-success";
@@ -15,11 +17,14 @@ function StatusBadge({ status, text }) {
       case "in progress":
       case "inprogress":
       case "awaiting":
+        return "bg-secondary px-2 py-1 rounded-full";
       case "submitted":
       case "payment_pending":
       case "draft":
-      case "new":
+      case "assigned":
       case "contacted":
+      case "hold":
+      case "expired":
         return "badge-warning";
       case "inactive":
       case "failed":
@@ -27,6 +32,7 @@ function StatusBadge({ status, text }) {
       case "overdue":
       case "error":
       case "cancelled":
+      case "close":
       case "blacklisted":
         return "badge-error";
       default:

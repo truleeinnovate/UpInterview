@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  fixed assessment result tab issue.before getting only completed status data now we will display all status data
 // v1.0.1  -  Ashraf  -  fixed assessment code issue.now it will generate assessment code like ASMT-TPL-00001 and assessment name to assessment template
+// v1.0.2  -  Ashraf  -  fixed assessment code issue.now it will generate assessment code like ASMT-TPL-00001 and assessment name to assessment template
  // <-------------------------------v1.0.1
 const Assessment = require("../models/assessmentTemplates");
 // ------------------------------v1.0.1 >
@@ -67,9 +68,9 @@ exports.newAssessment = async (req, res) => {
     // Generate custom AssessmentCode like "ASMT-00001"
     const lastAssessment = await Assessment.findOne({ tenantId })
       .select("AssessmentCode")
-       // <-------------------------------v1.0.0
-      .sort({ AssessmentCode: -1 }) // Sort by AssessmentCode in descending order
-       // <-------------------------------v1.0.0
+      // <-------------------------------v1.0.2
+      .sort({ _id: -1 }) // Use _id for sorting instead of AssessmentCode
+      // ------------------------------v1.0.2 >
       .lean();
 
     let nextNumber = 1;
@@ -79,6 +80,28 @@ exports.newAssessment = async (req, res) => {
         nextNumber = parseInt(match[1], 10) + 1;
       }
     }
+
+    // Alternative approach: Find the highest number by querying all AssessmentCodes
+    // This is more reliable but less efficient - use only if the above approach fails
+    // if (nextNumber === 1) {
+    //   const allAssessmentCodes = await Assessment.find({ 
+    //     tenantId, 
+    //     AssessmentCode: { $regex: /^ASMT-TPL-\d+$/ } 
+    //   })
+    //     .select("AssessmentCode")
+    //     .lean();
+      
+    //   const numbers = allAssessmentCodes
+    //     .map(assessment => {
+    //       const match = assessment.AssessmentCode.match(/ASMT-TPL-(\d+)/);
+    //       return match ? parseInt(match[1], 10) : 0;
+    //     })
+    //     .filter(num => num > 0);
+      
+    //   if (numbers.length > 0) {
+    //     nextNumber = Math.max(...numbers) + 1;
+    //   }
+    // }
 
     const assessmentCode = `ASMT-TPL-${String(nextNumber).padStart(5, "0")}`;
     newAssessmentData.AssessmentCode = assessmentCode;

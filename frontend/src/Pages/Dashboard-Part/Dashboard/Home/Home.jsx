@@ -1,4 +1,5 @@
 // v1.0.0  -  mansoor  -  aligned the left content and right content in the center in all the scrrens responsively
+// v1.0.1  -  Ashraf  -  removed the freelancer condition from the interview requests component
 import { useState, useEffect } from 'react';
 import { TrendingUp, AlertCircle, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -116,7 +117,9 @@ const Home = () => {
                 />
               </motion.div>
             </div>
-            {!isOrganization && freelancer && <InterviewRequests />}
+            {/* v1.0.1 -----------> */}
+             {freelancer && !isOrganization && <InterviewRequests />}
+            {/* v1.0.1 -----------> */}
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}

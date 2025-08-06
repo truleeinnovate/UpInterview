@@ -1,7 +1,9 @@
 /* eslint-disable react/prop-types */
 
 // v1.0.0------Venkatesh------add attachments tab
-// v1.0.0 - Ashok - disabled outer scrollbar using custom hook
+// v1.0.1 - Ashok - disabled outer scrollbar using custom hook
+// v1.0.2 - Ashok - added optional chaining to prevent errors when accessing properties of undefined
+// v1.0.3 - Venkatesh - ticket code and status in align center
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MdOutlineCancel } from "react-icons/md";
@@ -26,9 +28,10 @@ import { config } from "../../../../config.js";
 import { useCustomContext } from "../../../../Context/Contextfetch.js";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { Minimize, Expand, X, Eye } from "lucide-react";
-// v1.0.0 <-------------------------------------------------------------------------
+// v1.0.1 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
-// v1.0.0 ------------------------------------------------------------------------->
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
+// v1.0.1 ------------------------------------------------------------------------->
 
 const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
@@ -77,9 +80,9 @@ function SupportDetails() {
   const [ownerOptions, setOwnerOptions] = useState([]);
   console.log("ownerOptions---", ownerOptions);
 
-  // v1.0.0 <-------------------------------------------------------------------------
+  // v1.0.1 <-------------------------------------------------------------------------
   useScrollLock(true);
-  // v1.0.0 ------------------------------------------------------------------------->
+  // v1.0.1 ------------------------------------------------------------------------->
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -230,9 +233,10 @@ function SupportDetails() {
     navigate("/support-desk");
     return null;
   }
-
-  const ticketId = currentTicket._id?.slice(-5, -1) || "";
+  // v1.0.2 <--------------------------------------------------------
+  const ticketId = currentTicket?._id?.slice(-5, -1) || "";
   const statusClass = getStatusColor(currentTicket.status);
+  // v1.0.2 --------------------------------------------------------->
 
   const content = (
     <div
@@ -268,24 +272,22 @@ function SupportDetails() {
       </div>
 
       <div className="p-6">
-        <div className="flex items-center justify-center mb-4">
-          <div className="relative">
-            <div className="w-16 h-16 flex items-center justify-center bg-custom-blue/10 text-custom-blue rounded-full">
-              <FaTicketAlt className="w-8 h-8" />
-            </div>
+        {/*<-------v1.0.3------*/}
+      <div className="flex items-center justify-center gap-2 mb-4">
+          
+          <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
+            <FaTicketAlt className="w-8 h-8" />
           </div>
-        </div>
-
-        <div className="text-center mb-4">
-          <h3 className="text-2xl font-bold text-gray-900">
-            {currentTicket.ticketCode}
-          </h3>
-          <span
-            className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full mt-2 ${statusClass}`}
-          >
-            {currentTicket.status}
-          </span>
-        </div>
+          <div className="items-center text-center mb-4">
+        <h3 className="text-2xl font-bold text-gray-900">
+          {currentTicket?.ticketCode}
+        </h3>
+        <StatusBadge status={currentTicket?.status} text={currentTicket?.status ? currentTicket?.status.charAt(0).toUpperCase() + currentTicket?.status.slice(1) : "Not Provided"}/>{/*common status code add by Venkatesh*/}
+        {/*-------v1.0.3------>*/}
+        {/*-------v1.0.1-------------->*/}
+      </div>
+      </div>
+        {/* v1.0.2 -------------------------------------------------------------------> */}
 
         <div className="flex justify-between border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
@@ -406,7 +408,7 @@ function SupportDetails() {
                 </div>
               ))}
             </div>
-
+{/* v1.0.2 <-------------------------------------------------------------------------------------- */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4 mt-2">
               <h4 className="text-lg font-semibold text-gray-800 mb-4">
                 Ticket Information
@@ -419,7 +421,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Contact</p>
                     <p className="text-gray-700">
-                      {currentTicket.contact.charAt(0).toUpperCase() + currentTicket.contact.slice(1) || "N/A"}
+                      {currentTicket?.contact?.charAt(0).toUpperCase() + currentTicket?.contact?.slice(1) || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -430,7 +432,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Organization</p>
                     <p className="text-gray-700">
-                      {currentTicket.organization.charAt(0).toUpperCase() + currentTicket.organization.slice(1) || "N/A"}
+                      {currentTicket?.organization?.charAt(0).toUpperCase() + currentTicket?.organization?.slice(1) || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -441,7 +443,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Issue Type</p>
                     <p className="text-gray-700">
-                      {currentTicket.issueType || "N/A"}
+                      {currentTicket?.issueType || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -463,7 +465,7 @@ function SupportDetails() {
                             <option value="" hidden>
                               Select Owner
                             </option>
-                            {ownerOptions.map((user) => (
+                            {ownerOptions?.map((user) => (
                               <option key={user._id} value={user._id}>
                                 {user.firstName + " " + user.lastName}
                               </option>
@@ -490,7 +492,7 @@ function SupportDetails() {
                         </div>
                       ) : (
                         <p className="text-gray-700 whitespace-nowrap">
-                          {currentTicket.assignedTo || "N/A"}
+                          {currentTicket?.assignedTo || "N/A"}
                         </p>
                       )}
                     </div>
@@ -514,7 +516,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Priority</p>
                     <p className="text-gray-700">
-                      {currentTicket.priority || "N/A"}
+                      {currentTicket?.priority || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -532,7 +534,7 @@ function SupportDetails() {
                 </div>
                 <div className="flex-grow whitespace-pre-wrap break-words break-all">
                   <p className="text-gray-700 ">
-                    {currentTicket.description || "No description provided."}
+                    {currentTicket?.description || "No description provided."}
                   </p>
                 </div>
               </div>
@@ -551,8 +553,8 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Created By</p>
                     <p className="text-gray-700">
-                      {currentTicket.contact.charAt(0).toUpperCase() + currentTicket.contact.slice(1) || "Unknown"},{" "}
-                      {formatDate(currentTicket.createdAt)}
+                      {currentTicket?.contact?.charAt(0).toUpperCase() + currentTicket?.contact?.slice(1) || "Unknown"},{" "}
+                      {formatDate(currentTicket?.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -563,7 +565,7 @@ function SupportDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Modified By</p>
                     <p className="text-gray-700">
-                      {currentTicket?.statusHistory?.[0]?.user.charAt(0).toUpperCase() + currentTicket?.statusHistory?.[0]?.user.slice(1) || "Unknown"},{" "}
+                      {currentTicket?.statusHistory?.[0]?.user.charAt(0).toUpperCase() + currentTicket?.statusHistory?.[0]?.user?.slice(1) || "Unknown"},{" "}
                       {formatDate(currentTicket?.statusHistory?.[0]?.date)}
                     </p>
                   </div>
@@ -596,7 +598,7 @@ function SupportDetails() {
                 <button
                   type="button"
                   title="Preview Attachment"
-                  onClick={() => window.open(currentTicket.attachment.path, "_blank")}
+                  onClick={() => window.open(currentTicket?.attachment?.path, "_blank")}
                   className="mt-1 p-2 hover:bg-gray-100 rounded-lg transition"
                 >
                   <Eye className="w-5 h-5 text-gray-600 hover:text-blue-600" />
@@ -638,7 +640,7 @@ function SupportDetails() {
       <StatusChangeModal
         isOpen={isStatusModalOpen}
         onClose={closeStatusModal}
-        ticketId={currentTicket._id}
+        ticketId={currentTicket?._id}
         onStatusUpdate={handleStatusUpdate}
       />
     </>

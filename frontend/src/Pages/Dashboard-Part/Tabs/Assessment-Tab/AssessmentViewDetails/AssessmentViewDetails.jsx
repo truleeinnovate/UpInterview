@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  assessment top border removed
 // v1.0.2  -  Venkatesh  -  assessment questions tab first index is open by default
 // v1.0.3  -  Ashok  - Implemented scroll lock hook for conditionally disable outer scrollbar
+// v1.0.4  -  Ashraf  -  assessment view default expand true
 import { useState, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import { Minimize, Expand, X } from 'lucide-react';
@@ -22,7 +23,9 @@ function AssessmentView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // <-------------------------------v1.0.4
+  const [isFullscreen, setIsFullscreen] = useState(true);
+  // ------------------------------v1.0.4 >
   const [selectedTab, setSelectedTab] = useState(0);
   const [assessment, setAssessment] = useState(null);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+// v1.0.0 - Ashok - fixed z-index issue at RoundDetailsModal model previously it looks like behind the header
+import React, { useState } from "react";
 
-import { format, parseISO, isValid } from 'date-fns';
+import { format, parseISO, isValid } from "date-fns";
 
 import {
   ChevronDown,
@@ -19,22 +20,24 @@ import {
   X,
   Code,
   Laptop2,
-  MessageCircle
-} from 'lucide-react';
+  MessageCircle,
+} from "lucide-react";
 
-import Modal from 'react-modal';
-import { useNavigate } from 'react-router-dom';
+import Modal from "react-modal";
+import { useNavigate } from "react-router-dom";
+// v1.0.0 <------------------------------------------------------------------------------------
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
+// v1.0.0 ------------------------------------------------------------------------------------>
 
-Modal.setAppElement('#root');
+Modal.setAppElement("#root");
 const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
+  // v1.0.0 <----------------------------------------------------
+  useScrollLock(isOpen);
+  // v1.0.0 ---------------------------------------------------->
   const [isFullScreen, setIsFullScreen] = useState(false);
   if (round.length === 0) {
-    return <p className='justify-center items-center'>No Rounds selected</p>
+    return <p className="justify-center items-center">No Rounds selected</p>;
   }
-
-
-
-
 
   // const getIcon = (roundTitle) => {
   //   if (roundTitle.toLowerCase().includes('Technical')) {
@@ -54,18 +57,25 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
       isOpen={isOpen}
       onRequestClose={onClose}
       className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-40 "
+      // v1.0.0 <------------------------------------------------------------
+      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >
-      <div className="h-full pt-14 md:pt-20 sm:pt-20">
-        <div className="sticky top-0 bg-white border-b border-gray-100 p-4 z-10">
+      <div className="h-full">
+        <div className="sticky top-0 bg-white p-4 z-10">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
                 {/* {getIcon(round.roundTitle) || "N/A"} */}
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800">{round?.roundTitle || "N/A"}</h3>
-                <p className="text-gray-600">{interview?.positionId?.companyname || "N/A"} - {interview?.positionId?.title || "N/A"}</p>
+                <h3 className="text-xl font-bold text-custom-blue">
+                  {round?.roundTitle || "N/A"}
+                </h3>
+        {/* v1.0.0 ------------------------------------------------------------> */}
+                <p className="text-gray-600">
+                  {interview?.positionId?.companyname || "N/A"} -{" "}
+                  {interview?.positionId?.title || "N/A"}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -92,7 +102,9 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6 mb-6">
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-              <h4 className="font-medium text-gray-800 mb-4">Interview Details</h4>
+              <h4 className="font-medium text-gray-800 mb-4">
+                Interview Details
+              </h4>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-50 rounded-lg">
@@ -100,7 +112,9 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Interviewer</p>
-                    <p className="text-gray-800">{round?.interviewers?.name || "N/A"}</p>
+                    <p className="text-gray-800">
+                      {round?.interviewers?.name || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -109,23 +123,36 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Date</p>
-                    <p className="text-gray-800">  {round?.dateTime
-                      ? (() => {
-                        try {
-                          // Extract date part from datetime string
-                          const datePart = round.dateTime.split(' ')[0];
+                    <p className="text-gray-800">
+                      {" "}
+                      {round?.dateTime
+                        ? (() => {
+                            try {
+                              // Extract date part from datetime string
+                              const datePart = round.dateTime.split(" ")[0];
 
-                          // Convert DD-MM-YYYY → YYYY-MM-DD
-                          const formattedDate = datePart.split('-').reverse().join('-');
+                              // Convert DD-MM-YYYY → YYYY-MM-DD
+                              const formattedDate = datePart
+                                .split("-")
+                                .reverse()
+                                .join("-");
 
-                          // Format date to "MMM dd, yyyy"
-                          return format(new Date(formattedDate), 'MMM dd, yyyy');
-                        } catch (error) {
-                          console.error("Invalid date format:", round?.dateTime, error);
-                          return 'Invalid Date';
-                        }
-                      })()
-                      : 'N/A'}</p>
+                              // Format date to "MMM dd, yyyy"
+                              return format(
+                                new Date(formattedDate),
+                                "MMM dd, yyyy"
+                              );
+                            } catch (error) {
+                              console.error(
+                                "Invalid date format:",
+                                round?.dateTime,
+                                error
+                              );
+                              return "Invalid Date";
+                            }
+                          })()
+                        : "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -144,10 +171,15 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
               <h4 className="font-medium text-gray-800 mb-4">Status</h4>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${round.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                    round.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      round.status === "Completed"
+                        ? "bg-green-100 text-green-800"
+                        : round.status === "Scheduled"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
                     {round.status}
                   </span>
                 </div>
@@ -174,7 +206,9 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-4 h-4 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
+                      className={`w-4 h-4 ${
+                        star <= 4 ? "text-yellow-400" : "text-gray-300"
+                      }`}
                     />
                   ))}
                 </div>
@@ -186,10 +220,19 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h5 className="text-sm font-medium text-gray-700 mb-3">Strengths</h5>
+                  <h5 className="text-sm font-medium text-gray-700 mb-3">
+                    Strengths
+                  </h5>
                   <div className="space-y-2">
-                    {['Problem-solving', 'Technical knowledge', 'Communication'].map((strength, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                    {[
+                      "Problem-solving",
+                      "Technical knowledge",
+                      "Communication",
+                    ].map((strength, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 text-sm text-gray-600"
+                      >
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
                         <span>{strength}</span>
                       </div>
@@ -197,14 +240,21 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
                   </div>
                 </div>
                 <div>
-                  <h5 className="text-sm font-medium text-gray-700 mb-3">Areas for Improvement</h5>
+                  <h5 className="text-sm font-medium text-gray-700 mb-3">
+                    Areas for Improvement
+                  </h5>
                   <div className="space-y-2">
-                    {['System design patterns', 'Performance optimization'].map((area, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                        <div className="w-1 h-1 bg-gray-400 rounded-full" />
-                        <span>{area}</span>
-                      </div>
-                    ))}
+                    {["System design patterns", "Performance optimization"].map(
+                      (area, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 text-sm text-gray-600"
+                        >
+                          <div className="w-1 h-1 bg-gray-400 rounded-full" />
+                          <span>{area}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -216,10 +266,15 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
   );
 };
 
-const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => {
+const InterviewRounds = ({
+  interviews,
+  onViewDetails,
+  onEdit,
+  candidateId,
+}) => {
   const navigate = useNavigate();
   const [expandedInterview, setExpandedInterview] = useState(null);
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState("details");
   const [selectedRound, setSelectedRound] = useState(null);
   const [selectedInterview, setSelectedInterview] = useState(null);
 
@@ -277,14 +332,21 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => 
         </h3>
         <button
           className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20"
-          onClick={() => navigate('/interviews/new', { state: { candidateId, from360: true } })}
+          onClick={() =>
+            navigate("/interviews/new", {
+              state: { candidateId, from360: true },
+            })
+          }
         >
           Add Interview
         </button>
       </div>
 
-      {interviews.length === 0 ? <p className='text-center text-lg font-semibold'>No Interviews Scheduled</p> :
-
+      {interviews.length === 0 ? (
+        <p className="text-center text-lg font-semibold">
+          No Interviews Scheduled
+        </p>
+      ) : (
         <div className="space-y-4">
           {/* {
          interviews?.map((interview) => ( */}
@@ -298,8 +360,12 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => 
                   <Building className="w-5 h-5 text-custom-blue" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-800">{interviews?.positionId?.companyname || "N/A"}</h4>
-                  <p className="text-sm text-gray-600">{interviews?.positionId?.title || "N/A"}</p>
+                  <h4 className="font-semibold text-gray-800">
+                    {interviews?.positionId?.companyname || "N/A"}
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {interviews?.positionId?.title || "N/A"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -327,26 +393,28 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => 
               <div className="p-4">
                 <div className="flex gap-4 mb-4 border-b border-gray-200">
                   <button
-                    className={`pb-2 px-1 text-sm font-medium transition-colors relative ${activeTab === 'details'
-                      ? 'text-custom-blue border-b-2 border-custom-blue'
-                      : 'text-gray-600 hover:text-gray-800'
-                      }`}
-                    onClick={() => setActiveTab('details')}
+                    className={`pb-2 px-1 text-sm font-medium transition-colors relative ${
+                      activeTab === "details"
+                        ? "text-custom-blue border-b-2 border-custom-blue"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                    onClick={() => setActiveTab("details")}
                   >
                     Details
                   </button>
                   <button
-                    className={`pb-2 px-1 text-sm font-medium transition-colors relative ${activeTab === 'feedback'
-                      ? 'text-custom-blue border-b-2 '
-                      : 'text-gray-600 hover:text-gray-800'
-                      }`}
-                    onClick={() => setActiveTab('feedback')}
+                    className={`pb-2 px-1 text-sm font-medium transition-colors relative ${
+                      activeTab === "feedback"
+                        ? "text-custom-blue border-b-2 "
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                    onClick={() => setActiveTab("feedback")}
                   >
                     Feedback
                   </button>
                 </div>
 
-                {activeTab === 'details' ? (
+                {activeTab === "details" ? (
                   <div className="space-y-4">
                     {interviews?.rounds.map((round, index) => (
                       <div
@@ -355,41 +423,64 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => 
                       >
                         <div className="flex justify-between items-start">
                           <div>
-                            <h5 className="font-semibold text-gray-800">{round?.roundTitle || "N/A"}</h5>
-                            <p className="text-sm text-gray-600">Interviewer: {round.interviewers[0]?.name || "N/A"}</p>
+                            <h5 className="font-semibold text-gray-800">
+                              {round?.roundTitle || "N/A"}
+                            </h5>
+                            <p className="text-sm text-gray-600">
+                              Interviewer:{" "}
+                              {round?.interviewers[0]?.name || "N/A"}
+                            </p>
                           </div>
                           <div className="text-right">
                             <span className="text-sm text-gray-500">
                               {round?.dateTime
                                 ? (() => {
-                                  try {
-                                    // Extract date part from datetime string
-                                    const datePart = round.dateTime.split(' ')[0];
+                                    try {
+                                      // Extract date part from datetime string
+                                      const datePart =
+                                        round.dateTime.split(" ")[0];
 
-                                    // Convert DD-MM-YYYY → YYYY-MM-DD
-                                    const formattedDate = datePart.split('-').reverse().join('-');
+                                      // Convert DD-MM-YYYY → YYYY-MM-DD
+                                      const formattedDate = datePart
+                                        .split("-")
+                                        .reverse()
+                                        .join("-");
 
-                                    // Format date to "MMM dd, yyyy"
-                                    return format(new Date(formattedDate), 'MMM dd, yyyy');
-                                  } catch (error) {
-                                    console.error("Invalid date format:", round?.dateTime, error);
-                                    return 'Invalid Date';
-                                  }
-                                })()
-                                : 'N/A'}
-
+                                      // Format date to "MMM dd, yyyy"
+                                      return format(
+                                        new Date(formattedDate),
+                                        "MMM dd, yyyy"
+                                      );
+                                    } catch (error) {
+                                      console.error(
+                                        "Invalid date format:",
+                                        round?.dateTime,
+                                        error
+                                      );
+                                      return "Invalid Date";
+                                    }
+                                  })()
+                                : "N/A"}
                             </span>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className={`
+                              <span
+                                className={`
                                 px-2 py-1 rounded-full text-xs font-medium
-                                ${round.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                  round.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-gray-100 text-gray-800'}
-                              `}>
+                                ${
+                                  round.status === "Completed"
+                                    ? "bg-green-100 text-green-800"
+                                    : round.status === "Scheduled"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-gray-100 text-gray-800"
+                                }
+                              `}
+                              >
                                 {round?.status || "N/A"}
                               </span>
                               <button
-                                onClick={() => handleViewRound(interviews, round)}
+                                onClick={() =>
+                                  handleViewRound(interviews, round)
+                                }
                                 className="p-1 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
                                 title="View Round Details"
                               >
@@ -407,7 +498,9 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => 
                       interviews?.rounds?.map((round, index) => (
                         <div key={index} className="bg-gray-50 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-3">
-                            <h6 className="font-medium text-gray-800">{round?.roundTitle}</h6>
+                            <h6 className="font-medium text-gray-800">
+                              {round?.roundTitle}
+                            </h6>
                             <div className="flex items-center gap-2">
                               {round.feedback && (
                                 <>
@@ -431,7 +524,11 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => 
                                 {[1, 2, 3, 4, 5].map((star) => (
                                   <Star
                                     key={star}
-                                    className={`w-4 h-4 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
+                                    className={`w-4 h-4 ${
+                                      star <= 4
+                                        ? "text-yellow-400"
+                                        : "text-gray-300"
+                                    }`}
                                   />
                                 ))}
                               </div>
@@ -468,8 +565,7 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => 
           </div>
           {/* // ))} */}
         </div>
-
-      }
+      )}
 
       {selectedRound && selectedInterview && (
         <RoundDetailsModal
@@ -482,7 +578,6 @@ const InterviewRounds = ({ interviews, onViewDetails, onEdit, candidateId }) => 
           }}
         />
       )}
-
     </div>
   );
 };

@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  adding assessment code while sending email we will create schedule assessment and candidate assessment
 // v1.0.1  -  Ashraf  -  azure getting error while sending email
 // v1.0.2  -  Ashraf  -  fixed name schedule assessment to assessment schema and schedule assessment to assessment schema
+// v1.0.3  -  Ashraf  -  fixed assessment resend link for mutiple and single candidate assessment
 
 const { CandidateAssessment } = require("../../models/candidateAssessment");
 const { encrypt } = require('../../utils/generateOtp')
@@ -121,11 +122,11 @@ exports.sendOtp = async (req, res) => {
   }
 };
 
-
+// <-------------------------------v1.0.3
 exports.resendAssessmentLink = async (req, res) => {
   try {
     const {
-      candidateAssessmentId,
+      candidateAssessmentIds,
       userId,
       organizationId,
       assessmentId,
@@ -133,8 +134,17 @@ exports.resendAssessmentLink = async (req, res) => {
       supportEmail = process.env.SUPPORT_EMAIL
     } = req.body;
 
-    if (!candidateAssessmentId || !mongoose.isValidObjectId(candidateAssessmentId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing candidate assessment ID' });
+    // Handle both single and multiple candidate assessment IDs
+    let candidateAssessmentIdArray = [];
+    
+    if (candidateAssessmentIds && Array.isArray(candidateAssessmentIds)) {
+      // Multiple candidates
+      candidateAssessmentIdArray = candidateAssessmentIds;
+    } else if (candidateAssessmentId && mongoose.isValidObjectId(candidateAssessmentId)) {
+      // Single candidate
+      candidateAssessmentIdArray = [candidateAssessmentId];
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid or missing candidate assessment ID(s)' });
     }
 
     if (!userId || !mongoose.isValidObjectId(userId)) {
@@ -145,25 +155,11 @@ exports.resendAssessmentLink = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid or missing organization ID' });
     }
 
-    const candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId)
-      .populate('candidateId')
-      .populate('scheduledAssessmentId');
-
-    if (!candidateAssessment) {
-      return res.status(404).json({ success: false, message: 'Candidate assessment not found' });
-    }
-
-    if (!candidateAssessment.isActive) {
-      return res.status(400).json({ success: false, message: 'Candidate assessment is not active' });
-    }
-
-    if (!candidateAssessment.assessmentLink) {
-      return res.status(400).json({ success: false, message: 'No assessment link available' });
-    }
-
-    const candidate = candidateAssessment.candidateId;
-    if (!candidate) {
-      return res.status(404).json({ success: false, message: 'Candidate not found' });
+    // Validate all candidate assessment IDs
+    for (const id of candidateAssessmentIdArray) {
+      if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).json({ success: false, message: `Invalid candidate assessment ID: ${id}` });
+      }
     }
 
     const assessment = await Assessment.findById(assessmentId);
@@ -177,103 +173,172 @@ exports.resendAssessmentLink = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Email template not found' });
     }
 
-    const emails = Array.isArray(candidate.emails)
-      ? candidate.emails
-      : candidate.emails
-        ? [candidate.emails]
-        : candidate.Email
-          ? [candidate.Email]
-          : [];
+    const results = [];
+    let successCount = 0;
+    let failureCount = 0;
 
-    if (emails.length === 0) {
-      return res.status(400).json({ success: false, message: 'No valid email address for candidate' });
+    for (const candidateAssessmentId of candidateAssessmentIdArray) {
+      try {
+        const candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId)
+          .populate('candidateId')
+          .populate('scheduledAssessmentId');
+
+        if (!candidateAssessment) {
+          results.push({
+            candidateAssessmentId,
+            success: false,
+            message: 'Candidate assessment not found'
+          });
+          failureCount++;
+          continue;
+        }
+
+        if (!candidateAssessment.isActive) {
+          results.push({
+            candidateAssessmentId,
+            success: false,
+            message: 'Candidate assessment is not active'
+          });
+          failureCount++;
+          continue;
+        }
+
+        if (!candidateAssessment.assessmentLink) {
+          results.push({
+            candidateAssessmentId,
+            success: false,
+            message: 'No assessment link available'
+          });
+          failureCount++;
+          continue;
+        }
+
+        const candidate = candidateAssessment.candidateId;
+        if (!candidate) {
+          results.push({
+            candidateAssessmentId,
+            success: false,
+            message: 'Candidate not found'
+          });
+          failureCount++;
+          continue;
+        }
+
+        const emails = Array.isArray(candidate.emails)
+          ? candidate.emails
+          : candidate.emails
+            ? [candidate.emails]
+            : candidate.Email
+              ? [candidate.Email]
+              : [];
+
+        if (emails.length === 0) {
+          results.push({
+            candidateAssessmentId,
+            success: false,
+            message: 'No valid email address for candidate'
+          });
+          failureCount++;
+          continue;
+        }
+
+        const candidateName = (candidate.FirstName ? candidate.FirstName + ' ' : '') + (candidate.LastName || 'Candidate');
+        const formattedExpiryDate = candidateAssessment.expiryAt.toLocaleString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZoneName: 'short'
+        });
+
+        const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, '');
+        const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
+        const emailBody = cleanedBody
+          .replace(/{{candidateName}}/g, candidateName)
+          .replace(/{{companyName}}/g, companyName)
+          .replace(/{{expiryDate}}/g, formattedExpiryDate)
+          .replace(/{{assessmentLink}}/g, candidateAssessment.assessmentLink)
+          .replace(/{{assessmentDuration}}/g, assessmentDuration)
+          .replace(/{{supportEmail}}/g, supportEmail);
+
+        const sendEmailResponses = await Promise.all(
+          emails.map((email) => sendEmail(email, emailSubject, emailBody))
+        );
+
+        const emailStatus = sendEmailResponses.every((response) => response.success) ? 'Success' : 'Failed';
+
+        if (emailStatus === 'Success') {
+          successCount++;
+        } else {
+          failureCount++;
+        }
+
+        sendEmailResponses.forEach((response, index) => {
+          if (!response.success) {
+            console.error(`Error sending email to ${emails[index]}: ${response.message}`);
+          }
+        });
+
+        results.push({
+          candidateAssessmentId,
+          success: emailStatus === 'Success',
+          message: emailStatus === 'Success' ? 'Assessment link resent successfully' : 'Failed to send email',
+          candidateName,
+          emails
+        });
+
+      } catch (error) {
+        console.error(`Error processing candidate assessment ${candidateAssessmentId}:`, error);
+        results.push({
+          candidateAssessmentId,
+          success: false,
+          message: 'Internal server error'
+        });
+        failureCount++;
+      }
     }
 
-    const candidateName = (candidate.FirstName ? candidate.FirstName + ' ' : '') + (candidate.LastName || 'Candidate');
-    const formattedExpiryDate = candidateAssessment.expiryAt.toLocaleString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
-
-    const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, '');
-    const emailSubject = emailTemplate.subject.replace('{{companyName}}', companyName);
-    const emailBody = cleanedBody
-      .replace(/{{candidateName}}/g, candidateName)
-      .replace(/{{companyName}}/g, companyName)
-      .replace(/{{expiryDate}}/g, formattedExpiryDate)
-      .replace(/{{assessmentLink}}/g, candidateAssessment.assessmentLink)
-      .replace(/{{assessmentDuration}}/g, assessmentDuration)
-      .replace(/{{supportEmail}}/g, supportEmail);
-
-    const sendEmailResponses = await Promise.all(
-      emails.map((email) => sendEmail(email, emailSubject, emailBody))
-    );
-
-    const emailStatus = sendEmailResponses.every((response) => response.success) ? 'Success' : 'Failed';
-
-    sendEmailResponses.forEach((response, index) => {
-      if (!response.success) {
-        console.error(`Error sending email to ${emails[index]}: ${response.message}`);
+    // Return appropriate response based on single vs multiple
+    if (candidateAssessmentIdArray.length === 1) {
+      // Single candidate response (backward compatible)
+      const result = results[0];
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          message: `Assessment link resent successfully to ${result.candidateName}`,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: result.message,
+        });
       }
-    });
+    } else {
+      // Multiple candidates response
+      res.status(200).json({
+        success: true,
+        message: `Processed ${candidateAssessmentIdArray.length} candidates. ${successCount} successful, ${failureCount} failed.`,
+        results,
+        summary: {
+          total: candidateAssessmentIdArray.length,
+          successful: successCount,
+          failed: failureCount
+        }
+      });
+    }
 
-    // const notificationData = [{
-    //   toAddress: emails,
-    //   fromAddress: process.env.EMAIL_FROM,
-    //   title: `Assessment Email ${emailStatus}`,
-    //   body: `Email ${emailStatus} for candidate ${candidate.LastName}.`,
-    //   notificationType: 'email',
-    //   object: {
-    //     objectName: 'assessment',
-    //     objectId: candidateAssessment.scheduledAssessmentId.assessmentId,
-    //   },
-    //   status: emailStatus,
-    //   tenantId: organizationId,
-    //   ownerId: userId,
-    //   recipientId: candidate._id,
-    //   createdBy: userId,
-    //   updatedBy: userId,
-    // }];
-
-    const notificationData = [{
-      toAddress: emails,
-      fromAddress: process.env.EMAIL_FROM,
-      title: emailSubject,
-      body: emailBody,
-      notificationType: 'email',
-      object: {
-        objectName: 'assessment',
-        objectId: candidateAssessment.scheduledAssessmentId.assessmentId,
-      },
-      status: emailStatus,
-      tenantId: organizationId,
-      ownerId: userId,
-      recipientId: candidate._id,
-      createdBy: userId,
-      updatedBy: userId,
-    }];
-
-    req.notificationData = notificationData;
-    await notificationMiddleware(req, res, () => { });
-
-    res.status(200).json({
-      success: true,
-      message: `Assessment link resent successfully to ${candidate.LastName}`,
-    });
   } catch (error) {
-    console.error('Error resending assessment link:', error);
+    console.error('Error resending assessment link(s):', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to resend assessment link',
+      message: 'Failed to resend assessment link(s)',
       error: error.message,
     });
   }
 };
+// ------------------------------v1.0.3 >
 
 exports.shareAssessment = async (req, res) => {
   try {

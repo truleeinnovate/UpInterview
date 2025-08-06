@@ -1,0 +1,134 @@
+import React from "react";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { Doughnut } from "react-chartjs-2";
+
+// Register the required components
+ChartJS.register(ArcElement, Tooltip, Legend);
+
+const DoughnutChart = ({ skillsTabData, data }) => {
+  const calculateCategoryRatings = () => {
+    // If data is passed directly, use it; otherwise try to calculate from skillsTabData
+    if (data && Array.isArray(data)) {
+      return data.map((item) => ({
+        category: item.category,
+        percentage: Math.round(item.averageRating * 20), // Convert 1-5 rating to percentage
+      }));
+    }
+
+    // Fallback to skillsTabData calculation with null checks
+    if (!skillsTabData || !Array.isArray(skillsTabData)) {
+      return [];
+    }
+
+    const categoryRatings = skillsTabData.map((category) => {
+      if (!category.skillsList || !Array.isArray(category.skillsList)) {
+        return { category: category.category || "Unknown", avgRating: 0 };
+      }
+
+      const totalRatings = category.skillsList.reduce(
+        (acc, skill) => acc + (skill.rating || 0),
+        0
+      );
+      const avgRating =
+        category.skillsList.length > 0
+          ? totalRatings / category.skillsList.length
+          : 0;
+      return {
+        category: category.category || "Unknown",
+        avgRating,
+      };
+    });
+
+    const totalAvgRating = categoryRatings.reduce((acc, cat) => acc + cat.avgRating, 0);
+    const percentages = categoryRatings.map((cat) => ({
+      category: cat.category,
+      percentage:
+        totalAvgRating > 0
+          ? Math.round((cat.avgRating / totalAvgRating) * 100, 3)
+          : 0,
+    }));
+    return percentages;
+  };
+
+  const categoryData = calculateCategoryRatings();
+
+  // If no data available, show default message
+  if (!categoryData || categoryData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">No performance data available</p>
+      </div>
+    );
+  }
+
+  const chartData = {
+    labels: categoryData.map((cat) => cat.category),
+    datasets: [
+      {
+        data: categoryData.map((cat) => cat.percentage) || [25, 25, 25, 25],
+        backgroundColor: [
+          "#F8D9A0", // Mandatory skills color
+          "#B0C9F3", // Optional skills color
+          "#D3A8E0", // Technical skills color
+          "#A8E4E7", // Soft skills color
+        ],
+        borderWidth: 2, // For cleaner arcs
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "right", // Position of legend
+        labels: {
+          usePointStyle: true,
+          pointStyle: "circle",
+          font: { size: 16 },
+          // Custom callback to display percentages in the legend
+          generateLabels: (chart) => {
+            const { labels } = chart.data;
+            const data = chart.data.datasets[0].data;
+            const colors = chart.data.datasets[0].backgroundColor;
+            return labels.map((label, index) => ({
+              text: `${label} ${data[index]}%`, // Append percentage to label
+              fillStyle: colors[index], // Set legend color
+              strokeStyle: colors[index],
+              pointStyle: "circle", // Circle legend point
+            }));
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${context.raw}%`;
+          },
+        },
+      },
+    },
+    cutout: "70%", // To make it look like a doughnut chart
+  };
+
+  const centerText = {
+    id: "centerText",
+    beforeDraw(chart) {
+      const {
+        ctx,
+        chartArea: { width, height },
+      } = chart;
+
+      ctx.save();
+      ctx.font = "bold 20px Arial";
+      ctx.fillStyle = "#000"; // Text color
+      ctx.textAlign = "center";
+      ctx.fillText("Overall", width / 2, height / 2 - 10);
+      ctx.fillText("Impression", width / 2, height / 2 + 20);
+    },
+  };
+
+  return <Doughnut data={chartData} options={options} plugins={[centerText]} />;
+};
+
+export default DoughnutChart;

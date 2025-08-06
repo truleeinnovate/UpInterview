@@ -32,6 +32,8 @@
 //     return { formIsValid, newErrors };
 // };
 
+// v1.0.0 - Ashok - added "location" validation
+
 export const validateForm = (formData, entries, rounds) => {
   let errors = {};
   let formIsValid = true;
@@ -129,6 +131,13 @@ export const validateForm = (formData, entries, rounds) => {
       errors.noOfPositions = "Number of Positions must be greater than 0";
       formIsValid = false;
     }
+    // v1.0.0 <----------------------------------------------------------------------
+    // Add location validation
+    if (!formData.Location) {
+      errors.location = "Location is required";
+      formIsValid = false;
+    }
+    // v1.0.0 ---------------------------------------------------------------------->
 
   return { formIsValid, newErrors: errors };
 };

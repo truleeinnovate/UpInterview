@@ -1,14 +1,19 @@
-import { useState } from 'react'
-import Modal from 'react-modal'
-import classNames from 'classnames';
+//<-----v1.0.0-----Venkatesh---add scroll into view for error msg
+
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom'
 import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline'
+import { validateBankAccount } from '../../../../../utils/BankAccountValidation';//<-----v1.0.0------
+import { scrollToFirstError } from '../../../../../utils/ScrollToFirstError/scrollToFirstError';//<-----v1.0.0-----
+import Modal from 'react-modal'
+import classNames from 'classnames';
 
 export function BankAccountsPopup({ onClose, onSave }) {
   const navigate = useNavigate();
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [accounts, setAccounts] = useState([])
   const [isAddingAccount, setIsAddingAccount] = useState(false)
+  const [errors, setErrors] = useState({});//<-----v1.0.0-----
   const [newAccount, setNewAccount] = useState({
     accountName: '',
     accountNumber: '',
@@ -19,15 +24,33 @@ export function BankAccountsPopup({ onClose, onSave }) {
     swiftCode: '',
     isDefault: false
   })
+//<-----v1.0.0-----
+  const fieldRefs = {
+    accountName: useRef(null),
+    accountNumber: useRef(null),
+    confirmAccountNumber: useRef(null),
+    routingNumber: useRef(null),
+    bankName: useRef(null),
+    accountType: useRef(null),
+    swiftCode: useRef(null),
+  };
+  //-----v1.0.0----->
 
   const handleSubmit = (e) => {
     e.preventDefault()
     
-    if (newAccount.accountNumber !== newAccount.confirmAccountNumber) {
-      alert('Account numbers do not match')
-      return
-    }
+    //<-----v1.0.0-----
+    const validationErrors = validateBankAccount(newAccount);
+    setErrors(validationErrors);
+    console.log('Validation Errors:', validationErrors);
 
+    if (Object.keys(validationErrors).length > 0) {
+      scrollToFirstError(validationErrors, fieldRefs);
+      return;
+    }
+    //-----v1.0.0----->
+    
+    // If validation passes, add the new account
     const account = {
       id: Date.now(),
       ...newAccount,
@@ -58,16 +81,18 @@ export function BankAccountsPopup({ onClose, onSave }) {
         <h3 className="text-lg font-medium">Account Holder Information</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Account Holder Name
+            Account Holder Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
+            name="accountName"
+            ref={fieldRefs.accountName}//<-----v1.0.0-----
             value={newAccount.accountName}
-            placeholder="Account Holder Name"
             onChange={(e) => setNewAccount({ ...newAccount, accountName: e.target.value })}
-            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
-            required
+            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue  ${errors.accountName ? 'border-red-500' : 'border-gray-300'}`}
+            
           />
+          {errors.accountName && <p className="text-red-500 text-sm mt-2 font-medium">{errors.accountName}</p>}{/*<-----v1.0.0-----*/}
           <p className="mt-1 text-sm text-gray-500">Enter the name exactly as it appears on your bank account</p>
         </div>
       </div>
@@ -77,86 +102,99 @@ export function BankAccountsPopup({ onClose, onSave }) {
         <h3 className="text-lg font-medium">Bank Account Details</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Bank Name
+            Bank Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
+            name="bankName"
+            ref={fieldRefs.bankName}//<-----v1.0.0-----
             value={newAccount.bankName}
-            placeholder="Bank Name"
             onChange={(e) => setNewAccount({ ...newAccount, bankName: e.target.value })}
-            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
-            required
+            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${errors.bankName ? 'border-red-500' : 'border-gray-300'}`}
+            
           />
+          {errors.bankName && <p className="text-red-500 text-sm mt-2 font-medium">{errors.bankName}</p>}{/*<-----v1.0.0-----*/}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Account Type
+            Account Type <span className="text-red-500">*</span>
           </label>
           <select
+            name="accountType"
+            ref={fieldRefs.accountType}//<-----v1.0.0-----
             value={newAccount.accountType}
             onChange={(e) => setNewAccount({ ...newAccount, accountType: e.target.value })}
-            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${errors.accountType ? 'border-red-500' : 'border-gray-300'}`}
           >
             <option value="checking">Checking</option>
             <option value="savings">Savings</option>
           </select>
+          {errors.accountType && <p className="text-red-500 text-sm mt-2 font-medium">{errors.accountType}</p>}{/*<-----v1.0.0-----*/}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Account Number
+            Account Number <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
+            name="accountNumber"
+            ref={fieldRefs.accountNumber}//<-----v1.0.0-----
             value={newAccount.accountNumber}
-            placeholder="Account Number"
             onChange={(e) => setNewAccount({ ...newAccount, accountNumber: e.target.value })}
-            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
-            required
+            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${errors.accountNumber ? 'border-red-500' : 'border-gray-300'}`}
+            
           />
+          {errors.accountNumber && <p className="text-red-500 text-sm mt-2 font-medium">{errors.accountNumber}</p>}{/*<-----v1.0.0-----*/}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Confirm Account Number
+            Confirm Account Number <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
+            name="confirmAccountNumber"
+            ref={fieldRefs.confirmAccountNumber}//<-----v1.0.0-----
             value={newAccount.confirmAccountNumber}
-            placeholder="Confirm Account Number"
             onChange={(e) => setNewAccount({ ...newAccount, confirmAccountNumber: e.target.value })}
-            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
-            required
+            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${errors.confirmAccountNumber ? 'border-red-500' : 'border-gray-300'}`}
+            
           />
+          {errors.confirmAccountNumber && <p className="text-red-500 text-sm mt-2 font-medium">{errors.confirmAccountNumber}</p>}{/*<-----v1.0.0-----*/}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Routing Number
+            Routing Number <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
+            name="routingNumber"
+            ref={fieldRefs.routingNumber}//<-----v1.0.0-----
             value={newAccount.routingNumber}
-            placeholder="Routing Number"
             onChange={(e) => setNewAccount({ ...newAccount, routingNumber: e.target.value })}
-            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
-            required
+            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${errors.routingNumber ? 'border-red-500' : 'border-gray-300'}`}
+          
           />
+          {errors.routingNumber && <p className="text-red-500 text-sm mt-2 font-medium">{errors.routingNumber}</p>}{/*<-----v1.0.0-----*/}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            SWIFT/BIC Code
+            SWIFT/BIC Code <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
+            name="swiftCode"
+            ref={fieldRefs.swiftCode}//<-----v1.0.0-----
             value={newAccount.swiftCode}
-            placeholder="SWIFT/BIC Code"
             onChange={(e) => setNewAccount({ ...newAccount, swiftCode: e.target.value })}
-            className="w-full p-1 border rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${errors.swiftCode ? 'border-red-500' : 'border-gray-300'}`}
           />
-          <p className="mt-1 text-sm text-gray-500">Required for international transfers</p>
+          {errors.swiftCode && <p className="text-red-500 text-sm mt-2 font-medium">{errors.swiftCode}</p>}{/*<-----v1.0.0-----*/}
+          <p className="mt-1 text-sm text-gray-500">8-11 characters. You can find it on your bank statement</p>
         </div>
       </div>
 
@@ -165,6 +203,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
         <label className="flex items-center space-x-2">
           <input
             type="checkbox"
+            name="isDefault"
             checked={newAccount.isDefault}
             onChange={(e) => setNewAccount({ ...newAccount, isDefault: e.target.checked })}
             className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue"
@@ -225,13 +264,13 @@ export function BankAccountsPopup({ onClose, onSave }) {
           </div>
         </div>
       ))}
-    <div className="flex justify-end items-center">
-      <button
-        onClick={() => setIsAddingAccount(true)}
-        className="w-44 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
-      >
-        Add Bank Account
-      </button>
+      <div className="flex justify-end items-center">
+        <button
+          onClick={() => setIsAddingAccount(true)}
+          className="w-44 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
+        >
+          Add Bank Account
+        </button>
       </div>
     </div>
   )

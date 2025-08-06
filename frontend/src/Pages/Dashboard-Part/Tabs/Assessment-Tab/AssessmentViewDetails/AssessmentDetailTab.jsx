@@ -1,15 +1,14 @@
 // src/components/DetailsTab.jsx
+// v1.0.0  -  Ashraf  -  page alignments changes
 import { format } from 'date-fns';
 import { usePositions } from '../../../../../apiHooks/usePositions';
-
-
 
 function DetailsTab({ assessment, assessmentQuestions }) {
   const { positionData } = usePositions();
 
   const matchedPosition = positionData.find((pos) => pos._id === assessment.Position);
 
-  if (!assessment) return <div>Loading assessment details...</div>;
+  if (!assessment) return <div className="p-4 text-gray-600">Loading assessment details...</div>;
 
   const isEachSection = assessment.passScoreBy === 'Each Section';
   const scoringData = isEachSection
@@ -27,70 +26,77 @@ function DetailsTab({ assessment, assessmentQuestions }) {
     ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Details</h3>
-          <dl className="space-y-2">
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Position</dt>
-             <dd className="text-sm text-gray-900">{matchedPosition?.title.charAt(0).toUpperCase() + matchedPosition?.title.slice(1) || '-'}</dd>
+    <div className="space-y-8 p-6 bg-white rounded-lg shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Basic Details Section */}
+        <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-5 pb-2 border-b border-gray-200">Basic Details</h3>
+          <dl className="space-y-4">
+            <div className="flex justify-between items-start">
+              <dt className="text-sm font-medium text-gray-600 flex-1">Position</dt>
+              <dd className="text-sm font-medium text-gray-900 flex-1 text-right">
+                {matchedPosition?.title.charAt(0).toUpperCase() + matchedPosition?.title.slice(1) || '-'}
+              </dd>
             </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Duration</dt>
-              <dd className="text-sm text-gray-900">{assessment.Duration}</dd>
+            <div className="flex justify-between items-start">
+              <dt className="text-sm font-medium text-gray-600 flex-1">Duration</dt>
+              <dd className="text-sm font-medium text-gray-900 flex-1 text-right">{assessment.Duration}</dd>
             </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Difficulty Level</dt>
-              <dd className="text-sm text-gray-900">{assessment.DifficultyLevel}</dd>
+            <div className="flex justify-between items-start">
+              <dt className="text-sm font-medium text-gray-600 flex-1">Difficulty Level</dt>
+              <dd className="text-sm font-medium text-gray-900 flex-1 text-right">{assessment.DifficultyLevel}</dd>
             </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Expiry Date</dt>
-              <dd className="text-sm text-gray-900">
+            <div className="flex justify-between items-start">
+              <dt className="text-sm font-medium text-gray-600 flex-1">Expiry Date</dt>
+              <dd className="text-sm font-medium text-gray-900 flex-1 text-right">
                 {assessment.ExpiryDate ? format(new Date(assessment.ExpiryDate), 'MMM dd, yyyy') : '-'}
               </dd>
             </div>
           </dl>
         </div>
 
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Scoring</h3>
-          {scoringData.map((score, idx) => (
-            <div key={idx} className={isEachSection ? 'mb-4' : ''}>
-              <h4 className="text-sm font-medium text-gray-700 mb-2">{score.sectionName}</h4>
-              <dl className="space-y-2">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Total Score</dt>
-                  <dd className="text-sm text-gray-900">{score.totalScore}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Pass Score</dt>
-                  <dd className="text-sm text-gray-900">{score.passScore}</dd>
-                </div>
-                {!isEachSection && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Questions</dt>
-                    <dd className="text-sm text-gray-900">{assessment.NumberOfQuestions || '-'}</dd>
+        {/* Scoring Section */}
+        <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-5 pb-2 border-b border-gray-200">Scoring</h3>
+          <div className="space-y-6">
+            {scoringData.map((score, idx) => (
+              <div key={idx} className={`${isEachSection ? 'pb-4 mb-4 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0' : ''}`}>
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">{score.sectionName}</h4>
+                <dl className="space-y-3">
+                  <div className="flex justify-between">
+                    <dt className="text-sm font-medium text-gray-600">Total Score</dt>
+                    <dd className="text-sm font-medium text-gray-900">{score.totalScore}</dd>
                   </div>
-                )}
-              </dl>
-            </div>
-          ))}
+                  <div className="flex justify-between">
+                    <dt className="text-sm font-medium text-gray-600">Pass Score</dt>
+                    <dd className="text-sm font-medium text-gray-900">{score.passScore}</dd>
+                  </div>
+                  {!isEachSection && (
+                    <div className="flex justify-between">
+                      <dt className="text-sm font-medium text-gray-600">Questions</dt>
+                      <dd className="text-sm font-medium text-gray-900">{assessment.NumberOfQuestions || '-'}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
-        <div className="space-y-4">
+      {/* Additional Information Section */}
+      <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-5 pb-2 border-b border-gray-200">Additional Information</h3>
+        <div className="space-y-6">
           <div>
-            <h4 className="text-sm font-medium text-gray-900">Instructions</h4>
-            <p className="text-sm text-gray-500 break-words">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3">Instructions</h4>
+            <div className="text-sm text-gray-700 bg-white p-4 rounded border border-gray-200">
               {assessment.Instructions ? (
-                <div className="text-sm text-gray-500">
+                <div>
                   {assessment.Instructions.split('\n').map((paragraph, pIndex) => (
-                    <div key={pIndex} className="mb-2">
+                    <div key={pIndex} className="mb-3 last:mb-0">
                       {paragraph.startsWith('•') ? (
-                        <ul className="list-disc pl-5">
+                        <ul className="list-disc pl-5 space-y-1">
                           {paragraph
                             .split('•')
                             .filter((item) => item.trim())
@@ -105,13 +111,15 @@ function DetailsTab({ assessment, assessmentQuestions }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">None provided</p>
+                <p className="text-gray-500 italic">None provided</p>
               )}
-            </p>
+            </div>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-gray-900">Additional Notes</h4>
-            <p className="text-sm text-gray-500">{assessment.AdditionalNotes || 'None provided'}</p>
+            <h4 className="text-sm font-semibold text-gray-800 mb-3">Additional Notes</h4>
+            <div className="text-sm text-gray-700 bg-white p-4 rounded border border-gray-200">
+              {assessment.AdditionalNotes || <p className="text-gray-500 italic">None provided</p>}
+            </div>
           </div>
         </div>
       </div>

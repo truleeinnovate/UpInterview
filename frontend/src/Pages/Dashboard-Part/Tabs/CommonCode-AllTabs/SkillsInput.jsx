@@ -1,6 +1,6 @@
 // ----- v1.0.0 ----- Venkatesh----improve dropdown styles and placeholder text in small devices shown in ellipsis and border border-gray-300 added
-
-import { useState, useRef, useEffect } from 'react';
+// v1.0.1 - Ashok - added useForward ref to implement scroll to first error functionality
+import { useState, useRef, useEffect, forwardRef } from 'react';
 import { ReactComponent as FaTrash } from '../../../../icons/FaTrash.svg';
 import { ReactComponent as FaEdit } from '../../../../icons/FaEdit.svg';
 import { ReactComponent as FaPlus } from '../../../../icons/FaPlus.svg';
@@ -97,7 +97,232 @@ const CustomDropdown = ({
   );
 };
 
-const SkillsField = ({
+// v1.0.1 <----------------------------------------------------------------------------------
+// const SkillsField = ({
+//   entries,
+//   errors,
+//   onAddSkill,
+//   onEditSkill,
+//   onDeleteSkill,
+//   setEditingIndex,
+//   editingIndex,
+//   selectedSkill,
+//   setSelectedSkill,
+//   allSelectedSkills,
+//   selectedExp,
+//   setSelectedExp,
+//   selectedLevel,
+//   setSelectedLevel,
+//   skills,
+//   expertiseOptions,
+//   experienceOptions,
+//   isNextEnabled,
+//   handleAddEntry,
+// }) => {
+//   const [deleteIndex, setDeleteIndex] = useState(null);
+
+
+//   const handleDelete = (index) => {
+//     setDeleteIndex(index);
+//   };
+
+//   const confirmDelete = () => {
+//     if (deleteIndex !== null) {
+//       onDeleteSkill(deleteIndex);
+//       setDeleteIndex(null);
+//     }
+//   };
+
+//   const cancelDelete = () => {
+//     setDeleteIndex(null);
+//   };
+
+//   const handleEdit = (index) => {
+//     const entry = entries[index];
+//     setSelectedSkill(entry.skill || '');
+//     setSelectedExp(entry.experience || '');
+//     setSelectedLevel(entry.expertise || '');
+//     setEditingIndex(index);
+//     onEditSkill(index);
+//   };
+
+//   const availableSkills = skills.filter(
+//     (skill) => !allSelectedSkills.includes(skill.SkillName) || selectedSkill === skill.SkillName
+//   );
+
+//   const handleAddClick = () => {
+//     onAddSkill(setEditingIndex); // Pass setEditingIndex to the parent's onAddSkill
+//     // The setEditingIndex will now be handled by the parent's onAddSkill callback
+//     setSelectedSkill("");
+//     setSelectedExp("");
+//     setSelectedLevel("");
+//   };
+
+//   const handleCancelSelection = () => {
+//     // If the current editingIndex points to a newly added, empty row, delete it.
+//     // A newly added row will have an editingIndex, and its skill, experience, and expertise will be empty.
+//     if (editingIndex !== null &&
+//         entries[editingIndex] &&
+//         !entries[editingIndex].skill &&
+//         !entries[editingIndex].experience &&
+//         !entries[editingIndex].expertise) {
+//       onDeleteSkill(editingIndex);
+//     }
+//     setSelectedSkill("");
+//     setSelectedExp("");
+//     setSelectedLevel("");
+//     setEditingIndex(null);
+//   };
+
+//   return (
+//     <div>
+//       <div className="flex justify-between items-center">
+//         <div className="flex items-center mb-2">
+//           <label htmlFor="Skills" className="text-sm font-medium text-gray-900">
+//             Skills Details <span className="text-red-500">*</span>
+//           </label>
+//         </div>
+//         <button
+//           type="button"
+//           onClick={handleAddClick}
+//           disabled={editingIndex !== null && entries.length > 0}
+//           className={`flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded ${editingIndex !== null && entries.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+//         >
+//           <FaPlus className="mr-1 w-5 h-5" /> Add Rows
+//         </button>
+//       </div>
+//       {errors.skills && (
+//         <p className="text-red-500 text-sm">{errors.skills}</p>
+//       )}
+//       <div className="space-y-2 mb-4 mt-5">
+//         {entries.map((entry, index) => (
+//           <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
+//             { editingIndex === index || editingIndex === 'all' ? (
+//               // EDIT MODE
+//               <>
+//                 <div className="flex justify-between border border-gray-400 bg-white rounded w-full p-2 mr-3">
+//                   <div className="w-1/3 px-1">
+//                     <CustomDropdown
+//                       name="skill"
+//                       value={selectedSkill}
+//                       options={availableSkills}
+//                       onChange={(e) => setSelectedSkill(e.target.value)}
+//                       placeholder="Select Skill"
+//                       optionKey="SkillName"
+//                       optionValue="SkillName"
+//                     />
+//                   </div>
+//                   <div className="w-1/3 px-1">
+//                     <CustomDropdown
+//                       name="experience"
+//                       value={selectedExp}
+//                       options={experienceOptions}
+//                       onChange={(e) => setSelectedExp(e.target.value)}
+//                       placeholder="Select Experience"
+//                       disableSearch={true}
+//                     />
+//                   </div>
+//                   <div className="w-1/3 px-1">
+//                     <CustomDropdown
+//                       name="expertise"
+//                       value={selectedLevel}
+//                       options={expertiseOptions}
+//                       onChange={(e) => setSelectedLevel(e.target.value)}
+//                       placeholder="Select Expertise"
+//                       disableSearch={true}
+//                     />
+//                   </div>
+//                 </div>
+//                 <div className="flex space-x-2">
+//                 <button
+//                     type="button"
+//                     onClick={() => {
+//                       handleAddEntry();
+//                     }}
+//                     className={`text-green-600 hover:text-green-800 p-1 ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
+//                     disabled={!isNextEnabled()}
+//                     title='Add'
+//                   >
+//                     <FaPlus className="w-5 h-5" />{/* {editingIndex !== null ? <FaPlus /> : <FaPlus />} */}
+//                   </button>
+//                   <button
+//                     type="button"
+//                     onClick={handleCancelSelection}
+//                     className="text-red-600 hover:text-red-800 p-1"
+//                     title='Cancel'
+//                   >
+//                     <FaTimes className="w-5 h-5" />
+//                   </button>
+//                 </div>
+//               </>
+//             ) : (
+//               // DISPLAY MODE
+//               <>
+//                 <div className="flex justify-between border border-gray-400 bg-white rounded w-full mr-3">
+//                   <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+//                     {entry.skill}
+//                   </div>
+//                   <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+//                     {entry.experience}
+//                   </div>
+//                   <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
+//                     {entry.expertise}
+//                   </div>
+//                 </div>
+//                 <div className="flex space-x-2">
+//                   <button
+//                     type="button"
+//                     onClick={() => handleEdit(index)}
+//                     className="text-custom-blue text-md"
+//                     title='Edit'
+//                   >
+//                     <FaEdit className="w-5 h-5"/>
+//                   </button>
+//                   <button
+//                     type="button"
+//                     onClick={() => handleDelete(index)}
+//                     className="text-md"
+//                     title='Delete'
+//                   >
+//                     <FaTrash className="w-5 h-5" fill="red" />
+//                   </button>
+//                 </div>
+//               </>
+//             )}
+//           </div>
+//         ))}
+//       </div>
+
+//       {deleteIndex !== null && (
+//         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
+//           <div className="bg-white p-5 rounded shadow-lg">
+//             <p>Are you sure you want to delete this Skill?</p>
+//             <div className="flex justify-center space-x-2 mt-4">
+//               <button
+//                 onClick={confirmDelete}
+//                 className="bg-red-500 text-white px-4 py-2 rounded"
+//               >
+//                 Yes
+//               </button>
+//               <button
+//                 onClick={cancelDelete}
+//                 className="bg-gray-300 text-black px-4 py-2 rounded"
+//               >
+//                 No
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// import React, { forwardRef, useState } from "react";
+// import { FaPlus, FaTimes, FaEdit, FaTrash } from "react-icons/fa";
+// import CustomDropdown from "./CustomDropdown"; // Adjust the import as needed
+
+const SkillsField = forwardRef(({
   entries,
   errors,
   onAddSkill,
@@ -117,13 +342,10 @@ const SkillsField = ({
   experienceOptions,
   isNextEnabled,
   handleAddEntry,
-}) => {
+}, ref) => {
   const [deleteIndex, setDeleteIndex] = useState(null);
 
-
-  const handleDelete = (index) => {
-    setDeleteIndex(index);
-  };
+  const handleDelete = (index) => setDeleteIndex(index);
 
   const confirmDelete = () => {
     if (deleteIndex !== null) {
@@ -132,9 +354,7 @@ const SkillsField = ({
     }
   };
 
-  const cancelDelete = () => {
-    setDeleteIndex(null);
-  };
+  const cancelDelete = () => setDeleteIndex(null);
 
   const handleEdit = (index) => {
     const entry = entries[index];
@@ -150,21 +370,20 @@ const SkillsField = ({
   );
 
   const handleAddClick = () => {
-    onAddSkill(setEditingIndex); // Pass setEditingIndex to the parent's onAddSkill
-    // The setEditingIndex will now be handled by the parent's onAddSkill callback
+    onAddSkill(setEditingIndex);
     setSelectedSkill("");
     setSelectedExp("");
     setSelectedLevel("");
   };
 
   const handleCancelSelection = () => {
-    // If the current editingIndex points to a newly added, empty row, delete it.
-    // A newly added row will have an editingIndex, and its skill, experience, and expertise will be empty.
-    if (editingIndex !== null &&
-        entries[editingIndex] &&
-        !entries[editingIndex].skill &&
-        !entries[editingIndex].experience &&
-        !entries[editingIndex].expertise) {
+    if (
+      editingIndex !== null &&
+      entries[editingIndex] &&
+      !entries[editingIndex].skill &&
+      !entries[editingIndex].experience &&
+      !entries[editingIndex].expertise
+    ) {
       onDeleteSkill(editingIndex);
     }
     setSelectedSkill("");
@@ -174,7 +393,7 @@ const SkillsField = ({
   };
 
   return (
-    <div>
+    <div ref={ref}>
       <div className="flex justify-between items-center">
         <div className="flex items-center mb-2">
           <label htmlFor="Skills" className="text-sm font-medium text-gray-900">
@@ -190,14 +409,15 @@ const SkillsField = ({
           <FaPlus className="mr-1 w-5 h-5" /> Add Rows
         </button>
       </div>
+
       {errors.skills && (
         <p className="text-red-500 text-sm">{errors.skills}</p>
       )}
+
       <div className="space-y-2 mb-4 mt-5">
         {entries.map((entry, index) => (
-          <div key={index} className="border p-2 rounded-lg bg-gray-100 w-[100%] sm:w-full md:w-full flex">
-            { editingIndex === index || editingIndex === 'all' ? (
-              // EDIT MODE
+          <div key={index} className="border p-2 rounded-lg bg-gray-100 w-full flex">
+            {editingIndex === index || editingIndex === 'all' ? (
               <>
                 <div className="flex justify-between border border-gray-400 bg-white rounded w-full p-2 mr-3">
                   <div className="w-1/3 px-1">
@@ -233,55 +453,46 @@ const SkillsField = ({
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                <button
+                  <button
                     type="button"
-                    onClick={() => {
-                      handleAddEntry();
-                    }}
+                    onClick={handleAddEntry}
                     className={`text-green-600 hover:text-green-800 p-1 ${!isNextEnabled() ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!isNextEnabled()}
-                    title='Add'
+                    title="Add"
                   >
-                    <FaPlus className="w-5 h-5" />{/* {editingIndex !== null ? <FaPlus /> : <FaPlus />} */}
+                    <FaPlus className="w-5 h-5" />
                   </button>
                   <button
                     type="button"
                     onClick={handleCancelSelection}
                     className="text-red-600 hover:text-red-800 p-1"
-                    title='Cancel'
+                    title="Cancel"
                   >
                     <FaTimes className="w-5 h-5" />
                   </button>
                 </div>
               </>
             ) : (
-              // DISPLAY MODE
               <>
                 <div className="flex justify-between border border-gray-400 bg-white rounded w-full mr-3">
-                  <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
-                    {entry.skill}
-                  </div>
-                  <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
-                    {entry.experience}
-                  </div>
-                  <div className="w-1/3 px-2 py-1 text-center truncate overflow-hidden text-ellipsis whitespace-nowrap">
-                    {entry.expertise}
-                  </div>
+                  <div className="w-1/3 px-2 py-1 text-center truncate">{entry.skill}</div>
+                  <div className="w-1/3 px-2 py-1 text-center truncate">{entry.experience}</div>
+                  <div className="w-1/3 px-2 py-1 text-center truncate">{entry.expertise}</div>
                 </div>
                 <div className="flex space-x-2">
                   <button
                     type="button"
                     onClick={() => handleEdit(index)}
                     className="text-custom-blue text-md"
-                    title='Edit'
+                    title="Edit"
                   >
-                    <FaEdit className="w-5 h-5"/>
+                    <FaEdit className="w-5 h-5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(index)}
                     className="text-md"
-                    title='Delete'
+                    title="Delete"
                   >
                     <FaTrash className="w-5 h-5" fill="red" />
                   </button>
@@ -293,7 +504,7 @@ const SkillsField = ({
       </div>
 
       {deleteIndex !== null && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-5 rounded shadow-lg">
             <p>Are you sure you want to delete this Skill?</p>
             <div className="flex justify-center space-x-2 mt-4">
@@ -315,6 +526,7 @@ const SkillsField = ({
       )}
     </div>
   );
-};
+});
+// v1.0.1 ----------------------------------------------------------------------------------->
 
 export default SkillsField;

@@ -414,6 +414,7 @@
 // module.exports = { createInterview, saveInterviewRound, getDashboardStats };
 
 // v1.0.0  -  Ashraf  -  fixed name assessment to assessment template
+// v1.0.2  -  Ashraf  -  added sending interview email
 
 
 const mongoose = require("mongoose");
@@ -422,13 +423,16 @@ const { InterviewRounds } = require("../models/InterviewRounds.js");
 const InterviewTemplate = require("../models/InterviewTemplate.js");
 const { Contacts } = require("../models/Contacts");
 const { Users } = require("../models/Users");
-const { Candidate } = require("../models/candidate");
+// v1.0.2 <-----------------------------------------
+const { Candidate } = require("../models/Candidate");
 const { encrypt, generateOTP } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");
-const interviewQuestions = require("../models/interviewQuestions");
-const { Position } = require("../models/position.js");
+const interviewQuestions = require("../models/InterviewQuestions");
+const { Position } = require("../models/Position.js");
 // <-------------------------------v1.0.0
 const Assessment = require("../models/assessmentTemplates");
+const { sendInterviewRoundEmails } = require("./EmailsController/interviewEmailController");
+// v1.0.2 <-----------------------------------------
 // ------------------------------v1.0.0 >
 
 
@@ -810,6 +814,12 @@ const createInterview = async (req, res) => {
 // };
 
 async function handleInterviewQuestions(interviewId, roundId, questions) {
+  // Add null check for questions parameter
+  if (!questions || !Array.isArray(questions)) {
+    console.log("handleInterviewQuestions: questions is null, undefined, or not an array:", questions);
+    return;
+  }
+  
   const existingQuestions = await interviewQuestions.find({
     interviewId,
     roundId,
@@ -888,6 +898,16 @@ async function processInterviewers(interviewers) {
 const saveInterviewRound = async (req, res) => {
   try {
     const { interviewId, round, roundId, questions } = req.body;
+    console.log("=== saveInterviewRound START ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    console.log("interviewId:", interviewId);
+    console.log("roundId:", roundId);
+    console.log("round keys:", Object.keys(round || {}));
+    console.log("meetLink field:", round?.meetLink);
+    
+    // Initialize emailResult variable
+    let emailResult = { success: false, message: "No email sending attempted" };
+    
     if (!interviewId || !round) {
       return res
         .status(400)
@@ -899,13 +919,31 @@ const saveInterviewRound = async (req, res) => {
     }
 
     let savedRound;
+    // v1.0.2 <-----------------------------------------
     if (roundId) {
+      console.log("Updating existing round with ID:", roundId);
       let existingRound = await InterviewRounds.findById(roundId);
       if (existingRound) {
-        Object.assign(existingRound, round);
+        console.log("Found existing round:", existingRound._id);
+        console.log("Before update - existing round data:", JSON.stringify(existingRound.toObject(), null, 2));
+        
+        // Handle meetLink field separately to prevent conversion issues
+        const { meetLink, ...otherRoundData } = round;
+        Object.assign(existingRound, otherRoundData);
+        
+        // Set meetLink directly if it exists
+        if (meetLink && Array.isArray(meetLink)) {
+                       console.log("Setting meetLink directly:", meetLink);
+             console.log("meetLink structure:", meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
+          existingRound.meetLink = meetLink;
+        }
+        
+        console.log("After update - round data:", JSON.stringify(existingRound.toObject(), null, 2));
         savedRound = await existingRound.save();
+        console.log("Round saved successfully:", savedRound._id);
         await reorderInterviewRounds(interviewId);
       } else {
+        console.log("Round not found with ID:", roundId);
         return res.status(404).json({ message: "Round not found." });
       }
     } else {
@@ -917,23 +955,46 @@ const saveInterviewRound = async (req, res) => {
         { $inc: { sequence: 1 } }
       );
 
+      // Handle meetLink field separately for new rounds too
+      const { meetLink, ...otherRoundData } = round;
       const newInterviewRound = new InterviewRounds({
         interviewId,
-        ...round,
+        ...otherRoundData,
         sequence: newSequence,
       });
+
+      // Set meetLink directly if it exists
+      if (meetLink && Array.isArray(meetLink)) {
+                     console.log("Setting meetLink for new round:", meetLink);
+             console.log("meetLink structure:", meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
+        newInterviewRound.meetLink = meetLink;
+      }
 
       savedRound = await newInterviewRound.save();
       await reorderInterviewRounds(interviewId);
     }
 
-    await handleInterviewQuestions(interviewId, savedRound._id, questions);
+    // Only call handleInterviewQuestions if questions is provided
+    if (questions && Array.isArray(questions)) {
+      await handleInterviewQuestions(interviewId, savedRound._id, questions);
+    } else {
+      console.log("saveInterviewRound: questions is null, undefined, or not an array, skipping handleInterviewQuestions");
+    }
+
+    // Email sending is now handled in the frontend after meeting links are generated
+    // This ensures emails contain the proper encrypted meeting links
+    emailResult = { 
+      success: true, 
+      message: 'Emails will be sent from frontend after meeting links are generated' 
+    };
 
     return res.status(200).json({
       message: roundId
         ? "Round updated successfully."
         : "Interview round created successfully.",
       savedRound,
+      emailResult,
+      status:'ok'
     });
 
     async function reorderInterviewRounds(interviewId) {
@@ -946,11 +1007,15 @@ const saveInterviewRound = async (req, res) => {
       }
     }
   } catch (error) {
+    console.error("=== saveInterviewRound ERROR ===");
     console.error("Error saving interview round:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("=== saveInterviewRound ERROR END ===");
+    return res.status(500).json({ message: "Internal server error.", error: error.message });
   }
 };
-
+// v1.0.2 <-----------------------------------------
 // Dashboard stats code remains unchanged
 const getDateRanges = () => {
   const now = new Date();
