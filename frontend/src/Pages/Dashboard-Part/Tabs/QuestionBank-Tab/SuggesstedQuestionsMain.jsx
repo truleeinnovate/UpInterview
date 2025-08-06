@@ -405,7 +405,7 @@ const SuggestedQuestionsComponent = ({
     return (
         <div className="h-full flex flex-col">
             {/* Search/Filter Bar */}
-            <div className={`fixed flex items-center justify-end ${(type === "interviewerSection" || type === "assessment") ? `${type === "assessment" ? "top-40 left-40 right-40" : "top-24 left-16 right-16"}` : "top-32 left-5 right-5"} z-40`}>
+            <div className={`flex items-center justify-end px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0`}>
                 <div className="flex gap-x-3">
                     <div className="relative flex items-center rounded-md border">
                         <span className="p-2 text-custom-blue">
@@ -466,7 +466,7 @@ const SuggestedQuestionsComponent = ({
                 <>
 
                     {/* Content */}
-                    <div className="flex-1 min-h-screen overflow-y-auto px-5 mt-[110px]">
+                    <div className="flex-1 overflow-y-auto px-5 py-4">
                         {selectedSkills.length > 0 && (
                             <ul className="flex gap-2 flex-wrap px-4 pb-2">
                                 {selectedSkills.map((skill, index) => (

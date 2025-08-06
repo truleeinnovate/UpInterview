@@ -18,13 +18,16 @@ const dislikeOptions = [
   { value: "Too basic", label: "Too basic" },
 ];
 
-// Define SchedulerSectionComponent
-const SchedulerSectionComponent = ({ isEditMode }) => {
-  // Get location and feedback data
+const SchedulerSectionComponent = ({ isEditMode,interviewdata }) => {
+
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
-  const schedulerQuestions = feedbackData.preSelectedQuestions || [];
+  const schedulerQuestions = interviewdata?.interviewQuestions ? interviewdata?.interviewQuestions : feedbackData.preSelectedQuestions || [];
   const questionsfeedback = feedbackData.questionFeedback || [];
+  // console.log("interviewQuestions data",interviewdata);
+  
+
+
 
   // Initialize state variables
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");

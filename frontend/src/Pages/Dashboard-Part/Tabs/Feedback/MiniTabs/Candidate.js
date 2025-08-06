@@ -3,12 +3,15 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Award, Briefcase, ChevronDown, ChevronUp, GraduationCap, User } from 'lucide-react';
 
-const CandidateMiniTab = ({}) => {
+const CandidateMiniTab = ({selectedData}) => {
   const location = useLocation();
   const feedback = location.state?.feedback || {};
-  const candidateData = feedback.candidateId || {};
-  const positionData = feedback.positionId || {};
+  const candidateData = selectedData?.candidate ? selectedData?.candidate : feedback.candidateId || {};
+  const positionData = selectedData?.position ? selectedData?.position : feedback.positionId || {};
   const interviewRoundData = feedback.interviewRoundId || {};
+
+  console.log("positionData",selectedData);
+  
 
   const [expandedSections, setExpandedSections] = useState({
     skills: false,
@@ -56,7 +59,7 @@ const CandidateMiniTab = ({}) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Experience</p>
-            <p className="text-gray-900">{candidateData?.CurrentExperience}</p>
+            <p className="text-gray-900">{candidateData?.CurrentExperience ? candidateData?.CurrentExperience + " years" : "Not Available" }</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Position Applied</p>

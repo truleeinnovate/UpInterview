@@ -4,23 +4,23 @@ import { mockData } from './mockData';
 import { formatToLocalTime, formatDuration, getTimeUntilInterview, getDateStatus } from '../../utils/timezoneUtils';
 
 const CandidateView = ({ onBack,feedbackData,decodedData }) => {
-  const candidate = mockData.candidates[0];
-  const interview = mockData.interviews[0];
+  // const candidate = mockData.candidates[0];
+  // const interview = mockData.interviews[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#217989] to-[#1a616e] p-4">
       <div className="max-w-6xl mx-auto">
-        <button
+        {/* <button
           onClick={onBack}
           className="mb-6 text-white/80 hover:text-white transition-colors flex items-center gap-2"
         >
           <LogOut className="w-5 h-5" />
           <span>Back to Role Selection</span>
-        </button>
+        </button> */}
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-3  xl:grid-cols-3 gap-8">
           {/* Main Content - Left Side */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 2xl:col-span-2 xl:col-span-2 space-y-6">
             {/* Welcome Card */}
             <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
               <div className="mb-8">

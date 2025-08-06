@@ -146,8 +146,13 @@ function JoinMeeting() {
     };
     setUrlRoleInfo(roleInfo);
 
-    // Don't auto-select role - let user click the button
-    console.log('RoleSelector will be shown - user must click button to proceed');
+    // Auto-select candidate role if URL indicates candidate
+    if (isCandidate) {
+      console.log('Auto-selecting candidate role based on URL parameter');
+      setCurrentRole('candidate');
+    } else {
+      console.log('RoleSelector will be shown - user must click button to proceed');
+    }
 
   }, [location.search]);
 

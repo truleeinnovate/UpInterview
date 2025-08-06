@@ -1,20 +1,86 @@
 import React, { useState } from 'react';
 import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';
 import { mockData } from './mockData';
-import CandidateDetails from './CandidateDetails';
+// import CandidateDetails from './CandidateDetails';
+import CandidateMiniTab from '../Dashboard-Part/Tabs/Feedback/MiniTabs/Candidate'
 import InterviewQuestions from './InterviewQuestions';
 import FeedbackForm from './FeedbackForm';
 import FeedbackManagement from './FeedbackManagement';
+import InterviewsMiniTabComponent from '../Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews';
 
-const InterviewerView = ({ onBack }) => {
+const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feedbackError}) => {
   const [activeTab, setActiveTab] = useState('candidate');
-  const [selectedCandidate] = useState(mockData.candidates[0]);
+  const [selectedCandidate] = useState(feedbackData);
+  
+  // Question Bank State Management
+  const [interviewerSectionData, setInterviewerSectionData] = useState([]);
+  const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
+  const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
+
+  // Question Bank Handler Functions
+  const handleAddQuestionToRound = (question) => {
+    if (question && question.questionId && question.snapshot) {
+      setInterviewerSectionData((prevList) => {
+        if (prevList.some((q) => q.questionId === question.questionId)) {
+          return prevList;
+        }
+        return [
+          ...prevList,
+          {
+            ...question,
+            mandatory: "false", // Default to false when adding a new question
+            snapshot: {
+              ...question.snapshot,
+              mandatory: "false"
+            }
+          },
+        ]; // Add new question
+      });
+    }
+  };
+
+  const handleRemoveQuestion = (questionId) => {
+    console.log("Removing question:", questionId);
+    
+    // Remove question from interviewer section data
+    setInterviewerSectionData(prev => prev.filter(q => (q.questionId || q.id) !== questionId));
+    
+    // Add to removed question IDs
+    setRemovedQuestionIds(prev => [...prev, questionId]);
+  };
+
+  const handleToggleMandatory = (questionId) => {
+    console.log("Toggling mandatory for question:", questionId);
+    
+    // Toggle mandatory status for the question
+    setInterviewerSectionData(prev => {
+      console.log("Previous state:", prev);
+      const updated = prev.map(q => {
+        if ((q.questionId || q.id) === questionId) {
+          console.log("Found question to toggle:", q);
+          const newMandatory = q.mandatory === "true" ? "false" : "true";
+          console.log("New mandatory value:", newMandatory);
+          return { 
+            ...q, 
+            mandatory: newMandatory,
+            snapshot: q.snapshot ? {
+              ...q.snapshot,
+              mandatory: newMandatory
+            } : undefined
+          };
+        }
+        return q;
+      });
+      console.log("Updated state:", updated);
+      return updated;
+    });
+  };
 
   const tabs = [
     { id: 'candidate', label: 'Candidate Details', icon: User },
     { id: 'questions', label: 'Interview Questions', icon: MessageSquare },
     { id: 'feedback', label: 'Feedback Form', icon: FileText },
-    { id: 'management', label: 'Feedback Management', icon: Users }
+    // { id: 'management', label: 'Feedback Management', icon: Users }
   ];
 
   return (
@@ -31,7 +97,7 @@ const InterviewerView = ({ onBack }) => {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => window.open(mockData.interviews[0].meetingUrl, '_blank')}
+                onClick={() => window.open(decodedData.meetLink, '_blank')}
                 className="bg-[#217989] hover:bg-[#1a616e] text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Video className="w-4 h-4" />
@@ -48,10 +114,10 @@ const InterviewerView = ({ onBack }) => {
         </div>
       </div>
 
-      <div className="max-w-full mx-auto px-16 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <div className="lg:w-80">
+      <div className="flex h-[calc(100vh-80px)]">
+        {/* Fixed Sidebar - No Scroll */}
+        <div className="w-80 bg-white shadow-lg border-r border-gray-200 flex-shrink-0">
+          <div className="p-6 sticky top-0">
             <nav className="space-y-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -72,13 +138,41 @@ const InterviewerView = ({ onBack }) => {
               })}
             </nav>
           </div>
+        </div>
 
-          {/* Main Content */}
-          <div className="flex-1">
-            {activeTab === 'candidate' && <CandidateDetails candidate={selectedCandidate} />}
-            {activeTab === 'questions' && <InterviewQuestions />}
-            {activeTab === 'feedback' && <FeedbackForm />}
-            {activeTab === 'management' && <FeedbackManagement />}
+        {/* Scrollable Main Content */}
+        <div className="flex-1 bg-gray-50 overflow-y-auto">
+          <div className="p-8">
+            {activeTab === 'candidate' && <CandidateMiniTab selectedData={selectedCandidate} />}
+            {activeTab === 'questions' && (
+              <InterviewsMiniTabComponent 
+                interviewData={selectedCandidate} 
+                isAddMode={true}
+                interviewerSectionData={interviewerSectionData}
+                setInterviewerSectionData={setInterviewerSectionData}
+                removedQuestionIds={removedQuestionIds}
+                setRemovedQuestionIds={setRemovedQuestionIds}
+                isQuestionBankOpen={isQuestionBankOpen}
+                setIsQuestionBankOpen={setIsQuestionBankOpen}
+                handleAddQuestionToRound={handleAddQuestionToRound}
+                handleRemoveQuestion={handleRemoveQuestion}
+                handleToggleMandatory={handleToggleMandatory}
+              />
+            )}
+            {activeTab === 'feedback' && (
+              <FeedbackForm 
+                interviewerSectionData={interviewerSectionData}
+                setInterviewerSectionData={setInterviewerSectionData}
+                interviewRoundId={decodedData?.interviewRoundId}
+                candidateId={decodedData?.candidateId}
+                positionId={decodedData?.positionId}
+                interviewerId={decodedData?.interviewerId}
+                tenantId={decodedData?.tenantId}
+                isEditMode={false}
+                feedbackId={null}
+              />
+            )}
+            {/* {activeTab === 'management' && <FeedbackManagement />} */}
           </div>
         </div>
       </div>

@@ -4,27 +4,139 @@
 const FeedbackModel = require('../models/feedback.js')
 const mongoose = require('mongoose'); // Import mongoose to use ObjectId
 
-const interviewQuestions = require('../models/interviewQuestions.js');
+const InterviewQuestions = require('../models/interviewQuestions.js');
+const { InterviewRounds } = require('../models/InterviewRounds.js');
+const CandidatePosition = require('../models/CandidatePosition.js');
 
-
-const createFeedback =async(req,res)=>{
+const createFeedback = async (req, res) => {
     try {
-        const {tenantId,interviewId,candidateId,candidate,interviewerId,questionFeedback,generalComments,skills,overallImpression}= req.body
-        const FeedbackInstance = await FeedbackModel({tenantId,interviewId,candidateId,candidate,interviewerId,questionFeedback,generalComments,skills,overallImpression})
-        await FeedbackInstance.save()
+        console.log('📥 Received feedback data:', req.body);
+        
+        const {
+            tenantId,
+            interviewRoundId,
+            candidateId,
+            positionId,
+            interviewerId,
+            skills,
+            questionFeedback,
+            generalComments,
+            overallImpression,
+            status
+        } = req.body;
 
-        return res.status(201).send({
-            success:true,
-            message:"Feedback added"
-        })
+        // Simple validation - just check if basic data exists
+        if (!skills || !Array.isArray(skills) || skills.length === 0) {
+            console.log('❌ No skills provided');
+            return res.status(400).json({
+                success: false,
+                message: "Skills are required"
+            });
+        }
+
+        // Create feedback data with defaults
+        const feedbackData = {
+            skills: skills,
+            questionFeedback: questionFeedback || [],
+            generalComments: generalComments || "",
+            overallImpression: overallImpression || {},
+            status: status || 'submitted'
+        };
+
+        // Add fields only if they are not empty strings
+        if (tenantId && tenantId.trim() !== "") {
+            feedbackData.tenantId = tenantId;
+        }
+        
+        if (interviewRoundId && interviewRoundId.trim() !== "") {
+            feedbackData.interviewRoundId = interviewRoundId;
+        }
+        
+        if (candidateId && candidateId.trim() !== "") {
+            feedbackData.candidateId = candidateId;
+        }
+        
+        if (interviewerId && interviewerId.trim() !== "") {
+            feedbackData.interviewerId = interviewerId;
+        }
+
+        // Add positionId if provided and not empty
+        if (positionId && positionId.trim() !== "") {
+            feedbackData.positionId = positionId;
+        }
+
+        console.log('💾 Saving feedback data:', feedbackData);
+
+        const feedbackInstance = new FeedbackModel(feedbackData);
+        await feedbackInstance.save();
+
+        console.log('✅ Feedback saved successfully with ID:', feedbackInstance._id);
+
+        // Save questions to InterviewQuestions collection
+        if (questionFeedback && questionFeedback.length > 0) {
+          console.log('📝 Saving questions to InterviewQuestions collection...');
+          
+          const questionsToSave = questionFeedback.map((qFeedback, index) => {
+            const question = qFeedback.questionId; // This is the full question object from frontend
+            console.log('📋 Processing question:', question);
+            
+            // Extract the actual question data from the nested structure
+            const actualQuestion = question?.snapshot || question;
+            const questionId = question?.questionId || question?.id || question?._id || actualQuestion?._id;
+            
+            return {
+              interviewId: interviewRoundId, // Using interviewRoundId as interviewId
+              roundId: interviewRoundId,
+              order: index + 1,
+              customizations: qFeedback.interviewerFeedback?.note || '',
+              mandatory: question?.mandatory || actualQuestion?.mandatory || 'false',
+              tenantId: tenantId || '',
+              ownerId: interviewerId || '',
+              questionId: questionId,
+              source: question?.source || 'system',
+              snapshot: actualQuestion || {},
+              addedBy: 'interviewer'
+            };
+          });
+
+          console.log('📋 Questions to save:', questionsToSave);
+
+          // Save each question to InterviewQuestions collection
+          const savedQuestions = await Promise.all(
+            questionsToSave.map(async (questionData) => {
+              try {
+                const questionInstance = new InterviewQuestions(questionData);
+                const savedQuestion = await questionInstance.save();
+                console.log('✅ Question saved:', savedQuestion._id);
+                return savedQuestion;
+              } catch (error) {
+                console.error('❌ Error saving question:', error);
+                throw error;
+              }
+            })
+          );
+
+          console.log('✅ Questions saved successfully:', savedQuestions.length, 'questions');
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "Feedback submitted successfully",
+            data: {
+                feedbackId: feedbackInstance._id,
+                submittedAt: feedbackInstance.createdAt
+            }
+        });
+
     } catch (error) {
-        return res.status(500).send({
-            message:"Failed to add Feedback",
-            success:false,
-            error:error.message,
-        })
+        console.error("❌ Error creating feedback:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to submit feedback",
+            error: error.message
+        });
     }
-}
+};
 
 //<----v1.0.0---
 // Get feedback by tenant ID
@@ -54,7 +166,7 @@ const getFeedbackByTenantId = async (req, res) => {
 
       // Fetch pre-selected questions for each feedback item
       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
-        const preSelectedQuestions = await interviewQuestions.find({ roundId: item.interviewRoundId });
+        const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
         return {
           ...item.toObject(),
           preSelectedQuestions
@@ -177,10 +289,10 @@ const getFeedbackByRoundId = async (req, res) => {
       return res.status(404).json({ success: false, message: "Interview round not found" });
     }
 
-    // 3️⃣ Find CandidatePosition using interviewId
-    console.log("🔍 Searching for CandidatePosition with interviewId:", interviewRound.interviewId);
-    
-    // First, let's check if there are any CandidatePosition records at all
+         // 3️⃣ Find CandidatePosition using interviewId
+     console.log("🔍 Searching for CandidatePosition with interviewId:", interviewRound.interviewId);
+     
+     // First, let's check if there are any CandidatePosition records at all
     const totalCandidatePositions = await CandidatePosition.countDocuments();
     console.log("📊 Total CandidatePosition records in database:", totalCandidatePositions);
     
@@ -193,7 +305,8 @@ const getFeedbackByRoundId = async (req, res) => {
     const candidatePosition = await CandidatePosition.findOne({
       interviewId: interviewRound.interviewId,
     })
-      .populate("candidateId", "FirstName LastName Email Phone")
+    
+      .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
       .populate("positionId", "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary");
 
     console.log("✅ CandidatePosition Found:", candidatePosition ? "Yes" : "No");
@@ -240,15 +353,20 @@ const getFeedbackByRoundId = async (req, res) => {
       .populate("positionId", "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary")
       .populate("interviewerId", "FirstName LastName Email Phone");
 
-    console.log("✅ Feedbacks Found:", feedbacks.length, "documents");
-    if (feedbacks.length > 0) {
-      console.log("📋 First Feedback Details:", {
-        _id: feedbacks[0]._id,
-        candidateId: feedbacks[0].candidateId?._id,
-        interviewerId: feedbacks[0].interviewerId?._id,
-        skillsCount: feedbacks[0].skills?.length || 0
-      });
-    }
+         console.log("✅ Feedbacks Found:", feedbacks.length, "documents");
+     if (feedbacks.length > 0) {
+       console.log("📋 First Feedback Details:", {
+         _id: feedbacks[0]._id,
+         candidateId: feedbacks[0].candidateId?._id,
+         interviewerId: feedbacks[0].interviewerId?._id,
+         skillsCount: feedbacks[0].skills?.length || 0
+       });
+     }
+
+     // 4️⃣.5 Fetch Interview Questions for this round
+     console.log("🔍 Searching for Interview Questions with roundId:", roundId);
+     const interviewQuestionsList = await InterviewQuestions.find({ roundId: roundId });
+     console.log("✅ Interview Questions Found:", interviewQuestionsList.length, "questions");
 
     // 5️⃣ Get position data from feedback if not available from CandidatePosition
     let positionData = null;
@@ -289,40 +407,42 @@ const getFeedbackByRoundId = async (req, res) => {
       console.log("❌ No position data available from any source");
     }
 
-    // 6️⃣ Build Response with proper null checks and detailed position data
-    const responseData = {
-      interviewRound: {
-        _id: interviewRound._id,
-        interviewId: interviewRound.interviewId,
-        sequence: interviewRound.sequence,
-        roundTitle: interviewRound.roundTitle,
-        interviewMode: interviewRound.interviewMode,
-        interviewType: interviewRound.interviewType,
-        interviewerType: interviewRound.interviewerType,
-        duration: interviewRound.duration,
-        instructions: interviewRound.instructions,
-        dateTime: interviewRound.dateTime,
-        status: interviewRound.status,
-        meetingId: interviewRound.meetingId,
-        meetLink: interviewRound.meetLink,
-        assessmentId: interviewRound.assessmentId,
-        questions: interviewRound.questions,
-        rejectionReason: interviewRound.rejectionReason,
-        interviewers: interviewRound.interviewers || []
-      },
-      candidate: candidatePosition?.candidateId || null,
-      position: positionData,
-      interviewers: interviewRound.interviewers || [],
-      feedbacks: feedbacks || []
-    };
+         // 6️⃣ Build Response with proper null checks and detailed position data
+     const responseData = {
+       interviewRound: {
+         _id: interviewRound._id,
+         interviewId: interviewRound.interviewId,
+         sequence: interviewRound.sequence,
+         roundTitle: interviewRound.roundTitle,
+         interviewMode: interviewRound.interviewMode,
+         interviewType: interviewRound.interviewType,
+         interviewerType: interviewRound.interviewerType,
+         duration: interviewRound.duration,
+         instructions: interviewRound.instructions,
+         dateTime: interviewRound.dateTime,
+         status: interviewRound.status,
+         meetingId: interviewRound.meetingId,
+         meetLink: interviewRound.meetLink,
+         assessmentId: interviewRound.assessmentId,
+         questions: interviewRound.questions,
+         rejectionReason: interviewRound.rejectionReason,
+         interviewers: interviewRound.interviewers || []
+       },
+       candidate: candidatePosition?.candidateId || null,
+       position: positionData,
+       interviewers: interviewRound.interviewers || [],
+       feedbacks: feedbacks || [],
+       interviewQuestions: interviewQuestionsList || []
+     };
 
-    console.log("🎉 Sending successful response with data structure:", {
-      hasInterviewRound: !!responseData.interviewRound,
-      hasCandidate: !!responseData.candidate,
-      hasPosition: !!responseData.position,
-      interviewersCount: responseData.interviewers.length,
-      feedbacksCount: responseData.feedbacks.length
-    });
+         console.log("🎉 Sending successful response with data structure:", {
+       hasInterviewRound: !!responseData.interviewRound,
+       hasCandidate: !!responseData.candidate,
+       hasPosition: !!responseData.position,
+       interviewersCount: responseData.interviewers.length,
+       feedbacksCount: responseData.feedbacks.length,
+       interviewQuestionsCount: responseData.interviewQuestions.length
+     });
 
     if (responseData.position) {
       console.log("✅ Position data included in response:", {

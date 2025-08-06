@@ -22,8 +22,32 @@ const interviewMiniTabsList = [
 
 
 //<----v1.0.0---
-const InterviewsMiniTabComponent = ({ tab, page, closePopup, isEditMode }) => {
+
+const InterviewsMiniTabComponent = ({
+  interviewData,
+  isAddMode, 
+  roundDetails, 
+  tab, 
+  page, 
+  closePopup, 
+  data, 
+  isEditMode,
+  // Question Bank Props
+  interviewerSectionData,
+  setInterviewerSectionData,
+  removedQuestionIds,
+  setRemovedQuestionIds,
+  isQuestionBankOpen,
+  setIsQuestionBankOpen,
+  handleAddQuestionToRound,
+  handleRemoveQuestion,
+  handleToggleMandatory
+}) => {
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
+  const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext()
+  console.log("interviewData",interviewData);
+  
+
 
   const handleTabChange = (tab) => {
       setInterviewMiniTab(tab);
@@ -33,9 +57,27 @@ const InterviewsMiniTabComponent = ({ tab, page, closePopup, isEditMode }) => {
   const InterviewDisplayData = () => {
     switch (interviewMiniTab) {
       case 1:
-        return <SchedulerSectionComponent isEditMode={isEditMode} />;//<----v1.0.0---
+        return <SchedulerSectionComponent isEditMode={isEditMode} interviewdata ={interviewData} />;//<----v1.0.0---
       case 2:
-        return <InterviewerSectionComponent closePopup={closePopup} tab={tab} page={page}  isEditMode={isEditMode}/>;//<----v1.0.0---
+        return (
+          <InterviewerSectionComponent 
+            closePopup={closePopup} 
+            tab={tab} 
+            page={page} 
+            isAddMode={isAddMode}  
+            isEditMode={isEditMode}
+            // Question Bank Props
+            interviewerSectionData={interviewerSectionData}
+            setInterviewerSectionData={setInterviewerSectionData}
+            removedQuestionIds={removedQuestionIds}
+            setRemovedQuestionIds={setRemovedQuestionIds}
+            isQuestionBankOpen={isQuestionBankOpen}
+            setIsQuestionBankOpen={setIsQuestionBankOpen}
+            handleAddQuestionToRound={handleAddQuestionToRound}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
+          />
+        );//<----v1.0.0---
       default:
         return ""
     }
