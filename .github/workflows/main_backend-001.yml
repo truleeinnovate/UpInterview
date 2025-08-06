@@ -90,6 +90,14 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./backend
+        env:
+          # LinkedIn OAuth configuration
+          REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
+          REACT_APP_CLIENT_SECRET: ${{ secrets.REACT_APP_CLIENT_SECRET }}
+          REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
+          
+          # API URLs
+          REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
         run: npm ci --only=production
 
       - name: Create optimized deployment package
