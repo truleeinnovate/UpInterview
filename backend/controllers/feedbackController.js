@@ -3,6 +3,7 @@
 
 const FeedbackModel = require('../models/feedback.js')
 const mongoose = require('mongoose'); // Import mongoose to use ObjectId
+const interviewQuestions = require('../models/interviewQuestions.js');
 
 const createFeedback =async(req,res)=>{
     try {
@@ -38,16 +39,26 @@ const getFeedbackByTenantId = async (req, res) => {
 
     //console.log('Received tenantId:', tenantId);
 
+    let feedbackWithQuestions;
     let feedback;
     try {
       // Convert tenantId string to ObjectId since database stores it as ObjectId
       //const tenantObjectId = new mongoose.Types.ObjectId(tenantId);
       feedback = await FeedbackModel.find({ tenantId })
-        .populate('candidateId', 'FirstName LastName Email Phone skills')
+        .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
         .populate('positionId', 'title companyname jobDescription Location')
         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
         .populate('interviewerId','firstName lastName');
 
+      // Fetch pre-selected questions for each feedback item
+      feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
+        const preSelectedQuestions = await interviewQuestions.find({ roundId: item.interviewRoundId });
+        return {
+          ...item.toObject(),
+          preSelectedQuestions
+        };
+      }));
+      
       //console.log('Feedback found:', feedback.length, 'documents');
     } catch (err) {
       console.error('Invalid tenantId format:', err.message);
@@ -60,14 +71,14 @@ const getFeedbackByTenantId = async (req, res) => {
     if (!feedback) {
       return res.status(404).json({
         success: false,
-        message: "No feedback found for this tenant"
+        message: "Feedback not found for this tenant"
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Feedback retrieved successfully",
-      data: feedback
+      data: feedbackWithQuestions
     });
 
   } catch (error) {
