@@ -37,6 +37,7 @@ import {
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 // import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
 import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
+import { config } from "./config.js";
 
 
 
@@ -171,7 +172,7 @@ const ScheduleAssDetails = lazy(() =>
 const FeedbackTab = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback.jsx")
 );
- const FeedbackFormModel = lazy(() =>
+const FeedbackFormModel = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx")
 );
 const FeedbackPreview = lazy(() =>
@@ -486,12 +487,12 @@ const MainAppRoutes = ({
             />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/oauth2callback" element={<OAuthCallback />} />
-           
-           <Route path='/join-meeting' element={<JoinMeeting />} />
+
+            <Route path='/join-meeting' element={<JoinMeeting />} />
 
             {/* <Route path ='/join-meeting' element={<VideoCAllActionButtons />} /> */}
-           
-           
+
+
             <Route
               path="/payment-details"
               element={
@@ -987,15 +988,15 @@ const MainAppRoutes = ({
                   />
                 </>
               )}
-              
+
               {/* Feedbacks */}
               {hasPermission("Feedback") && (
                 <>
-                  <Route path="/feedback" element={<FeedbackTab/>} />
-                  <Route path="/feedback/view/:id" element={<><FeedbackFormModel/> <FeedbackTab/></>} />
-                  <Route path="/feedback/edit/:id" element={<><FeedbackFormModel/> <FeedbackTab/></>} />
-                  <Route path="/feedback-preview" element={<FeedbackPreview/>} />
-                  
+                  <Route path="/feedback" element={<FeedbackTab />} />
+                  <Route path="/feedback/view/:id" element={<><FeedbackFormModel /> <FeedbackTab /></>} />
+                  <Route path="/feedback/edit/:id" element={<><FeedbackFormModel /> <FeedbackTab /></>} />
+                  <Route path="/feedback-preview" element={<FeedbackPreview />} />
+
                 </>
               )}
 
@@ -1201,6 +1202,12 @@ const MainAppRoutes = ({
 };
 
 const App = () => {
+
+  console.log('1 config.REACT_APP_GOOGLE_AUTH_URL', config.REACT_APP_GOOGLE_AUTH_URL);
+  console.log('2 config.REACT_APP_GOOGLE_CLIENT_ID', config.REACT_APP_GOOGLE_CLIENT_ID);
+  console.log('3 config.REACT_APP_GOOGLE_REDIRECT_URI', config.REACT_APP_GOOGLE_REDIRECT_URI);
+  console.log('4 config.REACT_APP_GOOGLE_SCOPES', config.REACT_APP_GOOGLE_SCOPES);
+
   const location = useLocation();
   // <---------------------- v1.0.4
   const authToken = getAuthToken(); // Use validated token getter
@@ -1255,7 +1262,7 @@ const App = () => {
   useEffect(() => {
     if (authToken && !hasValidCachedPermissions()) {
       // <--------------------- v1.0.0
-      preloadPermissions().catch(() => {});
+      preloadPermissions().catch(() => { });
       // v1.0.0 --------------------->
     }
 
