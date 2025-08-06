@@ -55,6 +55,7 @@ const feedbackSchema = new mongoose.Schema(
     candidateId: { type: mongoose.Schema.Types.ObjectId, ref: 'Candidate' }, //candidate information
     positionId:{ type: mongoose.Schema.Types.ObjectId, ref: 'Position' },
     interviewerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' }, //interviewer information
+    status:{type:String, enum:["pending","completed","cancelled"], default:"pending"},
     skills: [skillsSchema], //overall skill ratings
     questionFeedback:[questionFeedbackSchema], //feedback for each question
     generalComments:String, //general comments about the interview session
