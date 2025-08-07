@@ -21,8 +21,10 @@ import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js'
 import SummarizedFeedbackModal from './SummarizedFeedbackModal.jsx';
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import FeedbackKanban from './FeedbackKanban.jsx';
+
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from "js-cookie";
+
 
 const Feedback = () => {
   const navigate = useNavigate();
@@ -52,6 +54,11 @@ const Feedback = () => {
   const [error, setError] = useState(null);
   // Removed modal-related state variables as modal is now in separate component
 
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload?.tenantId;
+  // const currentOwnerId = tokenPayload?.userId;
+
   useEffect(() => {
     // Dummy data for testing - replacing API calls
     // const dummyFeedbacks = [
@@ -75,16 +82,20 @@ const Feedback = () => {
     const fetchFeedbackData = async () => {
       try {
         setLoading(true);
+
         // Use different endpoint based on organization status
         //const tenantId = "685bb9a00abf677d3ae9ec56"
         const endpoint = organization 
           ? `${process.env.REACT_APP_API_URL}/feedback/${tenantId}` 
           : `${process.env.REACT_APP_API_URL}/feedback/${interviewerId}`;
         const response = await fetch(endpoint);
+
         if (!response.ok) {
           throw new Error('Failed to fetch feedback data');
         }
         const data = await response.json();
+
+        // console.log("data",data);
         setFeedbacks(data.data);
         setFilteredFeedbacks(data.data);
       } catch (err) {

@@ -18,13 +18,22 @@ const dislikeOptions = [
   { value: "Too basic", label: "Too basic" },
 ];
 
-const SchedulerSectionComponent = ({ isEditMode,interviewdata }) => {
+const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
 
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
-  const schedulerQuestions = interviewdata?.interviewQuestions ? interviewdata?.interviewQuestions : feedbackData.preSelectedQuestions || [];
+  const allQuestions = interviewdata?.interviewQuestions ? interviewdata?.interviewQuestions : feedbackData.preSelectedQuestions || [];
+  
+  // Filter questions: Show questions NOT added by interviewer (addedBy !== "interviewer")
+  // Also include questions that don't have addedBy field (fallback for older data)
+  const schedulerQuestions = allQuestions.filter(question => 
+    question.addedBy !== "interviewer" || !question.addedBy
+  );
+  
   const questionsfeedback = feedbackData.questionFeedback || [];
-  // console.log("interviewQuestions data",interviewdata);
+  console.log("All questions:", allQuestions.length);
+  console.log("Scheduler questions (not added by interviewer):", schedulerQuestions.length);
+  console.log("Scheduler questions data:", schedulerQuestions);
   
 
 
@@ -141,7 +150,7 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata }) => {
   const DisLikeSection = React.memo(({ each }) => {
     return (
     <>
-    {isEditMode ? (
+    {(isEditMode ) ? (
     <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
         <div className="flex justify-between items-center mb-2">
           <h1>Tell us more :</h1>
@@ -168,7 +177,7 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata }) => {
         </ul>
       </div>
     ) : (
-     <p className="w-full flex gap-x-8 gap-y-2 ">{each.interviewerFeedback?.dislikeReason || "N/A"}</p>
+     <p className="w-full flex gap-x-8 gap-y-2 ">{each.whyDislike || "N/A"}</p>
     )}
     </>
       
@@ -202,7 +211,7 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata }) => {
         <p className="w-[200px] font-bold text-gray-700">
           Response Type {each.mandatory === "true" && <span className="text-[red]">*</span>}
         </p>
-        { isEditMode ? (
+        {(isEditMode ) ? (
         <div className={`w-full flex gap-x-8 gap-y-2 `}>
           {["Not Answered", "Partially Answered", "Fully Answered"].map((option) => (
             <span key={option} className="flex items-center gap-2">
@@ -231,94 +240,108 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata }) => {
   // Return JSX
   return (
     <div className="space-y-4">
-      {schedulerQuestionsData.map((question) => (
-        <div key={question._id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
-          <div className="flex items-start justify-between mb-3">
-            <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-              {question.snapshot.technology && question.snapshot.technology.length > 0
-                ? question.snapshot.technology[0]
-                : "N/A"}
-            </span>
-            <span className="text-sm text-gray-500">{question.snapshot.difficultyLevel}</span>
-          </div>
-          <h3 className="font-semibold text-gray-800 mb-2">{question.snapshot.questionText}</h3>
-          {question.snapshot.correctAnswer && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
-              <p className="text-sm text-gray-700">{question.snapshot.correctAnswer}</p>
+      {schedulerQuestionsData.length > 0 ? (
+        schedulerQuestionsData.map((question) => (
+          <div key={question._id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
+            <div className="flex items-start justify-between mb-3">
+              <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+                {question.snapshot.technology && question.snapshot.technology.length > 0
+                  ? question.snapshot.technology[0]
+                  : "N/A"}
+              </span>
+              <span className="text-sm text-gray-500">{question.snapshot.difficultyLevel}</span>
             </div>
-          )}
-          {isEditMode && (
-            <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-              <span>Mandatory: {question.mandatory === "true" ? "Yes" : "No"}</span>
-            </div>
-          )}
-          <RadioGroupInput each={question} />
-          <div className="flex items-center gap-4 mt-2">
-          {isEditMode && (
-            <button
-              className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
-              onClick={() => onClickAddNote(question._id)}
-            >
-              Add a Note
-            </button>
-          )}
-            <SharePopupSection />
-            <span
-              className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                question.isLiked === "liked" ? "text-green-700" : ""
-              }`}
-              onClick={() => handleLikeToggle(question._id)}
-            >
-              <SlLike />
-            </span>
-            <span
-              className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                question.isLiked === "disliked" ? "text-red-500" : ""
-              }`}
-              style={{ cursor: "pointer" }}
-              onClick={() => handleDislikeToggle(question._id)}
-            >
-              <SlDislike />
-            </span>
-          </div>
-          {dislikeQuestionId === question._id && <DisLikeSection each={question} />}
-          {question.notesBool && (
-            <div>
-              <div className="flex justify-start mt-4">
-                <label htmlFor={`note-input-${question._id}`} className="w-[200px]">
-                  Note
-                </label>
-              { isEditMode ? (
-                <div className="flex items-start w-full">
-                  <div className="w-full relative mr-5 rounded-md h-[80px]">
-                    <input
-                      className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                      id={`note-input-${question._id}`}
-                      type="text"
-                      value={question.note}
-                      onChange={(e) => onChangeInterviewQuestionNotes(question._id, e.target.value.slice(0, 250))}
-                      placeholder="Add your note here"
-                    />
-                    <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
-                      {question.note?.length || 0}/250
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => onClickDeleteNote(question._id)}
-                    className="text-red-500 text-lg mt-2"
-                  >
-                    <FaTrash size={20}/>
-                  </button>
-                </div>
-              ) : (
-                <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">{question.note}</p>
-              )}
+            <h3 className="font-semibold text-gray-800 mb-2">{question.snapshot.questionText}</h3>
+            {question.snapshot.correctAnswer && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
+                <p className="text-sm text-gray-700">{question.snapshot.correctAnswer}</p>
               </div>
+            )}
+            {(isEditMode) && (
+              <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
+                <span>Mandatory: {question.mandatory === "true" ? "Yes" : "No"}</span>
+              </div>
+            )}
+            <RadioGroupInput each={question} />
+            <div className="flex items-center gap-4 mt-2">
+            {(isEditMode ) && (
+              <button
+                className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
+                onClick={() => onClickAddNote(question._id)}
+              >
+                Add a Note
+              </button>
+            )}
+              <SharePopupSection />
+              {(isEditMode ) && (
+                <>
+                  <span
+                    className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                      question.isLiked === "liked" ? "text-green-700" : ""
+                    }`}
+                    onClick={() => handleLikeToggle(question._id)}
+                  >
+                    <SlLike />
+                  </span>
+                  <span
+                    className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                      question.isLiked === "disliked" ? "text-red-500" : ""
+                    }`}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleDislikeToggle(question._id)}
+                  >
+                    <SlDislike />
+                  </span>
+                </>
+              )}
             </div>
-          )}
+            {dislikeQuestionId === question._id && <DisLikeSection each={question} />}
+            {question.notesBool && (
+              <div>
+                <div className="flex justify-start mt-4">
+                  <label htmlFor={`note-input-${question._id}`} className="w-[200px]">
+                    Note
+                  </label>
+                {(isEditMode ) ? (
+                  <div className="flex items-start w-full">
+                    <div className="w-full relative mr-5 rounded-md h-[80px]">
+                      <input
+                        className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
+                        id={`note-input-${question._id}`}
+                        type="text"
+                        value={question.note}
+                        onChange={(e) => onChangeInterviewQuestionNotes(question._id, e.target.value.slice(0, 250))}
+                        placeholder="Add your note here"
+                      />
+                      <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
+                        {question.note?.length || 0}/250
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => onClickDeleteNote(question._id)}
+                      className="text-red-500 text-lg mt-2"
+                    >
+                      <FaTrash size={20}/>
+                    </button>
+                  </div>
+                ) : (
+                  <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">{question.note}</p>
+                )}
+                </div>
+              </div>
+            )}
+          </div>
+        ))
+      ) : (
+        // Empty state when no preselected questions are present
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+          <div className="text-gray-500 mb-4">
+            <p className="text-lg font-medium">No preselected questions found</p>
+            <p className="text-sm">No questions have been preselected for this round</p>
+          </div>
         </div>
-      ))}
+      )}
     </div>
   );
 };

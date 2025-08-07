@@ -169,16 +169,16 @@ const createFeedback = async (req, res) => {
 const getFeedbackByTenantId = async (req, res) => {
   try {
     const { tenantId } = req.params;
-
+ 
     if (!tenantId) {
       return res.status(400).json({
         success: false,
         message: "Tenant ID is required"
       });
     }
-
+ 
     //console.log('Received tenantId:', tenantId);
-
+ 
     let feedbackWithQuestions;
     let feedback;
     try {
@@ -189,8 +189,8 @@ const getFeedbackByTenantId = async (req, res) => {
         .populate('positionId', 'title companyname jobDescription Location')
         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
         .populate('interviewerId','firstName lastName')
-        .populate('ownerId', 'firstName lastName email');
-
+        // .populate('ownerId', 'firstName lastName email');
+ 
       // Fetch pre-selected questions for each feedback item
       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
         const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
@@ -199,7 +199,7 @@ const getFeedbackByTenantId = async (req, res) => {
           preSelectedQuestions
         };
       }));
-      
+     
       //console.log('Feedback found:', feedback.length, 'documents');
     } catch (err) {
       console.error('Invalid tenantId format:', err.message);
@@ -208,20 +208,20 @@ const getFeedbackByTenantId = async (req, res) => {
         message: "Invalid Tenant ID format: " + err.message
       });
     }
-
+ 
     if (!feedback) {
       return res.status(404).json({
         success: false,
         message: "Feedback not found for this tenant"
       });
     }
-
+ 
     return res.status(200).json({
       success: true,
       message: "Feedback retrieved successfully",
       data: feedbackWithQuestions
     });
-
+ 
   } catch (error) {
     //console.error("Error getting feedback by tenant ID:", error);
     return res.status(500).json({
