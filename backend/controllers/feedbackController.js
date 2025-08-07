@@ -232,6 +232,73 @@ const getFeedbackByTenantId = async (req, res) => {
   }
 };
 
+//<----v1.0.0---Venkatesh-----get feedback by interviewer ID
+
+const getFeedbackByInterviewerId = async (req, res) => {
+  try {
+    const { interviewerId } = req.params;
+
+    if (!interviewerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Interviewer ID is required"
+      });
+    }
+
+    //console.log('Received interviewerId:', interviewerId);
+
+    let feedbackWithQuestions;
+    let feedback;
+    try {
+      // Convert interviewerId string to ObjectId since database stores it as ObjectId
+      //const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
+      feedback = await FeedbackModel.find({ interviewerId })
+        .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
+        .populate('positionId', 'title companyname jobDescription Location')
+        .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
+        .populate('interviewerId','firstName lastName');
+
+      // Fetch pre-selected questions for each feedback item
+      feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
+        const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
+        return {
+          ...item.toObject(),
+          preSelectedQuestions
+        };
+      }));
+      
+      //console.log('Feedback found:', feedback.length, 'documents');
+    } catch (err) {
+      console.error('Invalid interviewerId format:', err.message);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Interviewer ID format: " + err.message
+      });
+    }
+
+    if (!feedback || feedback.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Feedback not found for this interviewer"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Feedback retrieved successfully",
+      data: feedbackWithQuestions
+    });
+
+  } catch (error) {
+    //console.error("Error getting feedback by interviewer ID:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while getting feedback",
+      error: error.message
+    });
+  }
+};
+
 const getfeedbackById =async(req,res)=>{
     try {
         const {id} = req.params
@@ -559,7 +626,12 @@ const updateFeedback = async (req, res) => {
   }
 };
 
-module.exports={createFeedback, getFeedbackByTenantId,getfeedbackById,getFeedbackByRoundId,getAllFeedback,updateFeedback}
-
-
-
+module.exports = {
+  createFeedback,
+  getFeedbackByTenantId,
+  getFeedbackByInterviewerId,
+  getfeedbackById,
+  getFeedbackByRoundId,
+  getAllFeedback,
+  updateFeedback
+};
