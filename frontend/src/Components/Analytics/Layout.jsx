@@ -67,6 +67,7 @@
 
 // export default Layout;
 
+// v1.0.0 - Ashok - fixed style issues and commented some buttons
 
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
@@ -86,9 +87,11 @@ const Layout = () => {
   return (
     <div className="h-screen flex bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-      <nav className="w-64 bg-white shadow-sm border-r border-gray-200 h-full fixed left-0 top-0 pt-16">
-        <div className="p-6">
-          <div className="space-y-2">
+      <nav className="w-72 bg-white shadow-sm border-r border-gray-200 h-full fixed left-0 top-0 pt-16">
+        {/* v1.0.0 <-------------------------------------------------- */}
+        <div>
+        {/* v1.0.0 --------------------------------------------------> */}
+          <div>
             {navigation.map((item) => {
               const Icon = item.icon;
               const isExact = item.href === "/analytics"; // only for Dashboard
@@ -98,13 +101,21 @@ const Layout = () => {
                   key={item.name}
                   to={item.href}
                   end={isExact} // exact match only for Dashboard
+                  // className={({ isActive }) =>
+                  //   `flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  //     isActive
+                  //       ? "bg-teal-50 text-custom-blue border-l-2 border-custom-blue"
+                  //       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  //   }`
+                  // }
                   className={({ isActive }) =>
-                    `flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    `w-full flex items-center gap-3 px-6 py-3 text-xs font-medium transition-all duration-200 ${
                       isActive
-                        ? "bg-teal-50 text-custom-blue border-l-2 border-custom-blue"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? 'bg-blue-50 text-custom-blue border-r-4 border-custom-blue'
+                        : 'text-gray-600 hover:bg-gray-50'
                     }`
                   }
+
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.name}</span>
@@ -116,7 +127,7 @@ const Layout = () => {
       </nav>
 
       {/* Main Content (scrollable) */}
-      <main className="ml-64 flex-1 overflow-y-auto p-6 mb-16">
+      <main className="ml-72 flex-1 overflow-y-auto p-6 mt-1 mb-[54px]">
         <Outlet />
       </main>
     </div>
