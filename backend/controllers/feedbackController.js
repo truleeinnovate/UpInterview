@@ -26,6 +26,23 @@ const createFeedback = async (req, res) => {
             status
         } = req.body;
 
+        //added by venkatesh------ Check for existing feedback to prevent duplicates
+        if (interviewRoundId && candidateId && interviewerId) {
+            const existingFeedback = await FeedbackModel.findOne({
+                interviewRoundId,
+                candidateId,
+                interviewerId
+            });
+            if (existingFeedback) {
+                console.log('❌ Duplicate feedback found for this interview round, candidate, and interviewer');
+                return res.status(409).json({
+                    success: false,
+                    message: "Feedback already exists for this interview round and candidate from this interviewer",
+                    existingFeedbackId: existingFeedback._id
+                });
+            }
+        }
+
         // Simple validation - just check if basic data exists
         if (!skills || !Array.isArray(skills) || skills.length === 0) {
             console.log('❌ No skills provided');
@@ -189,6 +206,7 @@ const getFeedbackByTenantId = async (req, res) => {
         .populate('positionId', 'title companyname jobDescription Location')
         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
         .populate('interviewerId','firstName lastName')
+        //.populate('ownerId', 'firstName lastName email');
 
       // Fetch pre-selected questions for each feedback item
       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
