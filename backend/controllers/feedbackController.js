@@ -189,7 +189,6 @@ const getFeedbackByTenantId = async (req, res) => {
         .populate('positionId', 'title companyname jobDescription Location')
         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
         .populate('interviewerId','firstName lastName')
-        .populate('ownerId', 'firstName lastName email');
 
       // Fetch pre-selected questions for each feedback item
       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
