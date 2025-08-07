@@ -1,4 +1,4 @@
-.question-bank-modal {
+/* .question-bank-modal {
   width: 100%;
   max-width: 800px;
   max-height: 80vh;
@@ -250,7 +250,6 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .question-bank-modal {
     margin: 1rem;
@@ -291,7 +290,6 @@
   }
 }
 
-/* Animation for modal entrance */
 .question-bank-modal {
   animation: slideIn 0.3s ease-out;
 }
@@ -305,4 +303,4 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-} 
+}  */

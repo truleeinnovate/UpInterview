@@ -1,4 +1,4 @@
-.chat-sidebar {
+/* .chat-sidebar {
   width: 300px;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
@@ -161,7 +161,6 @@
   }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .chat-sidebar {
     width: 100%;
@@ -172,4 +171,4 @@
     bottom: 0;
     z-index: 100;
   }
-} 
+}  */

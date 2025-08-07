@@ -25,6 +25,8 @@ const FeedbackFormModal = () => {
   const [activeTab, setActiveTab] = useState(1);
   const isEditMode = mode === 'edit';
 
+  const isViewMode = mode === 'view';
+
 
   const handleClose = () => {
     navigate(-1); // Go back to previous page
@@ -37,19 +39,21 @@ const FeedbackFormModal = () => {
 
     switch (activeTab) {
       case 1: 
-        return <CandidateMiniTab />;
+        return <CandidateMiniTab isViewMode={isViewMode} />;
       case 2: 
         return <InterviewsMiniTabComponent 
           tab={true} 
           page="Popup" 
           closePopup={handleClose}
           isEditMode={isEditMode}
+          isViewMode={isViewMode}
         />;
       case 3: 
         return <FeedbackForm 
           tab={true} 
           page="Popup"
           isEditMode={isEditMode}
+          isViewMode={isViewMode}
         />;
       
       default: 

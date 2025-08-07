@@ -1,4 +1,4 @@
-.feedback-modal {
+/* .feedback-modal {
   width: 100%;
   max-width: 500px;
   background: white;
@@ -170,7 +170,6 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .feedback-modal {
     margin: 1rem;
@@ -194,7 +193,6 @@
   }
 }
 
-/* Animation for modal entrance */
 .feedback-modal {
   animation: slideIn 0.3s ease-out;
 }
@@ -208,4 +206,4 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-} 
+}  */

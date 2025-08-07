@@ -10,7 +10,7 @@ const CandidateMiniTab = ({selectedData}) => {
   const positionData = selectedData?.position ? selectedData?.position : feedback.positionId || {};
   const interviewRoundData = feedback.interviewRoundId || {};
 
-  console.log("positionData",selectedData);
+  console.log("positionData",candidateData);
   
 
   const [expandedSections, setExpandedSections] = useState({
@@ -91,7 +91,7 @@ const CandidateMiniTab = ({selectedData}) => {
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <div>
                   <p className="font-medium text-gray-900">{skill.skill}</p>
-                  <p className="text-sm text-gray-500">{skill.experience} years experience</p>
+                  <p className="text-sm text-gray-500">{skill.experience} experience</p>
                 </div>
                 <span 
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
