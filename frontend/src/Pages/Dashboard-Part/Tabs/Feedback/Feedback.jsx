@@ -21,10 +21,18 @@ import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js'
 import SummarizedFeedbackModal from './SummarizedFeedbackModal.jsx';
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import FeedbackKanban from './FeedbackKanban.jsx';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import Cookies from "js-cookie";
 
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const organization = tokenPayload?.organization;
+  const tenantId = tokenPayload?.tenantId;
+  const interviewerId = tokenPayload?.userId;
   
   // Get context data (removed unused variables)
   const { user } = useCustomContext();
@@ -67,9 +75,12 @@ const Feedback = () => {
     const fetchFeedbackData = async () => {
       try {
         setLoading(true);
-        // Replace with actual tenantId from your auth context or user data
-        const tenantId = '685bb9a00abf677d3ae9ec56'; 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/feedback/${tenantId}`);
+        // Use different endpoint based on organization status
+        //const tenantId = "685bb9a00abf677d3ae9ec56"
+        const endpoint = organization 
+          ? `${process.env.REACT_APP_API_URL}/feedback/${tenantId}` 
+          : `${process.env.REACT_APP_API_URL}/feedback/${interviewerId}`;
+        const response = await fetch(endpoint);
         if (!response.ok) {
           throw new Error('Failed to fetch feedback data');
         }
@@ -169,11 +180,15 @@ const Feedback = () => {
   const handleSummarize = (feedback) => {
     console.log("Summarize clicked", feedback); // Debug log to check the feedback object structure
     setSummaryData({
-      candidate_name: feedback.candidateName || 'Unknown',
-      candidate_job_title: feedback.positionId || 'Unknown Position',
-      overall_impression: feedback.overallImpression || 'No overall impression provided',
-      recommendation: feedback.recommendation || 'Not specified',
-      skills: feedback.skills ||  ["Unknown Skill"]
+      candidate_name: (feedback.candidateId ? `${feedback.candidateId.FirstName || ''} ${feedback.candidateId.LastName || ''}` : 'Unknown'),
+      candidate_job_title: feedback.positionId?.title || 'Unknown Position',
+      overall_impression: feedback.overallImpression?.note || 'No overall impression provided',
+      recommendation: feedback.overallImpression?.recommendation || 'Not specified',
+      skills: feedback.skills || [],
+      status: feedback.status || 'Not specified',
+      interview_mode: feedback.interviewRoundId?.interviewMode || 'Not specified',
+      scheduled_datetime: feedback.interviewRoundId?.dateTime || 'Not specified',
+      interviewer: feedback.interviewerId ? `${feedback.interviewerId.firstName || ''} ${feedback.interviewerId.lastName || ''}` : 'Not specified'
     });
     setShowSummaryModal(true);
   };
@@ -320,12 +335,12 @@ const Feedback = () => {
       ),
     },
     {
-      key: 'interviewRoundId.status',
+      key: 'status',
       header: 'Status',
       render: (value,row) => (
         <div className="flex items-center">
-            {getStatusIcon(row.interviewRoundId?.status)}
-          <span className="ml-2 text-sm capitalize">{row.interviewRoundId?.status}</span>
+            {getStatusIcon(row.status)}
+          <span className="ml-2 text-sm capitalize">{row.status}</span>
         </div>
       ),
     },
@@ -397,21 +412,21 @@ const Feedback = () => {
           </div>
         </main>
       </div>
-
+      
       <main className="fixed top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
           <motion.div className="bg-white">
-            {viewMode === 'table' ? (
-              <TableView
+        {viewMode === 'table' ? (
+          <TableView
                 //data={currentRows}
-                data={filteredFeedbacks.slice(startIndex, endIndex)}
-                columns={tableColumns}
-                actions={tableActions}
-                loading={loading}
+            data={filteredFeedbacks.slice(startIndex, endIndex)}
+            columns={tableColumns}
+            actions={tableActions}
+            loading={loading}
                 emptyState="No feedback found."
                 className="table-fixed w-full"
-              />
-            ) : (
+          />
+        ) : (
               <FeedbackKanban
                 //feedbacks={currentRows}
                 feedbacks={filteredFeedbacks.slice(startIndex, endIndex)}
@@ -419,11 +434,11 @@ const Feedback = () => {
                 onView={handleView}
                 onEdit={handleEdit}
               />
-            )}
-            <FilterPopup
-              isOpen={isFilterPopupOpen}
-              onClose={() => setFilterPopupOpen(false)}
-              onApply={handleApplyFilters}
+        )}
+        <FilterPopup
+          isOpen={isFilterPopupOpen}
+          onClose={() => setFilterPopupOpen(false)}
+          onApply={handleApplyFilters}
               onClearAll={handleClearFilters}
               filterIconRef={filterIconRef}
             >
@@ -454,7 +469,7 @@ const Feedback = () => {
                         </label>
                       ))}
                     </div>
-                  )}
+      )}
                 </div>
               </div>
             </FilterPopup>
@@ -463,12 +478,12 @@ const Feedback = () => {
       </main>
 
     </div>
-    <SummarizedFeedbackModal
-    open={showSummaryModal}
-    onClose={() => setShowSummaryModal(false)}
-    data={summaryData}
-    />
-   </>
+        <SummarizedFeedbackModal
+          open={showSummaryModal}
+          onClose={() => setShowSummaryModal(false)}
+          data={summaryData}
+        />
+    </>
   
   );
 };
