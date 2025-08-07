@@ -24,7 +24,6 @@ const RoleSelector = ({ onRoleSelect, roleInfo }) => {
         </div>
         
         <div className={`grid gap-8 mb-8 ${isSingleRole ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
-          {/* Candidate Instructions */}
           {showCandidateSection && (
             <div className="bg-gray-50 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">

@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 import RoleSelector from './RoleSelector';
 import CandidateView from './CandidateView';
 import InterviewerView from './InterviewerView';
+import CombinedNavbar from '../../Components/Navbar/CombinedNavbar';
 import { decryptData } from '../../utils/PaymentCard';
 import { config } from '../../config';
 
@@ -146,8 +147,13 @@ function JoinMeeting() {
     };
     setUrlRoleInfo(roleInfo);
 
-    // Don't auto-select role - let user click the button
-    console.log('RoleSelector will be shown - user must click button to proceed');
+    // Auto-select candidate role if URL indicates candidate
+    if (isCandidate) {
+      console.log('Auto-selecting candidate role based on URL parameter');
+      setCurrentRole('candidate');
+    } else {
+      console.log('RoleSelector will be shown - user must click button to proceed');
+    }
 
   }, [location.search]);
 
@@ -187,7 +193,12 @@ function JoinMeeting() {
   }
 
   if (currentRole === 'interviewer') {
-    return <InterviewerView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackData} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />;
+    return (
+      <>
+        <CombinedNavbar />
+        <InterviewerView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackData} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />
+      </>
+    );
   }
 
   // Always show RoleSelector first - user must click button to proceed

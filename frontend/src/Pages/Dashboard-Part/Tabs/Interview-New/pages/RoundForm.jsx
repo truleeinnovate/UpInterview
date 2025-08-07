@@ -1085,7 +1085,7 @@ const RoundFormInterviews = () => {
         
         try {
           setIsMeetingCreationLoading(true);
-          setMeetingCreationProgress('Creating meeting...');
+          setMeetingCreationProgress('Creating meeting links...');
           
           // Import the meeting platform utility
           const { createMeeting } = await import('../../../../../utils/meetingPlatforms.js');

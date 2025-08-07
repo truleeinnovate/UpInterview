@@ -3,12 +3,15 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Award, Briefcase, ChevronDown, ChevronUp, GraduationCap, User } from 'lucide-react';
 
-const CandidateMiniTab = ({}) => {
+const CandidateMiniTab = ({selectedData}) => {
   const location = useLocation();
   const feedback = location.state?.feedback || {};
-  const candidateData = feedback.candidateId || {};
-  const positionData = feedback.positionId || {};
+  const candidateData = selectedData?.candidate ? selectedData?.candidate : feedback.candidateId || {};
+  const positionData = selectedData?.position ? selectedData?.position : feedback.positionId || {};
   const interviewRoundData = feedback.interviewRoundId || {};
+
+  console.log("positionData",candidateData);
+  
 
   const [expandedSections, setExpandedSections] = useState({
     skills: false,
@@ -42,9 +45,9 @@ const CandidateMiniTab = ({}) => {
   
 
   return (
-    <div className="space-y-6">
+    <div className="px-5 space-y-6 min-h-screen">
       {/* Basic Info */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
+      <div className="bg-white rounded-lg p-6 shadow-sm mt-2">
         <div className="flex items-center mb-4">
           <User className="h-5 w-5 mr-2" style={{ color: 'rgb(33, 121, 137)' }} />
           <h3 className="text-lg font-medium text-gray-900">Candidate Information</h3>
@@ -56,7 +59,7 @@ const CandidateMiniTab = ({}) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Experience</p>
-            <p className="text-gray-900">{candidateData?.CurrentExperience}</p>
+            <p className="text-gray-900">{candidateData?.CurrentExperience ? candidateData?.CurrentExperience + " years" : "Not Available" }</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Position Applied</p>
@@ -88,7 +91,7 @@ const CandidateMiniTab = ({}) => {
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <div>
                   <p className="font-medium text-gray-900">{skill.skill}</p>
-                  <p className="text-sm text-gray-500">{skill.experience} years experience</p>
+                  <p className="text-sm text-gray-500">{skill.experience} experience</p>
                 </div>
                 <span 
                   className={`px-2 py-1 rounded-full text-xs font-medium ${

@@ -25,77 +25,35 @@ const FeedbackFormModal = () => {
   const [activeTab, setActiveTab] = useState(1);
   const isEditMode = mode === 'edit';
 
-  // Static data for view mode
-  const staticFeedbackData = {
-    _id: feedback?._id || "N/A",
-    interview: feedback?.interview || "John Doe",
-    interviewType: feedback?.interviewType || "Technical",
-    scheduledDate: feedback?.scheduledDate || "2025-08-01",
-    status: feedback?.status || "Active",
-    feedback: feedback?.feedback || "Good performance",
-  };
+  const isViewMode = mode === 'view';
+
 
   const handleClose = () => {
     navigate(-1); // Go back to previous page
   };
 
-  // Button handler functions for the feedback modal
-  const onClickPreviewButton = () => {
-    // Navigate to preview page with current feedback data
-    navigate('/feedback-preview', {
-      state: {
-        feedbackData: {
-          candidateData: feedback,
-        }
-      }
-    });
-  };
 
-  const onClickSubmit = () => {
-    // Handle feedback submission
-    
-    // Add your submission logic here
-    handleClose();
-  };
-
-  const onClickNextButton = () => {
-    // Move to next tab
-    if (activeTab < 3) {
-      setActiveTab(activeTab + 1);
-    }
-  };
-
-  const areAllValidationsMet = () => {
-    // Add your validation logic here
-    return true;
-  };
 
 
   const displayData = () => {
-    const roundDetails = { questions: [] };
-    const interviewDetails = feedback ? {
-      Candidate: feedback.interview,
-      Position: "Software Developer",
-      _id: feedback._id
-    } : {};
 
     switch (activeTab) {
       case 1: 
-        return <CandidateMiniTab />;
+        return <CandidateMiniTab isViewMode={isViewMode} />;
       case 2: 
         return <InterviewsMiniTabComponent 
-          roundDetails={roundDetails} 
           tab={true} 
           page="Popup" 
           closePopup={handleClose}
-          data={isEditMode ? feedback : staticFeedbackData}
           isEditMode={isEditMode}
+          isViewMode={isViewMode}
         />;
       case 3: 
         return <FeedbackForm 
           tab={true} 
           page="Popup"
           isEditMode={isEditMode}
+          isViewMode={isViewMode}
         />;
       
       default: 
@@ -142,36 +100,9 @@ const FeedbackFormModal = () => {
           ))}
         </ul>
         
-        <div className="flex-1 overflow-y-auto mx-8 mb-8 mt-4">
+        <div className="flex-1 overflow-y-auto">
           {displayData()}
         </div>
-        <div className="next-button--container flex justify-end py-1 pr-8 gap-4">
-              {activeTab === 3 && isEditMode && (
-                <>
-                  <button 
-                    //disabled={!areAllValidationsMet()} 
-                    onClick={onClickPreviewButton} 
-                    className={`bg-white text-[#227a8a] border-[1px] border-[#227a8a] py-[0.5rem] px-[2rem] rounded-lg `}//${!areAllValidationsMet() && "cursor-not-allowed"}
-                  >
-                    Preview
-                  </button>
-                  <button 
-                    onClick={onClickSubmit} 
-                    className="bg-[#227a8a] text-white py-[0.5rem] px-[2rem] rounded-lg"
-                  >
-                    Submit
-                  </button>
-                </>
-              )}
-              {activeTab <= 2 && isEditMode && (
-                <button 
-                  onClick={onClickNextButton} 
-                  className="bg-[#227a8a] text-white py-[0.5rem] px-[2rem] rounded-lg"
-                >
-                  Next
-                </button>
-              )}
-            </div>
       </div>
     </div>
   );

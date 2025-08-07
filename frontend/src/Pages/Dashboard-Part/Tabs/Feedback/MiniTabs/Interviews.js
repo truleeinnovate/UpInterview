@@ -7,6 +7,7 @@ import SchedulerSectionComponent from './InterviewMiniTabs/SchedulerSection';
 import InterviewerSectionComponent from './InterviewMiniTabs/InterviewerSection';
 import { useCustomContext } from '../../../../../Context/Contextfetch';
 
+
 const interviewMiniTabsList = [
   {
     id: 1,
@@ -22,9 +23,33 @@ const interviewMiniTabsList = [
 
 
 //<----v1.0.0---
-const InterviewsMiniTabComponent = ({ roundDetails, tab, page, closePopup, data, isEditMode }) => {
+
+const InterviewsMiniTabComponent = ({
+  interviewData,
+  isAddMode, 
+  roundDetails, 
+  tab, 
+  page, 
+  closePopup, 
+  data, 
+  isEditMode,
+  isViewMode,
+  // Question Bank Props
+  interviewerSectionData,
+  setInterviewerSectionData,
+  removedQuestionIds,
+  setRemovedQuestionIds,
+  isQuestionBankOpen,
+  setIsQuestionBankOpen,
+  handleAddQuestionToRound,
+  handleRemoveQuestion,
+  handleToggleMandatory
+}) => {
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
   const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext()
+  console.log("interviewData",interviewData);
+  
+
 
   const handleTabChange = (tab) => {
       setInterviewMiniTab(tab);
@@ -34,9 +59,29 @@ const InterviewsMiniTabComponent = ({ roundDetails, tab, page, closePopup, data,
   const InterviewDisplayData = () => {
     switch (interviewMiniTab) {
       case 1:
-        return <SchedulerSectionComponent isEditMode={isEditMode} />;//<----v1.0.0---
+        return <SchedulerSectionComponent isEditMode={isEditMode} interviewdata ={interviewData} isViewMode={isViewMode} />;//<----v1.0.0---
       case 2:
-        return <InterviewerSectionComponent closePopup={closePopup} tab={tab} page={page}  isEditMode={isEditMode}/>;//<----v1.0.0---
+        return (
+          <InterviewerSectionComponent 
+            closePopup={closePopup} 
+            tab={tab} 
+            page={page} 
+            isAddMode={isAddMode}  
+            isEditMode={isEditMode}
+            isViewMode={isViewMode}
+            // Question Bank Props
+            interviewerSectionData={interviewerSectionData || []}
+            setInterviewerSectionData={setInterviewerSectionData}
+            removedQuestionIds={removedQuestionIds}
+            setRemovedQuestionIds={setRemovedQuestionIds}
+            isQuestionBankOpen={isQuestionBankOpen}
+            setIsQuestionBankOpen={setIsQuestionBankOpen}
+            handleAddQuestionToRound={handleAddQuestionToRound}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
+            interviewData={interviewData}
+          />
+        );//<----v1.0.0---
       default:
         return ""
     }

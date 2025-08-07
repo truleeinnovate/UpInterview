@@ -610,8 +610,8 @@ const selectedLabelId = useMemo(() => {
   return (
     <>
       <Toaster />
-      <div className="w-full px-4 py-2 mt-10 bg-white">
-        <div className={`flex items-center justify-between fixed z-40 ${type === "interviewerSection" || type === "assessment" ? `${type === "assessment" ? "left-40 right-40" : "left-16 right-16"}` : "left-7 right-7"}`}>
+      <div className="w-full px-4 py-2 bg-white">
+        <div className={`flex items-center justify-between ${type === "interviewerSection" || type === "assessment" ? "" : ""}`}>
           <div className="flex items-center gap-2">
             <div className="relative inline-block w-48">
               <button
@@ -698,7 +698,7 @@ const selectedLabelId = useMemo(() => {
           </div>
         </div>
 
-        <div className={`${type === "interviewerSection" || type === "assessment" || activeTab === "MyQuestionsList" ? "mt-[60px]" : ""}`}>
+        <div className={`${type === "interviewerSection" || type === "assessment" || activeTab === "MyQuestionsList" ? "" : ""}`}>
           {selectedLabel && groupedQuestions[selectedLabel]?.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
               <div className="text-center max-w-md">
