@@ -14,6 +14,7 @@ const createFeedback = async (req, res) => {
         
         const {
             tenantId,
+            ownerId,
             interviewRoundId,
             candidateId,
             positionId,
@@ -34,10 +35,29 @@ const createFeedback = async (req, res) => {
             });
         }
 
+        // Process questionFeedback to extract only question IDs
+        const processedQuestionFeedback = (questionFeedback || []).map(qFeedback => {
+            const question = qFeedback.questionId; // This is the full question object from frontend
+            const questionId = question?.questionId || question?.id || question?._id || "";
+            
+            return {
+                questionId: questionId, // Store only the question ID
+                candidateAnswer: qFeedback.candidateAnswer || {
+                    answerType: question?.isAnswered || "not answered",
+                    submittedAnswer: ""
+                },
+                interviewerFeedback: qFeedback.interviewerFeedback || {
+                    liked: question?.isLiked || "none",
+                    note: question?.note || "",
+                    dislikeReason: question?.whyDislike || ""
+                }
+            };
+        });
+
         // Create feedback data with defaults
         const feedbackData = {
             skills: skills,
-            questionFeedback: questionFeedback || [],
+            questionFeedback: processedQuestionFeedback,
             generalComments: generalComments || "",
             overallImpression: overallImpression || {},
             status: status || 'submitted'
@@ -46,6 +66,10 @@ const createFeedback = async (req, res) => {
         // Add fields only if they are not empty strings
         if (tenantId && tenantId.trim() !== "") {
             feedbackData.tenantId = tenantId;
+        }
+        
+        if (ownerId && ownerId.trim() !== "") {
+            feedbackData.ownerId = ownerId;
         }
         
         if (interviewRoundId && interviewRoundId.trim() !== "") {
@@ -73,16 +97,18 @@ const createFeedback = async (req, res) => {
         console.log('✅ Feedback saved successfully with ID:', feedbackInstance._id);
 
         // Save questions to InterviewQuestions collection
-        if (questionFeedback && questionFeedback.length > 0) {
+        if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
           console.log('📝 Saving questions to InterviewQuestions collection...');
           
-          const questionsToSave = questionFeedback.map((qFeedback, index) => {
-            const question = qFeedback.questionId; // This is the full question object from frontend
+          const questionsToSave = processedQuestionFeedback.map((qFeedback, index) => {
+            // Get the original question object from the frontend data for additional details
+            const originalQuestionFeedback = questionFeedback[index];
+            const question = originalQuestionFeedback?.questionId; // This is the full question object from frontend
             console.log('📋 Processing question:', question);
             
             // Extract the actual question data from the nested structure
             const actualQuestion = question?.snapshot || question;
-            const questionId = question?.questionId || question?.id || question?._id || actualQuestion?._id;
+            const questionId = qFeedback.questionId; // Use the processed question ID
             
             return {
               interviewId: interviewRoundId, // Using interviewRoundId as interviewId
@@ -162,7 +188,8 @@ const getFeedbackByTenantId = async (req, res) => {
         .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
         .populate('positionId', 'title companyname jobDescription Location')
         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
-        .populate('interviewerId','firstName lastName');
+        .populate('interviewerId','firstName lastName')
+        .populate('ownerId', 'firstName lastName email');
 
       // Fetch pre-selected questions for each feedback item
       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
@@ -209,6 +236,11 @@ const getfeedbackById =async(req,res)=>{
     try {
         const {id} = req.params
         const feedback = await FeedbackModel.findById(id)
+          .populate('candidateId', 'FirstName LastName Email Phone')
+          .populate('positionId', 'title companyname jobDescription')
+          .populate('interviewRoundId', 'roundTitle interviewMode interviewType')
+          .populate('interviewerId', 'firstName lastName')
+          .populate('ownerId', 'firstName lastName email');
         if(!feedback){
             return res.status(404).json({
                 success:false,
@@ -233,6 +265,11 @@ const getfeedbackById =async(req,res)=>{
 const getAllFeedback = async(req,res)=>{
     try {
         const feedback = await FeedbackModel.find()
+          .populate('candidateId', 'FirstName LastName Email Phone')
+          .populate('positionId', 'title companyname jobDescription')
+          .populate('interviewRoundId', 'roundTitle interviewMode interviewType')
+          .populate('interviewerId', 'firstName lastName')
+          .populate('ownerId', 'firstName lastName email');
         if(!feedback){
             return res.status(404).json({
                 success:false,
@@ -351,7 +388,8 @@ const getFeedbackByRoundId = async (req, res) => {
     })
       .populate("candidateId", "FirstName LastName Email Phone")
       .populate("positionId", "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary")
-      .populate("interviewerId", "FirstName LastName Email Phone");
+      .populate("interviewerId", "FirstName LastName Email Phone")
+      .populate("ownerId", "firstName lastName email");
 
          console.log("✅ Feedbacks Found:", feedbacks.length, "documents");
      if (feedbacks.length > 0) {
