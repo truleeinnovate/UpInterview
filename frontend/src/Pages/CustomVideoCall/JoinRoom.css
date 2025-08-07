@@ -1,4 +1,4 @@
-.join-room-container {
+/* .join-room-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -390,7 +390,6 @@
   opacity: 0.9;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .join-room-header {
     flex-direction: column;
@@ -437,4 +436,4 @@
   .video-preview {
     height: 200px;
   }
-} 
+}  */

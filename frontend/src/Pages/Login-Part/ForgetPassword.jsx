@@ -34,6 +34,7 @@ const ForgotPassword = () => {
   };
   
   return (
+    <>
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-md">
@@ -102,6 +103,7 @@ const ForgotPassword = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

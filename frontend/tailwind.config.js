@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} **/
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -7,48 +7,65 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        // Replace HSL variables with concrete values or define them properly
+        border: "#e5e7eb", // Example concrete value
+        input: "#ffffff", 
+        ring: "#3b82f6",
+        background: "#ffffff",
+        foreground: "#111827",
+        
+        // Your primary color scale (good)
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          50: '#f0f9fa',
+          100: '#d9f1f4',
+          200: '#b8e3ea',
+          300: '#8bceda',
+          400: '#58b0c2',
+          500: '#217989',
+          600: '#1e6b79',
+          700: '#1c5964',
+          800: '#1c4a53',
+          900: '#1c3f47',
         },
+        
+        // Either define these properly or use concrete values
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "#9ca3af", // Example concrete value
+          foreground: "#111827"
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "#ef4444",
+          foreground: "#ffffff"
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "#f3f4f6",
+          foreground: "#6b7280"
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#3b82f6",
+          foreground: "#ffffff"
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "#ffffff",
+          foreground: "#111827"
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "#ffffff",
+          foreground: "#111827"
         },
-        // Custom Colors
+        
+        // Your custom colors (good)
         'custom-blue': '#217989',
         'custom-bg': '#F5F9FA',
         'toggle-bg': '#DEF5FB',
       },
+      fontFamily: {
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
+      },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "0.5rem",
+        md: "0.375rem",
+        sm: "0.25rem",
       },
       keyframes: {
         "accordion-down": {
@@ -65,7 +82,6 @@ module.exports = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
-
     screens: {
       'sm': {'min': '320px', 'max': '639px'},
       'md': {'min': '640px', 'max': '1023px'},
@@ -74,5 +90,7 @@ module.exports = {
       '2xl': {'min': '1536px'},
     },
   },
-  plugins: [],
+   plugins: [
+    require('@tailwindcss/forms'),
+  ],
 }
