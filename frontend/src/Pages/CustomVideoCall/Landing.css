@@ -1,4 +1,4 @@
-.landing-container {
+/* .landing-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -335,7 +335,6 @@
   opacity: 0.7;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .landing-header {
     flex-direction: column;
@@ -415,4 +414,4 @@
   .stat {
     justify-content: center;
   }
-} 
+}  */

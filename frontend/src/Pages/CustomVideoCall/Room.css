@@ -1,4 +1,4 @@
-.room-container {
+/* .room-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -6,7 +6,6 @@
   color: white;
 }
 
-/* Loading and Error States */
 .loading-overlay,
 .error-overlay {
   position: fixed;
@@ -215,7 +214,6 @@
   background: #d32f2f;
 }
 
-/* Screen sharing indicator */
 .screen-share-indicator {
   position: absolute;
   top: -2px;
@@ -520,7 +518,6 @@
   border-radius: 8px;
 }
 
-/* Sidebar Styles */
 .participants-sidebar,
 .chat-sidebar {
   width: 300px;
@@ -561,7 +558,6 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Participants List */
 .participants-list {
   flex: 1;
   overflow-y: auto;
@@ -612,7 +608,6 @@
   font-weight: 600;
 }
 
-/* Chat Styles */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -724,7 +719,6 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .room-header {
     flex-direction: column;
@@ -787,7 +781,6 @@
   }
 }
 
-/* Animation for video elements */
 .local-video,
 .remote-video-wrapper {
   transition: all 0.3s ease;
@@ -799,7 +792,6 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Loading state */
 .video-loading {
   display: flex;
   align-items: center;
@@ -821,7 +813,6 @@
   }
 }
 
-/* Invite Modal Styles */
 .invite-modal {
   max-width: 500px;
   width: 90%;
@@ -996,4 +987,4 @@
   color: #666;
   margin: 0;
   text-align: center;
-} 
+}  */

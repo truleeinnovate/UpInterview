@@ -4,6 +4,7 @@
 // v1.0.3 - Ranjith - new route CandidateDetails to assessment page
 // v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
 // v1.0.5 - Mansoor - Added custom video call application routes
+// v1.0.6 - Mansoor - removed the navbar in the login pages
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -477,7 +478,7 @@ const MainAppRoutes = ({
             <Route path="/complete-profile" element={<ProfileWizard />} />
             <Route path="/subscription-plans" element={<SubscriptionPlan />} />
             <Route
-              path="/organization-signup"
+              path="/organization/signup"
               element={<OrganizationSignUp />}
             />
             <Route path="/organization-login" element={<OrganizationLogin />} />
@@ -520,7 +521,7 @@ const MainAppRoutes = ({
               element={<SubscriptionSuccess />}
             />
             <Route path="/resetPassword" element={<ResetPassword />} />
-            <Route path="/forgetPassword" element={<ForgetPassword />} />
+            <Route path="/forgot-password" element={<ForgetPassword />} />
             <Route path="/assessmenttest" element={<AssessmentTest />} />
 
             {/* <------------------------------- v1.0.5 */}
@@ -1216,20 +1217,23 @@ const App = () => {
   const organization = tokenPayload?.organization;
   const [sessionExpired, setSessionExpired] = useState(false);
 
+
+  // <----------------v1.0.6
   const showLogoPaths = useMemo(
     () => [
-      "/organization-signup",
-      "/organization-login",
-      "/welcome-page-upinterview-individual",
-      "/select-user-type",
-      "/select-profession",
-      "/complete-profile",
-      "/subscription-plans",
-      "/payment-details",
-      "/verify-email",
+      // "/organization-signup",
+      // "/organization-login",
+      // "/welcome-page-upinterview-individual",
+      // "/select-user-type",
+      // "/select-profession",
+      // "/complete-profile",
+      // "/subscription-plans",
+      // "/payment-details",
+      // "/verify-email",
     ],
     []
   );
+  // v1.0.6------------------>
 
   const noNavbarPaths = useMemo(
     () => [
