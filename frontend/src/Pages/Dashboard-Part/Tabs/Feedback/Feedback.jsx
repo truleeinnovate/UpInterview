@@ -57,9 +57,9 @@ const Feedback = () => {
   const [error, setError] = useState(null);
   // Removed modal-related state variables as modal is now in separate component
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const tenantId = tokenPayload?.tenantId;
+  // const authToken = Cookies.get("authToken");
+  // const tokenPayload = decodeJwt(authToken);
+  // const tenantId = tokenPayload?.tenantId;
   // const currentOwnerId = tokenPayload?.userId;
 
   useEffect(() => {
