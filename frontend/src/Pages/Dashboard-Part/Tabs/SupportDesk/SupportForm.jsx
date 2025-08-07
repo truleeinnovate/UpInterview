@@ -4,6 +4,7 @@
 // v1.0.0 ------ Venkatesh---changes in full screen mode icons and remove footer border-top
 // v1.0.1 ------ Venkatesh---change select dropdown to custom dropdown
 // v1.0.2 - Ashok - Implemented scroll lock hook for conditionally disable outer scrollbar
+// v1.0.3 - Ashraf - Added subject field,changed description length to 1000,modified issues types added more types
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
@@ -15,8 +16,11 @@ import Cookies from "js-cookie";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import LoadingButton from "../../../../Components/LoadingButton";
 import {useScrollLock} from "../../../../apiHooks/scrollHook/useScrollLock";
+// v1.0.3 <-------------------------------------------------------------------------
+const maxDescriptionLen = 1000;
+const maxSubjectLen = 150;
+// v1.0.3 ------------------------------------------------------------------------->
 
-const maxDescriptionLen = 500;
 
 const validateFile = async (file, type = "attachment") => {
   if (!file || typeof file !== "object") {
@@ -64,7 +68,7 @@ const SupportForm = () => {
   const initialTicketData = location.state?.ticketData;
   const editMode = location.pathname.includes("/edit-ticket");
   const [isFullWidth, setIsFullWidth] = useState(false);
-  const [errors, setErrors] = useState({ issueType: "", description: "" });
+  const [errors, setErrors] = useState({ issueType: "", description: "", subject: "" });
   const [attachmentFileName, setAttachmentFileName] = useState("");
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [attachmentFileError, setAttachmentFileError] = useState("");
@@ -75,15 +79,25 @@ const SupportForm = () => {
   useScrollLock(true); // This will lock the outer scrollbar when the form is open
   // v1.0.2 ------------------------------------------------------------------------->
 
-
+// v1.0.3 <-------------------------------------------------------------------------
   const issuesData = useMemo(
     () => [
-      { id: 0, issue: "Payment" },
-      { id: 1, issue: "Technical" },
-      { id: 2, issue: "Account" },
+      { id: 0, issue: "Payment Issue" },
+      { id: 1, issue: "Technical Issue" },
+      { id: 2, issue: "Account Issue" },
+      { id: 3, issue: "Interview Feedback Issue" },
+      { id: 4, issue: "Scheduling Problem" },
+      { id: 5, issue: "Video/Audio Issue" },
+      { id: 6, issue: "Assessment Issue" },
     ],
     []
   );
+// v1.0.3 ------------------------------------------------------------------------->
+
+
+
+
+
 
   const initialFormState = useMemo(
     () => ({
@@ -92,12 +106,13 @@ const SupportForm = () => {
       selectedIssue: "",
       // file: null,
       description: "",
+      subject: "",
     }),
     []
   );
 
   const [formState, setFormState] = useState(initialFormState);
-  const { otherIssueFlag, otherIssue, selectedIssue, description } = formState;
+  const { otherIssueFlag, otherIssue, selectedIssue, description, subject } = formState;
   const fileRef = useRef(null);
   const [contact, setContact] = useState(null);
 
@@ -128,10 +143,11 @@ const SupportForm = () => {
       setFormState((prev) => ({
         ...prev,
         description: initialTicketData.description || "",
+        subject: initialTicketData.subject || "",
         selectedIssue: initialTicketData.issueType || "",
         otherIssue: initialTicketData.issueType || "",
         otherIssueFlag: !issuesData.some(
-          (item) => `${item.issue} Issue` === initialTicketData.issueType
+          (item) => `${item.issue}` === initialTicketData.issueType
         ),
         // file: !initialFormState.file || null,
       }));
@@ -143,11 +159,16 @@ const SupportForm = () => {
   }, [editMode, initialTicketData, issuesData]);
 
   const validateForm = useCallback(() => {
-    const newErrors = { issueType: "", description: "" };
+    const newErrors = { issueType: "", description: "", subject: "" };
     let isValid = true;
 
     if (!selectedIssue && !otherIssue) {
       newErrors.issueType = "Issue type is required";
+      isValid = false;
+    }
+
+    if (!subject.trim()) {
+      newErrors.subject = "Subject is required";
       isValid = false;
     }
 
@@ -158,7 +179,7 @@ const SupportForm = () => {
 
     setErrors(newErrors);
     return isValid;
-  }, [selectedIssue, otherIssue, description]);
+  }, [selectedIssue, otherIssue, description, subject]);
 
   const toggleFullWidth = () => {
     setIsFullWidth(!isFullWidth);
@@ -224,11 +245,24 @@ const SupportForm = () => {
     }));
     setErrors((prev) => ({ ...prev, description: "" }));
   }, []);
+  // v1.0.3 ------------------------------------------------------------------------->
+
+  const handleSubjectChange = useCallback((e) => {
+    const value = e.target.value.slice(0, maxSubjectLen);
+    setFormState((prev) => ({
+      ...prev,
+      subject: value,
+    }));
+    setErrors((prev) => ({ ...prev, subject: "" }));
+  }, []);
+// v1.0.3 ------------------------------------------------------------------------->
+
 
   const createFormData = useCallback(
     () => ({
       issueType: selectedIssue || otherIssue,
       description,
+      subject,
       ...(editMode
         ? {}
         : {
@@ -250,6 +284,7 @@ const SupportForm = () => {
       selectedIssue,
       otherIssue,
       description,
+      subject,
       editMode,
       contact,
       ownerId,
@@ -262,7 +297,7 @@ const SupportForm = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      setErrors({ issueType: "", description: "" });
+      setErrors({ issueType: "", description: "", subject: "" });
 
       if (!validateForm()) return;
 
@@ -343,8 +378,8 @@ const SupportForm = () => {
   const issueOptions = [
     ...issuesData.map((each) => ({
       id: each.id,
-      value: `${each.issue} Issue`,
-      label: `${each.issue} Issue`,
+      value: `${each.issue}`,
+      label: `${each.issue}`,
     })),
     { id: 'other', value: 'Other', label: 'Other' }
   ];
@@ -399,6 +434,37 @@ const SupportForm = () => {
             <form onSubmit={handleSubmit}>
               {/* Form Fields */}
               <div className="grid grid-cols-1 gap-x-6 gap-y-6">
+                {/* v1.0.3 <------------------------------------------------------------------------- */}
+                {/* Subject Section */}
+                <div>
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Subject / Title <span className="text-red-500">*</span>
+                  </label>
+                  <div>
+                    <input
+                      id="subject"
+                      type="text"
+                      placeholder="e.g., Unable to join interview room"
+                      value={subject}
+                      onChange={handleSubjectChange}
+                      className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${
+                        errors.subject ? "border-red-500" : ""
+                      }`}
+                    />
+                    <p className="text-right text-gray-500 text-xs mt-1">
+                      {subject.length}/{maxSubjectLen}
+                    </p>
+                    {errors.subject && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.subject}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 {/* Issue Type Section */}
                 <div>
                   <label
