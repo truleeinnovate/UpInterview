@@ -7,6 +7,8 @@ import { SlDislike } from "react-icons/sl";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import QuestionBank from "../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx";
 import { config } from '../../config.js';
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -40,6 +42,11 @@ const FeedbackForm = ({
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const currentTenantId = tokenPayload?.tenantId;
+  const currentOwnerId = tokenPayload?.userId;
 
   // Validation errors state
   const [errors, setErrors] = useState({
@@ -410,7 +417,8 @@ const FeedbackForm = ({
 
       // Prepare feedback data
       const feedbackData = {
-        tenantId: tenantId || "",
+        tenantId: currentTenantId || tenantId || "",
+        ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         positionId: positionId || "",
@@ -482,7 +490,8 @@ const FeedbackForm = ({
       
       // Prepare feedback data for draft save
       const feedbackData = {
-        tenantId: tenantId || "507f1f77bcf86cd799439011",
+        tenantId: currentTenantId || tenantId || "507f1f77bcf86cd799439011",
+        ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "507f1f77bcf86cd799439012",
         candidateId: candidateId || "507f1f77bcf86cd799439013",
         positionId: positionId || "507f1f77bcf86cd799439014",

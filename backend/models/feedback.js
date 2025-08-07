@@ -25,7 +25,7 @@ const interviewerFeedbackSchema = new mongoose.Schema({
  
  
 const questionFeedbackSchema = new mongoose.Schema({
-  questionId: mongoose.Schema.Types.Mixed, //reference to question (can be string ID or full object)
+  questionId: String, //reference to question (can be string ID or full object)
   candidateAnswer:candidateAnswerSchema, //candidate's answer details
   interviewerFeedback:interviewerFeedbackSchema // feedback from the interviewer
 })
@@ -51,6 +51,7 @@ const overallImpressionSchema = new mongoose.Schema({
 const feedbackSchema = new mongoose.Schema(
   {
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: false }, // reference to tenant
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: false }, // reference to user who created the feedback
     interviewRoundId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewRounds' }, // reference to interview session
 
     candidateId: { type: mongoose.Schema.Types.ObjectId, ref: 'Candidate', required: false }, //candidate information
