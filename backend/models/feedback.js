@@ -43,6 +43,7 @@ const skillsSchema = new mongoose.Schema({
  
 const overallImpressionSchema = new mongoose.Schema({
   overallRating: Number,
+  communicationRating: Number,
   recommendation: String,
   note: String,
 });

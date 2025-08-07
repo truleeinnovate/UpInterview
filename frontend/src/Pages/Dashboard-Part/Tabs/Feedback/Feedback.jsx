@@ -213,9 +213,9 @@ const Feedback = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'completed':
+      case 'submitted':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'pending':
+      case 'draft':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'cancelled':
         return <XCircle className="w-4 h-4 text-red-500" />;
@@ -323,7 +323,7 @@ const Feedback = () => {
       key: 'interviewerId.firstName',
       header: 'Interviewer',
       render: (value,row) => (
-        <div className="text-sm">{row.interviewerId?.firstName + " " + row.interviewerId?.lastName || "Not Provided"}</div>
+        <div className="text-sm">{row.interviewRoundId?.interviewerType === "Internal" ? (row.interviewerId?.firstName + " " + row.interviewerId?.lastName || "Not Provided") : "External"}</div>
       ),
     },
     
