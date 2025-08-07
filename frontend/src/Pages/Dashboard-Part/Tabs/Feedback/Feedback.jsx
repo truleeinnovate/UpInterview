@@ -24,17 +24,20 @@ import FeedbackKanban from './FeedbackKanban.jsx';
 
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from "js-cookie";
+import { useInterviews } from '../../../../apiHooks/useInterviews.js';
 
 
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
-
+  const { interviewData, isLoading } = useInterviews();
+  console.log("interviewDta", interviewData)
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
   const tenantId = tokenPayload?.tenantId;
-  const interviewerId = tokenPayload?.userId;
+  const ownerId = tokenPayload?.userId;
+  //console.log("ownerId",ownerId)
   
   // Get context data (removed unused variables)
   const { user } = useCustomContext();
@@ -87,7 +90,7 @@ const Feedback = () => {
         //const tenantId = "685bb9a00abf677d3ae9ec56"
         const endpoint = organization 
           ? `${process.env.REACT_APP_API_URL}/feedback/${tenantId}` 
-          : `${process.env.REACT_APP_API_URL}/feedback/${interviewerId}`;
+          : `${process.env.REACT_APP_API_URL}/feedback/ownerId/${ownerId}`;
         const response = await fetch(endpoint);
 
         if (!response.ok) {

@@ -118,7 +118,7 @@ const SummarizedFeedbackModal = ({ open, onClose, data }) => {
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-end items-start z-50 feedback-modal" style={{ height: '100vh' }}>
       <div className="bg-white w-[50%] h-full overflow-y-auto shadow-xl relative flex flex-col">
-        <div className="flex justify-between items-center p-6 bg-gray-50">
+        <div className="flex justify-between items-center px-4 py-4">
           <h2 className="text-xl font-bold text-[#227a8a]">Feedback Summary for {candidate_name}</h2>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-800">
             <X size={18} />
@@ -170,12 +170,6 @@ const SummarizedFeedbackModal = ({ open, onClose, data }) => {
             </div>
           </div>
 
-          {/* Overall Impression */}
-          <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h3 className="text-lg font-semibold mb-3 text-gray-700">Overall Impression</h3>
-            <p className="text-gray-900 leading-relaxed">{overall_impression}</p>
-          </div>
-
           {/* Skills */}
           <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 className="text-lg font-semibold mb-3 text-gray-700">Skill Ratings</h3>
@@ -191,6 +185,12 @@ const SummarizedFeedbackModal = ({ open, onClose, data }) => {
                 <p className="text-gray-500 text-sm">No skill ratings available.</p>
               )}
             </div>
+          </div>
+
+          {/* Overall Impression */}
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold mb-3 text-gray-700">Overall Impression</h3>
+            <p className="text-gray-900 leading-relaxed">{overall_impression}</p>
           </div>
 
           {/* Recommendation */}

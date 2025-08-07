@@ -7,6 +7,7 @@ const mongoose = require('mongoose'); // Import mongoose to use ObjectId
 const InterviewQuestions = require('../models/interviewQuestions.js');
 const { InterviewRounds } = require('../models/InterviewRounds.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
+const { Contacts } = require('../models/Contacts.js');
 
 const createFeedback = async (req, res) => {
     try {
@@ -25,6 +26,23 @@ const createFeedback = async (req, res) => {
             overallImpression,
             status
         } = req.body;
+
+        //added by venkatesh------ Check for existing feedback to prevent duplicates
+        if (interviewRoundId && candidateId && interviewerId) {
+            const existingFeedback = await FeedbackModel.findOne({
+                interviewRoundId,
+                candidateId,
+                interviewerId
+            });
+            if (existingFeedback) {
+                console.log('❌ Duplicate feedback found for this interview round, candidate, and interviewer');
+                return res.status(409).json({
+                    success: false,
+                    message: "Feedback already exists for this interview round and candidate from this interviewer",
+                    existingFeedbackId: existingFeedback._id
+                });
+            }
+        }
 
         // Simple validation - just check if basic data exists
         if (!skills || !Array.isArray(skills) || skills.length === 0) {
@@ -191,6 +209,7 @@ const getFeedbackByTenantId = async (req, res) => {
         .populate('interviewerId','firstName lastName')
         // .populate('ownerId', 'firstName lastName email');
  
+
       // Fetch pre-selected questions for each feedback item
       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
         const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
@@ -236,28 +255,35 @@ const getFeedbackByTenantId = async (req, res) => {
 
 const getFeedbackByInterviewerId = async (req, res) => {
   try {
-    const { interviewerId } = req.params;
+    const { ownerId } = req.params;
+    console.log("ownerId",ownerId)
 
-    if (!interviewerId) {
+    if (!ownerId) {
       return res.status(400).json({
         success: false,
-        message: "Interviewer ID is required"
+        message: "Owner ID is required"
       });
     }
+
 
     //console.log('Received interviewerId:', interviewerId);
 
     let feedbackWithQuestions;
     let feedback;
+    let contactId;
     try {
+
+      contactId = await Contacts.find({ ownerId })
+      const interviewerId = contactId._id;
+      console.log("contactId",contactId._id);
       // Convert interviewerId string to ObjectId since database stores it as ObjectId
       //const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
-      feedback = await FeedbackModel.find({ interviewerId })
+      feedback = await FeedbackModel.find({  interviewerId })
         .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
         .populate('positionId', 'title companyname jobDescription Location')
         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
         .populate('interviewerId','firstName lastName');
-
+      console.log("feedback",feedback)
       // Fetch pre-selected questions for each feedback item
       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
         const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
@@ -269,10 +295,10 @@ const getFeedbackByInterviewerId = async (req, res) => {
       
       //console.log('Feedback found:', feedback.length, 'documents');
     } catch (err) {
-      console.error('Invalid interviewerId format:', err.message);
+      console.error('Invalid ownerId format:', err.message);
       return res.status(400).json({
         success: false,
-        message: "Invalid Interviewer ID format: " + err.message
+        message: "Invalid Owner ID format: " + err.message
       });
     }
 
