@@ -509,7 +509,7 @@ const MainAppRoutes = ({
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/oauth2callback" element={<OAuthCallback />} />
 
-            <Route path='/join-meeting' element={<JoinMeeting />} />
+           
 
             {/* <Route path ='/join-meeting' element={<VideoCAllActionButtons />} /> */}
 
@@ -804,6 +804,8 @@ const MainAppRoutes = ({
                 </Route>
               )}
 
+
+
               {/* Account Settings Routes from effective user */}
 
               <Route
@@ -1020,6 +1022,8 @@ const MainAppRoutes = ({
 
                 </>
               )}
+
+<Route path='/join-meeting' element={<JoinMeeting />} />
 
               {/* Support Desk Admin*/}
               {hasPermission("SupportDesk") && (
@@ -1294,6 +1298,7 @@ const App = () => {
       "/video-call",
       "/video-call/join",
       "/video-call/room",
+      "/join-meeting",
     ],
     []
   );

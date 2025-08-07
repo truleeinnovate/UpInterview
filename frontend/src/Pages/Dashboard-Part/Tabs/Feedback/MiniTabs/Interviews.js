@@ -33,6 +33,7 @@ const InterviewsMiniTabComponent = ({
   closePopup, 
   data, 
   isEditMode,
+  isViewMode,
   // Question Bank Props
   interviewerSectionData,
   setInterviewerSectionData,
@@ -58,7 +59,7 @@ const InterviewsMiniTabComponent = ({
   const InterviewDisplayData = () => {
     switch (interviewMiniTab) {
       case 1:
-        return <SchedulerSectionComponent isEditMode={isEditMode} interviewdata ={interviewData} />;//<----v1.0.0---
+        return <SchedulerSectionComponent isEditMode={isEditMode} interviewdata ={interviewData} isViewMode={isViewMode} />;//<----v1.0.0---
       case 2:
         return (
           <InterviewerSectionComponent 
@@ -67,8 +68,9 @@ const InterviewsMiniTabComponent = ({
             page={page} 
             isAddMode={isAddMode}  
             isEditMode={isEditMode}
+            isViewMode={isViewMode}
             // Question Bank Props
-            interviewerSectionData={interviewerSectionData}
+            interviewerSectionData={interviewerSectionData || []}
             setInterviewerSectionData={setInterviewerSectionData}
             removedQuestionIds={removedQuestionIds}
             setRemovedQuestionIds={setRemovedQuestionIds}
@@ -77,6 +79,7 @@ const InterviewsMiniTabComponent = ({
             handleAddQuestionToRound={handleAddQuestionToRound}
             handleRemoveQuestion={handleRemoveQuestion}
             handleToggleMandatory={handleToggleMandatory}
+            interviewData={interviewData}
           />
         );//<----v1.0.0---
       default:

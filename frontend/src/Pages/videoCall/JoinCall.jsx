@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 import RoleSelector from './RoleSelector';
 import CandidateView from './CandidateView';
 import InterviewerView from './InterviewerView';
+import CombinedNavbar from '../../Components/Navbar/CombinedNavbar';
 import { decryptData } from '../../utils/PaymentCard';
 import { config } from '../../config';
 
@@ -192,7 +193,12 @@ function JoinMeeting() {
   }
 
   if (currentRole === 'interviewer') {
-    return <InterviewerView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackData} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />;
+    return (
+      <>
+        <CombinedNavbar />
+        <InterviewerView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackData} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />
+      </>
+    );
   }
 
   // Always show RoleSelector first - user must click button to proceed

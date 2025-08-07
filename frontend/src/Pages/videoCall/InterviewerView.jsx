@@ -11,6 +11,8 @@ import InterviewsMiniTabComponent from '../Dashboard-Part/Tabs/Feedback/MiniTabs
 const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feedbackError}) => {
   const [activeTab, setActiveTab] = useState('candidate');
   const [selectedCandidate] = useState(feedbackData);
+
+  console.log("selectedCandidate",selectedCandidate);
   
   // Question Bank State Management
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -84,33 +86,23 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#217989] rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-800">Interview Portal</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => window.open(decodedData.meetLink, '_blank')}
-                className="bg-[#217989] hover:bg-[#1a616e] text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Video className="w-4 h-4" />
-                Start Meeting
-              </button>
-              <button
-                onClick={onBack}
-                className="text-gray-500 hover:text-gray-700 transition-colors p-2"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 pt-14">
+      {/* Meeting Controls - Floating */}
+      <div className="fixed top-14 right-4 z-40 bg-white shadow-lg rounded-lg p-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.open(decodedData.meetLink, '_blank')}
+            className="bg-[#217989] hover:bg-[#1a616e] text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <Video className="w-4 h-4" />
+            Start Meeting
+          </button>
+          <button
+            onClick={onBack}
+            className="text-gray-500 hover:text-gray-700 transition-colors p-2"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
@@ -164,10 +156,10 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
                 interviewerSectionData={interviewerSectionData}
                 setInterviewerSectionData={setInterviewerSectionData}
                 interviewRoundId={decodedData?.interviewRoundId}
-                candidateId={decodedData?.candidateId}
-                positionId={decodedData?.positionId}
-                interviewerId={decodedData?.interviewerId}
-                tenantId={decodedData?.tenantId}
+                candidateId={selectedCandidate?.candidate?._id}
+                positionId={selectedCandidate?.position?._id}
+                interviewerId={selectedCandidate?.interviewers?._id}
+                // tenantId={decodedData?.tenantId}
                 isEditMode={false}
                 feedbackId={null}
               />

@@ -27,7 +27,7 @@ const FeedbackForm = ({
   candidateId,
   positionId,
   interviewerId,
-  tenantId,
+  // tenantId,
   isEditMode = false,
   feedbackId = null
 }) => {
@@ -417,7 +417,7 @@ const FeedbackForm = ({
 
       // Prepare feedback data
       const feedbackData = {
-        tenantId: currentTenantId || tenantId || "",
+        tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
@@ -490,12 +490,12 @@ const FeedbackForm = ({
       
       // Prepare feedback data for draft save
       const feedbackData = {
-        tenantId: currentTenantId || tenantId || "507f1f77bcf86cd799439011",
+        tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
-        interviewRoundId: interviewRoundId || "507f1f77bcf86cd799439012",
-        candidateId: candidateId || "507f1f77bcf86cd799439013",
-        positionId: positionId || "507f1f77bcf86cd799439014",
-        interviewerId: interviewerId || "507f1f77bcf86cd799439015",
+        interviewRoundId: interviewRoundId || "",
+        candidateId: candidateId || "",
+        positionId: positionId || "",
+        interviewerId: interviewerId || "",
         skills: skillRatings.map(skill => ({
           skillName: skill.skill,
           rating: skill.rating,
