@@ -7,6 +7,7 @@ const mongoose = require('mongoose'); // Import mongoose to use ObjectId
 const InterviewQuestions = require('../models/interviewQuestions.js');
 const { InterviewRounds } = require('../models/InterviewRounds.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
+const { Contacts } = require('../models/Contacts.js');
 
 const createFeedback = async (req, res) => {
     try {
@@ -253,28 +254,35 @@ const getFeedbackByTenantId = async (req, res) => {
 
 const getFeedbackByInterviewerId = async (req, res) => {
   try {
-    const { interviewerId } = req.params;
+    const { ownerId } = req.params;
+    console.log("ownerId",ownerId)
 
-    if (!interviewerId) {
+    if (!ownerId) {
       return res.status(400).json({
         success: false,
-        message: "Interviewer ID is required"
+        message: "Owner ID is required"
       });
     }
+
 
     //console.log('Received interviewerId:', interviewerId);
 
     let feedbackWithQuestions;
     let feedback;
+    let contactId;
     try {
+
+      contactId = await Contacts.find({ ownerId })
+      const interviewerId = contactId._id;
+      console.log("contactId",contactId._id);
       // Convert interviewerId string to ObjectId since database stores it as ObjectId
       //const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
-      feedback = await FeedbackModel.find({ interviewerId })
+      feedback = await FeedbackModel.find({  interviewerId })
         .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
         .populate('positionId', 'title companyname jobDescription Location')
         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
         .populate('interviewerId','firstName lastName');
-
+      console.log("feedback",feedback)
       // Fetch pre-selected questions for each feedback item
       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
         const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
@@ -286,10 +294,10 @@ const getFeedbackByInterviewerId = async (req, res) => {
       
       //console.log('Feedback found:', feedback.length, 'documents');
     } catch (err) {
-      console.error('Invalid interviewerId format:', err.message);
+      console.error('Invalid ownerId format:', err.message);
       return res.status(400).json({
         success: false,
-        message: "Invalid Interviewer ID format: " + err.message
+        message: "Invalid Owner ID format: " + err.message
       });
     }
 

@@ -18,7 +18,7 @@ router.put('/:id', updateFeedback);
 
 // Route to get feedback by tenant ID
 router.get('/:tenantId', getFeedbackByTenantId);//<----v1.0.0---
-router.get('/:interviewerId', getFeedbackByInterviewerId);//<----v1.0.0---
+router.get('/ownerId/:ownerId', getFeedbackByInterviewerId);//<----v1.0.0---
 
 router.get('/', getAllFeedback);//<----v1.0.0---
 
