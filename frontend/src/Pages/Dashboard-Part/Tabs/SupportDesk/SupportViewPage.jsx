@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - disabled outer scrollbar using custom hook
 // v1.0.1 - Venkatesh - ticket code and status in align center
+// v1.0.2 - Ashraf - Added subject field
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
@@ -137,6 +138,19 @@ const SupportViewPage = () => {
             )} */}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+            {/* v1.0.2 - Ashraf - Added subject field */}
+            <div className="flex items-center gap-3 col-span-1">
+              <div className="p-2 bg-custom-bg rounded-lg">
+                <FaFileAlt className="w-5 h-5 text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Subject</p>
+                <p className="text-gray-700">
+                  {ticketData?.subject || "N/A"}
+                </p>
+              </div>
+            </div>
+            {/* v1.0.2 - Ashraf - Added subject field */}
             <div className="flex items-center gap-3 col-span-1">
               <div className="p-2 bg-custom-bg rounded-lg">
                 <FaTag className="w-5 h-5 text-gray-500" />

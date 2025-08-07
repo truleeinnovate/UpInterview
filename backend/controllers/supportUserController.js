@@ -1,3 +1,5 @@
+// v1.0.0 - Ashraf - Added subject field
+
 const SupportUser = require("../models/SupportUser");
 
 exports.createTicket = async (req, res) => {
@@ -6,6 +8,11 @@ exports.createTicket = async (req, res) => {
     const {
       issueType,
       description,
+// v1.0.0 <----------------------------------------------------
+      
+      subject,
+// v1.0.0 --------------------------------------------->
+
       status,
       contact,
       priority,
@@ -17,6 +24,11 @@ exports.createTicket = async (req, res) => {
     if (!issueType) {
       return res.status(400).send({ message: "Issue type is required" });
     }
+    // v1.0.0 <----------------------------------------------------
+    if (!subject) {
+      return res.status(400).send({ message: "Subject is required" });
+    }
+    // v1.0.0 --------------------------------------------->
     if (!description) {
       return res.status(400).send({ message: "Description is required" });
     }
@@ -45,6 +57,10 @@ exports.createTicket = async (req, res) => {
     const ticket = await SupportUser.create({
       issueType,
       description,
+      // v1.0.0 <----------------------------------------------------
+      subject,
+      // v1.0.0 --------------------------------------------->
+
       status,
       contact,
       priority,
@@ -112,12 +128,19 @@ exports.getTicketBasedonId = async (req, res) => {
 exports.updateTicketById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { issueType, description, assignedTo, assignedToId } = req.body;
+    // v1.0.0 <----------------------------------------------------
+    const { issueType, description, subject, assignedTo, assignedToId } = req.body;
+    // v1.0.0 --------------------------------------------->
+
     const ticket = await SupportUser.findByIdAndUpdate(
       { _id: id },
       {
         issueType,
         description,
+        // v1.0.0 <----------------------------------------------------
+        subject,
+        // v1.0.0 --------------------------------------------->
+
         assignedTo,
         assignedToId,
       }

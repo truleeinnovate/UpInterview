@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 //<---------------------- v1.0.0----Venkatesh----in header add padding at top
+// v1.0.1 - Ashraf - Added subject field
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
@@ -177,6 +178,14 @@ function SupportDesk() {
       render: (value) =>
         value?.charAt(0).toUpperCase() + value.slice(1) || "N/A",
     },
+// v1.0.1 ---------------------------------------------------------------------------->
+    
+    {
+      key: "subject",
+      header: "Subject",
+      render: (value) => value || "N/A",
+    },
+// v1.0.1 ---------------------------------------------------------------------------->
     {
       key: "issueType",
       header: "Issue Type",
