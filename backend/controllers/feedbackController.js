@@ -509,7 +509,57 @@ const getFeedbackByRoundId = async (req, res) => {
 };
 
 
-module.exports={createFeedback, getFeedbackByTenantId,getfeedbackById,getFeedbackByRoundId,getAllFeedback}
+// Update feedback by ID
+const updateFeedback = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Feedback ID is required"
+      });
+    }
+
+    // Find and update the feedback
+    const updatedFeedback = await FeedbackModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { 
+        new: true, // Return the updated document
+        runValidators: true // Run schema validators
+      }
+    )
+    .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
+    .populate('interviewerId', 'FirstName LastName Email Phone')
+    .populate('positionId', 'title companyname')
+    .populate('interviewRoundId');
+
+    if (!updatedFeedback) {
+      return res.status(404).json({
+        success: false,
+        message: "Feedback not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Feedback updated successfully",
+      data: updatedFeedback
+    });
+
+  } catch (error) {
+    console.error('Error updating feedback:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update feedback",
+      error: error.message
+    });
+  }
+};
+
+module.exports={createFeedback, getFeedbackByTenantId,getfeedbackById,getFeedbackByRoundId,getAllFeedback,updateFeedback}
 
 
 

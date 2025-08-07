@@ -14,20 +14,33 @@
 //   state: Math.random().toString(36).substring(7)
 // };
 
+// Debug environment variables
+console.log('Environment variables check in the config file:');
+console.log('REACT_APP_CLIENT_ID:', process.env.REACT_APP_CLIENT_ID);
+console.log('REACT_APP_CLIENT_SECRET:', process.env.REACT_APP_CLIENT_SECRET);
+console.log('REACT_APP_REDIRECT_URI:', process.env.REACT_APP_REDIRECT_URI);
+console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+console.log('REACT_APP_API_URL_FRONTEND:', process.env.REACT_APP_API_URL_FRONTEND);
+console.log('REACT_APP_GOOGLE_AUTH_URL:', process.env.REACT_APP_GOOGLE_AUTH_URL);
+console.log('REACT_APP_GOOGLE_CLIENT_ID:', process.env.REACT_APP_GOOGLE_CLIENT_ID);
+console.log('REACT_APP_GOOGLE_REDIRECT_URI:', process.env.REACT_APP_GOOGLE_REDIRECT_URI);
+console.log('REACT_APP_GOOGLE_SCOPES:', process.env.REACT_APP_GOOGLE_SCOPES);
+
 export const config = {
-  REACT_APP_CLIENT_ID: "77eq6sdds9ol1a",
-  REACT_APP_CLIENT_SECRET: "WPL_AP1.rW1TQVlAI93U3fuN.61yPig==",
-  // offline linked in redirect uri
-  // REACT_APP_REDIRECT_URI: process.env.REACT_APP_REDIRECT_URI,
-  // online linked in redirect uri
-  REACT_APP_REDIRECT_URI: "https://app.upinterview.io/callback",
-  REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
-  REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND || "http://localhost:3000",
+  // LinkedIn OAuth configuration
+  REACT_APP_CLIENT_ID: process.env.REACT_APP_CLIENT_ID,
+  REACT_APP_CLIENT_SECRET: process.env.REACT_APP_CLIENT_SECRET,
+  REACT_APP_REDIRECT_URI: process.env.REACT_APP_REDIRECT_URI,
+
+  // API URLs
+  REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+  REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND,
+
   // Google OAuth configuration
-  REACT_APP_GOOGLE_AUTH_URL: process.env.REACT_APP_GOOGLE_AUTH_URL || 'https://accounts.google.com/o/oauth2/v2/auth?',
+  REACT_APP_GOOGLE_AUTH_URL: process.env.REACT_APP_GOOGLE_AUTH_URL,
   REACT_APP_GOOGLE_CLIENT_ID: process.env.REACT_APP_GOOGLE_CLIENT_ID,
   REACT_APP_GOOGLE_REDIRECT_URI: process.env.REACT_APP_GOOGLE_REDIRECT_URI,
-  REACT_APP_GOOGLE_SCOPES: process.env.REACT_APP_GOOGLE_SCOPES || 'https://www.googleapis.com/auth/calendar.events'
+  REACT_APP_GOOGLE_SCOPES: process.env.REACT_APP_GOOGLE_SCOPES
 };
 
 

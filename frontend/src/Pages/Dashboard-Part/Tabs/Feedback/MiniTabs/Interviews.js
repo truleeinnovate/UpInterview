@@ -5,7 +5,7 @@
 import React, { useState } from 'react'
 import SchedulerSectionComponent from './InterviewMiniTabs/SchedulerSection';
 import InterviewerSectionComponent from './InterviewMiniTabs/InterviewerSection';
-import { useCustomContext } from '../../../../../Context/Contextfetch';
+
 
 const interviewMiniTabsList = [
   {
@@ -22,6 +22,7 @@ const interviewMiniTabsList = [
 
 
 //<----v1.0.0---
+
 const InterviewsMiniTabComponent = ({
   interviewData,
   isAddMode, 
@@ -46,6 +47,7 @@ const InterviewsMiniTabComponent = ({
   const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext()
   console.log("interviewData",interviewData);
   
+
 
   const handleTabChange = (tab) => {
       setInterviewMiniTab(tab);
