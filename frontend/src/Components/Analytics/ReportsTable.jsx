@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - commented Columns, Export CSV, No Groupings
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, Search, Play, Settings, Group, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -123,12 +124,13 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
     if (sortField !== field) return '↕';
     return sortDirection === 'asc' ? '↑' : '↓';
   };
-
+  // v1.0.0 <---------------------------------------------------- 
   const handleGenerateReport = (item) => {
     if (type === 'templates') {
-      navigate(`/reports/${item.id}`);
+      navigate(`/analytics/reports/${item.id}`);
     }
   };
+  // v1.0.0 ---------------------------------------------------->
 
   const handleColumnsChange = (newColumns) => {
     setTableColumns(newColumns);
@@ -291,17 +293,19 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-custom-blue">{title}</h3>
             <div className="flex items-center space-x-2">
-              <button
+              {/* v1.0.0 <------------------------------------------------------------- */}
+              {/* <button
                 onClick={() => setShowColumnManager(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
               >
                 <Settings className="w-4 h-4" />
                 <span>Columns</span>
-              </button>
-              <button className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue transition-colors">
+              </button> */}
+              {/* <button className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue transition-colors">
                 <Download className="w-4 h-4" />
                 <span>Export CSV</span>
-              </button>
+              </button> */}
+              {/* v1.0.0 -------------------------------------------------------------> */}
             </div>
           </div>
           
@@ -319,7 +323,8 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
             </div>
             
             {/* Group By Dropdown */}
-            <div className="flex items-center space-x-2">
+            {/* v1.0.0 <-------------------------------------------------------------------- */}
+            {/* <div className="flex items-center space-x-2">
               <Group className="w-4 h-4 text-gray-500" />
               <select
                 value={groupByColumn}
@@ -343,7 +348,8 @@ const ReportsTable = ({ data, columns, title, type, onColumnsChange }) => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
+            {/* v1.0.0 --------------------------------------------------------------------> */}
           </div>
           
           {/* Group By Info */}

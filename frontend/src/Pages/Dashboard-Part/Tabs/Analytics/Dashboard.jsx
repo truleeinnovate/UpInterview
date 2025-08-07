@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - commented customize, layout, filters
 import React, { useState, useEffect } from "react";
 import {
   Calendar,
@@ -290,21 +291,22 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <button
+          {/* v1.0.0 <----------------------------------------------------------------------------------- */}
+          {/* <button
             onClick={() => setShowCustomization(true)}
             className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Settings className="w-4 h-4" />
             <span>Customize</span>
-          </button>
+          </button> */}
 
-          <button
+          {/* <button
             onClick={() => setShowColumnManager(true)}
             className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Settings className="w-4 h-4" />
             <span>Layout</span>
-          </button>
+          </button> */}
 
           <button
             onClick={() => setShowScheduledReports(true)}
@@ -317,10 +319,10 @@ const Dashboard = () => {
       </div>
 
       {/* Filters */}
-      <AdvancedFilters
+      {/* <AdvancedFilters
         onFiltersChange={handleFiltersChange}
         initialFilters={filters}
-      />
+      /> */}
 
       {/* Drag & Drop Dashboard */}
       <DragDropDashboard
@@ -332,30 +334,37 @@ const Dashboard = () => {
       />
 
       {/* Customization Panel */}
-      <CustomizationPanel
-        isOpen={showCustomization}
-        onClose={() => setShowCustomization(false)}
-        onApplyCustomization={handleCustomization}
-        type="dashboard"
-        currentSettings={customSettings}
+      <div>
+        <CustomizationPanel
+          isOpen={showCustomization}
+          onClose={() => setShowCustomization(false)}
+          onApplyCustomization={handleCustomization}
+          type="dashboard"
+          currentSettings={customSettings}
       />
+      </div>
 
       {/* Dashboard Column Manager */}
-      <DashboardColumnManager
-        isOpen={showColumnManager}
-        onClose={() => setShowColumnManager(false)}
-        kpiCards={kpiComponents}
-        charts={chartComponents}
-        onKpiCardsChange={handleKpiCardsChange}
-        onChartsChange={handleChartsChange}
-        customSettings={customSettings}
-      />
+      <div>
+        <DashboardColumnManager
+          isOpen={showColumnManager}
+          onClose={() => setShowColumnManager(false)}
+          kpiCards={kpiComponents}
+          charts={chartComponents}
+          onKpiCardsChange={handleKpiCardsChange}
+          onChartsChange={handleChartsChange}
+          customSettings={customSettings}
+        /> 
+      </div>
 
       {/* Scheduled Reports Modal */}
-      <ScheduledReports
-        isOpen={showScheduledReports}
-        onClose={() => setShowScheduledReports(false)}
-      />
+      <div>
+        <ScheduledReports
+          isOpen={showScheduledReports}
+          onClose={() => setShowScheduledReports(false)}
+        />
+      </div>
+        {/* v1.0.0 -----------------------------------------------------------------------------------> */}
     </div>
   );
 };

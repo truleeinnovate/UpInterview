@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - corrected path
 import React from 'react';
 import { Calendar, Clock, FileText, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -29,9 +30,11 @@ const KanbanBoard = ({ data }) => {
     }
   };
 
+  // v1.0.0 <----------------------------------------
   const handleGenerateReport = (item) => {
-    navigate(`/reports/${item.id}`);
+    navigate(`/analytics/reports/${item.id}`);
   };
+  // v1.0.0 ---------------------------------------->
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
