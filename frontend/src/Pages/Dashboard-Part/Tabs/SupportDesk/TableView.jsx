@@ -91,16 +91,17 @@ const TableView = ({ userRole, currentTickets, tickets, toggleAction, actionView
                 <table className="w-full divide-y divide-gray-200 table-fixed">
                   <thead className="bg-gray-50 border-b sticky top-0 z-10">
                     <tr>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Ticket ID</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">Contact</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Issue Type</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Status</th>
+                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">Ticket ID</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Contact</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">Subject</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">Issue Type</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">Status</th>
                       {(userRole === 'SuperAdmin' || userRole === 'Support Team') && (
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Priority</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">Priority</th>
                       )}
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Created On</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">Created On</th>
                       {userRole === 'SuperAdmin' && (
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Assigned To</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[12%]">Assigned To</th>
                       )}
                       <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[10%]">Actions</th>
                     </tr>
@@ -132,6 +133,7 @@ const TableView = ({ userRole, currentTickets, tickets, toggleAction, actionView
                         </td>
 
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">{ticket.contact || 'N/A'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600 max-w-xs truncate" title={ticket.subject || 'N/A'}>{ticket.subject || 'N/A'}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">{ticket.issueType || 'N/A'}</td>
                         <td className="px-4 py-2 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(ticket.status)}`}>

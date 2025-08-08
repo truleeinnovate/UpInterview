@@ -17,9 +17,11 @@ function JoinMeeting() {
   const [feedbackData, setFeedbackData] = useState(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState(null);
-
+  const interviewerId ="68664845d494db82db30103c"
+  // 507f1f77bcf86cd799439015
+  // 68664845d494db82db30103c
   // Function to fetch feedback data
-  const fetchFeedbackData = async (roundId) => {
+  const fetchFeedbackData = async (roundId, interviewerId) => {
     if (!roundId) {
       console.log('No round ID provided, skipping feedback fetch');
       return;
@@ -30,16 +32,34 @@ function JoinMeeting() {
       setFeedbackError(null);
       
       console.log('🔍 Fetching feedback data for round ID:', roundId);
+      console.log('👤 Interviewer ID for filtering:', interviewerId);
       
-              const response = await axios.get(`${config.REACT_APP_API_URL}/feedback/round/${roundId}`, {
-                  headers: {
+      // Build URL with query parameters
+      let url = `${config.REACT_APP_API_URL}/feedback/round/${roundId}`;
+      if (interviewerId) {
+        url += `?interviewerId=${interviewerId}`;
+      }
+      
+      console.log('🌐 Making API call to:', url);
+      
+      const response = await axios.get(url, {
+          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Cookies.get('authToken')}`
+            // 'Authorization': `Bearer ${Cookies.get('authToken')}`
           },
       });
 
       if (response.data.success) {
         console.log('✅ Feedback data fetched successfully:', response.data.data);
+        console.log('📊 Response summary:', {
+          hasInterviewRound: !!response.data.data.interviewRound,
+          hasCandidate: !!response.data.data.candidate,
+          hasPosition: !!response.data.data.position,
+          interviewersCount: response.data.data.interviewers?.length || 0,
+          feedbacksCount: response.data.data.feedbacks?.length || 0,
+          interviewQuestionsCount: response.data.data.interviewQuestions?.length || 0,
+          filteredByInterviewer: response.data.data.filteredByInterviewer || false
+        });
         setFeedbackData(response.data.data);
       } else {
         throw new Error(response.data.message || 'Failed to fetch feedback data');
@@ -113,6 +133,7 @@ function JoinMeeting() {
       roundData: decryptedRound,
       // meetLink: decryptedMeeting?.meetLink || decryptedRound?.meetLink,
       interviewRoundId: decryptedRound || '',
+      interviewerId:interviewerId,
       // candidateId: decryptedMeeting?.candidateId || decryptedRound?.candidateId,
       // interviewerId: decryptedMeeting?.interviewerId || decryptedRound?.interviewerId,
       // isCandidate: decryptedMeeting?.isCandidate || decryptedRound?.isCandidate,
@@ -132,7 +153,7 @@ function JoinMeeting() {
     // Fetch feedback data if we have a round ID
     if (extractedData.interviewRoundId) {
       console.log('🔄 Fetching feedback data for round ID:', extractedData.interviewRoundId);
-      fetchFeedbackData(extractedData.interviewRoundId);
+      fetchFeedbackData(extractedData.interviewRoundId, extractedData.interviewerId);
     } else {
       console.log('⚠️ No round ID available, skipping feedback fetch');
     }

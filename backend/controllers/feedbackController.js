@@ -4,7 +4,7 @@
 const FeedbackModel = require('../models/feedback.js')
 const mongoose = require('mongoose'); // Import mongoose to use ObjectId
 
-const InterviewQuestions = require('../models/interviewQuestions.js');
+const InterviewQuestions = require('../models/InterviewQuestions.js');
 const { InterviewRounds } = require('../models/InterviewRounds.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
 const { Contacts } = require('../models/Contacts.js');
@@ -26,6 +26,23 @@ const createFeedback = async (req, res) => {
             overallImpression,
             status
         } = req.body;
+
+        // Validate required fields
+        if (!interviewerId) {
+            console.log('❌ interviewerId is required');
+            return res.status(400).json({
+                success: false,
+                message: "Interviewer ID is required"
+            });
+        }
+
+        if (!interviewRoundId) {
+            console.log('❌ interviewRoundId is required');
+            return res.status(400).json({
+                success: false,
+                message: "Interview Round ID is required"
+            });
+        }
 
         //added by venkatesh------ Check for existing feedback to prevent duplicates
         if (interviewRoundId && candidateId && interviewerId) {
@@ -114,53 +131,87 @@ const createFeedback = async (req, res) => {
 
         console.log('✅ Feedback saved successfully with ID:', feedbackInstance._id);
 
-        // Save questions to InterviewQuestions collection
+        // Save questions to InterviewQuestions collection ONLY for question bank questions
+        let questionBankQuestions = [];
+        let successfulSaves = [];
         if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
-          console.log('📝 Saving questions to InterviewQuestions collection...');
+          console.log('📝 Checking for question bank questions to save...');
           
-          const questionsToSave = processedQuestionFeedback.map((qFeedback, index) => {
-            // Get the original question object from the frontend data for additional details
+          // Filter only questions that are from question bank (type="feedback" or source="system")
+          questionBankQuestions = processedQuestionFeedback.filter((qFeedback, index) => {
             const originalQuestionFeedback = questionFeedback[index];
-            const question = originalQuestionFeedback?.questionId; // This is the full question object from frontend
-            console.log('📋 Processing question:', question);
+            const question = originalQuestionFeedback?.questionId;
             
-            // Extract the actual question data from the nested structure
-            const actualQuestion = question?.snapshot || question;
-            const questionId = qFeedback.questionId; // Use the processed question ID
+            // Check if this is a question bank question
+            const isQuestionBankQuestion = question?.type === "feedback" || 
+                                         question?.source === "system" || 
+                                         question?.source === "questionbank" ||
+                                         (question?.snapshot && question?.snapshot.type === "feedback");
             
-            return {
-              interviewId: interviewRoundId, // Using interviewRoundId as interviewId
-              roundId: interviewRoundId,
-              order: index + 1,
-              customizations: qFeedback.interviewerFeedback?.note || '',
-              mandatory: question?.mandatory || actualQuestion?.mandatory || 'false',
-              tenantId: tenantId || '',
-              ownerId: interviewerId || '',
-              questionId: questionId,
-              source: question?.source || 'system',
-              snapshot: actualQuestion || {},
-              addedBy: 'interviewer'
-            };
+            console.log(`📋 Question ${index + 1}:`, {
+              questionId: qFeedback.questionId,
+              type: question?.type,
+              source: question?.source,
+              isQuestionBank: isQuestionBankQuestion
+            });
+            
+            return isQuestionBankQuestion;
           });
+          
+          console.log(`📊 Found ${questionBankQuestions.length} question bank questions out of ${processedQuestionFeedback.length} total questions`);
+          
+          if (questionBankQuestions.length > 0) {
+            const questionsToSave = questionBankQuestions.map((qFeedback, index) => {
+              // Get the original question object from the frontend data for additional details
+              const originalIndex = processedQuestionFeedback.indexOf(qFeedback);
+              const originalQuestionFeedback = questionFeedback[originalIndex];
+              const question = originalQuestionFeedback?.questionId; // This is the full question object from frontend
+              console.log('📋 Processing question bank question:', question);
+              
+              // Extract the actual question data from the nested structure
+              const actualQuestion = question?.snapshot || question;
+              const questionId = qFeedback.questionId; // Use the processed question ID
+              
+              return {
+                interviewId: interviewerId, // Using interviewRoundId as interviewId
+                roundId: interviewRoundId,
+                order: index + 1,
+                // customizations: qFeedback.interviewerFeedback?.note || '',
+                mandatory: question?.mandatory || actualQuestion?.mandatory || 'false',
+                tenantId: tenantId || '',
+                ownerId: feedbackData.ownerId, // Store the interviewerId as ownerId to track who added the question
+                questionId: questionId,
+                source: 'system', // Question bank questions have source as 'system'
+                snapshot: actualQuestion || {},
+                addedBy: 'interviewer' // Questions are added by interviewer during feedback
+              };
+            });
 
-          console.log('📋 Questions to save:', questionsToSave);
+            console.log('📋 Question bank questions to save:', questionsToSave.length);
 
-          // Save each question to InterviewQuestions collection
-          const savedQuestions = await Promise.all(
-            questionsToSave.map(async (questionData) => {
-              try {
-                const questionInstance = new InterviewQuestions(questionData);
-                const savedQuestion = await questionInstance.save();
-                console.log('✅ Question saved:', savedQuestion._id);
-                return savedQuestion;
-              } catch (error) {
-                console.error('❌ Error saving question:', error);
-                throw error;
-              }
-            })
-          );
+            // Save each question bank question to InterviewQuestions collection
+            successfulSaves = await Promise.all(
+              questionsToSave.map(async (questionData) => {
+                try {
+                  const questionInstance = new InterviewQuestions(questionData);
+                  const savedQuestion = await questionInstance.save();
+                  console.log('✅ Question bank question saved for interviewer:', interviewerId, 'Question ID:', savedQuestion._id);
+                  return savedQuestion;
+                } catch (error) {
+                  console.error('❌ Error saving question bank question for interviewer:', interviewerId, 'Error:', error);
+                  // Don't throw error, just log it and continue
+                  console.log('⚠️ Skipping question save due to error, continuing with feedback submission');
+                  return null;
+                }
+              })
+            );
 
-          console.log('✅ Questions saved successfully:', savedQuestions.length, 'questions');
+            // Filter out null values from failed saves
+            successfulSaves = successfulSaves.filter(question => question !== null);
+            console.log('✅ Question bank questions saved successfully for interviewer:', interviewerId, 'Count:', successfulSaves.length);
+          } else {
+            console.log('ℹ️ No question bank questions found to save');
+          }
         }
 
         return res.status(201).json({
@@ -168,7 +219,10 @@ const createFeedback = async (req, res) => {
             message: "Feedback submitted successfully",
             data: {
                 feedbackId: feedbackInstance._id,
-                submittedAt: feedbackInstance.createdAt
+                submittedAt: feedbackInstance.createdAt,
+                interviewerId: interviewerId,
+                totalQuestions: processedQuestionFeedback?.length || 0,
+                questionBankQuestionsSaved: successfulSaves?.length || 0
             }
         });
 
@@ -390,12 +444,20 @@ const getAllFeedback = async(req,res)=>{
 const getFeedbackByRoundId = async (req, res) => {
   try {
     const { roundId } = req.params;
+    const { interviewerId } = req.query; // Get interviewerId from query parameters
     console.log("📌 Requested Round ID:", roundId);
+    console.log("👤 Requested Interviewer ID:", interviewerId);
 
     // 1️⃣ Validate roundId
     if (!mongoose.Types.ObjectId.isValid(roundId)) {
       console.log("❌ Invalid roundId:", roundId);
       return res.status(400).json({ success: false, message: "Invalid round ID" });
+    }
+
+    // 1️⃣.5 Validate interviewerId if provided
+    if (interviewerId && !mongoose.Types.ObjectId.isValid(interviewerId)) {
+      console.log("❌ Invalid interviewerId:", interviewerId);
+      return res.status(400).json({ success: false, message: "Invalid interviewer ID" });
     }
 
     // 2️⃣ Find InterviewRound
@@ -447,7 +509,7 @@ const getFeedbackByRoundId = async (req, res) => {
         positionId: candidatePosition.positionId?._id,
         status: candidatePosition.status
       });
-      if (candidatePosition.candidateId) {
+      if (candidatePosition.candidateId) { 
         console.log("👤 Candidate Details:", {
           name: `${candidatePosition.candidateId.FirstName} ${candidatePosition.candidateId.LastName}`,
           email: candidatePosition.candidateId.Email,
@@ -476,9 +538,17 @@ const getFeedbackByRoundId = async (req, res) => {
 
     // 4️⃣ Fetch Feedback linked with this round
     console.log("🔍 Searching for Feedbacks with interviewRoundId:", roundId);
-    const feedbacks = await FeedbackModel.find({
-      interviewRoundId: roundId,
-    })
+    
+    // Build feedback query
+    const feedbackQuery = { interviewRoundId: roundId };
+    
+    // If interviewerId is provided, filter by that specific interviewer
+    if (interviewerId) {
+      feedbackQuery.interviewerId = interviewerId;
+      console.log("🔍 Filtering feedbacks by interviewerId:", interviewerId);
+    }
+    
+    const feedbacks = await FeedbackModel.find(feedbackQuery)
       .populate("candidateId", "FirstName LastName Email Phone")
       .populate("positionId", "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary")
       .populate("interviewerId", "FirstName LastName Email Phone")
@@ -498,6 +568,32 @@ const getFeedbackByRoundId = async (req, res) => {
      console.log("🔍 Searching for Interview Questions with roundId:", roundId);
      const interviewQuestionsList = await InterviewQuestions.find({ roundId: roundId });
      console.log("✅ Interview Questions Found:", interviewQuestionsList.length, "questions");
+
+     // Separate questions by type
+     const preselectedQuestions = interviewQuestionsList.filter(question => 
+       question.addedBy !== "interviewer" || !question.addedBy
+     );
+     const interviewerAddedQuestions = interviewQuestionsList.filter(question => 
+       question.addedBy === "interviewer"
+     );
+
+     console.log("📋 Question separation:", {
+       totalQuestions: interviewQuestionsList.length,
+       preselectedQuestions: preselectedQuestions.length,
+       interviewerAddedQuestions: interviewerAddedQuestions.length
+     });
+
+     // If interviewerId is provided, filter interviewer-added questions by that specific interviewer
+     if (interviewerId) {
+       const filteredInterviewerQuestions = interviewerAddedQuestions.filter(question => 
+         question.ownerId === interviewerId
+       );
+       console.log("🔍 Filtered interviewer questions by interviewerId:", interviewerId, "Count:", filteredInterviewerQuestions.length);
+       
+       // Update the interviewerAddedQuestions array with filtered results
+       interviewerAddedQuestions.length = 0;
+       interviewerAddedQuestions.push(...filteredInterviewerQuestions);
+     }
 
     // 5️⃣ Get position data from feedback if not available from CandidatePosition
     let positionData = null;
@@ -563,7 +659,10 @@ const getFeedbackByRoundId = async (req, res) => {
        position: positionData,
        interviewers: interviewRound.interviewers || [],
        feedbacks: feedbacks || [],
-       interviewQuestions: interviewQuestionsList || []
+       interviewQuestions: {
+         preselectedQuestions: preselectedQuestions,
+         interviewerAddedQuestions: interviewerAddedQuestions
+       }
      };
 
          console.log("🎉 Sending successful response with data structure:", {
@@ -572,7 +671,8 @@ const getFeedbackByRoundId = async (req, res) => {
        hasPosition: !!responseData.position,
        interviewersCount: responseData.interviewers.length,
        feedbacksCount: responseData.feedbacks.length,
-       interviewQuestionsCount: responseData.interviewQuestions.length
+       interviewQuestionsCount: responseData.interviewQuestions.preselectedQuestions.length + responseData.interviewQuestions.interviewerAddedQuestions.length,
+       filteredByInterviewer: !!interviewerId
      });
 
     if (responseData.position) {

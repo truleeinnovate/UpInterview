@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { FaTrash, FaPlus } from 'react-icons/fa';
 import { FileText, Plus, Trash2, X } from 'lucide-react';
 import Popup from "reactjs-popup";
@@ -28,15 +30,26 @@ const FeedbackForm = ({
   positionId,
   interviewerId,
   // tenantId,
-  isEditMode = false,
-  feedbackId = null
+  isEditMode,
+  isViewMode,
+  preselectedQuestionsResponses = []
 }) => {
-  const [overallRating, setOverallRating] = useState(0);
-  const [communicationRating, setCommunicationRating] = useState(0);
-  const [skillRatings, setSkillRatings] = useState([{ skill: '', rating: 0, comments: '' }]);
+
+  const location = useLocation();
+  const feedbackData = location.state?.feedback || {};
+  const feedbackId = feedbackData._id || null;
+  const skillsData = feedbackData.skills || [];
+  const overallImpressionTabData = feedbackData.overallImpression || {};
+  
+  const [overallRating, setOverallRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.overallRating) || 0);
+  const [communicationRating, setCommunicationRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.communicationRating) || 0);
+  const [skillRatings, setSkillRatings] = useState(((isEditMode || isViewMode) && skillsData.map(skill => ({ skill: skill.skillName, rating: skill.rating, comments: skill.note }))) || [{ skill: '', rating: 0, comments: '' }]);
   const [questionsAsked, setQuestionsAsked] = useState(['']);
-  const [comments, setComments] = useState('');
-  const [recommendation, setRecommendation] = useState('Maybe');
+  const [comments, setComments] = useState(((isEditMode || isViewMode) && overallImpressionTabData.note) || '');
+  const [recommendation, setRecommendation] = useState(((isEditMode || isViewMode) && overallImpressionTabData.recommendation) || 'Maybe');
+
+  const allQuestions = (isEditMode || isViewMode) ? feedbackData.preSelectedQuestions : interviewerSectionData
+  const filteredInterviewerQuestions = allQuestions.filter(question => question.addedBy === "interviewer");
   
   // Question Bank State Management
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
@@ -60,29 +73,29 @@ const FeedbackForm = ({
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
-      setInterviewerSectionData((prevList) => {
-        if (prevList.some((q) => q.questionId === question.questionId)) {
-          return prevList;
-        }
-        const newList = [
-          ...prevList,
-          {
-            ...question,
-            mandatory: "false", // Default to false when adding a new question
-            snapshot: {
-              ...question.snapshot,
-              mandatory: "false"
-            }
-          },
-        ];
-        
-        // Clear questions error if questions are added
-        if (newList.length > 0) {
-          clearError('questions');
-        }
-        
-        return newList;
-      });
+        setInterviewerSectionData((prevList) => {
+          if (prevList.some((q) => q.questionId === question.questionId)) {
+            return prevList;
+          }
+          const newList = [
+            ...prevList,
+            {
+              ...question,
+              mandatory: "false", // Default to false when adding a new question
+              snapshot: {
+                ...question.snapshot,
+                mandatory: "false"
+              }
+            },
+          ];
+          
+          // Clear questions error if questions are added
+          if (newList.length > 0) {
+            clearError('questions');
+          }
+          
+          return newList;
+        });
     }
   };
 
@@ -295,6 +308,7 @@ const FeedbackForm = ({
             key={star}
             type="button"
             onClick={() => setRating(star)}
+            disabled={isViewMode}
             className={`w-6 h-6 ${
               star <= rating 
                 ? 'text-yellow-400 fill-current' 
@@ -353,9 +367,9 @@ const FeedbackForm = ({
     }
 
     // Validate questions
-    if (interviewerSectionData.length === 0) {
-      newErrors.questions = 'Please add at least one question from the question bank';
-    }
+    // if (interviewerSectionData.length === 0) {
+    //   newErrors.questions = 'Please add at least one question from the question bank';
+    // }
 
     setErrors(newErrors);
     return !Object.values(newErrors).some(error => error !== '');
@@ -408,6 +422,7 @@ const FeedbackForm = ({
   const submitFeedback = async () => {
     try {
       console.log('🚀 Starting feedback submission...');
+      console.log('📋 Preselected questions responses:', preselectedQuestionsResponses);
       
       // Validate form
       if (!validateForm()) {
@@ -428,7 +443,66 @@ const FeedbackForm = ({
           rating: skill.rating,
           note: skill.comments || ""
         })),
-        questionFeedback: interviewerSectionData.map(question => ({
+        questionFeedback: [
+          // Interviewer section questions
+          ...interviewerSectionData.map(question => ({
+            questionId: question, // Send the full question object
+            candidateAnswer: {
+              answerType: question.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: question.isLiked || "none",
+              note: question.note || "",
+              dislikeReason: question.whyDislike || ""
+            }
+          })),
+          // Preselected questions responses
+          ...preselectedQuestionsResponses.map(response => ({
+            questionId: response,
+            candidateAnswer: {
+              answerType: response.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: response.isLiked || "none",
+              note: response.note || "",
+              dislikeReason: response.whyDislike || ""
+            }
+          }))
+        ],
+
+//         questionFeedback: filteredInterviewerQuestions.map(question => ({
+//           questionId: question, // Send the full question object
+//           candidateAnswer: {
+//             answerType: question.isAnswered || "not answered",
+//             submittedAnswer: ""
+//           },
+//           interviewerFeedback: {
+//             liked: question.isLiked || "none",
+//             note: question.note || "",
+//             dislikeReason: question.whyDislike || ""
+//           }
+//         })),
+
+        generalComments: comments,
+        overallImpression: {
+          overallRating: overallRating,
+          communicationRating: communicationRating,
+          recommendation: recommendation,
+          note: ""
+        }
+      };
+
+      const updatedFeedbackData = {
+        overallRating,
+        communicationRating,
+        skills: skillRatings.map(skill => ({
+          skillName: skill.skill,
+          rating: skill.rating,
+          note: skill.comments
+        })),
+        questionFeedback: filteredInterviewerQuestions.map(question => ({
           questionId: question, // Send the full question object
           candidateAnswer: {
             answerType: question.isAnswered || "not answered",
@@ -442,23 +516,38 @@ const FeedbackForm = ({
         })),
         generalComments: comments,
         overallImpression: {
-          overallRating: overallRating,
-          communicationRating: communicationRating,
-          recommendation: recommendation,
-          note: ""
-        }
+          overallRating,
+          recommendation,
+          note: comments
+        },
+        status: "submitted" // Mark as submitted
       };
 
       console.log('📤 Sending feedback data:', feedbackData);
 
+      let response;
+      if (isEditMode) {
+        if (feedbackId) {
+          response = await axios.put(`${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`, updatedFeedbackData);
+          if (response.data.success) {
+            alert('Feedback saved as draft successfully!');
+          } else {
+            alert('Failed to save feedback as draft: ' + response.data.message);
+          }
+        } else {
+          alert('No feedback ID found, cannot save draft.');
+        }
+      } else {
+
       // Simple POST request without authentication
-      const response = await fetch(`${config.REACT_APP_API_URL}/feedback/create`, {
+      response = await fetch(`${config.REACT_APP_API_URL}/feedback/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(feedbackData)
       });
+  
 
       const result = await response.json();
       console.log('📥 API Response:', result);
@@ -478,10 +567,12 @@ const FeedbackForm = ({
         console.log('❌ API Error:', result.message);
         alert(result.message || 'Failed to submit feedback');
       }
+    }
     } catch (error) {
       console.error('💥 Error submitting feedback:', error);
       alert('Failed to submit feedback. Please try again.');
     }
+  
   };
 
     const saveFeedback = async () => {
@@ -501,18 +592,49 @@ const FeedbackForm = ({
           rating: skill.rating,
           note: skill.comments || ""
         })),
-        questionFeedback: interviewerSectionData.map(question => ({
-          questionId: question, // Send the full question object
-          candidateAnswer: {
-            answerType: question.isAnswered || "not answered",
-            submittedAnswer: ""
-          },
-          interviewerFeedback: {
-            liked: question.isLiked || "none",
-            note: question.note || "",
-            dislikeReason: question.whyDislike || ""
-          }
-        })),
+
+        questionFeedback: [
+          // Interviewer section questions
+          ...interviewerSectionData.map(question => ({
+            questionId: question, // Send the full question object
+            candidateAnswer: {
+              answerType: question.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: question.isLiked || "none",
+              note: question.note || "",
+              dislikeReason: question.whyDislike || ""
+            }
+          })),
+          // Preselected questions responses
+          ...preselectedQuestionsResponses.map(response => ({
+            questionId: response.questionId,
+            candidateAnswer: {
+              answerType: response.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: response.isLiked || "none",
+              note: response.note || "",
+              dislikeReason: response.whyDislike || ""
+            }
+          }))
+        ],
+
+//         questionFeedback: filteredInterviewerQuestions.map(question => ({
+//           questionId: question, // Send the full question object
+//           candidateAnswer: {
+//             answerType: question.isAnswered || "not answered",
+//             submittedAnswer: ""
+//           },
+//           interviewerFeedback: {
+//             liked: question.isLiked || "none",
+//             note: question.note || "",
+//             dislikeReason: question.whyDislike || ""
+//           }
+//         })),
+
         generalComments: comments,
         overallImpression: {
           overallRating: overallRating,
@@ -523,17 +645,60 @@ const FeedbackForm = ({
         status: "draft" // Mark as draft
       };
 
+      const updatedFeedbackData = {
+          overallRating,
+          skills: skillRatings.map(skill => ({
+            skillName: skill.skill,
+            rating: skill.rating,
+            note: skill.comments
+          })),
+          questionFeedback: filteredInterviewerQuestions.map(question => ({
+            questionId: question, // Send the full question object
+            candidateAnswer: {
+              answerType: question.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: question.isLiked || "none",
+              note: question.note || "",
+              dislikeReason: question.whyDislike || ""
+            }
+          })),
+          generalComments: comments,
+          overallImpression: {
+            overallRating,
+            recommendation,
+            communicationRating,
+            note: comments
+          },
+          status: "draft" // Mark as draft
+        };
+
       console.log('📤 Sending draft data:', feedbackData);
 
+      let response;
+
+      if (isEditMode) {
+        if (feedbackId) {
+          response = await axios.put(`${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`, updatedFeedbackData);
+          if (response.data.success) {
+            alert('Feedback saved as draft successfully!');
+          } else {
+            alert('Failed to save feedback as draft: ' + response.data.message);
+          }
+        } else {
+          alert('No feedback ID found, cannot save draft.');
+        }
+      } else {
+
       // Simple POST request without authentication
-      const response = await fetch(`${config.REACT_APP_API_URL}/feedback/create`, {
+      response = await fetch(`${config.REACT_APP_API_URL}/feedback/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(feedbackData)
       });
-
       const result = await response.json();
       console.log('📥 Draft API Response:', result);
 
@@ -544,11 +709,12 @@ const FeedbackForm = ({
         console.log('❌ Draft save error:', result.message);
         alert(result.message || 'Failed to save draft');
       }
-    } catch (error) {
-      console.error('💥 Error saving draft:', error);
-      alert('Failed to save draft. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('💥 Error saving draft:', error);
+    alert('Failed to save draft. Please try again.');
+  }
+};
 
   // Button component for consistency
   const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', style = {}, disabled = false, type = 'button' }) => {
@@ -586,7 +752,7 @@ const FeedbackForm = ({
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Overall Rating *
+            Overall Rating {!isViewMode && <span className="text-red-500">*</span>}
           </label>
           <div className="flex items-center">
             {renderStarRating(overallRating, handleOverallRatingChange)}
@@ -599,7 +765,7 @@ const FeedbackForm = ({
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Communication Rating *
+            Communication Rating {!isViewMode && <span className="text-red-500">*</span>}
           </label>
           <div className="flex items-center">
             {renderStarRating(communicationRating, handleCommunicationRatingChange)}
@@ -613,8 +779,9 @@ const FeedbackForm = ({
         <div>
           <div className="flex justify-between items-center mb-3">
             <label className="block text-sm font-medium text-gray-700">
-              Skill Ratings *
+              Skill Ratings {!isViewMode && <span className="text-red-500">*</span>}
             </label>
+          {!isViewMode && (
             <Button
               type="button"
               onClick={handleAddSkill}
@@ -625,8 +792,28 @@ const FeedbackForm = ({
               <Plus className="h-3 w-3 mr-1" />
               Add Skill
             </Button>
+          )}
           </div>
-          
+          {isViewMode ? (
+            <div className="space-y-3">
+            {skillRatings.map((skill, index) => (
+              <div key={index} className="p-3 bg-gray-50 rounded-md">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="text-sm text-gray-800">
+                    {skill.skill}
+                  </div>
+                  <div className="flex items-center">
+                    {renderStarRating(skill.rating)}
+                    <span className="ml-2 text-sm text-gray-600">{skill.rating}/5</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {skill.comments || 'No comments'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          ): (
           <div className="space-y-3">
             {skillRatings.map((skill, index) => (
               <div key={index} className="p-3 bg-gray-50 rounded-md">
@@ -665,6 +852,7 @@ const FeedbackForm = ({
               </div>
             ))}
           </div>
+          )}
           {errors.skills && (
             <p className="mt-1 text-sm text-red-600">{errors.skills}</p>
           )}
@@ -674,12 +862,13 @@ const FeedbackForm = ({
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-4">
             <label className="block text-sm font-medium text-gray-700">
-              Questions Asked *
+              Questions Asked
             </label>
               <span className="text-sm text-gray-500">
-                {interviewerSectionData.length} question(s) from question bank
+                {filteredInterviewerQuestions.length} question(s) from question bank
               </span>
             </div>
+          {!isViewMode && (
             <button
               className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
               onClick={openQuestionBank}
@@ -688,11 +877,54 @@ const FeedbackForm = ({
               <FaPlus className="text-sm" />
               <span>Add Question</span>
             </button>
+          )}
           </div>
           
-                     <div className="space-y-4">
-             {interviewerSectionData.length > 0 ? (
-               interviewerSectionData.map((question) => (
+          {isViewMode ? (
+            <>
+                {filteredInterviewerQuestions.length > 0 ? (
+                  filteredInterviewerQuestions.map((question) => (
+                    <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2">
+                      <div className="flex items-start justify-between mb-3">
+                        <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+                          {question.snapshot?.skill || question.category || 'N/A'}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {question.snapshot?.difficultyLevel || question.difficulty || 'N/A'}
+                        </span>
+                      </div>
+                
+                      <h3 className="font-semibold text-gray-800 mb-2">
+                        {question.snapshot?.questionText || question.question || 'N/A'}
+                      </h3>
+                
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
+                        <p className="text-sm text-gray-700">
+                          {question.snapshot?.correctAnswer || question.expectedAnswer || 'N/A'}
+                        </p>
+                      </div>
+                
+                      <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
+                        <span>Mandatory: {(question.mandatory === "true" || question.snapshot?.mandatory === "true") ? "Yes" : "No"}</span>
+                      </div>
+                
+                      {/* Note display if available */}
+                      {question.notesBool && question.note && (
+                        <div className="mt-4">
+                          <p className="text-sm font-medium text-gray-600 mb-1">Note:</p>
+                          <p className="text-sm text-gray-800">{question.note}</p>
+                          <p className="text-xs text-gray-400 mt-1">{question.note.length}/250</p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : null}
+            </>
+          ) : (
+            <div className="space-y-4">
+             {filteredInterviewerQuestions.length > 0 ? (
+               filteredInterviewerQuestions.map((question) => (
                  <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
                    <div className="flex items-start justify-between mb-3">
                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
@@ -784,15 +1016,18 @@ const FeedbackForm = ({
               </div>
             )}
           </div>
-          {errors.questions && (
-            <p className="mt-1 text-sm text-red-600">{errors.questions}</p>
           )}
-        </div>
+          
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Overall Comments *
+            Overall Comments {!isViewMode && <span className="text-red-500">*</span>}
           </label>
+        {isViewMode ? (
+          <div className="text-sm text-gray-800">
+          {comments || "Not Provided"}
+        </div>
+        ) : (
           <textarea
             rows={4}
             value={comments}
@@ -800,6 +1035,7 @@ const FeedbackForm = ({
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Provide overall feedback about the candidate's performance..."
           />
+        )}
           {errors.comments && (
             <p className="mt-1 text-sm text-red-600">{errors.comments}</p>
           )}
@@ -807,8 +1043,13 @@ const FeedbackForm = ({
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Recommendation *
+            Recommendation {!isViewMode && <span className="text-red-500">*</span>}
           </label>
+        {isViewMode ? (
+          <div className="text-sm text-gray-800">
+          {recommendation || "Not Provided"}
+        </div>
+        ) : (
           <select
             value={recommendation}
             onChange={(e) => setRecommendation(e.target.value)}
@@ -820,8 +1061,10 @@ const FeedbackForm = ({
             <option value="No">No</option>
             {/* <option value="Strong No">Strong No</option> */}
           </select>
+        )}
         </div>
-        
+      
+      {!isViewMode && (
         <div className="flex justify-end gap-3">
           <Button
             onClick={saveFeedback}
@@ -839,6 +1082,7 @@ const FeedbackForm = ({
             Submit Feedback
           </Button>
         </div>
+      )}
       </div>
 
       {/* QuestionBank Modal */}
@@ -865,7 +1109,7 @@ const FeedbackForm = ({
             {/* QuestionBank Content */}
             <div className="flex-1 overflow-hidden">
               <QuestionBank
-                interviewQuestionsLists={interviewerSectionData}
+                interviewQuestionsLists={filteredInterviewerQuestions}
                 type="interviewerSection"
                 fromScheduleLater={true}
                 onAddQuestion={handleAddQuestionToRound}
@@ -878,6 +1122,7 @@ const FeedbackForm = ({
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };
