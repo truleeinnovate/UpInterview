@@ -1,6 +1,7 @@
 // v1.0.0  -  Venkatesh  -  Initial setup for Feedbacks with table and kanban views
 // v1.0.1  -  Venkatesh  -  Added toolbar with search, pagination, and filter functionality
 // v1.0.2  -  Venkatesh  -  Added edit modes for Candidate, Interviews, Skills, and Overall Impressions tabs
+// v1.0.3  -  Ashraf  -  added api get from apimodel
 
 import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
@@ -25,19 +26,30 @@ import FeedbackKanban from './FeedbackKanban.jsx';
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from "js-cookie";
 import { useInterviews } from '../../../../apiHooks/useInterviews.js';
+// <------------------------v1.0.3
+import { useFeedbacks } from '../../../../apiHooks/useFeedbacks.js';
 
 
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
-  const { interviewData, isLoading } = useInterviews();
-  console.log("interviewDta", interviewData)
+  const { interviewData, isLoading: interviewsLoading } = useInterviews();
+  const { data: feedbacksData, isLoading: feedbacksLoading, error: feedbacksError } = useFeedbacks();
+  
+  console.log("[Feedback] Debug:", {
+    interviewData: !!interviewData,
+    feedbacksData: !!feedbacksData,
+    feedbacksLoading,
+    feedbacksError: !!feedbacksError,
+    feedbacksDataLength: feedbacksData?.length || 0
+  });
+  // ------------------------------v1.0.3 >
+  
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
   const tenantId = tokenPayload?.tenantId;
   const ownerId = tokenPayload?.userId;
-  //console.log("ownerId",ownerId)
   
   // Get context data (removed unused variables)
   const { user } = useCustomContext();
@@ -47,69 +59,35 @@ const Feedback = () => {
   const filterIconRef = useRef(null);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
-  const [statusOptions] = useState(['Active', 'Inactive', 'Other']);
+  // <------------------------v1.0.3
+  const [statusOptions] = useState(['draft', 'submitted']);
+  // ------------------------------v1.0.3 >
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [tempSelectedStatus, setTempSelectedStatus] = useState([]);
   const [isStatusOpen, setIsStatusOpen] = useState(true);
-  const [feedbacks, setFeedbacks] = useState([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // ------------------------------v1.0.3 >
+  // Use data from the hook
+  const feedbacks = feedbacksData || [];
+  const loading = feedbacksLoading;
+  const error = feedbacksError;
   // Removed modal-related state variables as modal is now in separate component
 
-  // const authToken = Cookies.get("authToken");
-  // const tokenPayload = decodeJwt(authToken);
-  // const tenantId = tokenPayload?.tenantId;
-  // const currentOwnerId = tokenPayload?.userId;
-
+  // Update filtered feedbacks when feedbacks data changes
   useEffect(() => {
-    // Dummy data for testing - replacing API calls
-    // const dummyFeedbacks = [
-    //   { _id: 1, interview: "John Doe", interviewType: "Technical", scheduledDate: "2025-08-01", status: "Active", feedback: "Good performance" },
-    //   { _id: 2, interview: "Jane Smith", interviewType: "HR", scheduledDate: "2025-08-02", status: "Inactive", feedback: "Needs improvement" },
-    //   { _id: 3, interview: "Mike Johnson", interviewType: "Behavioral", scheduledDate: "2025-08-03", status: "Active", feedback: "Excellent communication" },
-    //   { _id: 4, interview: "Sarah Williams", interviewType: "Technical", scheduledDate: "2025-08-04", status: "Other", feedback: "Average skills" },
-    //   { _id: 5, interview: "Robert Brown", interviewType: "HR", scheduledDate: "2025-08-05", status: "Active", feedback: "Positive attitude" },
-    //   { _id: 6, interview: "Emily Davis", interviewType: "Behavioral", scheduledDate: "2025-08-06", status: "Inactive", feedback: "Lacks confidence" },
-    //   { _id: 7, interview: "William Wilson", interviewType: "Technical", scheduledDate: "2025-08-07", status: "Other", feedback: "Good problem-solving" },
-    //   { _id: 8, interview: "Lisa Anderson", interviewType: "HR", scheduledDate: "2025-08-08", status: "Active", feedback: "Team player" },
-    //   { _id: 9, interview: "James Taylor", interviewType: "Behavioral", scheduledDate: "2025-08-09", status: "Inactive", feedback: "Needs better time management" },
-    //   { _id: 10, interview: "Emma Martinez", interviewType: "Technical", scheduledDate: "2025-08-10", status: "Active", feedback: "Quick learner" },
-    //   { _id: 11, interview: "David Thompson", interviewType: "HR", scheduledDate: "2025-08-11", status: "Other", feedback: "Good leadership potential" },
-    //   { _id: 12, interview: "Olivia Garcia", interviewType: "Behavioral", scheduledDate: "2025-08-12", status: "Active", feedback: "Strong analytical skills" }
-    // ];
-    // setFeedbacks(dummyFeedbacks);
-    // setFilteredFeedbacks(dummyFeedbacks);
-    // setLoading(false);
-
-    const fetchFeedbackData = async () => {
-      try {
-        setLoading(true);
-
-        // Use different endpoint based on organization status
-        //const tenantId = "685bb9a00abf677d3ae9ec56"
-        const endpoint = organization 
-          ? `${process.env.REACT_APP_API_URL}/feedback/${tenantId}` 
-          : `${process.env.REACT_APP_API_URL}/feedback/ownerId/${ownerId}`;
-        const response = await fetch(endpoint);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch feedback data');
-        }
-        const data = await response.json();
-
-        // console.log("data",data);
-        setFeedbacks(data.data);
-        setFilteredFeedbacks(data.data);
-      } catch (err) {
-        setError(err.message || 'An error occurred while fetching data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFeedbackData();
-  }, []);
-
+    console.log("[Feedback] useEffect - feedbacks changed:", {
+      feedbacksLength: feedbacks.length,
+      currentFilteredLength: filteredFeedbacks.length
+    });
+    
+    // Only update if the arrays are actually different
+    if (feedbacks.length !== filteredFeedbacks.length || 
+        feedbacks.some((item, index) => item._id !== filteredFeedbacks[index]?._id)) {
+      setFilteredFeedbacks(feedbacks);
+    }
+  }, [feedbacks]);
+// 
+  // ------------------------------v1.0.3 >
   const rowsPerPage = 10;
   const startIndex = currentPage * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
@@ -138,14 +116,17 @@ const Feedback = () => {
     setIsFilterActive(true);
     setFilterPopupOpen(false);
     const filtered = feedbacks.filter((f) => {
-      const matchesStatus = selectedStatus.length === 0 || selectedStatus.includes((f.status || '').charAt(0).toUpperCase() + (f.status || '').slice(1));
-      const fields = [f._id, f.interview, f.interviewType, f.status].filter(Boolean);
+      // <------------------------v1.0.3
+      const matchesStatus = tempSelectedStatus.length === 0 || tempSelectedStatus.includes(f.status || '');
+      const candidateName = f.candidateId ? `${f.candidateId.FirstName || ''} ${f.candidateId.LastName || ''}` : '';
+      const positionTitle = f.positionId?.title || '';
+      const fields = [f._id, candidateName, positionTitle, f.status].filter(Boolean);
       const matchesSearch = fields.some((field) => field.toString().toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesStatus && matchesSearch;
     });
     setFilteredFeedbacks(filtered);
   };
-
+  // ------------------------------v1.0.3 >
   const handleClearFilters = () => {
     setSelectedStatus([]);
     setTempSelectedStatus([]);
@@ -161,13 +142,16 @@ const Feedback = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
     const filtered = feedbacks.filter((f) => {
-      const fields = [f._id, f.interview, f.interviewType, f.status].filter(Boolean);
+      // <------------------------v1.0.3
+      const candidateName = f.candidateId ? `${f.candidateId.FirstName || ''} ${f.candidateId.LastName || ''}` : '';
+      const positionTitle = f.positionId?.title || '';
+      const fields = [f._id, candidateName, positionTitle, f.status].filter(Boolean);
       const matchesSearch = fields.some((field) => field.toString().toLowerCase().includes(e.target.value.toLowerCase()));
       return matchesSearch;
     });
     setFilteredFeedbacks(filtered);
   };
-
+  // ------------------------------v1.0.3 >
   const nextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredFeedbacks.length / rowsPerPage) - 1));
   };
@@ -336,7 +320,7 @@ const Feedback = () => {
     // },
     {
       key: 'interviewRoundId.dateTime',
-      header: 'Scheduled Date&Time',
+      header: 'Date&Time',
       render: (value,row) => (
         <div className="text-sm">{row.interviewRoundId?.dateTime || "Not Provided"}</div>
       ),
@@ -385,14 +369,13 @@ const Feedback = () => {
       label: 'Edit',
       icon: <Pencil className="w-4 h-4 text-custom-blue" />,
       onClick: handleEdit,
+      show: (row) => row.status === 'draft', // Only show edit button for draft status
     },
   ];
 
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
 
-  if (loading) return <div className="text-center p-6">Loading...</div>;
-  //if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
 
   return (
     <>
