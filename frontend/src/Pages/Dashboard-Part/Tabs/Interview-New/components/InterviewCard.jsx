@@ -1,3 +1,7 @@
+
+//<-----v1.0.0-------Venkatesh---------add current round column
+
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, Briefcase, Clock, ArrowRight, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -9,14 +13,12 @@ import { motion } from 'framer-motion';
 import { formatDate } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 
-function InterviewCard({ interview, onView, onViewPosition }) {
+function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onEditInterview, effectivePermissions }) {
   const navigate = useNavigate();
-
 
   const [candidate, setCandidate] = useState(null);
   const [position, setPosition] = useState(null);
   const [template, setTemplate] = useState(null);
-
 
   useEffect(() => {
     if (interview) {
@@ -34,13 +36,13 @@ function InterviewCard({ interview, onView, onViewPosition }) {
   // const candidate = getCandidateById(interview.candidateId);
   // const position = getPositionById(interview.positionId);
 
-  const completedRounds = interview?.rounds?.filter(round => round.status === 'Completed').length;
-  const totalRounds = interview?.rounds?.length;
+  // const completedRounds = interview?.rounds?.filter(round => round.status === 'Completed').length;
+  // const totalRounds = interview?.rounds?.length;
 
-  const nextRound = interview?.rounds?.filter(round => ['Pending', 'Scheduled'].includes(round.status))
-    .sort((a, b) => a.sequence - b.sequence)[0];
+  // const nextRound = interview?.rounds?.filter(round => ['Pending', 'Scheduled'].includes(round.status))
+  //   .sort((a, b) => a.sequence - b.sequence)[0];
 
-  const nextRoundInterviewers = nextRound
+  // const nextRoundInterviewers = nextRound
   // ? nextRound.interviewers.map(id => getInterviewerById(id)).filter(Boolean)
   // : [];
 
@@ -60,6 +62,19 @@ function InterviewCard({ interview, onView, onViewPosition }) {
   //     setEntityDetailsSidebar(null);
   //   }
   // };
+//<-----v1.0.0-------
+  const rounds = interview.rounds || [];
+  const currentRound = rounds
+    .filter((round) => ['Pending', 'Scheduled', 'Request Sent'].includes(round.status))
+    .sort((a, b) => a.sequence - b.sequence)[0] || null;
+  const currentRoundInterviewers = currentRound?.interviewers || [];
+  const nextRound = rounds
+    .filter((round) => ['Pending', 'Scheduled', 'Request Sent'].includes(round.status))
+    .sort((a, b) => a.sequence - b.sequence)[1] || null;
+  const nextRoundInterviewers = nextRound?.interviewers || [];
+  const totalRounds = rounds.length;
+  const completedRounds = rounds.filter(round => round.status === 'Completed').length;
+//-----v1.0.0------->
 
   return (
     <>
@@ -142,14 +157,51 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                 <span>Progress: {completedRounds} of {totalRounds} Rounds Completed</span>
               </div>
             </div>
+            {/*<-----v1.0.0------- */}
+            {currentRound && (
+              <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300">Current: {currentRound.roundName}</h4>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      {currentRound.roundTitle} • {currentRound.interviewType}
+                    </p>
+                  </div>
+                  <StatusBadge status={currentRound.status} size="sm" />
+                </div>
+
+                {currentRoundInterviewers.length > 0 && (
+                  <div className="mt-2 flex items-center">
+                    <span className="text-xs text-green-600 dark:text-green-400 mr-2">Interviewers:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {currentRoundInterviewers.map((interviewer, index) => (
+                        <div key={interviewer?.id || index} className="flex items-center bg-white/50 dark:bg-black/10 rounded-full px-2 py-1">
+                          <InterviewerAvatar 
+                            interviewer={interviewer} 
+                            size="sm" 
+                          />
+                          <span className="ml-1 text-xs text-green-600 dark:text-green-400 truncate max-w-[120px]">
+                            {interviewer?.name}
+                            {interviewer?.isExternal && (
+                              <span className="text-xs text-orange-600 dark:text-orange-400 ml-1">(Outsourced)</span>
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {/*-----v1.0.0-------> */}
 
             {nextRound && (
               <div className="mt-4 p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                 <div className="flex justify-between items-start flex-wrap gap-2">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-medium text-custom-blue dark:text-blue-300">Next: {nextRound.name}</h4>
+                    <h4 className="text-xs sm:text-sm font-medium text-custom-blue dark:text-blue-300">Next: {nextRound.roundName}</h4>
                     <p className="text-xs text-custom-blue dark:text-blue-400 mt-1">
-                      {nextRound.type} • {nextRound.mode}
+                      {nextRound.roundTitle} • {nextRound.interviewType}
                     </p>
                   </div>
                   <StatusBadge status={nextRound.status} size="sm" />
@@ -162,9 +214,9 @@ function InterviewCard({ interview, onView, onViewPosition }) {
                       <div className="flex flex-wrap gap-2">
                         {nextRoundInterviewers.map((interviewer, index) => (
                           <div key={interviewer?.id || index} className="flex items-center bg-white/50 dark:bg-black/10 rounded-full px-2 py-1">
-                            <InterviewerAvatar
-                              interviewer={interviewer}
-                              size="sm"
+                            <InterviewerAvatar 
+                              interviewer={interviewer} 
+                              size="sm" 
                             />
                             <span className="ml-1 text-xs text-custom-blue dark:text-blue-400 truncate max-w-[120px]">
                               {interviewer?.name}

@@ -5,7 +5,8 @@ import { Expand, Minimize } from 'lucide-react';
 import { IoMdClose } from 'react-icons/io';
 import CandidateMiniTab from './MiniTabs/Candidate';
 import InterviewsMiniTabComponent from './MiniTabs/Interviews';
-import FeedbackForm from './MiniTabs/FeedbackForm.jsx';
+import FeedbackForm from '../../../videoCall/FeedbackForm';
+
 
 const tabsList = [
   { id: 1, tab: "Candidate" },

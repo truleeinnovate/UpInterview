@@ -9,7 +9,7 @@ const router = express.Router()
 // Route to create feedback
 router.post('/create', createFeedback)
 
-// Route to get feedback by round ID (more specific route first)
+// Route to get feedback by round ID (specific route for detailed view)
 router.get('/round/:roundId', getFeedbackByRoundId)
 
 

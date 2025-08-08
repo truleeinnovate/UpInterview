@@ -1,3 +1,4 @@
+// v1.0.0 - Ashraf - Added subject field
 const mongoose = require("mongoose");
 
 const StatusHistorySchema = new mongoose.Schema({
@@ -14,6 +15,10 @@ const TicketSchema = new mongoose.Schema(
     ticketCode: { type: String, unique: true },
     contact: { type: String, required: true },
     organization: { type: String },
+    // v1.0.0 <----------------------------------------------------
+    subject: { type: String, required: true, maxlength: 150 },
+    // v1.0.0 --------------------------------------------->
+
     issueType: { type: String, required: true },
     status: { type: String, default: "New" },
     priority: { type: String, default: "Medium" },

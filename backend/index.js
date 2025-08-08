@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashraf  -  fixed name assessment to assessment template
 // this is new
 // v1.0.3  -  Ashraf  -  added health check endpoints for monitoring
+// v1.0.4  -  Ashok   -  added analytics
 require('dotenv').config();
 
 // Debug environment variables
@@ -1238,3 +1239,170 @@ app.use("/interview-availability", interviewAvailabilityRoutes);
 const googlemeetRoutes = require("./routes/googlemeetRoutes");
 app.use("/googlemeet", googlemeetRoutes);
  // v1.0.0 ---------------------->
+
+//  v1.0.4 <------------------------------------------------------------------------------
+const filterRoutes = require('./routes/AnalyticsRoutes/filterRoutes.js');
+const columnRoutes = require('./routes/AnalyticsRoutes/columnRoutes');
+const reportRoutes = require('./routes/AnalyticsRoutes/reportRoutes');
+const {
+  interviews,
+  interviewers,
+  assessments,
+  candidates,
+  organizations,
+  reportTemplates,
+  getKPIData,
+  getChartData,
+  getTopSkills,
+  getTopExternalInterviewers
+} = require('./data/mockData.js');
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Interview SaaS Backend is running' });
+});
+// Dashboard endpoints
+// Filter routes
+app.use('/api/filters', filterRoutes);
+
+// Column management routes
+app.use('/api/columns', columnRoutes);
+
+// Report management routes
+app.use('/api/reports', reportRoutes);
+
+app.get('/api/kpis', (req, res) => {
+  try {
+    const kpis = getKPIData();
+    res.json(kpis);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch KPI data' });
+  }
+});
+
+app.get('/api/charts', (req, res) => {
+  try {
+    const data = getChartData();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch chart data' });
+  }
+});
+
+// Data endpoints
+app.get('/api/interviews', (req, res) => {
+  try {
+    res.json(interviews);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch interviews data' });
+  }
+});
+
+app.get('/api/interviews/:id', (req, res) => {
+  try {
+    const interview = interviews.find(i => i.id === req.params.id);
+    if (!interview) {
+      return res.status(404).json({ error: 'Interview not found' });
+    }
+    res.json(interview);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch interview data' });
+  }
+});
+
+app.get('/api/interviewers', (req, res) => {
+  try {
+    res.json(interviewers);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch interviewers data' });
+  }
+});
+
+app.get('/api/interviewers/:id', (req, res) => {
+  try {
+    const interviewer = interviewers.find(i => i.id === req.params.id);
+    if (!interviewer) {
+      return res.status(404).json({ error: 'Interviewer not found' });
+    }
+    res.json(interviewer);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch interviewer data' });
+  }
+});
+
+app.get('/api/assessments', (req, res) => {
+  try {
+    res.json(assessments);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch assessments data' });
+  }
+});
+
+app.get('/api/candidates', (req, res) => {
+  try {
+    res.json(candidates);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch candidates data' });
+  }
+});
+
+app.get('/api/organizations', (req, res) => {
+  try {
+    res.json(organizations);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch organizations data' });
+  }
+});
+
+app.get('/api/report-templates', (req, res) => {
+  try {
+    res.json(reportTemplates);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch report templates data' });
+  }
+});
+
+// Trends endpoints
+app.get('/api/trends/skills', (req, res) => {
+  try {
+    const data = getTopSkills();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch top skills data' });
+  }
+});
+
+app.get('/api/trends/external-interviewers', (req, res) => {
+  try {
+    const data = getTopExternalInterviewers();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch top external interviewers data' });
+  }
+});
+
+// Export endpoints (placeholders)
+app.post('/api/export/csv', (req, res) => {
+  try {
+    // Placeholder for CSV export functionality
+    res.json({ message: 'CSV export functionality would be implemented here', data: req.body });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to export CSV' });
+  }
+});
+
+app.post('/api/export/pdf', (req, res) => {
+  try {
+    // Placeholder for PDF export functionality
+    res.json({ message: 'PDF export functionality would be implemented here', data: req.body });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to export PDF' });
+  }
+});
+
+// Catch-all for undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
+//  v1.0.4 ------------------------------------------------------------------------------>

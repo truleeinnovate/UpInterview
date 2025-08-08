@@ -5,6 +5,7 @@
 // v1.0.4  -  Ashraf  -  fixed assessment model sort issue,because assessment is in loop
 // v1.0.5  -  Mansoor  -  fixed mockinterview model mapping issue
 // v1.0.6  -  Ashraf  -  fixed assessment to assessment template,schedule assessment to assessment schema
+// v1.0.7  -  Ashraf  -  fixed feedback model mapping issue
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -22,12 +23,18 @@ const { MockInterview } = require('../models/MockInterview');
 const { TenantQuestions } = require('../models/TenantQuestions');
 const TenantQuestionsListNames = require('../models/TenantQuestionsListNames');
 const { InterviewRounds } = require('../models/InterviewRounds');
-const InterviewQuestions = require('../models/InterviewQuestions');
+const InterviewQuestions = require('../models/interviewQuestions.js');
 const Users = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
 // <-------------------------------v1.0.6
 const ScheduledAssessmentSchema = require('../models/assessmentsSchema');
 // ------------------------------v1.0.6 >
+// <-------------------------------v1.0.7
+
+const FeedbackModel = require('../models/feedback.js');
+const { Contacts } = require('../models/Contacts.js');
+const CandidatePosition = require('../models/CandidatePosition.js');
+// ------------------------------v1.0.7 >
 
 const modelRequirements = {
   candidate: {
@@ -72,8 +79,15 @@ const modelRequirements = {
     model: MockInterview,
     permissionName: 'MockInterviews',
     requiredPermission: 'View'
-  }
+  },
   // v1.0.5---------------------------->
+  // <------------------------v1.0.7
+  feedback: {
+    model: null, // Will be handled specially in the switch case
+    permissionName: 'Feedback',
+    requiredPermission: 'View'
+  }
+  // ------------------------------v1.0.7 >
 };
 
 const getModelMapping = (permissions) => {
@@ -173,12 +187,16 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     //   console.log('[9] User lacks view permission for model - returning 403');
     //   return res.status(403).json({ error: 'Forbidden: No view permission for this resource' });
     // }
+    // <------------------------v1.0.7
 
-    if (!DataModel || typeof DataModel.find !== 'function') {
+    // Special handling for feedback model which has custom logic
+    if (model.toLowerCase() === 'feedback') {
+      console.log('[10] Processing feedback model with custom logic - skipping DataModel validation');
+    } else if (!DataModel || typeof DataModel.find !== 'function') {
       console.error('[10] Invalid DataModel configuration - returning 500');
       return res.status(500).json({ error: `Invalid model configuration for ${model}` });
     }
-
+    // ------------------------------v1.0.7 >
     // Base query - always enforce tenant boundary
     let query = model.toLowerCase() === 'scheduleassessment' ? { organizationId: tenantId } : { tenantId };
     console.log('[11] Initial query with tenantId:', query);
@@ -368,11 +386,76 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         console.log('[33] Found', data.length, 'Position records');
         break;
       // ------------------------------ v1.0.1 >
-
+      // <------------------------v1.0.7
+      case 'feedback':
+        console.log('[34] Processing Feedback model with complex logic');
+        
+        // Get all interviews for the current tenant/owner (using the already filtered query)
+        const feedbackInterviews = await Interview.find(query)
+          .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
+          .populate('positionId', 'title companyname jobDescription Location')
+          .lean();
+        
+        console.log('[35] Found', feedbackInterviews.length, 'interviews for feedback lookup');
+        
+        // Get all interview round IDs from these interviews
+        const feedbackInterviewIds = feedbackInterviews.map(interview => interview._id);
+        const feedbackInterviewRounds = await InterviewRounds.find({
+          interviewId: { $in: feedbackInterviewIds }
+        }).lean();
+        
+        const feedbackRoundIds = feedbackInterviewRounds.map(round => round._id);
+        console.log('[36] Found', feedbackRoundIds.length, 'interview round IDs');
+        
+        // Get feedback based on round IDs and tenant/owner matching
+        // The query already includes tenantId and ownerId filtering from the general logic above
+        let feedbackQuery = {
+          $or: [
+            { interviewRoundId: { $in: feedbackRoundIds } },
+            { tenantId: tenantId }
+          ]
+        };
+        
+        // For non-admin users, also include feedback they own (the general logic already handles this)
+        if (roleType === 'individual' || (roleType === 'organization' && roleName !== 'Admin')) {
+          feedbackQuery.$or.push({ ownerId: userId });
+        }
+        
+        console.log('[37] Feedback query:', JSON.stringify(feedbackQuery, null, 2));
+        
+        const feedbacks = await FeedbackModel.find(feedbackQuery)
+          .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
+          .populate('positionId', 'title companyname jobDescription Location')
+          .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
+          .populate('interviewerId', 'firstName lastName email')
+          .populate('ownerId', 'firstName lastName email')
+          .lean();
+        
+        console.log('[38] Found', feedbacks.length, 'feedback records');
+        
+        // Get interview questions for each feedback
+        const feedbackWithQuestions = await Promise.all(feedbacks.map(async (feedback) => {
+          const preSelectedQuestions = await InterviewQuestions.find({ 
+            roundId: feedback.interviewRoundId?._id 
+          }).lean();
+          
+          return {
+            ...feedback,
+            preSelectedQuestions,
+            // Add action buttons based on status
+            canEdit: feedback.status === 'draft',
+            canView: true
+          };
+        }));
+        
+        data = feedbackWithQuestions;
+        console.log('[39] Final feedback data prepared with', data.length, 'records');
+        break;
+      // ------------------------------v1.0.7 >
       default:
-        console.log('[38] Processing generic model:', model);
+        console.log('[40] Processing generic model:', model);
         data = await DataModel.find(query).lean();
-        console.log('[39] Found', data.length, 'records for model', model);
+        console.log('[41] Found', data.length, 'records for model', model);
     }
 
     console.log('[36] Sending response with data');

@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 
 // v1.0.0-----Venkatesh---in kanban view 4 cards shown in 2xl grid and add effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual"
+// v1.0.1 - Ashraf - Added subject field
 
 import { motion } from 'framer-motion';
 import { FaEye, FaPencilAlt } from 'react-icons/fa';
@@ -193,9 +194,11 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                       }
                     >
                       {/*------v1.0.0--------> */}
-                      {ticket.ticketCode}
+                      {/* v1.0.1 - Ashraf - Added subject field */}
+                      {ticket.subject || ticket.ticketCode}
                     </h4>
-                    <p className="text-sm text-gray-500">{formatDate(ticket.createdAt)}</p>
+                    <p className="text-sm text-gray-500">#{ticket.ticketCode} • {formatDate(ticket.createdAt)}</p>
+                    {/* v1.0.1 - Ashraf - Added subject field */}
                   </motion.div>
                   <div className="flex gap-1 flex-shrink-0">
                     {hasActionAccess(ticket) && (
