@@ -34,7 +34,7 @@ const FeedbackForm = ({
   isViewMode,
   preselectedQuestionsResponses = []
 }) => {
-
+//console.log("interviewerSectionData",interviewerSectionData)
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
   const feedbackId = feedbackData._id || null;
@@ -73,6 +73,7 @@ const FeedbackForm = ({
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
+      if (typeof setInterviewerSectionData === 'function') {
         setInterviewerSectionData((prevList) => {
           if (prevList.some((q) => q.questionId === question.questionId)) {
             return prevList;
@@ -96,6 +97,9 @@ const FeedbackForm = ({
           
           return newList;
         });
+      } else {
+        console.warn('setInterviewerSectionData is not a function, cannot add question to round');
+      }
     }
   };
 

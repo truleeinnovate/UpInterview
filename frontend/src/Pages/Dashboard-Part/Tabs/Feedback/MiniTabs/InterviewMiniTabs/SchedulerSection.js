@@ -57,9 +57,9 @@ const SchedulerSectionComponent = ({
   const [schedulerQuestionsData, setSchedulerQuestionsData] = useState(() => {
     return schedulerQuestions.map((q) => {
       // Find feedback for this question
-      const feedback = questionsfeedback.find((f) => f.questionId === q.questionId);
+      const feedback = questionsfeedback?.find((f) => f.questionId === q.questionId);
       // Find preselected response for this question
-      const preselectedResponse = preselectedQuestionsResponses.find((r) => r.questionId === q.questionId);
+      const preselectedResponse = preselectedQuestionsResponses?.find((r) => r.questionId === q.questionId);
       
       if (feedback) {
         return {
@@ -158,7 +158,7 @@ const SchedulerSectionComponent = ({
     
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData.find(q => q._id === id);
+      const question = schedulerQuestionsData?.find(q => q?._id === id);
       const newIsLiked = question?.isLiked === "liked" ? "" : "liked";
       handlePreselectedQuestionResponse(id, { isLiked: newIsLiked });
     }
