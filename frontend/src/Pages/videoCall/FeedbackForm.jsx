@@ -923,8 +923,8 @@ const FeedbackForm = ({
             </>
           ) : (
             <div className="space-y-4">
-             {filteredInterviewerQuestions.length > 0 ? (
-               filteredInterviewerQuestions.map((question) => (
+             {(interviewerSectionData?.length > 0 || filteredInterviewerQuestions?.length > 0) ? (
+               [...interviewerSectionData, ...filteredInterviewerQuestions].map((question) => (
                  <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
                    <div className="flex items-start justify-between mb-3">
                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
@@ -1109,7 +1109,7 @@ const FeedbackForm = ({
             {/* QuestionBank Content */}
             <div className="flex-1 overflow-hidden">
               <QuestionBank
-                interviewQuestionsLists={filteredInterviewerQuestions}
+                interviewQuestionsLists={interviewerSectionData || []}
                 type="interviewerSection"
                 fromScheduleLater={true}
                 onAddQuestion={handleAddQuestionToRound}
