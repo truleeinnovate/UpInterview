@@ -46,9 +46,18 @@ const InterviewerSectionComponent = ({
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
 
+  // Get interviewer-added questions from the new API structure
+  const interviewerAddedQuestionsFromAPI = interviewData?.interviewQuestions?.interviewerAddedQuestions || [];
   const allQuestions = feedbackData.preSelectedQuestions ? feedbackData.preSelectedQuestions : interviewData?.interviewQuestions || [];
-  const filteredInterviewerQuestions = allQuestions.filter(question => question.addedBy === "interviewer");
+  
+  // Use interviewer-added questions from API if available, otherwise fallback to old logic
+  const filteredInterviewerQuestions = interviewerAddedQuestionsFromAPI.length > 0 
+    ? interviewerAddedQuestionsFromAPI 
+    : (Array.isArray(allQuestions) 
+        ? allQuestions.filter(question => question.addedBy === "interviewer")
+        : []);
 
+  console.log("InterviewerSection - interviewer added questions from API:", interviewerAddedQuestionsFromAPI.length);
   console.log("InterviewerSection - feedbackData:", filteredInterviewerQuestions);
   
   console.log("InterviewerSection - all questions:", allQuestions.length);

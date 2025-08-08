@@ -18,22 +18,36 @@ const dislikeOptions = [
   { value: "Too basic", label: "Too basic" },
 ];
 
-const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
+const SchedulerSectionComponent = ({ 
+  isEditMode,
+  isAddMode,
+  interviewdata,
+  isViewMode,
+  preselectedQuestionsResponses,
+  setPreselectedQuestionsResponses,
+  handlePreselectedQuestionResponse
+}) => {
 
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
+  
+  // Get preselected questions from the new API structure
+  const preselectedQuestionsFromAPI = interviewdata?.interviewQuestions?.preselectedQuestions || [];
   const allQuestions = interviewdata?.interviewQuestions ? interviewdata?.interviewQuestions : feedbackData.preSelectedQuestions || [];
   
-  // Filter questions: Show questions NOT added by interviewer (addedBy !== "interviewer")
-  // Also include questions that don't have addedBy field (fallback for older data)
-  const schedulerQuestions = allQuestions.filter(question => 
-    question.addedBy !== "interviewer" || !question.addedBy
-  );
+  // Use preselected questions from API if available, otherwise fallback to old logic
+  const schedulerQuestions = preselectedQuestionsFromAPI.length > 0 
+    ? preselectedQuestionsFromAPI 
+    : (Array.isArray(allQuestions) 
+        ? allQuestions.filter(question => question.addedBy !== "interviewer" || !question.addedBy)
+        : []);
   
   const questionsfeedback = feedbackData.questionFeedback || [];
   console.log("All questions:", allQuestions.length);
+  console.log("Preselected questions from API:", preselectedQuestionsFromAPI.length);
   console.log("Scheduler questions (not added by interviewer):", schedulerQuestions.length);
   console.log("Scheduler questions data:", schedulerQuestions);
+  console.log("Preselected questions responses:", preselectedQuestionsResponses);
   
 
 
@@ -44,6 +58,9 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
     return schedulerQuestions.map((q) => {
       // Find feedback for this question
       const feedback = questionsfeedback.find((f) => f.questionId === q.questionId);
+      // Find preselected response for this question
+      const preselectedResponse = preselectedQuestionsResponses.find((r) => r.questionId === q.questionId);
+      
       if (feedback) {
         return {
           ...q,
@@ -57,22 +74,22 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
                 : feedback.candidateAnswer.answerType === "incorrect"
                   ? "Not Answered"
                   : "Not Answered"
-            : "Not Answered",
-          isLiked: feedback.interviewerFeedback?.liked || "",
-          whyDislike: feedback.interviewerFeedback?.dislikeReason || "",
-          notesBool: !!feedback.interviewerFeedback?.note,
-          note: feedback.interviewerFeedback?.note || "",
+            : preselectedResponse?.isAnswered || "Not Answered",
+          isLiked: feedback.interviewerFeedback?.liked || preselectedResponse?.isLiked || "",
+          whyDislike: feedback.interviewerFeedback?.dislikeReason || preselectedResponse?.whyDislike || "",
+          notesBool: !!feedback.interviewerFeedback?.note || preselectedResponse?.notesBool || false,
+          note: feedback.interviewerFeedback?.note || preselectedResponse?.note || "",
         };
       } else {
         return {
           ...q,
           candidateAnswer: null,
           interviewerFeedback: null,
-          isAnswered: "Not Answered",
-          isLiked: "",
-          whyDislike: "",
-          notesBool: false,
-          note: "",
+          isAnswered: preselectedResponse?.isAnswered || "Not Answered",
+          isLiked: preselectedResponse?.isLiked || "",
+          whyDislike: preselectedResponse?.whyDislike || "",
+          notesBool: preselectedResponse?.notesBool || false,
+          note: preselectedResponse?.note || "",
         };
       }
     });
@@ -88,6 +105,11 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
         question._id === questionId ? { ...question, isAnswered: value } : question
       )
     );
+    
+    // Update preselected questions responses
+    if (handlePreselectedQuestionResponse) {
+      handlePreselectedQuestionResponse(questionId, { isAnswered: value });
+    }
   };
 
   // Function to handle dislike radio input changes
@@ -100,6 +122,11 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
         return question;
       })
     );
+    
+    // Update preselected questions responses
+    if (handlePreselectedQuestionResponse) {
+      handlePreselectedQuestionResponse(questionId, { whyDislike: value, isLiked: "disliked" });
+    }
   };
 
   // Function to handle dislike toggle
@@ -111,6 +138,13 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
         q._id === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
       )
     );
+    
+    // Update preselected questions responses
+    if (handlePreselectedQuestionResponse) {
+      const question = schedulerQuestionsData.find(q => q._id === id);
+      const newIsLiked = question?.isLiked === "disliked" ? "" : "disliked";
+      handlePreselectedQuestionResponse(id, { isLiked: newIsLiked });
+    }
   };
 
   // Function to handle like toggle
@@ -121,6 +155,13 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
       )
     );
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
+    
+    // Update preselected questions responses
+    if (handlePreselectedQuestionResponse) {
+      const question = schedulerQuestionsData.find(q => q._id === id);
+      const newIsLiked = question?.isLiked === "liked" ? "" : "liked";
+      handlePreselectedQuestionResponse(id, { isLiked: newIsLiked });
+    }
   };
 
   // Function to handle add note
@@ -128,6 +169,13 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((q) => (q._id === id ? { ...q, notesBool: !q.notesBool } : q))
     );
+    
+    // Update preselected questions responses
+    if (handlePreselectedQuestionResponse) {
+      const question = schedulerQuestionsData.find(q => q._id === id);
+      const newNotesBool = !question?.notesBool;
+      handlePreselectedQuestionResponse(id, { notesBool: newNotesBool });
+    }
   };
 
   // Function to handle delete note
@@ -135,6 +183,11 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
     );
+    
+    // Update preselected questions responses
+    if (handlePreselectedQuestionResponse) {
+      handlePreselectedQuestionResponse(id, { notesBool: false, note: "" });
+    }
   };
 
   // Function to handle interview question notes
@@ -144,13 +197,18 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
         question._id === questionId ? { ...question, note: notes } : question
       )
     );
+    
+    // Update preselected questions responses
+    if (handlePreselectedQuestionResponse) {
+      handlePreselectedQuestionResponse(questionId, { note: notes });
+    }
   };
 
   // Define DisLikeSection component
   const DisLikeSection = React.memo(({ each }) => {
     return (
     <>
-    {(isEditMode ) ? (
+    {(isEditMode  || isAddMode ) ? (
     <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
         <div className="flex justify-between items-center mb-2">
           <h1>Tell us more :</h1>
@@ -211,7 +269,7 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
         <p className="w-[200px] font-bold text-gray-700">
           Response Type {each.mandatory === "true" && <span className="text-[red]">*</span>}
         </p>
-        {(isEditMode ) ? (
+        {(isEditMode  || isAddMode ) ? (
         <div className={`w-full flex gap-x-8 gap-y-2 `}>
           {["Not Answered", "Partially Answered", "Fully Answered"].map((option) => (
             <span key={option} className="flex items-center gap-2">
@@ -258,14 +316,14 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
                 <p className="text-sm text-gray-700">{question.snapshot.correctAnswer}</p>
               </div>
             )}
-            {(isEditMode) && (
+            {(isEditMode  || isAddMode ) && (
               <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
                 <span>Mandatory: {question.mandatory === "true" ? "Yes" : "No"}</span>
               </div>
             )}
             <RadioGroupInput each={question} />
             <div className="flex items-center gap-4 mt-2">
-            {(isEditMode ) && (
+            {(isEditMode  || isAddMode ) && (
               <button
                 className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
                 onClick={() => onClickAddNote(question._id)}
@@ -274,7 +332,7 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
               </button>
             )}
               <SharePopupSection />
-              {(isEditMode ) && (
+              {(isEditMode  || isAddMode ) && (
                 <>
                   <span
                     className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
@@ -303,7 +361,7 @@ const SchedulerSectionComponent = ({ isEditMode,interviewdata,isViewMode }) => {
                   <label htmlFor={`note-input-${question._id}`} className="w-[200px]">
                     Note
                   </label>
-                {(isEditMode ) ? (
+                {(isEditMode || isAddMode ) ? (
                   <div className="flex items-start w-full">
                     <div className="w-full relative mr-5 rounded-md h-[80px]">
                       <input

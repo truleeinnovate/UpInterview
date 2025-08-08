@@ -43,11 +43,24 @@ const InterviewsMiniTabComponent = ({
   setIsQuestionBankOpen,
   handleAddQuestionToRound,
   handleRemoveQuestion,
-  handleToggleMandatory
+  handleToggleMandatory,
+  // Preselected Questions Responses Props
+  preselectedQuestionsResponses,
+  setPreselectedQuestionsResponses,
+  handlePreselectedQuestionResponse
 }) => {
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
   const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext()
   console.log("interviewData",interviewData);
+  console.log("📊 InterviewData structure:", {
+    hasInterviewQuestions: !!interviewData?.interviewQuestions,
+    interviewQuestionsType: typeof interviewData?.interviewQuestions,
+    isObject: interviewData?.interviewQuestions && typeof interviewData?.interviewQuestions === 'object',
+    hasPreselectedQuestions: !!interviewData?.interviewQuestions?.preselectedQuestions,
+    hasInterviewerAddedQuestions: !!interviewData?.interviewQuestions?.interviewerAddedQuestions,
+    preselectedCount: interviewData?.interviewQuestions?.preselectedQuestions?.length || 0,
+    interviewerAddedCount: interviewData?.interviewQuestions?.interviewerAddedQuestions?.length || 0
+  });
   
 
 
@@ -59,7 +72,15 @@ const InterviewsMiniTabComponent = ({
   const InterviewDisplayData = () => {
     switch (interviewMiniTab) {
       case 1:
-        return <SchedulerSectionComponent isEditMode={isEditMode} interviewdata ={interviewData} isViewMode={isViewMode} />;//<----v1.0.0---
+        return <SchedulerSectionComponent 
+          isEditMode={isEditMode} 
+          isAddMode={isAddMode} 
+          interviewdata={interviewData} 
+          isViewMode={isViewMode}
+          preselectedQuestionsResponses={preselectedQuestionsResponses}
+          setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
+          handlePreselectedQuestionResponse={handlePreselectedQuestionResponse}
+        />;//<----v1.0.0---
       case 2:
         return (
           <InterviewerSectionComponent 

@@ -19,6 +19,9 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
 
+  // Preselected Questions Responses State Management
+  const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] = useState([]);
+
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -75,6 +78,22 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
       });
       console.log("Updated state:", updated);
       return updated;
+    });
+  };
+
+  // Preselected Questions Responses Handler Functions
+  const handlePreselectedQuestionResponse = (questionId, responseData) => {
+    setPreselectedQuestionsResponses(prev => {
+      const existingIndex = prev.findIndex(q => q.questionId === questionId);
+      if (existingIndex !== -1) {
+        // Update existing response
+        const updated = [...prev];
+        updated[existingIndex] = { ...updated[existingIndex], ...responseData };
+        return updated;
+      } else {
+        // Add new response
+        return [...prev, { questionId, ...responseData }];
+      }
     });
   };
 
@@ -149,6 +168,9 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
                 handleAddQuestionToRound={handleAddQuestionToRound}
                 handleRemoveQuestion={handleRemoveQuestion}
                 handleToggleMandatory={handleToggleMandatory}
+                preselectedQuestionsResponses={preselectedQuestionsResponses}
+                setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
+                handlePreselectedQuestionResponse={handlePreselectedQuestionResponse}
               />
             )}
             {activeTab === 'feedback' && (
@@ -158,10 +180,11 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
                 interviewRoundId={decodedData?.interviewRoundId}
                 candidateId={selectedCandidate?.candidate?._id}
                 positionId={selectedCandidate?.position?._id}
-                interviewerId={selectedCandidate?.interviewers?._id}
+                interviewerId={decodedData?.interviewerId}
                 // tenantId={decodedData?.tenantId}
                 isEditMode={false}
                 feedbackId={null}
+                preselectedQuestionsResponses={preselectedQuestionsResponses}
               />
             )}
             {/* {activeTab === 'management' && <FeedbackManagement />} */}
