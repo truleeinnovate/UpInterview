@@ -19,7 +19,7 @@ import { setAuthCookies, clearAllAuth } from '../../utils/AuthCookieManager/Auth
 import { validateWorkEmail, checkEmailExists } from '../../utils/workEmailValidation.js';
 
 import { Link } from 'react-router-dom';
-import Layout from './Layout.jsx';
+// import Layout from './Layout.jsx';
 
 export const Organization = () => {
   console.log('org signup')
@@ -849,7 +849,7 @@ export const Organization = () => {
         {/* <Layout showBackButton={true} backPath="/organization"> */}
           <div className="min-h-screen flex">
             {/* Left side - Hero Image and Content */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-500 to-primary-600 relative overflow-hidden rounded-r-3xl">
+            <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 to-primary-600 relative overflow-hidden rounded-r-3xl">
               <div className="absolute inset-0">
                 <img
                   src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1200"
@@ -1035,7 +1035,7 @@ export const Organization = () => {
             </div>
 
             {/* Right side - Signup Form */}
-            <div className="w-full lg:w-1/2 flex items-start justify-center p-4 lg:p-8 bg-gray-50 overflow-y-auto">
+            <div className="w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-start justify-center p-4 lg:p-8 bg-gray-50 overflow-y-auto">
               <div className="max-w-lg w-full py-4">
                 <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
                   <div className="text-center mb-8">
