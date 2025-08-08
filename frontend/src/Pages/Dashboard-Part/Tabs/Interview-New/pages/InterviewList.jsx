@@ -1,3 +1,5 @@
+//<---------v1.0.0---------Venkatesh-----add current round column
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronUp, ChevronDown, Calendar, ExternalLink, Eye, Pencil, ArrowRight } from 'lucide-react';
@@ -343,6 +345,43 @@ function InterviewList() {
         );
       },
     },
+    //<-------v1.0.1---------
+    {
+      key: 'currentRound',
+      header: 'Current Round',
+      render: (value, row) => {
+        const rounds = row.rounds || [];
+        const currentRound = rounds
+          .filter((round) => ['Pending', 'Scheduled', 'Request Sent'].includes(round.status))
+          .sort((a, b) => a.sequence - b.sequence)[0] || null;
+        return (
+          <div className="min-w-[200px] max-w-[250px]">
+            {currentRound ? (
+              <div>
+                <div className="text-sm font-medium text-gray-700">
+                  {currentRound.roundTitle} • {currentRound.interviewType}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <StatusBadge status={currentRound.status} size="sm" />
+                  <div className="text-xs text-gray-500">
+                    {currentRound.dateTime ? (
+                      <span>{currentRound.dateTime}</span>
+                    ) : (
+                      <span>Not scheduled</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <span className="text-sm text-gray-500">
+                No current round
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    //-------v1.0.1--------->
     {
       key: 'nextRound',
       header: 'Next Round',
@@ -350,7 +389,7 @@ function InterviewList() {
         const rounds = row.rounds || [];
         const nextRound = rounds
           .filter((round) => ['Pending', 'Scheduled', 'Request Sent'].includes(round.status))
-          .sort((a, b) => a.sequence - b.sequence)[0] || null;
+          .sort((a, b) => a.sequence - b.sequence)[1] || null;
         return (
           <Tooltip label={nextRound ? `${nextRound.roundTitle} (${nextRound.interviewType})` : 'No upcoming rounds'}>
             <div className="truncate max-w-[120px]">

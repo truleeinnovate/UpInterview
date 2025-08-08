@@ -800,7 +800,7 @@ const FeedbackForm = ({
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-4">
             <label className="block text-sm font-medium text-gray-700">
-              Questions Asked {!isViewMode && <span className="text-red-500">*</span>}
+              Questions Asked
             </label>
               <span className="text-sm text-gray-500">
                 {filteredInterviewerQuestions.length} question(s) from question bank

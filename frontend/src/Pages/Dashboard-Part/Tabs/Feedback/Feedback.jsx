@@ -376,7 +376,6 @@ const Feedback = () => {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
 
-
   return (
     <>
     <div className="bg-background min-h-screen">
