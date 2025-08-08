@@ -183,7 +183,7 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
                 interviewerId={decodedData?.interviewerId}
                 // tenantId={decodedData?.tenantId}
                 isEditMode={false}
-                feedbackId={null}
+                // feedbackId={null}
                 preselectedQuestionsResponses={preselectedQuestionsResponses}
               />
             )}
