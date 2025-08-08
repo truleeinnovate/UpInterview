@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import Slideshow from './Slideshow'
 import { config } from '../../config';
 import { Link } from 'react-router-dom';
-import Layout from './Layout';
+// import Layout from './Layout';
 
 const WelcomePageUpinterviewIndividual = () => {
   const [selectedOption, setSelectedOption] = useState(null);
@@ -69,7 +69,7 @@ const WelcomePageUpinterviewIndividual = () => {
       {/* <Layout showBackButton={true} backPath="/"> */}
         <div className="min-h-screen flex">
           {/* Left side - Hero Image and Content */}
-          <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden rounded-r-3xl">
+          <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden rounded-r-3xl">
             <div className="absolute inset-0">
               <img
                 src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1200"
@@ -184,7 +184,7 @@ const WelcomePageUpinterviewIndividual = () => {
           </div>
 
           {/* Right side - Login Form */}
-          <div className="w-full lg:w-1/2 flex items-start justify-center p-6 lg:p-12 bg-gradient-to-br from-gray-50 to-white pt-8">
+          <div className="w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-start justify-center p-6 lg:p-12 bg-gradient-to-br from-gray-50 to-white pt-8">
             <div className="max-w-lg w-full">
               <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 hover:shadow-3xl transition-all duration-300">
                 <div className="text-center mb-8">

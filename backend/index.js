@@ -5,16 +5,6 @@
 // v1.0.3  -  Ashraf  -  added health check endpoints for monitoring
 require('dotenv').config();
 
-// Debug environment variables
-console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('COOKIE_DOMAIN:', process.env.COOKIE_DOMAIN);
-console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
-console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
-console.log('GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI || 'NOT SET');
-console.log('=== END ENVIRONMENT VARIABLES DEBUG ===');
-
 const cors = require('cors');
 const express = require('express');
 const cookieParser = require('cookie-parser');
@@ -28,7 +18,10 @@ app.set('trust proxy', 1);
 // ✅ Parse cookies
 app.use(cookieParser());
 
-
+// console.log('config.REACT_APP_CLIENT_ID', config.REACT_APP_CLIENT_ID);
+// console.log('config.REACT_APP_CLIENT_SECRET', config.REACT_APP_CLIENT_SECRET);
+// console.log('config.REACT_APP_REDIRECT_URI', config.REACT_APP_REDIRECT_URI);
+// console.log('config.REACT_APP_API_URL_FRONTEND', config.REACT_APP_API_URL_FRONTEND);
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -117,10 +110,10 @@ const mongooseOptions = {
 const connectWithRetry = async (retries = 5, delay = 5000) => {
   for (let i = 0; i < retries; i++) {
     try {
-      console.log(`🔄 Attempting MongoDB connection (attempt ${i + 1}/${retries})...`);
+      // console.log(`🔄 Attempting MongoDB connection (attempt ${i + 1}/${retries})...`);
       await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
       console.log('✅ MongoDB connected successfully');
-      console.log('MongoDB URI:', process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED');
+      // console.log('MongoDB URI:', process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED');
       return;
     } catch (err) {
       console.error(`❌ MongoDB connection attempt ${i + 1} failed:`, err.message);
@@ -157,10 +150,10 @@ mongoose.connection.on('reconnected', () => {
   console.log('✅ MongoDB reconnected successfully');
 });
 
-mongoose.connection.on('connected', () => {
-  console.log('✅ MongoDB connected successfully');
-  console.log('Connection state:', mongoose.connection.readyState);
-});
+// mongoose.connection.on('connected', () => {
+//   console.log('✅ MongoDB connected successfully');
+//   // console.log('Connection state:', mongoose.connection.readyState);
+// });
 
 mongoose.connection.on('connecting', () => {
   console.log('🔄 MongoDB connecting...');
@@ -175,7 +168,7 @@ setInterval(() => {
     2: 'connecting',
     3: 'disconnecting'
   };
-  console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
+  // console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
 }, 30000); // Log every 30 seconds
 
 // Middleware to capture raw body for webhook endpoints

@@ -15,7 +15,7 @@ import { usePermissions } from '../../Context/PermissionsContext';
 
 
 import { Link } from 'react-router-dom';
-import Layout from './Layout.jsx';
+// import Layout from './Layout.jsx';
 
 const OrganizationLogin = () => {
   const { refreshPermissions } = usePermissions();
@@ -490,7 +490,7 @@ const OrganizationLogin = () => {
       {/* <div showBackButton={true} backPath="/"> */}
       <div className="min-h-screen flex">
         {/* Left side - Hero Image and Content */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden rounded-r-3xl">
+        <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden rounded-r-3xl">
           <div className="absolute inset-0">
             <img
               src="https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=1200"
@@ -669,7 +669,7 @@ const OrganizationLogin = () => {
         </div>
 
         {/* Right side - Login Form */}
-        <div className="w-full lg:w-1/2 flex items-start justify-center p-6 lg:p-12 bg-gradient-to-br from-gray-50 to-white">
+        <div className="w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-start justify-center p-6 lg:p-12 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-lg w-full py-4">
             <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 hover:shadow-3xl transition-all duration-300">
               <div className="text-center mb-8">
