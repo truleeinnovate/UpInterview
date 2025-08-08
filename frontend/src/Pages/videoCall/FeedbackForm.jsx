@@ -32,7 +32,8 @@ const FeedbackForm = ({
   // tenantId,
   isEditMode,
   isViewMode,
-  
+  feedbackId = null,
+  preselectedQuestionsResponses = []
 }) => {
 
   const location = useLocation();
@@ -422,6 +423,7 @@ const FeedbackForm = ({
   const submitFeedback = async () => {
     try {
       console.log('🚀 Starting feedback submission...');
+      console.log('📋 Preselected questions responses:', preselectedQuestionsResponses);
       
       // Validate form
       if (!validateForm()) {
@@ -442,18 +444,48 @@ const FeedbackForm = ({
           rating: skill.rating,
           note: skill.comments || ""
         })),
-        questionFeedback: filteredInterviewerQuestions.map(question => ({
-          questionId: question, // Send the full question object
-          candidateAnswer: {
-            answerType: question.isAnswered || "not answered",
-            submittedAnswer: ""
-          },
-          interviewerFeedback: {
-            liked: question.isLiked || "none",
-            note: question.note || "",
-            dislikeReason: question.whyDislike || ""
-          }
-        })),
+        questionFeedback: [
+          // Interviewer section questions
+          ...interviewerSectionData.map(question => ({
+            questionId: question, // Send the full question object
+            candidateAnswer: {
+              answerType: question.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: question.isLiked || "none",
+              note: question.note || "",
+              dislikeReason: question.whyDislike || ""
+            }
+          })),
+          // Preselected questions responses
+          ...preselectedQuestionsResponses.map(response => ({
+            questionId: response,
+            candidateAnswer: {
+              answerType: response.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: response.isLiked || "none",
+              note: response.note || "",
+              dislikeReason: response.whyDislike || ""
+            }
+          }))
+        ],
+
+//         questionFeedback: filteredInterviewerQuestions.map(question => ({
+//           questionId: question, // Send the full question object
+//           candidateAnswer: {
+//             answerType: question.isAnswered || "not answered",
+//             submittedAnswer: ""
+//           },
+//           interviewerFeedback: {
+//             liked: question.isLiked || "none",
+//             note: question.note || "",
+//             dislikeReason: question.whyDislike || ""
+//           }
+//         })),
+
         generalComments: comments,
         overallImpression: {
           overallRating: overallRating,
@@ -561,18 +593,49 @@ const FeedbackForm = ({
           rating: skill.rating,
           note: skill.comments || ""
         })),
-        questionFeedback: filteredInterviewerQuestions.map(question => ({
-          questionId: question, // Send the full question object
-          candidateAnswer: {
-            answerType: question.isAnswered || "not answered",
-            submittedAnswer: ""
-          },
-          interviewerFeedback: {
-            liked: question.isLiked || "none",
-            note: question.note || "",
-            dislikeReason: question.whyDislike || ""
-          }
-        })),
+
+        questionFeedback: [
+          // Interviewer section questions
+          ...interviewerSectionData.map(question => ({
+            questionId: question, // Send the full question object
+            candidateAnswer: {
+              answerType: question.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: question.isLiked || "none",
+              note: question.note || "",
+              dislikeReason: question.whyDislike || ""
+            }
+          })),
+          // Preselected questions responses
+          ...preselectedQuestionsResponses.map(response => ({
+            questionId: response.questionId,
+            candidateAnswer: {
+              answerType: response.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: response.isLiked || "none",
+              note: response.note || "",
+              dislikeReason: response.whyDislike || ""
+            }
+          }))
+        ],
+
+//         questionFeedback: filteredInterviewerQuestions.map(question => ({
+//           questionId: question, // Send the full question object
+//           candidateAnswer: {
+//             answerType: question.isAnswered || "not answered",
+//             submittedAnswer: ""
+//           },
+//           interviewerFeedback: {
+//             liked: question.isLiked || "none",
+//             note: question.note || "",
+//             dislikeReason: question.whyDislike || ""
+//           }
+//         })),
+
         generalComments: comments,
         overallImpression: {
           overallRating: overallRating,
@@ -954,10 +1017,9 @@ const FeedbackForm = ({
               </div>
             )}
           </div>
-          )}
-          {errors.questions && (
+          {/* {errors.questions && (
             <p className="mt-1 text-sm text-red-600">{errors.questions}</p>
-          )}
+          )} */}
         </div>
         
         <div>
