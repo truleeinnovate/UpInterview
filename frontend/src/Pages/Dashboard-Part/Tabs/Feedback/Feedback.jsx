@@ -391,7 +391,6 @@ const Feedback = () => {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
 
-  if (loading) return <div className="text-center p-6">Loading...</div>;
   //if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
 
   return (
