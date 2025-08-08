@@ -14,7 +14,7 @@ const UserDataLoader = ({ children }) => {
     '/',
     '/select-user-type',
     '/select-profession',
-    '/complete-profile',
+    '/create-profile',
     '/subscription-plans',
     '/organization-signup',
     '/organization-login',

@@ -148,7 +148,7 @@ const OrganizationLogin = () => {
   //         break;
   //       case 'active':
   //         if (isProfileCompleted === false && roleName) {
-  //           navigate('/complete-profile', {
+  //           navigate('/create-profile', {
   //             state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg }
   //           });
   //         } else {
@@ -281,7 +281,7 @@ const OrganizationLogin = () => {
           } else if (status === 'submitted' || status === 'payment_pending') {
             targetPath = '/subscription-plans';
           } else if (isProfileCompleted === false && roleName) {
-            targetPath = '/complete-profile';
+            targetPath = '/create-profile';
           }
 
           const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
@@ -305,7 +305,7 @@ const OrganizationLogin = () => {
 
         case 'active':
           if (isProfileCompleted === false && roleName) {
-            navigate('/complete-profile', {
+            navigate('/create-profile', {
               state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
             });
           } else {
