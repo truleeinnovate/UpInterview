@@ -500,24 +500,39 @@ const FeedbackForm = ({
 
       const updatedFeedbackData = {
         overallRating,
-        communicationRating,
         skills: skillRatings.map(skill => ({
           skillName: skill.skill,
           rating: skill.rating,
           note: skill.comments
         })),
-        questionFeedback: filteredInterviewerQuestions.map(question => ({
-          questionId: question, // Send the full question object
-          candidateAnswer: {
-            answerType: question.isAnswered || "not answered",
-            submittedAnswer: ""
-          },
-          interviewerFeedback: {
-            liked: question.isLiked || "none",
-            note: question.note || "",
-            dislikeReason: question.whyDislike || ""
-          }
-        })),
+        questionFeedback: [
+          // Interviewer section questions
+          ...interviewerSectionData.map(question => ({
+            questionId: question, // Send the full question object
+            candidateAnswer: {
+              answerType: question.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: question.isLiked || "none",
+              note: question.note || "",
+              dislikeReason: question.whyDislike || ""
+            }
+          })),
+          // Preselected questions responses
+          ...preselectedQuestionsResponses.map(response => ({
+            questionId: response,
+            candidateAnswer: {
+              answerType: response.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: response.isLiked || "none",
+              note: response.note || "",
+              dislikeReason: response.whyDislike || ""
+            }
+          }))
+        ],
         generalComments: comments,
         overallImpression: {
           overallRating,
@@ -656,18 +671,34 @@ const FeedbackForm = ({
             rating: skill.rating,
             note: skill.comments
           })),
-          questionFeedback: filteredInterviewerQuestions.map(question => ({
-            questionId: question, // Send the full question object
-            candidateAnswer: {
-              answerType: question.isAnswered || "not answered",
-              submittedAnswer: ""
-            },
-            interviewerFeedback: {
-              liked: question.isLiked || "none",
-              note: question.note || "",
-              dislikeReason: question.whyDislike || ""
-            }
-          })),
+          questionFeedback: [
+            // Interviewer section questions
+            ...interviewerSectionData.map(question => ({
+              questionId: question, // Send the full question object
+              candidateAnswer: {
+                answerType: question.isAnswered || "not answered",
+                submittedAnswer: ""
+              },
+              interviewerFeedback: {
+                liked: question.isLiked || "none",
+                note: question.note || "",
+                dislikeReason: question.whyDislike || ""
+              }
+            })),
+            // Preselected questions responses
+            ...preselectedQuestionsResponses.map(response => ({
+              questionId: response,
+              candidateAnswer: {
+                answerType: response.isAnswered || "not answered",
+                submittedAnswer: ""
+              },
+              interviewerFeedback: {
+                liked: response.isLiked || "none",
+                note: response.note || "",
+                dislikeReason: response.whyDislike || ""
+              }
+            }))
+          ],
           generalComments: comments,
           overallImpression: {
             overallRating,
@@ -886,8 +917,8 @@ const FeedbackForm = ({
           
           {isViewMode ? (
             <>
-                {filteredInterviewerQuestions.length > 0 ? (
-                  filteredInterviewerQuestions.map((question) => (
+                {(interviewerSectionData?.length > 0 || filteredInterviewerQuestions?.length > 0) ? (
+                  [...interviewerSectionData, ...filteredInterviewerQuestions].map((question) => (
                     <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2">
                       <div className="flex items-start justify-between mb-3">
                         <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
@@ -927,8 +958,8 @@ const FeedbackForm = ({
             </>
           ) : (
             <div className="space-y-4">
-             {filteredInterviewerQuestions.length > 0 ? (
-               filteredInterviewerQuestions.map((question) => (
+             {(interviewerSectionData?.length > 0 || filteredInterviewerQuestions?.length > 0) ? (
+                  [...interviewerSectionData, ...filteredInterviewerQuestions].map((question) => (
                  <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
                    <div className="flex items-start justify-between mb-3">
                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">

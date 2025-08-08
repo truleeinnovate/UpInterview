@@ -715,6 +715,20 @@ const updateFeedback = async (req, res) => {
       });
     }
 
+    console.log('📥 Received update feedback data:', updateData);
+
+    // // Preprocess questionFeedback to extract only the necessary fields if needed
+    // if (updateData.questionFeedback && Array.isArray(updateData.questionFeedback)) {
+    //   updateData.questionFeedback = updateData.questionFeedback.map(feedback => {
+    //     // Ensure questionId is a string, not an object
+    //     if (typeof feedback.questionId === 'object' && feedback.questionId !== null) {
+    //       feedback.questionId = feedback.questionId.questionId || feedback.questionId._id || feedback.questionId.id || feedback.questionId.toString();
+    //     }
+    //     return feedback;
+    //   });
+    //   console.log('🛠️ Processed questionFeedback:', updateData.questionFeedback);
+    // }
+
     // Find and update the feedback
     const updatedFeedback = await FeedbackModel.findByIdAndUpdate(
       id,
