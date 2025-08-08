@@ -1111,33 +1111,35 @@ const RoundFormInterviews = () => {
           try {
             console.log("=== Starting meeting URL processing ===");
             
-            // Dynamic import to avoid import issues
-            const { processMeetingUrls } = await import("../../../../../utils/meetingUrlGenerator.js");
-            console.log("Dynamic import successful, processMeetingUrls type:", typeof processMeetingUrls);
+            // // Dynamic import to avoid import issues
+            // const { processMeetingUrls } = await import("../../../../../utils/meetingUrlGenerator.js");
+            // console.log("Dynamic import successful, processMeetingUrls type:", typeof processMeetingUrls);
             
-            console.log("Calling processMeetingUrls with:", {
-              meetingLink,
-              roundId: response.savedRound._id,
-              interviewId,
-              roundData,
-              updateRoundWithMeetingLinks: typeof updateRoundWithMeetingLinks
-            });
-            console.log("updateRoundWithMeetingLinks function:", updateRoundWithMeetingLinks);
-            console.log("roundData details:", roundData);
+            // console.log("Calling processMeetingUrls with:", {
+            //   meetingLink,
+            //   roundId: response.savedRound._id,
+            //   interviewId,
+            //   roundData,
+            //   updateRoundWithMeetingLinks: typeof updateRoundWithMeetingLinks
+            // });
+            // console.log("updateRoundWithMeetingLinks function:", updateRoundWithMeetingLinks);
+            // console.log("roundData details:", roundData);
             
-            const result = await processMeetingUrls(
-              meetingLink, // meetingLink
-              response.savedRound._id, // roundId
-              interviewId, // interviewId
-              roundData, // roundData
-              updateRoundWithMeetingLinks // Function from useInterviews hook
-            );
+            // const result = await processMeetingUrls(
+            //   meetingLink, // meetingLink
+            //   response.savedRound._id, // roundId
+            //   interviewId, // interviewId
+            //   roundData, // roundData
+            //   updateRoundWithMeetingLinks // Function from useInterviews hook
+            // );
             
-            console.log("Meeting URL processing completed successfully:", result);
-            
+            // console.log("Meeting URL processing completed successfully:", result);
+            const isInternal = selectedInterviewType === "Internal";
             // Send emails after meeting links are generated
             try {
               console.log("=== Sending interview round emails ===");
+             
+              if (isInternal){
               const emailResponse = await axios.post(
                 `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
                 {
@@ -1164,6 +1166,10 @@ const RoundFormInterviews = () => {
               } else {
                 toast.error('Round created but email sending failed');
               }
+
+            }
+            
+            
             } catch (emailError) {
               console.error("Error sending emails:", emailError);
               toast.error('Round created but email sending failed');
