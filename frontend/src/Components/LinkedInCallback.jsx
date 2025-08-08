@@ -74,7 +74,7 @@ const LinkedInCallback = () => {
 
     if (basicDetails && !additionalDetails) {
       // Only basic details completed - go to complete-profile step 1
-      return navigate('/complete-profile', {
+      return navigate('/create-profile', {
         state: {
           token,
           linkedIn_email: email,
@@ -87,7 +87,7 @@ const LinkedInCallback = () => {
 
     if (basicDetails && additionalDetails && !interviewDetails) {
       // Basic and additional completed - go to complete-profile step 2
-      return navigate('/complete-profile', {
+      return navigate('/create-profile', {
         state: {
           token,
           linkedIn_email: email,
@@ -100,7 +100,7 @@ const LinkedInCallback = () => {
 
     if (basicDetails && additionalDetails && interviewDetails && !availabilityDetails) {
       // Basic, additional, interview completed - go to complete-profile step 3
-      return navigate('/complete-profile', {
+      return navigate('/create-profile', {
         state: {
           token,
           linkedIn_email: email,
