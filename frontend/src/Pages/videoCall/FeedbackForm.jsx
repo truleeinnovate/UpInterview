@@ -32,7 +32,6 @@ const FeedbackForm = ({
   // tenantId,
   isEditMode,
   isViewMode,
-  feedbackId = null,
   preselectedQuestionsResponses = []
 }) => {
 
@@ -923,7 +922,7 @@ const FeedbackForm = ({
                 ) : null}
             </>
           ) : (
-                     <div className="space-y-4">
+            <div className="space-y-4">
              {filteredInterviewerQuestions.length > 0 ? (
                filteredInterviewerQuestions.map((question) => (
                  <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
@@ -1017,10 +1016,8 @@ const FeedbackForm = ({
               </div>
             )}
           </div>
-          {/* {errors.questions && (
-            <p className="mt-1 text-sm text-red-600">{errors.questions}</p>
-          )} */}
-        </div>
+          )}
+          
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1125,6 +1122,7 @@ const FeedbackForm = ({
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };
