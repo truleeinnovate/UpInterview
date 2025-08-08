@@ -1,6 +1,7 @@
-// Added by Ashok 
+// Added by Ashok
+// v1.0.0 - Ashok - Improved the scroll to top at global
 /**
- * ScrollToTop Component
+ * ScrollRestoration Component
  *
  * Purpose:
  * This component automatically scrolls the window to the top of the page
@@ -18,18 +19,19 @@
  * Usage:
  * Place this component just inside <BrowserRouter> and outside <Routes> in App.jsx
  */
-
-import { useEffect } from "react";
+// v1.0.0 <------------------------------------------
+import { useLayoutEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-const ScrollToTop = () => {
+const ScrollRestoration = () => {
   const { pathname } = useLocation();
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
   }, [pathname]);
 
   return null;
 };
 
-export default ScrollToTop;
+export default ScrollRestoration;
+// v1.0.0 ------------------------------------------>
