@@ -3,6 +3,7 @@ const { CandidateAssessment } = require("../models/candidateAssessment");
 const { generateOTP } = require('../utils/generateOtp')
 const Otp = require("../models/Otp");
 const mongoose = require('mongoose');
+const cron = require('node-cron');
 // <-------------------------------v1.0.0
 const ScheduleAssessment = require("../models/assessmentsSchema"); 
 // ------------------------------v1.0.0 >
@@ -590,45 +591,7 @@ exports.updateScheduleStatus = async (req, res) => {
   }
 };
 
-// API endpoint to update all schedule assessment statuses
-exports.updateAllScheduleStatuses = async (req, res) => {
-  try {
-    const scheduleAssessments = await ScheduleAssessment.find({});
-    const results = [];
-    const errors = [];
 
-    for (const schedule of scheduleAssessments) {
-      try {
-        const updatedSchedule = await exports.updateScheduleAssessmentStatus(schedule._id);
-        if (updatedSchedule && updatedSchedule.status !== schedule.status) {
-          results.push({
-            scheduleAssessmentId: schedule._id,
-            oldStatus: schedule.status,
-            newStatus: updatedSchedule.status
-          });
-        }
-      } catch (error) {
-        errors.push({
-          scheduleAssessmentId: schedule._id,
-          error: error.message
-        });
-      }
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: `Successfully updated ${results.length} schedule assessment(s)`,
-      data: { updated: results, errors }
-    });
-  } catch (error) {
-    console.error("Error updating all schedule assessment statuses:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update schedule assessment statuses",
-      error: error.message,
-    });
-  }
-};
 
 // Function to automatically check and update expired candidate assessments
 exports.checkAndUpdateExpiredAssessments = async (req, res) => {
@@ -725,4 +688,105 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
     });
   }
 };
+
+//corn runScheduleAssessmentStatusUpdateJob and updateAllScheduleStatuse both is same code(ashraf)
+// API endpoint to update all schedule assessment statuses
+exports.updateAllScheduleStatuses = async (req, res) => {
+  try {
+    const scheduleAssessments = await ScheduleAssessment.find({});
+    const results = [];
+    const errors = [];
+
+    for (const schedule of scheduleAssessments) {
+      try {
+        const updatedSchedule = await exports.updateScheduleAssessmentStatus(schedule._id);
+        if (updatedSchedule && updatedSchedule.status !== schedule.status) {
+          results.push({
+            scheduleAssessmentId: schedule._id,
+            oldStatus: schedule.status,
+            newStatus: updatedSchedule.status
+          });
+        }
+      } catch (error) {
+        errors.push({
+          scheduleAssessmentId: schedule._id,
+          error: error.message
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Successfully updated ${results.length} schedule assessment(s)`,
+      data: { updated: results, errors }
+    });
+  } catch (error) {
+    console.error("Error updating all schedule assessment statuses:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update schedule assessment statuses",
+      error: error.message,
+    });
+  }
+};
+
+
+
+// Function to run the schedule assessment status update job
+const runScheduleAssessmentStatusUpdateJob = async () => {
+  try {
+    console.log('Starting automated schedule assessment status update job...');
+    
+    const scheduleAssessments = await ScheduleAssessment.find({});
+    const results = [];
+    const errors = [];
+
+    for (const schedule of scheduleAssessments) {
+      try {
+        const updatedSchedule = await exports.updateScheduleAssessmentStatus(schedule._id);
+        if (updatedSchedule && updatedSchedule.status !== schedule.status) {
+          results.push({
+            scheduleAssessmentId: schedule._id,
+            oldStatus: schedule.status,
+            newStatus: updatedSchedule.status
+          });
+        }
+      } catch (error) {
+        errors.push({
+          scheduleAssessmentId: schedule._id,
+          error: error.message
+        });
+      }
+    }
+
+    console.log(`Automated schedule assessment status update completed. Updated: ${results.length}, Errors: ${errors.length}`);
+    
+    if (results.length > 0) {
+      console.log('Updated schedule assessments:', results);
+    }
+    
+    if (errors.length > 0) {
+      console.error('Errors during update:', errors);
+    }
+
+  } catch (error) {
+    console.error('Error in automated schedule assessment status update job:', error);
+  }
+};
+
+// Cron job to automatically update schedule assessment statuses every 5 minutes
+cron.schedule('*/5 * * * *', async () => {
+  runScheduleAssessmentStatusUpdateJob();
+});
+
+// */5 * * * * means: "Run every 5 minutes"
+// You can adjust this schedule as needed:
+// */1 * * * * = every minute (for testing)
+// 0 */1 * * * = every hour
+// 0 0 * * * = once daily at midnight
+
+// Run immediately on file load for initial check
+console.log('Running initial schedule assessment status update check at startup...');
+runScheduleAssessmentStatusUpdateJob();
+
 // ------------------------------v1.0.0 >
