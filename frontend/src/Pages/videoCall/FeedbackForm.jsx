@@ -890,7 +890,7 @@ const FeedbackForm = ({
                 {filteredInterviewerQuestions.length} question(s) from question bank
               </span>
             </div>
-          {(!isViewMode || !isEditMode) ? (
+          {(!isViewMode) ? (
             <div></div>
           ) : (
             <button
