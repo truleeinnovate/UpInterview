@@ -2,7 +2,7 @@
 
 const express = require('express')
 
-const { createFeedback, getFeedbackByTenantId, getFeedbackByRoundId,getAllFeedback, updateFeedback, getFeedbackByInterviewerId } = require('../controllers/feedbackController.js')
+const { createFeedback, getFeedbackByRoundId,getAllFeedback, updateFeedback } = require('../controllers/feedbackController.js')
 
 const router = express.Router()
 
@@ -17,8 +17,8 @@ router.get('/round/:roundId', getFeedbackByRoundId)
 router.put('/:id', updateFeedback);
 
 // Route to get feedback by tenant ID
-router.get('/:tenantId', getFeedbackByTenantId);//<----v1.0.0---
-router.get('/ownerId/:ownerId', getFeedbackByInterviewerId);//<----v1.0.0---
+// router.get('/:tenantId', getFeedbackByTenantId);//<----v1.0.0---
+// router.get('/ownerId/:ownerId', getFeedbackByInterviewerId);//<----v1.0.0---
 
 router.get('/', getAllFeedback);//<----v1.0.0---
 

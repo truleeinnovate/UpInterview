@@ -4,7 +4,7 @@
 const FeedbackModel = require('../models/feedback.js')
 const mongoose = require('mongoose'); // Import mongoose to use ObjectId
 
-const InterviewQuestions = require('../models/InterviewQuestions.js');
+const InterviewQuestions = require('../models/interviewQuestions.js');
 const { InterviewRounds } = require('../models/InterviewRounds.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
 const { Contacts } = require('../models/Contacts.js');
@@ -238,146 +238,146 @@ const createFeedback = async (req, res) => {
 
 //<----v1.0.0---
 // Get feedback by tenant ID
-const getFeedbackByTenantId = async (req, res) => {
-  try {
-    const { tenantId } = req.params;
+// const getFeedbackByTenantId = async (req, res) => {
+//   try {
+//     const { tenantId } = req.params;
  
-    if (!tenantId) {
-      return res.status(400).json({
-        success: false,
-        message: "Tenant ID is required"
-      });
-    }
+//     if (!tenantId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Tenant ID is required"
+//       });
+//     }
  
-    //console.log('Received tenantId:', tenantId);
+//     //console.log('Received tenantId:', tenantId);
  
-    let feedbackWithQuestions;
-    let feedback;
-    try {
-      // Convert tenantId string to ObjectId since database stores it as ObjectId
-      //const tenantObjectId = new mongoose.Types.ObjectId(tenantId);
-      feedback = await FeedbackModel.find({ tenantId })
-        .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
-        .populate('positionId', 'title companyname jobDescription Location')
-        .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
-        .populate('interviewerId','firstName lastName')
-        // .populate('ownerId', 'firstName lastName email');
+//     let feedbackWithQuestions;
+//     let feedback;
+//     try {
+//       // Convert tenantId string to ObjectId since database stores it as ObjectId
+//       //const tenantObjectId = new mongoose.Types.ObjectId(tenantId);
+//       feedback = await FeedbackModel.find({ tenantId })
+//         .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
+//         .populate('positionId', 'title companyname jobDescription Location')
+//         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
+//         .populate('interviewerId','firstName lastName')
+//         // .populate('ownerId', 'firstName lastName email');
  
 
-      // Fetch pre-selected questions for each feedback item
-      feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
-        const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
-        return {
-          ...item.toObject(),
-          preSelectedQuestions
-        };
-      }));
+//       // Fetch pre-selected questions for each feedback item
+//       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
+//         const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
+//         return {
+//           ...item.toObject(),
+//           preSelectedQuestions
+//         };
+//       }));
      
-      //console.log('Feedback found:', feedback.length, 'documents');
-    } catch (err) {
-      console.error('Invalid tenantId format:', err.message);
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Tenant ID format: " + err.message
-      });
-    }
+//       //console.log('Feedback found:', feedback.length, 'documents');
+//     } catch (err) {
+//       console.error('Invalid tenantId format:', err.message);
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid Tenant ID format: " + err.message
+//       });
+//     }
  
-    if (!feedback) {
-      return res.status(404).json({
-        success: false,
-        message: "Feedback not found for this tenant"
-      });
-    }
+//     if (!feedback) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Feedback not found for this tenant"
+//       });
+//     }
  
-    return res.status(200).json({
-      success: true,
-      message: "Feedback retrieved successfully",
-      data: feedbackWithQuestions
-    });
+//     return res.status(200).json({
+//       success: true,
+//       message: "Feedback retrieved successfully",
+//       data: feedbackWithQuestions
+//     });
  
-  } catch (error) {
-    //console.error("Error getting feedback by tenant ID:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error while getting feedback",
-      error: error.message
-    });
-  }
-};
+//   } catch (error) {
+//     //console.error("Error getting feedback by tenant ID:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error while getting feedback",
+//       error: error.message
+//     });
+//   }
+// };
 
 //<----v1.0.0---Venkatesh-----get feedback by interviewer ID
 
-const getFeedbackByInterviewerId = async (req, res) => {
-  try {
-    const { ownerId } = req.params;
-    console.log("ownerId",ownerId)
+// const getFeedbackByInterviewerId = async (req, res) => {
+//   try {
+//     const { ownerId } = req.params;
+//     console.log("ownerId",ownerId)
 
-    if (!ownerId) {
-      return res.status(400).json({
-        success: false,
-        message: "Owner ID is required"
-      });
-    }
+//     if (!ownerId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Owner ID is required"
+//       });
+//     }
 
 
-    //console.log('Received interviewerId:', interviewerId);
+//     //console.log('Received interviewerId:', interviewerId);
 
-    let feedbackWithQuestions;
-    let feedback;
-    let contactId;
-    try {
+//     let feedbackWithQuestions;
+//     let feedback;
+//     let contactId;
+//     try {
 
-      contactId = await Contacts.find({ ownerId })
-      const interviewerId = contactId._id;
-      console.log("contactId",contactId._id);
-      // Convert interviewerId string to ObjectId since database stores it as ObjectId
-      //const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
-      feedback = await FeedbackModel.find({  interviewerId })
-        .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
-        .populate('positionId', 'title companyname jobDescription Location')
-        .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
-        .populate('interviewerId','firstName lastName');
-      console.log("feedback",feedback)
-      // Fetch pre-selected questions for each feedback item
-      feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
-        const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
-        return {
-          ...item.toObject(),
-          preSelectedQuestions
-        };
-      }));
+//       contactId = await Contacts.find({ ownerId })
+//       const interviewerId = contactId._id;
+//       console.log("contactId",contactId._id);
+//       // Convert interviewerId string to ObjectId since database stores it as ObjectId
+//       //const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
+//       feedback = await FeedbackModel.find({  interviewerId })
+//         .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
+//         .populate('positionId', 'title companyname jobDescription Location')
+//         .populate('interviewRoundId', 'roundTitle interviewMode interviewType interviewerType duration instructions dateTime status')
+//         .populate('interviewerId','firstName lastName');
+//       console.log("feedback",feedback)
+//       // Fetch pre-selected questions for each feedback item
+//       feedbackWithQuestions = await Promise.all(feedback.map(async (item) => {
+//         const preSelectedQuestions = await InterviewQuestions.find({ roundId: item.interviewRoundId });
+//         return {
+//           ...item.toObject(),
+//           preSelectedQuestions
+//         };
+//       }));
       
-      //console.log('Feedback found:', feedback.length, 'documents');
-    } catch (err) {
-      console.error('Invalid ownerId format:', err.message);
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Owner ID format: " + err.message
-      });
-    }
+//       //console.log('Feedback found:', feedback.length, 'documents');
+//     } catch (err) {
+//       console.error('Invalid ownerId format:', err.message);
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid Owner ID format: " + err.message
+//       });
+//     }
 
-    if (!feedback || feedback.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Feedback not found for this interviewer"
-      });
-    }
+//     if (!feedback || feedback.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Feedback not found for this interviewer"
+//       });
+//     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Feedback retrieved successfully",
-      data: feedbackWithQuestions
-    });
+//     return res.status(200).json({
+//       success: true,
+//       message: "Feedback retrieved successfully",
+//       data: feedbackWithQuestions
+//     });
 
-  } catch (error) {
-    //console.error("Error getting feedback by interviewer ID:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error while getting feedback",
-      error: error.message
-    });
-  }
-};
+//   } catch (error) {
+//     //console.error("Error getting feedback by interviewer ID:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error while getting feedback",
+//       error: error.message
+//     });
+//   }
+// };
 
 const getfeedbackById =async(req,res)=>{
     try {
@@ -715,6 +715,20 @@ const updateFeedback = async (req, res) => {
       });
     }
 
+    console.log('📥 Received update feedback data:', updateData);
+
+    // // Preprocess questionFeedback to extract only the necessary fields if needed
+    // if (updateData.questionFeedback && Array.isArray(updateData.questionFeedback)) {
+    //   updateData.questionFeedback = updateData.questionFeedback.map(feedback => {
+    //     // Ensure questionId is a string, not an object
+    //     if (typeof feedback.questionId === 'object' && feedback.questionId !== null) {
+    //       feedback.questionId = feedback.questionId.questionId || feedback.questionId._id || feedback.questionId.id || feedback.questionId.toString();
+    //     }
+    //     return feedback;
+    //   });
+    //   console.log('🛠️ Processed questionFeedback:', updateData.questionFeedback);
+    // }
+
     // Find and update the feedback
     const updatedFeedback = await FeedbackModel.findByIdAndUpdate(
       id,
@@ -754,8 +768,8 @@ const updateFeedback = async (req, res) => {
 
 module.exports = {
   createFeedback,
-  getFeedbackByTenantId,
-  getFeedbackByInterviewerId,
+  // getFeedbackByTenantId,
+  // getFeedbackByInterviewerId,
   getfeedbackById,
   getFeedbackByRoundId,
   getAllFeedback,

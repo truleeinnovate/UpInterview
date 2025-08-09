@@ -197,7 +197,7 @@ const Feedback = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'submitted':
+      case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'draft':
         return <Clock className="w-4 h-4 text-yellow-500" />;
@@ -320,9 +320,9 @@ const Feedback = () => {
     // },
     {
       key: 'interviewRoundId.dateTime',
-      header: 'Date&Time',
+      header: 'Date',
       render: (value,row) => (
-        <div className="text-sm">{row.interviewRoundId?.dateTime || "Not Provided"}</div>
+        <div className="text-sm">{row.interviewRoundId?.dateTime?.split(' ')[0] || 'N/A'}</div>
       ),
     },
     {
@@ -337,8 +337,8 @@ const Feedback = () => {
       header: 'Status',
       render: (value,row) => (
         <div className="flex items-center">
-            {getStatusIcon(row.status)}
-          <span className="ml-2 text-sm capitalize">{row.status}</span>
+            {getStatusIcon(row.status === "submitted" ? "completed" : row.status)}
+          <span className="ml-2 text-sm capitalize">{row.status === "submitted" ? "completed" : row.status}</span>
         </div>
       ),
     },

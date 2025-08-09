@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import axios from 'axios';
 import { FaTrash, FaPlus } from 'react-icons/fa';
 import { FileText, Plus, Trash2, X } from 'lucide-react';
 import Popup from "reactjs-popup";
@@ -11,6 +10,8 @@ import QuestionBank from "../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.j
 import { config } from '../../config.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
+import { useCreateFeedback, useUpdateFeedback } from '../../apiHooks/useFeedbacks';
+import { useScrollLock } from '../../apiHooks/scrollHook/useScrollLock.js';
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -35,6 +36,7 @@ const FeedbackForm = ({
   preselectedQuestionsResponses = []
 }) => {
 //console.log("interviewerSectionData",interviewerSectionData)
+ useScrollLock(true);
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
   const feedbackId = feedbackData._id || null;
@@ -336,9 +338,8 @@ const FeedbackForm = ({
     }
   };
 
-
-
-
+  const { mutate: createFeedback, isLoading: isCreating } = useCreateFeedback();
+  const { mutate: updateFeedback, isLoading: isUpdating } = useUpdateFeedback();
 
   // Validation function
   const validateForm = () => {
@@ -500,24 +501,39 @@ const FeedbackForm = ({
 
       const updatedFeedbackData = {
         overallRating,
-        communicationRating,
         skills: skillRatings.map(skill => ({
           skillName: skill.skill,
           rating: skill.rating,
           note: skill.comments
         })),
-        questionFeedback: filteredInterviewerQuestions.map(question => ({
-          questionId: question, // Send the full question object
-          candidateAnswer: {
-            answerType: question.isAnswered || "not answered",
-            submittedAnswer: ""
-          },
-          interviewerFeedback: {
-            liked: question.isLiked || "none",
-            note: question.note || "",
-            dislikeReason: question.whyDislike || ""
-          }
-        })),
+        questionFeedback: [
+          // Interviewer section questions
+          ...interviewerSectionData.map(question => ({
+            questionId: question, // Send the full question object
+            candidateAnswer: {
+              answerType: question.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: question.isLiked || "none",
+              note: question.note || "",
+              dislikeReason: question.whyDislike || ""
+            }
+          })),
+          // Preselected questions responses
+          ...preselectedQuestionsResponses.map(response => ({
+            questionId: response,
+            candidateAnswer: {
+              answerType: response.isAnswered || "not answered",
+              submittedAnswer: ""
+            },
+            interviewerFeedback: {
+              liked: response.isLiked || "none",
+              note: response.note || "",
+              dislikeReason: response.whyDislike || ""
+            }
+          }))
+        ],
         generalComments: comments,
         overallImpression: {
           overallRating,
@@ -529,49 +545,38 @@ const FeedbackForm = ({
 
       console.log('📤 Sending feedback data:', feedbackData);
 
-      let response;
       if (isEditMode) {
         if (feedbackId) {
-          response = await axios.put(`${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`, updatedFeedbackData);
-          if (response.data.success) {
-            alert('Feedback saved as draft successfully!');
-          } else {
-            alert('Failed to save feedback as draft: ' + response.data.message);
-          }
+          updateFeedback({ feedbackId, feedbackData: updatedFeedbackData }, {
+            onSuccess: (data) => {
+              if (data.success) {
+                alert('Feedback updated successfully!');
+              } else {
+                alert('Failed to update feedback: ' + data.message);
+              }
+            },
+            onError: (error) => {
+              alert('Failed to update feedback: ' + error.message);
+            }
+          });
         } else {
-          alert('No feedback ID found, cannot save draft.');
+          alert('No feedback ID found, cannot update.');
         }
       } else {
-
-      // Simple POST request without authentication
-      response = await fetch(`${config.REACT_APP_API_URL}/feedback/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(feedbackData)
-      });
-  
-
-      const result = await response.json();
-      console.log('📥 API Response:', result);
-
-      if (result.success) {
-        console.log('✅ Feedback submitted successfully!');
-        alert('Feedback submitted successfully!');
-        // Reset form
-        setOverallRating(0);
-        setCommunicationRating(0);
-        setSkillRatings([{ skill: '', rating: 0, comments: '' }]);
-        setQuestionsAsked(['']);
-        setComments('');
-        setRecommendation('Maybe');
-        setInterviewerSectionData([]);
-      } else {
-        console.log('❌ API Error:', result.message);
-        alert(result.message || 'Failed to submit feedback');
+        createFeedback(feedbackData, {
+          onSuccess: (data) => {
+            if (data.success) {
+              alert('Feedback submitted successfully!');
+              // Optionally, reset form or redirect
+            } else {
+              alert('Failed to submit feedback: ' + data.message);
+            }
+          },
+          onError: (error) => {
+            alert('Failed to submit feedback: ' + error.message);
+          }
+        });
       }
-    }
     } catch (error) {
       console.error('💥 Error submitting feedback:', error);
       alert('Failed to submit feedback. Please try again.');
@@ -656,18 +661,34 @@ const FeedbackForm = ({
             rating: skill.rating,
             note: skill.comments
           })),
-          questionFeedback: filteredInterviewerQuestions.map(question => ({
-            questionId: question, // Send the full question object
-            candidateAnswer: {
-              answerType: question.isAnswered || "not answered",
-              submittedAnswer: ""
-            },
-            interviewerFeedback: {
-              liked: question.isLiked || "none",
-              note: question.note || "",
-              dislikeReason: question.whyDislike || ""
-            }
-          })),
+          questionFeedback: [
+            // Interviewer section questions
+            ...interviewerSectionData.map(question => ({
+              questionId: question, // Send the full question object
+              candidateAnswer: {
+                answerType: question.isAnswered || "not answered",
+                submittedAnswer: ""
+              },
+              interviewerFeedback: {
+                liked: question.isLiked || "none",
+                note: question.note || "",
+                dislikeReason: question.whyDislike || ""
+              }
+            })),
+            // Preselected questions responses
+            ...preselectedQuestionsResponses.map(response => ({
+              questionId: response,
+              candidateAnswer: {
+                answerType: response.isAnswered || "not answered",
+                submittedAnswer: ""
+              },
+              interviewerFeedback: {
+                liked: response.isLiked || "none",
+                note: response.note || "",
+                dislikeReason: response.whyDislike || ""
+              }
+            }))
+          ],
           generalComments: comments,
           overallImpression: {
             overallRating,
@@ -680,45 +701,42 @@ const FeedbackForm = ({
 
       console.log('📤 Sending draft data:', feedbackData);
 
-      let response;
-
       if (isEditMode) {
         if (feedbackId) {
-          response = await axios.put(`${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`, updatedFeedbackData);
-          if (response.data.success) {
-            alert('Feedback saved as draft successfully!');
-          } else {
-            alert('Failed to save feedback as draft: ' + response.data.message);
-          }
+          updateFeedback({ feedbackId, feedbackData: updatedFeedbackData }, {
+            onSuccess: (data) => {
+              if (data.success) {
+                alert('Feedback saved as draft successfully!');
+              } else {
+                alert('Failed to save feedback as draft: ' + data.message);
+              }
+            },
+            onError: (error) => {
+              alert('Failed to save feedback as draft: ' + error.message);
+            }
+          });
         } else {
           alert('No feedback ID found, cannot save draft.');
         }
       } else {
-
-      // Simple POST request without authentication
-      response = await fetch(`${config.REACT_APP_API_URL}/feedback/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(feedbackData)
-      });
-      const result = await response.json();
-      console.log('📥 Draft API Response:', result);
-
-      if (result.success) {
-        console.log('✅ Draft saved successfully!');
-        alert('Feedback saved as draft!');
-      } else {
-        console.log('❌ Draft save error:', result.message);
-        alert(result.message || 'Failed to save draft');
+        createFeedback(feedbackData, {
+          onSuccess: (data) => {
+            if (data.success) {
+              alert('Feedback saved as draft!');
+            } else {
+              alert('Failed to save feedback as draft: ' + data.message);
+            }
+          },
+          onError: (error) => {
+            alert('Failed to save feedback as draft: ' + error.message);
+          }
+        });
       }
+    } catch (error) {
+      console.error('💥 Error saving draft:', error);
+      alert('Failed to save draft. Please try again.');
     }
-  } catch (error) {
-    console.error('💥 Error saving draft:', error);
-    alert('Failed to save draft. Please try again.');
-  }
-};
+  };
 
   // Button component for consistency
   const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', style = {}, disabled = false, type = 'button' }) => {
@@ -872,7 +890,9 @@ const FeedbackForm = ({
                 {filteredInterviewerQuestions.length} question(s) from question bank
               </span>
             </div>
-          {!isViewMode && (
+          {(!isViewMode) ? (
+            <div></div>
+          ) : (
             <button
               className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
               onClick={openQuestionBank}
@@ -886,8 +906,8 @@ const FeedbackForm = ({
           
           {isViewMode ? (
             <>
-                {filteredInterviewerQuestions.length > 0 ? (
-                  filteredInterviewerQuestions.map((question) => (
+                {(interviewerSectionData?.length > 0 || filteredInterviewerQuestions?.length > 0) ? (
+                  [...interviewerSectionData, ...filteredInterviewerQuestions].map((question) => (
                     <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2">
                       <div className="flex items-start justify-between mb-3">
                         <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
@@ -928,7 +948,8 @@ const FeedbackForm = ({
           ) : (
             <div className="space-y-4">
              {(interviewerSectionData?.length > 0 || filteredInterviewerQuestions?.length > 0) ? (
-               [...interviewerSectionData, ...filteredInterviewerQuestions].map((question) => (
+                  [...interviewerSectionData, ...filteredInterviewerQuestions].map((question) => (
+
                  <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
                    <div className="flex items-start justify-between mb-3">
                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
@@ -1023,7 +1044,7 @@ const FeedbackForm = ({
           )}
           
         
-        <div>
+        <div className="mt-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Overall Comments {!isViewMode && <span className="text-red-500">*</span>}
           </label>
@@ -1069,7 +1090,7 @@ const FeedbackForm = ({
         </div>
       
       {!isViewMode && (
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-3 mt-4">
           <Button
             onClick={saveFeedback}
             variant="outline"
