@@ -29,6 +29,7 @@ const FeedbackForm = ({
   candidateId,
   positionId,
   interviewerId,
+  feedbackCandidate,
   // tenantId,
   isEditMode,
   isViewMode,
@@ -440,6 +441,7 @@ const FeedbackForm = ({
         ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
+        feedbackCode: feedbackCandidate?.interviewRound?.interviewCode  || "" +"_" + feedbackCandidate?.interviewRound?.sequence  || "",
         positionId: positionId || "",
         interviewerId: interviewerId || "",
         skills: skillRatings.map(skill => ({
