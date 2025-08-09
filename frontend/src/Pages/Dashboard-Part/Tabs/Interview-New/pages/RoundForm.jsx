@@ -1102,25 +1102,22 @@ const RoundFormInterviews = () => {
           }, (progress) => {
             setMeetingCreationProgress(progress);
           });
-// <----------------------  added code by Ranjith
+          // Persist meeting link on the round (avoid reassigning consts)
           if (meetingLink) {
-            roundData = {
+            const updatedRoundData = {
               ...roundData,
-              meetingId: meetingLink
+              meetingId: meetingLink,
             };
-            isEditing = true;
-            const payload = isEditing
-              && {
+            const targetRoundId = response?.savedRound?._id || roundId;
+            const updatePayload = {
               interviewId,
-              roundId,
-              roundData,
-           
-            }
-            const response = await saveInterviewRound(payload);
-            console.log("response", response);
-
-          };
-          // ---------------------->  added code by Ranjith
+              roundId: targetRoundId,
+              round: updatedRoundData,
+              ...(isEditing ? { questions: interviewQuestionsList } : {}),
+            };
+            const updateResponse = await saveInterviewRound(updatePayload);
+            console.log("Round updated with meeting link:", updateResponse);
+          }
 
 
           console.log("Meeting created successfully:", meetingLink);
