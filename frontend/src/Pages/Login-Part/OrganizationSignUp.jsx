@@ -238,10 +238,8 @@ export const Organization = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
-
+  
+    // Prepare full data with confirmPassword
     const organizationData = {
       firstName: selectedFirstName,
       lastName: selectedLastName,
@@ -254,20 +252,25 @@ export const Organization = () => {
       employees: selectedEmployees,
       country: selectedCountry,
       password: selectedPassword,
+      confirmPassword: selectedConfirmPassword,
       contactType: 'Organization',
     };
-
+  
+    // Run validations first
     const isValid = await validateOrganizationSignup(
       organizationData,
       setErrors,
       checkEmailExists,
       checkProfileIdExists
     );
-
+  
     if (!isValid) {
       setIsSubmitting(false);
       return;
     }
+    
+    // Only set submitting to true after all validations pass
+    setIsSubmitting(true);
 
     // Validate email format and existence
     const emailFormatError = validateWorkEmail(selectedEmail);
