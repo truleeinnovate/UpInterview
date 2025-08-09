@@ -735,6 +735,12 @@ exports.updateAllScheduleStatuses = async (req, res) => {
 // Function to run the schedule assessment status update job
 const runScheduleAssessmentStatusUpdateJob = async () => {
   try {
+    // Check if database is connected before proceeding
+    if (mongoose.connection.readyState !== 1) {
+      console.log('Database not connected, skipping schedule assessment status update job');
+      return;
+    }
+
     console.log('Starting automated schedule assessment status update job...');
     
     const scheduleAssessments = await ScheduleAssessment.find({});
@@ -774,19 +780,30 @@ const runScheduleAssessmentStatusUpdateJob = async () => {
   }
 };
 
-// Cron job to automatically update schedule assessment statuses every 5 minutes
-cron.schedule('*/5 * * * *', async () => {
+// Function to start the cron job (only after DB connection is established)
+const startScheduleAssessmentCronJob = () => {
+  // Cron job to automatically update schedule assessment statuses every 5 minutes
+  cron.schedule('0 */1 * * *', async () => {
+    runScheduleAssessmentStatusUpdateJob();
+  });
+
+  // */5 * * * * means: "Run every 5 minutes"
+  // You can adjust this schedule as needed:
+  // */1 * * * * = every minute (for testing)
+  // 0 */1 * * * = every hour
+  // 0 0 * * * = once daily at midnight
+
+  console.log('Schedule assessment status update cron job started');
+};
+
+// Function to run initial check (only after DB connection is established)
+const runInitialScheduleAssessmentCheck = () => {
+  console.log('Running initial schedule assessment status update check at startup...');
   runScheduleAssessmentStatusUpdateJob();
-});
+};
 
-// */5 * * * * means: "Run every 5 minutes"
-// You can adjust this schedule as needed:
-// */1 * * * * = every minute (for testing)
-// 0 */1 * * * = every hour
-// 0 0 * * * = once daily at midnight
-
-// Run immediately on file load for initial check
-console.log('Running initial schedule assessment status update check at startup...');
-runScheduleAssessmentStatusUpdateJob();
+// Export the functions so they can be called after DB connection is established
+exports.startScheduleAssessmentCronJob = startScheduleAssessmentCronJob;
+exports.runInitialScheduleAssessmentCheck = runInitialScheduleAssessmentCheck;
 
 // ------------------------------v1.0.0 >
