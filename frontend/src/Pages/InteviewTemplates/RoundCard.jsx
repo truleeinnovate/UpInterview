@@ -3,8 +3,17 @@
    click on delete deleting the card but not closing the delete confirmation popup
 */
 
+/* 
+   v1.0.2 - Ashok - fixed z-index issue and added createPortal using this
+   lets you render a React component into a different part of the DOM
+   outside its parent hierarchy.
+*/
+
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
+// v1.0.2 <--------------------------------------------------
+import { createPortal } from "react-dom";
+// v1.0.2 -------------------------------------------------->
 
 import {
   Clock,
@@ -622,8 +631,8 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
           </Button>
         </div>
       </div>
-
-      {showDeleteConfirmModal && (
+      {/* v1.0.2 <--------------------------------------------------- */}
+      {/* {showDeleteConfirmModal && (
         // <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
         <div
           className="fixed top-0 left-0 w-screen h-screen z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
@@ -646,7 +655,34 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
+      {showDeleteConfirmModal &&
+        createPortal(
+          <div
+            className="fixed top-0 left-0 w-screen h-screen z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            style={{ pointerEvents: "auto" }}
+          >
+            <div className="bg-white p-5 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold mb-3">
+                Are you sure you want to delete this round?
+              </h3>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirmModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleDeleteRound}>
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      }
+      {/* v1.0.2 ---------------------------------------------------> */}
     </>
   );
 };
