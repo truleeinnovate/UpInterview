@@ -36,6 +36,20 @@ router.post("/check-user", async (req, res) => {
     "config.REACT_APP_REDIRECT_URI from backend linkedinroutes.js",
     config.REACT_APP_REDIRECT_URI
   );
+
+  // Check if required environment variables are set
+  if (!config.REACT_APP_CLIENT_ID || !config.REACT_APP_CLIENT_SECRET || !config.REACT_APP_REDIRECT_URI) {
+    console.error("Missing LinkedIn OAuth configuration:", {
+      CLIENT_ID: !!config.REACT_APP_CLIENT_ID,
+      CLIENT_SECRET: !!config.REACT_APP_CLIENT_SECRET,
+      REDIRECT_URI: !!config.REACT_APP_REDIRECT_URI
+    });
+    return res.status(500).json({
+      error: "LinkedIn OAuth configuration is missing",
+      details: "Please check your environment variables"
+    });
+  }
+
   try {
     console.log("Backend: 1. Received user check request", {
       source: "Local Server",
@@ -108,8 +122,17 @@ router.post("/check-user", async (req, res) => {
 
     // Check for existing user
     console.log("Backend: 4. Checking database for existing user");
-    const existingUser = await Users.findOne({ email: userInfo.email });
-    console.log("Backend: 4.1. Existing user:", existingUser);
+    let existingUser;
+    try {
+      existingUser = await Users.findOne({ email: userInfo.email });
+      console.log("Backend: 4.1. Existing user:", existingUser);
+    } catch (dbError) {
+      console.error("Database error while checking existing user:", dbError);
+      return res.status(500).json({
+        error: "Database connection error",
+        details: "Failed to check existing user"
+      });
+    }
 
     if (existingUser) {
       // Only send user data, not LinkedIn data
@@ -134,17 +157,28 @@ router.post("/check-user", async (req, res) => {
     } else {
 
       // Create new Tenant
-      const newTenant = await Tenant.create({
-        firstName: userInfo.firstName,
-        lastName: userInfo.lastName,
-        email: userInfo.email,
-        type: "individual",
-      });
+      let newTenant;
+      let newUser;
 
-      const newUser = await Users.create({
-        ...userInfo,
-        tenantId: newTenant._id
-      });
+      try {
+        newTenant = await Tenant.create({
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          email: userInfo.email,
+          type: "individual",
+        });
+
+        newUser = await Users.create({
+          ...userInfo,
+          tenantId: newTenant._id
+        });
+      } catch (creationError) {
+        console.error("Error creating new user/tenant:", creationError);
+        return res.status(500).json({
+          error: "Failed to create new user",
+          details: creationError.message
+        });
+      }
 
       newTenant.ownerId = newUser._id;
       await newTenant.save();
@@ -167,15 +201,24 @@ router.post("/check-user", async (req, res) => {
       // });
 
       // Step 1: Create contact without imageData
-      const newContact = await Contacts.create({
-        firstName: userInfo.firstName,
-        lastName: userInfo.lastName,
-        email: userInfo.email,
-        linkedinUrl: userInfo.profileUrl,
-        ownerId: newUser._id,
-        tenantId: newTenant._id,
-        createdBy: newUser._id,
-      });
+      let newContact;
+      try {
+        newContact = await Contacts.create({
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          email: userInfo.email,
+          linkedinUrl: userInfo.profileUrl,
+          ownerId: newUser._id,
+          tenantId: newTenant._id,
+          createdBy: newUser._id,
+        });
+      } catch (contactError) {
+        console.error("Error creating contact:", contactError);
+        return res.status(500).json({
+          error: "Failed to create contact",
+          details: contactError.message
+        });
+      }
 
       // Step 2: If picture exists, upload to Cloudinary using contact._id
       let imageData = null;

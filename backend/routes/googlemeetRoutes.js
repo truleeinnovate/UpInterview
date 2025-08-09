@@ -27,14 +27,6 @@ router.get("/health", (req, res) => {
   res.json(healthStatus);
 });
 
-// Debug environment variables
-console.log("=== Google Meet Environment Variables Debug ===");
-console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET");
-console.log("GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET");
-console.log("GOOGLE_REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI || "NOT SET");
-console.log("REACT_APP_API_URL_FRONTEND:", config.REACT_APP_API_URL_FRONTEND);
-console.log("==============================================");
-
 // Validate required environment variables
 if (!process.env.GOOGLE_CLIENT_ID) {
   console.error("ERROR: GOOGLE_CLIENT_ID is not set!");

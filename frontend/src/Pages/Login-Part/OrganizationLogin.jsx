@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Slideshow from './Slideshow';
+import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 // <------------------- v1.0.0
 import { setAuthCookies, clearAllAuth } from '../../utils/AuthCookieManager/AuthCookieManager';
 // v1.0.0 ---------------------->
@@ -15,7 +16,7 @@ import { usePermissions } from '../../Context/PermissionsContext';
 
 
 import { Link } from 'react-router-dom';
-import Layout from './Layout.jsx';
+// import Layout from './Layout.jsx';
 
 const OrganizationLogin = () => {
   const { refreshPermissions } = usePermissions();
@@ -148,7 +149,7 @@ const OrganizationLogin = () => {
   //         break;
   //       case 'active':
   //         if (isProfileCompleted === false && roleName) {
-  //           navigate('/complete-profile', {
+  //           navigate('/create-profile', {
   //             state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg }
   //           });
   //         } else {
@@ -281,7 +282,7 @@ const OrganizationLogin = () => {
           } else if (status === 'submitted' || status === 'payment_pending') {
             targetPath = '/subscription-plans';
           } else if (isProfileCompleted === false && roleName) {
-            targetPath = '/complete-profile';
+            targetPath = '/create-profile';
           }
 
           const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
@@ -305,7 +306,7 @@ const OrganizationLogin = () => {
 
         case 'active':
           if (isProfileCompleted === false && roleName) {
-            navigate('/complete-profile', {
+            navigate('/create-profile', {
               state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
             });
           } else {
@@ -490,7 +491,7 @@ const OrganizationLogin = () => {
       {/* <div showBackButton={true} backPath="/"> */}
       <div className="min-h-screen flex">
         {/* Left side - Hero Image and Content */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden rounded-r-3xl">
+        <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden rounded-r-3xl">
           <div className="absolute inset-0">
             <img
               src="https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=1200"
@@ -669,15 +670,11 @@ const OrganizationLogin = () => {
         </div>
 
         {/* Right side - Login Form */}
-        <div className="w-full lg:w-1/2 flex items-start justify-center p-6 lg:p-12 bg-gradient-to-br from-gray-50 to-white">
+        <div className="w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-start justify-center p-6 lg:p-12 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-lg w-full py-4">
             <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 hover:shadow-3xl transition-all duration-300">
               <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-6 hover:scale-110 transition-transform duration-300">
-                  <svg className="w-10 h-10 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m4 0v-4a1 1 0 011-1h4a1 1 0 011 1v4M7 7h10M7 11h10" />
-                  </svg>
-                </div>
+                <img src={logo} alt="Upinterview Logo" className="w-32 object-contain mx-auto mb-3 hover:scale-110 transition-transform duration-300" />
                 <h2 className="text-3xl font-bold text-gray-900 mb-3">Welcome Back! 🏢</h2>
                 <p className="text-gray-600 mb-4">Sign in to your organization dashboard</p>
                 <div className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
@@ -888,9 +885,9 @@ const OrganizationLogin = () => {
                     Create your organization account
                   </Link>
                 </p>
-                <p className="text-xs text-gray-500">
-                  🎉 Join 200+ companies already using InterviewHub
-                </p>
+                {/* <p className="text-xs text-gray-500">
+                  🎉 Join 200+ companies already using UpInterview
+                </p> */}
               </div>
             </div>
 

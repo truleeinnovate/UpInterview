@@ -8,6 +8,7 @@
 // v1.0.2--------Venkatesh---Prevent double-click save (simplified)
 
 // v1.0.4 - ASHOK - Improved Scroll to First Error functionality
+// v1.0.5 - AHOK  - fixed style issues at MCQ's input fields
 
 import React from "react";
 import { useState, useEffect, useRef } from "react";
@@ -143,7 +144,9 @@ const QuestionBankForm = ({
   const [selectedDifficultyLevel, setSelectedDifficultyLevel] = useState("");
   const [showDropdownDifficultyLevel, setShowDropdownDifficultyLevel] =
     useState(false);
-  const [selectedQuestionType, setSelectedQuestionType] = useState((type === "Feedback")? "Interview Questions" :  "" );
+  const [selectedQuestionType, setSelectedQuestionType] = useState(
+    type === "Feedback" ? "Interview Questions" : ""
+  );
   const [showDropdownQuestionType, setShowDropdownQuestionType] =
     useState(false);
   const [showMcqFields, setShowMcqFields] = useState(false);
@@ -453,8 +456,7 @@ const QuestionBankForm = ({
         questionId: isEdit ? question._id : undefined,
       });
       console.log("tenant question response", questionResponse);
-      if (type === "Feedback"){
-
+      if (type === "Feedback") {
       }
 
       // Handle adding question to assessment if type is 'assessment'
@@ -513,11 +515,12 @@ const QuestionBankForm = ({
       ) {
         fieldRefs.listRef.current.clearSelection();
       } else if (!isSaveAndNext) {
-        console.warn("clearSelection method not found on fieldRefs.listRef.current");
+        console.warn(
+          "clearSelection method not found on fieldRefs.listRef.current"
+        );
       }
 
       // v1.0.4 ------------------------------------------------------------------>
-
 
       if (isSaveAndNext) {
         setQuestionNumber((prevNumber) => prevNumber + 1);
@@ -943,7 +946,7 @@ const QuestionBankForm = ({
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                           border ${
-                            errors.questionType && (type !== "Feedback")
+                            errors.questionType && type !== "Feedback"
                               ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
                               : "border-gray-300 focus:ring-red-300"
                           }
@@ -953,7 +956,7 @@ const QuestionBankForm = ({
                         onClick={toggleDropdownQuestionType}
                         readOnly
                       />
-                      {errors.questionType && (type !== "Feedback") && (
+                      {errors.questionType && type !== "Feedback" && (
                         <p className="text-red-500 text-sm">
                           {errors.questionType}
                         </p>
@@ -964,7 +967,7 @@ const QuestionBankForm = ({
                       </div>
                       {/* <MdArrowDropDown className="absolute top-3 right-1 text-gray-500 text-lg mt-1 cursor-pointer " /> */}
 
-                      {showDropdownQuestionType && (type !== "Feedback") && (
+                      {showDropdownQuestionType && type !== "Feedback" && (
                         <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg h-40 overflow-y-auto text-sm">
                           {questionTypeOptions.map((questionType) => (
                             <div
@@ -984,22 +987,23 @@ const QuestionBankForm = ({
                   </div>
 
                   {/* My Question List */}
-                  {type === "Feedback" ? null : <div className="mb-4">
-                    {/* v1.0.4 <---------------------------------------------------------- */}
-                    <MyQuestionList
-                      ref={fieldRefs.listRef}
-                      fromform={true}
-                      onSelectList={handleListSelection}
-                      // ref={listRef}
-                      error={errors.tenantListId}
-                      defaultTenantList={selectedLabels}
-                      notEditmode={!isEdit}
-                      selectedListId={selectedLabelId}
-                      onErrorClear={handleErrorClear}
-                    />
-                    {/* v1.0.4 -----------------------------------------------------------> */}
-                  </div>
-                  }
+                  {type === "Feedback" ? null : (
+                    <div className="mb-4">
+                      {/* v1.0.4 <---------------------------------------------------------- */}
+                      <MyQuestionList
+                        ref={fieldRefs.listRef}
+                        fromform={true}
+                        onSelectList={handleListSelection}
+                        // ref={listRef}
+                        error={errors.tenantListId}
+                        defaultTenantList={selectedLabels}
+                        notEditmode={!isEdit}
+                        selectedListId={selectedLabelId}
+                        onErrorClear={handleErrorClear}
+                      />
+                      {/* v1.0.4 -----------------------------------------------------------> */}
+                    </div>
+                  )}
                   {/* Skill/Technology */}
 
                   <div className="flex flex-col gap-1 mb-4">
@@ -1186,7 +1190,7 @@ const QuestionBankForm = ({
                           }
                           focus:outline-gray-300
                         `}
-                      // v1.0.4 <----------------------------------------------------------------->
+                        // v1.0.4 <----------------------------------------------------------------->
                       ></textarea>
                       {/* Question Character Counter */}
                       <div className="flex justify-between items-center text-sm text-gray-500 mt-1">
@@ -1214,13 +1218,14 @@ const QuestionBankForm = ({
                         <label className="block mb-2 text-sm mt-1 font-medium text-gray-900 ">
                           Options <span className="text-red-500">*</span>
                         </label>
-                        <span className="flex items-center gap-2 bg-custom-blue text-white px-3 py-1 rounded-md">
-                          <Plus
-                            className="w-4 h-4 fill-white cursor-pointer"
-                            onClick={addOption}
-                          />
+                        {/* v1.0.5 <---------------------------------------------------------------- */}
+                        <button type="button" className="flex items-center gap-2 bg-custom-blue text-white px-3 py-1 rounded-md"
+                          onClick={addOption}
+                        >
+                          <Plus className="w-4 h-4 fill-white cursor-pointer" />
                           Add
-                        </span>
+                        </button>
+                        {/* v1.0.5 ----------------------------------------------------------------> */}
                       </div>
                       <form onSubmit={handleSubmit}>
                         {mcqOptions.map((option, index) => (
@@ -1234,8 +1239,10 @@ const QuestionBankForm = ({
                                 className="block text-sm font-medium leading-6 text-gray-500"
                               ></label>
                             </div>
+                            {/* v1.0.5 <--------------------------------------------------------- */}
                             <div className="flex-grow flex justify-center relative mb-5">
-                              <span className="absolute left-0 pl-1 pt-2 text-gray-500">
+                              {/* <span className="absolute left-0 pl-1 pt-2 text-gray-500"> */}
+                              <span className="absolute left-0 pl-2 pt-3 text-gray-500">
                                 {optionLabels[index]}.
                               </span>
                               <div className="flex flex-col w-full">
@@ -1247,7 +1254,7 @@ const QuestionBankForm = ({
                                   autoComplete="off"
                                   maxLength={250}
                                   // className={`border  px-3 py-2  sm:text-sm rounded-md border-gray-300   text-gray-500 focus:border-black focus:outline-none w-full pl-8`}
-                                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 pl-7 sm:text-sm
                                     border ${
                                       errors.options
                                         ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1261,6 +1268,7 @@ const QuestionBankForm = ({
                                   readOnly={option.isSaved && !option.isEditing}
                                   placeholder={`Please add option`}
                                 />
+                                {/* v1.0.5 <--------------------------------------------------------- */}
                                 {/* MCQ Option Character Counter */}
                                 <div className="text-right text-xs text-gray-400 mt-1">
                                   {option.option.length}/250 characters
@@ -1750,7 +1758,7 @@ const QuestionBankForm = ({
                         //     ? "border-red-500"
                         //     : "border-gray-300 focus:border-black"
                         // }`}
-                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                         border ${
                           errors.difficultyLevel
                             ? "border-red-500 focus:ring-red-500 focus:outline-red-300"

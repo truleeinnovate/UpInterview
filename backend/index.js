@@ -6,16 +6,6 @@
 // v1.0.4  -  Ashok   -  added analytics
 require('dotenv').config();
 
-// Debug environment variables
-console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('COOKIE_DOMAIN:', process.env.COOKIE_DOMAIN);
-console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
-console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
-console.log('GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI || 'NOT SET');
-console.log('=== END ENVIRONMENT VARIABLES DEBUG ===');
-
 const cors = require('cors');
 const express = require('express');
 const cookieParser = require('cookie-parser');
@@ -29,7 +19,10 @@ app.set('trust proxy', 1);
 // ✅ Parse cookies
 app.use(cookieParser());
 
-
+// console.log('config.REACT_APP_CLIENT_ID', config.REACT_APP_CLIENT_ID);
+// console.log('config.REACT_APP_CLIENT_SECRET', config.REACT_APP_CLIENT_SECRET);
+// console.log('config.REACT_APP_REDIRECT_URI', config.REACT_APP_REDIRECT_URI);
+// console.log('config.REACT_APP_API_URL_FRONTEND', config.REACT_APP_API_URL_FRONTEND);
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -85,7 +78,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-  // <---------------------- v1.0.3
+// <---------------------- v1.0.3
 
 
 // Enhanced MongoDB connection with Azure-specific configurations
@@ -118,10 +111,10 @@ const mongooseOptions = {
 const connectWithRetry = async (retries = 5, delay = 5000) => {
   for (let i = 0; i < retries; i++) {
     try {
-      console.log(`🔄 Attempting MongoDB connection (attempt ${i + 1}/${retries})...`);
+      // console.log(`🔄 Attempting MongoDB connection (attempt ${i + 1}/${retries})...`);
       await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
       console.log('✅ MongoDB connected successfully');
-      console.log('MongoDB URI:', process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED');
+      // console.log('MongoDB URI:', process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED');
       return;
     } catch (err) {
       console.error(`❌ MongoDB connection attempt ${i + 1} failed:`, err.message);
@@ -130,7 +123,7 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
         console.error('MongoDB URI status:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
         process.exit(1);
       }
-      console.log(`⏳ Retrying in ${delay/1000} seconds...`);
+      console.log(`⏳ Retrying in ${delay / 1000} seconds...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -158,10 +151,10 @@ mongoose.connection.on('reconnected', () => {
   console.log('✅ MongoDB reconnected successfully');
 });
 
-mongoose.connection.on('connected', () => {
-  console.log('✅ MongoDB connected successfully');
-  console.log('Connection state:', mongoose.connection.readyState);
-});
+// mongoose.connection.on('connected', () => {
+//   console.log('✅ MongoDB connected successfully');
+//   // console.log('Connection state:', mongoose.connection.readyState);
+// });
 
 mongoose.connection.on('connecting', () => {
   console.log('🔄 MongoDB connecting...');
@@ -176,7 +169,7 @@ setInterval(() => {
     2: 'connecting',
     3: 'disconnecting'
   };
-  console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
+  // console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
 }, 30000); // Log every 30 seconds
 
 // Middleware to capture raw body for webhook endpoints
@@ -231,7 +224,7 @@ app.get('/health', (req, res) => {
       COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || 'NOT SET'
     }
   };
-  
+
   res.status(isHealthy ? 200 : 503).json(healthCheck);
 });
 
@@ -249,7 +242,7 @@ app.get('/health/detailed', async (req, res) => {
   try {
     const isConnected = mongoose.connection.readyState === 1;
     let dbTest = { status: 'not_connected', error: null };
-    
+
     if (isConnected) {
       try {
         // Test database connection with a simple ping
@@ -259,7 +252,7 @@ app.get('/health/detailed', async (req, res) => {
         dbTest = { status: 'connected_but_ping_failed', error: pingError.message };
       }
     }
-    
+
     const detailedHealth = {
       status: isConnected && dbTest.status === 'connected' ? 'OK' : 'UNHEALTHY',
       timestamp: new Date().toISOString(),
@@ -288,10 +281,10 @@ app.get('/health/detailed', async (req, res) => {
         cpuUsage: process.cpuUsage()
       }
     };
-    
+
     const isHealthy = isConnected && dbTest.status === 'connected';
     res.status(isHealthy ? 200 : 503).json(detailedHealth);
-    
+
   } catch (error) {
     res.status(503).json({
       status: 'ERROR',
@@ -362,7 +355,7 @@ const conditionalPermissionMiddleware = (req, res, next) => {
   ];
 
   const isAuthRoute = authRoutes.some(route => req.path.includes(route));
-  
+
   if (isAuthRoute) {
     return next();
   }
@@ -507,7 +500,7 @@ app.use((err, req, res, next) => {
 const { Candidate } = require("./models/candidate.js");
 const { Position } = require("./models/position.js");
 const TeamMember = require("./models/TeamMembers.js");
- // <-------------------------------v1.0.2
+// <-------------------------------v1.0.2
 const Assessment = require("./models/assessmentTemplates");
 // ------------------------------v1.0.2 >
 const { Interview } = require("./models/Interview.js");
@@ -1115,7 +1108,7 @@ app.get('/check-profileId', async (req, res) => {
 
 const historyFeedsRoutes = require("./routes/feedsRoutes");
 const WalletRouter = require("./routes/WalletRoutes.js");
- // <-------------------------------v1.0.1
+// <-------------------------------v1.0.1
 app.use("/feeds", historyFeedsRoutes);
 // ------------------------------v1.0.1 >
 app.use("/wallet", WalletRouter);
@@ -1227,9 +1220,9 @@ app.use("/receipts", ReceiptsRoute);
 
 // ==================================================================================>
 
-  const feedbackRoutes = require('./routes/feedbackRoute')
+const feedbackRoutes = require('./routes/feedbackRoute')
 
-app.use('/feedback',feedbackRoutes)
+app.use('/feedback', feedbackRoutes)
 
 // <================ getting the availability by contact id to show in the account settings user profile ==============>
 const interviewAvailabilityRoutes = require("./routes/interviewAvailabilityRoutes");
@@ -1238,7 +1231,8 @@ app.use("/interview-availability", interviewAvailabilityRoutes);
 // Google Meet routes
 const googlemeetRoutes = require("./routes/googlemeetRoutes");
 app.use("/googlemeet", googlemeetRoutes);
- // v1.0.0 ---------------------->
+
+// v1.0.0 ---------------------->
 
 //  v1.0.4 <------------------------------------------------------------------------------
 const filterRoutes = require('./routes/AnalyticsRoutes/filterRoutes.js');

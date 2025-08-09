@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  creating interview email controller to send emails when rounds are saved
 
+const CryptoJS = require('crypto-js');
 const { Interview } = require("../../models/Interview");
 const { InterviewRounds } = require("../../models/InterviewRounds");
 const { Candidate } = require("../../models/Candidate");
@@ -8,6 +9,25 @@ const emailTemplateModel = require("../../models/EmailTemplatemodel");
 const sendEmail = require('../../utils/sendEmail');
 const Notification = require("../../models/notification");
 const mongoose = require("mongoose");
+const config = require("../../config");
+
+
+const SECRET_KEY = 'asdnalksm$$@#@cjh#@$abidsduwoa';
+
+const encryptData = (data) => {
+
+  try {
+    if (data === undefined || data === null) {
+      return null;
+    }
+    return CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
+
+  } catch (error) {
+    console.error('Error encrypting data:', error);
+    return null;
+  }
+
+};
 
 /**
  * Send interview round emails to candidate, interviewer, and scheduler
@@ -28,9 +48,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
 
     // Validate input
     if (!interviewId || !mongoose.isValidObjectId(interviewId)) {
-      const error = { 
-        success: false, 
-        message: 'Invalid or missing interview ID' 
+      const error = {
+        success: false,
+        message: 'Invalid or missing interview ID'
       };
       if (res) {
         return res.status(400).json(error);
@@ -39,9 +59,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     }
 
     if (!roundId || !mongoose.isValidObjectId(roundId)) {
-      const error = { 
-        success: false, 
-        message: 'Invalid or missing round ID' 
+      const error = {
+        success: false,
+        message: 'Invalid or missing round ID'
       };
       if (res) {
         return res.status(400).json(error);
@@ -55,9 +75,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       .populate('ownerId');
 
     if (!interview) {
-      const error = { 
-        success: false, 
-        message: 'Interview not found' 
+      const error = {
+        success: false,
+        message: 'Interview not found'
       };
       if (res) {
         return res.status(404).json(error);
@@ -70,15 +90,18 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       .populate('interviewers');
 
     if (!round) {
-      const error = { 
-        success: false, 
-        message: 'Interview round not found' 
+      const error = {
+        success: false,
+        message: 'Interview round not found'
       };
       if (res) {
         return res.status(404).json(error);
       }
       return error;
     }
+
+  
+
 
     // Check if emails should be sent based on the sendEmails parameter
     if (!sendEmails) {
@@ -97,9 +120,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const owner = interview.ownerId;
 
     if (!candidate) {
-      const error = { 
-        success: false, 
-        message: 'Candidate not found' 
+      const error = {
+        success: false,
+        message: 'Candidate not found'
       };
       if (res) {
         return res.status(404).json(error);
@@ -110,9 +133,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     // Get candidate email
     const candidateEmail = candidate.Email;
     if (!candidateEmail) {
-      const error = { 
-        success: false, 
-        message: 'No email address found for candidate' 
+      const error = {
+        success: false,
+        message: 'No email address found for candidate'
       };
       if (res) {
         return res.status(400).json(error);
@@ -122,41 +145,50 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
 
     // Get scheduler/owner email from contacts
     let schedulerEmail = null;
+    let scheduler = null;
     if (owner && owner._id) {
-      const schedulerContact = await Contacts.findOne({ 
-        ownerId: owner._id 
+      const schedulerContact = await Contacts.findOne({
+        ownerId: owner._id
       });
+      scheduler = schedulerContact;
       schedulerEmail = schedulerContact?.email;
     }
+    // console.log("🔍 Round data:", scheduler);
+
 
     // Get interviewer emails
     const interviewerEmails = [];
     if (round.interviewers && round.interviewers.length > 0) {
       for (const interviewer of round.interviewers) {
         if (interviewer.email) {
-          interviewerEmails.push(interviewer.email);
+          interviewerEmails.push(interviewer);
+          // interviewerEmails.push(interviewer.email);
         }
       }
     }
 
     // Get email templates
-    const candidateTemplate = await emailTemplateModel.findOne({ 
-      category: 'interview_candidate_invite', 
-      isSystemTemplate: true, 
-      isActive: true 
+    const candidateTemplate = await emailTemplateModel.findOne({
+      category: 'interview_candidate_invite',
+      isSystemTemplate: true,
+      isActive: true
     });
 
-    const interviewerTemplate = await emailTemplateModel.findOne({ 
-      category: 'interview_interviewer_invite', 
-      isSystemTemplate: true, 
-      isActive: true 
+    const interviewerTemplate = await emailTemplateModel.findOne({
+      category: 'interview_interviewer_invite',
+      isSystemTemplate: true,
+      isActive: true
     });
 
-    const schedulerTemplate = await emailTemplateModel.findOne({ 
-      category: 'interview_scheduler_notification', 
-      isSystemTemplate: true, 
-      isActive: true 
+    const schedulerTemplate = await emailTemplateModel.findOne({
+      category: 'interview_scheduler_notification',
+      isSystemTemplate: true,
+      isActive: true
     });
+    const baseUrl = `${config.REACT_APP_API_URL_FRONTEND}/join-meeting`;
+    const meetingLink = round.meetingId
+    const encryptedMeetingLink = encryptData(meetingLink);
+    const encryptedRoundId = encryptData(roundId);
 
     const notifications = [];
     const emailPromises = [];
@@ -184,29 +216,32 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         .replace('{{instructions}}', instructions)
         .replace('{{supportEmail}}', supportEmail);
 
-             // Add meeting links if available
-       if (round.meetLink && round.meetLink.length > 0) {
-         const candidateLink = round.meetLink.find(link => link.linkType === 'candidate');
-         if (candidateLink) {
-           emailBody = emailBody.replace('{{meetingLink}}', candidateLink.link);
-         }
-       } else {
-         // If no meeting links available, replace placeholder with a message
-         emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
-       }
+      // Add meeting links if available
+      if (round.meetingId && round.meetingId.length > 0) {
+
+        const candidateUrl = `${baseUrl}?candidate=true&meeting=${encodeURIComponent(encryptedMeetingLink)}&round=${encodeURIComponent(encryptedRoundId)}`;
+        console.log("🔍 Candidate link:", candidateUrl);
+
+        if (candidateUrl) {
+          emailBody = emailBody.replace('{{meetingLink}}', candidateUrl);
+        }
+      } else {
+        // If no meeting links available, replace placeholder with a message
+        emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
+      }
 
       emailPromises.push(
         sendEmail(candidateEmail, emailSubject, emailBody)
-          .then(response => ({ 
-            email: candidateEmail, 
-            recipient: 'candidate', 
-            success: true 
+          .then(response => ({
+            email: candidateEmail,
+            recipient: 'candidate',
+            success: true
           }))
-          .catch(error => ({ 
-            email: candidateEmail, 
-            recipient: 'candidate', 
-            success: false, 
-            error: error.message 
+          .catch(error => ({
+            email: candidateEmail,
+            recipient: 'candidate',
+            success: false,
+            error: error.message
           }))
       );
 
@@ -249,29 +284,40 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace('{{instructions}}', instructions)
           .replace('{{supportEmail}}', supportEmail);
 
-                 // Add meeting links if available
-         if (round.meetLink && round.meetLink.length > 0) {
-           const interviewerLink = round.meetLink.find(link => link.linkType === 'interviewer');
-           if (interviewerLink) {
-             emailBody = emailBody.replace('{{meetingLink}}', interviewerLink.link);
-           }
-         } else {
-           // If no meeting links available, replace placeholder with a message
-           emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
-         }
+        // Add meeting links if available
+        if (round.meetingId && round.meetingId.length > 0) {
+
+         
+            const encryptedInterviewerId = encryptData(interviewerEmail?._id);
+            const encryptedOwnerId = encryptData(interviewerEmail?.ownerId);
+
+            const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
+        &round=${encodeURIComponent(encryptedRoundId)}&interviwer=${encodeURIComponent(encryptedInterviewerId)}&owner=${encodeURIComponent(encryptedOwnerId)}`;
+
+            console.log("🔍 Interviewer link:", interviewerLink);
+            
+            //  const interviewerLink = round.meetingId
+            if (interviewerLink) {
+              emailBody = emailBody.replace('{{meetingLink}}', interviewerLink);
+            }
+          
+        } else {
+          // If no meeting links available, replace placeholder with a message
+          emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
+        }
 
         emailPromises.push(
-          sendEmail(interviewerEmail, emailSubject, emailBody)
-            .then(response => ({ 
-              email: interviewerEmail, 
-              recipient: 'interviewer', 
-              success: true 
+          sendEmail(interviewerEmail.email, emailSubject, emailBody)
+            .then(response => ({
+              email: interviewerEmail.email,
+              recipient: 'interviewer',
+              success: true
             }))
-            .catch(error => ({ 
-              email: interviewerEmail, 
-              recipient: 'interviewer', 
-              success: false, 
-              error: error.message 
+            .catch(error => ({
+              email: interviewerEmail.email,
+              recipient: 'interviewer',
+              success: false,
+              error: error.message
             }))
         );
 
@@ -286,7 +332,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           status: 'Pending',
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
-          recipientId: interviewerEmail, // Using email as recipientId for interviewers
+          recipientId: interviewerEmail.email, // Using email as recipientId for interviewers
           createdBy: interview.ownerId,
           updatedBy: interview.ownerId,
         });
@@ -314,29 +360,38 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         .replace('{{duration}}', duration)
         .replace('{{supportEmail}}', supportEmail);
 
-             // Add meeting links if available
-       if (round.meetLink && round.meetLink.length > 0) {
-         const hostLink = round.meetLink.find(link => link.linkType === 'schedule');
-         if (hostLink) {
-           emailBody = emailBody.replace('{{meetingLink}}', hostLink.link);
-         }
-       } else {
-         // If no meeting links available, replace placeholder with a message
-         emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
-       }
+      // Add meeting links if available
+      if (round.meetingId && round.meetingId.length > 0) {
+        const hostLink = round.meetingId
+             
+        const encryptedSchedulerId = encryptData(scheduler?._id);
+        const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
+
+        const schedulerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
+        &round=${encodeURIComponent(encryptedRoundId)}&interviwer=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
+
+        console.log("🔍 Scheduler link:", schedulerLink);
+
+        if (schedulerLink) {
+          emailBody = emailBody.replace('{{meetingLink}}', schedulerLink);
+        }
+      } else {
+        // If no meeting links available, replace placeholder with a message
+        emailBody = emailBody.replace('{{meetingLink}}', 'Meeting link will be provided later');
+      }
 
       emailPromises.push(
         sendEmail(schedulerEmail, emailSubject, emailBody)
-          .then(response => ({ 
-            email: schedulerEmail, 
-            recipient: 'scheduler', 
-            success: true 
+          .then(response => ({
+            email: schedulerEmail,
+            recipient: 'scheduler',
+            success: true
           }))
-          .catch(error => ({ 
-            email: schedulerEmail, 
-            recipient: 'scheduler', 
-            success: false, 
-            error: error.message 
+          .catch(error => ({
+            email: schedulerEmail,
+            recipient: 'scheduler',
+            success: false,
+            error: error.message
           }))
       );
 
@@ -387,6 +442,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       success: true,
       message: 'Interview round emails sent successfully',
       data: {
+        // schedulerLink:schedulerLink,
         roundId: round._id,
         emailsSent: successfulEmails.length,
         emailsFailed: failedEmails.length,
@@ -415,7 +471,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     }
     return errorResult;
   }
-}; 
+};
 
 /**
  * Send outsource interview request emails to selected outsource interviewers
@@ -441,9 +497,9 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
 
     // Validate input
     if (!interviewId || !mongoose.isValidObjectId(interviewId)) {
-      const error = { 
-        success: false, 
-        message: 'Invalid or missing interview ID' 
+      const error = {
+        success: false,
+        message: 'Invalid or missing interview ID'
       };
       if (res) {
         return res.status(400).json(error);
@@ -452,9 +508,9 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     }
 
     if (!roundId || !mongoose.isValidObjectId(roundId)) {
-      const error = { 
-        success: false, 
-        message: 'Invalid or missing round ID' 
+      const error = {
+        success: false,
+        message: 'Invalid or missing round ID'
       };
       if (res) {
         return res.status(400).json(error);
@@ -463,9 +519,9 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     }
 
     if (!interviewerIds || !Array.isArray(interviewerIds) || interviewerIds.length === 0) {
-      const error = { 
-        success: false, 
-        message: 'Invalid or missing interviewer IDs' 
+      const error = {
+        success: false,
+        message: 'Invalid or missing interviewer IDs'
       };
       if (res) {
         return res.status(400).json(error);
@@ -479,9 +535,9 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       .populate('ownerId');
 
     if (!interview) {
-      const error = { 
-        success: false, 
-        message: 'Interview not found' 
+      const error = {
+        success: false,
+        message: 'Interview not found'
       };
       if (res) {
         return res.status(404).json(error);
@@ -492,9 +548,9 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     // Fetch candidate details
     const candidate = interview.candidateId;
     if (!candidate) {
-      const error = { 
-        success: false, 
-        message: 'Candidate not found' 
+      const error = {
+        success: false,
+        message: 'Candidate not found'
       };
       if (res) {
         return res.status(404).json(error);
@@ -506,16 +562,16 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     const candidateName = [candidate.FirstName, candidate.LastName].filter(Boolean).join(' ') || 'Candidate';
 
     // Get outsource interview request email template
-    const outsourceRequestTemplate = await emailTemplateModel.findOne({ 
-      category: 'outsource_interview_request', 
-      isSystemTemplate: true, 
-      isActive: true 
+    const outsourceRequestTemplate = await emailTemplateModel.findOne({
+      category: 'outsource_interview_request',
+      isSystemTemplate: true,
+      isActive: true
     });
 
     if (!outsourceRequestTemplate) {
-      const error = { 
-        success: false, 
-        message: 'Outsource interview request email template not found' 
+      const error = {
+        success: false,
+        message: 'Outsource interview request email template not found'
       };
       if (res) {
         return res.status(404).json(error);
@@ -524,14 +580,14 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     }
 
     // Fetch interviewer details from Contacts
-    const interviewers = await Contacts.find({ 
-      _id: { $in: interviewerIds } 
+    const interviewers = await Contacts.find({
+      _id: { $in: interviewerIds }
     });
 
     if (!interviewers || interviewers.length === 0) {
-      const error = { 
-        success: false, 
-        message: 'No valid interviewers found' 
+      const error = {
+        success: false,
+        message: 'No valid interviewers found'
       };
       if (res) {
         return res.status(404).json(error);
@@ -578,18 +634,18 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
 
       emailPromises.push(
         sendEmail(interviewer.email, emailSubject, emailBody)
-          .then(response => ({ 
-            email: interviewer.email, 
-            recipient: 'outsource_interviewer', 
+          .then(response => ({
+            email: interviewer.email,
+            recipient: 'outsource_interviewer',
             interviewerId: interviewer._id,
-            success: true 
+            success: true
           }))
-          .catch(error => ({ 
-            email: interviewer.email, 
-            recipient: 'outsource_interviewer', 
+          .catch(error => ({
+            email: interviewer.email,
+            recipient: 'outsource_interviewer',
             interviewerId: interviewer._id,
-            success: false, 
-            error: error.message 
+            success: false,
+            error: error.message
           }))
       );
 
@@ -624,7 +680,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     if (successfulEmails.length > 0) {
       const successfulEmailsList = successfulEmails.map(r => r.email);
       await Notification.updateMany(
-        { 
+        {
           objectName: 'outsource_interview_request',
           objectId: roundId,
           recipientId: { $in: successfulEmails.map(r => r.interviewerId) }
@@ -637,7 +693,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     if (failedEmails.length > 0) {
       const failedEmailsList = failedEmails.map(r => r.email);
       await Notification.updateMany(
-        { 
+        {
           objectName: 'outsource_interview_request',
           objectId: roundId,
           recipientId: { $in: failedEmails.map(r => r.interviewerId) }
@@ -666,12 +722,12 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
 
   } catch (error) {
     console.error('Error sending outsource interview request emails:', error);
-    const errorResult = { 
-      success: false, 
+    const errorResult = {
+      success: false,
       message: 'Failed to send outsource interview request emails',
-      error: error.message 
+      error: error.message
     };
-    
+
     if (res) {
       return res.status(500).json(errorResult);
     }

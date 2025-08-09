@@ -1,5 +1,10 @@
 // v1.0.0 - Ranjith added the interview details tab new things relaetd path set for candidate and postion view tab show proeprly
 // v1.0.1 - Ashok - commented extra user icon and user name
+/* 
+   v1.0.2 - Ashok - fixed z-index issue and added createPortal using this
+   lets you render a React component into a different part of the DOM
+   outside its parent hierarchy.
+*/
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
@@ -28,6 +33,9 @@ import PositionSlideDetails from "../../Position-Tab/PositionSlideDetails";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import Loading from "../../../../../Components/Loading.js";
 import CandidateDetails from "../../Candidate-Tab/CandidateViewDetails/CandidateDetails.jsx";
+// v1.0.2 <---------------------------------------------------------------------
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+// v1.0.2 --------------------------------------------------------------------->
 
 const InterviewDetail = () => {
   const { id } = useParams();
@@ -87,6 +95,11 @@ const InterviewDetail = () => {
   // Entity details state
   const [entityDetailsSidebar, setEntityDetailsSidebar] = useState(null);
   const [entityDetailsModal, setEntityDetailsModal] = useState(null);
+
+  // it disables the outer scrollbar for these two popups when they are open
+  // v1.0.2 <---------------------------------------------------
+  useScrollLock(isModalOpen || showCompletionModal);
+  // v1.0.2 --------------------------------------------------->
 
   useEffect(() => {
     if (rounds) {
