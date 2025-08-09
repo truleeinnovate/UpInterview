@@ -1,8 +1,9 @@
+// v1.0.0 - Ashok - modified advanced filter collapsible dropdown as conditionally display
 import React, { useState, useEffect } from 'react';
 import { Filter, Plus, X, Save, RotateCcw, Search, Check, ChevronDown, ChevronRight, Settings } from 'lucide-react';
 import ApiService from "../../services/api"
 
-const AdvancedFilters = ({ onFiltersChange, initialFilters = {}, availableFields = [] }) => {
+const AdvancedFilters = ({ onFiltersChange, initialFilters = {}, availableFields = [], showAdvancedFilters = true }) => {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [basicFilters, setBasicFilters] = useState({
     interviewType: 'all',
@@ -533,184 +534,188 @@ const AdvancedFilters = ({ onFiltersChange, initialFilters = {}, availableFields
       </div>
 
       {/* Advanced Filters - Collapsible */}
-      <div className="border-t border-gray-200">
-        <div 
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-          onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-        >
-          <div className="flex items-center space-x-3">
-            {isAdvancedOpen ? (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
-            ) : (
-              <ChevronRight className="w-5 h-5 text-gray-400" />
-            )}
-            <Settings className="w-5 h-5 text-custom-blue" />
-            <h4 className="text-md font-medium text-custom-blue">Advanced Filters</h4>
-            {advancedFilters.length > 0 && (
-              <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full">
-                {advancedFilters.length}
-              </span>
-            )}
+      {/* v1.0.0 <---------------------------------------------------------------------- */}
+      {showAdvancedFilters && (
+        <div className="border-t border-gray-200">
+          <div 
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+          >
+            <div className="flex items-center space-x-3">
+              {isAdvancedOpen ? (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              )}
+              <Settings className="w-5 h-5 text-custom-blue" />
+              <h4 className="text-md font-medium text-custom-blue">Advanced Filters</h4>
+              {advancedFilters.length > 0 && (
+                <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full">
+                  {advancedFilters.length}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Advanced Filter Content */}
-        {isAdvancedOpen && (
-          <div className="px-4 pb-4 border-t border-gray-200">
-            {/* Saved Filter Presets */}
-            {savedFilters.length > 0 && (
-              <div className="mb-6 pt-4">
-                <h5 className="text-sm font-medium text-gray-700 mb-2">Saved Filter Presets</h5>
-                <div className="flex flex-wrap gap-2">
-                  {savedFilters.map(preset => (
-                    <div key={preset.id} className="flex items-center bg-gray-100 rounded-lg">
-                      <button
-                        onClick={() => loadFilterPreset(preset)}
-                        className="px-3 py-1 text-sm text-gray-700 hover:text-primary-600"
-                      >
-                        {preset.name}
-                      </button>
-                      <button
-                        onClick={() => deleteFilterPreset(preset.id)}
-                        className="px-2 py-1 text-gray-400 hover:text-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+          {/* Advanced Filter Content */}
+          {isAdvancedOpen && (
+            <div className="px-4 pb-4 border-t border-gray-200">
+              {/* Saved Filter Presets */}
+              {savedFilters.length > 0 && (
+                <div className="mb-6 pt-4">
+                  <h5 className="text-sm font-medium text-gray-700 mb-2">Saved Filter Presets</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {savedFilters.map(preset => (
+                      <div key={preset.id} className="flex items-center bg-gray-100 rounded-lg">
+                        <button
+                          onClick={() => loadFilterPreset(preset)}
+                          className="px-3 py-1 text-sm text-gray-700 hover:text-primary-600"
+                        >
+                          {preset.name}
+                        </button>
+                        <button
+                          onClick={() => deleteFilterPreset(preset.id)}
+                          className="px-2 py-1 text-gray-400 hover:text-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Advanced Filter Rules */}
-            <div className="space-y-3 mb-4">
-              {advancedFilters.map((filter, index) => (
-                <div key={filter.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  {/* Logic Operator */}
-                  {index > 0 && (
+              {/* Advanced Filter Rules */}
+              <div className="space-y-3 mb-4">
+                {advancedFilters.map((filter, index) => (
+                  <div key={filter.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    {/* Logic Operator */}
+                    {index > 0 && (
+                      <select
+                        value={filter.logic}
+                        onChange={(e) => updateAdvancedFilter(filter.id, 'logic', e.target.value)}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      >
+                        <option value="AND">AND</option>
+                        <option value="OR">OR</option>
+                      </select>
+                    )}
+
+                    {/* Field Selection */}
                     <select
-                      value={filter.logic}
-                      onChange={(e) => updateAdvancedFilter(filter.id, 'logic', e.target.value)}
-                      className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      value={filter.field}
+                      onChange={(e) => updateAdvancedFilter(filter.id, 'field', e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     >
-                      <option value="AND">AND</option>
-                      <option value="OR">OR</option>
+                      <option value="">Select field...</option>
+                      {fields.map(field => (
+                        <option key={field.key} value={field.key}>
+                          {field.label}
+                        </option>
+                      ))}
                     </select>
+
+                    {/* Operator Selection */}
+                    <select
+                      value={filter.operator}
+                      onChange={(e) => updateAdvancedFilter(filter.id, 'operator', e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      {operators[getFieldType(filter.field)]?.map(op => (
+                        <option key={op.value} value={op.value}>
+                          {op.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Value Input */}
+                    {renderValueInput(filter)}
+
+                    {/* Remove Filter */}
+                    <button
+                      onClick={() => removeAdvancedFilter(filter.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Advanced Filter Action Buttons */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={addAdvancedFilter}
+                    className="flex items-center space-x-2 px-3 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Rule</span>
+                  </button>
+                  
+                  <button
+                    onClick={clearAllFilters}
+                    className="flex items-center space-x-2 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Clear All</span>
+                  </button>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {hasAdvancedChanges && (
+                    <button
+                      onClick={applyAdvancedFilters}
+                      className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Apply</span>
+                    </button>
                   )}
-
-                  {/* Field Selection */}
-                  <select
-                    value={filter.field}
-                    onChange={(e) => updateAdvancedFilter(filter.id, 'field', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="">Select field...</option>
-                    {fields.map(field => (
-                      <option key={field.key} value={field.key}>
-                        {field.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Operator Selection */}
-                  <select
-                    value={filter.operator}
-                    onChange={(e) => updateAdvancedFilter(filter.id, 'operator', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    {operators[getFieldType(filter.field)]?.map(op => (
-                      <option key={op.value} value={op.value}>
-                        {op.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Value Input */}
-                  {renderValueInput(filter)}
-
-                  {/* Remove Filter */}
-                  <button
-                    onClick={() => removeAdvancedFilter(filter.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Advanced Filter Action Buttons */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={addAdvancedFilter}
-                  className="flex items-center space-x-2 px-3 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Rule</span>
-                </button>
-                
-                <button
-                  onClick={clearAllFilters}
-                  className="flex items-center space-x-2 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Clear All</span>
-                </button>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                {hasAdvancedChanges && (
-                  <button
-                    onClick={applyAdvancedFilters}
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                  >
-                    <Check className="w-4 h-4" />
-                    <span>Apply</span>
-                  </button>
-                )}
-                
-                {(hasBasicChanges() || advancedFilters.length > 0) && (
-                  <button
-                    onClick={() => setShowSaveDialog(true)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600 transition-colors"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>Save Preset</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Save Dialog */}
-            {showSaveDialog && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="text"
-                    value={filterName}
-                    onChange={(e) => setFilterName(e.target.value)}
-                    placeholder="Enter filter preset name..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
-                  <button
-                    onClick={saveFilterPreset}
-                    className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setShowSaveDialog(false)}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
+                  
+                  {(hasBasicChanges() || advancedFilters.length > 0) && (
+                    <button
+                      onClick={() => setShowSaveDialog(true)}
+                      className="flex items-center space-x-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600 transition-colors"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Save Preset</span>
+                    </button>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+
+              {/* Save Dialog */}
+              {showSaveDialog && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="text"
+                      value={filterName}
+                      onChange={(e) => setFilterName(e.target.value)}
+                      placeholder="Enter filter preset name..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                    <button
+                      onClick={saveFilterPreset}
+                      className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-primary-600"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setShowSaveDialog(false)}
+                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      {/* v1.0.0 ----------------------------------------------------------------------> */}
     </div>
   );
 };

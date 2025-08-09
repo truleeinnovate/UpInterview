@@ -420,6 +420,7 @@ const ReportDetail = () => {
       </div>
 
       {/* Filters */}
+      {/* v1.0.1 <------------------------------------------------------------------------------- */}
       <AdvancedFilters
         onFiltersChange={handleFiltersChange}
         initialFilters={filters}
@@ -441,7 +442,9 @@ const ReportDetail = () => {
           { key: "rating", label: "Rating", type: "number" },
           { key: "date", label: "Date", type: "date" },
         ]}
+        showAdvancedFilters={false}
       />
+      {/* v1.0.1 -------------------------------------------------------------------------------> */}
 
       {/* Content */}
       {activeView === "dashboard" ? (

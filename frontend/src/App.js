@@ -51,7 +51,7 @@ import { config } from "./config.js";
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
-const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
+// const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
 const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
 const ProfileWizard = lazy(() =>
   import("./Pages/Login-Part/Individual-4/Individual-4")
@@ -495,9 +495,9 @@ const MainAppRoutes = ({
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/select-user-type" element={<UserTypeSelection />} />
+            {/* <Route path="/select-user-type" element={<UserTypeSelection />} /> */}
             <Route path="/select-profession" element={<SelectProfession />} />
-            <Route path="/complete-profile" element={<ProfileWizard />} />
+            <Route path="/create-profile" element={<ProfileWizard />} />
             <Route path="/subscription-plans" element={<SubscriptionPlan />} />
             <Route
               path="/organization/signup"
@@ -505,7 +505,7 @@ const MainAppRoutes = ({
             />
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route
-              path="/welcome-page-upinterview-individual"
+              path="/individual-login"
               element={<WelcomePageUpinterviewIndividual />}
             />
             <Route path="/callback" element={<LinkedInCallback />} />
@@ -1268,10 +1268,10 @@ const App = () => {
     () => [
       // "/organization-signup",
       // "/organization-login",
-      // "/welcome-page-upinterview-individual",
+      // "/individual-login",
       // "/select-user-type",
       // "/select-profession",
-      // "/complete-profile",
+      // "/create-profile",
       // "/subscription-plans",
       // "/payment-details",
       // "/verify-email",
@@ -1286,13 +1286,13 @@ const App = () => {
       "/select-user-type",
       "/price",
       "/select-profession",
-      "/complete-profile",
+      "/create-profile",
       "/assessmenttest",
       "/assessmenttext",
       "/assessmentsubmit",
       "/candidatevc",
       "/organization-login",
-      "/welcome-page-upinterview-individual",
+      "/individual-login",
       "/organization-signup",
       "/callback",
       "/jitsimeetingstart",

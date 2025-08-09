@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import Slideshow from './Slideshow';
+import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 
 const Profile3 = () => {
     const [selectedTab, setSelectedTab] = useState('');
@@ -37,7 +38,7 @@ const Profile3 = () => {
             token: location.state?.token,
             linkedIn_email: location.state?.linkedIn_email,
         };
-        navigate('/complete-profile', {
+        navigate('/create-profile', {
             state: stateToPass,
         });
     };
@@ -93,7 +94,7 @@ const Profile3 = () => {
             {/* New UI */}
             <div className="min-h-screen flex">
                 {/* Left side - Hero Image and Content */}
-                <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-500 to-primary-600 relative overflow-hidden rounded-r-3xl">
+                <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 to-primary-600 relative overflow-hidden rounded-r-3xl">
                     <div className="absolute inset-0">
                         <img
                             src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1200"
@@ -182,17 +183,13 @@ const Profile3 = () => {
                 </div>
 
                 {/* Right side - Role Selection Form */}
-                <div className="w-full lg:w-1/2 flex items-start justify-center p-4 lg:p-8 bg-gray-50 overflow-y-auto">
+                <div className="w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-start justify-center p-4 lg:p-8 bg-gray-50 overflow-y-auto">
                     <div className="max-w-lg w-full py-4">
                         <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
                             <div className="text-center mb-8">
-                                <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <svg className="w-10 h-10 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                </div>
+                                <img src={logo} alt="Upinterview Logo" className="w-32 object-contain mx-auto mb-3 hover:scale-110 transition-transform duration-300" />
                                 <h2 className="text-3xl font-bold text-gray-900 mb-3">Let us know your profession?</h2>
-                                <p className="text-gray-600">Select your role to get started with InterviewHub</p>
+                                <p className="text-gray-600">Select your role to get started with UpInterview</p>
                             </div>
 
                             {/* Role Selection Cards */}
@@ -200,8 +197,8 @@ const Profile3 = () => {
                                 {/* Technical Expert/Developer Card */}
                                 <div
                                     className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${selectedTab === 'technical'
-                                            ? 'border-primary-500 bg-primary-50 shadow-lg'
-                                            : 'border-gray-200 hover:border-primary-300 hover:shadow-md'
+                                        ? 'border-primary-500 bg-primary-50 shadow-lg'
+                                        : 'border-gray-200 hover:border-primary-300 hover:shadow-md'
                                         }`}
                                     onClick={() => toggleActiveState('technical')}
                                 >
@@ -231,8 +228,8 @@ const Profile3 = () => {
                                 {/* HR/Recruiter Card */}
                                 <div
                                     className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${selectedTab === 'hr'
-                                            ? 'border-primary-500 bg-primary-50 shadow-lg'
-                                            : 'border-gray-200 hover:border-primary-300 hover:shadow-md'
+                                        ? 'border-primary-500 bg-primary-50 shadow-lg'
+                                        : 'border-gray-200 hover:border-primary-300 hover:shadow-md'
                                         }`}
                                     onClick={() => toggleActiveState('hr')}
                                 >
@@ -267,8 +264,8 @@ const Profile3 = () => {
                                     onClick={handleButtonClick}
                                     disabled={!selectedTab}
                                     className={`w-full text-lg font-medium rounded-lg py-4 transition-all duration-300 ${selectedTab
-                                            ? 'bg-primary-500 hover:bg-primary-600 text-white transform hover:scale-105 shadow-lg'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        ? 'bg-primary-500 hover:bg-primary-600 text-white transform hover:scale-105 shadow-lg'
+                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                         }`}
                                 >
                                     {selectedTab ? 'Create Profile ✨' : 'Please select a profession'}

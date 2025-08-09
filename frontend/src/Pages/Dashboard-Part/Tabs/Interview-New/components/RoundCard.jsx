@@ -1,5 +1,10 @@
 // v1.0.0 - Ashok - removed show and hide toggle
 // v1.0.1 - Ashok - disabled outer scrollbar using hook for better user experience
+/* 
+   v1.0.2 - Ashok - fixed z-index issue and added createPortal using this
+   lets you render a React component into a different part of the DOM
+   outside its parent hierarchy.
+*/
 
 import React, { useState, useEffect } from "react";
 import {
@@ -29,8 +34,11 @@ import { config } from "../../../../../config";
 import { useAssessments } from "../../../../../apiHooks/useAssessments";
 import { useInterviews } from "../../../../../apiHooks/useInterviews";
 // v1.0.1 <------------------------------------------------------------
-import {useScrollLock} from "../../../../../apiHooks/scrollHook/useScrollLock"
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.1 ------------------------------------------------------------>
+// v1.0.2 <--------------------------------------------
+import { createPortal } from "react-dom";
+// v1.0.2 -------------------------------------------->
 
 const RoundCard = ({
   round,
@@ -884,7 +892,8 @@ const RoundCard = ({
         </div>
       )}
 
-      {showDeleteConfirmModal && (
+      {/* v1.0.2 <-------------------------------------------------------------------------- */}
+      {/* {showDeleteConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <div className="bg-white p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-3">
@@ -903,7 +912,30 @@ const RoundCard = ({
             </div>
           </div>
         </div>
-      )}
+      )} */}
+      {showDeleteConfirmModal &&
+        createPortal(
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+            <div className="bg-white p-5 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold mb-3">
+                Are you sure you want to delete this round?
+              </h3>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirmModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleDeleteRound}>
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      {/* v1.0.2 --------------------------------------------------------------------------> */}
 
       {showRejectionModal && (
         <RejectionModal

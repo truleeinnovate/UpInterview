@@ -724,7 +724,7 @@ class AuthCookieManager {
         
         // Check if user is individual or individual freelancer and redirect accordingly
         if (effectivePermissions_RoleName === 'Individual' || effectivePermissions_RoleName === 'Individual_Freelancer') {
-          window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/welcome-page-upinterview-individual" : "http://localhost:3000/welcome-page-upinterview-individual";
+          window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/individual-login" : "http://localhost:3000/individual-login";
         } else {
           // Always redirect to main domain
           window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "http://localhost:3000/organization-login";

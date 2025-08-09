@@ -116,6 +116,7 @@ jobs:
           cp -r backend/middleware deploy/backend/
           cp -r backend/utils deploy/backend/
           cp -r backend/constants deploy/backend/
+          cp -r backend/data deploy/backend/
           
           # Copy node_modules (already installed with production deps)
           cp -r backend/node_modules deploy/backend/
