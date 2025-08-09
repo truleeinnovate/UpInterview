@@ -7,7 +7,7 @@
 
 // v1.0.6 - Mansoor - removed the navbar in the login pages
 
-// v1.0.5 - Ashok - Added Analytics related pages
+// v1.0.5 - Ashok - Added Analytics related pages 
 
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
