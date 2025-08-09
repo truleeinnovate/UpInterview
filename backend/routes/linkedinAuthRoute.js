@@ -32,10 +32,18 @@ const downloadImageAsBuffer = async (url) => {
 const { generateToken } = require("../utils/jwt");
 
 router.post("/check-user", async (req, res) => {
-  console.log(
-    "config.REACT_APP_REDIRECT_URI from backend linkedinroutes.js",
-    config.REACT_APP_REDIRECT_URI
-  );
+  console.log("=== LinkedIn Auth Debug Info ===");
+  console.log("Request headers:", req.headers);
+  console.log("Request body:", req.body);
+  console.log("Request origin:", req.headers.origin);
+  console.log("Request method:", req.method);
+  console.log("Request path:", req.path);
+
+  console.log("Environment variables:");
+  console.log("REACT_APP_CLIENT_ID:", config.REACT_APP_CLIENT_ID ? "SET" : "NOT SET");
+  console.log("REACT_APP_CLIENT_SECRET:", config.REACT_APP_CLIENT_SECRET ? "SET" : "NOT SET");
+  console.log("REACT_APP_REDIRECT_URI:", config.REACT_APP_REDIRECT_URI);
+  console.log("=== End Debug Info ===");
 
   // Check if required environment variables are set
   if (!config.REACT_APP_CLIENT_ID || !config.REACT_APP_CLIENT_SECRET || !config.REACT_APP_REDIRECT_URI) {
@@ -301,9 +309,21 @@ router.post("/check-user", async (req, res) => {
     //   res.json(responsePayload);
   } catch (error) {
     console.error("Error in LinkedIn authentication:", error);
+
+    // Log more details for debugging
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+
     res.status(500).json({
       error: "Internal server error",
       details: error.message,
+      timestamp: new Date().toISOString(),
+      path: req.path,
+      method: req.method
     });
   }
 });

@@ -18,7 +18,7 @@ const LinkedInCallback = () => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
       const allContacts = response.data;
       const filteredContacts = allContacts.filter(contact => contact.email === linkedInEmail);
-      
+
       if (filteredContacts.length > 0) {
         setFilteredContact(filteredContacts[0]);
         return filteredContacts[0];
@@ -49,7 +49,7 @@ const LinkedInCallback = () => {
     }
 
     const { completionStatus } = contact;
-    
+
     if (!completionStatus) {
       // No completion status - treat as new user
       return navigate('/select-profession', {
@@ -120,9 +120,9 @@ const LinkedInCallback = () => {
           state: { token, linkedIn_email: email }
         });
       }
-      
+
       const tenant = tenantResponse.data;
-      
+
       // If tenant status is 'submitted' or 'payment_pending', go to subscription plans
       if (tenant.status === 'submitted' || tenant.status === 'payment_pending') {
         return navigate('/subscription-plans', {
@@ -130,13 +130,13 @@ const LinkedInCallback = () => {
           replace: true,
         });
       }
-      
+
       // // For active users, go to home
       // if (tenant.status === 'active') {
       //   console.log('Tenant is active, navigating to home');
       //   return navigate('/home', { replace: true });
       // }
-      
+
       // For any other status, default to home
       return navigate('/home', {
         replace: true,
@@ -160,6 +160,9 @@ const LinkedInCallback = () => {
           throw new Error('No authorization code received from LinkedIn');
         }
 
+        console.log('Making request to:', `${config.REACT_APP_API_URL}/linkedin/check-user`);
+        console.log('Request payload:', { code, redirectUri: window.location.origin + '/callback' });
+
         const response = await axios.post(
           `${config.REACT_APP_API_URL}/linkedin/check-user`,
           { code, redirectUri: window.location.origin + '/callback' },
@@ -169,6 +172,7 @@ const LinkedInCallback = () => {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
+            timeout: 30000, // 30 second timeout
           }
         );
 
