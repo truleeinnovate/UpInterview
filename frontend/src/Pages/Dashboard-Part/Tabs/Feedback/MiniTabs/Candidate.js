@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
 import { useLocation } from 'react-router-dom';
-import { Award, Briefcase, ChevronDown, ChevronUp, GraduationCap, User } from 'lucide-react';
-
-const CandidateMiniTab = ({selectedData}) => {
+import { Award, Briefcase, ChevronDown, ChevronUp, GraduationCap, User,Video } from 'lucide-react';
+// import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';
+const CandidateMiniTab = ({selectedData,isAddMode,decodedData}) => {
   const location = useLocation();
   const feedback = location.state?.feedback || {};
   const candidateData = selectedData?.candidate ? selectedData?.candidate : feedback.candidateId || {};
@@ -47,7 +47,27 @@ const CandidateMiniTab = ({selectedData}) => {
   return (
     <div className="px-5 space-y-6 min-h-screen">
       {/* Basic Info */}
+
+     {isAddMode && (
+     <div className=" top-14 right-4 z-40 pt-3">
+     <div className="flex justify-end items-center gap-3">
+     <button
+          onClick={() => window.open(decodedData.meetLink, '_blank')}
+          className="  bg-[#1a616e] text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+        >
+          <Video className="w-4 h-4" />
+          Start Meeting
+        </button>
+        </div>
+        </div>
+      )} 
+
+
       <div className="bg-white rounded-lg p-6 shadow-sm mt-2">
+
+     
+
+
         <div className="flex items-center mb-4">
           <User className="h-5 w-5 mr-2" style={{ color: 'rgb(33, 121, 137)' }} />
           <h3 className="text-lg font-medium text-gray-900">Candidate Information</h3>

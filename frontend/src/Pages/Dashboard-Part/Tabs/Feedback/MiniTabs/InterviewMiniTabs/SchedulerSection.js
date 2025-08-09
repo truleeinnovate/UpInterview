@@ -99,16 +99,18 @@ const SchedulerSectionComponent = ({
   const questionRef = useRef(); // For future use, e.g., scrolling to a specific question
 
   // Function to handle radio input changes if needed
-  const onChangeRadioInput = (questionId, value) => {
+  const onChangeRadioInput = (id, value) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((question) =>
-        question._id === questionId ? { ...question, isAnswered: value } : question
+        question._id === id ? { ...question, isAnswered: value } : question
       )
     );
     
-    // Update preselected questions responses
+    // Update preselected questions responses using the underlying bank questionId
     if (handlePreselectedQuestionResponse) {
-      handlePreselectedQuestionResponse(questionId, { isAnswered: value });
+      const q = schedulerQuestionsData.find((qq) => qq._id === id);
+      const bankQuestionId = q?.questionId || id;
+      handlePreselectedQuestionResponse(bankQuestionId, { isAnswered: value });
     }
   };
 
@@ -125,7 +127,9 @@ const SchedulerSectionComponent = ({
     
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      handlePreselectedQuestionResponse(questionId, { whyDislike: value, isLiked: "disliked" });
+      const q = schedulerQuestionsData.find((qq) => qq._id === questionId);
+      const bankQuestionId = q?.questionId || questionId;
+      handlePreselectedQuestionResponse(bankQuestionId, { whyDislike: value, isLiked: "disliked" });
     }
   };
 
@@ -143,7 +147,8 @@ const SchedulerSectionComponent = ({
     if (handlePreselectedQuestionResponse) {
       const question = schedulerQuestionsData.find(q => q._id === id);
       const newIsLiked = question?.isLiked === "disliked" ? "" : "disliked";
-      handlePreselectedQuestionResponse(id, { isLiked: newIsLiked });
+      const bankQuestionId = question?.questionId || id;
+      handlePreselectedQuestionResponse(bankQuestionId, { isLiked: newIsLiked });
     }
   };
 
@@ -160,7 +165,8 @@ const SchedulerSectionComponent = ({
     if (handlePreselectedQuestionResponse) {
       const question = schedulerQuestionsData?.find(q => q?._id === id);
       const newIsLiked = question?.isLiked === "liked" ? "" : "liked";
-      handlePreselectedQuestionResponse(id, { isLiked: newIsLiked });
+      const bankQuestionId = question?.questionId || id;
+      handlePreselectedQuestionResponse(bankQuestionId, { isLiked: newIsLiked });
     }
   };
 
@@ -174,7 +180,8 @@ const SchedulerSectionComponent = ({
     if (handlePreselectedQuestionResponse) {
       const question = schedulerQuestionsData.find(q => q._id === id);
       const newNotesBool = !question?.notesBool;
-      handlePreselectedQuestionResponse(id, { notesBool: newNotesBool });
+      const bankQuestionId = question?.questionId || id;
+      handlePreselectedQuestionResponse(bankQuestionId, { notesBool: newNotesBool });
     }
   };
 
@@ -186,7 +193,9 @@ const SchedulerSectionComponent = ({
     
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      handlePreselectedQuestionResponse(id, { notesBool: false, note: "" });
+      const question = schedulerQuestionsData.find(q => q._id === id);
+      const bankQuestionId = question?.questionId || id;
+      handlePreselectedQuestionResponse(bankQuestionId, { notesBool: false, note: "" });
     }
   };
 
@@ -200,7 +209,9 @@ const SchedulerSectionComponent = ({
     
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      handlePreselectedQuestionResponse(questionId, { note: notes });
+      const q = schedulerQuestionsData.find(qq => qq._id === questionId);
+      const bankQuestionId = q?.questionId || questionId;
+      handlePreselectedQuestionResponse(bankQuestionId, { note: notes });
     }
   };
 
