@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { fetchFilterData } from '../api.js';
 import { usePermissions } from '../Context/PermissionsContext';
+import axios from 'axios';
 
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
@@ -26,5 +27,31 @@ export const useFeedbacks = (filters = {}) => {
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
     refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnReconnect: false, // Don't refetch on network reconnect
+  });
+};
+
+export const useCreateFeedback = () => {
+  return useMutation({
+    mutationFn: async (feedbackData) => {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/feedback`, feedbackData);
+      return response.data;
+    },
+    onError: (error) => {
+      console.error('Error creating feedback:', error);
+      throw error;
+    },
+  });
+};
+
+export const useUpdateFeedback = () => {
+  return useMutation({
+    mutationFn: async ({ feedbackId, feedbackData }) => {
+      const response = await axios.put(`${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`, feedbackData);
+      return response.data;
+    },
+    onError: (error) => {
+      console.error('Error updating feedback:', error);
+      throw error;
+    },
   });
 };

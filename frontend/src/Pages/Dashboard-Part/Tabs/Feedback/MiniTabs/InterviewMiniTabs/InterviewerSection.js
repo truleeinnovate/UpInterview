@@ -359,7 +359,7 @@ const InterviewerSectionComponent = ({
               The questions listed below are interviewer's choice.
             </p>
           </div>
-                     {(isEditMode || isAddMode) && (
+                     {(isAddMode) && (
              <div className="flex items-center gap-2">
                <button
                  className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
