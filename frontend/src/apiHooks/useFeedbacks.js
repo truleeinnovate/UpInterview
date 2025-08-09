@@ -33,7 +33,7 @@ export const useFeedbacks = (filters = {}) => {
 export const useCreateFeedback = () => {
   return useMutation({
     mutationFn: async (feedbackData) => {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/feedback`, feedbackData);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/feedback/create`, feedbackData);
       return response.data;
     },
     onError: (error) => {
