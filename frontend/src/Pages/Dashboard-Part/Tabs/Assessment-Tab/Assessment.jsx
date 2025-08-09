@@ -3,6 +3,9 @@
 // v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 // v1.0.3  -  Ashraf  -  assessment sections and question api getting in loop issue
 // v1.0.4  -  Ashraf  -  assessment to assessment templates
+/* v1.0.5  -  Ashok   -  fixed previously filter by duration not working and in the table 
+                         create new assessment popup has z-index issues 
+*/
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -21,14 +24,15 @@ import AssessmentKanban from "./AssessmentKanban.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { config } from "../../../../config.js";
-import { useAssessments } from '../../../../apiHooks/useAssessments.js';
+import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 
 const Assessment = () => {
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
   // <---------------------- v1.0.2
-  const { assessmentData, isLoading, fetchAssessmentQuestions } = useAssessments();
+  const { assessmentData, isLoading, fetchAssessmentQuestions } =
+    useAssessments();
   // <---------------------- v1.0.2 >
   const navigate = useNavigate();
   const [assessmentSections, setAssessmentSections] = useState({});
@@ -43,7 +47,7 @@ const Assessment = () => {
   });
   const [isShareOpen, setIsShareOpen] = useState(false);
   const filterIconRef = useRef(null);
-  // <---------------------- v1.0.3 
+  // <---------------------- v1.0.3
   const sectionsFetchedRef = useRef(false);
   // ------------------------------ v1.0.3 >
   // <---------------------- v1.0.0
@@ -66,66 +70,71 @@ const Assessment = () => {
     // Only run if assessmentData is loaded and not empty
     // <---------------------- v1.0.0
     if (!assessmentData || assessmentData.length === 0) return;
-    
+
     // ------------------------------ v1.0.3 >
     // Prevent running if we already have sections data for all assessments
-    const hasAllSections = assessmentData.every(assessment => 
+    const hasAllSections = assessmentData.every((assessment) =>
       assessmentSections.hasOwnProperty(assessment._id)
     );
     if (hasAllSections) {
       sectionsFetchedRef.current = true;
       return;
     }
-    
+
     // Prevent multiple simultaneous fetches
     if (sectionsFetchedRef.current) return;
     sectionsFetchedRef.current = true;
     // ------------------------------ v1.0.3 >
-    
+
     const fetchSectionsInBatches = async () => {
       const batchSize = 5; // Process 5 assessments at a time
       const sectionsCache = {};
-      
+
       for (let i = 0; i < assessmentData.length; i += batchSize) {
         const batch = assessmentData.slice(i, i + batchSize);
-        
+
         try {
           const batchPromises = batch.map(async (assessment) => {
             // ------------------------------ v1.0.3 >
             // Skip if we already have sections for this assessment
             if (assessmentSections.hasOwnProperty(assessment._id)) {
-              return { id: assessment._id, sections: assessmentSections[assessment._id] };
+              return {
+                id: assessment._id,
+                sections: assessmentSections[assessment._id],
+              };
             }
             // ------------------------------ v1.0.3 >
-            const { data, error } = await fetchAssessmentQuestions(assessment._id);
-            
+            const { data, error } = await fetchAssessmentQuestions(
+              assessment._id
+            );
+
             let sections = 0;
             if (!error && data && data.sections) {
               sections = data.sections.length || 0;
             }
-            
+
             return { id: assessment._id, sections };
           });
-          
+
           const batchResults = await Promise.all(batchPromises);
-          
+
           // Update state incrementally
-          batchResults.forEach(result => {
+          batchResults.forEach((result) => {
             sectionsCache[result.id] = result.sections;
           });
-          
-          setAssessmentSections(prev => ({ ...prev, ...sectionsCache }));
-          
+
+          setAssessmentSections((prev) => ({ ...prev, ...sectionsCache }));
+
           // Small delay between batches to prevent overwhelming the server
           if (i + batchSize < assessmentData.length) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
           }
         } catch (error) {
           console.error("Error fetching sections batch:", error);
         }
       }
     };
-    
+
     fetchSectionsInBatches();
   }, [assessmentData]);
   // <---------------------- v1.0.2 >
@@ -142,7 +151,9 @@ const Assessment = () => {
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
-    setIsFilterActive(filters.difficultyLevel.length > 0 || filters.duration.length > 0);
+    setIsFilterActive(
+      filters.difficultyLevel.length > 0 || filters.duration.length > 0
+    );
     setFilterPopupOpen(false);
     setCurrentPage(0);
   };
@@ -285,7 +296,11 @@ const Assessment = () => {
       key: "passScore",
       header: "Pass Score (Number / %)",
       render: (value, row) =>
-        row.passScore ? `${row.passScore} ${row.passScoreType === "Percentage" ? "%" : "Number"}` : "Not Provided",
+        row.passScore
+          ? `${row.passScore} ${
+              row.passScoreType === "Percentage" ? "%" : "Number"
+            }`
+          : "Not Provided",
     },
     {
       key: "Duration",
@@ -307,9 +322,9 @@ const Assessment = () => {
         ]
       : []),
     ...(effectivePermissions.AssessmentTemplates?.Edit
-      // <---------------------- v1.0.0
-      // <---------------------- v1.0.1
-      ? [
+      ? // <---------------------- v1.0.0
+        // <---------------------- v1.0.1
+        [
           {
             key: "edit",
             label: "Edit",
@@ -326,10 +341,11 @@ const Assessment = () => {
       disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
     },
   ];
-
-
+// v1.0.5 <------------------------------------------------------------
   const difficultyOptions = ["Easy", "Medium", "Hard"];
-  const durationOptions = ["30 minutes", "60 minutes"];
+  // const durationOptions = ["30 minutes", "60 minutes"];
+  const durationOptions = ["30 Minutes", "60 Minutes"];
+// v1.0.5 ------------------------------------------------------------>
 
   const handleDifficultyToggle = (option) => {
     setSelectedDifficulty((prev) =>
@@ -424,7 +440,9 @@ const Assessment = () => {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsDifficultyOpen(!isDifficultyOpen)}
                   >
-                    <span className="font-medium text-gray-700">Difficulty Level</span>
+                    <span className="font-medium text-gray-700">
+                      Difficulty Level
+                    </span>
                     {isDifficultyOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -434,7 +452,10 @@ const Assessment = () => {
                   {isDifficultyOpen && (
                     <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                       {difficultyOptions.map((option) => (
-                        <label key={option} className="flex items-center space-x-2">
+                        <label
+                          key={option}
+                          className="flex items-center space-x-2"
+                        >
                           <input
                             type="checkbox"
                             checked={selectedDifficulty.includes(option)}
@@ -462,7 +483,10 @@ const Assessment = () => {
                   {isDurationOpen && (
                     <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                       {durationOptions.map((option) => (
-                        <label key={option} className="flex items-center space-x-2">
+                        <label
+                          key={option}
+                          className="flex items-center space-x-2"
+                        >
                           <input
                             type="checkbox"
                             checked={selectedDuration.includes(option)}
