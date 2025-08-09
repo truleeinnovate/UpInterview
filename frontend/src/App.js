@@ -5,7 +5,7 @@
 // v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
 // v1.0.5 - Mansoor - Added custom video call application routes
 
-// v1.0.6 - Mansoor - removed the navbar in the login pages
+// v1.0.6 - Mansoor - removed the navbar in the login pages 
 
 // v1.0.5 - Ashok - Added Analytics related pages 
 
