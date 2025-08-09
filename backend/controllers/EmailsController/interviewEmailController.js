@@ -292,7 +292,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             const encryptedOwnerId = encryptData(interviewerEmail?.ownerId);
 
             const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
-        &round=${encodeURIComponent(encryptedRoundId)}&interviwer=${encodeURIComponent(encryptedInterviewerId)}&owner=${encodeURIComponent(encryptedOwnerId)}`;
+        &round=${encodeURIComponent(encryptedRoundId)}&interviewerId=${encodeURIComponent(encryptedInterviewerId)}&ownerId=${encodeURIComponent(encryptedOwnerId)}`;
 
             console.log("🔍 Interviewer link:", interviewerLink);
             
@@ -367,8 +367,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         const encryptedSchedulerId = encryptData(scheduler?._id);
         const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
 
-        const schedulerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
-        &round=${encodeURIComponent(encryptedRoundId)}&interviwer=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
+        const schedulerLink = `${baseUrl}?scheduler=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
+        &round=${encodeURIComponent(encryptedRoundId)}&interviewerId=${encodeURIComponent(encryptedSchedulerId)}&ownerId=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
 
         console.log("🔍 Scheduler link:", schedulerLink);
 
