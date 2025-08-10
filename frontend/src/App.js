@@ -21,7 +21,7 @@ import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
 import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
 import {
   usePermissions,
-  PermissionsProvider,
+  PermissionsProvider, 
 } from "./Context/PermissionsContext";
 import { CustomProvider } from "./Context/Contextfetch";
 import PageSetter from "./Components/PageSetter";
