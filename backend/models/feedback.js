@@ -63,7 +63,6 @@ const feedbackSchema = new mongoose.Schema(
     questionFeedback:[questionFeedbackSchema], //feedback for each question
     generalComments:String, //general comments about the interview session
     overallImpression: overallImpressionSchema,
-    feedbackCode:String,
     status: {
       type: String,
       enum: ['draft', 'submitted'],

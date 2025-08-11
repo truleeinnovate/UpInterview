@@ -113,12 +113,11 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
         <div className="flex items-center gap-3">
           <button
             onClick={() => window.open(decodedData.meetLink, '_blank')}
-            className=" text-black hover:bg-[#1a616e] hover:text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+            className="bg-[#217989] hover:bg-[#1a616e] text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
           >
             <Video className="w-4 h-4" />
             Start Meeting
           </button>
-         
         </div>
       </div> */}
 
@@ -180,8 +179,6 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
                 positionId={selectedCandidate?.position?._id}
                 interviewerId={decodedData?.interviewerId}
                 feedbackCandidate={selectedCandidate}
-              
-
                 // tenantId={decodedData?.tenantId}
                 // isEditMode={false}
                 // feedbackId={null}

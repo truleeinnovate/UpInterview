@@ -121,6 +121,7 @@ function JoinMeeting() {
     }
   }, [location.search]);
 
+
   // Function to fetch feedback data
   const fetchFeedbackData = async (roundId, interviewerId) => {
     if (!roundId) {
@@ -179,11 +180,12 @@ function JoinMeeting() {
 
     // Parse URL parameters
     const urlParams = new URLSearchParams(location.search);
-    const schedule = urlParams.get('scheduler');
+    const schedule = urlParams.get('schedule');
     const meeting = urlParams.get('meeting');
     const round = urlParams.get('round');
     const candidate = urlParams.get('candidate');
     const interviewer = urlParams.get('interviewer');
+
 
     console.log('=== URL PARAMETERS DEBUG ===');
     console.log('Raw URL parameters:', {
@@ -229,7 +231,6 @@ function JoinMeeting() {
     }
 
     const interviewerId ="68664845d494db82db30103c"
-
     // Extract key information
     const extractedData = {
       schedule: isSchedule,
