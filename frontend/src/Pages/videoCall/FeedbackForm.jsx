@@ -932,9 +932,22 @@ const FeedbackForm = ({
                 </button>
               )}
             </div>
-
-            {isViewMode ? (
-              <>
+          {(isViewMode || isEditMode) ? (
+            <div></div>
+          ) : (
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
+              onClick={openQuestionBank}
+              title="Add Question from Question Bank"
+            >
+              <FaPlus className="text-sm" />
+              <span>Add Question</span>
+            </button>
+          )}
+          </div>
+          
+          {isViewMode ? (
+            <>
                 {(interviewerSectionData?.length > 0 || filteredInterviewerQuestions?.length > 0) ? (
                   [...interviewerSectionData, ...filteredInterviewerQuestions].map((question) => (
                     <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2">

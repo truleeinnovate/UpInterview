@@ -570,52 +570,81 @@ class AuthCookieManager {
     }
   }
 
+  // Clear only effective user data (return to super admin)
+  // static clearEffectiveUser() {
+  //   try {
+  //     // Clear impersonation token and related data
+  //     Cookies.remove(IMPERSONATION_TOKEN_KEY);
+  //     localStorage.removeItem(IMPERSONATED_USER_KEY);
+
+  //     // Clear effective user permissions
+  //     this.clearPermissions('effective');
+
+  //     // Also clear the old legacy cache keys for backward compatibility
+  //     localStorage.removeItem('app_permissions_cache');
+  //     localStorage.removeItem('app_permissions_timestamp');
+
+  //     // Update user type based on current state
+  //     AuthCookieManager.updateUserType();
+
+  //     console.log('✅ Effective user data cleared, returning to super admin');
+  //   } catch (error) {
+  //     console.error('Error clearing effective user data:', error);
+  //   }
+  // }
+
+  // // Login as super admin
+  // static loginAsSuperAdmin(token) {
+  //   try {
+  //     this.clearAllAuth(); // Clear any existing data
+  //     this.setAuthToken(token);
+  //     console.log('✅ Logged in as super admin');
+  //   } catch (error) {
+  //     console.error('Error logging in as super admin:', error);
+  //   }
+  // }
+
+  // // Login as effective user (direct login)
+  // static loginAsEffectiveUser(token) {
+  //   try {
+  //     this.clearAllAuth(); // Clear any existing data
+  //     this.setImpersonationToken(token);
+  //     console.log('✅ Logged in as effective user');
+  //   } catch (error) {
+  //     console.error('Error logging in as effective user:', error);
+  //   }
+  // }
+
+  // Impersonate user (super admin impersonating effective user)
+  // static impersonateUser(token, userData) {
+  //   try {
+  //     // Keep super admin token, add impersonation token
+  //     this.setImpersonationToken(token, userData);
+  //     console.log('✅ Impersonating user:', userData);
+  //   } catch (error) {
+  //     console.error('Error impersonating user:', error);
+  //   }
+  // }
 
   // Login as user (super admin switching to user account)
   static loginAsUser(authToken, userData) {
     try {
-      // Clear all existing cookies and localStorage for fresh login
-      AuthCookieManager.clearAllAuth();
-      
-      // Clear all permission caches
-      AuthCookieManager.clearAllPermissionCaches();
-      
+
+      // Store the current super admin impersonation token
+      const currentImpersonationToken = AuthCookieManager.getImpersonationToken();
+
       // Set the user's auth token as the auth token (effective user session)
       AuthCookieManager.setAuthToken(authToken);
-      
-      // Store user data if provided
-      if (userData) {
-        localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
+
+      // Restore the super admin's impersonation token
+      if (currentImpersonationToken) {
+        AuthCookieManager.setImpersonationToken(currentImpersonationToken);
       }
-      
-      // Update user type based on new state
-      AuthCookieManager.updateUserType();
-      
-      console.log('✅ Login as user completed - all previous data cleared');
 
     } catch (error) {
       console.error('❌ Error during login as user:', error);
     }
   }
-
-  // static loginAsUser(authToken, userData) {
-  //   try {
-
-  //     // Store the current super admin impersonation token
-  //     const currentImpersonationToken = AuthCookieManager.getImpersonationToken();
-
-  //     // Set the user's auth token as the auth token (effective user session)
-  //     AuthCookieManager.setAuthToken(authToken);
-
-  //     // Restore the super admin's impersonation token
-  //     if (currentImpersonationToken) {
-  //       AuthCookieManager.setImpersonationToken(currentImpersonationToken);
-  //     }
-
-  //   } catch (error) {
-  //     console.error('❌ Error during login as user:', error);
-  //   }
-  // }
 
   // Smart logout based on current authentication state
   //<---------------------- v1.0.0

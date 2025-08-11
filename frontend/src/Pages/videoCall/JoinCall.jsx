@@ -17,7 +17,7 @@ function JoinMeeting() {
   const [feedbackData, setFeedbackData] = useState(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState(null);
-  // const interviewerId ="68664845d494db82db30103c"
+  const interviewerId ="68664845d494db82db30103c"
   // 507f1f77bcf86cd799439015
   // 68664845d494db82db30103c
   // Function to fetch feedback data
@@ -75,13 +75,14 @@ function JoinMeeting() {
   useEffect(() => {
     // Parse URL parameters
     const urlParams = new URLSearchParams(location.search);
-    const schedule = urlParams.get('scheduler');
+    const schedule = urlParams.get('schedule');
     const meeting = urlParams.get('meeting');
     const round = urlParams.get('round');
     const candidate = urlParams.get('candidate');
     const interviewer = urlParams.get('interviewer');
     // const ownerId = urlParams.get('owner');
     // const interviewerId = urlParams.get('interviewerId');
+
 
     console.log('=== URL PARAMETERS DEBUG ===');
     console.log('Raw URL parameters:', {
@@ -92,6 +93,7 @@ function JoinMeeting() {
       round,
       // interviewerId,
       // ownerId
+
     });
 
     // Parse schedule parameter
@@ -154,7 +156,6 @@ function JoinMeeting() {
       //    }
       //  }
         const interviewerId ="68664845d494db82db30103c"
-
     // Extract key information
     const extractedData = {
       schedule: isSchedule,
