@@ -80,6 +80,9 @@ function JoinMeeting() {
     const round = urlParams.get('round');
     const candidate = urlParams.get('candidate');
     const interviewer = urlParams.get('interviewer');
+    // const ownerId = urlParams.get('owner');
+    // const interviewerId = urlParams.get('interviewerId');
+
 
     console.log('=== URL PARAMETERS DEBUG ===');
     console.log('Raw URL parameters:', {
@@ -87,7 +90,10 @@ function JoinMeeting() {
       candidate,
       interviewer,
       meeting,
-      round
+      round,
+      // interviewerId,
+      // ownerId
+
     });
 
     // Parse schedule parameter
@@ -124,6 +130,32 @@ function JoinMeeting() {
       }
     }
 
+    //  // Decrypt interviewer Id
+    //  let decryptedOwnerId = null;
+    //  if (ownerId) {
+    //    try {
+    //      const decodedOwnerId = decodeURIComponent(ownerId);
+    //      console.log('Decoded round parameter:', decodedOwnerId);
+    //      decryptedOwnerId = decryptData(decodedOwnerId);
+    //      console.log('Decrypted round data:', decodedOwnerId);
+    //    } catch (error) {
+    //      console.error('Error decrypting round data:', error);
+    //    }
+    //  }
+
+       // Decrypt interviewer Id
+      //  let decryptedInterviewerId = null;
+      //  if (interviewerId) {
+      //    try {
+      //      const decodedInterviewerId = decodeURIComponent(interviewerId);
+      //      console.log('Decoded round parameter:', decodedInterviewerId);
+      //      decryptedInterviewerId = decryptData(decodedInterviewerId);
+      //      console.log('Decrypted round data:', decodedInterviewerId);
+      //    } catch (error) {
+      //      console.error('Error decrypting round data:', error);
+      //    }
+      //  }
+        const interviewerId ="68664845d494db82db30103c"
     // Extract key information
     const extractedData = {
       schedule: isSchedule,
@@ -133,7 +165,9 @@ function JoinMeeting() {
       roundData: decryptedRound,
       // meetLink: decryptedMeeting?.meetLink || decryptedRound?.meetLink,
       interviewRoundId: decryptedRound || '',
-      interviewerId:interviewerId,
+      interviewerId:interviewerId || "not found",
+      // ownerId:decryptedOwnerId,
+      // interviewerId:decryptedInterviewerId,
       // candidateId: decryptedMeeting?.candidateId || decryptedRound?.candidateId,
       // interviewerId: decryptedMeeting?.interviewerId || decryptedRound?.interviewerId,
       // isCandidate: decryptedMeeting?.isCandidate || decryptedRound?.isCandidate,

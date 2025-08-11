@@ -115,11 +115,37 @@ export const validateConfirmPassword = (password, confirmPassword) => {
   return '';
 };
 
-export const validateOrganizationSignup = async (formData, setErrors, checkEmailExists, checkProfileIdExists) => {
+// export const validateOrganizationSignup = async (formData, setErrors, checkEmailExists, checkProfileIdExists) => {
+//   const errors = {};
+
+//   // errors.email = await validateEmail(formData.email, checkEmailExists);
+//   errors.profileId = await validateProfileId(formData.profileId, checkProfileIdExists);
+//   errors.lastName = !formData.lastName ? 'Last Name is required' : '';
+//   errors.phone = validatePhone(formData.phone, formData.countryCode);
+//   errors.jobTitle = validateJobTitle(formData.jobTitle);
+//   errors.company = validateCompany(formData.company);
+//   errors.employees = validateEmployees(formData.employees);
+//   errors.country = validateCountry(formData.country);
+//   errors.password = validatePassword(formData.password);
+
+//   setErrors((prev) => ({ ...prev, ...errors }));
+
+//   return Object.values(errors).every((error) => error === '');
+// };
+
+export const validateOrganizationSignup = async (
+  formData, setErrors,
+  checkEmailExists, checkProfileIdExists
+) => {
   const errors = {};
 
-  // errors.email = await validateEmail(formData.email, checkEmailExists);
+  // Email
+  errors.email = await validateEmail(formData.email, checkEmailExists);
+
+  // Profile ID
   errors.profileId = await validateProfileId(formData.profileId, checkProfileIdExists);
+
+  // Other fields
   errors.lastName = !formData.lastName ? 'Last Name is required' : '';
   errors.phone = validatePhone(formData.phone, formData.countryCode);
   errors.jobTitle = validateJobTitle(formData.jobTitle);
@@ -127,8 +153,9 @@ export const validateOrganizationSignup = async (formData, setErrors, checkEmail
   errors.employees = validateEmployees(formData.employees);
   errors.country = validateCountry(formData.country);
   errors.password = validatePassword(formData.password);
+  errors.confirmPassword = validateConfirmPassword(formData.password, formData.confirmPassword);
 
-  setErrors((prev) => ({ ...prev, ...errors }));
+  setErrors(errors);
 
   return Object.values(errors).every((error) => error === '');
 };

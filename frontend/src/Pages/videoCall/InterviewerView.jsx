@@ -104,10 +104,12 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
     // { id: 'management', label: 'Feedback Management', icon: Users }
   ];
 
+  console.log("decodedData",decodedData);
+
   return (
-    <div className="min-h-screen bg-gray-50 pt-14">
+    <div className="min-h-screen bg-gray-50 ">
       {/* Meeting Controls - Floating */}
-      <div className="fixed top-14 right-4 z-40 bg-white shadow-lg rounded-lg p-3">
+      {/* <div className="fixed top-14 right-4 z-40 bg-white shadow-lg rounded-lg p-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => window.open(decodedData.meetLink, '_blank')}
@@ -116,14 +118,8 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
             <Video className="w-4 h-4" />
             Start Meeting
           </button>
-          <button
-            onClick={onBack}
-            className="text-gray-500 hover:text-gray-700 transition-colors p-2"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex h-[calc(100vh-80px)]">
         {/* Fixed Sidebar - No Scroll */}
@@ -154,7 +150,7 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
         {/* Scrollable Main Content */}
         <div className="flex-1 bg-gray-50 overflow-y-auto">
           <div className="p-8">
-            {activeTab === 'candidate' && <CandidateMiniTab selectedData={selectedCandidate} />}
+            {activeTab === 'candidate' && <CandidateMiniTab selectedData={selectedCandidate} isAddMode={true} decodedData={decodedData} />}
             {activeTab === 'questions' && (
               <InterviewsMiniTabComponent 
                 interviewData={selectedCandidate} 
@@ -171,6 +167,7 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
                 preselectedQuestionsResponses={preselectedQuestionsResponses}
                 setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
                 handlePreselectedQuestionResponse={handlePreselectedQuestionResponse}
+                decodedData={decodedData}
               />
             )}
             {activeTab === 'feedback' && (
@@ -181,10 +178,13 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
                 candidateId={selectedCandidate?.candidate?._id}
                 positionId={selectedCandidate?.position?._id}
                 interviewerId={decodedData?.interviewerId}
+                feedbackCandidate={selectedCandidate}
                 // tenantId={decodedData?.tenantId}
-                isEditMode={false}
+                // isEditMode={false}
                 // feedbackId={null}
                 preselectedQuestionsResponses={preselectedQuestionsResponses}
+                decodedData={decodedData}
+                isAddMode={true}
               />
             )}
             {/* {activeTab === 'management' && <FeedbackManagement />} */}
