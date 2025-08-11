@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import RoleSelector from './RoleSelector';
@@ -8,18 +8,119 @@ import InterviewerView from './InterviewerView';
 import CombinedNavbar from '../../Components/Navbar/CombinedNavbar';
 import { decryptData } from '../../utils/PaymentCard';
 import { config } from '../../config';
+import { isAuthenticated, getCurrentUserId, getActiveUserData } from '../../utils/AuthCookieManager/AuthCookieManager';
+import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode';
 
 function JoinMeeting() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [currentRole, setCurrentRole] = useState(null);
   const [decodedData, setDecodedData] = useState(null);
   const [urlRoleInfo, setUrlRoleInfo] = useState(null);
   const [feedbackData, setFeedbackData] = useState(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState(null);
-  // const interviewerId ="68664845d494db82db30103c"
-  // 507f1f77bcf86cd799439015
-  // 68664845d494db82db30103c
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [authError, setAuthError] = useState(null);
+
+  // Authentication check function
+  const checkAuthentication = () => {
+    try {
+      // Check if user is authenticated
+      if (!isAuthenticated()) {
+        console.log('User not authenticated, redirecting to login');
+        const returnUrl = encodeURIComponent(window.location.href);
+        navigate(`/organization-login?returnUrl=${returnUrl}`);
+        return false;
+      }
+
+      // Get current user data
+      const currentUserData = getActiveUserData();
+      if (!currentUserData) {
+        console.log('Unable to get current user data, redirecting to login');
+        const returnUrl = encodeURIComponent(window.location.href);
+        navigate(`/organization-login?returnUrl=${returnUrl}`);
+        return false;
+      }
+
+      // Extract ownerId from URL parameters
+      const urlParams = new URLSearchParams(location.search);
+      const encryptedOwnerId = urlParams.get('ownerId');
+      
+      if (!encryptedOwnerId) {
+        console.log('No ownerId in URL parameters');
+        setAuthError('Invalid meeting link: missing owner information');
+        setIsAuthChecking(false);
+        return false;
+      }
+
+      // Decrypt ownerId from URL
+      let decryptedOwnerId;
+      try {
+        const decodedOwnerId = decodeURIComponent(encryptedOwnerId);
+        decryptedOwnerId = decryptData(decodedOwnerId);
+        console.log('Decrypted ownerId from URL:', decryptedOwnerId);
+      } catch (error) {
+        console.error('Error decrypting ownerId:', error);
+        setAuthError('Invalid meeting link: unable to decrypt owner information');
+        setIsAuthChecking(false);
+        return false;
+      }
+
+      // Get current user's ownerId from token
+      const currentUserOwnerId = currentUserData.userId || currentUserData.id;
+      console.log('Current user ownerId:', currentUserOwnerId);
+      console.log('URL ownerId:', decryptedOwnerId);
+
+      // Check if ownerId matches
+      if (currentUserOwnerId !== decryptedOwnerId) {
+        console.log('OwnerId mismatch, redirecting to login');
+        const returnUrl = encodeURIComponent(window.location.href);
+        navigate(`/organization-login?returnUrl=${returnUrl}`);
+        return false;
+      }
+
+      console.log('Authentication successful, ownerId matches');
+      setIsAuthChecking(false);
+      return true;
+
+    } catch (error) {
+      console.error('Error in authentication check:', error);
+      setAuthError('Authentication error occurred');
+      setIsAuthChecking(false);
+      return false;
+    }
+  };
+
+  // Check authentication on component mount
+  useEffect(() => {
+    // Only check authentication for scheduler and interviewer links
+    const urlParams = new URLSearchParams(location.search);
+    const schedule = urlParams.get('scheduler');
+    const interviewer = urlParams.get('interviewer');
+    const candidate = urlParams.get('candidate');
+
+    const isSchedule = schedule === 'true';
+    const isInterviewer = interviewer === 'true';
+    const isCandidate = candidate === 'true';
+
+    // Skip authentication for candidate links
+    if (isCandidate) {
+      console.log('Candidate link detected, skipping authentication');
+      setIsAuthChecking(false);
+      return;
+    }
+
+    // Check authentication for scheduler and interviewer links
+    if (isSchedule || isInterviewer) {
+      console.log('Scheduler or interviewer link detected, checking authentication');
+      checkAuthentication();
+    } else {
+      console.log('No specific role detected, skipping authentication');
+      setIsAuthChecking(false);
+    }
+  }, [location.search]);
+
   // Function to fetch feedback data
   const fetchFeedbackData = async (roundId, interviewerId) => {
     if (!roundId) {
@@ -73,6 +174,9 @@ function JoinMeeting() {
   };
 
   useEffect(() => {
+    // Skip if still checking authentication
+    if (isAuthChecking) return;
+
     // Parse URL parameters
     const urlParams = new URLSearchParams(location.search);
     const schedule = urlParams.get('scheduler');
@@ -80,8 +184,6 @@ function JoinMeeting() {
     const round = urlParams.get('round');
     const candidate = urlParams.get('candidate');
     const interviewer = urlParams.get('interviewer');
-    // const ownerId = urlParams.get('owner');
-    // const interviewerId = urlParams.get('interviewerId');
 
     console.log('=== URL PARAMETERS DEBUG ===');
     console.log('Raw URL parameters:', {
@@ -90,8 +192,6 @@ function JoinMeeting() {
       interviewer,
       meeting,
       round,
-      // interviewerId,
-      // ownerId
     });
 
     // Parse schedule parameter
@@ -128,32 +228,7 @@ function JoinMeeting() {
       }
     }
 
-    //  // Decrypt interviewer Id
-    //  let decryptedOwnerId = null;
-    //  if (ownerId) {
-    //    try {
-    //      const decodedOwnerId = decodeURIComponent(ownerId);
-    //      console.log('Decoded round parameter:', decodedOwnerId);
-    //      decryptedOwnerId = decryptData(decodedOwnerId);
-    //      console.log('Decrypted round data:', decodedOwnerId);
-    //    } catch (error) {
-    //      console.error('Error decrypting round data:', error);
-    //    }
-    //  }
-
-       // Decrypt interviewer Id
-      //  let decryptedInterviewerId = null;
-      //  if (interviewerId) {
-      //    try {
-      //      const decodedInterviewerId = decodeURIComponent(interviewerId);
-      //      console.log('Decoded round parameter:', decodedInterviewerId);
-      //      decryptedInterviewerId = decryptData(decodedInterviewerId);
-      //      console.log('Decrypted round data:', decodedInterviewerId);
-      //    } catch (error) {
-      //      console.error('Error decrypting round data:', error);
-      //    }
-      //  }
-        const interviewerId ="68664845d494db82db30103c"
+    const interviewerId ="68664845d494db82db30103c"
 
     // Extract key information
     const extractedData = {
@@ -162,15 +237,8 @@ function JoinMeeting() {
       isInterviewer: isInterviewer,
       meetLink: decryptedMeeting,
       roundData: decryptedRound,
-      // meetLink: decryptedMeeting?.meetLink || decryptedRound?.meetLink,
       interviewRoundId: decryptedRound || '',
       interviewerId:interviewerId || "not found",
-      // ownerId:decryptedOwnerId,
-      // interviewerId:decryptedInterviewerId,
-      // candidateId: decryptedMeeting?.candidateId || decryptedRound?.candidateId,
-      // interviewerId: decryptedMeeting?.interviewerId || decryptedRound?.interviewerId,
-      // isCandidate: decryptedMeeting?.isCandidate || decryptedRound?.isCandidate,
-      // isInterviewer: decryptedMeeting?.isInterviewer || decryptedRound?.isInterviewer
     };
 
     console.log('=== EXTRACTED DATA ===');
@@ -209,7 +277,7 @@ function JoinMeeting() {
       console.log('RoleSelector will be shown - user must click button to proceed');
     }
 
-  }, [location.search]);
+  }, [location.search, isAuthChecking]);
 
   // Debug useEffect to log feedback data changes
   useEffect(() => {
@@ -240,6 +308,39 @@ function JoinMeeting() {
     console.log('User clicked back - returning to RoleSelector');
     setCurrentRole(null);
   };
+
+  // Show loading while checking authentication
+  if (isAuthChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if authentication failed
+  if (authError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">⚠️</div>
+          <p className="text-gray-800 mb-4">{authError}</p>
+          <button 
+            onClick={() => {
+              const returnUrl = encodeURIComponent(window.location.href);
+              navigate(`/organization-login?returnUrl=${returnUrl}`);
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Show appropriate view based on user's button click
   if (currentRole === 'candidate') {

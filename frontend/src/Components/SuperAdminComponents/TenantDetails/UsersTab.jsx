@@ -168,117 +168,87 @@ function UsersTab({ users, viewMode }) {
   };
 
   // Common function for Login as User API call
-  const handleLoginAsUser = async (userId) => {
-    console.log("🚀 Starting login as user process for userId:", userId);
-    setIsLoading(true);
+const handleLoginAsUser = async (userId) => {
+  console.log("🚀 Starting login as user process for userId:", userId);
+  setIsLoading(true);
 
-    try {
-      const impersonationToken = getImpersonationToken();
-      console.log("🔑 Impersonation token check:", !!impersonationToken);
+  try {
+    const impersonationToken = getImpersonationToken();
+    console.log("🔑 Impersonation token check:", !!impersonationToken);
 
-      if (!impersonationToken) {
-        console.error("❌ No impersonation token found");
-        toast.error("Super admin session expired. Please log in again.");
-        navigate("/organization-login");
-        return;
-      }
-
-      console.log("📡 Making API request to login-as-user endpoint");
-      console.log(
-        "🌐 API URL:",
-        `${config.REACT_APP_API_URL}/Organization/login-as-user`
-      );
-      console.log(
-        "🔑 Using impersonation token:",
-        impersonationToken ? "EXISTS" : "MISSING"
-      );
-      console.log("📦 Request body:", { userId });
-
-      const response = await fetch(
-        `${config.REACT_APP_API_URL}/Organization/login-as-user`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${impersonationToken}`,
-          },
-          body: JSON.stringify({ userId }),
-          credentials: "include",
-        }
-      );
-      console.log("📥 Login as user response status:", response.status);
-      console.log("📥 Login as user response:", response);
-      console.log(
-        "📥 Response headers:",
-        Object.fromEntries(response.headers.entries())
-      );
-
-      const data = await response.json();
-      console.log("📋 Response data:", data);
-      console.log("📋 Response data keys:", Object.keys(data));
-
-      if (data.success) {
-        console.log(
-          "✅ Login successful, authToken received:",
-          !!data.authToken
-        );
-        console.log("🔑 AuthToken details:", {
-          hasToken: !!data.authToken,
-          tokenLength: data.authToken ? data.authToken.length : 0,
-          userId: data.userId,
-          tenantId: data.tenantId,
-          isOrganization: data.isOrganization,
-        });
-
-        console.log("🍪 Setting auth cookies with data:", {
-          authToken: !!data.authToken,
-          authTokenLength: data.authToken ? data.authToken.length : 0,
-          userId: data.userId,
-          tenantId: data.tenantId,
-          organization: data.isOrganization,
-        });
-
-        console.log("🔧 Calling loginAsUser function...");
-        loginAsUser(data.authToken, {
-          userId: data.userId,
-          tenantId: data.tenantId,
-          organization: data.isOrganization,
-        });
-        console.log("✅ loginAsUser function completed");
- // <-------------------------------v1.0.0
-        // Wait for cookie to be available before fetching permissions
-        await new Promise(res => setTimeout(res, 200));
-        // ------------------------------v1.0.0 >
-
-        // Verify cookies were set
-        console.log("🔍 Verifying cookies after setting:");
-        const verifyAuthToken = getAuthToken();
-        const verifyImpersonationToken = getImpersonationToken();
-        console.log(
-          "🔍 Auth token after setting:",
-          verifyAuthToken ? "EXISTS" : "MISSING"
-        );
-        console.log(
-          "🔍 Impersonation token after setting:",
-          verifyImpersonationToken ? "EXISTS" : "MISSING"
-        );
-
-        console.log("🔄 Refreshing permissions");
-        await refreshPermissions();
-        console.log("🏠 Navigating to home page");
-        navigate("/home");
-      } else {
-        console.error("❌ Login failed:", data.message);
-        toast.error(data.message || "Login failed");
-      }
-    } catch (error) {
-      console.error("💥 Error during login as user:", error);
-      toast.error("An error occurred during login");
-    } finally {
-      setIsLoading(false);
+    if (!impersonationToken) {
+      console.error("❌ No impersonation token found");
+      toast.error("Super admin session expired. Please log in again.");
+      navigate("/organization-login");
+      return;
     }
-  };
 
+    console.log("📡 Making API request to login-as-user endpoint");
+    const response = await fetch(
+      `${config.REACT_APP_API_URL}/Organization/login-as-user`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${impersonationToken}`,
+        },
+        body: JSON.stringify({ userId }),
+        credentials: "include",
+      }
+    );
+
+    console.log("📥 Login as user response status:", response.status);
+    const data = await response.json();
+    console.log("📋 Response data:", data);
+
+    if (data.success) {
+      console.log("✅ Login successful, authToken received:", !!data.authToken);
+
+      // Set auth cookies and user data
+      await loginAsUser(data.authToken, {
+        userId: data.userId,
+        tenantId: data.tenantId,
+        organization: data.isOrganization,
+      });
+
+      // Delay to ensure cookies are processed
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1-second delay
+
+      // Verify cookies were set
+      console.log("🔍 Verifying cookies after setting:");
+      const verifyAuthToken = getAuthToken();
+      const verifyImpersonationToken = getImpersonationToken();
+      console.log(
+        "🔍 Auth token after setting:",
+        verifyAuthToken ? "EXISTS" : "MISSING"
+      );
+      console.log(
+        "🔍 Impersonation token after setting:",
+        verifyImpersonationToken ? "EXISTS" : "MISSING"
+      );
+
+      // Refresh permissions
+      console.log("🔄 Refreshing permissions");
+      await refreshPermissions();
+
+      // Navigate to home page
+      console.log("🏠 Navigating to home page");
+      navigate("/home");
+
+      // Reload the page to ensure new session is applied
+      console.log("🔄 Reloading page after navigation");
+      window.location.reload();
+    } else {
+      console.error("❌ Login failed:", data.message);
+      toast.error(data.message || "Login failed");
+    }
+  } catch (error) {
+    console.error("💥 Error during login as user:", error);
+    toast.error("An error occurred during login");
+  } finally {
+    setIsLoading(false);
+  }
+};
   // if (isLoading) {
   //   return <Loading />;
   // }

@@ -572,32 +572,45 @@ class AuthCookieManager {
 
 
   // Login as user (super admin switching to user account)
-  static loginAsUser(authToken, userData) {
-    try {
-      // Clear all existing cookies and localStorage for fresh login
-      AuthCookieManager.clearAllAuth();
-      
-      // Clear all permission caches
-      AuthCookieManager.clearAllPermissionCaches();
-      
-      // Set the user's auth token as the auth token (effective user session)
-      AuthCookieManager.setAuthToken(authToken);
-      
-      // Store user data if provided
-      if (userData) {
-        localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
-      }
-      
-      // Update user type based on new state
-      AuthCookieManager.updateUserType();
-      
-      console.log('✅ Login as user completed - all previous data cleared');
+ // Login as user (clear all cookies and set new user session)
+ static async loginAsUser(authToken, userData) {
+  try {
+    // Step 1: Clear all existing cookies and localStorage
+    await AuthCookieManager.clearAllAuth();
+    
+    // Step 2: Clear all permission caches
+    AuthCookieManager.clearAllPermissionCaches();
+    
+    // Step 3: Set the new user's auth token
+    AuthCookieManager.setAuthToken(authToken);
+    
+    // // Step 4: Store user data if provided
+    // if (userData) {
+    //   localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
+    // }
+    
+    // Step 5: Delay to ensure cookies are processed
+    await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+    
+    // Step 6: Update user type based on new state
+    AuthCookieManager.updateUserType();
+    
+    // Step 7: Sync auth state across tabs
+    AuthCookieManager.syncAuthAcrossTabs();
+    
+    // Step 8: Verify cookie state
+    const finalAuthToken = AuthCookieManager.getAuthToken();
+    console.log('✅ Login as user completed:', {
+      authToken: !!finalAuthToken,
+      impersonationToken: !!AuthCookieManager.getImpersonationToken(),
+      userType: AuthCookieManager.getUserType(),
+    });
 
-    } catch (error) {
-      console.error('❌ Error during login as user:', error);
-    }
+  } catch (error) {
+    console.error('❌ Error during login as user:', error);
+    throw error;
   }
-
+}
   // static loginAsUser(authToken, userData) {
   //   try {
 
