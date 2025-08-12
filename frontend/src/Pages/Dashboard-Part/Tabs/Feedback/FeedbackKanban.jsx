@@ -17,15 +17,15 @@ const FeedbackKanban = ({feedbacks, loading, onView, onEdit }) => {
   }, [feedbacks]);
 
   const columns = [
-    { id: 'pending', title: 'Pending Review', status: 'scheduled' },
-    { id: 'completed', title: 'Completed', status: 'completed' },
+    { id: 'draft', title: 'Pending Review', status: 'draft' },
+    { id: 'completed', title: 'Completed', status: 'submitted' },
     { id: 'maybe', title: 'Maybe', recommendation: 'Maybe' },
   ];
 
   const getColumnItems = (column) => {
     return filteredData.filter(item => {
       if (column.status) {
-        return item.interviewRoundId.status === column.status;
+        return item.status === column.status;
       }
       if (column.recommendation) {
         if (Array.isArray(column.recommendation)) {
@@ -41,7 +41,7 @@ const FeedbackKanban = ({feedbacks, loading, onView, onEdit }) => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'scheduled':
+      case 'draft':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'cancelled':
         return <XCircle className="w-4 h-4 text-red-500" />;
@@ -182,7 +182,7 @@ const FeedbackKanban = ({feedbacks, loading, onView, onEdit }) => {
                               </div>
                               <span className="ml-2 font-medium text-sm text-gray-900 truncate">{item.candidateId?.FirstName + ' ' + item.candidateId?.LastName}</span>
                             </div>
-                            {getStatusIcon(item.interviewRoundId.status)}
+                            {getStatusIcon(item.interviewRoundId?.status)}
                           </div>
                           <p className="text-sm text-gray-600 mb-2 truncate">{item.positionId?.title}</p>
                           <div className="flex items-center justify-between mb-2">

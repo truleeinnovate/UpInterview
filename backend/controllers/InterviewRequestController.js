@@ -436,51 +436,52 @@ exports.acceptInterviewRequest = async (req, res) => {
       { new: true }
     );
 
-    //<-----------v1.0.1-----------------------
-    // add hourly rate to the request
-    const findHourlyRate = await Contacts.findById(contactId);
-    const hourlyRate = findHourlyRate.hourlyRate;
+    // //<-----------v1.0.1-----------------------
+    // // add hourly rate to the request
+    // const findHourlyRate = await Contacts.findById(contactId);
+    // const hourlyRate = findHourlyRate.hourlyRate;
 
-    const request = await InterviewRequest.findById(requestId);
-    const duration = request.duration;
-    const durationInMinutes = parseInt(duration.split(" ")[0]);
-    // if hourlyRate is 100$ and duration is 45 minutes, totalAmount is 75$
-    const totalAmount = (hourlyRate * durationInMinutes) / 60;
+    // const request = await InterviewRequest.findById(requestId);
+    // const duration = request.duration;
+    // const durationInMinutes = parseInt(duration.split(" ")[0]);
+    // // if hourlyRate is 100$ and duration is 45 minutes, totalAmount is 75$
+    // const totalAmount = (hourlyRate * durationInMinutes) / 60;
   
-    const wallet = await Wallet.findById(request.tenantId);
-    const walletBalance = wallet.balance;
+    // const wallet = await Wallet.findById(request.tenantId);
+    // const walletBalance = wallet.balance;
   
-    // Check if there is enough balance in the wallet
-    if (walletBalance < totalAmount) {
-      return res.status(400).json({
-        success: false,
-        message: "Insufficient balance in wallet to accept this interview request."
-      });
-    }
+    // // Check if there is enough balance in the wallet
+    // if (walletBalance < totalAmount) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Insufficient balance in wallet to accept this interview request."
+    //   });
+    // }
   
-    // Deduct the total amount from wallet balance
-    const updatedWallet = await Wallet.findByIdAndUpdate(
-      request.tenantId,
-      { 
-        $inc: { 
-          balance: -totalAmount,
-          holdAmount: totalAmount
-        } 
-      },
-      { new: true }
-    );
+    // // Deduct the total amount from wallet balance
+    // const updatedWallet = await Wallet.findByIdAndUpdate(
+    //   request.tenantId,
+    //   { 
+    //     $inc: { 
+    //       balance: -totalAmount,
+    //       holdAmount: totalAmount
+    //     } 
+    //   },
+    //   { new: true }
+    // );
   
-    // Log the transaction or update any other necessary fields
-    console.log(`Deducted ${totalAmount} from wallet balance. New balance: ${updatedWallet.balance}`);
-    console.log(`Added ${totalAmount} to hold amount. New hold amount: ${updatedWallet.holdAmount}`);
-    //-----------v1.0.1------------------------------>
+    // // Log the transaction or update any other necessary fields
+    // console.log(`Deducted ${totalAmount} from wallet balance. New balance: ${updatedWallet.balance}`);
+    // console.log(`Added ${totalAmount} to hold amount. New hold amount: ${updatedWallet.holdAmount}`);
+    // //-----------v1.0.1------------------------------>
 
     // Send emails after successful acceptance
     try {
       const emailController = require('./EmailsController/interviewEmailController');
       await emailController.sendInterviewRoundEmails({
         body: {
-          interviewId: request.scheduledInterviewId,
+          // interviewId: request.scheduledInterviewId,
+          interviewId: round.interviewId,
           roundId: roundId,
           sendEmails: true
         }

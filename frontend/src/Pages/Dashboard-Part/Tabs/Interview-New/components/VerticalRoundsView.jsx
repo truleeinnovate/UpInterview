@@ -1,5 +1,5 @@
 // v1.0.0 - Ashok - modified as first card should open by default and added optional chaining(?)
-
+// v1.0.1 - Ashok - improved first should open by default
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import RoundCard from "./RoundCard";
@@ -17,25 +17,42 @@ const VerticalRoundsView = ({
   // Track expanded rounds
   const [expandedRounds, setExpandedRounds] = useState({});
 
+  // v1.0.1 <-------------------------------------------------------------------------------------
   // v1.0.0 <----------------------------------------------------------
   // Open first round by default
+  // useEffect(() => {
+  //   if (sortedRounds.length > 0) {
+  //     setExpandedRounds({ [sortedRounds[0]._id]: true });
+  //   }
+  // }, [rounds]);
+
   useEffect(() => {
     if (sortedRounds.length > 0) {
-      setExpandedRounds({ [sortedRounds[0]._id]: true });
+      setExpandedRounds(sortedRounds[0]._id);
     }
   }, [rounds]);
+
   // v1.0.0 ---------------------------------------------------------->
 
   // Toggle round expansion
+  // const toggleRound = (roundId) => {
+  //   setExpandedRounds((prev) => ({
+  //     ...prev,
+  //     [roundId]: !prev[roundId],
+  //   }));
+  // };
+
+  // Check if a round is expanded
+  // const isExpanded = (roundId) => !!expandedRounds[roundId];
+
+  // Toggle round expansion (only one open at a time)
   const toggleRound = (roundId) => {
-    setExpandedRounds((prev) => ({
-      ...prev,
-      [roundId]: !prev[roundId],
-    }));
+    setExpandedRounds((prev) => (prev === roundId ? null : roundId));
   };
 
   // Check if a round is expanded
-  const isExpanded = (roundId) => !!expandedRounds[roundId];
+  const isExpanded = (roundId) => expandedRounds === roundId;
+  // v1.0.1 -------------------------------------------------------------------------------------->
 
   // v1.0.0 <----------------------------------------------------------
   const capitalizeFirstLetter = (str) => {

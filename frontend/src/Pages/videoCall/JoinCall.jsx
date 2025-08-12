@@ -8,7 +8,7 @@ import InterviewerView from './InterviewerView';
 import CombinedNavbar from '../../Components/Navbar/CombinedNavbar';
 import { decryptData } from '../../utils/PaymentCard';
 import { config } from '../../config';
-import { isAuthenticated, getCurrentUserId, getActiveUserData } from '../../utils/AuthCookieManager/AuthCookieManager';
+import AuthCookieManager from '../../utils/AuthCookieManager/AuthCookieManager';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode';
 
 function JoinMeeting() {
@@ -26,16 +26,14 @@ function JoinMeeting() {
   // Authentication check function
   const checkAuthentication = () => {
     try {
-      // Check if user is authenticated
-      if (!isAuthenticated()) {
+      if (!AuthCookieManager.isAuthenticated()) {
         console.log('User not authenticated, redirecting to login');
         const returnUrl = encodeURIComponent(window.location.href);
         navigate(`/organization-login?returnUrl=${returnUrl}`);
         return false;
       }
 
-      // Get current user data
-      const currentUserData = getActiveUserData();
+      const currentUserData = AuthCookieManager.getActiveUserData();
       if (!currentUserData) {
         console.log('Unable to get current user data, redirecting to login');
         const returnUrl = encodeURIComponent(window.location.href);
@@ -43,9 +41,8 @@ function JoinMeeting() {
         return false;
       }
 
-      // Extract ownerId from URL parameters
       const urlParams = new URLSearchParams(location.search);
-      const encryptedOwnerId = urlParams.get('ownerId');
+      const encryptedOwnerId = urlParams.get('owner');
       
       if (!encryptedOwnerId) {
         console.log('No ownerId in URL parameters');
@@ -54,7 +51,6 @@ function JoinMeeting() {
         return false;
       }
 
-      // Decrypt ownerId from URL
       let decryptedOwnerId;
       try {
         const decodedOwnerId = decodeURIComponent(encryptedOwnerId);
@@ -67,12 +63,9 @@ function JoinMeeting() {
         return false;
       }
 
-      // Get current user's ownerId from token
       const currentUserOwnerId = currentUserData.userId || currentUserData.id;
       console.log('Current user ownerId:', currentUserOwnerId);
       console.log('URL ownerId:', decryptedOwnerId);
-
-      // Check if ownerId matches
       if (currentUserOwnerId !== decryptedOwnerId) {
         console.log('OwnerId mismatch, redirecting to login');
         const returnUrl = encodeURIComponent(window.location.href);
@@ -83,7 +76,6 @@ function JoinMeeting() {
       console.log('Authentication successful, ownerId matches');
       setIsAuthChecking(false);
       return true;
-
     } catch (error) {
       console.error('Error in authentication check:', error);
       setAuthError('Authentication error occurred');

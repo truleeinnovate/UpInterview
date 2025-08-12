@@ -5,9 +5,9 @@
 // v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
 // v1.0.5 - Mansoor - Added custom video call application routes
 
-// v1.0.6 - Mansoor - removed the navbar in the login pages
+// v1.0.6 - Mansoor - removed the navbar in the login pages 
 
-// v1.0.5 - Ashok - Added Analytics related pages
+// v1.0.5 - Ashok - Added Analytics related pages 
 
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
@@ -21,7 +21,7 @@ import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
 import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
 import {
   usePermissions,
-  PermissionsProvider,
+  PermissionsProvider, 
 } from "./Context/PermissionsContext";
 import { CustomProvider } from "./Context/Contextfetch";
 import PageSetter from "./Components/PageSetter";
@@ -180,9 +180,7 @@ const FeedbackTab = lazy(() =>
 const FeedbackFormModel = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx")
 );
-const FeedbackPreview = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Feedback/Preview.js")
-);
+
 const MyProfile = lazy(() =>
   import(
     "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"
@@ -1020,7 +1018,6 @@ const MainAppRoutes = ({
                   <Route path="/feedback" element={<FeedbackTab />} />
                   <Route path="/feedback/view/:id" element={<><FeedbackFormModel /> <FeedbackTab /></>} />
                   <Route path="/feedback/edit/:id" element={<><FeedbackFormModel /> <FeedbackTab /></>} />
-                  <Route path="/feedback-preview" element={<FeedbackPreview />} />
 
                 </>
               )}
@@ -1271,7 +1268,7 @@ const App = () => {
       // "/individual-login",
       // "/select-user-type",
       // "/select-profession",
-      // "/create-profile",
+      "/create-profile",
       // "/subscription-plans",
       // "/payment-details",
       // "/verify-email",

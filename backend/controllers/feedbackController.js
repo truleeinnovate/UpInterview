@@ -18,9 +18,7 @@ const createFeedback = async (req, res) => {
             ownerId,
             interviewRoundId,
             candidateId,
-            feedbackCode,
             positionId,
-            
             interviewerId,
             skills,
             questionFeedback,
@@ -114,14 +112,14 @@ const createFeedback = async (req, res) => {
             }
           }
 
+
         // Create feedback data with defaults
         const feedbackData = {
             skills: skills,
             questionFeedback: processedQuestionFeedback,
             generalComments: generalComments || "",
             overallImpression: overallImpression || {},
-            status: status || 'submitted',
-            feedbackCode: finalFeedbackCode || ""
+            status: status || 'submitted'
         };
 
         // Add fields only if they are not empty strings
@@ -555,10 +553,6 @@ const getFeedbackByRoundId = async (req, res) => {
     // 2️⃣ Find InterviewRound
     console.log("🔍 Searching for InterviewRound with ID:", roundId);
     const interviewRound = await InterviewRounds.findById(roundId)
-    .populate({
-      path: "interviewId",
-      select: "interviewCode" // ✅ Only fetch interviewCode (you can add other fields if needed)
-    })
       .populate("interviewers", "FirstName LastName Email Phone");
 
     console.log("✅ InterviewRound Found:", interviewRound ? "Yes" : "No");
@@ -735,7 +729,6 @@ const getFeedbackByRoundId = async (req, res) => {
        interviewRound: {
          _id: interviewRound._id,
          interviewId: interviewRound.interviewId,
-         interviewCode: interviewRound.interviewId?.interviewCode || null, // ✅ From Interview schema
          sequence: interviewRound.sequence,
          roundTitle: interviewRound.roundTitle,
          interviewMode: interviewRound.interviewMode,

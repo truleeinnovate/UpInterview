@@ -569,7 +569,7 @@ const createInterview = async (req, res) => {
             dateTime: round.dateTime || "",
             interviewers: round.interviewers || [], // This should be ObjectId array
             status: round.status || "Pending",
-            // meetLink: round.meetingId || [],
+            meetLink: round.meetLink || [],
             meetingId: round.meetingId || "",
             assessmentId: round.assessmentId || null,
             questions: [], // Initialize as empty array
@@ -897,13 +897,13 @@ async function processInterviewers(interviewers) {
 
 const saveInterviewRound = async (req, res) => {
   try {
-    const { interviewId, round, roundId, questions,  } = req.body;
+    const { interviewId, round, roundId, questions } = req.body;
     console.log("=== saveInterviewRound START ===");
     console.log("Request body:", JSON.stringify(req.body, null, 2));
     console.log("interviewId:", interviewId);
     console.log("roundId:", roundId);
     console.log("round keys:", Object.keys(round || {}));
-    console.log("meetLink field:", round?.meetingId);
+    console.log("meetLink field:", round?.meetLink);
     
     // Initialize emailResult variable
     let emailResult = { success: false, message: "No email sending attempted" };
@@ -928,19 +928,14 @@ const saveInterviewRound = async (req, res) => {
         console.log("Before update - existing round data:", JSON.stringify(existingRound.toObject(), null, 2));
         
         // Handle meetLink field separately to prevent conversion issues
-        const { meetingId, ...otherRoundData } = round;
+        const { meetLink, ...otherRoundData } = round;
         Object.assign(existingRound, otherRoundData);
         
         // Set meetLink directly if it exists
-        // if (meetLink && Array.isArray(meetLink)) {
-        //                console.log("Setting meetLink directly:", meetLink);
-        //      console.log("meetLink structure:", meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
-        //   existingRound.meetLink = meetLink;
-        // }
-
-        // metting ID single creating Ranjith
-        if (meetingId) {
-          existingRound.meetingId = meetingId;
+        if (meetLink && Array.isArray(meetLink)) {
+                       console.log("Setting meetLink directly:", meetLink);
+             console.log("meetLink structure:", meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
+          existingRound.meetLink = meetLink;
         }
         
         console.log("After update - round data:", JSON.stringify(existingRound.toObject(), null, 2));
@@ -961,7 +956,7 @@ const saveInterviewRound = async (req, res) => {
       );
 
       // Handle meetLink field separately for new rounds too
-      const { meetingId, ...otherRoundData } = round;
+      const { meetLink, ...otherRoundData } = round;
       const newInterviewRound = new InterviewRounds({
         interviewId,
         ...otherRoundData,
@@ -969,16 +964,11 @@ const saveInterviewRound = async (req, res) => {
       });
 
       // Set meetLink directly if it exists
-      // if (meetLink && Array.isArray(meetLink)) {
-      //                console.log("Setting meetLink for new round:", meetLink);
-      //        console.log("meetLink structure:", meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
-      //   newInterviewRound.meetLink = meetLink;
-      // }
-      
-        // metting ID single creating Ranjith
-        if (meetingId) {
-          newInterviewRound.meetingId = meetingId;
-        }
+      if (meetLink && Array.isArray(meetLink)) {
+                     console.log("Setting meetLink for new round:", meetLink);
+             console.log("meetLink structure:", meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
+        newInterviewRound.meetLink = meetLink;
+      }
 
       savedRound = await newInterviewRound.save();
       await reorderInterviewRounds(interviewId);

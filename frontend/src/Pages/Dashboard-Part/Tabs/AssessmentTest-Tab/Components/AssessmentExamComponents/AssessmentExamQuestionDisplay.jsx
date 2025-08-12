@@ -100,7 +100,7 @@ const AnswerInput = ({
         </div>
       );
 
-    case 'Short Text':
+    case 'Short Text(Single line)':
       return (
         <input
           type="text"

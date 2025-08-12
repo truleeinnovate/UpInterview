@@ -292,7 +292,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             const encryptedOwnerId = encryptData(interviewerEmail?.ownerId);
 
             const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
-        &round=${encodeURIComponent(encryptedRoundId)}&interviewerId=${encodeURIComponent(encryptedInterviewerId)}&ownerId=${encodeURIComponent(encryptedOwnerId)}`;
+        &round=${encodeURIComponent(encryptedRoundId)}&interviwer=${encodeURIComponent(encryptedInterviewerId)}&owner=${encodeURIComponent(encryptedOwnerId)}`;
 
             console.log("🔍 Interviewer link:", interviewerLink);
             
@@ -367,8 +367,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         const encryptedSchedulerId = encryptData(scheduler?._id);
         const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
 
-        const schedulerLink = `${baseUrl}?scheduler=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
-        &round=${encodeURIComponent(encryptedRoundId)}&interviewerId=${encodeURIComponent(encryptedSchedulerId)}&ownerId=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
+        const schedulerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(encryptedMeetingLink)}
+        &round=${encodeURIComponent(encryptedRoundId)}&interviwer=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
 
         console.log("🔍 Scheduler link:", schedulerLink);
 
@@ -629,7 +629,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
         .replace('{{supportEmail}}', supportEmail);
 
       // Add dashboard link for outsource interviewers to accept/decline
-      const dashboardLink = `${process.env.FRONTEND_URL}/interview-requests`;
+      const dashboardLink = `${config.REACT_APP_API_URL_FRONTEND}/home`;
       emailBody = emailBody.replace('{{dashboardLink}}', dashboardLink);
 
       emailPromises.push(

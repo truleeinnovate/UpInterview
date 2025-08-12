@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashraf  -  called sections function to load data fast
 // v1.0.3  -  Ashraf  -  removed already selected cant select logic because very new schedule we can select same candidate
 // v1.0.5  -  Ashok   -  z-index issue fixed and disabled outer scrollbar
+// v1.0.6  -  Ashok   -  popup z-index issues fixed and dynamically increased the height of the popup container 
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { shareAssessmentAPI } from "./AssessmentShareAPI.jsx";
@@ -465,10 +466,12 @@ const ShareAssessment = ({
       className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center"
       onClick={onCloseshare}
     >
+      {/* v1.0.6 <----------------------------------------------------------------------------------- */}
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] overflow-y-auto"
+        className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] ${showDropdownCandidate ? "h-[466px]" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
+      {/* v1.0.6 -----------------------------------------------------------------------------------> */}
         {isLoading && <Loading message="Sending emails..." />}
 
         {isSuccess && (
@@ -699,9 +702,9 @@ const ShareAssessment = ({
                       {errors.Candidate}
                     </p>
                   )}
-
+                  {/* v1.0.3 <------------------------------------------------------------------------------------------------------------------------- */}
                   {showDropdownCandidate && (
-                    <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                    <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-44 overflow-auto">
                       <div className="sticky top-0 p-2 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Available Candidates ({filteredCandidates.length})
@@ -758,6 +761,7 @@ const ShareAssessment = ({
                       </ul>
                     </div>
                   )}
+                  {/* v1.0.3 <------------------------------------------------------------------------------------------------------------------------- */}
                 </div>
 
                 {selectedCandidates.length > 0 && (

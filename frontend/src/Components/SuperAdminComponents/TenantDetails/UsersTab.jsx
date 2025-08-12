@@ -35,7 +35,7 @@ import SidebarPopup from "../SidebarPopup/SidebarPopup.jsx";
 import { LiaGenderlessSolid } from "react-icons/lia";
 import { FaCircle } from "react-icons/fa";
 import { config } from "../../../config.js";
-import {
+import AuthCookieManager, {
   // setAuthCookies,
   getImpersonationToken,
   getAuthToken,
@@ -171,29 +171,14 @@ function UsersTab({ users, viewMode }) {
   const handleLoginAsUser = async (userId) => {
     console.log("🚀 Starting login as user process for userId:", userId);
     setIsLoading(true);
-
     try {
       const impersonationToken = getImpersonationToken();
-      console.log("🔑 Impersonation token check:", !!impersonationToken);
-
       if (!impersonationToken) {
         console.error("❌ No impersonation token found");
         toast.error("Super admin session expired. Please log in again.");
         navigate("/organization-login");
         return;
       }
-
-      console.log("📡 Making API request to login-as-user endpoint");
-      console.log(
-        "🌐 API URL:",
-        `${config.REACT_APP_API_URL}/Organization/login-as-user`
-      );
-      console.log(
-        "🔑 Using impersonation token:",
-        impersonationToken ? "EXISTS" : "MISSING"
-      );
-      console.log("📦 Request body:", { userId });
-
       const response = await fetch(
         `${config.REACT_APP_API_URL}/Organization/login-as-user`,
         {
@@ -206,67 +191,41 @@ function UsersTab({ users, viewMode }) {
           credentials: "include",
         }
       );
-      console.log("📥 Login as user response status:", response.status);
-      console.log("📥 Login as user response:", response);
-      console.log(
-        "📥 Response headers:",
-        Object.fromEntries(response.headers.entries())
-      );
-
       const data = await response.json();
-      console.log("📋 Response data:", data);
-      console.log("📋 Response data keys:", Object.keys(data));
-
       if (data.success) {
-        console.log(
-          "✅ Login successful, authToken received:",
-          !!data.authToken
-        );
-        console.log("🔑 AuthToken details:", {
-          hasToken: !!data.authToken,
-          tokenLength: data.authToken ? data.authToken.length : 0,
-          userId: data.userId,
-          tenantId: data.tenantId,
-          isOrganization: data.isOrganization,
-        });
-
-        console.log("🍪 Setting auth cookies with data:", {
-          authToken: !!data.authToken,
-          authTokenLength: data.authToken ? data.authToken.length : 0,
+        await loginAsUser(data.authToken, {
           userId: data.userId,
           tenantId: data.tenantId,
           organization: data.isOrganization,
         });
-
-        console.log("🔧 Calling loginAsUser function...");
-        loginAsUser(data.authToken, {
-          userId: data.userId,
-          tenantId: data.tenantId,
-          organization: data.isOrganization,
-        });
-        console.log("✅ loginAsUser function completed");
- // <-------------------------------v1.0.0
-        // Wait for cookie to be available before fetching permissions
-        await new Promise(res => setTimeout(res, 200));
-        // ------------------------------v1.0.0 >
-
-        // Verify cookies were set
-        console.log("🔍 Verifying cookies after setting:");
-        const verifyAuthToken = getAuthToken();
-        const verifyImpersonationToken = getImpersonationToken();
-        console.log(
-          "🔍 Auth token after setting:",
-          verifyAuthToken ? "EXISTS" : "MISSING"
-        );
-        console.log(
-          "🔍 Impersonation token after setting:",
-          verifyImpersonationToken ? "EXISTS" : "MISSING"
-        );
-
-        console.log("🔄 Refreshing permissions");
-        await refreshPermissions();
-        console.log("🏠 Navigating to home page");
+        
+        // Verify cookie state with retries
+        let verified = false;
+        const maxRetries = 3;
+        for (let i = 0; i < maxRetries && !verified; i++) {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
+          const verifyAuthToken = getAuthToken();
+          const verifyImpersonationToken = getImpersonationToken();
+          console.log("🔍 Cookie state:", AuthCookieManager.debugCookieState());
+          verified = verifyAuthToken && !verifyImpersonationToken;
+          if (!verified) {
+            console.warn(`Retry ${i + 1}: Clearing and re-setting cookies`);
+            await AuthCookieManager.clearAllAuth();
+            await loginAsUser(data.authToken, {
+              userId: data.userId,
+              tenantId: data.tenantId,
+              organization: data.isOrganization,
+            });
+          }
+        }
+        
+        if (!verified) {
+          throw new Error("Failed to verify cookie state after retries");
+        }
+        
+        await refreshPermissions(true); // Force refresh permissions
         navigate("/home");
+        setTimeout(() => window.location.reload(), 500);
       } else {
         console.error("❌ Login failed:", data.message);
         toast.error(data.message || "Login failed");
@@ -278,7 +237,6 @@ function UsersTab({ users, viewMode }) {
       setIsLoading(false);
     }
   };
-
   // if (isLoading) {
   //   return <Loading />;
   // }

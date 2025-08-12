@@ -5,6 +5,7 @@
    lets you render a React component into a different part of the DOM
    outside its parent hierarchy.
 */
+// v1.0.3 - Ashok - In the showConfirmModal fixed z-index issue and disabled outer scrollbar using useScrollLock hook
 
 import React, { useState, useEffect } from "react";
 import {
@@ -72,7 +73,9 @@ const RoundCard = ({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const queryClient = useQueryClient();
   // v1.0.1 <--------------------------------------------
-  useScrollLock(showDeleteConfirmModal);
+  // v1.0.3 <--------------------------------------------------------
+  useScrollLock(showDeleteConfirmModal || showConfirmModal);
+  // v1.0.3 -------------------------------------------------------->
   // v1.0.1 -------------------------------------------->
   
     const [linkExpiryDays, setLinkExpiryDays] = useState(3);
@@ -958,8 +961,8 @@ const RoundCard = ({
           )}
         </div>
       </div>
-
-      {showConfirmModal && (
+      {/* v1.0.3 <------------------------------------------------------------------------------------ */}
+      {/* {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <div className="bg-white p-5 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-3">
@@ -978,8 +981,32 @@ const RoundCard = ({
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
+      {showConfirmModal &&
+        createPortal(
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+            <div className="bg-white p-5 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold mb-3">
+                Are you sure you want to {confirmAction.toLowerCase()} this
+                round?
+              </h3>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  No, Cancel
+                </Button>
+                <Button variant="success" onClick={handleConfirmStatusChange}>
+                  Yes, Confirm
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      {/* v1.0.3 ---------------------------------------------------------------------------------------> */}
       {/* v1.0.2 <-------------------------------------------------------------------------- */}
       {/* {showDeleteConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
@@ -1024,7 +1051,6 @@ const RoundCard = ({
           document.body
         )}
       {/* v1.0.2 --------------------------------------------------------------------------> */}
-
       {showRejectionModal && (
         <RejectionModal
           onClose={() => setShowRejectionModal(false)}
@@ -1032,7 +1058,6 @@ const RoundCard = ({
           roundName={round.name}
         />
       )}
-
       {showFeedbackModal && (
         <FeedbackModal
           onClose={() => setShowFeedbackModal(false)}
