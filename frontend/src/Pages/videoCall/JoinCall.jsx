@@ -157,7 +157,7 @@ function JoinMeeting() {
     // Only check authentication for schedule and interviewer links
     const urlParams = new URLSearchParams(location.search);
     // Fix typo - standardize to 'schedule' (was 'scheduler')
-    const schedule = urlParams.get('schedule');
+    const schedule = urlParams.get('scheduler');
     const interviewer = urlParams.get('interviewer');
     const candidate = urlParams.get('candidate');
 
@@ -241,11 +241,13 @@ function JoinMeeting() {
 
     // Parse URL parameters
     const urlParams = new URLSearchParams(location.search);
-    const schedule = urlParams.get('schedule');
+    const schedule = urlParams.get('scheduler');
     const meeting = urlParams.get('meeting');
     const round = urlParams.get('round');
     const candidate = urlParams.get('candidate');
     const interviewer = urlParams.get('interviewer');
+    const interviewerToken = urlParams.get('interviewertoken');
+    const schedulerToken = urlParams.get('schedulertoken');
 
 
     console.log('=== URL PARAMETERS DEBUG ===');
@@ -291,7 +293,22 @@ function JoinMeeting() {
       }
     }
 
-    const interviewerId = "68664845d494db82db30103c"
+     // Decrypt round data
+     let interviewerId = null;
+     if (interviewerToken) {
+       try {
+         const decodedInterviewerToken = decodeURIComponent(interviewerToken);
+         console.log('Decoded round parameter:', decodedInterviewerToken);
+         interviewerId = decryptData(interviewerToken);
+         console.log('Decrypted round data:', interviewerToken);
+       } catch (error) {
+         console.error('Error decrypting round data:', error);
+       }
+     }
+
+    // interviewerToken
+
+    // const interviewerId = "68664845d494db82db30103c"
     // Extract key information
     const extractedData = {
       schedule: isSchedule,
@@ -409,7 +426,7 @@ function JoinMeeting() {
     return <CandidateView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackData} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />;
   }
 
-  if (currentRole === 'interviewer') {
+  if (currentRole === 'interviewer' || currentRole === 'scheduler') {
     return (
       <>
         <CombinedNavbar />

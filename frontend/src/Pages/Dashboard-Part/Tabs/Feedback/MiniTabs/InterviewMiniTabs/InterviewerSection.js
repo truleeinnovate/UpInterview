@@ -42,7 +42,8 @@ const InterviewerSectionComponent = ({
   // Filtered interviewer questions from parent
   interviewerQuestions = [],
   // Interview data from parent
-  interviewData
+  interviewData,
+  decodedData
 }) => {
   // Get all questions from interviewData and filter for interviewer-added questions
   const location = useLocation();
@@ -146,6 +147,10 @@ const InterviewerSectionComponent = ({
     });
   }, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
   ////---v1.0.2----->
+
+
+  console.log("questionsWithFeedback",questionsWithFeedback);
+  
   const [interviewerSection, setInterviewerSection] = useState(
     isAddMode ? [] : [
       // {
@@ -442,7 +447,7 @@ const InterviewerSectionComponent = ({
               The questions listed below are interviewer's choice.
             </p>
           </div>
-                     {(isAddMode) && (
+                     {(isAddMode && !decodedData.schedule) && (
              <div className="flex items-center gap-2">
                <button
                  className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"

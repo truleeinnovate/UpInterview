@@ -8,7 +8,7 @@ const InterviewQuestions = require('../models/interviewQuestions.js');
 const { InterviewRounds } = require('../models/InterviewRounds.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
 const { Contacts } = require('../models/Contacts.js');
-
+const { Interview } = require('../models/Interview.js');
 const createFeedback = async (req, res) => { 
     try {
         // console.log('📥 Received feedback data:', req.body);
@@ -101,7 +101,7 @@ const createFeedback = async (req, res) => {
              // ===========================================
         // ✅ Generate feedbackCode sequence per round
         // ===========================================
-        let finalFeedbackCode = feedbackCode || "";
+        let finalFeedbackCode = "";
         if (interviewRoundId && feedbackCode) {
             const existingCount = await FeedbackModel.countDocuments({ interviewRoundId });
             if(existingCount === 0){
@@ -113,6 +113,9 @@ const createFeedback = async (req, res) => {
             }
           }
 
+          console.log("finalFeedbackCode",finalFeedbackCode);
+          console.log("feedbackCode",feedbackCode);
+
 
         // Create feedback data with defaults
         const feedbackData = {
@@ -120,7 +123,8 @@ const createFeedback = async (req, res) => {
             questionFeedback: processedQuestionFeedback,
             generalComments: generalComments || "",
             overallImpression: overallImpression || {},
-            status: status || 'submitted'
+            status: status || 'draft',
+            feedbackCode:finalFeedbackCode
         };
 
         // Add fields only if they are not empty strings
@@ -572,6 +576,10 @@ const getFeedbackByRoundId = async (req, res) => {
       return res.status(404).json({ success: false, message: "Interview round not found" });
     }
 
+    const interviewSection = await Interview.findOne({ _id: interviewRound.interviewId })
+
+    console.log("interviewSection", interviewSection);
+
          // 3️⃣ Find CandidatePosition using interviewId
      console.log("🔍 Searching for CandidatePosition with interviewId:", interviewRound.interviewId);
      
@@ -731,6 +739,7 @@ const getFeedbackByRoundId = async (req, res) => {
          _id: interviewRound._id,
          interviewId: interviewRound.interviewId,
          sequence: interviewRound.sequence,
+         interviewCode: interviewSection.interviewCode,
          roundTitle: interviewRound.roundTitle,
          interviewMode: interviewRound.interviewMode,
          interviewType: interviewRound.interviewType,
