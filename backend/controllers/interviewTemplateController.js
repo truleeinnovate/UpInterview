@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Added sort when fetching all interview templates
 const InterviewTemplate = require("../models/InterviewTemplate");
 
 // Create a new interview template
@@ -82,7 +83,10 @@ exports.getAllTemplates = async (req, res) => {
       model: "Contacts",
       select: "firstName lastName email",
       // select: "firstName lastName _id", // limit fields
-    });
+    // v1.0.0 <-------------------------------------------------------------------------
+    }).sort({ _id: -1 }); // _id in MongoDB roughly reflects creation order
+    // v1.0.0 ------------------------------------------------------------------------->
+
 
     // Transform output: map interviewers to a single "name" field
     const transformedTemplates = templates.map((template) => {

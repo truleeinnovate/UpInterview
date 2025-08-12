@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - updated addOrUpdateRound
+// v1.0.1 - Ashok - removed reverse while fetching interview templates
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useMemo } from 'react';
@@ -86,7 +87,10 @@ export const useInterviewTemplates = () => {
     queryKey: ['interviewTemplates'],
     queryFn: async () => {
       const data = await fetchFilterData('interviewtemplate'); // <- lowercase to match backend
-      return data.reverse();
+    // v1.0.1 <------------------------------------------------------
+      //   return data.reverse();
+    return data;
+    // v1.0.1 ------------------------------------------------------>
     },
     enabled: !!hasViewPermission,
     retry: 1,
