@@ -25,7 +25,7 @@ class AuthCookieManager {
     try {
       // <---------------------- v1.0.2
       const token = Cookies.get(AUTH_TOKEN_KEY);
-      
+
       // If token exists, validate it's not expired
       if (token) {
         try {
@@ -58,7 +58,7 @@ class AuthCookieManager {
     try {
       // <---------------------- v1.0.2
       const token = Cookies.get(IMPERSONATION_TOKEN_KEY);
-      
+
       // If token exists, validate it's not expired
       if (token) {
         try {
@@ -77,7 +77,7 @@ class AuthCookieManager {
           return null;
         }
       }
-      
+
       return token;
       // ---------------------- v1.0.2 >
     } catch (error) {
@@ -93,32 +93,32 @@ class AuthCookieManager {
       // Clear the expired cookie
       const currentDomain = window.location.hostname;
       const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
-      
+
       const clearOptions = {
         expires: new Date(0),
         path: '/',
         secure: !isLocalhost,
         sameSite: isLocalhost ? 'Lax' : 'None'
       };
-      
+
       if (!isLocalhost && currentDomain.includes('upinterview.io')) {
         clearOptions.domain = '.upinterview.io';
       }
-      
+
       Cookies.set(tokenKey, '', clearOptions);
-      
+
       // Clear any localStorage backup (cleanup)
       try {
         localStorage.removeItem(`${tokenKey}_backup`);
       } catch (e) {
         // Ignore localStorage errors
       }
-      
+
       // Trigger token expired event for smart logout
-      window.dispatchEvent(new CustomEvent('tokenExpired', { 
-        detail: { tokenKey } 
+      window.dispatchEvent(new CustomEvent('tokenExpired', {
+        detail: { tokenKey }
       }));
-      
+
       console.log(`Expired token cleared: ${tokenKey}`);
     } catch (error) {
       console.error(`Error clearing expired token ${tokenKey}:`, error);
@@ -130,7 +130,7 @@ class AuthCookieManager {
     try {
       const authToken = this.getAuthToken();
       const impersonationToken = this.getImpersonationToken();
-      
+
       // Broadcast auth state to other tabs
       if (typeof window !== 'undefined' && window.localStorage) {
         const authState = {
@@ -138,9 +138,9 @@ class AuthCookieManager {
           impersonationToken,
           timestamp: Date.now()
         };
-        
+
         localStorage.setItem('auth_sync_state', JSON.stringify(authState));
-        
+
         // Trigger storage event for other tabs
         window.dispatchEvent(new StorageEvent('storage', {
           key: 'auth_sync_state',
@@ -155,7 +155,7 @@ class AuthCookieManager {
   // Listen for auth changes from other tabs
   static setupCrossTabAuthListener() {
     if (typeof window === 'undefined') return;
-    
+
     const handleStorageChange = (event) => {
       if (event.key === 'auth_sync_state') {
         try {
@@ -179,9 +179,9 @@ class AuthCookieManager {
         }
       }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Return cleanup function
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -193,21 +193,21 @@ class AuthCookieManager {
     try {
       const currentDomain = window.location.hostname;
       const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
-      
+
       const cookieOptions = {
         expires: 7, // 7 days
         secure: !isLocalhost, // Only secure in production
         sameSite: isLocalhost ? 'Lax' : 'None', // Use Lax for localhost, None for production
         path: '/',
       };
-      
+
       // Only set domain for production and when not localhost
       if (!isLocalhost && currentDomain.includes('upinterview.io')) {
         cookieOptions.domain = '.upinterview.io';
       }
-      
+
       Cookies.set(AUTH_TOKEN_KEY, token, cookieOptions);
-      
+
     } catch (error) {
       console.error('❌ Error setting auth token:', error);
     }
@@ -218,22 +218,22 @@ class AuthCookieManager {
     try {
       const currentDomain = window.location.hostname;
       const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
-      
+
       const cookieOptions = {
         expires: 7, // 7 days
         secure: !isLocalhost, // Only secure in production
         sameSite: isLocalhost ? 'Lax' : 'None', // Use Lax for localhost, None for production
         path: '/',
       };
-      
+
       // Only set domain for production and when not localhost
       if (!isLocalhost && currentDomain.includes('upinterview.io')) {
         cookieOptions.domain = '.upinterview.io';
       }
-      
+
       // Set the token in cookies
       Cookies.set(IMPERSONATION_TOKEN_KEY, token, cookieOptions);
-      
+
       if (userData) {
         localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
       }
@@ -254,7 +254,7 @@ class AuthCookieManager {
 
       // Determine user type directly from token state
       let userType = null;
-      
+
       if (authToken && impersonationToken) {
         // Check if impersonation token has impersonatedUserId (super admin) or userId (effective user)
         const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
@@ -276,7 +276,7 @@ class AuthCookieManager {
       if (userType !== storedUserType) {
         this.setUserType(userType);
       }
-      
+
       return userType;
     } catch (error) {
       console.warn('Error getting user type:', error);
@@ -360,12 +360,12 @@ class AuthCookieManager {
   static syncUserType() {
     const currentUserType = this.getUserType(); // Get from token state
     const storedUserType = this.getStoredUserType(); // Get from localStorage
-    
+
     if (currentUserType !== storedUserType) {
       this.setUserType(currentUserType);
       return true;
     }
-    
+
     return false;
   }
 
@@ -541,16 +541,44 @@ class AuthCookieManager {
       localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
       localStorage.removeItem('app_permissions_cache');
       localStorage.removeItem('app_permissions_timestamp');
-      
+
       // Clear new permission cache keys
       localStorage.removeItem('permissions_effective');
       localStorage.removeItem('permissions_superAdmin');
-      
+
     } catch (error) {
       console.warn('Error clearing permission caches:', error);
     }
   }
+  static clearCookie(name) {
+    try {
+      const currentDomain = window.location.hostname;
+      const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
 
+      const baseOptions = {
+        path: '/',
+        secure: !isLocalhost,
+        sameSite: isLocalhost ? 'Lax' : 'None',
+      };
+
+      // Clear with domain in production
+      if (!isLocalhost && currentDomain.includes('upinterview.io')) {
+        Cookies.remove(name, { ...baseOptions, domain: '.upinterview.io' });
+      }
+
+      // Clear without domain as fallback
+      Cookies.remove(name, baseOptions);
+
+      // Extra fallback for subdomains
+      if (!isLocalhost && currentDomain.startsWith('app.')) {
+        Cookies.remove(name, { ...baseOptions, domain: 'upinterview.io' });
+      }
+
+      console.log(`Cleared cookie: ${name}`);
+    } catch (error) {
+      console.error(`Error clearing cookie ${name}:`, error);
+    }
+  }
   /**
    * Clear permissions for a specific user type
    * 
@@ -627,45 +655,66 @@ class AuthCookieManager {
   // }
 
   // Login as user (super admin switching to user account)
- // Login as user (clear all cookies and set new user session)
- static async loginAsUser(authToken, userData) {
-  try {
-    // Step 1: Clear all existing cookies and localStorage
-    await AuthCookieManager.clearAllAuth();
-    
-    // Step 2: Clear all permission caches
-    AuthCookieManager.clearAllPermissionCaches();
-    
-    // Step 3: Set the new user's auth token
-    AuthCookieManager.setAuthToken(authToken);
-    
-    // // Step 4: Store user data if provided
-    // if (userData) {
-    //   localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
-    // }
-    
-    // Step 5: Delay to ensure cookies are processed
-    await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
-    
-    // Step 6: Update user type based on new state
-    AuthCookieManager.updateUserType();
-    
-    // Step 7: Sync auth state across tabs
-    AuthCookieManager.syncAuthAcrossTabs();
-    
-    // Step 8: Verify cookie state
-    const finalAuthToken = AuthCookieManager.getAuthToken();
-    console.log('✅ Login as user completed:', {
-      authToken: !!finalAuthToken,
-      impersonationToken: !!AuthCookieManager.getImpersonationToken(),
-      userType: AuthCookieManager.getUserType(),
-    });
+  // Login as user (clear all cookies and set new user session)
+  static async loginAsUser(authToken, userData) {
+    try {
+      // Step 1: Clear all existing cookies and localStorage
+      await AuthCookieManager.clearAllAuth();
 
-  } catch (error) {
-    console.error('❌ Error during login as user:', error);
-    throw error;
+      // Step 2: Clear all permission caches
+      AuthCookieManager.clearAllPermissionCaches();
+
+      // Step 3: Set the new user's auth token
+      AuthCookieManager.setAuthToken(authToken);
+
+      // Step 4: Delay and verify with retries
+      const maxRetries = 3;
+      let retries = 0;
+      let verified = false;
+
+      while (!verified && retries < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay per attempt
+        const currentAuthToken = AuthCookieManager.getAuthToken();
+        const currentImpersonationToken = AuthCookieManager.getImpersonationToken();
+
+        verified = !!currentAuthToken && !currentImpersonationToken;
+
+        if (!verified) {
+          console.warn(`Verification failed on attempt ${retries + 1}. Re-clearing and re-setting.`);
+          await AuthCookieManager.clearAllAuth();
+          AuthCookieManager.setAuthToken(authToken);
+        }
+
+        retries++;
+      }
+
+      if (!verified) {
+        throw new Error('Failed to verify cookie state after retries');
+      }
+
+      // Step 5: Store user data if provided
+      if (userData) {
+        localStorage.setItem(IMPERSONATED_USER_KEY, JSON.stringify(userData));
+      }
+
+      // Step 6: Update user type
+      AuthCookieManager.updateUserType();
+
+      // Step 7: Sync auth state across tabs
+      AuthCookieManager.syncAuthAcrossTabs();
+
+      // Step 8: Log final state
+      const finalAuthToken = AuthCookieManager.getAuthToken();
+      console.log('✅ Login as user completed:', {
+        authToken: !!finalAuthToken,
+        impersonationToken: !!AuthCookieManager.getImpersonationToken(),
+        userType: AuthCookieManager.getUserType(),
+      });
+    } catch (error) {
+      console.error('❌ Error during login as user:', error);
+      throw error;
+    }
   }
-}
   // static loginAsUser(authToken, userData) {
   //   try {
 
@@ -690,70 +739,28 @@ class AuthCookieManager {
   //<---------------------- v1.0.0
   static async smartLogout(navigate, setLoading = null, effectivePermissions_RoleName = null) {
     try {
-        // ---------------------- v1.0.0 >
-      
-      // Set loading state if provided
       if (setLoading) {
         setLoading(true);
       }
 
-      // Reset permission preload flag
-      // <---------------------- v1.0.2
       const { resetPermissionPreload } = await import("../permissionPreloader");
       resetPermissionPreload();
-      // ---------------------- v1.0.2 >
-      
-      // Get current authentication state
+
       const authToken = AuthCookieManager.getAuthToken();
       const impersonationToken = AuthCookieManager.getImpersonationToken();
 
-      // Simulate backend processing time for cookie clearing
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Helper function to clear cookies using multiple methods
-      const clearCookie = (name) => {
-        try {
-          const currentDomain = window.location.hostname;
-          // <---------------------- v1.0.2
-          const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
-          
-          const clearOptions = {
-            expires: new Date(0),
-            path: '/',
-            secure: !isLocalhost,
-            sameSite: isLocalhost ? 'Lax' : 'None'
-          };
-          
-          // Only set domain for production and when not localhost
-          if (!isLocalhost && currentDomain.includes('upinterview.io')) {
-            clearOptions.domain = '.upinterview.io';
-          }
-          
-          // Clear from cookies
-          Cookies.set(name, '', clearOptions);
-          
-        } catch (error) {
-          console.error(`Error clearing cookie ${name}:`, error);
-        }
-      };
-      // ---------------------- v1.0.2 >
-
       if (impersonationToken && !authToken) {
-        // Clear super admin related data
-        clearCookie(IMPERSONATION_TOKEN_KEY);
+        AuthCookieManager.clearCookie(IMPERSONATION_TOKEN_KEY);
         localStorage.removeItem(IMPERSONATED_USER_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
         AuthCookieManager.clearPermissions('superAdmin');
         localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
         localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
-        // Always redirect to main domain
         window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "http://localhost:3000/organization-login";
-        // navigate("/organization-login");
-
-
       } else if (authToken && !impersonationToken) {
-        // Clear effective user related data
-        clearCookie(AUTH_TOKEN_KEY);
+        AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
         AuthCookieManager.clearPermissions('effective');
         localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
@@ -761,73 +768,50 @@ class AuthCookieManager {
         localStorage.removeItem('app_permissions_cache');
         localStorage.removeItem('permissions_effective');
         localStorage.removeItem('app_permissions_timestamp');
-        
-        // Check if user is individual or individual freelancer and redirect accordingly
         if (effectivePermissions_RoleName === 'Individual' || effectivePermissions_RoleName === 'Individual_Freelancer') {
           window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/individual-login" : "http://localhost:3000/individual-login";
         } else {
-          // Always redirect to main domain
           window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "http://localhost:3000/organization-login";
         }
-        // navigate("/organization-login");
-
       } else if (authToken && impersonationToken) {
-        // Clear effective user data, keep super admin data
-        clearCookie(AUTH_TOKEN_KEY);
+        AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
         AuthCookieManager.clearPermissions('effective');
         AuthCookieManager.clearAllPermissionCaches();
         localStorage.removeItem(USER_TYPE_KEY);
         navigate("/admin-dashboard");
       } else {
         window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "http://localhost:3000/organization-login";
-        // navigate("/organization-login");
-
       }
 
-      // Wait a moment for cookies to be cleared, then verify
-      // <---------------------- v1.0.2
       setTimeout(async () => {
-      // ---------------------- v1.0.2 >
-        // Verify that cookies and localStorage were cleared
         const verifyAuthToken = AuthCookieManager.getAuthToken();
         const verifyImpersonationToken = AuthCookieManager.getImpersonationToken();
         const verifyEffectivePermissions = localStorage.getItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
         const verifySuperAdminPermissions = localStorage.getItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
 
-        // Only use aggressive fallback if we're not in the "both tokens" scenario
-        // In the "both tokens" scenario, we expect the authToken to be cleared but impersonationToken to remain
         const originalAuthToken = authToken;
         const originalImpersonationToken = impersonationToken;
 
         if (originalAuthToken && originalImpersonationToken) {
-          // Scenario 3: Both tokens existed - only authToken should be cleared
           if (verifyAuthToken && !verifyImpersonationToken) {
-            clearCookie(AUTH_TOKEN_KEY);
+            AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
           } else if (!verifyAuthToken && verifyImpersonationToken) {
-            // <---------------------- v1.0.2
+            // Expected state
           } else {
             await AuthCookieManager.clearAllAuth();
           }
         } else {
-          // Other scenarios: both tokens should be cleared
           if (verifyAuthToken || verifyImpersonationToken) {
             await AuthCookieManager.clearAllAuth();
-            // ---------------------- v1.0.2 >
           }
         }
-
       }, 100);
-      
     } catch (error) {
       console.error('Error during smart logout:', error);
-      // Ensure loading is turned off even if there's an error
       if (setLoading) {
         setLoading(false);
       }
-      // Fallback to main domain organization login
       window.location.href = process.env.NODE_ENV === 'production' ? "https://app.upinterview.io/organization-login" : "http://localhost:3000/organization-login";
-      // navigate("/organization-login");
-
     }
   }
   // ---------------------- v1.0.2 >
@@ -836,51 +820,22 @@ class AuthCookieManager {
   static async handleTokenExpiration() {
     try {
       console.log('🔄 Handling token expiration...');
-      
-      // Reset permission preload flag
+
       const { resetPermissionPreload } = await import("../permissionPreloader");
       resetPermissionPreload();
-      
-      // Get current authentication state
+
       const authToken = AuthCookieManager.getAuthToken();
       const impersonationToken = AuthCookieManager.getImpersonationToken();
 
-      // Helper function to clear cookies
-      const clearCookie = (name) => {
-        try {
-          const currentDomain = window.location.hostname;
-          const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
-          
-          const clearOptions = {
-            expires: new Date(0),
-            path: '/',
-            secure: !isLocalhost,
-            sameSite: isLocalhost ? 'Lax' : 'None'
-          };
-          
-          if (!isLocalhost && currentDomain.includes('upinterview.io')) {
-            clearOptions.domain = '.upinterview.io';
-          }
-          
-          Cookies.set(name, '', clearOptions);
-        } catch (error) {
-          console.error(`Error clearing cookie ${name}:`, error);
-        }
-      };
-
-      // Clear all authentication data based on current state
       if (impersonationToken && !authToken) {
-        // Clear super admin related data
-        clearCookie(IMPERSONATION_TOKEN_KEY);
+        AuthCookieManager.clearCookie(IMPERSONATION_TOKEN_KEY);
         localStorage.removeItem(IMPERSONATED_USER_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
         AuthCookieManager.clearPermissions('superAdmin');
         localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
         localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
-        
       } else if (authToken && !impersonationToken) {
-        // Clear effective user related data
-        clearCookie(AUTH_TOKEN_KEY);
+        AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
         AuthCookieManager.clearPermissions('effective');
         localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
@@ -888,27 +843,21 @@ class AuthCookieManager {
         localStorage.removeItem('app_permissions_cache');
         localStorage.removeItem('permissions_effective');
         localStorage.removeItem('app_permissions_timestamp');
-        
       } else if (authToken && impersonationToken) {
-        // Clear effective user data, keep super admin data
-        clearCookie(AUTH_TOKEN_KEY);
+        AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
         AuthCookieManager.clearPermissions('effective');
         AuthCookieManager.clearAllPermissionCaches();
         localStorage.removeItem(USER_TYPE_KEY);
       }
 
-      // Always redirect to login page for token expiration
-      const loginUrl = process.env.NODE_ENV === 'production' 
-        ? "https://app.upinterview.io/organization-login" 
+      const loginUrl = process.env.NODE_ENV === 'production'
+        ? "https://app.upinterview.io/organization-login"
         : "http://localhost:3000/organization-login";
-      
       window.location.href = loginUrl;
-      
     } catch (error) {
       console.error('❌ Error handling token expiration:', error);
-      // Fallback: redirect to login
-      window.location.href = process.env.NODE_ENV === 'production' 
-        ? "https://app.upinterview.io/organization-login" 
+      window.location.href = process.env.NODE_ENV === 'production'
+        ? "https://app.upinterview.io/organization-login"
         : "http://localhost:3000/organization-login";
     }
   }
@@ -938,50 +887,28 @@ class AuthCookieManager {
     try {
       // Reset permission preload flag
       const { resetPermissionPreload } = await import("../permissionPreloader");
-
       resetPermissionPreload();
-      // ---------------------- v1.0.2 >
-      
+
       // Clear localStorage
       localStorage.clear();
 
-      // Get current domain for proper cookie clearing
-      const currentDomain = window.location.hostname;
-      
-      const clearOptions = {
-        expires: new Date(0),
-        secure: true,
-        sameSite: 'None',
-        path: '/'
-      };
-      
+      // Clear specific auth cookies
+      this.clearCookie(AUTH_TOKEN_KEY);
+      this.clearCookie(IMPERSONATION_TOKEN_KEY);
 
-      // Clear specific auth cookies with proper options
-      Cookies.set(AUTH_TOKEN_KEY, '', clearOptions);
-      Cookies.set(IMPERSONATION_TOKEN_KEY, '', clearOptions);
-
-      // Also try without domain for development
-      if (currentDomain === 'localhost' || currentDomain.includes('127.0.0.1')) {
-        Cookies.set(AUTH_TOKEN_KEY, '', { 
-          expires: new Date(0),
-          path: '/'
-        });
-        Cookies.set(IMPERSONATION_TOKEN_KEY, '', { 
-          expires: new Date(0),
-          path: '/'
-        });
-      }
-
-      // Generic cookie clearing as fallback
+      // Generic fallback: clear all cookies
       document.cookie.split(";").forEach((c) => {
         const cookieName = c.trim().split("=")[0];
         if (cookieName) {
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          this.clearCookie(cookieName);
         }
       });
 
+      // Log cookie state after clearing
+      console.log('All auth cleared, final cookie state:', this.debugCookieState());
     } catch (error) {
       console.error('Error clearing all auth data:', error);
+      throw error; // Rethrow to propagate to calling functions
     }
   }
 
@@ -1074,7 +1001,7 @@ class AuthCookieManager {
       const authToken = AuthCookieManager.getAuthToken();
       const impersonationToken = AuthCookieManager.getImpersonationToken();
       const userType = AuthCookieManager.getUserType();
-      
+
       // Count cookies in document.cookie
       const allCookies = document.cookie.split(';').map(c => c.trim());
       const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
@@ -1110,12 +1037,12 @@ class AuthCookieManager {
       const currentDomain = window.location.hostname;
       const authToken = AuthCookieManager.getAuthToken();
       const impersonationToken = AuthCookieManager.getImpersonationToken();
-      
+
       // Count cookies in document.cookie
       const allCookies = document.cookie.split(';').map(c => c.trim());
       const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
       const impersonationTokenCount = allCookies.filter(c => c.startsWith('impersonationToken=')).length;
-      
+
       console.log('🔍 Cookie State Debug:', {
         currentDomain,
         authToken: {
@@ -1166,7 +1093,7 @@ class AuthCookieManager {
       sessionStorage: false,
       notifications: false
     };
-    
+
     try {
       // Check cookie support
       document.cookie = 'test=1';
@@ -1175,7 +1102,7 @@ class AuthCookieManager {
     } catch (e) {
       console.warn('Cookie support check failed:', e);
     }
-    
+
     try {
       // Check localStorage support
       localStorage.setItem('test', '1');
@@ -1184,7 +1111,7 @@ class AuthCookieManager {
     } catch (e) {
       console.warn('localStorage support check failed:', e);
     }
-    
+
     try {
       // Check sessionStorage support
       sessionStorage.setItem('test', '1');
@@ -1193,12 +1120,12 @@ class AuthCookieManager {
     } catch (e) {
       console.warn('sessionStorage support check failed:', e);
     }
-    
+
     // Check notification permission
     if ('Notification' in window) {
       permissions.notifications = Notification.permission === 'granted';
     }
-    
+
     return permissions;
   }
 
@@ -1242,22 +1169,22 @@ class AuthCookieManager {
       try {
         const authToken = this.getAuthToken();
         const impersonationToken = this.getImpersonationToken();
-        
+
         // If no tokens exist, clear the interval
         if (!authToken && !impersonationToken) {
           clearInterval(validationInterval);
           return;
         }
-        
+
         // Validation is already done in getAuthToken() and getImpersonationToken()
         // This just ensures we check periodically
         console.log('Token validation check completed');
-        
+
       } catch (error) {
         console.error('Error during token validation:', error);
       }
     }, 5 * 60 * 1000); // 5 minutes
-    
+
     // Return cleanup function
     return () => clearInterval(validationInterval);
   }
@@ -1266,7 +1193,7 @@ class AuthCookieManager {
   static isTokenExpiringSoon(token) {
     try {
       if (!token) return false;
-      
+
       const decoded = jwtDecode(token);
       if (decoded && decoded.exp) {
         const currentTime = Math.floor(Date.now() / 1000);
@@ -1281,11 +1208,17 @@ class AuthCookieManager {
   }
   // ---------------------- v1.0.2 >
 
+  // Inside AuthCookieManager class
+
+
 }
+
+
 
 // Named exports for backward compatibility
 export const setAuthCookies = AuthCookieManager.setAuthCookies;
-export const clearAllAuth = AuthCookieManager.clearAllAuth;
+export const clearAllAuth = AuthCookieManager.clearAllAuth.bind(AuthCookieManager);
+export const clearCookie = AuthCookieManager.clearCookie.bind(AuthCookieManager);
 export const debugTokenSources = AuthCookieManager.debugTokenSources;
 export const testCookieFunctionality = AuthCookieManager.testCookieFunctionality;
 export const verifyCookieState = AuthCookieManager.verifyCookieState;
