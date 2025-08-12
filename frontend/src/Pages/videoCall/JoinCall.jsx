@@ -104,7 +104,30 @@ function JoinMeeting() {
       }
     };
 
+
   // Check authentication on component mount
+
+      const currentUserOwnerId = currentUserData.userId || currentUserData.id;
+      console.log('Current user ownerId:', currentUserOwnerId);
+      console.log('URL ownerId:', decryptedOwnerId);
+      if (currentUserOwnerId !== decryptedOwnerId) {
+        console.log('OwnerId mismatch, redirecting to login');
+        const returnUrl = encodeURIComponent(window.location.href);
+        navigate(`/organization-login?returnUrl=${returnUrl}`);
+        return false;
+      }
+
+      console.log('Authentication successful, ownerId matches');
+      setIsAuthChecking(false);
+      return true;
+    } catch (error) {
+      console.error('Error in authentication check:', error);
+      setAuthError('Authentication error occurred');
+      setIsAuthChecking(false);
+      return false;
+    }
+  };
+
   // Check authentication on component mount
   useEffect(() => {
     // Only check authentication for schedule and interviewer links

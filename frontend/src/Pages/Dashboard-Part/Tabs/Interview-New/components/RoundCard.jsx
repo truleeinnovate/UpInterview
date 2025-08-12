@@ -20,6 +20,7 @@ import {
   MessageSquare,
   User,
   ExternalLink,
+  Share2
 } from "lucide-react";
 
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
@@ -39,8 +40,9 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock"
 // v1.0.1 ------------------------------------------------------------>
 // v1.0.2 <--------------------------------------------
 import { createPortal } from "react-dom";
+import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI";
 // v1.0.2 -------------------------------------------->
-
+import { useQueryClient } from "@tanstack/react-query";
 const RoundCard = ({
   round,
   interviewData,
@@ -69,12 +71,14 @@ const RoundCard = ({
   const [confirmAction, setConfirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-
+  const queryClient = useQueryClient();
   // v1.0.1 <--------------------------------------------
   // v1.0.3 <--------------------------------------------------------
   useScrollLock(showDeleteConfirmModal || showConfirmModal);
   // v1.0.3 -------------------------------------------------------->
   // v1.0.1 -------------------------------------------->
+  
+    const [linkExpiryDays, setLinkExpiryDays] = useState(3);
 
   // useEffect(() => {
   //   if (round.assessmentId) {
@@ -112,6 +116,8 @@ const RoundCard = ({
 
   // Remove console.log to prevent loops
   // console.log("round", round);
+  console.log("interviewData",interviewData);
+  
 
   const toggleSection = async (sectionId) => {
     if (expandedSections[sectionId]) {
@@ -271,6 +277,71 @@ const RoundCard = ({
     // If scheduled within 30 minutes of creation, consider it instant
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
+  console.log("round",round);
+  
+
+    const handleShareClick = async () => {
+      // Validate assessment selection when fromscheduleAssessment is true
+      // if (fromscheduleAssessment && !selectedAssessment) {
+      //   setErrors({
+      //     ...errors,
+      //     Assessment: "Please select an assessment template.",
+      //   });
+      //   return;
+      // }
+  
+      // if (selectedCandidates.length === 0) {
+      //   setErrors({
+      //     ...errors,
+      //     Candidate: "Please select at least one candidate.",
+      //   });
+      //   return;
+      // }
+  
+      console.log("selectedAssessment",
+        {
+          assessmentId: round?.assessmentId,
+          selectedCandidates: interviewData?.candidateId,
+          userId: interviewData?.candidateId?.ownerId,
+        // selectedCandidates,
+        // linkExpiryDays,
+        // onClose: onCloseshare,
+        // setErrors,
+        // setIsLoading,
+        // organizationId,
+        // userId,
+        queryClient,
+        }
+      );
+      
+   const linkExpiryDays = round?.dateTime
+      // setIsLoading(true);
+      const result = await shareAssessmentAPI({
+        assessmentId:   round?.assessmentId,
+        selectedCandidates: interviewData?.candidateId,
+        userId: interviewData?.candidateId?.ownerId,
+          // ? selectedAssessment._id
+          // : assessment._id,
+        // selectedCandidates,
+        linkExpiryDays,
+        // onClose: onCloseshare,
+        // setErrors,
+        // setIsLoading,
+        // organizationId,
+        // userId,
+        queryClient,
+      });
+      console.log("assessment result",result);
+      
+  
+      if (result.success) {
+        // React Query will handle data refresh automatically
+        // No need to manually fetch data
+      } else {
+        toast.error(result.message || "Failed to schedule assessment");
+      }
+      // setIsLoading(false);
+    };
 
   return (
     <>
@@ -774,8 +845,25 @@ const RoundCard = ({
                 </div>
               )}
 
+
+
               {isRoundActive && (
                 <div className="mt-6 flex justify-end space-x-3">
+
+{round.roundTitle === "Assessment" && (
+                    <Button
+                      onClick={handleShareClick}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center"
+                    >
+                      <Share2 className="h-4 w-4 mr-1" />
+                      share 
+                    </Button>
+                  )}
+
+
+
                   {canEdit && (
                     <Button
                       onClick={onEdit}

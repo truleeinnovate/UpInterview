@@ -45,8 +45,9 @@ export const validateProfileId = async (profileId, checkProfileIdExists) => {
 };
 
 export const validatePhone = (phone, countryCode) => {
-  if (!phone) {
-    return 'Phone Number is required';
+  // Make phone number optional
+  if (!phone || phone.trim() === '') {
+    return '';
   }
 
   const cleanPhone = phone.replace(/\D/g, '');
