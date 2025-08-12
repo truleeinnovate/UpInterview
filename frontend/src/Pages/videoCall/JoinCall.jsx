@@ -66,7 +66,6 @@ function JoinMeeting() {
       const currentUserOwnerId = currentUserData.userId || currentUserData.id;
       console.log('Current user ownerId:', currentUserOwnerId);
       console.log('URL ownerId:', decryptedOwnerId);
-
       if (currentUserOwnerId !== decryptedOwnerId) {
         console.log('OwnerId mismatch, redirecting to login');
         const returnUrl = encodeURIComponent(window.location.href);
