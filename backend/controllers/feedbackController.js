@@ -24,7 +24,8 @@ const createFeedback = async (req, res) => {
             questionFeedback,
             generalComments,
             overallImpression,
-            status
+            status,
+            feedbackCode
         } = req.body;
 
         // Validate required fields
