@@ -55,25 +55,35 @@ const VerticalRoundsView = ({
             onClick={() => toggleRound(round?._id)}
             className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
           >
+        
             <div className="flex items-center">
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
                 <span className="text-sm font-medium">{round?.sequence}</span>
               </div>
               <div>
+                <div className="flex items-center">
                 <h3 className="text-lg font-semibold text-gray-900">
                   {round?.roundTitle}
                 </h3>
+                <span className="mx-2">
+                    {capitalizeFirstLetter(round?.status)}
+                  </span>
+                  </div>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
                   <span className="mr-2">
                     {capitalizeFirstLetter(round?.interviewType)}
                   </span>
+                 
                   <span>•</span>
                   <span className="mx-2">
                     {capitalizeFirstLetter(round?.interviewMode)}
                   </span>
+                
+                  
                 </div>
               </div>
             </div>
+          
             <div className="flex items-center space-x-4">
               {/* {canEditRound(round) && (
                 <Button

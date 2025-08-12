@@ -971,6 +971,9 @@ const RoundFormInterviews = () => {
         "Response from selectedInterviewType:",
         selectedInterviewType
       );
+      if (payload.round.roundTitle !== "Assessment") {
+        
+     
       // Handle outsource request if interviewers are selected
       if (selectedInterviewers && selectedInterviewers.length > 0) {
         const isInternal = selectedInterviewType === "Internal";
@@ -1061,7 +1064,7 @@ const RoundFormInterviews = () => {
       }
 
 
-      console.log("response", response);
+      // console.log("response", response);
 
 
       // don't remove this code related to agora video room
@@ -1076,7 +1079,7 @@ const RoundFormInterviews = () => {
 
       // }
 
-      console.log("response", response);
+      // console.log("response", response);
 
 
       // Meeting platform link creation
@@ -1221,6 +1224,8 @@ const RoundFormInterviews = () => {
         }
       }
 
+
+    }
 
 
     } catch (err) {
