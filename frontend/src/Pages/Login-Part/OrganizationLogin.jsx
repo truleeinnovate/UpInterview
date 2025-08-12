@@ -517,17 +517,17 @@ const OrganizationLogin = () => {
       {/* <div showBackButton={true} backPath="/"> */}
       <div className="min-h-screen flex">
         {/* Left side - Hero Image and Content */}
-        <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden rounded-r-3xl">
+        <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-custom-blue/80 via-custom-blue/90 to-custom-blue relative overflow-hidden rounded-r-3xl">
           <div className="absolute inset-0">
             <img
               src="https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=1200"
               alt="Modern office meeting room"
               className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/85 via-primary-600/90 to-primary-700/95"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-custom-blue/85 via-custom-blue/90 to-custom-blue/95"></div>
           </div>
 
-          <div className="relative z-10 flex flex-col justify-center px-4 lg:px-8 py-8 lg:py-12 text-white animate-fade-in">
+          <div className="relative z-10 flex flex-col justify-center px-4 lg:px-8 py-8 lg:py-12 text-white animate-fade-in mt-1">
             <div className="mb-8">
               <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
                 <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
@@ -766,9 +766,9 @@ const OrganizationLogin = () => {
                 })()}
               </div>
 
-              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 rounded-xl p-4 mb-6 border border-primary-200/50">
+              <div className="bg-gradient-to-r from-custom-blue/5 to-custom-blue/10 rounded-xl p-4 mb-6 border border-custom-blue/20">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <svg className="w-5 h-5 text-primary-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-custom-blue mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                   </svg>
                   {(() => {
@@ -800,19 +800,19 @@ const OrganizationLogin = () => {
                           return (
                             <>
                               <li className="flex items-center">
-                                <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                                <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 animate-pulse"></div>
                                 Join your scheduled interview meeting
                               </li>
                               <li className="flex items-center">
-                                <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                                <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 animate-pulse"></div>
                                 Access meeting details and candidate info
                               </li>
                               <li className="flex items-center">
-                                <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                                <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 animate-pulse"></div>
                                 View interview feedback and assessments
                               </li>
                               <li className="flex items-center">
-                                <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                                <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 animate-pulse"></div>
                                 Manage interview scheduling and availability
                               </li>
                             </>
@@ -862,7 +862,7 @@ const OrganizationLogin = () => {
                         setErrors((prev) => ({ ...prev, email: '' }));
                       }}
                       onBlur={(e) => handleBlur('email', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                         }`}
                       placeholder="your@company.com"
                       autoComplete="email"
@@ -892,7 +892,7 @@ const OrganizationLogin = () => {
                           setErrors((prev) => ({ ...prev, password: '' }));
                         }}
                         onBlur={(e) => handleBlur('password', e.target.value)}
-                        className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                        className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                           }`}
                         placeholder="••••••••"
                         autoComplete="current-password"
@@ -930,7 +930,7 @@ const OrganizationLogin = () => {
 
                     <Link
                       to="/forgot-password"
-                      className="text-sm text-primary-500 hover:text-primary-600 font-medium hover:underline transition-all duration-200"
+                      className="text-sm text-custom-blue hover:text-custom-blue/80 font-medium hover:underline transition-all duration-200"
                     >
                       Forgot password?
                     </Link>
@@ -941,7 +941,7 @@ const OrganizationLogin = () => {
                     disabled={isLoading}
                     className={`w-full text-lg font-medium rounded-lg py-3 transition-all duration-300 flex items-center justify-center ${isLoading
                       ? 'bg-gray-400 cursor-not-allowed transform scale-95'
-                      : 'bg-primary-500 hover:bg-primary-600 text-white transform hover:scale-105'
+                      : 'bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105 shadow-md'
                       }`}
                   >
                     {isLoading ? (
@@ -973,7 +973,7 @@ const OrganizationLogin = () => {
                   </button>
                 </form>
               ) : (
-                <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-custom-blue/20">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -997,7 +997,7 @@ const OrganizationLogin = () => {
                         disabled={isResending || countdown > 0}
                         className={`w-full px-4 py-3 rounded-lg font-medium transition-all duration-300 ${isResending || countdown > 0
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white transform hover:scale-105'
+                          : 'bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105 shadow-md'
                           }`}
                       >
                         {isResending ? (

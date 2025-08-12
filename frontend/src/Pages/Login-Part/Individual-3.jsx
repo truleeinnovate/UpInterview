@@ -94,14 +94,14 @@ const Profile3 = () => {
             {/* New UI */}
             <div className="min-h-screen flex">
                 {/* Left side - Hero Image and Content */}
-                <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 to-primary-600 relative overflow-hidden rounded-r-3xl">
+                <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-custom-blue/90 to-custom-blue/80 relative overflow-hidden rounded-r-3xl">
                     <div className="absolute inset-0">
                         <img
                             src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1200"
                             alt="Team collaboration and hiring"
                             className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/90 to-primary-600/90"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-custom-blue/90 to-custom-blue/80"></div>
                     </div>
 
                     <div className="relative z-10 flex flex-col justify-center px-4 lg:px-8 py-8 lg:py-12 text-white">
@@ -197,13 +197,13 @@ const Profile3 = () => {
                                 {/* Technical Expert/Developer Card */}
                                 <div
                                     className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${selectedTab === 'technical'
-                                        ? 'border-primary-500 bg-primary-50 shadow-lg'
-                                        : 'border-gray-200 hover:border-primary-300 hover:shadow-md'
+                                        ? 'border-custom-blue bg-custom-blue/10 shadow-lg'
+                                        : 'border-gray-200 hover:border-custom-blue/50 hover:shadow-md'
                                         }`}
                                     onClick={() => toggleActiveState('technical')}
                                 >
                                     <div className="flex items-center">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${selectedTab === 'technical' ? 'bg-primary-500' : 'bg-gray-100'
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${selectedTab === 'technical' ? 'bg-custom-blue' : 'bg-gray-100'
                                             }`}>
                                             <svg className={`w-6 h-6 ${selectedTab === 'technical' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -216,7 +216,7 @@ const Profile3 = () => {
                                             </p>
                                         </div>
                                         {selectedTab === 'technical' && (
-                                            <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
+                                            <div className="w-6 h-6 bg-custom-blue rounded-full flex items-center justify-center">
                                                 <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                 </svg>
@@ -228,13 +228,13 @@ const Profile3 = () => {
                                 {/* HR/Recruiter Card */}
                                 <div
                                     className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${selectedTab === 'hr'
-                                        ? 'border-primary-500 bg-primary-50 shadow-lg'
-                                        : 'border-gray-200 hover:border-primary-300 hover:shadow-md'
+                                        ? 'border-custom-blue bg-custom-blue/10 shadow-lg'
+                                        : 'border-gray-200 hover:border-custom-blue/50 hover:shadow-md'
                                         }`}
                                     onClick={() => toggleActiveState('hr')}
                                 >
                                     <div className="flex items-center">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${selectedTab === 'hr' ? 'bg-primary-500' : 'bg-gray-100'
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${selectedTab === 'hr' ? 'bg-custom-blue' : 'bg-gray-100'
                                             }`}>
                                             <svg className={`w-6 h-6 ${selectedTab === 'hr' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -247,7 +247,7 @@ const Profile3 = () => {
                                             </p>
                                         </div>
                                         {selectedTab === 'hr' && (
-                                            <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
+                                            <div className="w-6 h-6 bg-custom-blue rounded-full flex items-center justify-center">
                                                 <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                 </svg>
@@ -264,7 +264,7 @@ const Profile3 = () => {
                                     onClick={handleButtonClick}
                                     disabled={!selectedTab}
                                     className={`w-full text-lg font-medium rounded-lg py-4 transition-all duration-300 ${selectedTab
-                                        ? 'bg-primary-500 hover:bg-primary-600 text-white transform hover:scale-105 shadow-lg'
+                                        ? 'bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105 shadow-lg'
                                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                         }`}
                                 >
@@ -275,22 +275,22 @@ const Profile3 = () => {
                             {/* Additional Info */}
                             <div className="mt-8 bg-gray-50 rounded-xl p-4">
                                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                                    <svg className="w-5 h-5 text-primary-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg className="w-5 h-5 text-custom-blue mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                     </svg>
                                     What happens next?
                                 </h4>
                                 <ul className="space-y-2 text-sm text-gray-600">
                                     <li className="flex items-start">
-                                        <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 mt-2 flex-shrink-0"></div>
+                                        <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 mt-2 flex-shrink-0"></div>
                                         <span>Complete your profile with your expertise and experience</span>
                                     </li>
                                     <li className="flex items-start">
-                                        <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 mt-2 flex-shrink-0"></div>
+                                        <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 mt-2 flex-shrink-0"></div>
                                         <span>Choose between freelance opportunities or platform access</span>
                                     </li>
                                     <li className="flex items-start">
-                                        <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 mt-2 flex-shrink-0"></div>
+                                        <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 mt-2 flex-shrink-0"></div>
                                         <span>Start conducting interviews and earning or using our tools</span>
                                     </li>
                                 </ul>
