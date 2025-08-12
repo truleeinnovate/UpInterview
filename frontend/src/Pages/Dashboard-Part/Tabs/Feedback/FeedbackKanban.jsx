@@ -182,7 +182,7 @@ const FeedbackKanban = ({feedbacks, loading, onView, onEdit }) => {
                               </div>
                               <span className="ml-2 font-medium text-sm text-gray-900 truncate">{item.candidateId?.FirstName + ' ' + item.candidateId?.LastName}</span>
                             </div>
-                            {getStatusIcon(item.interviewRoundId.status)}
+                            {getStatusIcon(item.interviewRoundId?.status)}
                           </div>
                           <p className="text-sm text-gray-600 mb-2 truncate">{item.positionId?.title}</p>
                           <div className="flex items-center justify-between mb-2">

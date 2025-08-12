@@ -14,7 +14,7 @@ const CandidateMiniTab = ({selectedData,isAddMode,decodedData}) => {
   
 
   const [expandedSections, setExpandedSections] = useState({
-    skills: false,
+    skills: true,
     certificates: false,
     projects: false
   });

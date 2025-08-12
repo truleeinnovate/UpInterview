@@ -388,6 +388,7 @@ const usersRoutes = require('./routes/usersRoutes.js');
 // Add import for agoraRoomRoute
 const agoraRoomRoute = require('./routes/agoraRoomRoute.js');
 const feedbackRoute = require('./routes/feedbackRoute.js');
+const usageRoutes = require('./routes/usageRoutes.js');
 
 app.use('/api/agora', agoraRoomRoute);
 // ------------------------------v1.0.3 >
@@ -403,6 +404,7 @@ app.use('/', Cardrouter);
 app.use('/emails', EmailRouter);
 app.use('/users', usersRoutes);
 app.use('/feedback', feedbackRoute);
+app.use('/usage', usageRoutes);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
