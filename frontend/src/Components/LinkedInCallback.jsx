@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { config } from '../config.js';
-import { setAuthCookies, clearAllAuth } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { setAuthCookies, clearAllAuth, getAuthToken, debugCookieState } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 import Loading from '../Components/Loading.js';
 import { useIndividualLogin } from '../apiHooks/useIndividualLogin';
 
@@ -153,13 +153,14 @@ const LinkedInCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log('🔍 Initial cookie state:', debugCookieState());
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-
+  
         if (!code) {
           throw new Error('No authorization code received from LinkedIn');
         }
-
+  
         const response = await axios.post(
           `${config.REACT_APP_API_URL}/linkedin/check-user`,
           { code, redirectUri: window.location.origin + '/callback' },
@@ -171,24 +172,46 @@ const LinkedInCallback = () => {
             },
           }
         );
-
+  
         const { existingUser, token, email } = response.data;
-
+  
         // Clear all cookies and localStorage before setting new ones
-        clearAllAuth();
-        console.log('✅ Cleared all cookies and localStorage for individual login');
-
-        // Set the authToken cookie using the consistent method
+        console.log('🧹 Clearing all auth data');
+        await clearAllAuth();
+        console.log('✅ Cleared all cookies and localStorage, post-clear state:', debugCookieState());
+  
+        // Set the authToken with retries
         if (token) {
-          setAuthCookies({ authToken: token });
+          const maxRetries = 3;
+          let retries = 0;
+          let verified = false;
+  
+          while (!verified && retries < maxRetries) {
+            setAuthCookies({ authToken: token });
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
+  
+            const authToken = getAuthToken();
+            console.log(`🔍 Verification attempt ${retries + 1}, cookie state:`, debugCookieState());
+  
+            verified = !!authToken;
+            if (!verified) {
+              console.warn(`Retry ${retries + 1}: authToken not set, re-clearing and re-setting`);
+              await clearAllAuth();
+            }
+            retries++;
+          }
+  
+          if (!verified) {
+            throw new Error('Failed to set authToken after retries');
+          }
+        } else {
+          throw new Error('No token received from LinkedIn');
         }
-
+  
         if (existingUser) {
-          // Check if we have a contact for this user
           const contact = await fetchAndFilterContacts(email);
           await determineNavigation(contact, token, email);
         } else {
-          // New user - go to select profession
           navigate('/select-profession', {
             state: {
               linkedIn_email: email,
@@ -199,11 +222,16 @@ const LinkedInCallback = () => {
       } catch (error) {
         console.error('Error in LinkedIn callback:', error);
         setError(error.message || 'Failed to process LinkedIn login');
+        setTimeout(() => {
+          navigate('/login', {
+            state: { error: 'LinkedIn login failed. Please try again.' },
+          });
+        }, 5000);
       } finally {
         setLoading(false);
       }
     };
-
+  
     handleCallback();
   }, [navigate]);
 
