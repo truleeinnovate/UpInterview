@@ -180,9 +180,7 @@ const FeedbackTab = lazy(() =>
 const FeedbackFormModel = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx")
 );
-const FeedbackPreview = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Feedback/Preview.js")
-);
+
 const MyProfile = lazy(() =>
   import(
     "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"
@@ -1020,7 +1018,6 @@ const MainAppRoutes = ({
                   <Route path="/feedback" element={<FeedbackTab />} />
                   <Route path="/feedback/view/:id" element={<><FeedbackFormModel /> <FeedbackTab /></>} />
                   <Route path="/feedback/edit/:id" element={<><FeedbackFormModel /> <FeedbackTab /></>} />
-                  <Route path="/feedback-preview" element={<FeedbackPreview />} />
 
                 </>
               )}
