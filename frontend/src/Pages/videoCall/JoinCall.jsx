@@ -24,44 +24,88 @@ function JoinMeeting() {
   const [authError, setAuthError] = useState(null);
 
   // Authentication check function
-  const checkAuthentication = () => {
-    try {
-      if (!AuthCookieManager.isAuthenticated()) {
-        console.log('User not authenticated, redirecting to login');
-        const returnUrl = encodeURIComponent(window.location.href);
-        navigate(`/organization-login?returnUrl=${returnUrl}`);
-        return false;
-      }
-
-      const currentUserData = AuthCookieManager.getActiveUserData();
-      if (!currentUserData) {
-        console.log('Unable to get current user data, redirecting to login');
-        const returnUrl = encodeURIComponent(window.location.href);
-        navigate(`/organization-login?returnUrl=${returnUrl}`);
-        return false;
-      }
-
-      const urlParams = new URLSearchParams(location.search);
-      const encryptedOwnerId = urlParams.get('owner');
-      
-      if (!encryptedOwnerId) {
-        console.log('No ownerId in URL parameters');
-        setAuthError('Invalid meeting link: missing owner information');
-        setIsAuthChecking(false);
-        return false;
-      }
-
-      let decryptedOwnerId;
+    // Authentication check function
+    const checkAuthentication = () => {
       try {
-        const decodedOwnerId = decodeURIComponent(encryptedOwnerId);
-        decryptedOwnerId = decryptData(decodedOwnerId);
-        console.log('Decrypted ownerId from URL:', decryptedOwnerId);
+        if (!AuthCookieManager.isAuthenticated()) {
+          console.log('User not authenticated, redirecting to login');
+          const returnUrl = encodeURIComponent(window.location.href);
+          
+          // Determine login path based on role (interviewer vs scheduler/organization)
+          const urlParams = new URLSearchParams(location.search);
+          const isInterviewer = urlParams.get('interviewer') === 'true';
+          const loginPath = isInterviewer ? '/individual-login' : '/organization-login';
+          
+          navigate(`${loginPath}?returnUrl=${returnUrl}`);
+          return false;
+        }
+  
+        const currentUserData = AuthCookieManager.getActiveUserData();
+        if (!currentUserData) {
+          console.log('Unable to get current user data, redirecting to login');
+          const returnUrl = encodeURIComponent(window.location.href);
+          
+          // Same login path logic as above
+          const urlParams = new URLSearchParams(location.search);
+          const isInterviewer = urlParams.get('interviewer') === 'true';
+          const loginPath = isInterviewer ? '/individual-login' : '/organization-login';
+          
+          navigate(`${loginPath}?returnUrl=${returnUrl}`);
+          return false;
+        }
+  
+        const urlParams = new URLSearchParams(location.search);
+        const encryptedOwnerId = urlParams.get('owner');
+        
+        if (!encryptedOwnerId) {
+          console.log('No ownerId in URL parameters');
+          setAuthError('Invalid meeting link: missing owner information');
+          setIsAuthChecking(false);
+          return false;
+        }
+  
+        let decryptedOwnerId;
+        try {
+          const decodedOwnerId = decodeURIComponent(encryptedOwnerId);
+          decryptedOwnerId = decryptData(decodedOwnerId);
+          console.log('Decrypted ownerId from URL:', decryptedOwnerId);
+        } catch (error) {
+          console.error('Error decrypting ownerId:', error);
+          setAuthError('Invalid meeting link: unable to decrypt owner information');
+          setIsAuthChecking(false);
+          return false;
+        }
+  
+        const currentUserOwnerId = currentUserData.userId || currentUserData.id;
+        console.log('Current user ownerId:', currentUserOwnerId);
+        console.log('URL ownerId:', decryptedOwnerId);
+  
+        if (currentUserOwnerId !== decryptedOwnerId) {
+          console.log('OwnerId mismatch, redirecting to login');
+          const returnUrl = encodeURIComponent(window.location.href);
+          
+          // Same login path logic for mismatch
+          const urlParams = new URLSearchParams(location.search);
+          const isInterviewer = urlParams.get('interviewer') === 'true';
+          const loginPath = isInterviewer ? '/individual-login' : '/organization-login';
+          
+          navigate(`${loginPath}?returnUrl=${returnUrl}`);
+          return false;
+        }
+  
+        console.log('Authentication successful, ownerId matches');
+        setIsAuthChecking(false);
+        return true;
       } catch (error) {
-        console.error('Error decrypting ownerId:', error);
-        setAuthError('Invalid meeting link: unable to decrypt owner information');
+        console.error('Error in authentication check:', error);
+        setAuthError('Authentication error occurred');
         setIsAuthChecking(false);
         return false;
       }
+    };
+
+
+  // Check authentication on component mount
 
       const currentUserOwnerId = currentUserData.userId || currentUserData.id;
       console.log('Current user ownerId:', currentUserOwnerId);
@@ -86,9 +130,10 @@ function JoinMeeting() {
 
   // Check authentication on component mount
   useEffect(() => {
-    // Only check authentication for scheduler and interviewer links
+    // Only check authentication for schedule and interviewer links
     const urlParams = new URLSearchParams(location.search);
-    const schedule = urlParams.get('scheduler');
+    // Fix typo - standardize to 'schedule' (was 'scheduler')
+    const schedule = urlParams.get('schedule');
     const interviewer = urlParams.get('interviewer');
     const candidate = urlParams.get('candidate');
 
@@ -103,9 +148,9 @@ function JoinMeeting() {
       return;
     }
 
-    // Check authentication for scheduler and interviewer links
+    // Check authentication for schedule and interviewer links
     if (isSchedule || isInterviewer) {
-      console.log('Scheduler or interviewer link detected, checking authentication');
+      console.log('Schedule or interviewer link detected, checking authentication');
       checkAuthentication();
     } else {
       console.log('No specific role detected, skipping authentication');
