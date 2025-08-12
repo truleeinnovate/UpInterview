@@ -238,7 +238,7 @@ export const Organization = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Prepare full data with confirmPassword
     const organizationData = {
       firstName: selectedFirstName,
@@ -255,7 +255,7 @@ export const Organization = () => {
       confirmPassword: selectedConfirmPassword,
       contactType: 'Organization',
     };
-  
+
     // Run validations first
     const isValid = await validateOrganizationSignup(
       organizationData,
@@ -263,12 +263,12 @@ export const Organization = () => {
       checkEmailExists,
       checkProfileIdExists
     );
-  
+
     if (!isValid) {
       setIsSubmitting(false);
       return;
     }
-    
+
     // Only set submitting to true after all validations pass
     setIsSubmitting(true);
 
@@ -798,14 +798,14 @@ export const Organization = () => {
 
                     <div className="flex justify-center">
                       <div className="text-sm mb-4">
-                        If already registered | <span className="cursor-pointer text-custom-blue underline" onClick={() => navigate('/organization-login')}>Login</span>
+                        If already registered | <span className="cursor-pointer text-custom-blue underline hover:text-custom-blue/80 transition-colors duration-200" onClick={() => navigate('/organization-login')}>Login</span>
                       </div>
                     </div>
                     <div className="flex justify-center mb-10">
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className={`w-full text-sm text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${isSubmitting ? 'bg-custom-blue cursor-not-allowed' : 'bg-custom-blue hover:bg-custom-blue/80'}`}
+                        className={`w-full text-sm font-medium text-white rounded-lg px-4 py-3 transition-colors duration-300 flex items-center justify-center ${isSubmitting ? 'bg-custom-blue cursor-not-allowed' : 'bg-custom-blue hover:bg-custom-blue/90 shadow-md'}`}
                       >
                         {isSubmitting ? (
                           <>
@@ -833,13 +833,13 @@ export const Organization = () => {
                       <button
                         onClick={handleResendVerification}
                         disabled={isResending || countdown > 0}
-                        className={`px-4 py-2 rounded-md transition-colors ${isResending || countdown > 0 ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+                        className={`px-4 py-2 rounded-lg transition-colors font-medium ${isResending || countdown > 0 ? 'bg-custom-blue/70 cursor-not-allowed' : 'bg-custom-blue hover:bg-custom-blue/90 text-white shadow-md'}`}
                       >
                         {isResending ? 'Resending...' : countdown > 0 ? `Resend in ${countdown}s` : 'Resend Email'}
                       </button>
                       <button
                         onClick={() => navigate('/organization-login')}
-                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors text-gray-700"
+                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-700 font-medium"
                       >
                         Back to Login
                       </button>
@@ -853,17 +853,17 @@ export const Organization = () => {
         {/* <Layout showBackButton={true} backPath="/organization"> */}
         <div className="min-h-screen flex">
           {/* Left side - Hero Image and Content */}
-          <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 to-primary-600 relative overflow-hidden rounded-r-3xl">
+          <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-custom-blue to-custom-blue/90 relative overflow-hidden rounded-r-3xl">
             <div className="absolute inset-0">
               <img
                 src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1200"
                 alt="Team collaboration and hiring"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/90 to-primary-600/90"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-custom-blue/90 to-custom-blue/80"></div>
             </div>
 
-            <div className="relative z-10 flex -mt-44 flex-col justify-center px-4 lg:px-8 text-white">
+            <div className="relative z-10 flex -mt-20 flex-col justify-center px-4 lg:px-8 text-white">
               <div className="mb-8">
                 <h1 className="text-4xl font-bold mb-4">Transform Your Hiring Process</h1>
                 <p className="text-xl text-white leading-relaxed font-medium">
@@ -970,19 +970,19 @@ export const Organization = () => {
                   </p>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="flex items-center">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></div>
+                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>
                       <span>Detailed Scorecards</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></div>
+                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>
                       <span>Video Recordings</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></div>
+                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>
                       <span>Code Review Notes</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></div>
+                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>
                       <span>Hiring Recommendations</span>
                     </div>
                   </div>
@@ -1049,7 +1049,7 @@ export const Organization = () => {
                 </div>
 
                 {/* Benefits Banner */}
-                <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-3 mb-4 text-white">
+                <div className="bg-gradient-to-r from-custom-blue to-custom-blue/90 rounded-xl p-3 mb-4 text-white">
                   <div className="flex items-center mb-2">
                     <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
@@ -1065,293 +1065,6 @@ export const Organization = () => {
 
                 {!formSubmitted ? (
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Personal Information Section */}
-                    <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <svg className="w-5 h-5 text-primary-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-                        </svg>
-                        👤 Account Information
-                      </h3>
-
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                            First Name *
-                          </label>
-                          <input
-                            type="text"
-                            id="firstName"
-                            value={selectedFirstName}
-                            onChange={(e) => handleChange('firstName', e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.firstName ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                              }`}
-                            placeholder="John"
-                            autoComplete="given-name"
-                          />
-                          {errors.firstName && (
-                            <p className="text-red-500 text-sm mt-1 flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                              {errors.firstName}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                            Last Name *
-                          </label>
-                          <input
-                            type="text"
-                            id="lastName"
-                            value={selectedLastName}
-                            onChange={(e) => handleChange('lastName', e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.lastName ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                              }`}
-                            placeholder="Doe"
-                            autoComplete="family-name"
-                          />
-                          {errors.lastName && (
-                            <p className="text-red-500 text-sm mt-1 flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                              {errors.lastName}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="mb-4">
-                        <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-2">
-                          Job Title *
-                        </label>
-                        <input
-                          type="text"
-                          id="jobTitle"
-                          value={selectedJobTitle}
-                          onChange={(e) => handleChange('jobTitle', e.target.value)}
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.jobTitle ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                            }`}
-                          placeholder="HR Manager"
-                          autoComplete="organization-title"
-                        />
-                        {errors.jobTitle && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {errors.jobTitle}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mb-4">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                          Work Email Address *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="email"
-                            value={selectedEmail}
-                            onChange={handleEmailInput}
-                            onBlur={(e) => handleBlur('email', e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                              }`}
-                            placeholder="john.doe@company.com"
-                            autoComplete="email"
-                          />
-                          {isCheckingEmail && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
-                            </div>
-                          )}
-                        </div>
-                        {errors.email && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {errors.email}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mb-4">
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone Number *
-                        </label>
-                        <div className="flex gap-2">
-                          <div className="relative w-1/4" ref={countryCodeDropdownRef}>
-                            <div
-                              className={`flex items-center justify-between rounded border ${errors.phone ? 'border-red-500' : 'border-gray-300'} bg-white px-3 h-12 cursor-pointer`}
-                              onClick={toggleDropdownCountryCode}
-                            >
-                              <span className="text-gray-900 text-sm">{selectedCountryCode}</span>
-                              <MdArrowDropDown className="text-gray-500 text-xl" />
-                            </div>
-                            {showDropdownCountryCode && (
-                              <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 max-h-60 overflow-y-auto">
-                                {countryCodeOptions.map((option) => (
-                                  <div
-                                    key={option.code}
-                                    className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm text-gray-900"
-                                    onClick={() => handleCountryCodeSelect(option.code)}
-                                  >
-                                    {option.code}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <div className="relative w-3/4">
-                            <input
-                              type="tel"
-                              id="phone"
-                              value={selectedPhone}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
-                                handleChange('phone', value);
-                              }}
-                              maxLength={selectedCountryCode === '+91' ? 10 : 11}
-                              inputMode="numeric"
-                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.phone ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                                }`}
-                              placeholder="1234567890"
-                              autoComplete="tel"
-                            />
-                          </div>
-                        </div>
-                        {errors.phone && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {errors.phone}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mb-4">
-                        <label htmlFor="profileId" className="block text-sm font-medium text-gray-700 mb-2">
-                          Profile ID / Username *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="profileId"
-                            value={selectedProfileId}
-                            onChange={(e) => handleChange('profileId', e.target.value)}
-                            onBlur={(e) => handleBlur('profileId', e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.profileId ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                              }`}
-                            placeholder="your-username"
-                            autoComplete="username"
-                          />
-                          {isCheckingProfileId && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
-                            </div>
-                          )}
-                        </div>
-                        {errors.profileId && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {errors.profileId}
-                            {suggestedProfileId && errors.profileId.includes('already taken') && (
-                              <span className="text-gray-600 ml-2">
-                                Try this:{' '}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedProfileId(suggestedProfileId);
-                                    setSuggestedProfileId('');
-                                    setErrors((prev) => ({ ...prev, profileId: '' }));
-                                  }}
-                                  className="text-blue-500 hover:underline"
-                                >
-                                  {suggestedProfileId}
-                                </button>
-                              </span>
-                            )}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mb-4">
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                          Create Password *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            id="password"
-                            value={selectedPassword}
-                            onChange={(e) => handleChange("password", e.target.value)}
-                            onBlur={(e) => handleBlur("password", e.target.value)}
-                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                              }`}
-                            placeholder="••••••••"
-                            autoComplete="new-password"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                          >
-                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                          </button>
-                        </div>
-                        {errors.password && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {errors.password}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mb-4">
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                          Confirm Password *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            id="confirmPassword"
-                            value={selectedConfirmPassword}
-                            onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                            onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
-                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                              }`}
-                            placeholder="••••••••"
-                            autoComplete="new-password"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                          >
-                            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                          </button>
-                        </div>
-                        {errors.confirmPassword && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {errors.confirmPassword}
-                          </p>
-                        )}
-                      </div>
-
-                    </div>
 
                     {/* Company Information Section */}
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
@@ -1477,14 +1190,176 @@ export const Organization = () => {
                       </div>
                     </div>
 
-                    {/* Account Security Section */}
-                    {/* <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                    {/* Personal Information Section */}
+                    <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <svg className="w-5 h-5 text-primary-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
                         </svg>
-                        🔐 Account Security
+                        👤 Account Information
                       </h3>
+
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                            First Name *
+                          </label>
+                          <input
+                            type="text"
+                            id="firstName"
+                            value={selectedFirstName}
+                            onChange={(e) => handleChange('firstName', e.target.value)}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.firstName ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                              }`}
+                            placeholder="John"
+                            autoComplete="given-name"
+                          />
+                          {errors.firstName && (
+                            <p className="text-red-500 text-sm mt-1 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              {errors.firstName}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                            Last Name *
+                          </label>
+                          <input
+                            type="text"
+                            id="lastName"
+                            value={selectedLastName}
+                            onChange={(e) => handleChange('lastName', e.target.value)}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.lastName ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                              }`}
+                            placeholder="Doe"
+                            autoComplete="family-name"
+                          />
+                          {errors.lastName && (
+                            <p className="text-red-500 text-sm mt-1 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              {errors.lastName}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                          Job Title *
+                        </label>
+                        <input
+                          type="text"
+                          id="jobTitle"
+                          value={selectedJobTitle}
+                          onChange={(e) => handleChange('jobTitle', e.target.value)}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.jobTitle ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                            }`}
+                          placeholder="HR Manager"
+                          autoComplete="organization-title"
+                        />
+                        {errors.jobTitle && (
+                          <p className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {errors.jobTitle}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mb-4">
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                          Work Email Address *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            id="email"
+                            value={selectedEmail}
+                            onChange={handleEmailInput}
+                            onBlur={(e) => handleBlur('email', e.target.value)}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                              }`}
+                            placeholder="john.doe@company.com"
+                            autoComplete="email"
+                          />
+                          {isCheckingEmail && (
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
+                            </div>
+                          )}
+                        </div>
+                        {errors.email && (
+                          <p className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {errors.email}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mb-4">
+                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                          Phone Number
+                        </label>
+                        <div className="flex gap-2">
+                          <div className="relative w-1/4" ref={countryCodeDropdownRef}>
+                            <div
+                              className={`flex items-center justify-between rounded border
+                                 bg-white px-3 h-12 cursor-pointer`}
+                              onClick={toggleDropdownCountryCode}
+                            >
+                              <span className="text-gray-900 text-sm">{selectedCountryCode}</span>
+                              <MdArrowDropDown className="text-gray-500 text-xl" />
+                            </div>
+                            {showDropdownCountryCode && (
+                              <div className="absolute z-50 border w-full rounded-md bg-white shadow-lg mt-1 max-h-60 overflow-y-auto">
+                                {countryCodeOptions.map((option) => (
+                                  <div
+                                    key={option.code}
+                                    className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm text-gray-900"
+                                    onClick={() => handleCountryCodeSelect(option.code)}
+                                  >
+                                    {option.code}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div className="relative w-3/4">
+                            <input
+                              type="tel"
+                              id="phone"
+                              value={selectedPhone}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '');
+                                handleChange('phone', value);
+                              }}
+                              maxLength={selectedCountryCode === '+91' ? 10 : 11}
+                              inputMode="numeric"
+                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200
+                                `}
+                              placeholder="1234567890"
+                              autoComplete="tel"
+                            />
+                          </div>
+                        </div>
+                        {/* {errors.phone && (
+                          <p className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {errors.phone}
+                          </p>
+                        )} */}
+                      </div>
 
                       <div className="mb-4">
                         <label htmlFor="profileId" className="block text-sm font-medium text-gray-700 mb-2">
@@ -1504,7 +1379,7 @@ export const Organization = () => {
                           />
                           {isCheckingProfileId && (
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
                             </div>
                           )}
                         </div>
@@ -1545,7 +1420,7 @@ export const Organization = () => {
                             value={selectedPassword}
                             onChange={(e) => handleChange("password", e.target.value)}
                             onBlur={(e) => handleBlur("password", e.target.value)}
-                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                               }`}
                             placeholder="••••••••"
                             autoComplete="new-password"
@@ -1579,7 +1454,134 @@ export const Organization = () => {
                             value={selectedConfirmPassword}
                             onChange={(e) => handleChange("confirmPassword", e.target.value)}
                             onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
-                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                              }`}
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                          >
+                            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                        </div>
+                        {errors.confirmPassword && (
+                          <p className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {errors.confirmPassword}
+                          </p>
+                        )}
+                      </div>
+
+                    </div>
+
+                    {/* Account Security Section */}
+                    {/* <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-5 h-5 text-primary-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
+                        🔐 Account Security
+                      </h3>
+
+                      <div className="mb-4">
+                        <label htmlFor="profileId" className="block text-sm font-medium text-gray-700 mb-2">
+                          Profile ID / Username *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            id="profileId"
+                            value={selectedProfileId}
+                            onChange={(e) => handleChange('profileId', e.target.value)}
+                            onBlur={(e) => handleBlur('profileId', e.target.value)}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.profileId ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                              }`}
+                            placeholder="your-username"
+                            autoComplete="username"
+                          />
+                          {isCheckingProfileId && (
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
+                            </div>
+                          )}
+                        </div>
+                        {errors.profileId && (
+                          <p className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {errors.profileId}
+                            {suggestedProfileId && errors.profileId.includes('already taken') && (
+                              <span className="text-gray-600 ml-2">
+                                Try this:{' '}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedProfileId(suggestedProfileId);
+                                    setSuggestedProfileId('');
+                                    setErrors((prev) => ({ ...prev, profileId: '' }));
+                                  }}
+                                  className="text-blue-500 hover:underline"
+                                >
+                                  {suggestedProfileId}
+                                </button>
+                              </span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mb-4">
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                          Create Password *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            id="password"
+                            value={selectedPassword}
+                            onChange={(e) => handleChange("password", e.target.value)}
+                            onBlur={(e) => handleBlur("password", e.target.value)}
+                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                              }`}
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                          >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                        </div>
+                        {errors.password && (
+                          <p className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {errors.password}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mb-4">
+                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                          Confirm Password *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            id="confirmPassword"
+                            value={selectedConfirmPassword}
+                            onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                            onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
+                            className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-custom-blue focus:border-custom-blue transition-all duration-200 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                               }`}
                             placeholder="••••••••"
                             autoComplete="new-password"
@@ -1614,7 +1616,7 @@ export const Organization = () => {
                       disabled={isSubmitting}
                       className={`w-full text-lg font-medium rounded-lg py-3 transition-all duration-300 flex items-center justify-center ${isSubmitting
                         ? 'bg-gray-400 cursor-not-allowed transform scale-95'
-                        : 'bg-primary-500 hover:bg-primary-600 text-white transform hover:scale-105'
+                        : 'bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105'
                         }`}
                     >
                       {isSubmitting ? (
@@ -1632,8 +1634,8 @@ export const Organization = () => {
                   </form>
                 ) : (
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-16 h-16 bg-custom-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-custom-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
@@ -1642,7 +1644,7 @@ export const Organization = () => {
                     </h3>
                     <p className="text-gray-600 mb-4">
                       We've sent a verification email to{' '}
-                      <span className="font-semibold text-blue-600">{email}</span>
+                      <span className="font-semibold text-custom-blue">{email}</span>
                     </p>
                     <p className="text-sm text-gray-500 mb-6">
                       Please check your inbox and click the verification link to continue.
@@ -1654,7 +1656,7 @@ export const Organization = () => {
                         disabled={isResending || countdown > 0}
                         className={`w-full px-4 py-3 rounded-lg font-medium transition-all duration-300 ${isResending || countdown > 0
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white transform hover:scale-105'
+                          : 'bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105'
                           }`}
                       >
                         {isResending ? (
@@ -1687,7 +1689,7 @@ export const Organization = () => {
                     Already have an account?{' '}
                     <Link
                       to="/organization-login"
-                      className="text-primary-500 hover:text-primary-600 font-medium"
+                      className="text-custom-blue hover:text-custom-blue/80 font-medium"
                     >
                       Sign in here
                     </Link>

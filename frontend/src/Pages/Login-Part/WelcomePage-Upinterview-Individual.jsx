@@ -70,14 +70,14 @@ const WelcomePageUpinterviewIndividual = () => {
       {/* <Layout showBackButton={true} backPath="/"> */}
       <div className="min-h-screen flex">
         {/* Left side - Hero Image and Content */}
-        <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden rounded-r-3xl">
+        <div className="hidden lg:flex lg:w-1/2 xl:flex xl:w-1/2 2xl:flex 2xl:w-1/2 bg-gradient-to-br from-custom-blue/90 via-custom-blue to-custom-blue/80 relative overflow-hidden rounded-r-3xl">
           <div className="absolute inset-0">
             <img
               src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1200"
               alt="Professional interview setting"
               className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/85 via-primary-600/90 to-primary-700/95"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-custom-blue/90 via-custom-blue/80 to-custom-blue/70"></div>
           </div>
 
           <div className="relative z-10 flex flex-col justify-center px-4 lg:px-8 py-8 lg:py-12 text-white animate-fade-in">
@@ -196,7 +196,6 @@ const WelcomePageUpinterviewIndividual = () => {
                   Sign in to access your interviewer dashboard and start earning
                 </p>
                 <div className="inline-flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                   Ready to start interviewing
                 </div>
               </div>
@@ -210,19 +209,19 @@ const WelcomePageUpinterviewIndividual = () => {
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-center">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                    <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 animate-pulse"></div>
                     Your interview schedule and upcoming sessions
                   </li>
                   <li className="flex items-center">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                    <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 animate-pulse"></div>
                     Earnings dashboard and payment history
                   </li>
                   <li className="flex items-center">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                    <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 animate-pulse"></div>
                     New interview opportunities
                   </li>
                   <li className="flex items-center">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                    <div className="w-2 h-2 bg-custom-blue rounded-full mr-3 animate-pulse"></div>
                     Performance metrics and feedback
                   </li>
                 </ul>
@@ -244,7 +243,7 @@ const WelcomePageUpinterviewIndividual = () => {
                 </p>
                 {/* <p className="text-sm text-gray-500">
                   New to our platform?{' '}
-                  <Link to="/" className="text-primary-500 hover:text-primary-600 font-medium hover:underline transition-all duration-200">
+                  <Link to="/" className="text-custom-blue hover:text-custom-blue/80 font-medium hover:underline transition-all duration-200">
                     Learn more about UpInterview
                   </Link>
                 </p> */}
