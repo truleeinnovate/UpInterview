@@ -629,7 +629,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
         .replace('{{supportEmail}}', supportEmail);
 
       // Add dashboard link for outsource interviewers to accept/decline
-      const dashboardLink = `${process.env.FRONTEND_URL}/interview-requests`;
+      const dashboardLink = `${config.REACT_APP_API_URL_FRONTEND}/home`;
       emailBody = emailBody.replace('{{dashboardLink}}', dashboardLink);
 
       emailPromises.push(
