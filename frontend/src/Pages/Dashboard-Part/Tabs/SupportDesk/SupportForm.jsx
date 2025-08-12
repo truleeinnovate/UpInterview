@@ -435,35 +435,7 @@ const SupportForm = () => {
               {/* Form Fields */}
               <div className="grid grid-cols-1 gap-x-6 gap-y-6">
                 {/* v1.0.3 <------------------------------------------------------------------------- */}
-                {/* Subject Section */}
-                <div>
-                  <label
-                    htmlFor="subject"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Subject / Title <span className="text-red-500">*</span>
-                  </label>
-                  <div>
-                    <input
-                      id="subject"
-                      type="text"
-                      placeholder="e.g., Unable to join interview room"
-                      value={subject}
-                      onChange={handleSubjectChange}
-                      className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${
-                        errors.subject ? "border-red-500" : ""
-                      }`}
-                    />
-                    <p className="text-right text-gray-500 text-xs mt-1">
-                      {subject.length}/{maxSubjectLen}
-                    </p>
-                    {errors.subject && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.subject}
-                      </p>
-                    )}
-                  </div>
-                </div>
+           
 
                 {/* Issue Type Section */}
                 <div>
@@ -510,6 +482,36 @@ const SupportForm = () => {
                       )}
                     </div>
                   )}
+                </div>
+
+                     {/* Subject Section */}
+                     <div>
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Subject / Title <span className="text-red-500">*</span>
+                  </label>
+                  <div>
+                    <input
+                      id="subject"
+                      type="text"
+                      placeholder="e.g., Unable to join interview room"
+                      value={subject}
+                      onChange={handleSubjectChange}
+                      className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${
+                        errors.subject ? "border-red-500" : ""
+                      }`}
+                    />
+                    <p className="text-right text-gray-500 text-xs mt-1">
+                      {subject.length}/{maxSubjectLen}
+                    </p>
+                    {errors.subject && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.subject}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Description Section */}
