@@ -71,7 +71,7 @@ const corsOptions = {
     'x-tenant-id',
     'x-impersonation-userid',
     'x-permissions',
-    'set-cookie',
+    // 'set-cookie',
     'x-new-token'
   ]
 };
