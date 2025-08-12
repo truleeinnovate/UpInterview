@@ -42,7 +42,7 @@ function JoinMeeting() {
       }
 
       const urlParams = new URLSearchParams(location.search);
-      const encryptedOwnerId = urlParams.get('ownerId');
+      const encryptedOwnerId = urlParams.get('owner');
       
       if (!encryptedOwnerId) {
         console.log('No ownerId in URL parameters');
