@@ -19,13 +19,9 @@ function testTaskReminder() {
 
 // The actual cron job logic extracted for reuse
 const runTaskReminderJob = async () => {
-  // Check if database is connected before proceeding
-  if (mongoose.connection.readyState !== 1) {
-    console.log('Database not connected, skipping task reminder job');
-    return;
-  }
 
   // console.log('Running automated task email reminder job at', new Date().toISOString());
+
 
   try {
     // Find tasks due in the next 24 hours
@@ -167,22 +163,14 @@ const runTaskReminderJob = async () => {
   }
 };
 
-// Function to start the cron job (only after DB connection is established)
-const startTaskReminderCronJob = () => {
-  // Cron job to automate email reminders for tasks due in 24 hours
-  cron.schedule('* * * * *', async () => {
-    runTaskReminderJob();
-  });
-
-  console.log('Task reminder cron job started');
-};
-
-// Function to run initial check (only after DB connection is established)
-const runInitialTaskReminderCheck = () => {
-  console.log('Running initial task reminder check at startup...');
+// Cron job to automate email reminders for tasks due in 24 hours
+cron.schedule('* * * * *', async () => {
   runTaskReminderJob();
-};
+});
 
-// Export the functions so they can be called after DB connection is established
-exports.startTaskReminderCronJob = startTaskReminderCronJob;
-exports.runInitialTaskReminderCheck = runInitialTaskReminderCheck;
+
+// console.log('Task reminder cron job scheduled to run every minute for testing.');
+
+// Run immediately on file load for testing
+// console.log('Running initial test of task reminder job at startup...');
+runTaskReminderJob();

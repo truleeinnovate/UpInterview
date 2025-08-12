@@ -54,13 +54,13 @@ const interviewRoundSchema = new mongoose.Schema({
     ],
     status:  { type: String }, // draft - if accept - scheduled, if request sent then (request sent)
     meetingId: String,
-        //     meetLink: {
-        //     type: [{
-        //         linkType: String, // candidate, host, interviewers
-        //         link: String
-        //     }],
-        //     default: []
-        // },
+            meetLink: {
+            type: [{
+                linkType: String, // candidate, host, interviewers
+                link: String
+            }],
+            default: []
+        },
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "assessment" },
      questions: [{
                 questionId: { type: mongoose.Schema.Types.Mixed },

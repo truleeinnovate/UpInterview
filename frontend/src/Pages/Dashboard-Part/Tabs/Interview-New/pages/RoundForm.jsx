@@ -349,13 +349,13 @@ const RoundFormInterviews = () => {
       prev.map((question) =>
         question.questionId === questionId
           ? {
-            ...question,
-            snapshot: {
-              ...question.snapshot,
-              mandatory:
-                question.snapshot.mandatory === "true" ? "false" : "true",
-            },
-          }
+              ...question,
+              snapshot: {
+                ...question.snapshot,
+                mandatory:
+                  question.snapshot.mandatory === "true" ? "false" : "true",
+              },
+            }
           : question
       )
     );
@@ -487,11 +487,11 @@ const RoundFormInterviews = () => {
       const newAssessmentTemplate =
         roundEditData.roundTitle === "Assessment" && roundEditData.assessmentId
           ? {
-            assessmentId: roundEditData.assessmentId,
-            assessmentName:
-              assessmentData.find((a) => a._id === roundEditData.assessmentId)
-                ?.AssessmentTitle || "",
-          }
+              assessmentId: roundEditData.assessmentId,
+              assessmentName:
+                assessmentData.find((a) => a._id === roundEditData.assessmentId)
+                  ?.AssessmentTitle || "",
+            }
           : { assessmentId: "", assessmentName: "" };
       if (
         JSON.stringify(assessmentTemplate) !==
@@ -825,13 +825,13 @@ const RoundFormInterviews = () => {
       selectedMeetingPlatform
     });
     e.preventDefault();
-
+    
     // Prevent multiple submissions
     if (isSubmitting) {
       console.log("Form is already submitting, ignoring this submission");
       return;
     }
-
+    
     setIsSubmitting(true);
 
     // console.log("roundEditData", roundEditData);
@@ -936,23 +936,23 @@ const RoundFormInterviews = () => {
       // console.log("roundData", roundData);
       const payload = isEditing
         ? {
-          interviewId,
-          round: roundData,
-          roundId,
-          questions: interviewQuestionsList,
-        }
+            interviewId,
+            round: roundData,
+            roundId,
+            questions: interviewQuestionsList,
+          }
         : {
-          interviewId,
-          round: roundData,
-          questions:
-            interviewQuestionsList.map((q) => ({
-              questionId: q.questionId,
-              snapshot: {
-                ...q.snapshot,
-                mandatory: q.snapshot.mandatory || "false",
-              },
-            })) || [],
-        };
+            interviewId,
+            round: roundData,
+            questions:
+              interviewQuestionsList.map((q) => ({
+                questionId: q.questionId,
+                snapshot: {
+                  ...q.snapshot,
+                  mandatory: q.snapshot.mandatory || "false",
+                },
+              })) || [],
+          };
 
       console.log("=== Round Saving Process ===");
       console.log("Payload for submission:", payload);
@@ -962,7 +962,7 @@ const RoundFormInterviews = () => {
       const response = await saveInterviewRound(payload);
       console.log("Round saved successfully:", response);
       console.log("Saved round ID:", response.savedRound._id);
-
+      
       // Show success toast for round creation
       toast.success('Interview round created successfully!');
 
@@ -1020,10 +1020,10 @@ const RoundFormInterviews = () => {
         if (!isInternal && selectedInterviewers && selectedInterviewers.length > 0) {
           try {
             console.log("=== Sending outsource interview request emails ===");
-            const interviewerIds = selectedInterviewers.map(interviewer =>
+            const interviewerIds = selectedInterviewers.map(interviewer => 
               interviewer.contact?._id || interviewer._id
             );
-
+            
             const emailResponse = await axios.post(
               `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
               {
@@ -1043,9 +1043,9 @@ const RoundFormInterviews = () => {
                 },
               }
             );
-
+            
             console.log("Outsource email sending response:", emailResponse.data);
-
+            
             if (emailResponse.data.success) {
               toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
               if (emailResponse.data.data.failedEmails > 0) {
@@ -1077,24 +1077,23 @@ const RoundFormInterviews = () => {
 
       // }
 
-      console.log("response", response);
-
+      console.log("response",response);
+      
 
       // Meeting platform link creation
       if (response.status === 'ok') {
         console.log("Generating meeting link for the interview");
-
+        
         try {
           setIsMeetingCreationLoading(true);
           // v1.0.3 <-----------------------------------------------------------
           setMeetingCreationProgress('Creating links...');
           // v1.0.3 ----------------------------------------------------------->
-
           // Import the meeting platform utility
           const { createMeeting } = await import('../../../../../utils/meetingPlatforms.js');
-
+          
           console.log("Selected interviewers for meeting creation:", selectedInterviewers);
-
+          
           // Create meeting using the platform utility
           const meetingLink = await createMeeting(selectedMeetingPlatform, {
             roundTitle,
@@ -1122,19 +1121,18 @@ const RoundFormInterviews = () => {
             console.log("Round updated with meeting link:", updateResponse);
           }
 
-
           console.log("Meeting created successfully:", meetingLink);
           console.log("Meeting link type:", typeof meetingLink);
           console.log("Meeting link value:", meetingLink);
-
+          
           // Use the new utility to generate and save meeting URLs
           try {
             console.log("=== Starting meeting URL processing ===");
-
+            
             // // Dynamic import to avoid import issues
             // const { processMeetingUrls } = await import("../../../../../utils/meetingUrlGenerator.js");
             // console.log("Dynamic import successful, processMeetingUrls type:", typeof processMeetingUrls);
-
+            
             // console.log("Calling processMeetingUrls with:", {
             //   meetingLink,
             //   roundId: response.savedRound._id,
@@ -1144,7 +1142,7 @@ const RoundFormInterviews = () => {
             // });
             // console.log("updateRoundWithMeetingLinks function:", updateRoundWithMeetingLinks);
             // console.log("roundData details:", roundData);
-
+            
             // const result = await processMeetingUrls(
             //   meetingLink, // meetingLink
             //   response.savedRound._id, // roundId
@@ -1152,44 +1150,44 @@ const RoundFormInterviews = () => {
             //   roundData, // roundData
             //   updateRoundWithMeetingLinks // Function from useInterviews hook
             // );
-
+            
             // console.log("Meeting URL processing completed successfully:", result);
             const isInternal = selectedInterviewType === "Internal";
             // Send emails after meeting links are generated
             try {
               console.log("=== Sending interview round emails ===");
-
-              if (isInternal) {
-                const emailResponse = await axios.post(
-                  `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
-                  {
-                    interviewId: interviewId,
-                    roundId: response.savedRound._id,
-                    sendEmails: true
+             
+              if (isInternal){
+              const emailResponse = await axios.post(
+                `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
+                {
+                  interviewId: interviewId,
+                  roundId: response.savedRound._id,
+                  sendEmails: true
+                },
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${Cookies.get("authToken")}`,
                   },
-                  {
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Authorization: `Bearer ${Cookies.get("authToken")}`,
-                    },
-                  }
-                );
-
-                console.log("Email sending response:", emailResponse.data);
-
-                // Show success toast for emails
-                if (emailResponse.data.success) {
-                  toast.success('Interview round created and emails sent successfully!');
-                  if (emailResponse.data.data.emailsSent > 0) {
-                    toast.success(`Emails sent to ${emailResponse.data.data.emailsSent} recipients`);
-                  }
-                } else {
-                  toast.error('Round created but email sending failed');
                 }
-
+              );
+              
+              console.log("Email sending response:", emailResponse.data);
+              
+              // Show success toast for emails
+              if (emailResponse.data.success) {
+                toast.success('Interview round created and emails sent successfully!');
+                if (emailResponse.data.data.emailsSent > 0) {
+                  toast.success(`Emails sent to ${emailResponse.data.data.emailsSent} recipients`);
+                }
+              } else {
+                toast.error('Round created but email sending failed');
               }
 
-
+            }
+            
+            
             } catch (emailError) {
               console.error("Error sending emails:", emailError);
               toast.error('Round created but email sending failed');
@@ -1202,13 +1200,13 @@ const RoundFormInterviews = () => {
               response: urlError.response?.data
             });
           }
-
+          
           // Navigate to interview page after successful creation
           console.log("Navigating to interview page:", `/interviews/${interviewId}`);
           console.log("Navigation function type:", typeof navigate);
           navigate(`/interviews/${interviewId}`);
           console.log("Navigation called successfully");
-
+          
         } catch (err) {
           console.error("Error in meeting creation:", err);
           setErrors({
@@ -1222,7 +1220,7 @@ const RoundFormInterviews = () => {
       }
 
 
-
+   
     } catch (err) {
       console.error("=== Form Submission Error ===");
       console.error("Error submitting the form:", err);
@@ -1231,10 +1229,10 @@ const RoundFormInterviews = () => {
         stack: err.stack,
         response: err.response?.data
       });
-
+      
       // Show error toast
       toast.error('Failed to create interview round. Please try again.');
-
+      
       setErrors({
         submit:
           err instanceof Error ? err.message : "An unknown error occurred",
@@ -1449,9 +1447,10 @@ const RoundFormInterviews = () => {
                           //     : "border-gray-300"
                           // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${errors.roundTitle
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
+                            border ${
+                              errors.roundTitle
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
                             }
                             focus:outline-gray-300
                           `}
@@ -1478,13 +1477,14 @@ const RoundFormInterviews = () => {
                           //     : "border-gray-300"
                           // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${errors.roundTitle
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
+                            border ${
+                              errors.roundTitle
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
                             }
                             focus:outline-gray-300
                           `}
-                        // required
+                          // required
                         >
                           <option value="">Select Round Title</option>
                           <option value="Assessment">Assessment</option>
@@ -1526,9 +1526,10 @@ const RoundFormInterviews = () => {
                         //     : "border-gray-300"
                         // } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.interviewMode
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
+                          border ${
+                            errors.interviewMode
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
                           }
                           focus:outline-gray-300
                         `}
@@ -1573,13 +1574,14 @@ const RoundFormInterviews = () => {
                         //   errors.sequence ? "border-red-500" : "border-gray-300"
                         // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.sequence
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
+                          border ${
+                            errors.sequence
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
                           }
                           focus:outline-gray-300
                         `}
-                      // required
+                        // required
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         The order in which this round appears in the interview
@@ -1632,9 +1634,10 @@ const RoundFormInterviews = () => {
                               id="assessmentTemplate"
                               // className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${errors.assessmentTemplate
-                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                  : "border-gray-300 focus:ring-red-300"
+                                border ${
+                                  errors.assessmentTemplate
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1711,193 +1714,196 @@ const RoundFormInterviews = () => {
                                 ) : (
                                   <div className="space-y-4">
                                     {!sectionQuestions ||
-                                      sectionQuestions.noQuestions ? (
+                                    sectionQuestions.noQuestions ? (
                                       <div className="text-center py-4 text-gray-500">
                                         No Sections available for this
                                         Assessment
                                       </div>
                                     ) : //  <div className="space-y-4">
-                                      Object.keys(sectionQuestions).length > 0 ? (
-                                        Object.entries(sectionQuestions).map(
-                                          ([sectionId, sectionData]) => {
-                                            // Find section details from assessmentData
-                                            // const selectedAssessment = assessmentData.find(
-                                            //   a => a._id === formData.assessmentTemplate[0].assessmentId
-                                            // );
+                                    Object.keys(sectionQuestions).length > 0 ? (
+                                      Object.entries(sectionQuestions).map(
+                                        ([sectionId, sectionData]) => {
+                                          // Find section details from assessmentData
+                                          // const selectedAssessment = assessmentData.find(
+                                          //   a => a._id === formData.assessmentTemplate[0].assessmentId
+                                          // );
 
-                                            // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
+                                          // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
 
-                                            if (
-                                              !sectionData ||
-                                              !Array.isArray(
-                                                sectionData.questions
-                                              )
-                                            ) {
-                                              return (
-                                                <div
-                                                  key={sectionId}
-                                                  className="border rounded-md shadow-sm p-4"
-                                                >
-                                                  <div className="text-center py-4 text-gray-500">
-                                                    No Valid data for this section
-                                                  </div>
-                                                </div>
-                                              );
-                                            }
-
+                                          if (
+                                            !sectionData ||
+                                            !Array.isArray(
+                                              sectionData.questions
+                                            )
+                                          ) {
                                             return (
                                               <div
                                                 key={sectionId}
                                                 className="border rounded-md shadow-sm p-4"
                                               >
-                                                <button
-                                                  onClick={(e) =>
-                                                    toggleSection(sectionId, e)
-                                                  }
-                                                  className="flex justify-between items-center w-full"
-                                                >
-                                                  <span className="font-medium">
-                                                    {sectionData?.sectionName
-                                                      ? sectionData?.sectionName
+                                                <div className="text-center py-4 text-gray-500">
+                                                  No Valid data for this section
+                                                </div>
+                                              </div>
+                                            );
+                                          }
+
+                                          return (
+                                            <div
+                                              key={sectionId}
+                                              className="border rounded-md shadow-sm p-4"
+                                            >
+                                              <button
+                                                onClick={(e) =>
+                                                  toggleSection(sectionId, e)
+                                                }
+                                                className="flex justify-between items-center w-full"
+                                              >
+                                                <span className="font-medium">
+                                                  {sectionData?.sectionName
+                                                    ? sectionData?.sectionName
                                                         .charAt(0)
                                                         .toUpperCase() +
                                                       sectionData?.sectionName.slice(
                                                         1
                                                       )
-                                                      : "Unnamed Section"}
-                                                  </span>
-                                                  <ChevronUp
-                                                    className={`transform transition-transform ${expandedSections[sectionId]
-                                                        ? ""
-                                                        : "rotate-180"
-                                                      }`}
-                                                  />
-                                                </button>
+                                                    : "Unnamed Section"}
+                                                </span>
+                                                <ChevronUp
+                                                  className={`transform transition-transform ${
+                                                    expandedSections[sectionId]
+                                                      ? ""
+                                                      : "rotate-180"
+                                                  }`}
+                                                />
+                                              </button>
 
-                                                {expandedSections[sectionId] && (
-                                                  <div className="mt-4 space-y-3">
-                                                    {sectionData?.questions
-                                                      .length > 0 ? (
-                                                      sectionData?.questions.map(
-                                                        (question, idx) => (
+                                              {expandedSections[sectionId] && (
+                                                <div className="mt-4 space-y-3">
+                                                  {sectionData?.questions
+                                                    .length > 0 ? (
+                                                    sectionData?.questions.map(
+                                                      (question, idx) => (
+                                                        <div
+                                                          key={
+                                                            question._id || idx
+                                                          }
+                                                          className="border rounded-md shadow-sm overflow-hidden"
+                                                        >
                                                           <div
-                                                            key={
-                                                              question._id || idx
-                                                            }
-                                                            className="border rounded-md shadow-sm overflow-hidden"
-                                                          >
-                                                            <div
-                                                              onClick={() =>
-                                                                setExpandedQuestions(
-                                                                  (prev) => ({
-                                                                    ...prev,
-                                                                    [question._id]:
-                                                                      !prev[
+                                                            onClick={() =>
+                                                              setExpandedQuestions(
+                                                                (prev) => ({
+                                                                  ...prev,
+                                                                  [question._id]:
+                                                                    !prev[
                                                                       question
                                                                         ._id
-                                                                      ],
-                                                                  })
-                                                                )
-                                                              }
-                                                              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                                            >
-                                                              <div className="flex items-center gap-2">
-                                                                <span className="font-medium text-gray-600">
-                                                                  {idx + 1}.
-                                                                </span>
-                                                                <p className="text-sm text-gray-700">
-                                                                  {question
-                                                                    .snapshot
-                                                                    ?.questionText ||
-                                                                    "No question text"}
-                                                                </p>
-                                                              </div>
-                                                              <ChevronDown
-                                                                className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                                    question._id
-                                                                  ]
-                                                                    ? "transform rotate-180"
-                                                                    : ""
-                                                                  }`}
-                                                              />
+                                                                    ],
+                                                                })
+                                                              )
+                                                            }
+                                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                          >
+                                                            <div className="flex items-center gap-2">
+                                                              <span className="font-medium text-gray-600">
+                                                                {idx + 1}.
+                                                              </span>
+                                                              <p className="text-sm text-gray-700">
+                                                                {question
+                                                                  .snapshot
+                                                                  ?.questionText ||
+                                                                  "No question text"}
+                                                              </p>
                                                             </div>
+                                                            <ChevronDown
+                                                              className={`w-5 h-5 text-gray-400 transition-transform ${
+                                                                expandedQuestions[
+                                                                  question._id
+                                                                ]
+                                                                  ? "transform rotate-180"
+                                                                  : ""
+                                                              }`}
+                                                            />
+                                                          </div>
 
-                                                            {expandedQuestions[
-                                                              question._id
-                                                            ] && (
-                                                                <div className="px-4 py-3">
-                                                                  <div className="flex justify-between mb-2">
-                                                                    <div className="flex items-center gap-2">
-                                                                      <span className="text-sm font-medium text-gray-500">
-                                                                        Type:
-                                                                      </span>
-                                                                      <span className="text-sm text-gray-700">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.questionType ||
-                                                                          "Not specified"}
-                                                                      </span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                      <span className="text-sm font-medium text-gray-500">
-                                                                        Score:
-                                                                      </span>
-                                                                      <span className="text-sm text-gray-700">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.score ||
-                                                                          "0"}
-                                                                      </span>
-                                                                    </div>
-                                                                  </div>
+                                                          {expandedQuestions[
+                                                            question._id
+                                                          ] && (
+                                                            <div className="px-4 py-3">
+                                                              <div className="flex justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Type:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.questionType ||
+                                                                      "Not specified"}
+                                                                  </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Score:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.score ||
+                                                                      "0"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
 
-                                                                  {/* Display question options if MCQ */}
-                                                                  {question.snapshot
-                                                                    ?.questionType ===
-                                                                    "MCQ" && (
-                                                                      <div className="mt-2">
-                                                                        <span className="text-sm font-medium text-gray-500">
-                                                                          Options:
-                                                                        </span>
-                                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                                          {question.snapshot?.options?.map(
-                                                                            (
-                                                                              option,
-                                                                              optIdx
-                                                                            ) => (
-                                                                              <div
-                                                                                key={
-                                                                                  optIdx
-                                                                                }
-                                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                                className={`text-sm p-2 rounded border ${option ===
-                                                                                    question
-                                                                                      .snapshot
-                                                                                      .correctAnswer
-                                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                                    : "bg-gray-50 border-gray-200"
-                                                                                  }`}
-                                                                              >
-                                                                                {
-                                                                                  option
-                                                                                }
-                                                                                {option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer && (
-                                                                                    <span className="ml-2 text-green-600">
-                                                                                      ✓
-                                                                                    </span>
-                                                                                  )}
-                                                                              </div>
-                                                                            )
+                                                              {/* Display question options if MCQ */}
+                                                              {question.snapshot
+                                                                ?.questionType ===
+                                                                "MCQ" && (
+                                                                <div className="mt-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Options:
+                                                                  </span>
+                                                                  <div className="grid grid-cols-2 gap-2 mt-1">
+                                                                    {question.snapshot?.options?.map(
+                                                                      (
+                                                                        option,
+                                                                        optIdx
+                                                                      ) => (
+                                                                        <div
+                                                                          key={
+                                                                            optIdx
+                                                                          }
+                                                                          //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                          className={`text-sm p-2 rounded border ${
+                                                                            option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer
+                                                                              ? "bg-green-50 border-green-200 text-green-800"
+                                                                              : "bg-gray-50 border-gray-200"
+                                                                          }`}
+                                                                        >
+                                                                          {
+                                                                            option
+                                                                          }
+                                                                          {option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer && (
+                                                                            <span className="ml-2 text-green-600">
+                                                                              ✓
+                                                                            </span>
                                                                           )}
                                                                         </div>
-                                                                      </div>
+                                                                      )
                                                                     )}
+                                                                  </div>
+                                                                </div>
+                                                              )}
 
-                                                                  {/* Display correct answer */}
-                                                                  {/* <div className="mt-2">
+                                                              {/* Display correct answer */}
+                                                              {/* <div className="mt-2">
                                                                                               <span className="text-sm font-medium text-gray-500">
                                                                                                 Correct Answer:
                                                                                               </span>
@@ -1906,52 +1912,52 @@ const RoundFormInterviews = () => {
                                                                                               </div>
                                                                                             </div> */}
 
-                                                                  {/* Additional question metadata */}
-                                                                  <div className="grid grid-cols-2 gap-4 mt-3">
-                                                                    <div>
-                                                                      <span className="text-xs font-medium text-gray-500">
-                                                                        Difficulty:
-                                                                      </span>
-                                                                      <span className="text-xs text-gray-700 ml-1">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.difficultyLevel ||
-                                                                          "Not specified"}
-                                                                      </span>
-                                                                    </div>
-                                                                    <div>
-                                                                      <span className="text-xs font-medium text-gray-500">
-                                                                        Skills:
-                                                                      </span>
-                                                                      <span className="text-xs text-gray-700 ml-1">
-                                                                        {question.snapshot?.skill?.join(
-                                                                          ", "
-                                                                        ) || "None"}
-                                                                      </span>
-                                                                    </div>
-                                                                  </div>
+                                                              {/* Additional question metadata */}
+                                                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Difficulty:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.difficultyLevel ||
+                                                                      "Not specified"}
+                                                                  </span>
                                                                 </div>
-                                                              )}
-                                                          </div>
-                                                        )
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Skills:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question.snapshot?.skill?.join(
+                                                                      ", "
+                                                                    ) || "None"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                        </div>
                                                       )
-                                                    ) : (
-                                                      <div className="text-center py-4 text-gray-500">
-                                                        No Questions found in this
-                                                        section
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            );
-                                          }
-                                        )
-                                      ) : (
-                                        <div className="text-center py-4 text-gray-500">
-                                          No Assessment data available
-                                        </div>
-                                      )}
+                                                    )
+                                                  ) : (
+                                                    <div className="text-center py-4 text-gray-500">
+                                                      No Questions found in this
+                                                      section
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        }
+                                      )
+                                    ) : (
+                                      <div className="text-center py-4 text-gray-500">
+                                        No Assessment data available
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -1972,22 +1978,25 @@ const RoundFormInterviews = () => {
                           <button
                             type="button"
                             onClick={() => setInterviewType("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "instant"
                                 ? "border-custom-blue bg-blue-50"
                                 : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${interviewType === "instant"
+                              className={`h-6 w-6 ${
+                                interviewType === "instant"
                                   ? "text-custom-blue/70"
                                   : "text-gray-400"
-                                }`}
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "instant"
+                              className={`mt-2 font-medium ${
+                                interviewType === "instant"
                                   ? "text-custom-blue"
                                   : "text-gray-900"
-                                }`}
+                              }`}
                             >
                               Instant Interview
                             </span>
@@ -1999,22 +2008,25 @@ const RoundFormInterviews = () => {
                           <button
                             type="button"
                             onClick={() => setInterviewType("scheduled")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "scheduled"
                                 ? "border-custom-blue bg-blue-50"
                                 : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${interviewType === "scheduled"
+                              className={`h-6 w-6 ${
+                                interviewType === "scheduled"
                                   ? "text-custom-blue/70"
                                   : "text-gray-400"
-                                }`}
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "scheduled"
+                              className={`mt-2 font-medium ${
+                                interviewType === "scheduled"
                                   ? "text-custom-blue"
                                   : "text-gray-900"
-                                }`}
+                              }`}
                             >
                               Schedule for Later
                             </span>
@@ -2136,10 +2148,11 @@ const RoundFormInterviews = () => {
                               }}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
+                              className={`${
+                                isExternalSelected
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                                }`}
+                              }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2156,10 +2169,11 @@ const RoundFormInterviews = () => {
                               onClick={() => setInternalInterviews(true)}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
+                              className={`${
+                                isExternalSelected
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                                }`}
+                              }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2177,10 +2191,11 @@ const RoundFormInterviews = () => {
                             onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
-                            className={`${isInternalSelected
+                            className={`${
+                              isInternalSelected
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""
-                              }`}
+                            }`}
                             disabled={isInternalSelected}
                             title={
                               isInternalSelected
@@ -2288,22 +2303,24 @@ const RoundFormInterviews = () => {
                                               {/* <p className="text-xs text-gray-600 mb-2">{interviewer.description}</p> */}
                                               <ul className="list-disc list-inside text-xs text-custom-blue ml-1">
                                                 {interviewer.usersNames &&
-                                                  interviewer.usersNames.length >
+                                                interviewer.usersNames.length >
                                                   0
                                                   ? interviewer.usersNames.map(
-                                                    (name, i) => (
-                                                      <li
-                                                        key={`${interviewer._id}-user-${i}`}
-                                                      >
-                                                        {name}
-                                                      </li>
+                                                      (name, i) => (
+                                                        <li
+                                                          key={`${interviewer._id}-user-${i}`}
+                                                        >
+                                                          {name}
+                                                        </li>
+                                                      )
                                                     )
-                                                  )
-                                                  : `${interviewer.firstName ||
-                                                    ""
-                                                    } ${interviewer.lastName || ""
+                                                  : `${
+                                                      interviewer.firstName ||
+                                                      ""
+                                                    } ${
+                                                      interviewer.lastName || ""
                                                     }`.trim() ||
-                                                  interviewer.email}
+                                                    interviewer.email}
 
                                                 {/* {interviewer.usersNames.map((name, i) => (
                                                                                 <li key={`${interviewer._id}-user-${i}`}>{name}</li>
@@ -2324,9 +2341,11 @@ const RoundFormInterviews = () => {
                                           <div className="flex items-center">
                                             <User className="h-4 w-4 text-custom-blue mr-2" />
                                             <span className="text-sm font-medium text-custom-blue truncate">
-                                              {`${interviewer.firstName || ""
-                                                } ${interviewer.lastName || ""
-                                                }`.trim() || interviewer.email}
+                                              {`${
+                                                interviewer.firstName || ""
+                                              } ${
+                                                interviewer.lastName || ""
+                                              }`.trim() || interviewer.email}
                                             </span>
                                           </div>
 
@@ -2441,10 +2460,11 @@ const RoundFormInterviews = () => {
                                     return (
                                       <li
                                         key={qIndex}
-                                        className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
+                                        className={`flex justify-between items-center p-3 border rounded-md ${
+                                          isMandatory
                                             ? "border-red-500"
                                             : "border-gray-300"
-                                          }`}
+                                        }`}
                                       >
                                         <span className="text-gray-900 font-medium">
                                           {qIndex + 1}.{" "}
@@ -2541,7 +2561,7 @@ const RoundFormInterviews = () => {
                       className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3   sm:text-sm h-64
                   ${errors.instructions ? "border-red-400" : ""}
                   `}
-                    // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                     <p className="mt-1 text-sm text-gray-500">
                       Add Instructions after the interview round is completed
@@ -2562,11 +2582,11 @@ const RoundFormInterviews = () => {
                       onClick={handleSubmit}
                       isLoading={isMutationLoading || isMeetingCreationLoading || isSubmitting}
                       loadingText={
-                        isMeetingCreationLoading
-                          ? meetingCreationProgress || "Creating meeting..."
+                        isMeetingCreationLoading 
+                          ? meetingCreationProgress || "Creating meeting..." 
                           : isSubmitting
-                            ? "Submitting..."
-                            : isEditing ? "Updating..." : "Saving..."
+                          ? "Submitting..."
+                          : isEditing ? "Updating..." : "Saving..."
                       }
                       disabled={isSubmitting}
                     >
@@ -2607,7 +2627,7 @@ const RoundFormInterviews = () => {
           selectedInterviewers={internalInterviewers}
           defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
-        //  clearOnViewTypeChange={true}
+          //  clearOnViewTypeChange={true}
         />
       )}
     </div>

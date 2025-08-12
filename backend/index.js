@@ -151,28 +151,10 @@ mongoose.connection.on('reconnected', () => {
   console.log('✅ MongoDB reconnected successfully');
 });
 
-mongoose.connection.on('connected', () => {
-  console.log('✅ MongoDB connected successfully');
-  // console.log('Connection state:', mongoose.connection.readyState);
-  
-  // Start the schedule assessment cron job after database connection is established
-  try {
-    const { startScheduleAssessmentCronJob, runInitialScheduleAssessmentCheck } = require('./controllers/candidateAssessmentController');
-    startScheduleAssessmentCronJob();
-    runInitialScheduleAssessmentCheck();
-  } catch (error) {
-    console.error('Error starting schedule assessment cron job:', error);
-  }
-
-  // Start the task reminder cron job after database connection is established
-  try {
-    const { startTaskReminderCronJob, runInitialTaskReminderCheck } = require('./controllers/PushNotificationControllers/pushNotificationTaskController');
-    startTaskReminderCronJob();
-    runInitialTaskReminderCheck();
-  } catch (error) {
-    console.error('Error starting task reminder cron job:', error);
-  }
-});
+// mongoose.connection.on('connected', () => {
+//   console.log('✅ MongoDB connected successfully');
+//   // console.log('Connection state:', mongoose.connection.readyState);
+// });
 
 mongoose.connection.on('connecting', () => {
   console.log('🔄 MongoDB connecting...');

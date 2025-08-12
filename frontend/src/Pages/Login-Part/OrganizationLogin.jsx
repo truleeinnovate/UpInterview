@@ -31,7 +31,7 @@ const OrganizationLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle verification success
+  // Handle verification success and returnUrl
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const verified = query.get('verified');
@@ -297,7 +297,33 @@ const OrganizationLogin = () => {
       // Step 7: Refresh permissions for non-subdomain cases
       await refreshPermissions();
 
-      // Step 8: Handle navigation based on user status (immediate navigation)
+      // Step 8: Check for returnUrl parameter and redirect accordingly
+      const query = new URLSearchParams(location.search);
+      const returnUrl = query.get('returnUrl');
+      
+      if (returnUrl) {
+        try {
+          const decodedReturnUrl = decodeURIComponent(returnUrl);
+          console.log('Redirecting to returnUrl:', decodedReturnUrl);
+          
+          // Validate the returnUrl is from the same domain for security
+          const returnUrlObj = new URL(decodedReturnUrl);
+          const currentDomain = window.location.hostname;
+          
+          if (returnUrlObj.hostname === currentDomain || returnUrlObj.hostname.endsWith('.app.upinterview.io')) {
+            // Wait for data to be ready before redirecting
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            window.location.href = decodedReturnUrl;
+            return;
+          } else {
+            console.warn('Invalid returnUrl domain, falling back to default navigation');
+          }
+        } catch (error) {
+          console.error('Error processing returnUrl:', error);
+        }
+      }
+
+      // Step 9: Handle navigation based on user status (default navigation)
       switch (status) {
         case 'submitted':
         case 'payment_pending':
@@ -675,12 +701,69 @@ const OrganizationLogin = () => {
             <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 hover:shadow-3xl transition-all duration-300">
               <div className="text-center mb-8">
                 <img src={logo} alt="Upinterview Logo" className="w-32 object-contain mx-auto mb-3 hover:scale-110 transition-transform duration-300" />
-                <h2 className="text-3xl font-bold text-gray-900 mb-3">Welcome Back! 🏢</h2>
-                <p className="text-gray-600 mb-4">Sign in to your organization dashboard</p>
+                <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                  {(() => {
+                    const query = new URLSearchParams(location.search);
+                    const returnUrl = query.get('returnUrl');
+                    if (returnUrl) {
+                      try {
+                        const decodedReturnUrl = decodeURIComponent(returnUrl);
+                        const returnUrlObj = new URL(decodedReturnUrl);
+                        if (returnUrlObj.pathname === '/join-meeting') {
+                          return 'Join Your Meeting! 🎯';
+                        }
+                      } catch (error) {
+                        console.error('Error processing returnUrl:', error);
+                      }
+                    }
+                    return 'Welcome Back! 🏢';
+                  })()}
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  {(() => {
+                    const query = new URLSearchParams(location.search);
+                    const returnUrl = query.get('returnUrl');
+                    if (returnUrl) {
+                      try {
+                        const decodedReturnUrl = decodeURIComponent(returnUrl);
+                        const returnUrlObj = new URL(decodedReturnUrl);
+                        if (returnUrlObj.pathname === '/join-meeting') {
+                          return 'Sign in to access your scheduled interview meeting';
+                        }
+                      } catch (error) {
+                        console.error('Error processing returnUrl:', error);
+                      }
+                    }
+                    return 'Sign in to your organization dashboard';
+                  })()}
+                </p>
                 <div className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></div>
                   Dashboard ready
                 </div>
+                
+                {/* Return URL indicator */}
+                {(() => {
+                  const query = new URLSearchParams(location.search);
+                  const returnUrl = query.get('returnUrl');
+                  if (returnUrl) {
+                    try {
+                      const decodedReturnUrl = decodeURIComponent(returnUrl);
+                      const returnUrlObj = new URL(decodedReturnUrl);
+                      if (returnUrlObj.pathname === '/join-meeting') {
+                        return (
+                          <div className="inline-flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm mt-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                            Redirecting back to meeting after login
+                          </div>
+                        );
+                      }
+                    } catch (error) {
+                      console.error('Error processing returnUrl:', error);
+                    }
+                  }
+                  return null;
+                })()}
               </div>
 
               <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 rounded-xl p-4 mb-6 border border-primary-200/50">
@@ -688,25 +771,78 @@ const OrganizationLogin = () => {
                   <svg className="w-5 h-5 text-primary-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                   </svg>
-                  🚀 Dashboard Access:
+                  {(() => {
+                    const query = new URLSearchParams(location.search);
+                    const returnUrl = query.get('returnUrl');
+                    if (returnUrl) {
+                      try {
+                        const decodedReturnUrl = decodeURIComponent(returnUrl);
+                        const returnUrlObj = new URL(decodedReturnUrl);
+                        if (returnUrlObj.pathname === '/join-meeting') {
+                          return '🎯 Meeting Access:';
+                        }
+                      } catch (error) {
+                        console.error('Error processing returnUrl:', error);
+                      }
+                    }
+                    return '🚀 Dashboard Access:';
+                  })()}
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700">
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
-                    Schedule interviews with expert interviewers
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
-                    Manage your internal team availability
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
-                    Track interview progress and feedback
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
-                    Access detailed candidate assessments
-                  </li>
+                  {(() => {
+                    const query = new URLSearchParams(location.search);
+                    const returnUrl = query.get('returnUrl');
+                    if (returnUrl) {
+                      try {
+                        const decodedReturnUrl = decodeURIComponent(returnUrl);
+                        const returnUrlObj = new URL(decodedReturnUrl);
+                        if (returnUrlObj.pathname === '/join-meeting') {
+                          return (
+                            <>
+                              <li className="flex items-center">
+                                <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                                Join your scheduled interview meeting
+                              </li>
+                              <li className="flex items-center">
+                                <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                                Access meeting details and candidate info
+                              </li>
+                              <li className="flex items-center">
+                                <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                                View interview feedback and assessments
+                              </li>
+                              <li className="flex items-center">
+                                <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                                Manage interview scheduling and availability
+                              </li>
+                            </>
+                          );
+                        }
+                      } catch (error) {
+                        console.error('Error processing returnUrl:', error);
+                      }
+                    }
+                    return (
+                      <>
+                        <li className="flex items-center">
+                          <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                          Schedule interviews with expert interviewers
+                        </li>
+                        <li className="flex items-center">
+                          <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                          Manage your internal team availability
+                        </li>
+                        <li className="flex items-center">
+                          <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                          Track interview progress and feedback
+                        </li>
+                        <li className="flex items-center">
+                          <div className="w-2 h-2 bg-primary-500 rounded-full mr-3 animate-pulse"></div>
+                          Access detailed candidate assessments
+                        </li>
+                      </>
+                    );
+                  })()}
                 </ul>
               </div>
 
@@ -817,7 +953,22 @@ const OrganizationLogin = () => {
                         Authenticating...
                       </>
                     ) : (
-                      'Sign In to Dashboard ✨'
+                      (() => {
+                        const query = new URLSearchParams(location.search);
+                        const returnUrl = query.get('returnUrl');
+                        if (returnUrl) {
+                          try {
+                            const decodedReturnUrl = decodeURIComponent(returnUrl);
+                            const returnUrlObj = new URL(decodedReturnUrl);
+                            if (returnUrlObj.pathname === '/join-meeting') {
+                              return 'Sign In & Join Meeting ✨';
+                            }
+                          } catch (error) {
+                            console.error('Error processing returnUrl:', error);
+                          }
+                        }
+                        return 'Sign In to Dashboard ✨';
+                      })()
                     )}
                   </button>
                 </form>
