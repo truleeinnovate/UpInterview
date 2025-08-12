@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
 // v1.0.1  -  Ashraf  -  added extend/cancel functionality for individual candidate assessments. show all data when isAssessmentView is true and add status column for assessment view
+// v1.0.2  -  Ashok   -  fixed search by name as can search by full name
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -22,7 +23,12 @@ import { usePermissions } from "../../../../Context/PermissionsContext";
 import { useAssessments } from "../../../../apiHooks/useAssessments";
 import toast from "react-hot-toast";
 
-function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading = {} }) {
+function Candidate({
+  candidates,
+  onResendLink,
+  isAssessmentView,
+  resendLoading = {},
+}) {
   // ------------------------------v1.0.1 >
   // <---------------------- v1.0.0
   // All hooks at the top
@@ -53,27 +59,24 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null);
 
-
-
   // <---------------------- v1.0.2
   // Helper function to check if a candidate is cancelled (handles all case variations)
   const isCandidateCancelled = (candidate) => {
-    
     const status = candidate?.status;
     if (!status) {
-      console.log('❌ No status found, returning false');
+      console.log("❌ No status found, returning false");
       return false;
     }
-    
+
     // Simple case-insensitive check
     const normalizedStatus = status.toString().toLowerCase().trim();
-    console.log('Normalized status:', normalizedStatus);
-    
-    const isCancelled = normalizedStatus === 'cancelled';
-    
-    console.log('Is cancelled check result:', isCancelled);
+    console.log("Normalized status:", normalizedStatus);
+
+    const isCancelled = normalizedStatus === "cancelled";
+
+    console.log("Is cancelled check result:", isCancelled);
     console.log('  normalizedStatus === "cancelled":', isCancelled);
-    
+
     return isCancelled;
   };
 
@@ -81,83 +84,89 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
   const shouldShowActionButtons = (candidate) => {
     // Normalize status to lowercase for case-insensitive comparison
     const status = candidate.status?.toString().toLowerCase().trim();
-    
+
     // Debug log to see status values
-    console.log('=== CANDIDATE STATUS DEBUG ===');
-    console.log('Candidate ID:', candidate._id);
-    console.log('Original Status:', candidate.status);
-    console.log('Normalized Status:', status);
-    console.log('Status Type:', typeof candidate.status);
-    
+    console.log("=== CANDIDATE STATUS DEBUG ===");
+    console.log("Candidate ID:", candidate._id);
+    console.log("Original Status:", candidate.status);
+    console.log("Normalized Status:", status);
+    console.log("Status Type:", typeof candidate.status);
+
     // Check for cancelled status - use the same logic as isCandidateCancelled
-    const isCancelled = status === 'cancelled';
-    
-    console.log('Is Cancelled Check:', isCancelled);
-    console.log('=== END DEBUG ===');
-    
+    const isCancelled = status === "cancelled";
+
+    console.log("Is Cancelled Check:", isCancelled);
+    console.log("=== END DEBUG ===");
+
     // Never show action buttons for cancelled candidates (case-insensitive)
     if (isCancelled) {
-      console.log('❌ Candidate is cancelled - hiding all buttons');
+      console.log("❌ Candidate is cancelled - hiding all buttons");
       return false;
     }
-    
+
     // Don't show action buttons for completed, expired, failed, or pass statuses
-    if (['completed', 'expired', 'failed', 'pass'].includes(status)) {
+    if (["completed", "expired", "failed", "pass"].includes(status)) {
       return false;
     }
-    
-    console.log('✅ Candidate can show action buttons');
+
+    console.log("✅ Candidate can show action buttons");
     return true;
   };
 
   // Simplified function to check if a specific button should be shown
   const shouldShowButton = (candidate, buttonType) => {
     console.log(`🔍 shouldShowButton called for ${buttonType} button`);
-    console.log('Candidate status:', candidate.status);
-    console.log('Candidate status type:', typeof candidate.status);
-    
+    console.log("Candidate status:", candidate.status);
+    console.log("Candidate status type:", typeof candidate.status);
+
     // Check if candidate is cancelled - if so, hide ALL buttons
     const isCancelled = isCandidateCancelled(candidate);
-    console.log('isCandidateCancelled result:', isCancelled);
-    
+    console.log("isCandidateCancelled result:", isCancelled);
+
     if (isCancelled) {
       console.log(`❌ ${buttonType} button hidden - candidate is cancelled`);
       return false;
     }
-    
+
     // Check specific button logic
-    if (buttonType === 'resend') {
+    if (buttonType === "resend") {
       // Don't show resend button for completed, cancelled, failed, or pass statuses
       const status = candidate.status?.toString().toLowerCase().trim();
-      const canResend = !['completed', 'cancelled', 'failed', 'pass'].includes(status);
-      console.log(`✅ ${buttonType} button ${canResend ? 'shown' : 'hidden'} - canResend: ${canResend}, status: ${status}`);
+      const canResend = !["completed", "cancelled", "failed", "pass"].includes(
+        status
+      );
+      console.log(
+        `✅ ${buttonType} button ${
+          canResend ? "shown" : "hidden"
+        } - canResend: ${canResend}, status: ${status}`
+      );
       return canResend;
     }
-    
+
     return false;
   };
 
   // Helper function to get status color for assessment view
   const getStatusColor = (status) => {
     switch (status) {
-      case 'completed':
-        return 'text-green-600 bg-green-50';
-      case 'cancelled':
-        return 'text-red-600 bg-red-50';
-      case 'extended':
-        return 'text-blue-600 bg-blue-50';
-      case 'pending':
-        return 'text-yellow-600 bg-yellow-50';
-      case 'in_progress':
-        return 'text-purple-600 bg-purple-50';
-      case 'expired':
-        return 'text-orange-600 bg-orange-50';
-      case 'failed':
-        return 'text-red-600 bg-red-50';
-      case 'pass':
-        return 'text-green-600 bg-green-50';
+      case "completed":
+        return "text-green-600 bg-green-50";
+      case "cancelled":
+        return "text-red-600 bg-red-50";
+      case "extended":
+        return "text-blue-600 bg-blue-50";
+      case "pending":
+        return "text-yellow-600 bg-yellow-50";
+      case "in_progress":
+        return "text-purple-600 bg-purple-50";
+      case "expired":
+        return "text-orange-600 bg-orange-50";
+      case "failed":
+        return "text-red-600 bg-red-50";
+      case "pass":
+        return "text-green-600 bg-green-50";
       default:
-        return 'text-gray-600 bg-gray-50';
+        return "text-gray-600 bg-gray-50";
     }
   };
   // ------------------------------ v1.0.2 >
@@ -186,8 +195,6 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
   if (!isInitialized) {
     return null;
   }
-
-
 
   const handleStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -254,6 +261,11 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
     }
   };
 
+  // v1.0.2 <------------------------------------------------------------------------
+  const normalizeSpaces = (str) =>
+    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
+  // v1.0.2 ------------------------------------------------------------------------>
+
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
     return dataToUse.filter((user) => {
@@ -278,10 +290,26 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
         (!selectedFilters.experience.max ||
           user.CurrentExperience <= selectedFilters.experience.max);
 
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      // v1.0.2 <-----------------------------------------------------------------
+      // NEW: normalize and check full name (both orders)
+      const normalizedQuery = normalizeSpaces(searchQuery);
+
+      const fullNameNormal = normalizeSpaces(
+        `${user.FirstName || ""} ${user.LastName || ""}`
       );
 
+      const fullNameReverse = normalizeSpaces(
+        `${user.LastName || ""} ${user.FirstName || ""}`
+      );
+
+      const matchesSearchQuery =
+        fieldsToSearch.some((field) =>
+          normalizeSpaces(field).includes(normalizedQuery)
+        ) ||
+        fullNameNormal.includes(normalizedQuery) ||
+        fullNameReverse.includes(normalizedQuery);
+
+      // v1.0.2 ------------------------------------------------------------------>
       return (
         matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
       );
@@ -417,63 +445,79 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
     },
     // <---------------------- v1.0.2
     // Add status column only for assessment view
-    ...(isAssessmentView ? [
-      {
-        key: "status",
-        header: "Status",
-        render: (value, row) => {
-          const status = row.status || 'pending';
-          return (
-            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </span>
-          );
-        },
-      },
-      {
-        key: "expiryAt",
-        header: "Expiry Date",
-        render: (value, row) => {
-          if (!row.expiryAt) return 'N/A';
-          
-          const now = new Date();
-          const expiry = new Date(row.expiryAt);
-          const timeDiff = expiry.getTime() - now.getTime();
-          
-          if (timeDiff <= 0) {
-            return (
-              <span className="text-red-600 text-sm font-medium">
-                Expired
-              </span>
-            );
-          }
-          
-          const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          
-          let timeText = '';
-          if (days > 0) {
-            timeText = `${days}d ${hours}h`;
-          } else if (hours > 0) {
-            timeText = `${hours}h`;
-          } else {
-            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-            timeText = `${minutes}m`;
-          }
-          
-          return (
-            <div className="text-sm">
-              <div className="font-medium text-gray-900">
-                {expiry.toLocaleDateString()}
-              </div>
-              <div className={`text-xs ${timeDiff < 24 * 60 * 60 * 1000 ? 'text-red-600' : 'text-gray-500'}`}>
-                {timeText} remaining
-              </div>
-            </div>
-          );
-        },
-      },
-    ] : []),
+    ...(isAssessmentView
+      ? [
+          {
+            key: "status",
+            header: "Status",
+            render: (value, row) => {
+              const status = row.status || "pending";
+              return (
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                    status
+                  )}`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </span>
+              );
+            },
+          },
+          {
+            key: "expiryAt",
+            header: "Expiry Date",
+            render: (value, row) => {
+              if (!row.expiryAt) return "N/A";
+
+              const now = new Date();
+              const expiry = new Date(row.expiryAt);
+              const timeDiff = expiry.getTime() - now.getTime();
+
+              if (timeDiff <= 0) {
+                return (
+                  <span className="text-red-600 text-sm font-medium">
+                    Expired
+                  </span>
+                );
+              }
+
+              const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+              const hours = Math.floor(
+                (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+              );
+
+              let timeText = "";
+              if (days > 0) {
+                timeText = `${days}d ${hours}h`;
+              } else if (hours > 0) {
+                timeText = `${hours}h`;
+              } else {
+                const minutes = Math.floor(
+                  (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+                );
+                timeText = `${minutes}m`;
+              }
+
+              return (
+                <div className="text-sm">
+                  <div className="font-medium text-gray-900">
+                    {expiry.toLocaleDateString()}
+                  </div>
+                  <div
+                    className={`text-xs ${
+                      timeDiff < 24 * 60 * 60 * 1000
+                        ? "text-red-600"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {timeText} remaining
+                  </div>
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
     // ------------------------------ v1.0.2 >
   ];
 
@@ -538,7 +582,7 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
       : []),
     ...(isAssessmentView
       ? [
-        // <-------------------------------v1.0.1
+          // <-------------------------------v1.0.1
           // Only show resend link for candidates that can be resent
           {
             key: "resend-link",
@@ -547,9 +591,25 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
               const isLoading = resendLoading[row.id];
               return isLoading ? (
                 <div className="w-4 h-4 flex items-center justify-center">
-                  <svg className="animate-spin h-4 w-4 text-custom-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-4 w-4 text-custom-blue"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                 </div>
               ) : (
@@ -562,9 +622,14 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
               }
             },
             show: (row) => {
-              console.log('🔍 TABLE Resend button show function called for:', row._id, 'status:', row.status);
-              const result = shouldShowButton(row, 'resend');
-              console.log('🔍 TABLE Resend button result:', result);
+              console.log(
+                "🔍 TABLE Resend button show function called for:",
+                row._id,
+                "status:",
+                row.status
+              );
+              const result = shouldShowButton(row, "resend");
+              console.log("🔍 TABLE Resend button result:", result);
               return result;
             },
             disabled: (row) => resendLoading[row.id],
@@ -625,9 +690,14 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
           {/* // <-------------------------------v1.0.1 */}
           {/* Only show resend link for candidates that can be resent */}
           {(() => {
-            console.log('🔍 KANBAN Resend button check for:', item._id, 'status:', item.status);
-            const result = shouldShowButton(item, 'resend');
-            console.log('🔍 KANBAN Resend button result:', result);
+            console.log(
+              "🔍 KANBAN Resend button check for:",
+              item._id,
+              "status:",
+              item.status
+            );
+            const result = shouldShowButton(item, "resend");
+            console.log("🔍 KANBAN Resend button result:", result);
             return result;
           })() && (
             <button
@@ -639,14 +709,30 @@ function Candidate({ candidates, onResendLink, isAssessmentView, resendLoading =
               }}
               disabled={resendLoading[item.id]}
               className={`p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors ${
-                resendLoading[item.id] ? 'opacity-50 cursor-not-allowed' : ''
+                resendLoading[item.id] ? "opacity-50 cursor-not-allowed" : ""
               }`}
               title="Resend Link"
             >
               {resendLoading[item.id] ? (
-                <svg className="animate-spin h-4 w-4 text-custom-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin h-4 w-4 text-custom-blue"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
               ) : (
                 <Mail className="w-4 h-4" />

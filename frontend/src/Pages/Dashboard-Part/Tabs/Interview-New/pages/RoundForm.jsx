@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - removed extra status text
 // v1.0.1 - Ashok - Added scroll to first error functionality
 // v1.0.2 - Ashraf - Added sending interview email,creating custom url for each user
+// v1.0.3 - Ashok - fixed button text while loading from Creating links to Creating Links
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -1085,7 +1086,9 @@ const RoundFormInterviews = () => {
 
         try {
           setIsMeetingCreationLoading(true);
-          setMeetingCreationProgress('Creating meeting links...');
+          // v1.0.3 <-----------------------------------------------------------
+          setMeetingCreationProgress('Creating links...');
+          // v1.0.3 ----------------------------------------------------------->
 
           // Import the meeting platform utility
           const { createMeeting } = await import('../../../../../utils/meetingPlatforms.js');

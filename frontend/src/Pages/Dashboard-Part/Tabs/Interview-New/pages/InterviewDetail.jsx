@@ -101,8 +101,37 @@ const InterviewDetail = () => {
   useScrollLock(isModalOpen || showCompletionModal);
   // v1.0.2 --------------------------------------------------->
 
+  // v1.0.1 <----------------------------------------------------------------------------------
+  // useEffect(() => {
+  //   if (rounds) {
+  //     // Set the active round to the first non-completed round
+  //     const nextRound = rounds
+  //       .filter((round) => ["Pending", "Scheduled"].includes(round.status))
+  //       .sort((a, b) => a.sequence - b.sequence)[0];
+
+  //     if (nextRound) {
+  //       setActiveRound(nextRound._id);
+  //     } else {
+  //       // If all rounds are completed, set the last round as active
+  //       const lastRound = [...rounds].sort(
+  //         (a, b) => b.sequence - a.sequence
+  //       )[0];
+  //       if (lastRound) {
+  //         setActiveRound(lastRound._id);
+  //       }
+  //     }
+  //   }
+  // }, [rounds]);
+
   useEffect(() => {
-    if (rounds) {
+    if (rounds && rounds.length > 0) {
+      if (rounds.length === 1) {
+        // Force vertical mode when only one round exists
+        setRoundsViewMode("vertical");
+        setActiveRound(rounds[0]._id); // Always open the only card
+        return; // No need to run the rest of the logic
+      }
+
       // Set the active round to the first non-completed round
       const nextRound = rounds
         .filter((round) => ["Pending", "Scheduled"].includes(round.status))
@@ -121,7 +150,8 @@ const InterviewDetail = () => {
       }
     }
   }, [rounds]);
-
+  // v1.0.1 ---------------------------------------------------------------------------------->
+  
   // Ensure hooks are always called before any conditional return
   // if (!interview) {
   //   return <Loading />;
@@ -344,7 +374,7 @@ const InterviewDetail = () => {
                     Candidate
                   </dt> */}
                   <dd className="text-sm text-gray-900">
-                  {/* v1.0.1 ---------------------------------------------------------------------> */}
+                    {/* v1.0.1 ---------------------------------------------------------------------> */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center">
                       <div className="mr-0 mb-3 sm:mb-0 sm:mr-3">
                         {candidate?.imageUrl ? (
@@ -544,7 +574,7 @@ const InterviewDetail = () => {
                   </h3>
                   <div className="flex space-x-2">
                     {/* v1.0.0 <------------------------------------------------------------------------------------------------------------- */}
-                    {interview?.rounds?.length > 1  && (
+                    {interview?.rounds?.length > 1 && (
                       <button
                         onClick={toggleViewMode}
                         className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
