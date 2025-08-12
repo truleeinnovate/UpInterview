@@ -24,46 +24,72 @@ function JoinMeeting() {
   const [authError, setAuthError] = useState(null);
 
   // Authentication check function
-    // Authentication check function
-    const checkAuthentication = () => {
+  const checkAuthentication = () => {
+    try {
+      if (!AuthCookieManager.isAuthenticated()) {
+        console.log('User not authenticated, redirecting to login');
+        const returnUrl = encodeURIComponent(window.location.href);
+        navigate(`/organization-login?returnUrl=${returnUrl}`);
+        return false;
+      }
+
+      const currentUserData = AuthCookieManager.getActiveUserData();
+      if (!currentUserData) {
+        console.log('Unable to get current user data, redirecting to login');
+        const returnUrl = encodeURIComponent(window.location.href);
+        navigate(`/organization-login?returnUrl=${returnUrl}`);
+        return false;
+      }
+
+      const urlParams = new URLSearchParams(location.search);
+      const encryptedOwnerId = urlParams.get('owner');
+
+      if (!encryptedOwnerId) {
+        console.log('No ownerId in URL parameters');
+        setAuthError('Invalid meeting link: missing owner information');
+        setIsAuthChecking(false);
+        return false;
+      }
+
+      let decryptedOwnerId;
       try {
         if (!AuthCookieManager.isAuthenticated()) {
           console.log('User not authenticated, redirecting to login');
           const returnUrl = encodeURIComponent(window.location.href);
-          
+
           // Determine login path based on role (interviewer vs scheduler/organization)
           const urlParams = new URLSearchParams(location.search);
           const isInterviewer = urlParams.get('interviewer') === 'true';
           const loginPath = isInterviewer ? '/individual-login' : '/organization-login';
-          
+
           navigate(`${loginPath}?returnUrl=${returnUrl}`);
           return false;
         }
-  
+
         const currentUserData = AuthCookieManager.getActiveUserData();
         if (!currentUserData) {
           console.log('Unable to get current user data, redirecting to login');
           const returnUrl = encodeURIComponent(window.location.href);
-          
+
           // Same login path logic as above
           const urlParams = new URLSearchParams(location.search);
           const isInterviewer = urlParams.get('interviewer') === 'true';
           const loginPath = isInterviewer ? '/individual-login' : '/organization-login';
-          
+
           navigate(`${loginPath}?returnUrl=${returnUrl}`);
           return false;
         }
-  
+
         const urlParams = new URLSearchParams(location.search);
         const encryptedOwnerId = urlParams.get('owner');
-        
+
         if (!encryptedOwnerId) {
           console.log('No ownerId in URL parameters');
           setAuthError('Invalid meeting link: missing owner information');
           setIsAuthChecking(false);
           return false;
         }
-  
+
         let decryptedOwnerId;
         try {
           const decodedOwnerId = decodeURIComponent(encryptedOwnerId);
@@ -75,24 +101,24 @@ function JoinMeeting() {
           setIsAuthChecking(false);
           return false;
         }
-  
+
         const currentUserOwnerId = currentUserData.userId || currentUserData.id;
         console.log('Current user ownerId:', currentUserOwnerId);
         console.log('URL ownerId:', decryptedOwnerId);
-  
+
         if (currentUserOwnerId !== decryptedOwnerId) {
           console.log('OwnerId mismatch, redirecting to login');
           const returnUrl = encodeURIComponent(window.location.href);
-          
+
           // Same login path logic for mismatch
           const urlParams = new URLSearchParams(location.search);
           const isInterviewer = urlParams.get('interviewer') === 'true';
           const loginPath = isInterviewer ? '/individual-login' : '/organization-login';
-          
+
           navigate(`${loginPath}?returnUrl=${returnUrl}`);
           return false;
         }
-  
+
         console.log('Authentication successful, ownerId matches');
         setIsAuthChecking(false);
         return true;
@@ -102,10 +128,8 @@ function JoinMeeting() {
         setIsAuthChecking(false);
         return false;
       }
-    };
 
-
-  // Check authentication on component mount
+      // Check authentication on component mount
 
       const currentUserOwnerId = currentUserData.userId || currentUserData.id;
       console.log('Current user ownerId:', currentUserOwnerId);
@@ -169,23 +193,23 @@ function JoinMeeting() {
     try {
       setFeedbackLoading(true);
       setFeedbackError(null);
-      
+
       console.log('🔍 Fetching feedback data for round ID:', roundId);
       console.log('👤 Interviewer ID for filtering:', interviewerId);
-      
+
       // Build URL with query parameters
       let url = `${config.REACT_APP_API_URL}/feedback/round/${roundId}`;
       if (interviewerId) {
         url += `?interviewerId=${interviewerId}`;
       }
-      
+
       console.log('🌐 Making API call to:', url);
-      
+
       const response = await axios.get(url, {
-          headers: {
-            'Content-Type': 'application/json',
-            // 'Authorization': `Bearer ${Cookies.get('authToken')}`
-          },
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${Cookies.get('authToken')}`
+        },
       });
 
       if (response.data.success) {
@@ -267,7 +291,7 @@ function JoinMeeting() {
       }
     }
 
-    const interviewerId ="68664845d494db82db30103c"
+    const interviewerId = "68664845d494db82db30103c"
     // Extract key information
     const extractedData = {
       schedule: isSchedule,
@@ -276,7 +300,7 @@ function JoinMeeting() {
       meetLink: decryptedMeeting,
       roundData: decryptedRound,
       interviewRoundId: decryptedRound || '',
-      interviewerId:interviewerId || "not found",
+      interviewerId: interviewerId || "not found",
     };
 
     console.log('=== EXTRACTED DATA ===');
@@ -325,7 +349,7 @@ function JoinMeeting() {
       hasData: !!feedbackData,
       dataKeys: feedbackData ? Object.keys(feedbackData) : []
     });
-    
+
     if (feedbackData) {
       console.log('📋 Feedback Data Details:', {
         hasInterviewRound: !!feedbackData.interviewRound,
@@ -366,7 +390,7 @@ function JoinMeeting() {
         <div className="text-center">
           <div className="text-red-600 text-xl mb-4">⚠️</div>
           <p className="text-gray-800 mb-4">{authError}</p>
-          <button 
+          <button
             onClick={() => {
               const returnUrl = encodeURIComponent(window.location.href);
               navigate(`/organization-login?returnUrl=${returnUrl}`);
