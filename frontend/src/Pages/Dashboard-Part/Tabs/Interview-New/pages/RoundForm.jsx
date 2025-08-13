@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - Added scroll to first error functionality
 // v1.0.2 - Ashraf - Added sending interview email,creating custom url for each user
 // v1.0.3 - Ashok - fixed button text while loading from Creating links to Creating Links
+//<-----v1.0.4----Venkatesh-----default and enforce scheduledDate when switching to "scheduled" after 2 hours from now
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -172,6 +173,28 @@ const RoundFormInterviews = () => {
   console.log("interviewerGroupName", interviewerGroupName);
 
 
+  //<-----v1.0.4----
+  // Helper: format a Date to 'YYYY-MM-DDTHH:mm' for <input type="datetime-local"/>
+  const formatForDatetimeLocal = (date) => {
+    const pad = (n) => String(n).padStart(2, "0");
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    return `${y}-${m}-${d}T${hh}:${mm}`;
+  };
+
+  // Helper: minimum selectable scheduled time = now + 2 hours (local time)
+  const twoHoursFromNowLocal = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    d.setSeconds(0, 0); // strip seconds/millis for consistency
+    return formatForDatetimeLocal(d);
+  };
+  
+  //-----v1.0.4---->
+
   // v1.0.1 <-------------------------------------------------------------------------
   const fieldRefs = {
     roundTitle: useRef(null),
@@ -318,6 +341,18 @@ const RoundFormInterviews = () => {
   useEffect(() => {
     updateTimes(duration);
   }, [duration, updateTimes]);
+
+  //<-----v1.0.4----
+  // Default and enforce scheduledDate when switching to "scheduled"
+  useEffect(() => {
+    if (interviewType === "scheduled") {
+      const minVal = twoHoursFromNowLocal();
+      if (!scheduledDate || scheduledDate < minVal) {
+        setScheduledDate(minVal);
+      }
+    }
+  }, [interviewType]);
+  //-----v1.0.4---->
 
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -2034,11 +2069,17 @@ const RoundFormInterviews = () => {
                                 type="datetime-local"
                                 id="scheduledDate"
                                 name="scheduledDate"
+                                //lang="en-US"
                                 value={scheduledDate}
-                                onChange={(e) =>
-                                  setScheduledDate(e.target.value)
-                                }
-                                min={new Date().toISOString().slice(0, 16)}
+                                //<-----v1.0.4----
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  const minVal = twoHoursFromNowLocal();
+                                  // Prevent selecting past/less than 2 hours from now
+                                  setScheduledDate(val && val < minVal ? minVal : val);
+                                }}
+                                min={twoHoursFromNowLocal()}
+                                //-----v1.0.4---->
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
                               />
                             </div>

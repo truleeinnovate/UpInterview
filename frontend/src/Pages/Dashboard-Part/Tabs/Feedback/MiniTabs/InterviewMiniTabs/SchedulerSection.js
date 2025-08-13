@@ -1,3 +1,4 @@
+//<----v1.0.0---Venkatesh-----disable like and dislike in view mode
 /* eslint-disable no-lone-blocks */
 import React, { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
@@ -136,6 +137,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle dislike toggle
   const handleDislikeToggle = (id) => {
+    if (isViewMode) return;//<----v1.0.0---
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
     else setDislikeQuestionId(id);
     setSchedulerQuestionsData((prev) =>
@@ -155,6 +157,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle like toggle
   const handleLikeToggle = (id) => {
+    if (isViewMode) return;//<----v1.0.0---
     setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
         q._id === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q

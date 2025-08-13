@@ -1,4 +1,5 @@
 //<---v1.0.0-----Venkatesh----solved edit mode issues
+//<---v1.0.1-----Venkatesh----solved edit mode issues
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -409,6 +410,7 @@ const FeedbackForm = ({
   };
 
   const handleDislikeToggle = (id) => {
+    if (isViewMode) return;//<---v1.0.1-----
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
     else setDislikeQuestionId(id);
     //<---v1.0.0-----
@@ -425,6 +427,7 @@ const FeedbackForm = ({
   };
 
   const handleLikeToggle = (id) => {
+    if (isViewMode) return;//<---v1.0.1-----
     //<---v1.0.0-----
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === id);
@@ -446,32 +449,38 @@ const FeedbackForm = ({
   // Component Functions
   const DisLikeSection = React.memo(({ each }) => {
     return (
-      <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
-        <div className="flex justify-between items-center mb-2">
-          <h1>Tell us more :</h1>
-          <button onClick={() => setDislikeQuestionId(null)}>
-            <IoIosCloseCircleOutline />
-          </button>
-        </div>
-        <ul className="flex flex-wrap gap-3">
-          {dislikeOptions.map((option) => (
-            <li key={option.value} className="flex items-center gap-2">
-              <input
-                type="radio"
-                id={`dislike-${each.questionId || each.id}-${option.value}`}
-                name={`dislike-${each.questionId || each.id}`}
-                value={option.value}
-                checked={each.whyDislike === option.value}
-                onChange={(e) => onChangeDislikeRadioInput(each.questionId || each.id, e.target.value)}
-              />
-              <label htmlFor={`dislike-${each.questionId || each.id}-${option.value}`} className="cursor-pointer">
-                {option.label}
-              </label>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
+      <>
+              {(isEditMode || isAddMode) ? (
+                <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <h1>Tell us more :</h1>
+                    <button onClick={() => setDislikeQuestionId(null)}>
+                      <IoIosCloseCircleOutline />
+                    </button>
+                  </div>
+                  <ul className="flex flex-wrap gap-3">
+                    {dislikeOptions.map((option) => (
+                      <li key={option.value} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          id={`dislike-${each.questionId || each.id}-${option.value}`}
+                          name={`dislike-${each.questionId || each.id}`}
+                          value={option.value}
+                          checked={each.whyDislike === option.value}
+                          onChange={(e) => onChangeDislikeRadioInput(each.questionId || each.id, e.target.value)}
+                        />
+                        <label htmlFor={`dislike-${each.questionId || each.id}-${option.value}`} className="cursor-pointer">
+                         {option.label}
+                       </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p className="w-full flex gap-x-8 gap-y-2 ">{each.whyDislike || "N/A"}</p>
+              )}
+              </>
+  );
   });
 
   const SharePopupSection = () => {
@@ -1079,14 +1088,14 @@ const FeedbackForm = ({
                   {questionsWithFeedback.length} question(s) from question bank
                 </span>
               </div>
-              {(isViewMode || isEditMode || decodedData.schedule) ? (
+              {(isViewMode || isEditMode || decodedData?.schedule) ? (
                 <div></div>
               ) : (
                 <button
                   className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
                   onClick={openQuestionBank}
                   title="Add Question from Question Bank"
-                  disabled={decodedData.schedule}
+                  disabled={decodedData?.schedule}
                 >
                   <FaPlus className="text-sm" />
                   <span>Add Question</span>
@@ -1124,11 +1133,12 @@ const FeedbackForm = ({
                         <span>Mandatory: {(question.mandatory === "true" || question.snapshot?.mandatory === "true") ? "Yes" : "No"}</span>
                       </div>
 
-                      <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-2 mt-2">
                       <span
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
                             }`}
                           onClick={() => handleLikeToggle(question.questionId || question.id)}
+                          disabled={!isViewMode}
                         >
                           <SlLike />
                         </span>
@@ -1137,11 +1147,15 @@ const FeedbackForm = ({
                             }`}
                           style={{ cursor: "pointer" }}
                           onClick={() => handleDislikeToggle(question.questionId || question.id)}
+                          disabled={!isViewMode}
                         >
                           <SlDislike />
                         </span>
                       </div>
                       <div>
+                      {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && (
+                         <DisLikeSection each={question} />
+                       )}
                       </div>
 
 
@@ -1301,7 +1315,8 @@ const FeedbackForm = ({
               )}
             </div>
 
-            {!isViewMode || decodedData.schedule && (
+            {/*<---v1.0.1-----> */}
+            {(!isViewMode || decodedData?.schedule) && (
               <div className="flex justify-end gap-3 mt-4">
                 <Button
                   onClick={saveFeedback}
