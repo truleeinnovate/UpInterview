@@ -26,7 +26,7 @@ app.use(cookieParser());
 
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('Origin:', origin);
+    // console.log('Origin:', origin);
     const allowedOrigins = [
       'https://app.upinterview.io',
       /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/,
@@ -42,7 +42,7 @@ const corsOptions = {
         ? allowed === origin
         : allowed.test(origin)
     )) {
-      console.log('Origin allowed:', origin);
+      // console.log('Origin allowed:', origin);
       return callback(null, true);
     }
 
@@ -123,7 +123,7 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
         console.error('MongoDB URI status:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
         process.exit(1);
       }
-      console.log(`⏳ Retrying in ${delay / 1000} seconds...`);
+      // console.log(`⏳ Retrying in ${delay / 1000} seconds...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -144,30 +144,32 @@ mongoose.connection.on('error', (err) => {
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ MongoDB disconnected - attempting to reconnect...');
+  // console.log('⚠️ MongoDB disconnected - attempting to reconnect...');
 });
 
 mongoose.connection.on('reconnected', () => {
-  console.log('✅ MongoDB reconnected successfully');
+  // console.log('✅ MongoDB reconnected successfully');
 });
 
-mongoose.connection.on('connected', () => {
-  console.log('✅ MongoDB connected successfully');
-  // console.log('Connection state:', mongoose.connection.readyState);
+// mongoose.connection.on('connected', async () => {
+//   console.log('✅ MongoDB c onnected successfully');
   
-  // Start the schedule assessment cron job after database connection is established
-  try {
-    const { startScheduleAssessmentCronJob, runInitialScheduleAssessmentCheck } = require('./controllers/candidateAssessmentController');
-    startScheduleAssessmentCronJob();
-    runInitialScheduleAssessmentCheck();
-  } catch (error) {
-    console.error('Error starting schedule assessment cron job:', error);
-  }
-});
+//   // Wait a short moment to ensure the connection is fully established
+//   await new Promise(resolve => setTimeout(resolve, 1000));
+  
+//   // Start the schedule assessment cron job after database connection is established
+//   try {
+//     const { startScheduleAssessmentCronJob, runInitialScheduleAssessmentCheck } = require('./controllers/candidateAssessmentController');
+//     await startScheduleAssessmentCronJob();
+//     await runInitialScheduleAssessmentCheck();
+//   } catch (error) {
+//     console.error('Error starting schedule assessment cron job:', error);
+//   }
+// });
 
-mongoose.connection.on('connecting', () => {
-  console.log('🔄 MongoDB connecting...');
-});
+// mongoose.connection.on('connecting', () => {
+//   console.log('🔄 MongoDB connecting...');
+// });
 
 // Add connection monitoring
 setInterval(() => {
