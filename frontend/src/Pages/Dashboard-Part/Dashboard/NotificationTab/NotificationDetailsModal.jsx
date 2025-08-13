@@ -1,5 +1,3 @@
-// v1.0.0 - Ashok - Disabled outer scrollbar when popup is open for better user experience
-
 /* eslint-disable react/prop-types */
 import React from "react";
 import { motion } from "framer-motion";
@@ -16,9 +14,6 @@ import {
   Download,
   Paperclip,
 } from "lucide-react";
-// v1.0.0 <----------------------------------------------
-import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
-// v1.0.0 ---------------------------------------------->
 
 const NotificationDetailsModal = ({
   notification,
@@ -26,9 +21,6 @@ const NotificationDetailsModal = ({
   onClose,
   showContentDetails,
 }) => {
-  // v1.0.0 <---------------------------------------
-  useScrollLock(isOpen);
-  // v1.0.0 --------------------------------------->
 
   if (!isOpen || !notification) return null;
 

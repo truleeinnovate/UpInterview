@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Added optional chaining (ex. property?.value)
+
 /* eslint-disable react-hooks/exhaustive-deps */
 //<----v1.0.0---Venkatesh---add loading skelton view and api loading issues solved
 import React, { useEffect, useState } from 'react';
@@ -113,14 +115,20 @@ const Usage = () => {
       <h2 className="text-2xl font-bold">Usage Analytics</h2>
 
       {/* Usage Period */}
+      {/* v1.0.0 <------------------------------------------------------------------------- */}
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium">Current Period</h3>
         <p className="text-gray-600 mt-2">
           {usage?.period?.fromDate || usage?.period?.toDate ? (
-            `${usage?.period?.fromDate ? new Date(usage.period.fromDate).toLocaleDateString() : '—'} to ${usage?.period?.toDate ? new Date(usage.period.toDate).toLocaleDateString() : '—'}`
+
+            `${new Date(usage?.period?.fromDate)?.toLocaleDateString()} to ${new Date(usage?.period?.toDate)?.toLocaleDateString()}`
+
+//             `${usage?.period?.fromDate ? new Date(usage.period.fromDate).toLocaleDateString() : '—'} to ${usage?.period?.toDate ? new Date(usage.period.toDate).toLocaleDateString() : '—'}`
+
           ) : (error || '—')}
         </p>
       </div>
+      {/* v1.0.0 -------------------------------------------------------------------------> */}
 
       {/* Usage Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -184,9 +192,11 @@ const Usage = () => {
         <div className="h-2 bg-gray-200 rounded-full">
           <div
             className="h-full bg-custom-blue rounded-full"
+            // v1.0.0 <------------------------------------------------------------------------------------------
             style={{
-              width: `${usage?.totalUsers ? Math.min((usage.currentUsers / usage.totalUsers) * 100, 100) : 0}%`
+              width: `${usage?.totalUsers ? Math.min((usage?.currentUsers / usage?.totalUsers) * 100, 100) : 0}%`
             }}
+            // v1.0.0 ------------------------------------------------------------------------------------------>
           />
         </div>
       </div>

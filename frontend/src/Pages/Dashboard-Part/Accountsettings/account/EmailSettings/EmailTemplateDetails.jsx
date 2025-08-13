@@ -98,9 +98,11 @@ function EmailTemplates({
                 </div>
               </div>
               <div className="rounded p-3 mb-4 text-sm text-gray-600">
-                <p className="line-clamp-1  w-1/2 prose max-w-none"
+                {/* v1.0.0 <------------------------------------------------------- */}
+                <p className="line-clamp-1  w-1/2 prose max-w-none pb-1"
                  dangerouslySetInnerHTML={{__html: template.body}} 
                  ></p>
+                 {/* v1.0.0 --------------------------------------------------------> */}
               </div>
             </div>
           ))
