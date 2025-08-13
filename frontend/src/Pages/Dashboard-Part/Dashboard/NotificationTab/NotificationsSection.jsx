@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - fixed z-index issue by wrapping the popup in the container div
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -230,11 +232,13 @@ const NotificationsSection = () => {
         notifications={notificationsData}
       />
 
-      <NotificationDetailsModal
-        isOpen={!!selectedNotification}
-        onClose={() => setSelectedNotification(null)}
-        notification={selectedNotification}
-      />
+     <div>
+        <NotificationDetailsModal
+          isOpen={!!selectedNotification}
+          onClose={() => setSelectedNotification(null)}
+          notification={selectedNotification}
+        />
+      </div>
     </>
   );
 };

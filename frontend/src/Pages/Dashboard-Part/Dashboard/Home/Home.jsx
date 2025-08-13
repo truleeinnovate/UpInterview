@@ -1,5 +1,7 @@
 // v1.0.0  -  mansoor  -  aligned the left content and right content in the center in all the scrrens responsively
 // v1.0.1  -  Ashraf  -  removed the freelancer condition from the interview requests component
+// v1.0.2  -  Ashok   -  disabled outer scrollbar when outsource and interviewers popup's open
+
 import { useState, useEffect } from 'react';
 import { TrendingUp, AlertCircle, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -19,6 +21,9 @@ import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { config } from '../../../../config';
+// v1.0.2 <---------------------------------------------------------------------
+import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js';
+// v1.0.2 --------------------------------------------------------------------->
 
 const Home = () => {
   const tokenPayload = decodeJwt(Cookies.get('authToken'));
@@ -29,6 +34,11 @@ const Home = () => {
   const freelancer = tokenPayload?.freelancer;
   const [isInternalInterviews, setInternalInterviews] = useState(false);
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
+
+  // Disabled outer scrollbar when outsource and interviewers popup open
+  // v1.0.2 <-----------------------------------------------
+  useScrollLock(showOutsourcePopup || isInternalInterviews);
+  // v1.0.2 ----------------------------------------------->
 
   const [stats, setStats] = useState({
     totalInterviews: 0,
