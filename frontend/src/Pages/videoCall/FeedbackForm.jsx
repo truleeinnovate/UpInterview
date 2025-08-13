@@ -1,4 +1,5 @@
 //<---v1.0.0-----Venkatesh----solved edit mode issues
+//<---v1.0.1-----Venkatesh----solved edit mode issues
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -409,7 +410,7 @@ const FeedbackForm = ({
   };
 
   const handleDislikeToggle = (id) => {
-    if (isViewMode) return;
+    if (isViewMode) return;//<---v1.0.1-----
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
     else setDislikeQuestionId(id);
     //<---v1.0.0-----
@@ -426,7 +427,7 @@ const FeedbackForm = ({
   };
 
   const handleLikeToggle = (id) => {
-    if (isViewMode) return;
+    if (isViewMode) return;//<---v1.0.1-----
     //<---v1.0.0-----
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === id);
@@ -1314,6 +1315,7 @@ const FeedbackForm = ({
               )}
             </div>
 
+            {/*<---v1.0.1-----> */}
             {(!isViewMode || decodedData?.schedule) && (
               <div className="flex justify-end gap-3 mt-4">
                 <Button

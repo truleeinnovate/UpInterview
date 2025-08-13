@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+//<----v1.0.0---Venkatesh---add loading skelton view and api loading issues solved
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -247,3 +248,5 @@ const Usage = () => {
 }
 
 export default Usage
+
+//-----v1.0.0-------->

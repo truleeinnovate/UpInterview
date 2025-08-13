@@ -2,6 +2,7 @@
 //<----v1.0.0---Venkatesh-----open selected question on load
 //<----v1.0.1---Venkatesh-----update selected question on load from question bank
 ////<---v1.0.2-----Venkatesh-----solved edit mode issues
+//<----v1.0.3-----Venkatesh-----disable like and dislike in view mode
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
@@ -329,7 +330,7 @@ const InterviewerSectionComponent = ({
      };
    
      const handleDislikeToggle = (id) => {
-       if (isViewMode) return;
+       if (isViewMode) return;//<----v1.0.3-----
        if (dislikeQuestionId === id) setDislikeQuestionId(null);
        else setDislikeQuestionId(id);
        setInterviewerSectionData((prev) =>
@@ -340,7 +341,7 @@ const InterviewerSectionComponent = ({
      };
    
      const handleLikeToggle = (id) => {
-       if (isViewMode) return;
+       if (isViewMode) return;//<----v1.0.3-----
        setInterviewerSectionData((prev) =>
          prev.map((q) =>
            (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
