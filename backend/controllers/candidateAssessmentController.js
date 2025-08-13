@@ -735,7 +735,7 @@ exports.updateAllScheduleStatuses = async (req, res) => {
 // Function to run the schedule assessment status update job
 const runScheduleAssessmentStatusUpdateJob = async () => {
   try {
-    console.log('Starting automated schedule assessment status update job...');
+    // console.log('Starting automated schedule assessment status update job...');
     
     const scheduleAssessments = await ScheduleAssessment.find({});
     const results = [];
@@ -759,7 +759,7 @@ const runScheduleAssessmentStatusUpdateJob = async () => {
       }
     }
 
-    console.log(`Automated schedule assessment status update completed. Updated: ${results.length}, Errors: ${errors.length}`);
+    // console.log(`Automated schedule assessment status update completed. Updated: ${results.length}, Errors: ${errors.length}`);
     
     if (results.length > 0) {
       console.log('Updated schedule assessments:', results);
@@ -770,7 +770,7 @@ const runScheduleAssessmentStatusUpdateJob = async () => {
     }
 
   } catch (error) {
-    console.error('Error in automated schedule assessment status update job:', error);
+    // console.error('Error in automated schedule assessment status update job:', error);
   }
 };
 
@@ -786,7 +786,7 @@ cron.schedule('*/5 * * * *', async () => {
 // 0 0 * * * = once daily at midnight
 
 // Run immediately on file load for initial check
-console.log('Running initial schedule assessment status update check at startup...');
+// console.log('Running initial schedule assessment status update check at startup...');
 runScheduleAssessmentStatusUpdateJob();
 
 // ------------------------------v1.0.0 >

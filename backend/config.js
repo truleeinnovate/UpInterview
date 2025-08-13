@@ -1,10 +1,3 @@
-// Debug environment variables
-console.log('Backend Environment variables check:');
-console.log('REACT_APP_CLIENT_ID:', process.env.REACT_APP_CLIENT_ID);
-console.log('REACT_APP_CLIENT_SECRET:', process.env.REACT_APP_CLIENT_SECRET);
-console.log('REACT_APP_REDIRECT_URI:', process.env.REACT_APP_REDIRECT_URI);
-console.log('REACT_APP_API_URL_FRONTEND:', process.env.REACT_APP_API_URL_FRONTEND);
-
 module.exports = {
   // REACT_APP_CLIENT_ID: "77eq6sdds9ol1a",
   // REACT_APP_CLIENT_SECRET: "WPL_AP1.rW1TQVlAI93U3fuN.61yPig==",
