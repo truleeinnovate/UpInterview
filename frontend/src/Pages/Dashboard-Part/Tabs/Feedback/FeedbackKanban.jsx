@@ -143,7 +143,7 @@ const FeedbackKanban = ({feedbacks, loading, onView, onEdit }) => {
       transition={{ duration: 0.5 }}
       className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-auto"
     >
-      <div className="h-full w-full">
+      <div className="h-screen w-full">
         <motion.div
           className="flex items-center justify-between mb-6"
           initial={{ x: -20, opacity: 0 }}

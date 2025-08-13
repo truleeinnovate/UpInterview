@@ -343,7 +343,7 @@ const SchedulerSectionComponent = ({
               </button>
             )}
               <SharePopupSection />
-              {(isEditMode  || isAddMode ) && (
+              {(isEditMode || isViewMode  || isAddMode ) && (
                 <>
                   <span
                     className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
@@ -365,7 +365,7 @@ const SchedulerSectionComponent = ({
                 </>
               )}
             </div>
-            {dislikeQuestionId === question._id && <DisLikeSection each={question} />}
+            {(dislikeQuestionId === question._id || question.questionId) && <DisLikeSection each={question} />}
             {question.notesBool && (
               <div>
                 <div className="flex justify-start mt-4">

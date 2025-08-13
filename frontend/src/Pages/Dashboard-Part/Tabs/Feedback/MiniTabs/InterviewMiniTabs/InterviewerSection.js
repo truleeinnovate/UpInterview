@@ -459,7 +459,7 @@ const InterviewerSectionComponent = ({
         {questionsWithFeedback?.length > 0 ? (
           // Render merged interviewer questions with feedback applied
           questionsWithFeedback.map((question) => (
-             <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
+             <div key={question.questionId || question._id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
            <div className="flex items-start justify-between mb-3">
              <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
                {question.snapshot?.skill || question.category || 'N/A'}
@@ -488,33 +488,35 @@ const InterviewerSectionComponent = ({
                           </button>
                         )}
                         <SharePopupSection />
-                        {(isEditMode || isAddMode) && (
-                          <>
-                            <span
-                              className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                                question.isLiked === "liked" ? "text-green-700" : ""
-                              }`}
-                              onClick={() => handleLikeToggle(question.questionId || question.id)}
-                            >
-                              <SlLike />
-                            </span>
-                            <span
-                              className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                                question.isLiked === "disliked" ? "text-red-500" : ""
-                              }`}
-                              style={{ cursor: "pointer" }}
-                              onClick={() => handleDislikeToggle(question.questionId || question.id)}
-                            >
-                              <SlDislike />
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      {dislikeQuestionId === (question.questionId || question.id) && <DisLikeSection each={question} />}
-                      {question.notesBool && (
+                        {(isEditMode||isViewMode || isAddMode) && (
+                           <>
+                             <span
+                               className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                                 question.isLiked === "liked" ? "text-green-700" : ""
+                               }`}
+                               onClick={() => handleLikeToggle(question.questionId || question._id)}
+                             >
+                               <SlLike />
+                             </span>
+                             <span
+                               className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                                 question.isLiked === "disliked" ? "text-red-500" : ""
+                               }`}
+                               style={{ cursor: "pointer" }}
+                               onClick={() => handleDislikeToggle(question.questionId || question._id)}
+                             >
+                               <SlDislike />
+                             </span>
+                           </>
+                         )}
+                       </div>
+                       {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && (
+                         <DisLikeSection each={question} />
+                       )}
+                       {question.notesBool && (
                         <div>
                         <div className="flex justify-start mt-4">
-                          <label htmlFor={`note-input-${question.questionId || question.id}`} className="w-[200px]">
+                          <label htmlFor={`note-input-${question.questionId}`} className="w-[200px]">
                             Note
                           </label>
                           {(isEditMode || isAddMode) ? (
@@ -522,10 +524,10 @@ const InterviewerSectionComponent = ({
                               <div className="w-full relative mr-5 rounded-md h-[80px]">
                                 <input
                                   className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                                  id={`note-input-${question.questionId || question.id}`}
+                                  id={`note-input-${question.questionId}`}
                                   type="text"
                                   value={question.note}
-                                  onChange={(e) => onChangeInterviewQuestionNotes(question.questionId || question.id, e.target.value.slice(0, 250))}
+                                  onChange={(e) => onChangeInterviewQuestionNotes(question.questionId, e.target.value.slice(0, 250))}
                                   placeholder="Add your note here"
                                 />
                                 <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
@@ -533,7 +535,7 @@ const InterviewerSectionComponent = ({
                                 </span>
                               </div>
                               <button
-                                onClick={() => onClickDeleteNote(question.questionId || question.id)}
+                                onClick={() => onClickDeleteNote(question.questionId)}
                                 className="text-red-500 text-lg mt-2"
                               >
                                 <FaTrash size={20}/>

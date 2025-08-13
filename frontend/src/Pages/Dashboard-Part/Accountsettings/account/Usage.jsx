@@ -69,8 +69,8 @@ const Usage = () => {
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium">Current Period</h3>
         <p className="text-gray-600 mt-2">
-          {usage.period.fromDate || usage.period.toDate ? (
-            `${new Date(usage.period?.fromDate).toLocaleDateString()} to ${new Date(usage.period?.toDate).toLocaleDateString()}`
+          {usage?.period?.fromDate || usage?.period?.toDate ? (
+            `${usage?.period?.fromDate ? new Date(usage.period.fromDate).toLocaleDateString() : '—'} to ${usage?.period?.toDate ? new Date(usage.period.toDate).toLocaleDateString() : '—'}`
           ) : (error || '—')}
         </p>
       </div>
