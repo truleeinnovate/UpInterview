@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Added new schema as commented
 const { ReportTemplate, DashboardConfig, TrendsConfig, SavedQuery } = require('../../models/AnalyticSchemas/reportSchemas');
 const { addTenantFilter, generateTenantScopedId } = require('../../middleware/tenantMiddleware');
 
@@ -484,3 +485,199 @@ module.exports = {
   getSavedQueries,
   saveQuery
 };
+
+
+
+
+
+
+// v1.0.0 <------------------------------------------------NEW SCHEMA-----------------------------------------------------
+// const mongoose = require('mongoose');
+// const { Schema } = mongoose;
+ 
+// // =============================================================================
+// // REPORT TEMPLATE SCHEMA - Customizable report templates per tenant/user
+// // =============================================================================
+// const reportTemplateSchema = new Schema({
+//   templateId: {
+//     type: String,
+//     required: true,
+//     index: true
+//   }, //Unique Auto Genereate No. RT-00001
+//   tenantId: {
+//     type: String,
+//     required: true,
+//     index: true
+//   }, //Organization or Tenant Reference
+//   name: {
+//     type: String,
+//     required: true
+//   }, //All Open Positions
+//   description: String,
+//   type: {
+//     type: String,
+//     enum: ['interview', 'interviewer', 'assessment', 'candidate', 'position','organization', 'dashboard', 'trends', 'custom'],
+//     required: true
+//   },
+//   category: String,
+//   // Template Configuration
+//   configuration: {
+//     // Data Source Settings
+//     dataSource: {
+//       collections: {
+//         type: [String],// Which collections to query: ['candidates', 'interviews', 'assessments']
+//         default: []
+//       }
+//       dateRange: {
+//         type: String,
+//         enum: ['today', 'yesterday', 'last7days', 'last30days', 'last90days', 'thisMonth', 'lastMonth', 'thisYear', 'custom'],
+//         default: 'last30days'
+//       },
+//     },
+//     defaultColumns: [String],
+//     availableColumns: [String],
+//   },
+//   // Template Status and Metadata
+//   status: {
+//     type: String,
+//     enum: ['active', 'draft', 'archived', 'template'],
+//     default: 'draft'
+//   },
+//   // Sharing and Permissions
+//   sharing: {
+//     isPublic: {
+//       type: Boolean,
+//       default: false
+//     },
+//     sharedWith: [{
+//       userId: String,
+//       permission: {
+//         type: String,
+//         enum: ['view', 'edit', 'admin'],
+//         default: 'view'
+//       }
+//     }],
+//     teamAccess: {
+//       type: String,
+//       enum: ['private', 'team', 'organization'],
+//       default: 'private'
+//     }
+//   },
+//   // Usage Statistics
+//   usage: {
+//     lastGenerated: Date,
+//     generationCount: {
+//       type: Number,
+//       default: 0
+//     },
+//     viewCount: {
+//       type: Number,
+//       default: 0
+//     },
+//     favoriteCount: {
+//       type: Number,
+//       default: 0
+//     }
+//   },
+//   createdBy: {
+//     type: String,
+//     required: true // userId who created this template
+//   },
+//   lastModified: Date,
+//   modifiedBy: String,
+//   // Template Tags and Search
+//   tags: [String],
+//   searchKeywords: [String]
+// }, {
+//   timestamps: true
+// });
+ 
+// // Indexes for Report Templates
+// reportTemplateSchema.index({ tenantId: 1, templateId: 1 }, { unique: true });
+// reportTemplateSchema.index({ tenantId: 1, name: 1 });
+// reportTemplateSchema.index({ tenantId: 1, type: 1 });
+// reportTemplateSchema.index({ tenantId: 1, createdBy: 1 });
+// reportTemplateSchema.index({ tenantId: 1, status: 1 });
+// reportTemplateSchema.index({ tenantId: 1, 'sharing.isPublic': 1 });
+ 
+// // =============================================================================
+// // SAVED QUERIES SCHEMA - User's saved custom queries
+// // =============================================================================
+// const savedQuerySchema = new Schema({
+//   tenantId: {
+//     type: String,
+//     required: true,
+//     index: true
+//   },
+//   userId: {
+//     type: String,
+//     required: true,
+//     index: true
+//   },
+//   queryId: {
+//     type: String,
+//     required: true,
+//     index: true
+//   },//Unique Auto Genereate No. RQ-00001
+//   name: {
+//     type: String,
+//     required: true
+//   },
+//   description: String,
+//   // Query Configuration
+//   query: {
+//     collection: {
+//       type: String,
+//       required: true,
+//       enum: ['interviews', 'interviewers', 'assessments', 'candidates', 'organizations']
+//     },
+//     activeColumns: [String],
+//     filters: Schema.Types.Mixed,
+//     aggregation: [{
+//       stage: String,
+//       config: Schema.Types.Mixed
+//     }],
+//     sort: Schema.Types.Mixed,
+//     limit: Number
+//   },
+//   // Visualization Settings
+//   visualization: {
+//     type: {
+//       type: String,
+//       enum: ['table', 'chart', 'kpi', 'list'],
+//       default: 'table'
+//     },
+//     chartType: String, // 'line', 'bar', 'pie', etc.
+//     config: Schema.Types.Mixed
+//   },
+//   // Sharing
+//   isPublic: {
+//     type: Boolean,
+//     default: false
+//   },
+//   sharedWith: [String], // userIds
+//   // Usage
+//   lastExecuted: Date,
+//   executionCount: {
+//     type: Number,
+//     default: 0
+//   },
+//   tags: [String]
+// }, {
+//   timestamps: true
+// });
+ 
+// // Indexes for Saved Queries
+// savedQuerySchema.index({ tenantId: 1, userId: 1 });
+// savedQuerySchema.index({ tenantId: 1, name: 1 });
+// savedQuerySchema.index({ tenantId: 1, queryId: 1 }, { unique: true });
+// savedQuerySchema.index({ tenantId: 1, isPublic: 1 });
+ 
+// // =============================================================================
+// // EXPORT MODELS
+// // =============================================================================
+// module.exports = {
+//   ReportTemplate: mongoose.model('ReportTemplate', reportTemplateSchema),
+//   SavedQuery: mongoose.model('SavedQuery', savedQuerySchema)
+// };
+// // v1.0.0 <--------------------------------------------NEW SCHEMA-------------------------------------------------------->

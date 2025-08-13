@@ -1,16 +1,20 @@
 // ----- v1.0.0 ----- Venkatesh----update LoadingButton colors
+// v1.0.1 - Ashok - fixed z-index issue when popup is open
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+// v1.0.1 <---------------------------------------------
+import { createPortal } from "react-dom";
+// v1.0.1 --------------------------------------------->
 import toast from "react-hot-toast";
-import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import "./subscription-animations.css";
-import { usePositions } from '../../../../../apiHooks/usePositions';
-import { usePermissions } from '../../../../../Context/PermissionsContext';
-import { usePermissionCheck } from '../../../../../utils/permissionUtils';
+import { usePositions } from "../../../../../apiHooks/usePositions";
+import { usePermissions } from "../../../../../Context/PermissionsContext";
+import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 
 // Loading Skeleton for Current Plan Section
 const CurrentPlanSkeleton = () => {
@@ -49,7 +53,11 @@ const SubscriptionPlansSkeleton = () => {
       <div className="skeleton-animation">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {[1, 2, 3].map((plan) => (
-            <div key={plan} className="shadow-lg rounded-3xl bg-white p-6" style={{ minHeight: '420px' }}>
+            <div
+              key={plan}
+              className="shadow-lg rounded-3xl bg-white p-6"
+              style={{ minHeight: "420px" }}
+            >
               {/* Plan header */}
               <div className="flex justify-between items-start mb-4">
                 <div className="h-8 bg-gray-200 rounded w-24"></div>
@@ -82,8 +90,6 @@ const SubscriptionPlansSkeleton = () => {
     </div>
   );
 };
-
-
 
 const Subscription = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -118,31 +124,34 @@ const Subscription = () => {
     const fetchData = async () => {
       try {
         if (!userId) {
-          throw new Error('User ID not found');
+          throw new Error("User ID not found");
         }
-        const Sub_res = await axios.get(`${process.env.REACT_APP_API_URL}/subscriptions/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        });
+        const Sub_res = await axios.get(
+          `${process.env.REACT_APP_API_URL}/subscriptions/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
         const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
-        console.log('Subscription data:', Subscription_data);
+        console.log("Subscription data:", Subscription_data);
 
         if (Subscription_data.subscriptionPlanId) {
           if (!Subscription_data.paymentMethod) {
-            Subscription_data.paymentMethod = 'card';
+            Subscription_data.paymentMethod = "card";
           }
 
           setSubscriptionData(Subscription_data);
 
-          if (Subscription_data.selectedBillingCycle === 'annual') {
+          if (Subscription_data.selectedBillingCycle === "annual") {
             setIsAnnual(true);
-          } else if (Subscription_data.selectedBillingCycle === 'monthly') {
+          } else if (Subscription_data.selectedBillingCycle === "monthly") {
             setIsAnnual(false);
           }
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -158,7 +167,9 @@ const Subscription = () => {
     const fetchPlans = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/all-subscription-plans?t=${new Date().getTime()}`,
+          `${
+            process.env.REACT_APP_API_URL
+          }/all-subscription-plans?t=${new Date().getTime()}`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -194,28 +205,28 @@ const Subscription = () => {
             ),
             monthlyBadge:
               monthlyPricing?.discountType === "percentage" &&
-                monthlyPricing?.discount > 0
+              monthlyPricing?.discount > 0
                 ? `Save ${calculateDiscountPercentage(
-                  monthlyPricing.price,
-                  monthlyPricing.discount
-                )}%`
+                    monthlyPricing.price,
+                    monthlyPricing.discount
+                  )}%`
                 : null,
             annualBadge:
               annualPricing?.discountType === "percentage" &&
-                annualPricing?.discount > 0
+              annualPricing?.discount > 0
                 ? `Save ${calculateDiscountPercentage(
-                  annualPricing.price,
-                  annualPricing.discount
-                )}%`
+                    annualPricing.price,
+                    annualPricing.discount
+                  )}%`
                 : null,
             monthlyDiscount:
               monthlyPricing?.discountType === "percentage" &&
-                monthlyPricing?.discount > 0
+              monthlyPricing?.discount > 0
                 ? parseInt(monthlyPricing.discount)
                 : null,
             annualDiscount:
               annualPricing?.discountType === "percentage" &&
-                annualPricing?.discount > 0
+              annualPricing?.discount > 0
                 ? parseInt(annualPricing?.discount)
                 : null,
           };
@@ -233,7 +244,9 @@ const Subscription = () => {
     try {
       setLoading(true);
       setShowCancelModal(false);
-      toast.loading('Processing your cancellation request...', { id: 'cancel-toast' });
+      toast.loading("Processing your cancellation request...", {
+        id: "cancel-toast",
+      });
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/cancel-subscription`,
         {
@@ -241,20 +254,22 @@ const Subscription = () => {
           razorpaySubscriptionId: subscriptionData.razorpaySubscriptionId,
           tenantId: user.tenantId,
           ownerId: user.ownerId,
-          reason: 'user_requested'
+          reason: "user_requested",
         },
         {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         }
       );
 
-      toast.dismiss('cancel-toast');
+      toast.dismiss("cancel-toast");
 
       if (response.status === 200) {
-        toast.success('Your subscription has been cancelled successfully!');
-        toast.loading('Refreshing subscription data...', { id: 'refresh-toast' });
+        toast.success("Your subscription has been cancelled successfully!");
+        toast.loading("Refreshing subscription data...", {
+          id: "refresh-toast",
+        });
         setTimeout(() => {
-          toast.dismiss('refresh-toast');
+          toast.dismiss("refresh-toast");
           window.location.reload();
         }, 4000);
         // send email for subscription cancelled
@@ -264,8 +279,10 @@ const Subscription = () => {
         // });
       }
     } catch (error) {
-      console.error('Error cancelling subscription:', error);
-      toast.error(error.response?.data?.message || 'Failed to cancel subscription');
+      console.error("Error cancelling subscription:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to cancel subscription"
+      );
     } finally {
       setLoading(false);
     }
@@ -274,7 +291,9 @@ const Subscription = () => {
   const updateSubscriptionPlan = async (plan) => {
     try {
       setLoading(true);
-      toast.loading('Updating your subscription plan...', { id: 'update-toast' });
+      toast.loading("Updating your subscription plan...", {
+        id: "update-toast",
+      });
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/update-subscription-plan`,
         {
@@ -286,23 +305,27 @@ const Subscription = () => {
           ownerId: user.ownerId,
         },
         {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         }
       );
 
-      toast.dismiss('update-toast');
+      toast.dismiss("update-toast");
 
       if (response.status === 200) {
-        toast.success('Your subscription plan has been updated successfully!');
-        toast.loading('Refreshing subscription data...', { id: 'refresh-toast' });
+        toast.success("Your subscription plan has been updated successfully!");
+        toast.loading("Refreshing subscription data...", {
+          id: "refresh-toast",
+        });
         setTimeout(() => {
-          toast.dismiss('refresh-toast');
+          toast.dismiss("refresh-toast");
           window.location.reload();
         }, 4000);
       }
     } catch (error) {
-      console.error('Error updating subscription plan:', error);
-      toast.error(error.response?.data?.message || 'Failed to update subscription plan');
+      console.error("Error updating subscription plan:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to update subscription plan"
+      );
     } finally {
       setLoading(false);
     }
@@ -311,36 +334,48 @@ const Subscription = () => {
   const submitPlans = async (plan) => {
     setLoadingPlanId(plan.planId);
     try {
-      if (subscriptionData.subscriptionPlanId === plan.planId &&
-        subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") &&
-        subscriptionData.status === "active") {
+      if (
+        subscriptionData.subscriptionPlanId === plan.planId &&
+        subscriptionData.selectedBillingCycle ===
+          (isAnnual ? "annual" : "monthly") &&
+        subscriptionData.status === "active"
+      ) {
         return; // Already subscribed to this plan
       }
 
-      if (subscriptionData.subscriptionPlanId === plan.planId &&
-        subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") &&
-        subscriptionData.status === "created") {
+      if (
+        subscriptionData.subscriptionPlanId === plan.planId &&
+        subscriptionData.selectedBillingCycle ===
+          (isAnnual ? "annual" : "monthly") &&
+        subscriptionData.status === "created"
+      ) {
         // Continue to payment for existing subscription
-        navigate('/account-settings/subscription/card-details', {
+        navigate("/account-settings/subscription/card-details", {
           state: {
             plan: {
               ...plan,
               billingCycle: isAnnual ? "annual" : "monthly",
-              user: user
+              user: user,
             },
-            isUpgrading: false
-          }
+            isUpgrading: false,
+          },
         });
         return;
       }
 
       // Check if this is an upgrade
       if (subscriptionData.subscriptionPlanId) {
-        const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
-        const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
+        const currentPlanIndex = plans.findIndex(
+          (p) => p.planId === subscriptionData.subscriptionPlanId
+        );
+        const thisPlanIndex = plans.findIndex((p) => p.planId === plan.planId);
 
-        if (currentPlanIndex !== -1 && thisPlanIndex > currentPlanIndex &&
-          subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly")) {
+        if (
+          currentPlanIndex !== -1 &&
+          thisPlanIndex > currentPlanIndex &&
+          subscriptionData.selectedBillingCycle ===
+            (isAnnual ? "annual" : "monthly")
+        ) {
           // This is an upgrade
           setSelectedPlanForUpgrade(plan);
           setShowUpgradeConfirmModal(true);
@@ -349,19 +384,19 @@ const Subscription = () => {
       }
 
       // New subscription or different billing cycle
-      navigate('/account-settings/subscription/card-details', {
+      navigate("/account-settings/subscription/card-details", {
         state: {
           plan: {
             ...plan,
             billingCycle: isAnnual ? "annual" : "monthly",
-            user: user
+            user: user,
           },
-          isUpgrading: false
-        }
+          isUpgrading: false,
+        },
       });
     } catch (error) {
-      console.error('Error submitting plan:', error);
-      toast.error('Failed to process plan selection');
+      console.error("Error submitting plan:", error);
+      toast.error("Failed to process plan selection");
     } finally {
       setLoadingPlanId(null);
     }
@@ -374,20 +409,24 @@ const Subscription = () => {
     <>
       <div className="space-y-6 sm:mt-10 md:mt-20">
         {/* Hidden element for Razorpay */}
-        <div id="razorpay-card-update" style={{ display: 'none' }}></div>
+        <div id="razorpay-card-update" style={{ display: "none" }}></div>
 
         {/* Header Section - Always visible */}
         <div className="flex-1">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Subscription</h2>
-            {!loading && subscriptionData && subscriptionData.status === 'active' && ((organization !== "false" || subscriptionData.planName !== "Base")) && (
-              <button
-                onClick={() => setShowCancelModal(true)}
-                className={`bg-custom-blue hover:bg-custom-blue/80 py-2 px-4 rounded-lg text-white`}
-              >
-                Cancel Subscription
-              </button>
-            )}
+            {!loading &&
+              subscriptionData &&
+              subscriptionData.status === "active" &&
+              (organization !== "false" ||
+                subscriptionData.planName !== "Base") && (
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className={`bg-custom-blue hover:bg-custom-blue/80 py-2 px-4 rounded-lg text-white`}
+                >
+                  Cancel Subscription
+                </button>
+              )}
           </div>
         </div>
 
@@ -401,12 +440,25 @@ const Subscription = () => {
               <div>
                 <h3 className="text-base sm:text-lg md:text-xl font-medium">{`Current Plan: ${subscriptionData.planName} (${subscriptionData.selectedBillingCycle})`}</h3>
                 <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                  Next billing date: {subscriptionData.nextBillingDate ? new Date(subscriptionData.nextBillingDate).toLocaleDateString() : "N/A"}
+                  Next billing date:{" "}
+                  {subscriptionData.nextBillingDate
+                    ? new Date(
+                        subscriptionData.nextBillingDate
+                      ).toLocaleDateString()
+                    : "N/A"}
                 </p>
               </div>
-              <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${subscriptionData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                {subscriptionData.status ? subscriptionData.status.charAt(0).toUpperCase() + subscriptionData.status.slice(1) : "inactive"}
+              <span
+                className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${
+                  subscriptionData.status === "active"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
+                {subscriptionData.status
+                  ? subscriptionData.status.charAt(0).toUpperCase() +
+                    subscriptionData.status.slice(1)
+                  : "inactive"}
               </span>
             </div>
           </div>
@@ -418,22 +470,32 @@ const Subscription = () => {
         ) : (
           <div className="flex justify-center items-center space-x-2 mb-16">
             <p
-              className={`text-custom-blue ${!isAnnual ? "font-semibold text-base sm:text-lg md:text-xl" : "font-medium text-sm sm:text-base md:text-lg"}`}
+              className={`text-custom-blue ${
+                !isAnnual
+                  ? "font-semibold text-base sm:text-lg md:text-xl"
+                  : "font-medium text-sm sm:text-base md:text-lg"
+              }`}
             >
               Bill Monthly
             </p>
             <div
               onClick={toggleBilling}
-              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${isAnnual ? "bg-[#217989]" : "bg-[#217989]"
-                }`}
+              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+                isAnnual ? "bg-[#217989]" : "bg-[#217989]"
+              }`}
             >
               <div
-                className={`w-4 h-4 rounded-full shadow-md transform transition-all ${isAnnual ? "translate-x-6 bg-white" : "translate-x-0 bg-white"
-                  }`}
+                className={`w-4 h-4 rounded-full shadow-md transform transition-all ${
+                  isAnnual ? "translate-x-6 bg-white" : "translate-x-0 bg-white"
+                }`}
               ></div>
             </div>
             <p
-              className={`text-[#217989] ${isAnnual ? "font-semibold text-base sm:text-lg md:text-xl" : "font-medium text-sm sm:text-base md:text-lg"}`}
+              className={`text-[#217989] ${
+                isAnnual
+                  ? "font-semibold text-base sm:text-lg md:text-xl"
+                  : "font-medium text-sm sm:text-base md:text-lg"
+              }`}
             >
               Bill Annually
             </p>
@@ -449,38 +511,39 @@ const Subscription = () => {
               {plans.map((plan) => (
                 <div
                   key={plan.name}
-                  className={`shadow-lg rounded-3xl relative transition-all duration-300 p-6 ${isHighlighted(plan)
-                    ? "-translate-y-2 md:-translate-y-4 lg:-translate-y-6 xl:-translate-y-6 2xl:-translate-y-6 z-10 bg-[#217989] text-white transform scale-[1.02]"
-                    : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
-                    }`}
+                  className={`shadow-lg rounded-3xl relative transition-all duration-300 p-6 ${
+                    isHighlighted(plan)
+                      ? "-translate-y-2 md:-translate-y-4 lg:-translate-y-6 xl:-translate-y-6 2xl:-translate-y-6 z-10 bg-[#217989] text-white transform scale-[1.02]"
+                      : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
+                  }`}
                   onMouseEnter={() => setHoveredPlan(plan.name)}
                   onMouseLeave={() => setHoveredPlan(null)}
                   style={{
-                    minHeight: '420px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between'
+                    minHeight: "420px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
                   }}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <h5
-                      className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"}`}
+                      className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                        isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                      }`}
                     >
                       {plan.name}
                     </h5>
-                    {isAnnual ? (
-                      plan.annualBadge && (
-                        <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
-                          {plan.annualBadge}
-                        </span>
-                      )
-                    ) : (
-                      plan.monthlyBadge && (
-                        <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
-                          {plan.monthlyBadge}
-                        </span>
-                      )
-                    )}
+                    {isAnnual
+                      ? plan.annualBadge && (
+                          <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
+                            {plan.annualBadge}
+                          </span>
+                        )
+                      : plan.monthlyBadge && (
+                          <span className="bg-white text-purple-600 font-semibold text-sm py-1 px-2 rounded-md">
+                            {plan.monthlyBadge}
+                          </span>
+                        )}
                   </div>
                   <div className="flex-grow mt-4">
                     <ul className="space-y-2 text-xs sm:text-sm md:text-base lg:text-lg">
@@ -496,72 +559,129 @@ const Subscription = () => {
                     <p className="text-2xl sm:text-3xl md:text-4xl font-bold">
                       <span className="text-lg sm:text-xl md:text-2xl">$</span>
                       {isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                      <span className="text-sm sm:text-base md:text-lg font-medium"> /{isAnnual ? "year" : "month"}</span>
+                      <span className="text-sm sm:text-base md:text-lg font-medium">
+                        {" "}
+                        /{isAnnual ? "year" : "month"}
+                      </span>
                     </p>
                   </div>
-                  
+
                   <button
-                onClick={() => submitPlans(plan)}
-                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
-                ${isHighlighted(plan) ? "bg-white text-custom-blue" : "text-white bg-custom-blue"}
-                ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}
+                    onClick={() => submitPlans(plan)}
+                    className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
+                ${
+                  isHighlighted(plan)
+                    ? "bg-white text-custom-blue"
+                    : "text-white bg-custom-blue"
+                }
+                ${
+                  subscriptionData.subscriptionPlanId === plan.planId &&
+                  subscriptionData.selectedBillingCycle ===
+                    (isAnnual ? "annual" : "monthly") &&
+                  subscriptionData.status === "active"
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }
                 ${(() => {
                   // Check if this is an upgrade button
                   if (subscriptionData.subscriptionPlanId) {
-                    const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
-                    const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
-                    if (currentPlanIndex !== -1 && thisPlanIndex > currentPlanIndex && 
-                        subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly")) {
+                    const currentPlanIndex = plans.findIndex(
+                      (p) => p.planId === subscriptionData.subscriptionPlanId
+                    );
+                    const thisPlanIndex = plans.findIndex(
+                      (p) => p.planId === plan.planId
+                    );
+                    if (
+                      currentPlanIndex !== -1 &&
+                      thisPlanIndex > currentPlanIndex &&
+                      subscriptionData.selectedBillingCycle ===
+                        (isAnnual ? "annual" : "monthly")
+                    ) {
                       return "upgrade-button-animation";
                     }
                   }
                   return "";
                 })()}`}
-                disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"}
-              >
-                {loadingPlanId === plan.planId ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "active"
-                ? "Subscribed"
-                : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.selectedBillingCycle === (isAnnual ? "annual" : "monthly") && subscriptionData.status === "created"
-                ? "Continue to Payment"
-                : (() => {
-                    // Determine if this plan is higher or lower than current plan
-                    if (subscriptionData.subscriptionPlanId) {
-                      const currentPlanIndex = plans.findIndex(p => p.planId === subscriptionData.subscriptionPlanId);
-                      const thisPlanIndex = plans.findIndex(p => p.planId === plan.planId);
-                      
-                      // Only compare plans when viewing the same billing cycle as the current subscription
-                      if (subscriptionData.selectedBillingCycle !== (isAnnual ? "annual" : "monthly")) {
-                        return "Choose";
-                      }
-                      
-                      // If current plan index exists and this plan index exists
-                      if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
-                        return thisPlanIndex > currentPlanIndex ? "Upgrade" : "Choose";
-                      }
+                    disabled={
+                      subscriptionData.subscriptionPlanId === plan.planId &&
+                      subscriptionData.selectedBillingCycle ===
+                        (isAnnual ? "annual" : "monthly") &&
+                      subscriptionData.status === "active"
                     }
-                    return "Choose";
-                  })()
-                )}
-              </button>
+                  >
+                    {loadingPlanId === plan.planId ? (
+                      <span className="flex items-center justify-center">
+                        <svg
+                          className="animate-spin h-5 w-5 mr-2"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Processing...
+                      </span>
+                    ) : subscriptionData.subscriptionPlanId === plan.planId &&
+                      subscriptionData.selectedBillingCycle ===
+                        (isAnnual ? "annual" : "monthly") &&
+                      subscriptionData.status === "active" ? (
+                      "Subscribed"
+                    ) : subscriptionData.subscriptionPlanId === plan.planId &&
+                      subscriptionData.selectedBillingCycle ===
+                        (isAnnual ? "annual" : "monthly") &&
+                      subscriptionData.status === "created" ? (
+                      "Continue to Payment"
+                    ) : (
+                      (() => {
+                        // Determine if this plan is higher or lower than current plan
+                        if (subscriptionData.subscriptionPlanId) {
+                          const currentPlanIndex = plans.findIndex(
+                            (p) =>
+                              p.planId === subscriptionData.subscriptionPlanId
+                          );
+                          const thisPlanIndex = plans.findIndex(
+                            (p) => p.planId === plan.planId
+                          );
 
+                          // Only compare plans when viewing the same billing cycle as the current subscription
+                          if (
+                            subscriptionData.selectedBillingCycle !==
+                            (isAnnual ? "annual" : "monthly")
+                          ) {
+                            return "Choose";
+                          }
+
+                          // If current plan index exists and this plan index exists
+                          if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
+                            return thisPlanIndex > currentPlanIndex
+                              ? "Upgrade"
+                              : "Choose";
+                          }
+                        }
+                        return "Choose";
+                      })()
+                    )}
+                  </button>
                 </div>
               ))}
             </div>
           </div>
         )}
-
       </div>
       {/* Cancel Subscription Modal */}
-      {showCancelModal && (
+      {/* v1.0.1 <---------------------------------------------------------------------- */}
+      {/* {showCancelModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h2 className="text-xl font-semibold mb-4 text-custom-blue">Cancel Subscription</h2>
@@ -589,18 +709,62 @@ const Subscription = () => {
             </div>
           </div>
         </div>
-      )}
-
+      )} */}
+      {showCancelModal &&
+        createPortal(
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h2 className="text-xl font-semibold mb-4 text-custom-blue">
+                Cancel Subscription
+              </h2>
+              <p className="mb-4 text-sm sm:text-base text-gray-600">
+                Are you sure you want to cancel your{" "}
+                <span className="font-medium">
+                  {subscriptionData?.planName || "current"} with{" "}
+                  {subscriptionData?.membershipType || "monthly"}
+                </span>{" "}
+                subscription?
+              </p>
+              <p className="mb-6 text-sm sm:text-base text-gray-600">
+                Your subscription will be cancelled immediately and you will
+                lose access to premium features.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
+                  disabled={loading}
+                >
+                  Keep Subscription
+                </button>
+                <button
+                  onClick={handleCancelSubscription}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-150"
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : "Cancel Subscription"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      {/* v1.0.1 ----------------------------------------------------------------------> */}
       {/* Upgrade Confirmation Modal */}
       {showUpgradeConfirmModal && selectedPlanForUpgrade && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-xl font-semibold mb-4 text-custom-blue">Upgrade Subscription</h2>
+            <h2 className="text-xl font-semibold mb-4 text-custom-blue">
+              Upgrade Subscription
+            </h2>
             <p className="mb-4 text-sm sm:text-base text-gray-600">
-              Are you sure you want to upgrade to <span className="font-medium">{selectedPlanForUpgrade.name}</span>?
+              Are you sure you want to upgrade to{" "}
+              <span className="font-medium">{selectedPlanForUpgrade.name}</span>
+              ?
             </p>
             <p className="mb-6 text-sm sm:text-base text-gray-600">
-              Your subscription will be upgraded and you will be charged the difference.
+              Your subscription will be upgraded and you will be charged the
+              difference.
             </p>
             <div className="flex justify-end space-x-4">
               <button

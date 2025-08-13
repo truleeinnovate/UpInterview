@@ -20,9 +20,6 @@ import { format, isValid } from "date-fns";
 import NotificationDetailsModal from "./NotificationDetailsModal";
 import Modal from "react-modal";
 import classNames from "classnames";
-// v1.0.0 <---------------------------------------------
-import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
-// v1.0.0 --------------------------------------------->
 
 const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,10 +29,6 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   // const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState("all"); // 'all', 'email', or 'whatsapp'
-
-  // v1.0.0 <--------------------------------------------------------
-  useScrollLock(isOpen);
-  // v1.0.0 -------------------------------------------------------->
 
   // Check if notifications is properly structured
   const hasEmailProperty = notifications && Array.isArray(notifications.email);
@@ -474,12 +467,15 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
           </div>
         </div>
       </Modal>
-
-      <NotificationDetailsModal
-        isOpen={!!selectedNotification}
-        onClose={() => setSelectedNotification(null)}
-        notification={selectedNotification}
-      />
+      {/* v1.0.1 <------------------------------------------------------------- */}
+      <div>
+        <NotificationDetailsModal
+          isOpen={!!selectedNotification}
+          onClose={() => setSelectedNotification(null)}
+          notification={selectedNotification}
+        />
+      </div>
+      {/* v1.0.1 -------------------------------------------------------------> */}
     </>
   );
 };
