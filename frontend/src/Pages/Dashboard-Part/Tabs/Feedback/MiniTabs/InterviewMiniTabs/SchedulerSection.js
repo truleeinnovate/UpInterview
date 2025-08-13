@@ -136,6 +136,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle dislike toggle
   const handleDislikeToggle = (id) => {
+    if (isViewMode) return;
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
     else setDislikeQuestionId(id);
     setSchedulerQuestionsData((prev) =>
@@ -155,6 +156,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle like toggle
   const handleLikeToggle = (id) => {
+    if (isViewMode) return;
     setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
         q._id === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q

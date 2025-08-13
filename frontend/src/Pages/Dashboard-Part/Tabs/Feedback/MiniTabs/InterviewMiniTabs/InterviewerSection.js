@@ -329,6 +329,7 @@ const InterviewerSectionComponent = ({
      };
    
      const handleDislikeToggle = (id) => {
+       if (isViewMode) return;
        if (dislikeQuestionId === id) setDislikeQuestionId(null);
        else setDislikeQuestionId(id);
        setInterviewerSectionData((prev) =>
@@ -339,6 +340,7 @@ const InterviewerSectionComponent = ({
      };
    
      const handleLikeToggle = (id) => {
+       if (isViewMode) return;
        setInterviewerSectionData((prev) =>
          prev.map((q) =>
            (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
@@ -447,7 +449,7 @@ const InterviewerSectionComponent = ({
               The questions listed below are interviewer's choice.
             </p>
           </div>
-                     {(isAddMode && !decodedData.schedule) && (
+                     {(isAddMode && !decodedData?.schedule) && (
              <div className="flex items-center gap-2">
                <button
                  className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
@@ -493,10 +495,10 @@ const InterviewerSectionComponent = ({
                           </button>
                         )}
                         <SharePopupSection />
-                        {(isEditMode||isViewMode || isAddMode) && (
+                        {(isEditMode|| isViewMode || isAddMode) && (
                            <>
                              <span
-                               className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                               className={`transition-transform hover:scale-110 duration-300 ease-in-out  ${
                                  question.isLiked === "liked" ? "text-green-700" : ""
                                }`}
                                onClick={() => handleLikeToggle(question.questionId || question._id)}
