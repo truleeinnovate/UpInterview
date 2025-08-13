@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Added optional chaining (ex. property?.value)
 
 /* eslint-disable react-hooks/exhaustive-deps */
+//<----v1.0.0---Venkatesh---add loading skelton view and api loading issues solved
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -19,15 +20,29 @@ const Usage = () => {
   const { effectivePermissions } = usePermissions();
 
   // Local state for usage API
-  const [usage, setUsage] = useState(null);
+  const [usage, setUsage] = useState({});
+  console.log("usage--",usage)
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Fetch usage when permissions are ready
   useEffect(() => {
-    if (!isInitialized || !checkPermission("Usage")) return;
+    // Wait until permissions are initialized
+    if (!isInitialized) return;
+
+    // Ensure the user has access to Usage
+    if (!checkPermission("Usage")) return;
+
+    // Guard: tenantId must be available to build the API URL
+    if (!tenantId) {
+      console.warn("Usage: tenantId is missing; skipping fetch");
+      setError("Missing tenant information");
+      return;
+    }
 
     const fetchUsage = async () => {
       try {
+        setLoading(true);
         setError(null);
         const url = `${process.env.REACT_APP_API_URL}/usage/${tenantId}`;
 
@@ -43,14 +58,46 @@ const Usage = () => {
       } catch (err) {
         console.error('Error fetching usage:', err);
         setError('Failed to load usage');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUsage();
-  }, [tenantId]);
+  }, [isInitialized, effectivePermissions, authToken, tenantId]);
 
-  // Permission check after all hooks
-  if (!isInitialized || !checkPermission("Usage")) {
+  // Loading skeleton view (initializing or fetching)
+  if (!isInitialized || loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 w-48 bg-gray-200 rounded" />
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="h-5 w-40 bg-gray-200 rounded" />
+          <div className="mt-3 h-4 w-64 bg-gray-200 rounded" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1,2,3].map((i) => (
+            <div key={i} className="bg-white p-6 rounded-lg shadow">
+              <div className="h-5 w-36 bg-gray-200 rounded" />
+              <div className="mt-3 h-4 w-full bg-gray-200 rounded" />
+              <div className="mt-2 h-2 w-full bg-gray-200 rounded-full" />
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
+          <div className="h-4 w-80 bg-gray-200 rounded mb-3" />
+          <div className="h-2 w-full bg-gray-200 rounded-full" />
+        </div>
+      </div>
+    );
+  }
+
+  // Permission check after initialization
+  if (!checkPermission("Usage")) {
     return null;
   }
 
@@ -73,7 +120,11 @@ const Usage = () => {
         <h3 className="text-lg font-medium">Current Period</h3>
         <p className="text-gray-600 mt-2">
           {usage?.period?.fromDate || usage?.period?.toDate ? (
+
             `${new Date(usage?.period?.fromDate)?.toLocaleDateString()} to ${new Date(usage?.period?.toDate)?.toLocaleDateString()}`
+
+//             `${usage?.period?.fromDate ? new Date(usage.period.fromDate).toLocaleDateString() : '—'} to ${usage?.period?.toDate ? new Date(usage.period.toDate).toLocaleDateString() : '—'}`
+
           ) : (error || '—')}
         </p>
       </div>
@@ -207,3 +258,5 @@ const Usage = () => {
 }
 
 export default Usage
+
+//-----v1.0.0-------->

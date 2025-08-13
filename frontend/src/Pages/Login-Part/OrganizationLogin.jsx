@@ -266,35 +266,12 @@ const OrganizationLogin = () => {
         return;
       }
 
-      // Step 6: Get returnUrl early
-      const query = new URLSearchParams(location.search);
-      const returnUrl = query.get('returnUrl');
-      let finalRedirectUrl = null;
-
-      if (returnUrl) {
-        let decodedReturnUrl = decodeURIComponent(returnUrl);
-        let returnUrlObj = new URL(decodedReturnUrl);
-
-        // If subdomain redirect needed, reconstruct returnUrl on subdomain
-        if (subdomain && subdomainStatus === 'active') {
-          const currentDomain = window.location.hostname;
-          if (!currentDomain.includes(subdomain)) {
-            decodedReturnUrl = `${window.location.protocol}//${subdomain}.app.upinterview.io${returnUrlObj.pathname}${returnUrlObj.search}`;
-            returnUrlObj = new URL(decodedReturnUrl); // Update obj
-          }
-        }
-
-        // Validate the (possibly reconstructed) returnUrl
-        if (returnUrlObj.hostname.endsWith('.app.upinterview.io')) { // Allow subdomains
-          finalRedirectUrl = decodedReturnUrl;
-        } else {
-          console.warn('Invalid returnUrl domain, falling back to default navigation');
-        }
-      }
-
-      // Step 7: Handle subdomain redirect (only if no returnUrl or invalid)
-      if (!finalRedirectUrl && subdomain && subdomainStatus === 'active') {
+      // Step 6: Check subdomain and handle subdomain routing
+      if (subdomain && subdomainStatus === 'active') {
         const currentDomain = window.location.hostname;
+        const targetDomain = `${subdomain}.app.upinterview.io`;
+
+        // Check if we need to redirect to subdomain
         if (!currentDomain.includes(subdomain)) {
           const protocol = window.location.protocol;
 
@@ -308,23 +285,45 @@ const OrganizationLogin = () => {
             targetPath = '/create-profile';
           }
 
-          finalRedirectUrl = `${protocol}//${subdomain}.app.upinterview.io${targetPath}`;
+          const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
+
+          // Wait for data to be loaded in the home page
+          await new Promise(resolve => setTimeout(resolve, 4000));
+          window.location.href = targetUrl;
+          return;
         }
       }
 
-      // Step 8: Refresh permissions
+      // Step 7: Refresh permissions for non-subdomain cases
       await refreshPermissions();
 
-      // Step 9: Redirect to final URL (returnUrl or subdomain or default)
-      if (finalRedirectUrl) {
-        // Increased delay for cookie sync
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        console.log('Redirecting to:', finalRedirectUrl);
-        window.location.href = finalRedirectUrl;
-        return;
+      // Step 8: Check for returnUrl parameter and redirect accordingly
+      const query = new URLSearchParams(location.search);
+      const returnUrl = query.get('returnUrl');
+      
+      if (returnUrl) {
+        try {
+          const decodedReturnUrl = decodeURIComponent(returnUrl);
+          console.log('Redirecting to returnUrl:', decodedReturnUrl);
+          
+          // Validate the returnUrl is from the same domain for security
+          const returnUrlObj = new URL(decodedReturnUrl);
+          const currentDomain = window.location.hostname;
+          
+          if (returnUrlObj.hostname === currentDomain || returnUrlObj.hostname.endsWith('.app.upinterview.io')) {
+            // Wait for data to be ready before redirecting
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            window.location.href = decodedReturnUrl;
+            return;
+          } else {
+            console.warn('Invalid returnUrl domain, falling back to default navigation');
+          }
+        } catch (error) {
+          console.error('Error processing returnUrl:', error);
+        }
       }
 
-      // Step 10: Handle default navigation based on user status (no returnUrl, no subdomain redirect)
+      // Step 9: Handle navigation based on user status (default navigation)
       switch (status) {
         case 'submitted':
         case 'payment_pending':
@@ -337,8 +336,8 @@ const OrganizationLogin = () => {
               state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg },
             });
           } else {
-            // Increased delay for data readiness
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            // Wait for data to be ready before navigating to home
+            await new Promise(resolve => setTimeout(resolve, 4000));
             navigate('/home');
           }
           break;

@@ -138,11 +138,11 @@ function OutsourcedInterviewerModal({
               // console.log("No skills to match against, including all interviewers");
               return true;
             }
-            
+
             if (interviewerSkills.length === 0) {
               // console.log("Interviewer has no skills, excluding");
               return false;
-          }
+            }
 
             // Convert all skills to lowercase for case-insensitive comparison
             const interviewerSkillsLower = interviewerSkills.map(skill => skill.toLowerCase());
@@ -335,17 +335,26 @@ function OutsourcedInterviewerModal({
     setFilteredInterviewers(filtered);
   }, [searchTerm, rateRange, baseInterviewers]);
 
-  const handleSelectClick = (interviewer) => {
-    console.log("Selected or removed interviewer:", interviewer);
+  // const handleSelectClick = (interviewer) => {
+  //   console.log("Selected or removed interviewer:", interviewer);
 
+  //   setSelectedInterviewersLocal((prev) => {
+  //     const isAlreadySelected = prev.some((selected) => selected._id === interviewer._id);
+
+  //     if (isAlreadySelected) {
+  //       return prev.filter((selected) => selected._id !== interviewer._id);
+  //     } else {
+  //       return [...prev, interviewer];
+  //     }
+  //   });
+  // };
+
+  const handleSelectClick = (interviewer) => {
     setSelectedInterviewersLocal((prev) => {
       const isAlreadySelected = prev.some((selected) => selected._id === interviewer._id);
-
-      if (isAlreadySelected) {
-        return prev.filter((selected) => selected._id !== interviewer._id);
-      } else {
-        return [...prev, interviewer];
-      }
+      return isAlreadySelected
+        ? prev.filter((selected) => selected._id !== interviewer._id)
+        : [...prev, interviewer];
     });
   };
 
@@ -370,7 +379,7 @@ function OutsourcedInterviewerModal({
           {/* Fixed Header */}
           {/* <------------------------------- v1.0.0  */}
           <div className="flex justify-between items-center px-5 py-4 bg-white z-10">
-          {/* ------------------------------ v1.0.0 > */}
+            {/* ------------------------------ v1.0.0 > */}
             <div>
               <h2 className="text-2xl font-semibold text-custom-blue">Select Outsourced Interviewers</h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -402,7 +411,7 @@ function OutsourcedInterviewerModal({
           {/* Fixed Search and Info Section */}
           {/* <------------------------------- v1.0.0  */}
           <div className="px-6 py-4 bg-white z-10">
-          {/* ------------------------------ v1.0.0 > */}
+            {/* ------------------------------ v1.0.0 > */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <div className="flex items-start space-x-3 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                 <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
@@ -484,11 +493,19 @@ function OutsourcedInterviewerModal({
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className={`grid gap-4 ${isFullscreen ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3' : 'grid-cols-1'}`}>
               {filteredInterviewers.map((interviewer) => (
+                // <OutsourcedInterviewerCard
+                //   key={interviewer._id}
+                //   interviewer={interviewer}
+                //   // isSelected={selectedInterviewersLocal.some(sel => sel._id === interviewer._id)}
+                //   isSelected={selectedInterviewer?._id === interviewer._id}
+                //   onSelect={() => handleSelectClick(interviewer)}
+                //   onViewDetails={() => setSelectedInterviewer(interviewer)}
+                //   navigatedfrom={navigatedfrom}
+                // />
                 <OutsourcedInterviewerCard
                   key={interviewer._id}
                   interviewer={interviewer}
-                  // isSelected={selectedInterviewersLocal.some(sel => sel._id === interviewer._id)}
-                  isSelected={selectedInterviewer?._id === interviewer._id}
+                  isSelected={selectedInterviewersLocal.some(sel => sel._id === interviewer._id)}
                   onSelect={() => handleSelectClick(interviewer)}
                   onViewDetails={() => setSelectedInterviewer(interviewer)}
                   navigatedfrom={navigatedfrom}
@@ -504,7 +521,7 @@ function OutsourcedInterviewerModal({
 
           {/* Fixed Footer (Hidden when navigatedfrom is 'dashboard') */}
           {navigatedfrom !== 'dashboard' && (
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end">
+            <div className="sticky bottom-0 bg-white p-4 flex justify-end">
               <button
                 onClick={handleProceed}
                 disabled={selectedInterviewersLocal.length === 0}
