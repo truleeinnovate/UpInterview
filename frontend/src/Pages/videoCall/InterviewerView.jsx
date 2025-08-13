@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';
-import { mockData } from './mockData';
+import {  User, MessageSquare, FileText } from 'lucide-react';
+
 // import CandidateDetails from './CandidateDetails';
 import CandidateMiniTab from '../Dashboard-Part/Tabs/Feedback/MiniTabs/Candidate'
-import InterviewQuestions from './InterviewQuestions';
+
 import FeedbackForm from './FeedbackForm';
-import FeedbackManagement from './FeedbackManagement';
+
 import InterviewsMiniTabComponent from '../Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews';
 
 const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feedbackError}) => {
@@ -25,23 +25,54 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
-      setInterviewerSectionData((prevList) => {
-        if (prevList.some((q) => q.questionId === question.questionId)) {
-          return prevList;
-        }
-        return [
-          ...prevList,
-          {
-            ...question,
-            mandatory: "false", // Default to false when adding a new question
-            snapshot: {
-              ...question.snapshot,
-              mandatory: "false"
-            }
-          },
-        ]; // Add new question
-      });
+      if (typeof setInterviewerSectionData === 'function') {
+        setInterviewerSectionData((prevList) => {
+          if (prevList.some((q) => q.questionId === question.questionId)) {
+            return prevList;
+          }
+          const newList = [
+            ...prevList,
+            {
+              ...question,
+              addedBy: 'interviewer',
+              mandatory: "false", // Default to false when adding a new question
+              snapshot: {
+                ...question.snapshot,
+                addedBy: 'interviewer',
+                mandatory: "false"
+              }
+            },
+          ];
+
+          // Clear questions error if questions are added
+          // if (newList.length > 0) {
+          //   clearError('questions');
+          // }
+
+          return newList;
+        });
+      } else {
+        console.warn('setInterviewerSectionData is not a function, cannot add question to round');
+      }
     }
+    // if (question && question.questionId && question.snapshot) {
+    //   setInterviewerSectionData((prevList) => {
+    //     if (prevList.some((q) => q.questionId === question.questionId)) {
+    //       return prevList;
+    //     }
+    //     return [
+    //       ...prevList,
+    //       {
+    //         ...question,
+    //         mandatory: "false", // Default to false when adding a new question
+    //         snapshot: {
+    //           ...question.snapshot,
+    //           mandatory: "false"
+    //         }
+    //       },
+    //     ]; // Add new question
+    //   });
+    // }
   };
 
   const handleRemoveQuestion = (questionId) => {

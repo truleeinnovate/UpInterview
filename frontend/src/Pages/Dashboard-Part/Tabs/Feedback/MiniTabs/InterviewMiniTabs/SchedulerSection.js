@@ -25,7 +25,8 @@ const SchedulerSectionComponent = ({
   isViewMode,
   preselectedQuestionsResponses,
   setPreselectedQuestionsResponses,
-  handlePreselectedQuestionResponse
+  handlePreselectedQuestionResponse,
+  
 }) => {
 
   const location = useLocation();

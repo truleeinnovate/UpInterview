@@ -53,6 +53,7 @@ const InterviewsMiniTabComponent = ({
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
   const { SchedulerSectionData, setSchedulerSectionData } = useCustomContext()
   console.log("interviewData",interviewData);
+  console.log("interviewer Section Data",interviewerSectionData);
   console.log("📊 InterviewData structure:", {
     hasInterviewQuestions: !!interviewData?.interviewQuestions,
     interviewQuestionsType: typeof interviewData?.interviewQuestions,
@@ -81,6 +82,7 @@ const InterviewsMiniTabComponent = ({
           preselectedQuestionsResponses={preselectedQuestionsResponses}
           setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
           handlePreselectedQuestionResponse={handlePreselectedQuestionResponse}
+          
         />;//<----v1.0.0---
       case 2:
         return (
@@ -102,6 +104,7 @@ const InterviewsMiniTabComponent = ({
             handleRemoveQuestion={handleRemoveQuestion}
             handleToggleMandatory={handleToggleMandatory}
             interviewData={interviewData}
+            decodedData={decodedData}
           />
         );//<----v1.0.0---
       default:

@@ -58,11 +58,12 @@ const feedbackSchema = new mongoose.Schema(
     candidateId: { type: mongoose.Schema.Types.ObjectId, ref: 'Candidate', required: false }, //candidate information
     positionId:{ type: mongoose.Schema.Types.ObjectId, ref: 'Position', required: false },
     interviewerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts', required: false }, //interviewer information
-
+    
     skills: [skillsSchema], //overall skill ratings
     questionFeedback:[questionFeedbackSchema], //feedback for each question
     generalComments:String, //general comments about the interview session
     overallImpression: overallImpressionSchema,
+    feedbackCode:String,
     status: {
       type: String,
       enum: ['draft', 'submitted'],

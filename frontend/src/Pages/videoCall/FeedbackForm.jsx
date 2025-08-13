@@ -65,7 +65,7 @@ const FeedbackForm = ({
   decodedData,
   isAddMode 
 }) => {
-  //console.log("interviewerSectionData",interviewerSectionData)
+  console.log("interviewerSectionData",interviewerSectionData)
   useScrollLock(true);
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
@@ -269,11 +269,11 @@ const FeedbackForm = ({
             ...prevList,
             {
               ...question,
-              //addedBy: 'interviewer',
+              addedBy: 'interviewer',
               mandatory: "false", // Default to false when adding a new question
               snapshot: {
                 ...question.snapshot,
-               // addedBy: 'interviewer',
+                addedBy: 'interviewer',
                 mandatory: "false"
               }
             },
@@ -1079,13 +1079,14 @@ const FeedbackForm = ({
                   {questionsWithFeedback.length} question(s) from question bank
                 </span>
               </div>
-              {(isViewMode || isEditMode) ? (
+              {(isViewMode || isEditMode || decodedData.schedule) ? (
                 <div></div>
               ) : (
                 <button
                   className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
                   onClick={openQuestionBank}
                   title="Add Question from Question Bank"
+                  disabled={decodedData.schedule}
                 >
                   <FaPlus className="text-sm" />
                   <span>Add Question</span>
@@ -1298,11 +1299,12 @@ const FeedbackForm = ({
               )}
             </div>
 
-            {!isViewMode && (
+            {!isViewMode || decodedData.schedule && (
               <div className="flex justify-end gap-3 mt-4">
                 <Button
                   onClick={saveFeedback}
                   variant="outline"
+                  // disabled={decodedData.schedule}
                   style={{ borderColor: 'rgb(33, 121, 137)', color: 'rgb(33, 121, 137)' }}
                   className="hover:bg-gray-50"
                 >
@@ -1312,6 +1314,7 @@ const FeedbackForm = ({
                   onClick={submitFeedback}
                   style={{ backgroundColor: 'rgb(33, 121, 137)' }}
                   className="text-white hover:opacity-90"
+                  // disabled={decodedData.schedule}
                 >
                   Submit Feedback
                 </Button>
