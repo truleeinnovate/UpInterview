@@ -1,6 +1,7 @@
 // v1.0.0  -  mansoor  -  aligned the left content and right content in the center in all the scrrens responsively
 // v1.0.1  -  Ashraf  -  removed the freelancer condition from the interview requests component
 // v1.0.2  -  Ashok   -  disabled outer scrollbar when outsource and interviewers popup's open
+// v1.0.3  -  Venkatesh - added the pending feedback count in the stats card
 
 import { useState, useEffect } from 'react';
 import { TrendingUp, AlertCircle, UserCheck } from 'lucide-react';
@@ -22,6 +23,7 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 import { config } from '../../../../config';
 // v1.0.2 <---------------------------------------------------------------------
+import { useFeedbacks } from '../../../../apiHooks/useFeedbacks.js';//<----v1.0.3--------
 import { useScrollLock } from '../../../../apiHooks/scrollHook/useScrollLock.js';
 // v1.0.2 --------------------------------------------------------------------->
 
@@ -39,6 +41,14 @@ const Home = () => {
   // v1.0.2 <-----------------------------------------------
   useScrollLock(showOutsourcePopup || isInternalInterviews);
   // v1.0.2 ----------------------------------------------->
+
+  //<----v1.0.3--------
+  // Dynamic Pending Feedback count (status === 'draft')
+  const { data: feedbacksData, isLoading: feedbacksLoading } = useFeedbacks();
+  const pendingDraftCount = (feedbacksData || []).filter(
+    (f) => String(f?.status || '').toLowerCase() === 'draft'
+  ).length;
+  //----v1.0.3-------->
 
   const [stats, setStats] = useState({
     totalInterviews: 0,
@@ -107,7 +117,7 @@ const Home = () => {
               >
                 <StatsCard
                   title="Pending Feedback"
-                  value="18"
+                  value={feedbacksLoading ? '0' : pendingDraftCount.toString()}//<----v1.0.3--------
                   icon={AlertCircle}
                   color="orange"
                 />
