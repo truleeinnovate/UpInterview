@@ -1,14 +1,16 @@
+//<----v1.0.0-----Venkatesh-----backend via TanStack Query added
 import { useState, useEffect } from 'react'
 import Modal from 'react-modal'
 import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+ 
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 import { XMarkIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline'
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from '../../../../../apiHooks/useUsers.js';
 import logo from '../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp'
+import { useVerifyWalletPayment, useCreateWalletOrder } from '../../../../../apiHooks/useWallet.js';
 
 export function WalletTopupPopup({ onClose, onTopup }) {
   const navigate = useNavigate();
@@ -23,6 +25,10 @@ export function WalletTopupPopup({ onClose, onTopup }) {
   
   const tenantId = tokenPayload?.tenantId;
   const ownerId = tokenPayload?.userId;
+  //<----v1.0.0-----
+  const verifyWalletPayment = useVerifyWalletPayment();
+  const createWalletOrder = useCreateWalletOrder();
+  //----v1.0.0----->
 
   // Load Razorpay script
   useEffect(() => {
@@ -38,30 +44,30 @@ export function WalletTopupPopup({ onClose, onTopup }) {
     }
   }, [])
 
-   const {userProfile, isLoading, isError} = useUserProfile(ownerId)
+  const { userProfile } = useUserProfile()//<----v1.0.0-----
 
   const [userDetails, setUserProfile] = useState([])
   
-      // Fetch user profile data from contacts API
-      useEffect(() => {
-          const fetchUserProfile = async () => {
-              try {
-                  if (userProfile) {
-                          setUserProfile({
-                              name: `${userProfile.firstName} ${userProfile.lastName}`,
-                              email: userProfile.email,
-                              phone: userProfile.phone
-                          });
-                          console.log('User profile fetched:', userProfile);
-                  }
-              } catch (error) {
-                  console.error('Error fetching user profile:', error);
-                  toast.error('Failed to fetch user profile data');
-              }
-          };
-  
-          fetchUserProfile();
-      }, [ownerId,userProfile]);
+  // Fetch user profile data from contacts API
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        if (userProfile) {
+          setUserProfile({
+            name: `${userProfile.firstName} ${userProfile.lastName}`,
+            email: userProfile.email,
+            phone: userProfile.phone
+          });
+          console.log('User profile fetched:', userProfile);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        toast.error('Failed to fetch user profile data');
+      }
+    };
+
+    fetchUserProfile();
+  }, [ownerId,userProfile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -77,15 +83,16 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         throw new Error('User not logged in')
       }
 
-      // Create order from backend
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/wallet/create-order`, {
+      //<----v1.0.0-----
+      // Create order from backend via TanStack Query
+      const orderData = await createWalletOrder.mutateAsync({
         amount: parseFloat(amount),
         currency: 'USD',
         ownerId: ownerId,
         tenantId: tenantId || 'default'
       })
 
-      const { orderId, key_id } = response.data
+      const { orderId, key_id } = orderData
 
       // Initialize Razorpay payment
       const options = {
@@ -104,8 +111,8 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               signature: response.razorpay_signature?.substring(0, 10) + '...'
             });
             
-            // Verify payment with backend
-            const paymentResponse = await axios.post(`${process.env.REACT_APP_API_URL}/wallet/verify-payment`, {
+            // Verify payment with backend via TanStack Query mutation
+            const verification = await verifyWalletPayment.mutateAsync({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -115,9 +122,9 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               description: 'Wallet Top-up via Razorpay'
             });
 
-            console.log('Payment verification response:', paymentResponse.data);
+            console.log('Payment verification response:', verification);
 
-            if (paymentResponse.data.success) {
+            if (verification?.success) {
               // Update UI with new wallet data
               onTopup({
                 amount: parseFloat(amount),
@@ -130,12 +137,13 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               toast.success('Wallet top-up successful!');
               onClose();
             } else {
-              console.error('Backend did not confirm success:', paymentResponse.data);
+              //console.error('Backend did not confirm success:', verification);//----v1.0.0----->
               setError('Payment verification failed. Please try again.');
               setIsProcessing(false);
             }
           } catch (error) {
             console.error('Payment verification failed:', error);
+
             // More detailed error feedback
             if (error.response) {
               // The request was made and the server responded with a status code

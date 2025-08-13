@@ -1,17 +1,17 @@
+//<----v1.0.0-----Venkatesh-----backend via TanStack Query added
+
+
 import { useState, useEffect, useRef } from 'react'
 import { ViewDetailsButton, EditButton } from '../../common/Buttons'
 
-import axios from 'axios'
-import Cookies from "js-cookie";
 import { Outlet } from 'react-router-dom'
 import WalletBalancePopup from './WalletBalancePopup';
 import WalletTransactionPopup from './WalletTransactionPopup';
 import { WalletTopupPopup } from './WalletTopupPopup'
 import { BankAccountsPopup } from './BankAccountsPopup'
-import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode.js';
 import './topupAnimation.css';
-import { usePermissions } from '../../../../../Context/PermissionsContext';
 import { usePermissionCheck } from '../../../../../utils/permissionUtils';
+import { useWallet } from '../../../../../apiHooks/useWallet';//<----v1.0.0-----
 
 export const getTransactionTypeStyle = (type) => {
   switch (type) {
@@ -41,51 +41,13 @@ export const calculatePendingBalance = (walletBalance) => {
 
 const Wallet = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
-  const { effectivePermissions } = usePermissions();
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
-  const [walletBalance, setWalletBalance] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: walletBalance, isLoading, refetch } = useWallet();//<----v1.0.0-----
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [viewingBalance, setViewingBalance] = useState(false);
   const [isTopupOpen, setIsTopupOpen] = useState(false);
   const [isBankAccountsOpen, setIsBankAccountsOpen] = useState(false);
   const [animateTopUp, setAnimateTopUp] = useState(true);
   const topUpButtonRef = useRef(null);
-
-  // Function to fetch wallet data directly
-  async function fetchWalletData() {
-    try {
-      setIsLoading(true);
-      if (!userId) {
-        console.error('User ID not found');
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('Fetching wallet data for user:', userId);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/wallet/${userId}`);
-
-      if (response.data && response.data.walletDetials && response.data.walletDetials.length > 0) {
-        console.log('Wallet data received:', response.data.walletDetials[0]);
-        // Set wallet balance to the first wallet object in the array
-        setWalletBalance(response.data.walletDetials[0]);
-      } else {
-        console.warn('No wallet data found or empty wallet data');
-        setWalletBalance(null);
-      }
-    } catch (error) {
-      console.error('Error fetching wallet data:', error);
-      setWalletBalance(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchWalletData();
-  }, []);
 
   useEffect(() => {
     setAnimateTopUp(true);
@@ -101,44 +63,15 @@ const Wallet = () => {
     return null;
   }
 
-
-
-  // Get wallet transactions from the fetched data
+  const pendingBalance = calculatePendingBalance(walletBalance);//<----v1.0.0-----
   const walletTransactions = walletBalance?.transactions || [];
-
-  // Fetch wallet data on component mount
-  // useEffect(() => {
-  //   fetchWalletData();
-  // }, []);
-
-  console.log("walletBalance ", walletBalance);
-
-  // Start animation on page load and stop after 20 seconds
-  // useEffect(() => {
-  //   setAnimateTopUp(true);
-  //   const animationTimer = setTimeout(() => {
-  //     setAnimateTopUp(false);
-  //   }, 20000);
-
-  //   return () => clearTimeout(animationTimer);
-  // }, []);
-
-  const pendingBalance = calculatePendingBalance(walletBalance);
 
   const handleTopup = async (topupData) => {
     console.log('Processing top-up:', topupData);
 
     try {
-      if (!userId) {
-        console.error('User ID not found');
-        return;
-      }
-
-      // Show success message
-      // alert(`Successfully added $${topupData.amount.toFixed(2)} to your wallet!`);
-
       console.log('Refreshing wallet data after topup');
-      await fetchWalletData();
+      await refetch();
     } catch (error) {
       console.error('Error refreshing wallet data after topup:', error);
     }
