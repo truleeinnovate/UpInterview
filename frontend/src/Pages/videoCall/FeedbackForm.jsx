@@ -1192,7 +1192,7 @@ const FeedbackForm = ({
                         <span
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
                             }`}
-                          onClick={() => handleLikeToggle(question.questionId || question.id)}
+                          onClick={() => handleLikeToggle(question.questionId || question._id)}
                         >
                           <SlLike />
                         </span>
@@ -1200,13 +1200,15 @@ const FeedbackForm = ({
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked" ? "text-red-500" : ""
                             }`}
                           style={{ cursor: "pointer" }}
-                          onClick={() => handleDislikeToggle(question.questionId || question.id)}
+                          onClick={() => handleDislikeToggle(question.questionId || question._id)}
                         >
                           <SlDislike />
                         </span>
                       </div>
-
-                      {dislikeQuestionId === (question.questionId || question.id) && <DisLikeSection each={question} />}
+                      
+                      {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && (
+                         <DisLikeSection each={question} />
+                       )}
 
                       {question.notesBool && (
                         <div>
