@@ -1,7 +1,8 @@
 //<---v1.0.0------venkatesh------add scroll into view for error msg
 //<---v1.0.1------venkatesh------update scroll into view for error msg
+//<---v1.0.2------venkatesh------default and enforce time to after 2 hours from now
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react'; //<---v1.0.2-----
 import Modal from 'react-modal';
 import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom';
@@ -98,6 +99,40 @@ const TaskForm = ({
 
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null); // Add error state
+
+   //<---v1.0.2--------
+  // --- Date helpers: local datetime string and min (now + 2 hours)
+  const formatForDatetimeLocal = useCallback((date) => {
+    const pad = (n) => String(n).padStart(2, "0");
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    return `${y}-${m}-${d}T${hh}:${mm}`;
+  }, []);
+  const twoHoursFromNowLocal = useCallback(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    d.setSeconds(0, 0);
+    return formatForDatetimeLocal(d);
+  }, [formatForDatetimeLocal]);
+
+  // Initialize scheduledDate: use existing dueDate if editing, else default to now + 2 hours.
+  useEffect(() => {
+    const minVal = twoHoursFromNowLocal();
+    if (taskId && formData?.dueDate) {
+      const d = new Date(formData.dueDate);
+      if (!isNaN(d.getTime())) {
+        const formatted = formatForDatetimeLocal(d);
+        setScheduledDate((prev) => (!prev || prev !== formatted ? (formatted < minVal ? minVal : formatted) : prev));
+        return;
+      }
+    }
+    // New task or no valid dueDate
+    setScheduledDate((prev) => (!prev || prev < minVal ? minVal : prev));
+  }, [taskId, formData.dueDate, twoHoursFromNowLocal, formatForDatetimeLocal]);
+   //----v1.0.2----->
 
   // State for storing selections
   const [selectedCategoryRelatedTo, setSelectedCategoryRelatedTo] = useState("");
@@ -642,17 +677,21 @@ const TaskForm = ({
               type="datetime-local"
               id="scheduledDate"
               name="scheduledDate"
+              //lang="en-US"
+               //<---v1.0.2-----
               ref={fieldRefs.dueDate}//<---v1.0.1------
-              placeholder="DD-MM-YYYY"
-              value={taskId && formData.dueDate && !isNaN(new Date(formData.dueDate).getTime()) ? new Date(formData.dueDate).toISOString().slice(0, 16) : scheduledDate}
+              value={scheduledDate}
               onChange={(e) => {
-                 setScheduledDate(e.target.value)
-                 setErrors((prevErrors) => ({
+                const val = e.target.value;
+                const minVal = twoHoursFromNowLocal();
+                setScheduledDate(val && val < minVal ? minVal : val);
+                setErrors((prevErrors) => ({
                   ...prevErrors,
                   dueDate: "",
                 }));
               }}
-              min={new Date().toISOString().slice(0, 16)}
+              min={twoHoursFromNowLocal()}
+              //----v1.0.2----->
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />         
               {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
