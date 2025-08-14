@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  extend limit changed to 5 days max
 // v1.0.1  -  Ashraf  -  added resend link functionality and if already extended and cancel show as disable
+// v1.0.2  -  Ashok   -  Disabled outer scrollbar when popup is open for better user experience
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, AlertCircle, CheckCircle, Clock, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -9,6 +10,9 @@ import axios from 'axios';
 import { config } from '../../../../../config.js';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../../../../../utils/AuthCookieManager/jwtDecode';
+// v1.0.2 <-------------------------------------------------------------------------------
+import { useScrollLock } from '../../../../../apiHooks/scrollHook/useScrollLock.js';
+// v1.0.2 ------------------------------------------------------------------------------->
 
 const AssessmentActionPopup = ({ 
   isOpen, 
@@ -39,6 +43,9 @@ const AssessmentActionPopup = ({
   const organizationId = tokenPayload?.tenantId;
   const [isResendLoading, setIsResendLoading] = useState(false);
 
+  // v1.0.2 <-----------------------------------------------
+  useScrollLock(isOpen);
+  // v1.0.2 ----------------------------------------------->
 
 
   // Get all candidates and determine which ones can be acted upon

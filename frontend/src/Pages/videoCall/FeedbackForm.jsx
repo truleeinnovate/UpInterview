@@ -1,4 +1,5 @@
 //<---v1.0.0-----Venkatesh----solved edit mode issues
+//<---v1.0.1-----Venkatesh----solved edit mode issues
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -621,6 +622,7 @@ const FeedbackForm = ({
   };
 
   const handleDislikeToggle = (id) => {
+    if (isViewMode) return;//<---v1.0.1-----
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
     else setDislikeQuestionId(id);
     //<---v1.0.0-----
@@ -637,6 +639,7 @@ const FeedbackForm = ({
   };
 
   const handleLikeToggle = (id) => {
+    if (isViewMode) return;//<---v1.0.1-----
     //<---v1.0.0-----
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === id);
@@ -658,32 +661,38 @@ const FeedbackForm = ({
   // Component Functions
   const DisLikeSection = React.memo(({ each }) => {
     return (
-      <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
-        <div className="flex justify-between items-center mb-2">
-          <h1>Tell us more :</h1>
-          <button onClick={() => setDislikeQuestionId(null)}>
-            <IoIosCloseCircleOutline />
-          </button>
-        </div>
-        <ul className="flex flex-wrap gap-3">
-          {dislikeOptions.map((option) => (
-            <li key={option.value} className="flex items-center gap-2">
-              <input
-                type="radio"
-                id={`dislike-${each.questionId || each.id}-${option.value}`}
-                name={`dislike-${each.questionId || each.id}`}
-                value={option.value}
-                checked={each.whyDislike === option.value}
-                onChange={(e) => onChangeDislikeRadioInput(each.questionId || each.id, e.target.value)}
-              />
-              <label htmlFor={`dislike-${each.questionId || each.id}-${option.value}`} className="cursor-pointer">
-                {option.label}
-              </label>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
+      <>
+              {(isEditMode || isAddMode) ? (
+                <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <h1>Tell us more :</h1>
+                    <button onClick={() => setDislikeQuestionId(null)}>
+                      <IoIosCloseCircleOutline />
+                    </button>
+                  </div>
+                  <ul className="flex flex-wrap gap-3">
+                    {dislikeOptions.map((option) => (
+                      <li key={option.value} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          id={`dislike-${each.questionId || each.id}-${option.value}`}
+                          name={`dislike-${each.questionId || each.id}`}
+                          value={option.value}
+                          checked={each.whyDislike === option.value}
+                          onChange={(e) => onChangeDislikeRadioInput(each.questionId || each.id, e.target.value)}
+                        />
+                        <label htmlFor={`dislike-${each.questionId || each.id}-${option.value}`} className="cursor-pointer">
+                         {option.label}
+                       </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p className="w-full flex gap-x-8 gap-y-2 ">{each.whyDislike || "N/A"}</p>
+              )}
+              </>
+  );
   });
 
   const SharePopupSection = () => {
@@ -1336,11 +1345,12 @@ const FeedbackForm = ({
                         <span>Mandatory: {(question.mandatory === "true" || question.snapshot?.mandatory === "true") ? "Yes" : "No"}</span>
                       </div>
 
-                      <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-2 mt-2">
                       <span
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
                             }`}
                           onClick={() => handleLikeToggle(question.questionId || question.id)}
+                          disabled={!isViewMode}
                         >
                           <SlLike />
                         </span>
@@ -1349,11 +1359,15 @@ const FeedbackForm = ({
                             }`}
                           style={{ cursor: "pointer" }}
                           onClick={() => handleDislikeToggle(question.questionId || question.id)}
+                          disabled={!isViewMode}
                         >
                           <SlDislike />
                         </span>
                       </div>
                       <div>
+                      {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && (
+                         <DisLikeSection each={question} />
+                       )}
                       </div>
 
 
@@ -1404,7 +1418,7 @@ const FeedbackForm = ({
                         <span
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
                             }`}
-                          onClick={() => handleLikeToggle(question.questionId || question.id)}
+                          onClick={() => handleLikeToggle(question.questionId || question._id)}
                         >
                           <SlLike />
                         </span>
@@ -1412,13 +1426,15 @@ const FeedbackForm = ({
                           className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked" ? "text-red-500" : ""
                             }`}
                           style={{ cursor: "pointer" }}
-                          onClick={() => handleDislikeToggle(question.questionId || question.id)}
+                          onClick={() => handleDislikeToggle(question.questionId || question._id)}
                         >
                           <SlDislike />
                         </span>
                       </div>
-
-                      {dislikeQuestionId === (question.questionId || question.id) && <DisLikeSection each={question} />}
+                      
+                      {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && (
+                         <DisLikeSection each={question} />
+                       )}
 
                       {question.notesBool && (
                         <div>
@@ -1510,7 +1526,6 @@ const FeedbackForm = ({
                 </select>
               )}
             </div>
-
             {isViewMode || decodedData?.schedule ? 
             <div>
             </div>

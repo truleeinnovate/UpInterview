@@ -28,13 +28,14 @@ import ConfirmationModal from "./ConfirmModel";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { config } from "../../../../../config";
 import axios from "axios";
-import AuthCookieManager from '../../../../../utils/AuthCookieManager/AuthCookieManager';
+import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 
 const UsersAccountTab = () => {
   const userType = AuthCookieManager.getUserType();
 
   const { effectivePermissions, superAdminPermissions } = usePermissions();
-  const { usersRes, usersLoading, currentPlan, toggleUserStatus } = useCustomContext();
+  const { usersRes, usersLoading, currentPlan, toggleUserStatus } =
+    useCustomContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");
@@ -54,20 +55,20 @@ const UsersAccountTab = () => {
   const filterIconRef = useRef(null);
 
   // Select data and loading state based on type
-  const dataSource = userType === 'superAdmin' ? superAdminUsers : usersRes;
-  const loading = userType === 'superAdmin' ? superAdminLoading : usersLoading;
-  console.log("SETTINGS USERS =================================> : ", usersRes)
+  const dataSource = userType === "superAdmin" ? superAdminUsers : usersRes;
+  const loading = userType === "superAdmin" ? superAdminLoading : usersLoading;
+  console.log("SETTINGS USERS =================================> : ", usersRes);
   // Fetch super admin users when type is superAdmin
   useEffect(() => {
-    if (userType === 'superAdmin') {
+    if (userType === "superAdmin") {
       const fetchSuperAdminUsers = async () => {
         setSuperAdminLoading(true);
         try {
           const url = `${config.REACT_APP_API_URL}/users/super-admins`;
-          console.log('Fetching super admin users from:', url);
+          console.log("Fetching super admin users from:", url);
           const response = await axios.get(url, {
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
               // No Authorization or tenantId header for super admin API
             },
           });
@@ -76,8 +77,8 @@ const UsersAccountTab = () => {
           setSuperAdminUsers((response.data || []).reverse());
           // ------------------------------v1.0.0 >
         } catch (error) {
-          console.error('Error fetching super admin users:', error);
-          toast.error('Failed to load super admin users');
+          console.error("Error fetching super admin users:", error);
+          toast.error("Failed to load super admin users");
           setSuperAdminUsers([]);
         } finally {
           setSuperAdminLoading(false);
@@ -149,6 +150,11 @@ const UsersAccountTab = () => {
     ...new Set(dataSource?.map((user) => user.label).filter(Boolean)),
   ];
 
+  // v1.0.0 <-----------------------------------------------------------
+  const normalizeSpaces = (str) =>
+    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
+  // v1.0.0 ----------------------------------------------------------->
+
   // Filtered data
   const FilteredData = () => {
     if (!Array.isArray(dataSource)) return [];
@@ -164,9 +170,27 @@ const UsersAccountTab = () => {
       const matchesRole =
         selectedFilters.roles.length === 0 ||
         selectedFilters.roles.includes(user.label);
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      // v1.0.0 <---------------------------------------------------------------------------------
+      // const matchesSearchQuery = fieldsToSearch.some((field) =>
+      //   field.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      // );
+
+      const normalizedQuery = normalizeSpaces(searchQuery);
+      // Full name in both orders
+      const fullNameNormal = normalizeSpaces(
+        `${user.firstName || ""} ${user.lastName || ""}`
       );
+      const fullNameReverse = normalizeSpaces(
+        `${user.lastName || ""} ${user.firstName || ""}`
+      );
+
+      const matchesSearchQuery =
+        fieldsToSearch.some((field) =>
+          normalizeSpaces(field).includes(normalizedQuery)
+        ) ||
+        fullNameNormal.includes(normalizedQuery) ||
+        fullNameReverse.includes(normalizedQuery);
+      // v1.0.0 --------------------------------------------------------------------------------->
 
       return matchesSearchQuery && matchesRole;
     });
@@ -238,8 +262,8 @@ const UsersAccountTab = () => {
                     row.gender === "Male"
                       ? maleImage
                       : row.gender === "Female"
-                        ? femaleImage
-                        : genderlessImage;
+                      ? femaleImage
+                      : genderlessImage;
                 }}
               />
             ) : (
@@ -253,16 +277,39 @@ const UsersAccountTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${row.firstName ? row.firstName.charAt(0).toUpperCase().trim() + row.firstName.slice(1).trim() : ""} ${row.lastName ? row.lastName.charAt(0).toUpperCase().trim() + row.lastName.slice(1) : ""}`.trim() || "Unknown"}
+              {`${
+                row.firstName
+                  ? row.firstName.charAt(0).toUpperCase().trim() +
+                    row.firstName.slice(1).trim()
+                  : ""
+              } ${
+                row.lastName
+                  ? row.lastName.charAt(0).toUpperCase().trim() +
+                    row.lastName.slice(1)
+                  : ""
+              }`.trim() || "Unknown"}
             </div>
           </div>
         </div>
       ),
     },
-    { key: "email", header: "Email", render: (value) => value || "Not Provided" },
-    { key: "phone", header: "Phone", render: (value) => value || "Not Provided" },
+    {
+      key: "email",
+      header: "Email",
+      render: (value) => value || "Not Provided",
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      render: (value) => value || "Not Provided",
+    },
     { key: "label", header: "Role", render: (value) => value || "Not Found" },
-    { key: "status", header: "Status", render: (value) => value.charAt(0).toUpperCase() + value.slice(1) || "Not Found" },
+    {
+      key: "status",
+      header: "Status",
+      render: (value) =>
+        value.charAt(0).toUpperCase() + value.slice(1) || "Not Found",
+    },
   ];
 
   // Table Actions Configuration
@@ -315,20 +362,36 @@ const UsersAccountTab = () => {
                 <div className="bg-blue-50 border-l-4 border-custom-blue p-4 rounded-r-lg">
                   <div className="flex">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-custom-blue" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      <svg
+                        className="h-5 w-5 text-custom-blue"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h3 className="text-sm font-medium text-custom-blue">User Management</h3>
+                      <h3 className="text-sm font-medium text-custom-blue">
+                        User Management
+                      </h3>
                       <div className="mt-2 text-sm text-custom-blue">
-                        <p>Manage all users who can conduct interviews, including:</p>
+                        <p>
+                          Manage all users who can conduct interviews,
+                          including:
+                        </p>
                         {/* v1.0.1 <--------------------------------------------------------------------------------------------------------- */}
                         <ul className="list-disc list-inside mt-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-y-1 gap-x-16">
-                        {/* v1.0.1 ---------------------------------------------------------------------------------------------------------> */}
+                          {/* v1.0.1 ---------------------------------------------------------------------------------------------------------> */}
                           <li>Create and manage interviewer accounts</li>
                           <li>Set user roles and permissions</li>
-                          <li>Configure interview availability and expertise</li>
+                          <li>
+                            Configure interview availability and expertise
+                          </li>
                           <li>Track interviewer performance and ratings</li>
                         </ul>
                       </div>
@@ -343,7 +406,7 @@ const UsersAccountTab = () => {
               transition={{ duration: 0.3 }}
             >
               <Header
-                title={userType === 'superAdmin' ? "Super Admins" : "Users"}
+                title={userType === "superAdmin" ? "Super Admins" : "Users"}
                 onAddClick={() => {
                   if (dataSource.length >= currentPlan.maxUsers) {
                     toast(
@@ -362,9 +425,11 @@ const UsersAccountTab = () => {
                   }
                 }}
                 addButtonText="Add User"
-                canCreate={userType === 'superAdmin' ? superAdminPermissions?.Users
-                  ?.Create : effectivePermissions?.Users
-                  ?.Create}
+                canCreate={
+                  userType === "superAdmin"
+                    ? superAdminPermissions?.Users?.Create
+                    : effectivePermissions?.Users?.Create
+                }
               />
             </motion.div>
             <Toolbar
@@ -394,7 +459,11 @@ const UsersAccountTab = () => {
                       columns={tableColumns}
                       loading={loading}
                       actions={tableActions}
-                      emptyState={userType === 'superAdmin' ? "No super admins found." : "No users found."}
+                      emptyState={
+                        userType === "superAdmin"
+                          ? "No super admins found."
+                          : "No users found."
+                      }
                     />
                   </div>
                 ) : (
@@ -402,7 +471,7 @@ const UsersAccountTab = () => {
                     <KanbanView
                       currentFilteredRows={currentFilteredRows}
                       loading={loading}
-                      setActionViewMore={() => { }}
+                      setActionViewMore={() => {}}
                       userData={dataSource}
                       toggleSidebar={() => navigate("new")}
                     />
@@ -472,10 +541,14 @@ const UsersAccountTab = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">
-                    {userType === 'superAdmin' ? "Super Admin Management Guide" : "User Management Guide"}
+                    {userType === "superAdmin"
+                      ? "Super Admin Management Guide"
+                      : "User Management Guide"}
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    {userType === 'superAdmin' ? "Manage super admin accounts efficiently" : "Manage your team's interviewers efficiently"}
+                    {userType === "superAdmin"
+                      ? "Manage super admin accounts efficiently"
+                      : "Manage your team's interviewers efficiently"}
                   </p>
                 </div>
                 <button
@@ -492,14 +565,18 @@ const UsersAccountTab = () => {
                     <Info size={20} />
                   </div>
                   <p className="ml-3">
-                    {userType === 'superAdmin' ? "Manage all super admin users, including:" : "Manage all users who can conduct interviews, including:"}
+                    {userType === "superAdmin"
+                      ? "Manage all super admin users, including:"
+                      : "Manage all users who can conduct interviews, including:"}
                   </p>
                 </div>
                 <ul className="space-y-3 pl-8">
                   <li className="flex items-start">
                     <span className="flex-shrink-0 h-1.5 w-1.5 mt-2.5 bg-custom-blue rounded-full"></span>
                     <span className="ml-2">
-                      {userType === 'superAdmin' ? "Create and manage super admin accounts" : "Create and manage interviewer accounts"}
+                      {userType === "superAdmin"
+                        ? "Create and manage super admin accounts"
+                        : "Create and manage interviewer accounts"}
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -534,7 +611,17 @@ const UsersAccountTab = () => {
       )}
       <ConfirmationModal
         show={showConfirmation}
-        userName={`${selectedUser?.firstName ? selectedUser?.firstName.charAt(0).toUpperCase() + selectedUser?.firstName.slice(1) : ""} ${selectedUser?.lastName ? selectedUser?.lastName.charAt(0).toUpperCase() + selectedUser?.lastName.slice(1) : ""}`}
+        userName={`${
+          selectedUser?.firstName
+            ? selectedUser?.firstName.charAt(0).toUpperCase() +
+              selectedUser?.firstName.slice(1)
+            : ""
+        } ${
+          selectedUser?.lastName
+            ? selectedUser?.lastName.charAt(0).toUpperCase() +
+              selectedUser?.lastName.slice(1)
+            : ""
+        }`}
         newStatus={newStatus}
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}

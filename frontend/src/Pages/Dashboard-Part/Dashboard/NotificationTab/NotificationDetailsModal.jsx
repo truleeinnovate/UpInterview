@@ -1,25 +1,40 @@
 /* eslint-disable react/prop-types */
-import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  X, Mail, MessageSquare, Calendar, User, FileText, 
-  AlertCircle, Image, FileSpreadsheet, Download, Paperclip 
-} from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  X,
+  Mail,
+  MessageSquare,
+  Calendar,
+  User,
+  FileText,
+  AlertCircle,
+  Image,
+  FileSpreadsheet,
+  Download,
+  Paperclip,
+} from "lucide-react";
 
-const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDetails }) => {
+const NotificationDetailsModal = ({
+  notification,
+  isOpen,
+  onClose,
+  showContentDetails,
+}) => {
+
   if (!isOpen || !notification) return null;
 
   const getNotificationIcon = () => {
     switch (notification.type) {
-      case 'interview':
+      case "interview":
         return <Calendar className="text-blue-600" size={20} />;
-      case 'feedback':
+      case "feedback":
         return <FileText className="text-purple-600" size={20} />;
-      case 'candidate':
+      case "candidate":
         return <User className="text-green-600" size={20} />;
-      case 'system':
+      case "system":
         return <AlertCircle className="text-orange-600" size={20} />;
-      case 'message':
+      case "message":
         return <MessageSquare className="text-indigo-600" size={20} />;
       default:
         return <Mail className="text-custom-blue" size={20} />;
@@ -28,11 +43,11 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
 
   const getAttachmentIcon = (iconType) => {
     switch (iconType) {
-      case 'image':
+      case "image":
         return <Image size={16} />;
-      case 'file-spreadsheet':
+      case "file-spreadsheet":
         return <FileSpreadsheet size={16} />;
-      case 'file-text':
+      case "file-text":
         return <FileText size={16} />;
       default:
         return <FileText size={16} />;
@@ -41,15 +56,22 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
 
   const getCategoryDisplay = () => {
     // Check if notification and object exist and have objectName property
-    if (!notification || !notification.object || !notification.object.objectName) {
-      console.log('Missing object data:', notification);
-      return '';
+    if (
+      !notification ||
+      !notification.object ||
+      !notification.object.objectName
+    ) {
+      console.log("Missing object data:", notification);
+      return "";
     }
-    return notification.object.objectName.charAt(0).toUpperCase() + notification.object.objectName.slice(1);
+    return (
+      notification.object.objectName.charAt(0).toUpperCase() +
+      notification.object.objectName.slice(1)
+    );
   };
 
   const formatMessageBody = (message) => {
-    return message.split('\n').map((line, index) => (
+    return message.split("\n").map((line, index) => (
       <React.Fragment key={index}>
         {line}
         <br />
@@ -78,9 +100,13 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  {showContentDetails && notification?.object?.objectName ? `${getCategoryDisplay()} Details` : 'Notification Details'}
+                  {showContentDetails && notification?.object?.objectName
+                    ? `${getCategoryDisplay()} Details`
+                    : "Notification Details"}
                 </h2>
-                <p className="text-sm text-gray-500">View detailed information</p>
+                <p className="text-sm text-gray-500">
+                  View detailed information
+                </p>
               </div>
             </div>
             <button
@@ -95,25 +121,43 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="space-y-6">
             {/* Email Header */}
-            {notification.type === 'email' && (
+            {notification.type === "email" && (
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">{notification.subject}</h3>
-                  <span className="text-sm text-gray-500">{new Date(notification.timestamp).toLocaleString('en-CA')}</span>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {notification.subject}
+                  </h3>
+                  <span className="text-sm text-gray-500">
+                    {new Date(notification.timestamp).toLocaleString("en-CA")}
+                  </span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-start space-x-2">
-                    <span className="text-sm font-medium text-gray-700 w-12">From:</span>
-                    <span className="text-sm text-gray-600">notifications@company.com</span>
+                    <span className="text-sm font-medium text-gray-700 w-12">
+                      From:
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      notifications@company.com
+                    </span>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <span className="text-sm font-medium text-gray-700 w-12">To:</span>
-                    <span className="text-sm text-gray-600 break-all">{Array.isArray(notification.recipients) ? notification.recipients.join(', ') : notification.recipients}</span>
+                    <span className="text-sm font-medium text-gray-700 w-12">
+                      To:
+                    </span>
+                    <span className="text-sm text-gray-600 break-all">
+                      {Array.isArray(notification.recipients)
+                        ? notification.recipients.join(", ")
+                        : notification.recipients}
+                    </span>
                   </div>
                   {notification.cc && notification.cc.length > 0 && (
                     <div className="flex items-start space-x-2">
-                      <span className="text-sm font-medium text-gray-700 w-12">CC:</span>
-                      <span className="text-sm text-gray-600 break-all">{notification.cc.join(', ')}</span>
+                      <span className="text-sm font-medium text-gray-700 w-12">
+                        CC:
+                      </span>
+                      <span className="text-sm text-gray-600 break-all">
+                        {notification.cc.join(", ")}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -123,71 +167,87 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
             {/* Message Body */}
             <div className="bg-white rounded-xl">
               <div className="prose max-w-none">
-                <div className="text-gray-700 leading-relaxed whitespace-pre-line" dangerouslySetInnerHTML={{__html: notification.message}}>
-            
-                </div>
+                <div
+                  className="text-gray-700 leading-relaxed whitespace-pre-line"
+                  dangerouslySetInnerHTML={{ __html: notification.message }}
+                ></div>
               </div>
             </div>
 
             {/* Attachments */}
-            {notification.attachments && notification.attachments.length > 0 && (
-              <div className="border-t border-gray-100 pt-4">
-                <div className="flex items-center space-x-2 mb-3">
-                  <Paperclip size={16} className="text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">
-                    Attachments ({notification.attachments.length})
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {notification.attachments.map((attachment) => (
-                    <div
-                      key={attachment.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-300"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-white rounded-lg">
-                          {getAttachmentIcon(attachment.icon)}
+            {notification.attachments &&
+              notification.attachments.length > 0 && (
+                <div className="border-t border-gray-100 pt-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <Paperclip size={16} className="text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700">
+                      Attachments ({notification.attachments.length})
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {notification.attachments.map((attachment) => (
+                      <div
+                        key={attachment.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-300"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-white rounded-lg">
+                            {getAttachmentIcon(attachment.icon)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                              {attachment.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {attachment.size}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
-                            {attachment.name}
-                          </p>
-                          <p className="text-xs text-gray-500">{attachment.size}</p>
-                        </div>
+                        <button className="p-2 text-gray-500 hover:text-custom-blue rounded-lg hover:bg-white transition-colors duration-300">
+                          <Download size={16} />
+                        </button>
                       </div>
-                      <button className="p-2 text-gray-500 hover:text-custom-blue rounded-lg hover:bg-white transition-colors duration-300">
-                        <Download size={16} />
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Status and Priority */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <div className="flex items-center space-x-3">
-                <span className={`px-2 py-1 text-xs font-medium rounded-lg ${
-                  notification.status === 'sent' ? 'bg-blue-100 text-custom-blue' :
-                  notification.status === 'delivered' ? 'bg-green-100 text-green-600' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
-                  {notification.status.charAt(0).toUpperCase() + notification.status.slice(1)}
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-lg ${
+                    notification.status === "sent"
+                      ? "bg-blue-100 text-custom-blue"
+                      : notification.status === "delivered"
+                      ? "bg-green-100 text-green-600"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {notification.status.charAt(0).toUpperCase() +
+                    notification.status.slice(1)}
                 </span>
-                {notification.priority === 'high' && (
+                {notification.priority === "high" && (
                   <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-600 rounded-lg">
                     High Priority
                   </span>
                 )}
                 {notification?.object?.objectName && (
-                  <span className={`px-2 py-1 text-xs font-medium rounded-lg ${
-                    notification?.object?.objectName === 'assessment' ? 'bg-blue-100 text-custom-blue' :
-                    notification?.object?.objectName === 'interview' ? 'bg-blue-100 text-blue-600' :
-                    notification?.object?.objectName === 'feedback' ? 'bg-purple-100 text-purple-600' :
-                    notification?.object?.objectName === 'candidate' ? 'bg-green-100 text-green-600' :
-                    notification?.object?.objectName === 'system' ? 'bg-orange-100 text-orange-600' :
-                    'bg-indigo-100 text-indigo-600'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-lg ${
+                      notification?.object?.objectName === "assessment"
+                        ? "bg-blue-100 text-custom-blue"
+                        : notification?.object?.objectName === "interview"
+                        ? "bg-blue-100 text-blue-600"
+                        : notification?.object?.objectName === "feedback"
+                        ? "bg-purple-100 text-purple-600"
+                        : notification?.object?.objectName === "candidate"
+                        ? "bg-green-100 text-green-600"
+                        : notification?.object?.objectName === "system"
+                        ? "bg-orange-100 text-orange-600"
+                        : "bg-indigo-100 text-indigo-600"
+                    }`}
+                  >
                     {getCategoryDisplay()}
                   </span>
                 )}
@@ -197,26 +257,26 @@ const NotificationDetailsModal = ({ notification, isOpen, onClose, showContentDe
             {/* Action Buttons */}
             <div className="flex flex-row items-center justify-end gap-3 pt-4">
               <div>
-              {notification.object.objectName === 'interview' && (
-                <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
-                  View Interview Details
-                </button>
-              )}
-              {notification.object.objectName === 'feedback' && (
-                <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
-                  View Feedback
-                </button>
-              )}
-              {notification.object.objectName === 'candidate' && (
-                <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
-                  View Candidate Profile
-                </button>
-              )}
-              {notification.object.objectName === 'assessment' && (
-                <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
-                  View Assessment Details
-                </button>
-              )}
+                {notification.object.objectName === "interview" && (
+                  <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
+                    View Interview Details
+                  </button>
+                )}
+                {notification.object.objectName === "feedback" && (
+                  <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
+                    View Feedback
+                  </button>
+                )}
+                {notification.object.objectName === "candidate" && (
+                  <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
+                    View Candidate Profile
+                  </button>
+                )}
+                {notification.object.objectName === "assessment" && (
+                  <button className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-custom-blue bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-300">
+                    View Assessment Details
+                  </button>
+                )}
               </div>
             </div>
           </div>

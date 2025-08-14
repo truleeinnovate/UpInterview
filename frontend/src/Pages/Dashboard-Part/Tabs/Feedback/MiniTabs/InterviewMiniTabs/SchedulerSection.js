@@ -1,3 +1,4 @@
+//<----v1.0.0---Venkatesh-----disable like and dislike in view mode
 /* eslint-disable no-lone-blocks */
 import React, { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
@@ -161,6 +162,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle dislike toggle
   const handleDislikeToggle = (id) => {
+    if (isViewMode) return;//<----v1.0.0---
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
     else setDislikeQuestionId(id);
     setSchedulerQuestionsData((prev) =>
@@ -180,6 +182,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle like toggle
   const handleLikeToggle = (id) => {
+    if (isViewMode) return;//<----v1.0.0---
     setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
         q._id === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
@@ -369,7 +372,7 @@ const SchedulerSectionComponent = ({
               </button>
             )}
               <SharePopupSection />
-              {(isEditMode  || isAddMode ) && (
+              {(isEditMode || isViewMode  || isAddMode ) && (
                 <>
                   <span
                     className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
@@ -391,7 +394,7 @@ const SchedulerSectionComponent = ({
                 </>
               )}
             </div>
-            {dislikeQuestionId === question._id && <DisLikeSection each={question} />}
+            {(dislikeQuestionId === question._id || question.questionId) && <DisLikeSection each={question} />}
             {question.notesBool && (
               <div>
                 <div className="flex justify-start mt-4">

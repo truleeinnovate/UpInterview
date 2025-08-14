@@ -1,4 +1,5 @@
 //<-----v1.0.0-----Venkatesh---add scroll into view for error msg
+// v1.0.1 - Ashok - Added border and text color for cancel button
 
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom'
@@ -216,7 +217,10 @@ export function BankAccountsPopup({ onClose, onSave }) {
         <button
           type="button"
           onClick={() => setIsAddingAccount(false)}
-          className="px-4 py-2 text-gray-700 hover:text-gray-900"
+          // v1.0.1 <-----------------------------------------------------------------------
+          // className="px-4 py-2 text-gray-700 hover:text-gray-900"
+          className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+          // v1.0.1 ----------------------------------------------------------------------->
         >
           Cancel
         </button>
