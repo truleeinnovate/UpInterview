@@ -1164,7 +1164,7 @@ const handleSubscriptionCancelled = async (subscription) => {
         customerSubscription.razorpayCustomerId = null;
         customerSubscription.razorpayPaymentId = null;
         customerSubscription.lastPaymentId = null;
-        customerSubscription.nextBillingDate = new Date();
+        customerSubscription.nextBillingDate = null;
         await customerSubscription.save();
 
         console.log('Updated subscription status to cancelled');
