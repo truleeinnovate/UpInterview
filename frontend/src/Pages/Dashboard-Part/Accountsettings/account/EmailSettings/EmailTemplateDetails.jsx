@@ -1,7 +1,11 @@
+// v1.0.0 - Ashok - Fixed z-index issue when loading using createPortal 
 /* eslint-disable react/prop-types */
 
 import { Eye, Lock, CheckCircle2, XCircle } from 'lucide-react';
 import Loading from '../../../../../Components/Loading';
+// v1.0.0 <---------------------------------------------------
+import { createPortal } from 'react-dom';
+// v1.0.0 --------------------------------------------------->
 
 function EmailTemplates({ 
   templates,
@@ -16,7 +20,18 @@ function EmailTemplates({
         // <div className="flex items-center justify-center h-screen">
         //   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
         // </div>
-        <Loading message="Loading email templates..." />
+
+        // v1.0.0 <--------------------------------------------------------------
+        // <Loading message="Loading email templates..." />
+        
+        createPortal(
+          <div>
+            <Loading message="Loading email templates..." />
+          </div>,
+          document.body
+        )
+        // v1.0.0 <---------------------------------------------------------------
+
       ) : (
         templates.length === 0 ? (
           <div className="text-center py-8 text-gray-500">

@@ -8,7 +8,8 @@
 // v1.0.2--------Venkatesh---Prevent double-click save (simplified)
 
 // v1.0.4 - ASHOK - Improved Scroll to First Error functionality
-// v1.0.5 - AHOK  - fixed style issues at MCQ's input fields
+// v1.0.5 - ASHOK  - fixed style issues at MCQ's input fields
+// v1.0.6 - ASHOK  - Removed border left and set outline as none and improved scroll to first error logic
 
 import React from "react";
 import { useState, useEffect, useRef } from "react";
@@ -69,7 +70,9 @@ const QuestionBankForm = ({
   // v1.0.4 <--------------------------------------------------------------------
   const fieldRefs = {
     questionType: useRef(null),
-    listRef: useRef(null),
+    // v1.0.6 <------------------------------------
+    questionListRef: useRef(null),
+    // v1.0.6 ------------------------------------>
     minexperience: useRef(null),
     maxexperience: useRef(null),
     questionText: useRef(null),
@@ -497,30 +500,32 @@ const QuestionBankForm = ({
 
       // Clear form fields
       clearFormFields();
+      // v1.0.6 <------------------------------------------------------------------------------
       // v1.0.4 <------------------------------------------------------------------
       // Only clear question list selection if it's NOT Save & Next
-      // if (
-      //   !isSaveAndNext &&
-      //   listRef.current &&
-      //   typeof listRef.current.clearSelection === "function"
-      // ) {
-      //   listRef.current.clearSelection();
-      // } else if (!isSaveAndNext) {
-      //   console.warn("clearSelection method not found on listRef.current");
-      // }
       if (
         !isSaveAndNext &&
-        fieldRefs.listRef.current &&
-        typeof fieldRefs.listRef.current.clearSelection === "function"
+        listRef.current &&
+        typeof listRef.current.clearSelection === "function"
       ) {
-        fieldRefs.listRef.current.clearSelection();
+        listRef.current.clearSelection();
       } else if (!isSaveAndNext) {
-        console.warn(
-          "clearSelection method not found on fieldRefs.listRef.current"
-        );
+        console.warn("clearSelection method not found on listRef.current");
       }
+      // if (
+      //   !isSaveAndNext &&
+      //   fieldRefs.listRef.current &&
+      //   typeof fieldRefs.listRef.current.clearSelection === "function"
+      // ) {
+      //   fieldRefs.listRef.current.clearSelection();
+      // } else if (!isSaveAndNext) {
+      //   console.warn(
+      //     "clearSelection method not found on fieldRefs.listRef.current"
+      //   );
+      // }
 
       // v1.0.4 ------------------------------------------------------------------>
+      // v1.0.6 ------------------------------------------------------------------------------>
 
       if (isSaveAndNext) {
         setQuestionNumber((prevNumber) => prevNumber + 1);
@@ -819,7 +824,10 @@ const QuestionBankForm = ({
   };
 
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200",
+    // v1.0.6 <----------------------------------------------------------
+    // "fixed bg-white shadow-2xl border-l border-gray-200",
+    "fixed bg-white shadow-2xl outline-none",
+    // v1.0.6 ---------------------------------------------------------->
     {
       "overflow-y-auto": !isModalOpen,
       "overflow-hidden": isModalOpen,
@@ -991,7 +999,10 @@ const QuestionBankForm = ({
                     <div className="mb-4">
                       {/* v1.0.4 <---------------------------------------------------------- */}
                       <MyQuestionList
-                        ref={fieldRefs.listRef}
+                      // v1.0.6 <-----------------------------------------
+                        questionListRef={fieldRefs.questionListRef}
+                        ref={listRef}
+                      // v1.0.6 ----------------------------------------->
                         fromform={true}
                         onSelectList={handleListSelection}
                         // ref={listRef}

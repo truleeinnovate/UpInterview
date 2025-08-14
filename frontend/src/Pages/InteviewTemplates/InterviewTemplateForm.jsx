@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  on saving both getting load
 // v1.0.2  -  Ashok   -  disabled outer scrollbar for the form
 // v1.0.3  -  Ashok   -  added scroll to first error functionality
+// v1.0.3  -  Ashok   -  Removed border left and set outline as none
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
@@ -287,7 +288,9 @@ const InterviewSlideover = ({ mode }) => {
   };
 
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200 z-50",
+    // v1.0.3 <------------------------------------------------
+    "fixed bg-white shadow-2xl z-50 outline-none",
+    // v1.0.3 ------------------------------------------------>
     {
       // 'overflow-y-auto': true,
       "inset-0": isFullScreen,

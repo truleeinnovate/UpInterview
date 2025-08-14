@@ -1,4 +1,5 @@
 //v1.0.0 removed coverLetterdescription feild by Ranjith
+// v1.0.1 - Ashok - Removed border left and set outline as none
 
 import React, { useEffect, useRef, useState } from "react";
 import { Expand, Minimize, Search, X, ChevronDown } from "lucide-react";
@@ -269,9 +270,11 @@ const EditAdvacedDetails = ({
   };
 
   // console.log('skills from context:', skills);
-
+  // v1.0.1 <----------------------------------------------------------------- 
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
+    // "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
+    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
+  // v1.0.1 ----------------------------------------------------------------->
     {
       "inset-0": isFullScreen,
       "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,

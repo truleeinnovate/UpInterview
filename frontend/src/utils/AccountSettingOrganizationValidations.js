@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Phone number has * as mandatory field but previously it's not so fixed that issue
+
 // validations/companyValidation.js
 export const validateCompanyProfile = (formData) => {
     const errors = {};
@@ -15,6 +17,9 @@ export const validateCompanyProfile = (formData) => {
     if (!safeTrim(formData.lastName)) errors.lastName = "Last name is required";
     if (!safeTrim(formData.email)) errors.email = "Email is required"; // Fixed capitalization (Email -> email)
     if (!safeTrim(formData.jobTitle)) errors.jobTitle = "Job title is required";
+    // v1.0.0 <---------------------------------------------------------------------
+    if (!safeTrim(formData.phone)) errors.phone = "Phone number is required";
+    // v1.0.0 --------------------------------------------------------------------->
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
