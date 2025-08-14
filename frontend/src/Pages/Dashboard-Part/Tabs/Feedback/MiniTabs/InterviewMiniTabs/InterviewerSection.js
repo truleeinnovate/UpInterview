@@ -48,19 +48,27 @@ const InterviewerSectionComponent = ({
   // Get all questions from interviewData and filter for interviewer-added questions
   const location = useLocation();
   const rawFeedbackData = location.state?.feedback;
-  const feedbackData = React.useMemo(() => rawFeedbackData || {}, [rawFeedbackData]);
+  // const feedbackData = React.useMemo(() => rawFeedbackData || {}, [rawFeedbackData] || interviewData?.questionFeedback);
+  const feedbackData = React.useMemo(() => {
+    return rawFeedbackData || interviewData || {};
+  }, [rawFeedbackData, interviewData]);
+  
+// console.log("feedbackData",interviewData?.questionFeedback);
 
   // Get interviewer-added questions from the new API structure
-  const rawInterviewerAddedQuestionsFromAPI = interviewData?.interviewQuestions?.interviewerAddedQuestions;
+  const rawInterviewerAddedQuestionsFromAPI = interviewData?.interviewQuestions?.interviewerAddedQuestions ;
   const interviewerAddedQuestionsFromAPI = React.useMemo(
     () => rawInterviewerAddedQuestionsFromAPI || [],
     [rawInterviewerAddedQuestionsFromAPI]
   );
-  const rawInterviewQuestions = interviewData?.interviewQuestions;
+  const rawInterviewQuestions = interviewData?.interviewQuestions || interviewerSectionData;
   const allQuestions = React.useMemo(() => {
     if (feedbackData?.preSelectedQuestions) return feedbackData.preSelectedQuestions;
     return rawInterviewQuestions || [];
   }, [feedbackData, rawInterviewQuestions]);
+
+  // console.log("rawInterviewQuestions",rawInterviewQuestions);
+  
   
   // Use interviewer-added questions from API if available, otherwise fallback to old logic
   const filteredInterviewerQuestions = React.useMemo(() => {
@@ -84,31 +92,69 @@ const InterviewerSectionComponent = ({
   ////<---v1.0.2-----
   // Merge persisted feedback into interviewer questions without overwriting current UI state
   const questionsWithFeedback = React.useMemo(() => {
-    const baseArray = [...(interviewerSectionData || []), ...(filteredInterviewerQuestions || [])];
-    // De-duplicate by question id
-    const mapById = new Map();
-    baseArray.forEach((q) => {
-      const key = q.questionId || q._id;
-      if (!key) return;
-      if (!mapById.has(key)) mapById.set(key, q);
+    
+    
+  //   const baseArray = [...(interviewerSectionData || []), ...(filteredInterviewerQuestions || [])];
+  // //  console.log("baseArray",baseArray);
+    
+  //   // De-duplicate by question id
+  //   const mapById = new Map();
+  //   baseArray.forEach((q) => {
+  //     const key = q.questionId || q._id;
+  //     if (!key) return;
+  //     if (!mapById.has(key)) mapById.set(key, q);
+  //   });
+  //   const baseQuestions = Array.from(mapById.values());
+  //   // Restrict to only interviewer-added questions
+  //   const interviewerIdSet = new Set(
+  //     (filteredInterviewerQuestions || [])
+  //       .map((qq) => qq.questionId || qq._id)
+  //       .filter(Boolean)
+  //   );
+  //   console.log("baseQuestions",baseQuestions);
+    
+  //   const baseQuestionsFiltered = baseQuestions.filter((q) => {
+  //     const id = q.questionId || q._id;
+  //     console.log("id",id);
+  //     console.log("interviewerIdSet",q);
+      
+  //     if (interviewerIdSet.size > 0) {
+  //       return !!id && interviewerIdSet.has(id);
+  //     }
+  //     const addedBy = q.addedBy || q.snapshot?.addedBy;
+  //     return addedBy === "interviewer";
+  //   });
+  //   console.log("feedbackData",feedbackData);
+  const existingQuestions = filteredInterviewerQuestions || [];
+    
+  // Get newly added questions from interviewerSectionData that are not in existing questions
+  // const newlyAddedQuestions = (interviewerSectionData || []).filter(newQ => {
+  //   const newId = newQ.questionId || newQ._id || newQ.id;
+  //   return !existingQuestions.some(existingQ => {
+  //     const existingId = existingQ.questionId || existingQ._id || existingQ.id;
+  //     return existingId === newId;
+  //   });
+    
+  // });
+  const newlyAddedQuestions = (interviewerSectionData || [])
+  .filter(newQ => {
+    const newId = newQ.questionId || newQ._id || newQ.id;
+    const isNotDuplicate = !existingQuestions.some(existingQ => {
+      const existingId = existingQ.questionId || existingQ._id || existingQ.id;
+      return existingId === newId;
     });
-    const baseQuestions = Array.from(mapById.values());
-    // Restrict to only interviewer-added questions
-    const interviewerIdSet = new Set(
-      (filteredInterviewerQuestions || [])
-        .map((qq) => qq.questionId || qq._id)
-        .filter(Boolean)
-    );
-    const baseQuestionsFiltered = baseQuestions.filter((q) => {
-      const id = q.questionId || q._id;
-      if (interviewerIdSet.size > 0) {
-        return !!id && interviewerIdSet.has(id);
-      }
-      const addedBy = q.addedBy || q.snapshot?.addedBy;
-      return addedBy === "interviewer";
-    });
-    const shouldApplyFeedback = (isEditMode || isViewMode) && feedbackData && Array.isArray(feedbackData.questionFeedback) && feedbackData.questionFeedback.length > 0;
-    if (!shouldApplyFeedback) return baseQuestionsFiltered;
+    const isAddedByInterviewer = (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
+    return isNotDuplicate && isAddedByInterviewer;
+  });
+
+  // Combine both arrays
+  const allCombinedQuestions = [...existingQuestions, ...newlyAddedQuestions];
+  
+    
+    const shouldApplyFeedback = (isEditMode || isViewMode || isAddMode) && feedbackData && Array.isArray(feedbackData.questionFeedback) && feedbackData.questionFeedback.length > 0;
+    console.log("shouldApplyFeedback",shouldApplyFeedback,isAddMode);
+    
+    if (!shouldApplyFeedback) return allCombinedQuestions;
     const feedbackMap = feedbackData.questionFeedback.reduce((acc, f) => {
       const k = f.questionId || f._id;
       if (!k) return acc;
@@ -122,13 +168,14 @@ const InterviewerSectionComponent = ({
       if (type === "incorrect" || type === "Not Answered" || type === "not answered" || type === "wrong") return "Not Answered";
       return undefined;
     };
-    return baseQuestionsFiltered.map((item) => {
+    return allCombinedQuestions.map((item) => {
+     console.log("item",item);
       const id = item.questionId ||  item._id;
       const f = id ? feedbackMap[id] : null;
       if (!f) return item;
       const merged = { ...item };
-      const submittedAns = f.candidateAnswer?.submittedAnswer || "";
-      const answerType = f.candidateAnswer?.answerType || "";
+      const submittedAns = f.candidateAnswer?.submittedAnswer || item.candidateAnswer?.submittedAnswer || "";
+      const answerType = f.candidateAnswer?.answerType || item.candidateAnswer?.answerType || "";
       const derivedIsAnswered = mapAnswerType(answerType);
       if (!merged.answer && submittedAns) merged.answer = submittedAns;
       if (!merged.isAnswered || merged.isAnswered === "Not Answered") {
@@ -151,28 +198,17 @@ const InterviewerSectionComponent = ({
 
   console.log("questionsWithFeedback",questionsWithFeedback);
   
-  const [interviewerSection, setInterviewerSection] = useState(
-    isAddMode ? [] : [
-      // {
-      //   id: 1,
-      //   question: "Tell me about your experience with React",
-      //   answer: "Sample answer about React experience",
-      //   mandatory: true,
-      //   isAnswered: "Not Answered",
-      //   notesBool: false,
-      //   note: ""
-      // },
-      // {
-      //   id: 2,
-      //   question: "How do you handle state management?",
-      //   answer: "Sample answer about state management",
-      //   mandatory: false,
-      //   isAnswered: "Not Answered",
-      //   notesBool: false,
-      //   note: ""
-      // }
-    ]
-  );
+  // const [interviewerSection, setInterviewerSection] = useState(
+  //   isAddMode ? [] : [
+ 
+  //   ]
+  // );
+  const [interviewerSection, setInterviewerSection] = useState(() => {
+    return (isAddMode || isEditMode) 
+      ? questionsWithFeedback
+      : [];
+  });
+  
 
 
 
@@ -447,7 +483,9 @@ const InterviewerSectionComponent = ({
               The questions listed below are interviewer's choice.
             </p>
           </div>
-                     {(isAddMode && !decodedData.schedule) && (
+          {isViewMode || decodedData?.schedule ? 
+            <div>
+            </div> : (
              <div className="flex items-center gap-2">
                <button
                  className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"

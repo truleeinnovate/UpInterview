@@ -4,6 +4,8 @@ import { Video, LogOut, MessageSquare, Clock, MapPin } from 'lucide-react';
 import { formatToLocalTime, formatDuration, getTimeUntilInterview, getDateStatus } from '../../utils/timezoneUtils';
 
 const CandidateView = ({ onBack,feedbackData,decodedData }) => {
+  console.log("feedbackData",feedbackData);
+  
   // const candidate = mockData.candidates[0];
   // const interview = mockData.interviews[0];
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {  User, MessageSquare, FileText } from 'lucide-react';
 
 // import CandidateDetails from './CandidateDetails';
@@ -15,9 +15,35 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
   console.log("selectedCandidate",selectedCandidate);
   
   // Question Bank State Management
-  const [interviewerSectionData, setInterviewerSectionData] = useState([]);
+  const initialQuestions = feedbackData?.questionFeedback;
+const [interviewerSectionData, setInterviewerSectionData] = useState(
+  Array.isArray(initialQuestions) ? [...initialQuestions] : []
+);
+console.log("interviewerSectionData",initialQuestions);
+
+  // const [interviewerSectionData, setInterviewerSectionData] = useState( [...selectedCandidate.interviewData?.questionFeedback]);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
+
+  // Merge answered and newly added
+  const mergedQuestions = useMemo(() => {
+    // Get existing interviewer questions from API
+    const existingInterviewerQuestions = selectedCandidate?.interviewData?.questionFeedback || [];
+    
+    // Get newly added questions from interviewerSectionData
+    const newlyAddedQuestions = (interviewerSectionData || []).filter(newQ => {
+      const newId = newQ.questionId || newQ._id || newQ.id;
+      return !existingInterviewerQuestions.some(existingQ => {
+        const existingId = existingQ.questionId || existingQ._id || existingQ.id;
+        return existingId === newId;
+      });
+    });
+  
+    // Combine both for submission purposes
+    return [...existingInterviewerQuestions, ...newlyAddedQuestions];
+  }, [selectedCandidate, interviewerSectionData]);
+console.log("mergedQuestions",mergedQuestions);
+
 
   // Preselected Questions Responses State Management
   const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] = useState([]);
@@ -135,7 +161,7 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
     // { id: 'management', label: 'Feedback Management', icon: Users }
   ];
 
-  console.log("decodedData",decodedData);
+  console.log("mergedQuestions",mergedQuestions);
 
   return (
     <div className="min-h-screen bg-gray-50 ">
@@ -186,6 +212,7 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
               <InterviewsMiniTabComponent 
                 interviewData={selectedCandidate} 
                 isAddMode={true}
+                
                 interviewerSectionData={interviewerSectionData}
                 setInterviewerSectionData={setInterviewerSectionData}
                 removedQuestionIds={removedQuestionIds}
@@ -199,6 +226,7 @@ const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feed
                 setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
                 handlePreselectedQuestionResponse={handlePreselectedQuestionResponse}
                 decodedData={decodedData}
+                
               />
             )}
             {activeTab === 'feedback' && (

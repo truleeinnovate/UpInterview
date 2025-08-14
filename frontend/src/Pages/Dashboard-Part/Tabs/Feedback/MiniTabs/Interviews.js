@@ -61,7 +61,9 @@ const InterviewsMiniTabComponent = ({
     hasPreselectedQuestions: !!interviewData?.interviewQuestions?.preselectedQuestions,
     hasInterviewerAddedQuestions: !!interviewData?.interviewQuestions?.interviewerAddedQuestions,
     preselectedCount: interviewData?.interviewQuestions?.preselectedQuestions?.length || 0,
-    interviewerAddedCount: interviewData?.interviewQuestions?.interviewerAddedQuestions?.length || 0
+    interviewerAddedCount: interviewData?.interviewQuestions?.interviewerAddedQuestions?.length || 0,
+    questionFeedback: interviewData?.questionFeedback
+
   });
   
 

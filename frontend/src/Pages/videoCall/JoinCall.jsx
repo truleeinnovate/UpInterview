@@ -10,6 +10,8 @@ import { decryptData } from '../../utils/PaymentCard';
 import { config } from '../../config';
 import AuthCookieManager from '../../utils/AuthCookieManager/AuthCookieManager';
 import { decodeJwt } from '../../utils/AuthCookieManager/jwtDecode';
+import { useFeedbackData } from '../../apiHooks/useFeedbacks';
+
 
 function JoinMeeting() {
   const location = useLocation();
@@ -17,11 +19,16 @@ function JoinMeeting() {
   const [currentRole, setCurrentRole] = useState(null);
   const [decodedData, setDecodedData] = useState(null);
   const [urlRoleInfo, setUrlRoleInfo] = useState(null);
-  const [feedbackData, setFeedbackData] = useState(null);
-  const [feedbackLoading, setFeedbackLoading] = useState(false);
-  const [feedbackError, setFeedbackError] = useState(null);
+  const [feedbackDatas, setFeedbackData] = useState(null);
+  // const [feedbackLoading, setFeedbackLoading] = useState(false);
+  // const [feedbackError, setFeedbackError] = useState(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [authError, setAuthError] = useState(null);
+
+  // ✅ New state for pre-auth status
+  const [preAuthPassed, setPreAuthPassed] = useState(false);
+  const [preAuthLoading, setPreAuthLoading] = useState(true);
+  const [AuthType, setAuthType] = useState(null);
 
   // Authentication check function
   const checkAuthentication = () => {
@@ -58,9 +65,10 @@ function JoinMeeting() {
           const returnUrl = encodeURIComponent(window.location.href);
 
           // Determine login path based on role (interviewer vs scheduler/organization)
-          const urlParams = new URLSearchParams(location.search);
-          const isInterviewer = urlParams.get('interviewer') === 'true';
-          const loginPath = isInterviewer ? '/individual-login' : '/organization-login';
+          // const urlParams = new URLSearchParams(location.search);
+          // const isInterviewer = urlParams.get('interviewer') === 'true';
+          const isIndividual = AuthType === "individual";
+          const loginPath = isIndividual ? '/individual-login' : '/organization-login';
 
           navigate(`${loginPath}?returnUrl=${returnUrl}`);
           return false;
@@ -152,92 +160,53 @@ function JoinMeeting() {
     }
   };
 
-  // Check authentication on component mount
-  useEffect(() => {
-    // Only check authentication for schedule and interviewer links
-    const urlParams = new URLSearchParams(location.search);
-    // Fix typo - standardize to 'schedule' (was 'scheduler')
-    const schedule = urlParams.get('scheduler');
-    const interviewer = urlParams.get('interviewer');
-    const candidate = urlParams.get('candidate');
 
-    const isSchedule = schedule === 'true';
-    const isInterviewer = interviewer === 'true';
-    const isCandidate = candidate === 'true';
-
-    // Skip authentication for candidate links
-    if (isCandidate) {
-      console.log('Candidate link detected, skipping authentication');
-      setIsAuthChecking(false);
-      return;
-    }
-
-    // Check authentication for schedule and interviewer links
-    if (isSchedule || isInterviewer) {
-      console.log('Schedule or interviewer link detected, checking authentication');
-      checkAuthentication();
-    } else {
-      console.log('No specific role detected, skipping authentication');
-      setIsAuthChecking(false);
-    }
-  }, [location.search]);
 
 
   // Function to fetch feedback data
-  const fetchFeedbackData = async (roundId, interviewerId) => {
-    if (!roundId) {
-      console.log('No round ID provided, skipping feedback fetch');
-      return;
-    }
+  // const fetchFeedbackData = async (roundId, interviewerId) => {
+  //   if (!roundId) {
+  //     console.log('No round ID provided, skipping feedback fetch');
+  //     return;
+  //   }
 
-    try {
-      setFeedbackLoading(true);
-      setFeedbackError(null);
+  //   try {
+  //     setFeedbackLoading(true);
+  //     setFeedbackError(null);
 
-      console.log('🔍 Fetching feedback data for round ID:', roundId);
-      console.log('👤 Interviewer ID for filtering:', interviewerId);
 
-      // Build URL with query parameters
-      let url = `${config.REACT_APP_API_URL}/feedback/round/${roundId}`;
-      if (interviewerId) {
-        url += `?interviewerId=${interviewerId}`;
-      }
+  //     // Build URL with query parameters
+  //     let url = `${config.REACT_APP_API_URL}/feedback/round/${roundId}`;
+  //     if (interviewerId) {
+  //       url += `?interviewerId=${interviewerId}`;
+  //     }
 
-      console.log('🌐 Making API call to:', url);
+  //     console.log('🌐 Making API call to:', url);
 
-      const response = await axios.get(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${Cookies.get('authToken')}`
-        },
-      });
+  //     const response = await axios.get(url, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         // 'Authorization': `Bearer ${Cookies.get('authToken')}`
+  //       },
+  //     });
 
-      if (response.data.success) {
-        console.log('✅ Feedback data fetched successfully:', response.data.data);
-        console.log('📊 Response summary:', {
-          hasInterviewRound: !!response.data.data.interviewRound,
-          hasCandidate: !!response.data.data.candidate,
-          hasPosition: !!response.data.data.position,
-          interviewersCount: response.data.data.interviewers?.length || 0,
-          feedbacksCount: response.data.data.feedbacks?.length || 0,
-          interviewQuestionsCount: response.data.data.interviewQuestions?.length || 0,
-          filteredByInterviewer: response.data.data.filteredByInterviewer || false
-        });
-        setFeedbackData(response.data.data);
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch feedback data');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching feedback data:', error);
-      setFeedbackError(error.message);
-    } finally {
-      setFeedbackLoading(false);
-    }
-  };
+  //     if (response.data.success) {
+
+  //       setFeedbackData(response.data.data);
+  //     } else {
+  //       throw new Error(response.data.message || 'Failed to fetch feedback data');
+  //     }
+  //   } catch (error) {
+  //     console.error('❌ Error fetching feedback data:', error);
+  //     setFeedbackError(error.message);
+  //   } finally {
+  //     setFeedbackLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     // Skip if still checking authentication
-    if (isAuthChecking) return;
+    // if (isAuthChecking) return;
 
     // Parse URL parameters
     const urlParams = new URLSearchParams(location.search);
@@ -250,15 +219,6 @@ function JoinMeeting() {
     const schedulerToken = urlParams.get('schedulertoken');
 
 
-    console.log('=== URL PARAMETERS DEBUG ===');
-    console.log('Raw URL parameters:', {
-      schedule,
-      candidate,
-      interviewer,
-      meeting,
-      round,
-    });
-
     // Parse schedule parameter
     const isSchedule = schedule === 'true';
     const isCandidate = candidate === 'true';
@@ -266,6 +226,16 @@ function JoinMeeting() {
     console.log('Schedule boolean:', isSchedule);
     console.log('Is Candidate:', isCandidate);
     console.log('Is Interviewer:', isInterviewer);
+
+    // Skip auth for candidate links
+    if (isCandidate) {
+      console.log('Candidate link detected, skipping pre-auth & auth');
+      setIsAuthChecking(false);
+      setPreAuthPassed(true);
+      setPreAuthLoading(false);
+      return;
+    }
+
 
     // Decrypt meeting data
     let decryptedMeeting = null;
@@ -293,18 +263,19 @@ function JoinMeeting() {
       }
     }
 
-     // Decrypt round data
-     let interviewerId = null;
-     if (interviewerToken) {
-       try {
-         const decodedInterviewerToken = decodeURIComponent(interviewerToken);
-         console.log('Decoded round parameter:', decodedInterviewerToken);
-         interviewerId = decryptData(interviewerToken);
-         console.log('Decrypted round data:', interviewerToken);
-       } catch (error) {
-         console.error('Error decrypting round data:', error);
-       }
-     }
+    // Decrypt round data
+    let interviewerId = null;
+    if (interviewerToken || schedulerToken) {
+      try {
+        console.log('Decoded round parameter:', schedulerToken);
+        const decodedInterviewerToken = decodeURIComponent(interviewerToken || schedulerToken);
+        console.log('Decoded round parameter:', decodedInterviewerToken);
+        interviewerId = decryptData(interviewerToken || schedulerToken);
+        console.log('Decrypted round data:', interviewerId);
+      } catch (error) {
+        console.error('Error decrypting round data:', error);
+      }
+    }
 
     // interviewerToken
 
@@ -320,23 +291,7 @@ function JoinMeeting() {
       interviewerId: interviewerId || "not found",
     };
 
-    console.log('=== EXTRACTED DATA ===');
-    console.log('Schedule:', extractedData.schedule);
-    console.log('Meet Link:', extractedData.meetLink);
-    console.log('Interview Round ID:', extractedData.interviewRoundId);
-    console.log('Is Candidate:', extractedData.isCandidate);
-    console.log('Is Interviewer:', extractedData.isInterviewer);
-    console.log('Full extracted data:', extractedData);
-
     setDecodedData(extractedData);
-
-    // Fetch feedback data if we have a round ID
-    if (extractedData.interviewRoundId) {
-      console.log('🔄 Fetching feedback data for round ID:', extractedData.interviewRoundId);
-      fetchFeedbackData(extractedData.interviewRoundId, extractedData.interviewerId);
-    } else {
-      console.log('⚠️ No round ID available, skipping feedback fetch');
-    }
 
     // Set role information for RoleSelector
     // If schedule=true, treat it as interviewer role
@@ -350,41 +305,212 @@ function JoinMeeting() {
 
     // Auto-select candidate role if URL indicates candidate
     if (isCandidate) {
-      console.log('Auto-selecting candidate role based on URL parameter');
+
       setCurrentRole('candidate');
-    } else {
-      console.log('RoleSelector will be shown - user must click button to proceed');
     }
 
-  }, [location.search, isAuthChecking]);
+    // ✅ Pre-Auth API Call
+    const fetchPreAuthDetails = async () => {
+      try {
+        const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/contact-details`, {
+          params: {
+            contactId: extractedData.interviewerId,
+            roundId: extractedData.interviewRoundId
+          }
+        });
+        console.log("res", res);
 
-  // Debug useEffect to log feedback data changes
+        const result = res.data
+        if (result) {
+          console.log('📅 Pre-auth API data:', result);
+
+
+          // Check meeting expiry
+          // if (res.data.round && res.data.round.dateTime) {
+          //   const roundDate = new Date(res.data.round.dateTime);
+          //   if (roundDate < new Date()) {
+          //     setAuthError('Meeting link has expired');
+          //     setPreAuthPassed(false);
+          //     return; // stop here, don't set preAuthPassed true
+          //   }
+          // }
+
+          // If not expired, pass pre-auth
+          setPreAuthPassed(true);
+          setAuthType(result?.tenant?.type)
+
+        } else {
+          console.error('❌ API error:', res.data.error);
+          setAuthError(res.data.error || 'Error fetching meeting details');
+        }
+      } catch (err) {
+        console.error('❌ API call failed:', err);
+        setAuthError('Failed to check meeting details');
+      } finally {
+        setPreAuthLoading(false);
+      }
+    };
+
+    fetchPreAuthDetails();
+
+
+    // ✅ Pre-Auth API Call
+    // const fetchPreAuthDetails = async () => {
+    //   try {
+    //     const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/contact-details`, {
+    //       params: {
+    //         contactId: extractedData.interviewerId,
+    //         roundId: extractedData.interviewRoundId
+    //       }
+    //     });
+
+    //     if (res.data.success) {
+    //       console.log('📅 Pre-auth API data:', res.data);
+    //       setPreAuthPassed(true);
+    //     } else {
+    //       console.error('❌ API error:', res.data.error);
+    //       setAuthError(res.data.error || 'Error fetching meeting details');
+    //     }
+    //   } catch (err) {
+    //     console.error('❌ API call failed:', err);
+    //     setAuthError('Failed to check meeting details');
+    //   } finally {
+    //     setPreAuthLoading(false);
+    //   }
+    // };
+
+    // fetchPreAuthDetails();
+
+
+
+
+  }, [location.search]);
+
+
+
+
+  // Check authentication on component mount
   useEffect(() => {
-    console.log('📊 Feedback Data Status:', {
-      loading: feedbackLoading,
-      error: feedbackError,
-      hasData: !!feedbackData,
-      dataKeys: feedbackData ? Object.keys(feedbackData) : []
-    });
+    if (!preAuthLoading && preAuthPassed) {
+      // Only check authentication for schedule and interviewer links
+      const urlParams = new URLSearchParams(location.search);
+      // Fix typo - standardize to 'schedule' (was 'scheduler')
+      const schedule = urlParams.get('scheduler');
+      const interviewer = urlParams.get('interviewer');
+      const candidate = urlParams.get('candidate');
 
-    if (feedbackData) {
-      console.log('📋 Feedback Data Details:', {
-        hasInterviewRound: !!feedbackData.interviewRound,
-        hasCandidate: !!feedbackData.candidate,
-        hasPosition: !!feedbackData.position,
-        interviewersCount: feedbackData.interviewers?.length || 0,
-        feedbacksCount: feedbackData.feedbacks?.length || 0
-      });
+      const isSchedule = schedule === 'true';
+      const isInterviewer = interviewer === 'true';
+      const isCandidate = candidate === 'true';
+
+
+
+
+      // Skip authentication for candidate links
+      if (isCandidate) {
+        console.log('Candidate link detected, skipping authentication');
+        setIsAuthChecking(false);
+        return;
+      }
+
+      // Check authentication for schedule and interviewer links
+      if (isSchedule || isInterviewer) {
+        console.log('Schedule or interviewer link detected, checking authentication');
+        checkAuthentication();
+      } else {
+        console.log('No specific role detected, skipping authentication');
+        setIsAuthChecking(false);
+      }
     }
-  }, [feedbackData, feedbackLoading, feedbackError]);
+  }, [preAuthLoading, preAuthPassed]);
+
+
+
+
+  const {
+    data: feedbackData,
+    isLoading: feedbackLoading,
+    error: feedbackError
+  } = useFeedbackData(
+    !isAuthChecking && preAuthPassed ? decodedData?.interviewRoundId : null,
+    !isAuthChecking && preAuthPassed ? decodedData?.interviewerId : null
+  );
+
+  console.log("feedbackData join call", feedbackData);
+
+  useEffect(() => {
+    if (!feedbackLoading && feedbackData?.feedbacks?.length) {
+      const matchedFeedbacks = feedbackData.feedbacks
+        .filter(fb =>
+          fb.interviewerId?._id?.toString() === decodedData?.interviewerId
+        )
+        .map(fb => ({
+          ...fb,
+          interviewRound: feedbackData.interviewRound,
+          candidate: feedbackData.candidate,
+          position: feedbackData.position
+        }));
+      console.log("matchedFeedbacks", matchedFeedbacks);
+
+      setFeedbackData(matchedFeedbacks[0]);
+
+      // if (matchedFeedbacks.length > 0) {
+      //   setFeedbackData(matchedFeedbacks);
+      // } else {
+      //   // No match
+      // }
+    } else {
+      console.log("feedbackData", feedbackData);
+
+      setFeedbackData(feedbackData);
+    }
+  }, [feedbackLoading, feedbackData, decodedData?.interviewRoundId]);
+
+  
+
+  // Loading state for pre-auth
+  if (preAuthLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Checking meeting details...</p>
+      </div>
+    );
+  }
+
+  if (feedbackLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (feedbackError) {
+    return <div>Error loading feedback</div>;
+  }
+  // Debug useEffect to log feedback data changes
+  // useEffect(() => {
+  //   console.log('📊 Feedback Data Status:', {
+  //     loading: feedbackLoading,
+  //     error: feedbackError,
+  //     hasData: !!feedbackData,
+  //     dataKeys: feedbackData ? Object.keys(feedbackData) : []
+  //   });
+
+  //   if (feedbackData) {
+  //     console.log('📋 Feedback Data Details:', {
+  //       hasInterviewRound: !!feedbackData.interviewRound,
+  //       hasCandidate: !!feedbackData.candidate,
+  //       hasPosition: !!feedbackData.position,
+  //       interviewersCount: feedbackData.interviewers?.length || 0,
+  //       feedbacksCount: feedbackData.feedbacks?.length || 0
+  //     });
+  //   }
+  // }, [feedbackData, feedbackLoading, feedbackError]);
 
   const handleRoleSelect = (role) => {
-    console.log('User clicked role selection:', role);
+    // console.log('User clicked role selection:', role);
     setCurrentRole(role);
   };
 
   const handleBack = () => {
-    console.log('User clicked back - returning to RoleSelector');
+    // console.log('User clicked back - returning to RoleSelector');
     setCurrentRole(null);
   };
 
@@ -420,17 +546,18 @@ function JoinMeeting() {
       </div>
     );
   }
+  console.log("feedbackData", feedbackDatas);
 
   // Show appropriate view based on user's button click
   if (currentRole === 'candidate') {
-    return <CandidateView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackData} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />;
+    return <CandidateView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackDatas} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />;
   }
 
   if (currentRole === 'interviewer' || currentRole === 'scheduler') {
     return (
       <>
         <CombinedNavbar />
-        <InterviewerView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackData} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />
+        <InterviewerView onBack={handleBack} decodedData={decodedData} feedbackData={feedbackDatas} feedbackLoading={feedbackLoading} feedbackError={feedbackError} />
       </>
     );
   }
