@@ -450,13 +450,22 @@ exports.acceptInterviewRequest = async (req, res) => {
     const totalAmount = (hourlyRate * durationInMinutes) / 60;
     console.log(`Calculated total amount for this request: ${totalAmount}`);
 
-    const wallet = await Wallet.findById(request.tenantId);
-    const walletBalance = wallet.balance;
+    const wallet = await Wallet.findOne({ tenantId: request.tenantId });
+    if (!wallet) {
+      console.log(`No wallet found for tenant ${request.tenantId}`);
+      return res.status(400).json({
+        success: false,
+        message: "No wallet found for this organization."
+      });
+    }
+    console.log(`Found wallet for tenant ${request.tenantId}:`, wallet);
+    const walletBalance = wallet.balance || 0;
 
     console.log(`Found wallet balance for tenant ${request.tenantId}: ${walletBalance}`);
 
     // Check if there is enough balance in the wallet
     if (walletBalance < totalAmount) {
+      console.log(`Insufficient balance in wallet to accept this interview request. Wallet balance: ${walletBalance}, Total amount: ${totalAmount}`);
       return res.status(400).json({
         success: false,
         message: "Insufficient balance in wallet to accept this interview request."
@@ -467,8 +476,8 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     // Deduct the total amount from wallet balance
     console.log(`Attempting to deduct ${totalAmount} from wallet balance and add to hold amount`);
-    const updatedWallet = await Wallet.findByIdAndUpdate(
-      request.tenantId,
+    const updatedWallet = await Wallet.findOneAndUpdate(
+      { tenantId: request.tenantId },
       { 
         $inc: { 
           balance: -totalAmount,

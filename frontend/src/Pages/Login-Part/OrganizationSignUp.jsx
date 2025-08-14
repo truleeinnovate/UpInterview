@@ -1274,38 +1274,6 @@ export const Organization = () => {
                       </div>
 
                       <div className="mb-4">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                          Work Email Address *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="email"
-                            value={selectedEmail}
-                            onChange={handleEmailInput}
-                            onBlur={(e) => handleBlur('email', e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                              }`}
-                            placeholder="john.doe@company.com"
-                            autoComplete="email"
-                          />
-                          {isCheckingEmail && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
-                            </div>
-                          )}
-                        </div>
-                        {errors.email && (
-                          <p className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {errors.email}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mb-4">
                         <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                           Phone Number
                         </label>
@@ -1362,8 +1330,40 @@ export const Organization = () => {
                       </div>
 
                       <div className="mb-4">
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                          Work Email *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            id="email"
+                            value={selectedEmail}
+                            onChange={handleEmailInput}
+                            onBlur={(e) => handleBlur('email', e.target.value)}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                              }`}
+                            placeholder="john.doe@company.com"
+                            autoComplete="email"
+                          />
+                          {isCheckingEmail && (
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
+                            </div>
+                          )}
+                        </div>
+                        {errors.email && (
+                          <p className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {errors.email}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mb-4">
                         <label htmlFor="profileId" className="block text-sm font-medium text-gray-700 mb-2">
-                          Profile ID / Username *
+                          Username *
                         </label>
                         <div className="relative">
                           <input

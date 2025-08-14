@@ -24,20 +24,20 @@ export const validateProfileId = async (profileId, checkProfileIdExists) => {
   let errorMessage = '';
 
   if (!profileId) {
-    errorMessage = 'Profile ID is required';
+    errorMessage = 'Username ID is required';
   } else if (profileId.length < 4) {
-    errorMessage = 'Profile ID must be at least 4 characters';
+    errorMessage = 'Username ID must be at least 4 characters';
   } else if (!/^[a-zA-Z0-9_]+$/.test(profileId)) {
     errorMessage = 'Only letters, numbers, and underscores allowed';
   } else if (checkProfileIdExists) {
     try {
       const exists = await checkProfileIdExists(profileId);
       if (exists) {
-        errorMessage = 'Profile ID already taken';
+        errorMessage = 'Username ID already taken';
       }
     } catch (err) {
-      console.error('Error checking profile ID:', err);
-      errorMessage = 'Error verifying Profile ID';
+      console.error('Error checking Username ID:', err);
+      errorMessage = 'Error verifying Username ID';
     }
   }
 

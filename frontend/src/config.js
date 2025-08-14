@@ -14,18 +14,6 @@
 //   state: Math.random().toString(36).substring(7)
 // };
 
-// Debug environment variables
-console.log('Environment variables check in the config file:');
-console.log('REACT_APP_CLIENT_ID:', process.env.REACT_APP_CLIENT_ID);
-console.log('REACT_APP_CLIENT_SECRET:', process.env.REACT_APP_CLIENT_SECRET);
-console.log('REACT_APP_REDIRECT_URI:', process.env.REACT_APP_REDIRECT_URI);
-console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
-console.log('REACT_APP_API_URL_FRONTEND:', process.env.REACT_APP_API_URL_FRONTEND);
-console.log('REACT_APP_GOOGLE_AUTH_URL:', process.env.REACT_APP_GOOGLE_AUTH_URL);
-console.log('REACT_APP_GOOGLE_CLIENT_ID:', process.env.REACT_APP_GOOGLE_CLIENT_ID);
-console.log('REACT_APP_GOOGLE_REDIRECT_URI:', process.env.REACT_APP_GOOGLE_REDIRECT_URI);
-console.log('REACT_APP_GOOGLE_SCOPES:', process.env.REACT_APP_GOOGLE_SCOPES);
-
 export const config = {
   // LinkedIn OAuth configuration
   REACT_APP_CLIENT_ID: process.env.REACT_APP_CLIENT_ID,

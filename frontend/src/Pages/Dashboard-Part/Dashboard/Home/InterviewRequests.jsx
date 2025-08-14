@@ -17,16 +17,32 @@ const InterviewRequests = () => {
   const [error, setError] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
+  // Reusable function to fetch interview requests
+  const fetchInterviewRequests = async (contactId) => {
+    try {
+      const requestRes = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest/requests`, {
+        params: { interviewerId: contactId }
+      });
+      // console.log("Fetched interview requests:", requestRes.data);
+      setRequests(requestRes.data);
+      return requestRes.data;
+    } catch (err) {
+      console.error('Failed to fetch interview requests:', err);
+      setError('Error fetching interview requests');
+      throw err;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         // Step 1: Fetch Contacts
         const contactRes = await axios.get(`${config.REACT_APP_API_URL}/contacts`);
         const allContacts = contactRes.data;
-        console.log("All contacts:", allContacts);
+        // console.log("All contacts:", allContacts);
 
         // Step 2: Find the specific contact with matching ownerId
-        // ownerId is a string, contact.ownerId may be ObjectId or string
         const matchedContact = allContacts.find(contact =>
           contact.ownerId?.toString() === ownerId
         );
@@ -41,12 +57,7 @@ const InterviewRequests = () => {
         setSelectedContact(matchedContact);
 
         // Step 3: Fetch Interview Requests using matched contact ID
-        const requestRes = await axios.get(`${config.REACT_APP_API_URL}/interviewrequest/requests`, {
-          params: { interviewerId: matchedContact._id }
-        });
-
-        console.log("Interview requests for matched contact:", requestRes.data);
-        setRequests(requestRes.data);
+        await fetchInterviewRequests(matchedContact._id);
       } catch (err) {
         console.error('Failed to fetch data:', err);
         setError('Error fetching data');
@@ -56,7 +67,7 @@ const InterviewRequests = () => {
     };
 
     fetchData();
-  }, []);
+  }, [ownerId]);
 
   // // Fetch interview requests
   // useEffect(() => {
@@ -80,21 +91,45 @@ const InterviewRequests = () => {
   // Handle Accept button click
   const handleAccept = async (requestId, contactId, roundId) => {
     try {
+      // // First, verify the request is still available
+      // const verifyResponse = await axios.get(
+      //   `${config.REACT_APP_API_URL}/interviewrequest/requests?requestId=${requestId}`
+      // );
+
+      // const requestExists = verifyResponse.data.some(
+      //   req => req._id === requestId && req.status === 'inprogress'
+      // );
+
+      // if (!requestExists) {
+      //   // Refresh the requests list to show current status
+      //   if (selectedContact?._id) {
+      //     await fetchInterviewRequests(selectedContact._id);
+      //   }
+      //   alert('This interview request is no longer available. It may have been accepted by someone else or expired.');
+      //   return;
+      // }
+
+      // If request is still available, proceed with acceptance
       await axios.post(`${config.REACT_APP_API_URL}/interviewrequest/accept`, {
         requestId,
         contactId,
         roundId,
       });
 
-      // Update the request status to 'accepted' in the UI
-      setRequests(requests.map(req =>
-        req.id === requestId ? { ...req, status: 'accepted' } : req
-      ));
+      // Refresh the requests list to get the latest data
+      if (selectedContact?._id) {
+        await fetchInterviewRequests(selectedContact._id);
+      }
 
-      setSelectedRequest(prev => prev ? { ...prev, status: 'accepted' } : null);
       console.log('Interview request accepted successfully!');
     } catch (err) {
       console.error('Failed to accept interview request', err);
+      if (err.response?.status === 400) {
+        // Refresh the requests list to show current status
+        if (selectedContact?._id) {
+          await fetchInterviewRequests(selectedContact._id);
+        }
+      }
     }
   };
 
@@ -141,7 +176,10 @@ const InterviewRequests = () => {
                     <User size={18} className="text-custom-blue" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900">{request.contactId?.firstName + " " + request.contactId?.lastName}</h4>
+                    <h4 className="text-sm font-semibold text-gray-900">
+                      {/* {request.contactId?.firstName + " " + request.contactId?.lastName} */}
+                      {request.roundDetails.roundTitle}
+                    </h4>
                     <p className="text-xs text-gray-600">{request.positionId?.title || 'N/A'}</p>
                   </div>
                 </div>
@@ -162,10 +200,10 @@ const InterviewRequests = () => {
                   <Building size={14} className="text-gray-400" />
                   <span className="text-xs text-gray-600 truncate">{request.positionId?.companyname || 'N/A'}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                {/* <div className="flex items-center gap-1.5">
                   <Video size={14} className="text-gray-400" />
                   <span className="text-xs text-gray-600 truncate">{request.type}</span>
-                </div>
+                </div> */}
                 <div className="flex items-center gap-1.5 col-span-2">
                   <Clock size={14} className="text-gray-400" />
                   <span className="text-xs text-gray-600">Requested for {request.requestedDate}</span>
@@ -173,13 +211,13 @@ const InterviewRequests = () => {
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                <span
+                {/* <span
                   className={`px-2 py-0.5 rounded-lg text-xs font-medium ${request.status === 'scheduled' ? 'bg-blue-100 text-custom-blue' : 'bg-yellow-100 text-yellow-600'
                     }`}
                 >
                   {request.status}
-                </span>
-                <div className="flex items-center gap-2">
+                </span> */}
+                <div className="flex items-center justify-end gap-2">
                   <button
                     onClick={() => handleDetails(request)}
                     className="px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300"

@@ -32,10 +32,10 @@ const downloadImageAsBuffer = async (url) => {
 const { generateToken } = require("../utils/jwt");
 
 router.post("/check-user", async (req, res) => {
-  console.log(
-    "config.REACT_APP_REDIRECT_URI from backend linkedinroutes.js",
-    config.REACT_APP_REDIRECT_URI
-  );
+  // console.log(
+  //   "config.REACT_APP_REDIRECT_URI from backend linkedinroutes.js",
+  //   config.REACT_APP_REDIRECT_URI
+  // );
 
   // Check if required environment variables are set
   if (!config.REACT_APP_CLIENT_ID || !config.REACT_APP_CLIENT_SECRET || !config.REACT_APP_REDIRECT_URI) {
@@ -51,22 +51,22 @@ router.post("/check-user", async (req, res) => {
   }
 
   try {
-    console.log("Backend: 1. Received user check request", {
-      source: "Local Server",
-      requestOrigin: req.headers.origin,
-      requestMethod: req.method,
-      requestPath: req.path,
-      requestBody: req.body,
-    });
+    // console.log("Backend: 1. Received user check request", {
+    //   source: "Local Server",
+    //   requestOrigin: req.headers.origin,
+    //   requestMethod: req.method,
+    //   requestPath: req.path,
+    //   requestBody: req.body,
+    // });
     const { code } = req.body;
 
     if (!code) {
-      console.log("No authorization code provided");
+      // console.log("No authorization code provided");
       return res.status(400).json({ error: "No authorization code provided" });
     }
 
     // Exchange code for token
-    console.log("Backend: 2. Exchanging code for token");
+    // console.log("Backend: 2. Exchanging code for token");
     let tokenResponse;
     try {
       tokenResponse = await axios.post(
@@ -100,7 +100,7 @@ router.post("/check-user", async (req, res) => {
     const accessToken = tokenResponse.data.access_token;
 
     // Get user info from LinkedIn
-    console.log("Backend: 3. Getting user info from LinkedIn");
+    // console.log("Backend: 3. Getting user info from LinkedIn");
     const userInfoResponse = await axios.get(
       "https://api.linkedin.com/v2/userinfo",
       {
@@ -121,11 +121,11 @@ router.post("/check-user", async (req, res) => {
     };
 
     // Check for existing user
-    console.log("Backend: 4. Checking database for existing user");
+    // console.log("Backend: 4. Checking database for existing user");
     let existingUser;
     try {
       existingUser = await Users.findOne({ email: userInfo.email });
-      console.log("Backend: 4.1. Existing user:", existingUser);
+      // console.log("Backend: 4.1. Existing user:", existingUser);
     } catch (dbError) {
       console.error("Database error while checking existing user:", dbError);
       return res.status(500).json({
