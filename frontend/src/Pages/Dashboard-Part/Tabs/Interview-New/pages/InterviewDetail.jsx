@@ -37,9 +37,17 @@ import CandidateDetails from "../../Candidate-Tab/CandidateViewDetails/Candidate
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.2 --------------------------------------------------------------------->
 
+import { calculateTimeBeforeInterview, getFeeBracket, calculateFees } from '../../../../../utils/feeCalculations.js';
+// import FeeConfirmationModal from '../components/FeeConfirmationModal.js';
+
 const InterviewDetail = () => {
   const { id } = useParams();
   const { interviewData, updateInterviewStatus } = useInterviews();
+
+  // const [showFeeModal, setShowFeeModal] = useState(false);
+  const [modalAction, setModalAction] = useState(null); // 'reschedule' or 'cancel'
+  const [selectedRound, setSelectedRound] = useState(null);
+  const [calculatedFees, setCalculatedFees] = useState(null);
 
   const interview = interviewData?.find((interview) => interview._id === id);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -86,6 +94,26 @@ const InterviewDetail = () => {
       setTemplate(interview?.templateId || null);
     }
   }, [interview]);
+
+  const handleInitiateAction = async (round, action) => {
+    console.log('handleInitiateAction called:', { round, action });
+    try {
+      // Update round status and fees via API
+      await updateInterviewStatus({
+        interviewId: id,
+        roundId: round._id,
+        action: action,
+        newStatus: action === 'cancel' ? 'Cancelled' : 'Rescheduled', // Or 'Pending' for reschedule
+      });
+      // If reschedule, increment rescheduleCount in backend (optional, depending on API)
+      if (action === 'reschedule') {
+        // API call to increment count if needed
+      }
+      // Refresh interviewData (optional, depending on hook behavior)
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const [activeRound, setActiveRound] = useState(null);
   const [showFinalFeedbackModal, setShowFinalFeedbackModal] = useState(false);
@@ -151,7 +179,7 @@ const InterviewDetail = () => {
     }
   }, [rounds]);
   // v1.0.1 ---------------------------------------------------------------------------------->
-  
+
   // Ensure hooks are always called before any conditional return
   // if (!interview) {
   //   return <Loading />;
@@ -393,7 +421,7 @@ const InterviewDetail = () => {
                         <div className="font-medium">
                           {candidate?.LastName
                             ? candidate.LastName.charAt(0).toUpperCase() +
-                              candidate.LastName.slice(1)
+                            candidate.LastName.slice(1)
                             : "Unknown"}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
@@ -438,7 +466,7 @@ const InterviewDetail = () => {
                     <div className="font-medium">
                       {position?.title
                         ? position.title.charAt(0).toUpperCase() +
-                          position.title.slice(1)
+                        position.title.slice(1)
                         : "Unknown"}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -476,7 +504,7 @@ const InterviewDetail = () => {
                     <div className="font-medium">
                       {template?.templateName
                         ? template.templateName.charAt(0).toUpperCase() +
-                          template.templateName.slice(1)
+                        template.templateName.slice(1)
                         : "Not selected any template"}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -657,22 +685,27 @@ const InterviewDetail = () => {
                   <div className="mt-6">
                     {roundsViewMode === "horizontal" ? (
                       activeRound && (
-                        <SingleRoundView
-                          rounds={rounds}
-                          interviewData={interview}
-                          currentRoundId={activeRound}
-                          canEditRound={canEditRound}
-                          onEditRound={handleEditRound}
-                          onChangeRound={handleSelectRound}
-                        />
+                        <>
+                          <SingleRoundView
+                            rounds={rounds}
+                            interviewData={interview}
+                            currentRoundId={activeRound}
+                            canEditRound={canEditRound}
+                            onEditRound={handleEditRound}
+                            onChangeRound={handleSelectRound}
+                          />
+                        </>
                       )
                     ) : (
-                      <VerticalRoundsView
-                        rounds={rounds}
-                        interviewData={interview}
-                        canEditRound={canEditRound}
-                        onEditRound={handleEditRound}
-                      />
+                      <>
+                        <VerticalRoundsView
+                          rounds={rounds}
+                          interviewData={interview}
+                          canEditRound={canEditRound}
+                          onEditRound={handleEditRound}
+                          onInitiateAction={handleInitiateAction}
+                        />
+                      </>
                     )}
                   </div>
                 )}
@@ -774,6 +807,16 @@ const InterviewDetail = () => {
       )}
 
       {/*  ------------------------> */}
+
+      {/* {showFeeModal && (
+        <FeeConfirmationModal
+          onClose={() => setShowFeeModal(false)}
+          onConfirm={handleConfirmAction}
+          action={modalAction}
+          fees={calculatedFees}
+          round={selectedRound}
+        />
+      )} */}
 
       {/* {selectPositionView === true && (
         <PositionSlideDetails

@@ -103,21 +103,20 @@ const getModelMapping = (permissions) => {
 };
 
 router.get('/:model', permissionMiddleware, async (req, res) => {
-  console.log('--- STARTING REQUEST PROCESSING ---');
   try {
     const { model } = req.params;
 
-    console.log('[1] Request received for model:', model);
-    console.log('[1.1] Cookies received:', req.cookies);
-    console.log('[1.2] Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
+    // console.log('[1] Request received for model:', model);
+    // console.log('[1.1] Cookies received:', req.cookies);
+    // console.log('[1.2] Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
 
     // Get user information from res.locals (set by permissionMiddleware)
     let { userId, tenantId } = res.locals;
-    console.log('[2] User info from res.locals:', { userId, tenantId });
+    // console.log('[2] User info from res.locals:', { userId, tenantId });
 
     // If res.locals doesn't have user info, try to extract from token directly
     if (!userId || !tenantId) {
-      console.log('[2.1] No user info in res.locals, trying direct token extraction');
+      // console.log('[2.1] No user info in res.locals, trying direct token extraction');
 
       // Try to get token from cookies first, then from Authorization header
       let authToken = req.cookies.authToken;
@@ -126,7 +125,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
           authToken = authHeader.substring(7);
-          console.log('[2.2] Got token from Authorization header');
+          // console.log('[2.2] Got token from Authorization header');
         }
       }
 
@@ -135,7 +134,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
           userId = decoded.userId;
           tenantId = decoded.tenantId;
-          console.log('[2.3] Extracted user info from token:', { userId, tenantId });
+          // console.log('[2.3] Extracted user info from token:', { userId, tenantId });
         } catch (err) {
           console.error('[2.4] JWT verification failed:', err.message);
         }
@@ -143,7 +142,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     }
 
     if (!userId || !tenantId) {
-      console.log('[3] Missing userId or tenantId - returning 401');
+      // console.log('[3] Missing userId or tenantId - returning 401');
       return res.status(401).json({ error: 'Unauthorized: Missing userId or tenantId' });
     }
 
@@ -154,30 +153,24 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       effectivePermissions_RoleName,
     } = res.locals;
 
-    console.log('[4] Permission data from res.locals:', {
-      roleType: effectivePermissions_RoleType,
-      roleName: effectivePermissions_RoleName,
-      inheritedRoleIds: inheritedRoleIds?.length || 0,
-      hasEffectivePermissions: !!effectivePermissions
-    });
+    // console.log('[4] Permission data from res.locals:', {
+    //   roleType: effectivePermissions_RoleType,
+    //   roleName: effectivePermissions_RoleName,
+    //   inheritedRoleIds: inheritedRoleIds?.length || 0,
+    //   hasEffectivePermissions: !!effectivePermissions
+    // });
 
     if (!effectivePermissions) {
-      console.log('[5] No effective permissions found - returning 403');
+      // console.log('[5] No effective permissions found - returning 403');
       return res.status(403).json({ error: 'Forbidden: No permissions available' });
     }
 
     const modelMapping = getModelMapping(effectivePermissions);
-    console.log('[6] Model mapping for request:', Object.keys(modelMapping));
+    // console.log('[6] Model mapping for request:', Object.keys(modelMapping));
 
     const modelConfig = modelMapping[model.toLowerCase()];
-    console.log('[7] Model config for', model, ':', {
-      hasModelConfig: !!modelConfig,
-      hasViewPermission: modelConfig?.hasViewPermission,
-      modelName: modelConfig?.model?.modelName
-    });
 
     if (!modelConfig) {
-      console.log('[8] Invalid model requested - returning 400');
       return res.status(400).json({ message: `Invalid model: ${model}` });
     }
 
@@ -191,7 +184,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
     // Special handling for feedback model which has custom logic
     if (model.toLowerCase() === 'feedback') {
-      console.log('[10] Processing feedback model with custom logic - skipping DataModel validation');
+      // console.log('[10] Processing feedback model with custom logic - skipping DataModel validation');
     } else if (!DataModel || typeof DataModel.find !== 'function') {
       console.error('[10] Invalid DataModel configuration - returning 500');
       return res.status(500).json({ error: `Invalid model configuration for ${model}` });
@@ -199,42 +192,42 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     // ------------------------------v1.0.7 >
     // Base query - always enforce tenant boundary
     let query = model.toLowerCase() === 'scheduleassessment' ? { organizationId: tenantId } : { tenantId };
-    console.log('[11] Initial query with tenantId:', query);
+    // console.log('[11] Initial query with tenantId:', query);
 
     const roleType = effectivePermissions_RoleType;
     const roleName = effectivePermissions_RoleName;
 
-    console.log('[12] User role details:', {
-      roleType,
-      roleName,
-      isOrganizationAdmin: roleType === 'organization' && roleName === 'Admin'
-    });
+    // console.log('[12] User role details:', {
+    //   roleType,
+    //   roleName,
+    //   isOrganizationAdmin: roleType === 'organization' && roleName === 'Admin'
+    // });
 
     if (roleType === 'individual' && model.toLowerCase() !== 'scheduleassessment') {
       query.ownerId = userId;
-      console.log('[13] Individual user - adding ownerId filter:', query);
+      // console.log('[13] Individual user - adding ownerId filter:', query);
     } else if (roleType === 'organization' && roleName !== 'Admin') {
       if (model.toLowerCase() === 'scheduleassessment') {
         // For scheduled assessments, organization non-admin can see all under same organization
       }
       if (inheritedRoleIds?.length > 0) {
-        console.log('[14] Non-admin org user with inherited roles:', inheritedRoleIds);
+        // console.log('[14] Non-admin org user with inherited roles:', inheritedRoleIds);
         const accessibleUsers = await Users.find({
           tenantId,
           roleId: { $in: inheritedRoleIds },
         }).select('_id');
 
         const userIds = accessibleUsers.map(user => user._id);
-        console.log('[15] Accessible user IDs from inherited roles:', userIds);
+        // console.log('[15] Accessible user IDs from inherited roles:', userIds);
 
         query.ownerId = { $in: userIds };
       } else {
-        console.log('[16] Non-admin org user with no inherited roles - using own userId');
+        // console.log('[16] Non-admin org user with no inherited roles - using own userId');
         query.ownerId = userId;
       }
-      console.log('[17] Final query after org user processing:', query);
+      // console.log('[17] Final query after org user processing:', query);
     } else {
-      console.log('[18] Organization Admin - only tenantId filter applied');
+      // console.log('[18] Organization Admin - only tenantId filter applied');
       // Ensure scheduled assessments are not restricted by ownerId
       if (model.toLowerCase() === 'scheduleassessment') {
         delete query.ownerId;
@@ -244,7 +237,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     let data;
     switch (model.toLowerCase()) {
       case 'mockinterview':
-        console.log('[19] Processing MockInterview model');
+        // console.log('[19] Processing MockInterview model');
         data = await DataModel.find(query)
           .populate({
             path: 'rounds.interviewers',
@@ -252,16 +245,16 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             select: 'firstName lastName email',
           })
           .lean();
-        console.log('[20] Found', data.length, 'MockInterview records');
+        // console.log('[20] Found', data.length, 'MockInterview records');
         break;
 
       case 'tenantquestions':
-        console.log('[21] Processing TenantQuestions model');
+        // console.log('[21] Processing TenantQuestions model');
         const lists = await TenantQuestionsListNames.find(query).lean();
-        console.log('[22] Found', lists.length, 'question lists');
+        // console.log('[22] Found', lists.length, 'question lists');
 
         const listIds = lists.map((list) => list._id);
-        console.log('[23] List IDs to filter questions:', listIds);
+        // console.log('[23] List IDs to filter questions:', listIds);
 
         const questions = await TenantQuestions.find({
           ...query,
@@ -278,7 +271,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           })
           .lean();
 
-        console.log('[24] Found', questions.length, 'questions matching lists');
+        // console.log('[24] Found', questions.length, 'questions matching lists');
 
         const groupedQuestions = lists.reduce((acc, list) => {
           acc[list.label] = [];
@@ -299,22 +292,22 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         });
 
         data = groupedQuestions;
-        console.log('[25] Grouped questions by', Object.keys(groupedQuestions).length, 'categories');
+        // console.log('[25] Grouped questions by', Object.keys(groupedQuestions).length, 'categories');
         break;
 
 
 
       case 'interview':
-        console.log('[26] Processing Interview model');
+        // console.log('[26] Processing Interview model');
         const interviews = await DataModel.find(query)
           .populate({ path: 'candidateId', model: 'Candidate' })
           .populate({ path: 'positionId', model: 'Position' })
           .populate({ path: 'templateId', model: 'InterviewTemplate' })
           .lean();
 
-        console.log('[27] Found', interviews.length, 'interviews');
+        // console.log('[27] Found', interviews.length, 'interviews');
         const interviewIds = interviews.map((interview) => interview._id);
-        console.log('[28] Interview IDs for related data:', interviewIds);
+        // console.log('[28] Interview IDs for related data:', interviewIds);
         // <------------------------------- v1.0.1 
         const roundsData = await InterviewRounds.find({
           interviewId: { $in: interviewIds },
@@ -327,7 +320,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           })
           .lean();
 
-        console.log('[29] Found', roundsData.length, 'interview rounds');
+        // console.log('[29] Found', roundsData.length, 'interview rounds');
 
         const interviewQuestions = await InterviewQuestions.find({
           interviewId: { $in: interviewIds },
@@ -336,7 +329,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .select('roundId snapshot')
           .lean();
 
-        console.log('[30] Found', interviewQuestions.length, 'interview questions');
+        // console.log('[30] Found', interviewQuestions.length, 'interview questions');
         // <------------------------------- v1.0.2 
         const roundsWithQuestions = roundsData.map((round) => ({
           ...round,
@@ -349,12 +342,12 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           rounds: roundsWithQuestions.filter((round) => round.interviewId.toString() === interview._id.toString()),
         }));
         // ------------------------------ v1.0.2 >
-        console.log('[31] Final interview data with rounds and questions prepared');
+        // console.log('[31] Final interview data with rounds and questions prepared');
         break;
 
       // <------------------------------- v1.0.3 
       case 'interviewtemplate':
-        console.log('[34] Processing InterviewTemplate model');
+        // console.log('[34] Processing InterviewTemplate model');
         data = await DataModel.find(query)
           .populate({
             path: 'rounds.interviewers',
@@ -362,20 +355,20 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             select: 'firstName lastName email',
           })
           .lean();
-        console.log('[35] Found', data.length, 'InterviewTemplate records');
+        // console.log('[35] Found', data.length, 'InterviewTemplate records');
         break;
       // ------------------------------ v1.0.4 >
 
       case 'assessment':
-        console.log('[36] Processing Assessment model');
+        // console.log('[36] Processing Assessment model');
         data = await DataModel.find(query)
           .lean();
-        console.log('[37] Found', data.length, 'Assessment records');
+        // console.log('[37] Found', data.length, 'Assessment records');
         break;
       // ------------------------------ v1.0.4 >
 
       case 'position':
-        console.log('[32] Processing Position model');
+        // console.log('[32] Processing Position model');
         data = await DataModel.find(query)
           .populate({
             path: 'rounds.interviewers',
@@ -383,12 +376,12 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             select: 'firstName lastName email',
           })
           .lean();
-        console.log('[33] Found', data.length, 'Position records');
+        // console.log('[33] Found', data.length, 'Position records');
         break;
       // ------------------------------ v1.0.1 >
       // <------------------------v1.0.7
       case 'feedback':
-        console.log('[34] Processing Feedback model with complex logic');
+        // console.log('[34] Processing Feedback model with complex logic');
         
         // Get all interviews for the current tenant/owner (using the already filtered query)
         const feedbackInterviews = await Interview.find(query)
@@ -396,7 +389,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .populate('positionId', 'title companyname jobDescription Location')
           .lean();
         
-        console.log('[35] Found', feedbackInterviews.length, 'interviews for feedback lookup');
+        // console.log('[35] Found', feedbackInterviews.length, 'interviews for feedback lookup');
         
         // Get all interview round IDs from these interviews
         const feedbackInterviewIds = feedbackInterviews.map(interview => interview._id);
@@ -405,7 +398,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         }).lean();
         
         const feedbackRoundIds = feedbackInterviewRounds.map(round => round._id);
-        console.log('[36] Found', feedbackRoundIds.length, 'interview round IDs');
+        // console.log('[36] Found', feedbackRoundIds.length, 'interview round IDs');
         
         // Get feedback based on round IDs and tenant/owner matching
         // The query already includes tenantId and ownerId filtering from the general logic above
@@ -421,7 +414,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           feedbackQuery.$or.push({ ownerId: userId });
         }
         
-        console.log('[37] Feedback query:', JSON.stringify(feedbackQuery, null, 2));
+        // console.log('[37] Feedback query:', JSON.stringify(feedbackQuery, null, 2));
         
         const feedbacks = await FeedbackModel.find(feedbackQuery)
           .populate('candidateId', 'FirstName LastName Email Phone skills CurrentExperience')
@@ -431,7 +424,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
           .populate('ownerId', 'firstName lastName email')
           .lean();
         
-        console.log('[38] Found', feedbacks.length, 'feedback records');
+        // console.log('[38] Found', feedbacks.length, 'feedback records');
         
         // Get interview questions for each feedback
         const feedbackWithQuestions = await Promise.all(feedbacks.map(async (feedback) => {
@@ -449,16 +442,16 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         }));
         
         data = feedbackWithQuestions;
-        console.log('[39] Final feedback data prepared with', data.length, 'records');
+        // console.log('[39] Final feedback data prepared with', data.length, 'records');
         break;
       // ------------------------------v1.0.7 >
       default:
-        console.log('[40] Processing generic model:', model);
+        // console.log('[40] Processing generic model:', model);
         data = await DataModel.find(query).lean();
-        console.log('[41] Found', data.length, 'records for model', model);
+        // console.log('[41] Found', data.length, 'records for model', model);
     }
 
-    console.log('[36] Sending response with data');
+    // console.log('[36] Sending response with data');
     res.status(200).json({ data });
   } catch (error) {
     console.error('[37] Error in request processing:', {
@@ -473,7 +466,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       requestId: req.id // If you have request ID tracking
     });
   }
-  console.log('--- REQUEST PROCESSING COMPLETE ---');
+  // console.log('--- REQUEST PROCESSING COMPLETE ---');
 });
 
 module.exports = router;

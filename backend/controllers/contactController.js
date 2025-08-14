@@ -9,7 +9,7 @@ const getAllContacts = async (req, res) => {
     const contacts = await Contacts.find();
     return res.status(200).json(contacts);
   } catch (error) {
-    console.error("Error fetching all contacts:", error);
+    // console.error("Error fetching all contacts:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

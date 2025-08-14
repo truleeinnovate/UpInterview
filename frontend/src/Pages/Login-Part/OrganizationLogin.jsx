@@ -1028,7 +1028,7 @@ const OrganizationLogin = () => {
                   Don't have an account?{' '}
                   <Link
                     to="/organization/signup"
-                    className="text-primary-500 hover:text-primary-600 font-medium hover:underline transition-all duration-200"
+                    className="text-custom-blue hover:text-custom-blue/80 font-medium"
                   >
                     Create your organization account
                   </Link>

@@ -5,12 +5,17 @@ import PropTypes from "prop-types";
 import RoundCard from "./RoundCard";
 import { Button } from "../../CommonCode-AllTabs/ui/button";
 import { Edit, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, XCircle } from 'lucide-react';
+
 const VerticalRoundsView = ({
   rounds,
   interviewData,
   canEditRound,
   onEditRound,
+  onInitiateAction
 }) => {
+  console.log('Received rounds:', rounds);
+  console.log('onInitiateAction prop:', onInitiateAction);
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
@@ -27,6 +32,7 @@ const VerticalRoundsView = ({
   // }, [rounds]);
 
   useEffect(() => {
+    console.log('Sorted Rounds:', sortedRounds);
     if (sortedRounds.length > 0) {
       setExpandedRounds(sortedRounds[0]._id);
     }
@@ -72,55 +78,38 @@ const VerticalRoundsView = ({
             onClick={() => toggleRound(round?._id)}
             className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
           >
-        
             <div className="flex items-center">
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
                 <span className="text-sm font-medium">{round?.sequence}</span>
               </div>
               <div>
                 <div className="flex items-center">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {round?.roundTitle}
-                </h3>
-                <span className="mx-2">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {round?.roundTitle}
+                  </h3>
+                  <span className="mx-2">
                     {capitalizeFirstLetter(round?.status)}
                   </span>
-                  </div>
+                </div>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
                   <span className="mr-2">
                     {capitalizeFirstLetter(round?.interviewType)}
                   </span>
-                 
                   <span>•</span>
                   <span className="mx-2">
                     {capitalizeFirstLetter(round?.interviewMode)}
                   </span>
-                
-                  
                 </div>
               </div>
             </div>
-          
             <div className="flex items-center space-x-4">
-              {/* {canEditRound(round) && (
-                <Button
-                  onClick={() => onEditRound(round)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit Round
-                </Button>
-              )} */}
-              {isExpanded(round.id) ? (
+              {isExpanded(round._id) ? (
                 <ChevronUp className="h-5 w-5 text-gray-400" />
               ) : (
                 <ChevronDown className="h-5 w-5 text-gray-400" />
               )}
             </div>
           </button>
-
           {isExpanded(round._id) && (
             <div className="px-4 pb-4">
               <RoundCard
@@ -130,6 +119,8 @@ const VerticalRoundsView = ({
                 onEdit={() => onEditRound(round)}
                 isActive={false}
                 hideHeader={true}
+                onInitiateAction={onInitiateAction}
+                isExpanded={isExpanded}
               />
             </div>
           )}
