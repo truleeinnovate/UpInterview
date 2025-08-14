@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - fixed z-index issue at RoundDetailsModal model previously it looks like behind the header
+// v1.0.1 - Ashok - Removed border left and set outline as none
 import React, { useState } from "react";
 
 import { format, parseISO, isValid } from "date-fns";
@@ -47,11 +48,11 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
   //   }
   //   return <MessageCircle className="w-5 h-5 text-green-600" />;
   // };
-
+  // v1.0.1 <----------------------------------------------------------------------------------- 
   const modalClass = isFullScreen
     ? "fixed inset-0 bg-white z-50 overflow-y-auto"
-    : "fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-2xl border-l border-gray-200 z-50 overflow-y-auto";
-
+    : "fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 bg-white shadow-2xl z-50 overflow-y-auto outline-none";
+  // v1.0.1 -----------------------------------------------------------------------------------> 
   return (
     <Modal
       isOpen={isOpen}

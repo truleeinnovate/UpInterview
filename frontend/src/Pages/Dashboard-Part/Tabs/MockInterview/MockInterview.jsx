@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
 // v1.0.1  -  Ashok   -  added status badge as common code
+// v1.0.2  -  Ashok   -  Disabled outer scrollbar when popups (reschedule and cancel schedule) open
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -21,6 +22,9 @@ import { usePermissions } from "../../../../Context/PermissionsContext";
 // v1.0.1 <--------------------------------------------------------------------------
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 // v1.0.1 -------------------------------------------------------------------------->
+// v1.0.2 <-----------------------------------------------------------------------------------
+import {useScrollLock} from "../../../../apiHooks/scrollHook/useScrollLock.js"
+// v1.0.2 ----------------------------------------------------------------------------------->
 
 const MockInterview = () => {
   const { effectivePermissions, isInitialized } = usePermissions();
@@ -40,6 +44,10 @@ const MockInterview = () => {
   const [reschedule, setReschedule] = useState(false);
   const [cancelSchedule, setCancelSchedule] = useState(false);
   const filterIconRef = useRef(null);
+
+  // v1.0.2 <--------------------------------------------
+  useScrollLock(reschedule || cancelSchedule)
+  // v1.0.2 -------------------------------------------->
 
   useEffect(() => {
     document.title = "Mockinterview Tab";

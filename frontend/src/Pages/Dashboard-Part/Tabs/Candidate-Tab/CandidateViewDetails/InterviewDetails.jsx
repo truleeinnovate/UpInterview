@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - when popup is open removed outer scrollbar using useScrollLock hook
+// v1.0.1 - Ashok - Removed border at the popup set outline as none
 import React, { useState } from "react";
 import { format } from "date-fns";
 import Modal from "react-modal";
@@ -380,7 +381,9 @@ Feedback: ${round.feedback || "N/A"}
           onRequestClose={() => setIsEditModalOpen(false)}
           // v1.0.0 <------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
           // className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg"
-          className="fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 p-6 bg-white shadow-2xl transform transition-transform duration-300 z-50 overflow-y-auto"
+          // v1.0.1 <-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+          className="fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 p-6 bg-white shadow-2xl transform transition-transform duration-300 z-50 overflow-y-auto outline-none"
+          // v1.0.1 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
 
           overlayClassName="fixed inset-0 bg-black bg-opacity-30 z-50"
         >

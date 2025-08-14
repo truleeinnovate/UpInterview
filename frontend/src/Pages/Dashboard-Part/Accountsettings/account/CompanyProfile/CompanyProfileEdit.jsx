@@ -2,6 +2,7 @@
 // v1.0.2 changes done by Venky related to error msg scroll into view
 // v1.0.3 changes done by Venkatesh related to error msg scroll into view
 // v1.0.4 - Ashok - Improved scroll to first error functionality
+// v1.0.5 - Ashok - Removed border left and set outline as none
 
 // import { companyProfile, companySizes, industries } from '../mockData/companyData'
 // import { useCustomContext } from '../../../../../Context/Contextfetch';
@@ -382,7 +383,10 @@ const CompanyEditProfile = () => {
     }
   };
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
+    // v1.0.5 <---------------------------------------------------------------------
+    // "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
+    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
+    // v1.0.5 <---------------------------------------------------------------------
     {
       "inset-0": isFullScreen,
       "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
