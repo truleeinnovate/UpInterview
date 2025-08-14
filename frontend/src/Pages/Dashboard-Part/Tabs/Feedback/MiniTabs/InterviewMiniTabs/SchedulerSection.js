@@ -34,22 +34,46 @@ const SchedulerSectionComponent = ({
   const feedbackData = location.state?.feedback || {};
   
   // Get preselected questions from the new API structure
-  const preselectedQuestionsFromAPI = interviewdata?.interviewQuestions?.preselectedQuestions || [];
-  const allQuestions = interviewdata?.interviewQuestions ? interviewdata?.interviewQuestions : feedbackData.preSelectedQuestions || [];
+  const preselectedQuestionsFromAPI = interviewdata?.interviewQuestions?.preselectedQuestions ||  interviewdata?.questionFeedback || [];
+  const allQuestions = interviewdata?.interviewQuestions ? interviewdata?.interviewQuestions ||  interviewdata?.questionFeedback : feedbackData.preSelectedQuestions || [];
+  console.log("allQuestions",allQuestions);
   
   // Use preselected questions from API if available, otherwise fallback to old logic
-  const schedulerQuestions = preselectedQuestionsFromAPI.length > 0 
-    ? preselectedQuestionsFromAPI 
-    : (Array.isArray(allQuestions) 
-        ? allQuestions.filter(question => question.addedBy !== "interviewer" || !question.addedBy)
-        : []);
+  // const schedulerQuestions = preselectedQuestionsFromAPI.length > 0 
+  //   ? preselectedQuestionsFromAPI 
+  //   : (Array.isArray(allQuestions) 
+  //       ? allQuestions.filter(question => question.addedBy !== "interviewer" || !question.addedBy)
+  //       : []);
+
+   // FIXED FILTERING LOGIC: Filter out questions added by interviewer
+   const schedulerQuestions = preselectedQuestionsFromAPI.length > 0 
+   ? preselectedQuestionsFromAPI.filter(question => {
+       // Exclude questions added by interviewer
+       return question.addedBy !== "interviewer";
+     })
+   : (Array.isArray(allQuestions) 
+       ? allQuestions.filter(question => {
+           // Exclude questions added by interviewer
+           if (question.addedBy === "interviewer") {
+             return false;
+           }
+           
+           // Additional logic: Keep questions that have feedback even if they were added by interviewer
+           // (This is commented out as per your requirement to completely exclude interviewer questions)
+           // const hasFeedback = questionsfeedback.some(f => f.questionId === question.questionId);
+           // return question.addedBy !== "interviewer" || hasFeedback;
+           
+           return true;
+         })
+       : []);
   
-  const questionsfeedback = feedbackData.questionFeedback || [];
+  const questionsfeedback = feedbackData.questionFeedback ||  interviewdata?.questionFeedback || [];
   console.log("All questions:", allQuestions.length);
   console.log("Preselected questions from API:", preselectedQuestionsFromAPI.length);
   console.log("Scheduler questions (not added by interviewer):", schedulerQuestions.length);
   console.log("Scheduler questions data:", schedulerQuestions);
   console.log("Preselected questions responses:", preselectedQuestionsResponses);
+  console.log("questionsfeedback",questionsfeedback);
   
 
 
@@ -62,36 +86,37 @@ const SchedulerSectionComponent = ({
       const feedback = questionsfeedback?.find((f) => f.questionId === q.questionId);
       // Find preselected response for this question
       const preselectedResponse = preselectedQuestionsResponses?.find((r) => r.questionId === q.questionId);
+      console.log("qda",feedback);
       
       if (feedback) {
         return {
           ...q,
-          candidateAnswer: feedback.candidateAnswer || null,
-          interviewerFeedback: feedback.interviewerFeedback || null,
-          isAnswered: feedback.candidateAnswer?.answerType
-            ? feedback.candidateAnswer.answerType === "correct"
+          candidateAnswer: feedback.candidateAnswer || q.candidateAnswer || null,
+          interviewerFeedback: feedback.interviewerFeedback || q.interviewerFeedback || null,
+          isAnswered: feedback.candidateAnswer?.answerType || q.candidateAnswer?.answerType
+            ? feedback.candidateAnswer.answerType || q.candidateAnswer?.answerType === "correct"
               ? "Fully Answered"
-              : feedback.candidateAnswer.answerType === "partial"
+              : feedback.candidateAnswer.answerType || q.candidateAnswer?.answerType === "partial"
                 ? "Partially Answered"
-                : feedback.candidateAnswer.answerType === "incorrect"
+                : feedback.candidateAnswer.answerType || q.candidateAnswer?.answerType === "incorrect"
                   ? "Not Answered"
                   : "Not Answered"
             : preselectedResponse?.isAnswered || "Not Answered",
-          isLiked: feedback.interviewerFeedback?.liked || preselectedResponse?.isLiked || "",
-          whyDislike: feedback.interviewerFeedback?.dislikeReason || preselectedResponse?.whyDislike || "",
-          notesBool: !!feedback.interviewerFeedback?.note || preselectedResponse?.notesBool || false,
-          note: feedback.interviewerFeedback?.note || preselectedResponse?.note || "",
+          isLiked: feedback.interviewerFeedback?.liked || preselectedResponse?.isLiked || q.interviewerFeedback?.liked || "",
+          whyDislike: feedback.interviewerFeedback?.dislikeReason || preselectedResponse?.whyDislike || q.interviewerFeedback?.dislikeReason || "",
+          notesBool: !!feedback.interviewerFeedback?.note || preselectedResponse?.notesBool || q.interviewerFeedback?.note || false,
+          note: feedback.interviewerFeedback?.note || preselectedResponse?.note || q.interviewerFeedback?.note || "",
         };
       } else {
         return {
           ...q,
           candidateAnswer: null,
           interviewerFeedback: null,
-          isAnswered: preselectedResponse?.isAnswered || "Not Answered",
-          isLiked: preselectedResponse?.isLiked || "",
-          whyDislike: preselectedResponse?.whyDislike || "",
-          notesBool: preselectedResponse?.notesBool || false,
-          note: preselectedResponse?.note || "",
+          isAnswered: preselectedResponse?.isAnswered || q.isAnswered || "Not Answered",
+          isLiked: preselectedResponse?.isLiked || q.isLiked || "",
+          whyDislike: preselectedResponse?.whyDislike || q.whyDislike || "",
+          notesBool: preselectedResponse?.notesBool || q.notesBool || false,
+          note: preselectedResponse?.note || q.note || "",
         };
       }
     });

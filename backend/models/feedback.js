@@ -25,7 +25,11 @@ const interviewerFeedbackSchema = new mongoose.Schema({
  
  
 const questionFeedbackSchema = new mongoose.Schema({
-  questionId: String, //reference to question (can be string ID or full object)
+  // questionId: String, //reference to question (can be string ID or full object)
+  questionId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'InterviewQuestions' // must match the model name
+  },
   candidateAnswer:candidateAnswerSchema, //candidate's answer details
   interviewerFeedback:interviewerFeedbackSchema // feedback from the interviewer
 })

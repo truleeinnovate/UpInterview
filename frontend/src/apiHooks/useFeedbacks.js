@@ -55,3 +55,58 @@ export const useUpdateFeedback = () => {
     },
   });
 };
+
+
+
+export const useFeedbackData = (roundId, interviewerId) => {
+  return useQuery({
+    queryKey: ['feedbackData', roundId, interviewerId],
+    queryFn: async () => {
+      if (!roundId) {
+        console.log('No round ID provided, skipping feedback fetch');
+        return null;
+      }
+
+      console.log('🔍 Fetching feedback data for round ID:', roundId);
+      console.log('👤 Interviewer ID for filtering:', interviewerId);
+
+      // Build URL with query parameters
+      let url = `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`;
+      if (interviewerId) {
+        url += `?interviewerId=${interviewerId}`;
+      }
+
+      console.log('🌐 Making API call to:', url);
+
+      const response = await axios.get(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${Cookies.get('authToken')}`
+        },
+      });
+
+      if (response.data.success) {
+        console.log('✅ Feedback data fetched successfully:', response.data.data);
+        console.log('📊 Response summary:', {
+          hasInterviewRound: !!response.data.data.interviewRound,
+          hasCandidate: !!response.data.data.candidate,
+          hasPosition: !!response.data.data.position,
+          interviewersCount: response.data.data.interviewers?.length || 0,
+          feedbacksCount: response.data.data.feedbacks?.length || 0,
+          interviewQuestionsCount: response.data.data.interviewQuestions?.length || 0,
+          filteredByInterviewer: response.data.data.filteredByInterviewer || false
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch feedback data');
+      }
+    },
+    enabled: !!roundId, // only run if roundId exists
+    retry: 1,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false
+  });
+};
