@@ -1,11 +1,15 @@
 // v1.0.0  -  Ashraf  -  header border-b removed
-import React, { useState, useRef, useEffect } from 'react';
+// v1.0.1  -  Venkatesh  -  interviewer if  wallet balance is less than hourlyrate then show wallet modal
+import React, { useState, useRef, useEffect, useMemo } from 'react';//<----v1.0.1-----
 import { X, Star, ExternalLink, ChevronDown, ChevronUp, Search, Minimize, Info, Clock, Users, Expand } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
 import InterviewerAvatar from '../../../CommonCode-AllTabs/InterviewerAvatar.jsx';
 import InterviewerDetailsModal from '../Internal-Or-Outsource/OutsourceInterviewerDetail.jsx';
 import { useCustomContext } from '../../../../../../Context/Contextfetch.js';
+import Wallet from '../../../../Accountsettings/account/wallet/Wallet.jsx';
+import { useWallet } from '../../../../../../apiHooks/useWallet';//<----v1.0.1-----
+import toast from 'react-hot-toast';//<----v1.0.1-----
 
 const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDetails, navigatedfrom }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -90,7 +94,9 @@ function OutsourcedInterviewerModal({
   navigatedfrom
 }) {
 
-  const { interviewers } = useCustomContext();
+  const { interviewers, contacts } = useCustomContext();//<----v1.0.1-----
+  //console.log("contacts===",contacts)
+  const { data: walletBalance } = useWallet();//<----v1.0.1-----
 
   const [searchTerm, setSearchTerm] = useState('');
   const [rateRange, setRateRange] = useState([0, 250]);
@@ -100,6 +106,21 @@ function OutsourcedInterviewerModal({
   const requestSentRef = useRef(false);
   const [filteredInterviewers, setFilteredInterviewers] = useState([]);
   const [baseInterviewers, setBaseInterviewers] = useState([]);
+  const [showWalletModal, setShowWalletModal] = useState(false);//<----v1.0.1-----
+
+  //<----v1.0.1-----
+  // Compute the highest hourlyRate from backend contacts
+  const maxHourlyRate = useMemo(() => {
+    const rates = Array.isArray(contacts)
+      ? contacts
+          .map((c) => parseFloat(c?.hourlyRate))
+          .filter((n) => Number.isFinite(n))
+      : [];
+    return rates.length ? Math.max(...rates) : 0;
+  }, [contacts]);
+  //----v1.0.1----->
+
+  // Toast is shown inside handleProceed before opening the wallet modal
 
   // Fetch and filter interviewers based on skills and availability
   useEffect(() => {
@@ -359,9 +380,18 @@ function OutsourcedInterviewerModal({
   };
 
   const handleProceed = () => {
-    console.log("Selected Interviewers:", selectedInterviewersLocal);
-    onProceed(selectedInterviewersLocal);
-    onClose();
+    //<----v1.0.1-----
+    const balance = walletBalance?.balance || 0;
+    if (balance > maxHourlyRate) {
+      console.log("Selected Interviewers:", selectedInterviewersLocal);
+      onProceed(selectedInterviewersLocal);
+      onClose();
+    } else {
+      const required = Number(maxHourlyRate || 0).toFixed(2);
+      toast.error(`Your wallet balance is less than the highest interviewer hourly rate (required: $${required}). Please add funds to proceed.`);
+      setTimeout(() => setShowWalletModal(true), 1000);
+    }
+    //----v1.0.1----->
   };
 
   const [isOpen, setIsOpen] = useState(false);
@@ -542,6 +572,35 @@ function OutsourcedInterviewerModal({
           />
         )}
       </AnimatePresence>
+
+      {showWalletModal && (
+        //<----v1.0.1-----
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50"
+          onClick={() => setShowWalletModal(false)}
+        >
+          <motion.div
+            className={`bg-white h-full shadow-xl flex flex-col ${isFullscreen ? 'w-full' : 'w-full md:w-2/3 lg:w-1/2 xl:w-1/2 2xl:w-1/2'}`}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+          <div className="flex items-center justify-end pt-2">
+            <button
+              aria-label="Close"
+              onClick={() => setShowWalletModal(false)}
+              className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
+            >
+              <X className="h-5 w-5 text-gray-600" />
+            </button>
+            </div>
+            <Wallet/>
+          </motion.div>
+        </div>
+        //----v1.0.1----->
+      )}
     </>
   );
 }
