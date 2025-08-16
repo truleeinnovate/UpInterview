@@ -27,6 +27,7 @@ const SuggestedQuestionsComponent = ({
     interviewQuestionsLists,
     removedQuestionIds = [],
 }) => {
+
     const { suggestedQuestions, isLoading } = useQuestions();
     const [skillInput, setSkillInput] = useState("");
     const [selectedSkills, setSelectedSkills] = useState([]);
@@ -35,7 +36,7 @@ const SuggestedQuestionsComponent = ({
     const filterIconRef = useRef(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const itemsPerPage = 10;
-        const [dropdownOpen, setDropdownOpen] = useState(null);
+    const [dropdownOpen, setDropdownOpen] = useState(null);
 
     const [filtrationData, setFiltrationData] = useState([
         {
@@ -73,26 +74,26 @@ const SuggestedQuestionsComponent = ({
     const [searchInput, setSearchInput] = useState("");
     const [tempFiltrationData, setTempFiltrationData] = useState(JSON.parse(JSON.stringify(filtrationData)));
 
-    
-   
+
+
     // Filter questions
     const suggestedQuestionsFilteredData = useMemo(() => {
         if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
         return suggestedQuestions.filter((question) => {
             // Unified search: check both question text and tags
-            const matchesSearch = 
+            const matchesSearch =
                 !searchInput ||
                 question.questionText.toLowerCase().includes(searchInput.toLowerCase()) ||
                 question.tags.some(tag => tag.toLowerCase().includes(searchInput.toLowerCase()));
-            
+
             const matchesType =
                 questionTypeFilterItems.length === 0 ||
                 questionTypeFilterItems.includes(question.questionType.toLowerCase());
-            
+
             const matchesDifficultyLevel =
                 difficultyLevelFilterItems.length === 0 ||
                 difficultyLevelFilterItems.includes(question.difficultyLevel.toLowerCase());
-            
+
             return matchesSearch && matchesType && matchesDifficultyLevel;
         });
     }, [
@@ -321,20 +322,20 @@ const SuggestedQuestionsComponent = ({
 
     const getDifficultyStyles = (difficulty) => {
         switch (difficulty) {
-          case "Easy":
-            return "border-white rounded-md px-2 py-1 bg-[#81C784]";
-          case "Medium":
-            return "border-white rounded-md px-2 py-1 bg-[#FFD54F]";
-          case "Hard":
-            return "border-white rounded-md px-2 py-1 bg-[#E57373]";
-          default:
-            return "";
+            case "Easy":
+                return "border-white rounded-md px-2 py-1 bg-[#81C784]";
+            case "Medium":
+                return "border-white rounded-md px-2 py-1 bg-[#FFD54F]";
+            case "Hard":
+                return "border-white rounded-md px-2 py-1 bg-[#E57373]";
+            default:
+                return "";
         }
-      };
-        const toggleDropdown = (questionId) => {
+    };
+    const toggleDropdown = (questionId) => {
         setDropdownOpen(dropdownOpen === questionId ? null : questionId);
     };
-        const closeDropdown = () => {
+    const closeDropdown = () => {
         setDropdownOpen(null);
     };
 
@@ -549,7 +550,7 @@ const SuggestedQuestionsComponent = ({
                                                     </div>
                                                 </div>
                                             )}
-                                            {type === "interviewerSection" || type === "feedback" && (
+                                            {(type === "interviewerSection" || type === "feedback") && (
                                                 <div className="p-1 flex justify-center w-[8%]">
                                                     {interviewQuestionsLists?.some((q) => q.questionId === item._id) ? (
                                                         <button
@@ -593,22 +594,22 @@ const SuggestedQuestionsComponent = ({
                                             )}
 
                                             {!type && !fromScheduleLater && (
-                                                    <div className="w-[10%] flex justify-center relative">
-                                                        <button
-                                                            type="button"
-                                                            className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
-                                                            onClick={() => toggleDropdown(item._id)}
-                                                        >
-                                                            Add to list
-                                                        </button>
-                                                        {dropdownOpen === item._id && (
-                                                            <MyQuestionList
-                                                                question={item}
-                                                                closeDropdown={closeDropdown}
-                                                            />
-                                                        )}
-                                                    </div>
-                                                )}
+                                                <div className="w-[10%] flex justify-center relative">
+                                                    <button
+                                                        type="button"
+                                                        className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
+                                                        onClick={() => toggleDropdown(item._id)}
+                                                    >
+                                                        Add to list
+                                                    </button>
+                                                    {dropdownOpen === item._id && (
+                                                        <MyQuestionList
+                                                            question={item}
+                                                            closeDropdown={closeDropdown}
+                                                        />
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="px-4 py-2">
                                             <p className="text-gray-600 mb-2">
@@ -639,7 +640,7 @@ const SuggestedQuestionsComponent = ({
 
             )}
 
-           
+
             <FilterPopup
                 isOpen={isPopupOpen}
                 onClose={() => setIsPopupOpen(false)}

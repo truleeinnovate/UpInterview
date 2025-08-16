@@ -151,7 +151,7 @@ const RoundFormInterviews = () => {
 
   const [interviewType, setInterviewType] = useState("instant"); // "instant" or "scheduled"
   const [scheduledDate, setScheduledDate] = useState(""); // Start Date & Time
-  const [duration, setDuration] = useState(30); // Duration in minutes
+  const [duration, setDuration] = useState(60); // Duration in minutes
   const [startTime, setStartTime] = useState(""); // Final Start Time
   const [endTime, setEndTime] = useState(""); // Calculated End Time
   const [combinedDateTime, setCombinedDateTime] = useState("");
@@ -418,7 +418,7 @@ const RoundFormInterviews = () => {
       setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
-      setDuration(30);
+      setDuration(60);
       setStartTime("");
       setEndTime("");
       setInterviewerGroupName("");
@@ -433,7 +433,7 @@ const RoundFormInterviews = () => {
       setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
-      setDuration(30);
+      setDuration(60);
       setStartTime("");
       setEndTime("");
 
@@ -456,7 +456,7 @@ const RoundFormInterviews = () => {
       setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
-      setDuration(30);
+      setDuration(60);
       setStartTime("");
       setEndTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
@@ -469,7 +469,7 @@ const RoundFormInterviews = () => {
       setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
-      setDuration(30);
+      setDuration(60);
       setStartTime("");
       setEndTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
@@ -1087,7 +1087,7 @@ const RoundFormInterviews = () => {
               console.log("Outsource email sending response:", emailResponse.data);
 
               if (emailResponse.data.success) {
-                toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
+                // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
                 if (emailResponse.data.data.failedEmails > 0) {
                   toast.warning(`${emailResponse.data.data.failedEmails} emails failed to send`);
                 }
@@ -1305,8 +1305,8 @@ const RoundFormInterviews = () => {
     if (scheduledDate !== newScheduledDate) {
       setScheduledDate(newScheduledDate);
     }
-    if (duration !== 30) {
-      setDuration(30);
+    if (duration !== 60) {
+      setDuration(60);
     }
   }, []);
 
@@ -1659,7 +1659,6 @@ const RoundFormInterviews = () => {
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
                       >
                         <option value="30">30 min</option>
-                        <option value="45">45 min</option>
                         <option value="60">60 min</option>
                         <option value="90">90 min</option>
                         <option value="120">120 min</option>

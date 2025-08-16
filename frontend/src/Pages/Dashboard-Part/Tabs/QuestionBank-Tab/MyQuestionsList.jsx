@@ -3,7 +3,7 @@
 // v1.0.2  -  Venkatesh  -  fixed selected label issue now default first label is selected
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import {ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
 import { ReactComponent as IoIosArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { ReactComponent as IoIosArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
@@ -12,7 +12,7 @@ import { ReactComponent as MdMoreVert } from "../../../../icons/MdMoreVert.svg";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import Editassesmentquestion from "./QuestionBank-Form.jsx";
 import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
-import { toast, Toaster } from 'react-hot-toast'; 
+import { toast, Toaster } from 'react-hot-toast';
 import Cookies from "js-cookie";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
@@ -45,7 +45,7 @@ const MyQuestionsList = ({
 }) => {
   const { myQuestionsList, isLoading } = useQuestions();
   console.log("myQuestionsList:", myQuestionsList);
-  
+
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
   const filterIconRef = useRef(null);
@@ -265,7 +265,7 @@ const MyQuestionsList = ({
   };
 
 
-   //    useEffect(() => {
+  //    useEffect(() => {
   //   if (removedQuestionIds && removedQuestionIds.length > 0) {
   //     // Update the local state to mark these questions as not added
   //     removedQuestionIds.forEach(questionId => {
@@ -283,24 +283,24 @@ const MyQuestionsList = ({
   //       });
   //       return updatedList;
   //     });
-      // const requiredArray = myQuestionsList;
-      // console.log("myQuestionsList", requiredArray);
+  // const requiredArray = myQuestionsList;
+  // console.log("myQuestionsList", requiredArray);
 
-      // const requiredObj = requiredArray.map((item) =>
-      //   item._id === question._id ? { ...item, isAdded: false } : item
-      // );
-      //     setMyQuestionsList((prev) => ({
-      //   ...prev,
-      //   [listName]: requiredObj,
-      // }));
-    // }
+  // const requiredObj = requiredArray.map((item) =>
+  //   item._id === question._id ? { ...item, isAdded: false } : item
+  // );
+  //     setMyQuestionsList((prev) => ({
+  //   ...prev,
+  //   [listName]: requiredObj,
+  // }));
+  // }
   // }, [removedQuestionIds, setMyQuestionsList]);
 
   // const onClickAddButton = async (question, listName, idx) => {
   //   // ... (unchanged, keep existing implementation)
   // };
 
-     const onClickAddButton = async (question, listName, indx) => {
+  const onClickAddButton = async (question, listName, indx) => {
     console.log("question", question);
     console.log("type", type)
     if (type === "assessment") {
@@ -438,7 +438,7 @@ const MyQuestionsList = ({
   // };
 
 
-    const onClickRemoveQuestion = async (question, listName, indx) => {
+  const onClickRemoveQuestion = async (question, listName, indx) => {
 
     if (type === 'interviewerSection' || type === 'feedback') {
       if (handleRemoveQuestion) {
@@ -455,8 +455,8 @@ const MyQuestionsList = ({
       // }));
 
       toast.error("Question removed successfully!");
-    } 
-    
+    }
+
     // else {
 
     //   try {
@@ -568,12 +568,12 @@ const MyQuestionsList = ({
   };
 
   // Find the listId for the selectedLabel
-const selectedLabelId = useMemo(() => {
-  if (!selectedLabel || !myQuestionsList) return null;
-  const allQuestions = Object.values(myQuestionsList).flat();
-  const matchingQuestion = allQuestions.find((q) => q.label === selectedLabel);
-  return matchingQuestion ? matchingQuestion.listId : null;
-}, [selectedLabel, myQuestionsList]);
+  const selectedLabelId = useMemo(() => {
+    if (!selectedLabel || !myQuestionsList) return null;
+    const allQuestions = Object.values(myQuestionsList).flat();
+    const matchingQuestion = allQuestions.find((q) => q.label === selectedLabel);
+    return matchingQuestion ? matchingQuestion.listId : null;
+  }, [selectedLabel, myQuestionsList]);
 
   const groupedQuestions = filteredMyQuestionsList;
 
@@ -635,13 +635,12 @@ const selectedLabelId = useMemo(() => {
                     Object.keys(groupedQuestions).map((listName, idx) => (
                       <div
                         key={idx}
-                        className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
-                          selectedLabel === listName
+                        className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
                             ? "bg-blue-50 text-custom-blue font-semibold"
                             : groupedQuestions[listName].length === 0
-                            ? "text-gray-400"
-                            : ""
-                        }`}
+                              ? "text-gray-400"
+                              : ""
+                          }`}
                         onClick={() => handleLabelChange(listName)}
                         title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
                       >
@@ -650,11 +649,10 @@ const selectedLabelId = useMemo(() => {
                           <span className="truncate">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</span>
                           {/*-------v1.0.0------>*/}
                           <span
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              groupedQuestions[listName].length === 0
+                            className={`text-xs px-2 py-1 rounded-full ${groupedQuestions[listName].length === 0
                                 ? "text-gray-500 bg-gray-100"
                                 : "text-gray-500 bg-gray-100"
-                            }`}
+                              }`}
                           >
                             {groupedQuestions[listName].length}
                           </span>
@@ -832,11 +830,11 @@ const selectedLabelId = useMemo(() => {
                                 >
                                   {question.difficultyLevel}
                                 </span>
-                                {type === "interviewerSection" || type === "feedback" && (
+                                {(type === "interviewerSection" || type === "feedback") && (
                                   <div>
                                     {interviewQuestionsLists?.some((q) => q.questionId === question._id) ? (
                                       <button
-                                       type="button"
+                                        type="button"
                                         onClick={() => onClickRemoveQuestion(question, listName, index)}
                                         className="rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
                                       >
@@ -844,7 +842,7 @@ const selectedLabelId = useMemo(() => {
                                       </button>
                                     ) : (
                                       <button
-                                       type="button"
+                                        type="button"
                                         className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
                                         onClick={() => onClickAddButton(question, listName, index)}
                                       >
