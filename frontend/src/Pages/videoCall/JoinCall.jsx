@@ -737,6 +737,7 @@ function JoinMeeting() {
     };
 
     setDecodedData(extractedData);
+    console.log("extractedData",extractedData);
 
     // Set role information for RoleSelector
     const effectiveIsInterviewer = isInterviewer || isSchedule;

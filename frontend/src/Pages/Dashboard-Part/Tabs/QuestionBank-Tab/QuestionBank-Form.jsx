@@ -995,7 +995,7 @@ const QuestionBankForm = ({
                   </div>
 
                   {/* My Question List */}
-                  {type === "Feedback" ? null : (
+                  {type === "feedback" ? null : (
                     <div className="mb-4">
                       {/* v1.0.4 <---------------------------------------------------------- */}
                       <MyQuestionList
@@ -1929,7 +1929,8 @@ const QuestionBankForm = ({
                   >
                     {isEdit ? "Update" : "Save"}
                   </LoadingButton>
-                  {!isEdit && (
+                  {type !== 'feedback' && (
+                  !isEdit && (
                     // <button
                     //   type="submit"
                     //   onClick={(e) => handleSubmit(e, true)}
@@ -1946,7 +1947,8 @@ const QuestionBankForm = ({
                     >
                       Save & Next
                     </LoadingButton>
-                  )}
+                  )
+                )}
                   {/* v1.0.2-----Prevent double-click----> */}
                 </div>
               </form>

@@ -440,7 +440,7 @@ const MyQuestionsList = ({
 
     const onClickRemoveQuestion = async (question, listName, indx) => {
 
-    if (type === 'interviewerSection') {
+    if (type === 'interviewerSection' || type === 'feedback') {
       if (handleRemoveQuestion) {
         handleRemoveQuestion(question._id)
 
@@ -611,7 +611,7 @@ const selectedLabelId = useMemo(() => {
     <>
       <Toaster />
       <div className="w-full px-4 py-2 bg-white">
-        <div className={`flex items-center justify-between ${type === "interviewerSection" || type === "assessment" ? "" : ""}`}>
+        <div className={`flex items-center justify-between ${type === "interviewerSection" || type === "feedback" || type === "assessment" ? "" : ""}`}>
           <div className="flex items-center gap-2">
             <div className="relative inline-block w-48">
               <button
@@ -832,7 +832,7 @@ const selectedLabelId = useMemo(() => {
                                 >
                                   {question.difficultyLevel}
                                 </span>
-                                {type === "interviewerSection" && (
+                                {type === "interviewerSection" || type === "feedback" && (
                                   <div>
                                     {interviewQuestionsLists?.some((q) => q.questionId === question._id) ? (
                                       <button

@@ -164,11 +164,11 @@ const FeedbackForm = ({
 
   //<---v1.0.0-----
   const filteredInterviewerQuestions = React.useMemo(() => {
-    const all = (isEditMode || isViewMode) ? feedbackData.preSelectedQuestions : mergedQuestions
+    const all = (isEditMode || isViewMode ) ? feedbackData.preSelectedQuestions : mergedQuestions
     return Array.isArray(all)
       ? all.filter((q) => (q.addedBy) === "interviewer")
       : [];
-  }, [isEditMode, isViewMode, feedbackData, interviewerSectionData]);
+  }, [isEditMode, isViewMode, isAddMode, feedbackData, interviewerSectionData]);
   // console.log("filteredInterviewerQuestions",filteredInterviewerQuestions)
 
 
@@ -248,8 +248,10 @@ const FeedbackForm = ({
   // Start with all questions from all sources
   const allQuestions = [
     ...(filteredInterviewerQuestions || []),
-    ...(interviewerSectionData || [])
+    // ...(interviewerSectionData || [])
   ];
+
+  console.log("allQuestions",allQuestions);
 
   // Create a map by question ID for quick lookup
   const questionsMap = new Map();
@@ -261,7 +263,7 @@ const FeedbackForm = ({
   });
 
   // Apply feedback data if available
-  if ((isEditMode || isViewMode) && feedbackData?.questionFeedback) {
+  if ((isEditMode || isViewMode || isAddMode) && feedbackData?.questionFeedback) {
     feedbackData.questionFeedback.forEach(feedback => {
       const id = feedback.questionId || feedback._id;
       if (id && questionsMap.has(id)) {
@@ -370,12 +372,14 @@ const FeedbackForm = ({
   //---v1.0.0----->
 
   // Final list of questions to render in the interviewer section
+  
+  
   const questionsToRender = React.useMemo(() => {
-    if (isEditMode || isViewMode) {
+    if (isEditMode || isViewMode || isAddMode) {
       return Array.isArray(questionsWithFeedback) ? questionsWithFeedback : [];
     }
     return Array.isArray(filteredInterviewerQuestions) ? filteredInterviewerQuestions : [];
-  }, [isEditMode, isViewMode, questionsWithFeedback, filteredInterviewerQuestions]);
+  }, [isEditMode, isViewMode, isAddMode, questionsWithFeedback, filteredInterviewerQuestions]);
 
   // Build a final, de-duplicated list of questionFeedback for updates, preserving existing interviewerFeedback
   const finalQuestionFeedback = React.useMemo(() => {
@@ -876,7 +880,7 @@ const FeedbackForm = ({
         ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
-        feedbackCode: feedbackCandidate?.interviewRound?.interviewCode || "" + "_" + feedbackCandidate?.interviewRound?.sequence || "",
+        feedbackCode: feedbackCandidate?.interviewRound?.interviewCode || "" + "-" + feedbackCandidate?.interviewRound?.sequence || "",
         positionId: positionId || "",
         interviewerId: interviewerId || "",
         skills: skillRatings.map(skill => ({
@@ -1213,7 +1217,11 @@ const FeedbackForm = ({
               <label className="block text-sm font-medium text-gray-700">
                 Skill Ratings {!isViewMode && <span className="text-red-500">*</span>}
               </label>
-              {!isViewMode && (
+              {(isViewMode || isEditMode  || decodedData?.schedule) ? (
+                <div></div>
+              ) : (
+              // {!isViewMode &&
+                 
                 <Button
                   type="button"
                   onClick={handleAddSkill}
@@ -1226,7 +1234,7 @@ const FeedbackForm = ({
                 </Button>
               )}
             </div>
-            {isViewMode ? (
+            {isViewMode  ? (
               <div className="space-y-3">
                 {skillRatings.map((skill, index) => (
                   <div key={index} className="p-3 bg-gray-50 rounded-md">
@@ -1300,7 +1308,7 @@ const FeedbackForm = ({
                   {questionsWithFeedback.length} question(s) from question bank
                 </span>
               </div>
-              {(isViewMode  || decodedData?.schedule) ? (
+              {(isViewMode || isEditMode  || decodedData?.schedule) ? (
                 <div></div>
               ) : (
                 <button
@@ -1385,8 +1393,9 @@ const FeedbackForm = ({
               </>
             ) : (
               <div className="space-y-4">
-                {questionsToRender.map((question) => (
-
+                {questionsToRender.map((question) => {
+              console.log("questionsToRender",question)
+              return (
                     <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
                       <div className="flex items-start justify-between mb-3">
                         <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
@@ -1467,7 +1476,9 @@ const FeedbackForm = ({
                         </div>
                       )}
                     </div>
-                  ))
+
+                )}
+                )
                 }
                 { (questionsToRender.length === 0) && (
                   <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
@@ -1577,7 +1588,7 @@ const FeedbackForm = ({
                 <div className="flex-1 overflow-hidden">
                   <QuestionBank
                     interviewQuestionsLists={interviewerSectionData || []}
-                    type="interviewerSection"
+                    type="feedback"
                     fromScheduleLater={true}
                     onAddQuestion={handleAddQuestionToRound}
                     handleRemoveQuestion={handleRemoveQuestion}

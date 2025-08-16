@@ -1754,7 +1754,7 @@ const handleSubscriptionCharged = async (subscription) => {
         // create usage
 
         const features = subscriptionPlan.features;
-        //console.log('features:',features);
+        console.log('features:',features);
         
         const usage = new Usage({
                 tenantId: customerSubscription.tenantId,
