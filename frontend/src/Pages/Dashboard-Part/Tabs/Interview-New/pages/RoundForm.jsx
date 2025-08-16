@@ -192,7 +192,7 @@ const RoundFormInterviews = () => {
     d.setSeconds(0, 0); // strip seconds/millis for consistency
     return formatForDatetimeLocal(d);
   };
-  
+
   //-----v1.0.4---->
 
   // v1.0.1 <-------------------------------------------------------------------------
@@ -839,7 +839,8 @@ const RoundFormInterviews = () => {
   //       const maxSequence = rounds?.length > 0
   //         ? Math.max(...rounds.map(r => r.sequence))
   //         : 0;
-  //       setSequence(maxSequence + 1);
+  //       setSequence(maxSequence + 1);const response = await saveInterviewRound(payload);
+
   //     }
   //   },
   //   [rounds, isEditing, roundEditData, navigate, assessmentData, fetchAssessmentQuestions]
@@ -968,7 +969,7 @@ const RoundFormInterviews = () => {
 
       // v1.0.1 --------------------------------------------------------------------------------->
 
-      
+
       // console.log("roundData", roundData);
       const payload = isEditing
         ? {
@@ -1627,7 +1628,7 @@ const RoundFormInterviews = () => {
 
                     {/* Status */}
 
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Status
                       </label>
@@ -1638,13 +1639,33 @@ const RoundFormInterviews = () => {
                         >
                           {status}
                         </span>{" "}
-                        {/* v1.0.0 <----------------------------------------------------------- */}
-                        {/* <div className="ml-2">
-                          <StatusBadge status={status} size="sm" />
-                        </div> */}
-                        {/* v1.0.0 -----------------------------------------------------------> */}
                       </div>
+                    </div> */}
+
+                    <div>
+                      <label
+                        htmlFor="duration"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Duration (Minutes)
+                      </label>
+                      <select
+                        id="duration"
+                        name="duration"
+                        value={duration}
+                        onChange={(e) =>
+                          setDuration(parseInt(e.target.value))
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
+                      >
+                        <option value="30">30 min</option>
+                        <option value="45">45 min</option>
+                        <option value="60">60 min</option>
+                        <option value="90">90 min</option>
+                        <option value="120">120 min</option>
+                      </select>
                     </div>
+
                     {roundTitle === "Assessment" && (
                       <>
                         <div>
@@ -1800,8 +1821,8 @@ const RoundFormInterviews = () => {
                                                   </span>
                                                   <ChevronUp
                                                     className={`transform transition-transform ${expandedSections[sectionId]
-                                                        ? ""
-                                                        : "rotate-180"
+                                                      ? ""
+                                                      : "rotate-180"
                                                       }`}
                                                   />
                                                 </button>
@@ -1846,10 +1867,10 @@ const RoundFormInterviews = () => {
                                                               </div>
                                                               <ChevronDown
                                                                 className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                                    question._id
-                                                                  ]
-                                                                    ? "transform rotate-180"
-                                                                    : ""
+                                                                  question._id
+                                                                ]
+                                                                  ? "transform rotate-180"
+                                                                  : ""
                                                                   }`}
                                                               />
                                                             </div>
@@ -1903,11 +1924,11 @@ const RoundFormInterviews = () => {
                                                                                 }
                                                                                 //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
                                                                                 className={`text-sm p-2 rounded border ${option ===
-                                                                                    question
-                                                                                      .snapshot
-                                                                                      .correctAnswer
-                                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                                    : "bg-gray-50 border-gray-200"
+                                                                                  question
+                                                                                    .snapshot
+                                                                                    .correctAnswer
+                                                                                  ? "bg-green-50 border-green-200 text-green-800"
+                                                                                  : "bg-gray-50 border-gray-200"
                                                                                   }`}
                                                                               >
                                                                                 {
@@ -2005,20 +2026,20 @@ const RoundFormInterviews = () => {
                             type="button"
                             onClick={() => setInterviewType("instant")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
                               }`}
                           >
                             <Clock
                               className={`h-6 w-6 ${interviewType === "instant"
-                                  ? "text-custom-blue/70"
-                                  : "text-gray-400"
+                                ? "text-custom-blue/70"
+                                : "text-gray-400"
                                 }`}
                             />
                             <span
                               className={`mt-2 font-medium ${interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
                                 }`}
                             >
                               Instant Interview
@@ -2032,20 +2053,20 @@ const RoundFormInterviews = () => {
                             type="button"
                             onClick={() => setInterviewType("scheduled")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
                               }`}
                           >
                             <Calendar
                               className={`h-6 w-6 ${interviewType === "scheduled"
-                                  ? "text-custom-blue/70"
-                                  : "text-gray-400"
+                                ? "text-custom-blue/70"
+                                : "text-gray-400"
                                 }`}
                             />
                             <span
                               className={`mt-2 font-medium ${interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
                                 }`}
                             >
                               Schedule for Later
@@ -2085,7 +2106,7 @@ const RoundFormInterviews = () => {
                             </div>
                           )}
 
-                          <div className="mt-4">
+                          {/* <div className="mt-4">
                             <label
                               htmlFor="duration"
                               className="block text-sm font-medium text-gray-700"
@@ -2107,7 +2128,7 @@ const RoundFormInterviews = () => {
                               <option value="90">90 min</option>
                               <option value="120">120 min</option>
                             </select>
-                          </div>
+                          </div> */}
                         </div>
 
                         {interviewType === "instant" && (
@@ -2149,14 +2170,14 @@ const RoundFormInterviews = () => {
                                 to{" "}
                                 <span className="font-medium">
                                   {new Date(endTime).toLocaleString([], {
-                                    dateStyle: "medium",
-                                    timeStyle: "short",
+                                    timeStyle: "short", // ✅ only show time
                                   })}
                                 </span>
                               </p>
                             </div>
                           </div>
                         )}
+
                       </div>
 
                       {/* Select Interviewers */}
@@ -2175,8 +2196,8 @@ const RoundFormInterviews = () => {
                               variant="outline"
                               size="sm"
                               className={`${isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
                                 }`}
                               disabled={isExternalSelected}
                               title={
@@ -2195,8 +2216,8 @@ const RoundFormInterviews = () => {
                               variant="outline"
                               size="sm"
                               className={`${isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
                                 }`}
                               disabled={isExternalSelected}
                               title={
@@ -2216,8 +2237,8 @@ const RoundFormInterviews = () => {
                             variant="outline"
                             size="sm"
                             className={`${isInternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
                               }`}
                             disabled={isInternalSelected}
                             title={
@@ -2480,8 +2501,8 @@ const RoundFormInterviews = () => {
                                       <li
                                         key={qIndex}
                                         className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                            ? "border-red-500"
-                                            : "border-gray-300"
+                                          ? "border-red-500"
+                                          : "border-gray-300"
                                           }`}
                                       >
                                         <span className="text-gray-900 font-medium">

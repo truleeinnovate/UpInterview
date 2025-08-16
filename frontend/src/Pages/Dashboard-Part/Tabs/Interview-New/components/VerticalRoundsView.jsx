@@ -87,7 +87,7 @@ const VerticalRoundsView = ({
                   <h3 className="text-lg font-semibold text-gray-900">
                     {round?.roundTitle}
                   </h3>
-                  <span className="mx-2">
+                  <span className="mx-2 text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-800">
                     {capitalizeFirstLetter(round?.status)}
                   </span>
                 </div>
