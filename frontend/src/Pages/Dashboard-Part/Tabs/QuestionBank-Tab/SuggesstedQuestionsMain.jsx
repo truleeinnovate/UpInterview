@@ -310,7 +310,7 @@ const SuggestedQuestionsComponent = ({
     };
 
     const onClickRemoveQuestion = async (id) => {
-        if (type === "interviewerSection" && handleRemoveQuestion) {
+        if (type === "interviewerSection" || type === "feedback" && handleRemoveQuestion) {
             handleRemoveQuestion(id);
             setMandatoryStatus((prev) => ({ ...prev, [id]: false }));
             toast.error("Question removed successfully!");
@@ -350,7 +350,7 @@ const SuggestedQuestionsComponent = ({
     // Skeleton Loader
     const SkeletonLoader = () => (
         <div className="w-full px-5">
-            <div className={`fixed flex items-center justify-between ${(type === "interviewerSection" || type === "assessment") ? "top-40 left-40 right-40" : "top-32 left-5 right-5"}`}>
+            <div className={`fixed flex items-center justify-between ${(type === "interviewerSection" || type === "feedback" || type === "assessment") ? "top-40 left-40 right-40" : "top-32 left-5 right-5"}`}>
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-64 bg-gray-200 rounded-md animate-pulse"></div>
                     <div className="h-10 w-64 bg-gray-200 rounded-md animate-pulse"></div>
@@ -516,7 +516,7 @@ const SuggestedQuestionsComponent = ({
                                             <h2 className="font-medium w-[85%] text-gray-800">
                                                 {(currentPage - 1) * itemsPerPage + 1 + index}. {item.questionText}
                                             </h2>
-                                            <div className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${type === "interviewerSection" || type === "assessment" ? "w-[15%]" : "w-[10%]"}`}>
+                                            <div className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${type === "interviewerSection" || type === "feedback" || type === "assessment" ? "w-[15%]" : "w-[10%]"}`}>
                                                 <p
                                                     className={`w-16 text-center ${getDifficultyStyles(item.difficultyLevel)} rounded-full py-1`}
                                                     title="Difficulty Level"
@@ -549,7 +549,7 @@ const SuggestedQuestionsComponent = ({
                                                     </div>
                                                 </div>
                                             )}
-                                            {type === "interviewerSection" && (
+                                            {type === "interviewerSection" || type === "feedback" && (
                                                 <div className="p-1 flex justify-center w-[8%]">
                                                     {interviewQuestionsLists?.some((q) => q.questionId === item._id) ? (
                                                         <button

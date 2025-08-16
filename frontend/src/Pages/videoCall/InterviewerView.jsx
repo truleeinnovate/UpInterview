@@ -178,10 +178,10 @@ console.log("mergedQuestions",mergedQuestions);
         </div>
       </div> */}
 
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-screen overflow-hidden">
         {/* Fixed Sidebar - No Scroll */}
         <div className="w-80 bg-white shadow-lg border-r border-gray-200 flex-shrink-0">
-          <div className="p-6 sticky top-0">
+          <div className="p-6 flex-col h-full">
             <nav className="space-y-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -205,7 +205,7 @@ console.log("mergedQuestions",mergedQuestions);
         </div>
 
         {/* Scrollable Main Content */}
-        <div className="flex-1 bg-gray-50 overflow-y-auto">
+        <div className="flex-1 bg-gray-50 mb-10 overflow-y-auto">
           <div className="p-8">
             {activeTab === 'candidate' && <CandidateMiniTab selectedData={selectedCandidate} isAddMode={true} decodedData={decodedData} />}
             {activeTab === 'questions' && (

@@ -486,7 +486,7 @@ const InterviewerSectionComponent = ({
               The questions listed below are interviewer's choice.
             </p>
           </div>
-          {isViewMode || decodedData?.schedule ? 
+          {isViewMode || isEditMode   || decodedData?.schedule ? 
             <div>
             </div> : (
              <div className="flex items-center gap-2">
@@ -635,7 +635,7 @@ const InterviewerSectionComponent = ({
              <div className="flex-1 overflow-hidden">
                                <QuestionBank
                   interviewQuestionsLists={interviewerSectionData || []}
-                  type="interviewerSection"
+                  type="feedback"
                   fromScheduleLater={true}
                   onAddQuestion={handleAddQuestionToRound}
                   handleRemoveQuestion={handleRemoveQuestion}

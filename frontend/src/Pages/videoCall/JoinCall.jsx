@@ -292,6 +292,7 @@ function JoinMeeting() {
     };
 
     setDecodedData(extractedData);
+    console.log("extractedData",extractedData);
 
     // Set role information for RoleSelector
     // If schedule=true, treat it as interviewer role

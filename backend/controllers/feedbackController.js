@@ -109,7 +109,7 @@ const createFeedback = async (req, res) => {
               finalFeedbackCode = `${feedbackCode}`
             }else{
             const sequenceNumber = existingCount + 1;
-            finalFeedbackCode = `${feedbackCode}_${sequenceNumber}`;
+            finalFeedbackCode = `${feedbackCode}-${sequenceNumber}`;
             console.log(`🆕 Generated feedbackCode for round ${interviewRoundId}:`, finalFeedbackCode);
             }
           }

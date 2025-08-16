@@ -39,7 +39,7 @@ const QuestionBank = ({ assessmentId,
   };
 
   return (
-    <div className={`h-full bg-white rounded-lg flex flex-col ${type === "interviewerSection" || type === "assessment" ? "" : ""}`}>
+    <div className={`h-full bg-white rounded-lg flex flex-col ${type === "interviewerSection" || type === "feedback" || type === "assessment" ? "" : ""}`}>
       {/* Tab Navigation - Fixed at top for modal context */}
       <div className="bg-white px-4 py-3 border-b border-gray-200 flex-shrink-0">
         <div className="flex">
