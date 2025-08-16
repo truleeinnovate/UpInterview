@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - changed createdAt to _id for customRequestId generation
 // v1.0.1 - Venkatesh - added wallet functionality deduction and hold amount
+// v1.0.2 - Venkatesh -- Prepare a transaction record for wallet history (type: 'hold')
+
 const mongoose = require("mongoose");
 const Interview = require("../models/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest");
@@ -476,13 +478,44 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     // Deduct the total amount from wallet balance
     console.log(`Attempting to deduct ${totalAmount} from wallet balance and add to hold amount`);
+    //<-----v1.0.2------
+    // Prepare a transaction record for wallet history (type: 'hold')
+    const holdTransaction = {
+      type: "hold",
+      amount: totalAmount,
+      description: `Hold for interview round ${round?.roundTitle}`,
+      relatedInvoiceId: String((request?._id).slice(10)),
+      status: "completed",
+      metadata: {
+        interviewId: String(round?.interviewId || ""),
+        roundId: String(roundId),
+        requestId: String(requestId),
+        interviewerContactId: String(contactId),
+        hourlyRate: Number(hourlyRate),
+        duration: String(duration),
+        durationInMinutes: Number(durationInMinutes),
+        calculation: {
+          formula: "hourlyRate * minutes / 60",
+          hourlyRate: Number(hourlyRate),
+          minutes: Number(durationInMinutes),
+        },
+        prevBalance: Number(wallet.balance || 0),
+        prevHoldAmount: Number(wallet.holdAmount || 0),
+        newBalance: Number((wallet.balance || 0) - totalAmount),
+        newHoldAmount: Number((wallet.holdAmount || 0) + totalAmount),
+      },
+      createdDate: new Date(),
+      createdAt: new Date(),
+    };
+    //-----v1.0.2------>
     const updatedWallet = await Wallet.findOneAndUpdate(
       { tenantId: request.tenantId },
-      { 
-        $inc: { 
+      {
+        $inc: {
           balance: -totalAmount,
-          holdAmount: totalAmount
-        } 
+          holdAmount: totalAmount,
+        },
+        $push: { transactions: holdTransaction },
       },
       { new: true }
     );
@@ -490,6 +523,7 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     console.log(`Deducted ${totalAmount} from wallet balance. New balance: ${updatedWallet.balance}`);
     console.log(`Added ${totalAmount} to hold amount. New hold amount: ${updatedWallet.holdAmount}`);
+    console.log(`Recorded hold transaction in wallet history`);
     //-----------v1.0.1------------------------------>
 
     // Send emails after successful acceptance
