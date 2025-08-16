@@ -53,6 +53,7 @@ const RoundCard = ({
   isExpanded,
   onInitiateAction
 }) => {
+  console.log('round in the roound card page: ', round)
   // const {
   //   assessmentData,
   //   sectionQuestions,
@@ -385,7 +386,7 @@ const RoundCard = ({
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Schedule
                   </h4>
-                  <div className="flex items-center text-sm text-gray-500 mb-1">
+                  {/* <div className="flex items-center text-sm text-gray-500 mb-1">
                     <Calendar className="h-4 w-4 mr-1" />
                     <span>Scheduled: {formatDate(round.scheduledDate)}</span>
                     {isInstantInterview() && (
@@ -393,7 +394,14 @@ const RoundCard = ({
                         Instant
                       </span>
                     )}
-                  </div>
+                  </div> */}
+                  {console.log("round below", round)}
+                  {round.dateTime && (
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>Scheduled: {round.dateTime}</span>
+                    </div>
+                  )}
                   {round.completedDate && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Clock className="h-4 w-4 mr-1" />
