@@ -42,7 +42,7 @@ import { calculateTimeBeforeInterview, getFeeBracket, calculateFees } from '../.
 
 const InterviewDetail = () => {
   const { id } = useParams();
-  const { interviewData, updateInterviewStatus } = useInterviews();
+  const { interviewData, updateInterviewStatus,isLoading } = useInterviews();
 
   // const [showFeeModal, setShowFeeModal] = useState(false);
   const [modalAction, setModalAction] = useState(null); // 'reschedule' or 'cancel'

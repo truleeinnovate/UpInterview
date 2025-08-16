@@ -484,33 +484,33 @@ exports.acceptInterviewRequest = async (req, res) => {
     console.log(`Attempting to deduct ${totalAmount} from wallet balance and add to hold amount`);
     //<-----v1.0.2------
     // Prepare a transaction record for wallet history (type: 'hold')
-    const holdTransaction = {
-      type: "hold",
-      amount: totalAmount,
-      description: `Hold for interview round ${round?.roundTitle}`,
-      relatedInvoiceId: String((request?._id).slice(10)),
-      status: "completed",
-      metadata: {
-        interviewId: String(round?.interviewId || ""),
-        roundId: String(roundId),
-        requestId: String(requestId),
-        interviewerContactId: String(contactId),
-        hourlyRate: Number(hourlyRate),
-        duration: String(duration),
-        durationInMinutes: Number(durationInMinutes),
-        calculation: {
-          formula: "hourlyRate * minutes / 60",
-          hourlyRate: Number(hourlyRate),
-          minutes: Number(durationInMinutes),
-        },
-        prevBalance: Number(wallet.balance || 0),
-        prevHoldAmount: Number(wallet.holdAmount || 0),
-        newBalance: Number((wallet.balance || 0) - totalAmount),
-        newHoldAmount: Number((wallet.holdAmount || 0) + totalAmount),
-      },
-      createdDate: new Date(),
-      createdAt: new Date(),
-    };
+    // const holdTransaction = {
+    //   type: "hold",
+    //   amount: totalAmount,
+    //   description: `Hold for interview round ${round?.roundTitle}`,
+    //   relatedInvoiceId: String((request?._id).slice(10)),
+    //   status: "completed",
+    //   metadata: {
+    //     interviewId: String(round?.interviewId || ""),
+    //     roundId: String(roundId),
+    //     requestId: String(requestId),
+    //     interviewerContactId: String(contactId),
+    //     hourlyRate: Number(hourlyRate),
+    //     duration: String(duration),
+    //     durationInMinutes: Number(durationInMinutes),
+    //     calculation: {
+    //       formula: "hourlyRate * minutes / 60",
+    //       hourlyRate: Number(hourlyRate),
+    //       minutes: Number(durationInMinutes),
+    //     },
+    //     prevBalance: Number(wallet.balance || 0),
+    //     prevHoldAmount: Number(wallet.holdAmount || 0),
+    //     newBalance: Number((wallet.balance || 0) - totalAmount),
+    //     newHoldAmount: Number((wallet.holdAmount || 0) + totalAmount),
+    //   },
+    //   createdDate: new Date(),
+    //   createdAt: new Date(),
+    // };
     //-----v1.0.2------>
     const updatedWallet = await Wallet.findOneAndUpdate(
       { tenantId: request.tenantId },
@@ -519,7 +519,7 @@ exports.acceptInterviewRequest = async (req, res) => {
           balance: -totalAmount,
           holdAmount: totalAmount,
         },
-        $push: { transactions: holdTransaction },
+        // $push: { transactions: holdTransaction },
       },
       { new: true }
     );
