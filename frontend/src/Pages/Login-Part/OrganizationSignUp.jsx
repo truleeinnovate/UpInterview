@@ -1,4 +1,5 @@
 // v1.0.0 - mansoor - replaced the old ui with new ui
+// v1.0.1  - Ashraf - changed user name format and place holder,suggest part
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -103,8 +104,7 @@ export const Organization = () => {
     };
   }, []);
 
-  const checkProfileIdExists = useCallback(async (profileId) => {
-    if (!profileId) return false;
+  const checkProfileIdExists = async (profileId) => {
     try {
       const response = await axios.get(`${config.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`);
       return response.data.exists;
@@ -112,7 +112,7 @@ export const Organization = () => {
       console.error("ProfileId check error:", error);
       return false;
     }
-  }, []);
+  };
 
   const handleChange = (field, value) => {
     if (field === 'email') {
@@ -157,33 +157,7 @@ export const Organization = () => {
     }
   };
 
-  const handleBlur = (field, value) => {
-    if (field === 'email') {
-      clearTimeout(emailTimeoutRef.current);
-      handleEmailValidation(value);
-    } else if (field === 'profileId') {
-      clearTimeout(profileIdTimeoutRef.current);
-      handleProfileIdValidation(value);
-    } else if (field === 'password') {
-      const passwordError = validatePassword(value);
-      const confirmPasswordError =
-        selectedConfirmPassword && value !== selectedConfirmPassword
-          ? 'Passwords do not match'
-          : '';
-      setErrors((prev) => ({
-        ...prev,
-        password: passwordError,
-        confirmPassword: confirmPasswordError,
-      }));
-    } else if (field === 'confirmPassword') {
-      const confirmPasswordError =
-        value && value !== selectedPassword ? 'Passwords do not match' : '';
-      setErrors((prev) => ({
-        ...prev,
-        confirmPassword: confirmPasswordError,
-      }));
-    }
-  };
+
 
 
   useEffect(() => {
@@ -338,11 +312,50 @@ export const Organization = () => {
       setIsResending(false);
     }
   };
+//  -------------------------------------- v1.0.1 >
 
-  const generateProfileId = (email) => {
-    if (!email) return '';
-    return email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+
+  const handleEmailInput = (e) => {
+    const email = e.target.value;
+    setSelectedEmail(email);
+    setErrors((prev) => ({ ...prev, email: '' }));
+    // Remove profileId generation from here to prevent partial updates
   };
+
+  const handleBlur = (field, value) => {
+    if (field === 'email') {
+      clearTimeout(emailTimeoutRef.current);
+      emailTimeoutRef.current = setTimeout(() => {
+        handleEmailValidation(value);
+      }, 300); // Debounce to avoid rapid API calls
+    } else if (field === 'profileId') {
+      clearTimeout(profileIdTimeoutRef.current);
+      profileIdTimeoutRef.current = setTimeout(() => {
+        handleProfileIdValidation(value);
+      }, 300);
+    } else if (field === 'password') {
+      const passwordError = validatePassword(value);
+      const confirmPasswordError =
+        selectedConfirmPassword && value !== selectedConfirmPassword
+          ? 'Passwords do not match'
+          : '';
+      setErrors((prev) => ({
+        ...prev,
+        password: passwordError,
+        confirmPassword: confirmPasswordError,
+      }));
+    } else if (field === 'confirmPassword') {
+      const confirmPasswordError =
+        value && value !== selectedPassword ? 'Passwords do not match' : '';
+      setErrors((prev) => ({
+        ...prev,
+        confirmPassword: confirmPasswordError,
+      }));
+    }
+  };
+// v1.0.1 -------------------------------------->
+
 
   const handleEmailValidation = async (email) => {
     if (!email) {
@@ -363,20 +376,28 @@ export const Organization = () => {
     const exists = await checkEmailExists(email);
     if (exists) {
       setErrors((prev) => ({ ...prev, email: 'Email already registered' }));
-    } else {
-      setErrors((prev) => ({ ...prev, email: '' }));
-
-      if (!selectedProfileId) {
-        const generatedProfileId = generateProfileId(email);
-        setSelectedProfileId(generatedProfileId);
-        handleProfileIdValidation(generatedProfileId);
-      }
+      setIsCheckingEmail(false);
+      return;
     }
+
+    setErrors((prev) => ({ ...prev, email: '' }));
+
+    // Only update profileId if the email is valid and profileId is empty or matches the previous email
+    const generatedProfileId = generateProfileId(email);
+    setSelectedProfileId(generatedProfileId);
+    handleProfileIdValidation(generatedProfileId);
 
     setIsCheckingEmail(false);
   };
 
+  const generateProfileId = (email) => {
+    if (!email) return '';
+    console.log('generateProfileId input:', email); // Debug log
+    return email; // Use full email as username
+  };
+
   const handleProfileIdValidation = async (profileId) => {
+    console.log('handleProfileIdValidation profileId:', profileId); // Debug log
     if (!profileId) {
       setErrors((prev) => ({ ...prev, profileId: '' }));
       setSuggestedProfileId('');
@@ -386,35 +407,38 @@ export const Organization = () => {
 
     setIsCheckingProfileId(true);
     const profileIdError = await validateProfileId(profileId, checkProfileIdExists);
+    console.log('profileIdError:', profileIdError); // Debug log
     setErrors((prev) => ({ ...prev, profileId: profileIdError }));
 
     if (profileIdError && profileIdError.includes('already taken')) {
-      const baseProfileId = profileId.replace(/[0-9]+$/, '');
-      let suffix = 1;
-      let newProfileId = `${baseProfileId}${suffix}`;
+      const [localPart, ...domainParts] = profileId.split('@');
+      const domain = domainParts.join('@'); // Handle edge cases like user@sub@domain.com
+      console.log('localPart:', localPart, 'domain:', domain); // Debug log
+      if (!localPart || !domain) {
+        setSuggestedProfileId('');
+        setIsCheckingProfileId(false);
+        return;
+      }
+      let suffixCharCode = 97; // 'a'
+      let newProfileId = `${localPart}.a@${domain}`;
+      console.log('Initial suggestion:', newProfileId); // Debug log
 
       while (await checkProfileIdExists(newProfileId)) {
-        suffix++;
-        newProfileId = `${baseProfileId}${suffix}`;
+        suffixCharCode++;
+        if (suffixCharCode > 122) { // 'z'
+          setSuggestedProfileId('');
+          break;
+        }
+        newProfileId = `${localPart}.${String.fromCharCode(suffixCharCode)}@${domain}`;
+        console.log('Next suggestion:', newProfileId); // Debug log
       }
+      console.log('Final suggestedProfileId:', newProfileId); // Debug log
       setSuggestedProfileId(newProfileId);
     } else {
       setSuggestedProfileId('');
     }
 
     setIsCheckingProfileId(false);
-  };
-
-  const handleEmailInput = (e) => {
-    const email = e.target.value;
-    setSelectedEmail(email);
-    setErrors((prev) => ({ ...prev, email: '' }));
-
-    if (email && !selectedProfileId) {
-      const generatedProfileId = generateProfileId(email);
-      setSelectedProfileId(generatedProfileId);
-      handleProfileIdValidation(generatedProfileId);
-    }
   };
 
   const [countdown, setCountdown] = useState(0);
@@ -1372,9 +1396,8 @@ export const Organization = () => {
                             value={selectedProfileId}
                             onChange={(e) => handleChange('profileId', e.target.value)}
                             onBlur={(e) => handleBlur('profileId', e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.profileId ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                              }`}
-                            placeholder="your-username"
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 ${errors.profileId ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}`}
+                            placeholder="your-username@company.com"
                             autoComplete="username"
                           />
                           {isCheckingProfileId && (

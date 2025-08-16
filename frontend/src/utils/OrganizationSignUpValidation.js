@@ -1,3 +1,4 @@
+// v1.0.0  - Ashraf - changed user name format and place holder,suggest part
 export const validateEmail = async (email, checkEmailExists) => {
   let errorMessage = '';
 
@@ -19,30 +20,40 @@ export const validateEmail = async (email, checkEmailExists) => {
 
   return errorMessage;
 };
+//  -------------------------------------- v1.0.0 >
 
 export const validateProfileId = async (profileId, checkProfileIdExists) => {
   let errorMessage = '';
-
   if (!profileId) {
-    errorMessage = 'Username ID is required';
-  } else if (profileId.length < 4) {
-    errorMessage = 'Username ID must be at least 4 characters';
-  } else if (!/^[a-zA-Z0-9_]+$/.test(profileId)) {
-    errorMessage = 'Only letters, numbers, and underscores allowed';
-  } else if (checkProfileIdExists) {
-    try {
-      const exists = await checkProfileIdExists(profileId);
-      if (exists) {
-        errorMessage = 'Username ID already taken';
+    errorMessage = 'Username is required';
+  } else {
+    const usernameRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!usernameRegex.test(profileId)) {
+      errorMessage = 'Invalid Username format. Must be a valid email address format (e.g., user@company.com)';
+    } else {
+      const personalDomains = [
+        'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
+        'aol.com', 'icloud.com', 'protonmail.com', 'mail.com'
+      ];
+      const domain = profileId.split('@')[1]?.toLowerCase();
+      if (personalDomains.includes(domain)) {
+        errorMessage = 'Username cannot use personal email domains (e.g., gmail.com)';
+      } else if (checkProfileIdExists) {
+        try {
+          const exists = await checkProfileIdExists(profileId);
+          if (exists) {
+            errorMessage = 'Username already taken';
+          }
+        } catch (err) {
+          console.error('Error checking Username:', err);
+          errorMessage = 'Error verifying Username';
+        }
       }
-    } catch (err) {
-      console.error('Error checking Username ID:', err);
-      errorMessage = 'Error verifying Username ID';
     }
   }
-
   return errorMessage;
 };
+//  -------------------------------------- v1.0.0 >
 
 export const validatePhone = (phone, countryCode) => {
   // Make phone number optional
