@@ -16,6 +16,7 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import { useCreateFeedback, useUpdateFeedback } from '../../apiHooks/useFeedbacks';
 import { useScrollLock } from '../../apiHooks/scrollHook/useScrollLock.js';
+import toast from 'react-hot-toast';
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -1101,29 +1102,29 @@ const FeedbackForm = ({
           updateFeedback({ feedbackId, feedbackData: updatedFeedbackData }, {
             onSuccess: (data) => {
               if (data.success) {
-                alert('Feedback saved as draft successfully!');
+                toast.success('Feedback saved as draft successfully!');
               } else {
-                alert('Failed to save feedback as draft: ' + data.message);
+                toast.error('Failed to save feedback as draft: ' + data.message);
               }
             },
             onError: (error) => {
-              alert('Failed to save feedback as draft: ' + error.message);
+              toast.error('Failed to save feedback as draft: ' + error.message);
             }
           });
         } else {
-          alert('No feedback ID found, cannot save draft.');
+          toast.error('No feedback ID found, cannot save draft.');
         }
       } else {
         createFeedback(feedbackData, {
           onSuccess: (data) => {
             if (data.success) {
-              alert('Feedback saved as draft!');
+              toast.success('Feedback saved as draft!');
             } else {
-              alert('Failed to save feedback as draft: ' + data.message);
+              toast.error('Failed to save feedback as draft: ' + data.message);
             }
           },
           onError: (error) => {
-            alert('Failed to save feedback as draft: ' + error.message);
+            toast.error('Failed to save feedback as draft: ' + error.message);
           }
         });
       }
