@@ -1,13 +1,98 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Video, LogOut, MessageSquare, Clock, MapPin } from 'lucide-react';
 
 import { formatToLocalTime, formatDuration, getTimeUntilInterview, getDateStatus } from '../../utils/timezoneUtils';
 
 const CandidateView = ({ onBack,feedbackData,decodedData }) => {
   console.log("feedbackData",feedbackData);
+  const [isButtonEnabled, setIsButtonEnabled] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [localInterviewTime, setLocalInterviewTime] = useState('');
+  const [localEndTime, setLocalEndTime] = useState('');
+
   
-  // const candidate = mockData.candidates[0];
-  // const interview = mockData.interviews[0];
+  // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
+  const parseCustomDateTime = (dateTimeStr) => {
+    if (!dateTimeStr) return { start: null, end: null };
+    
+    const [startPart, endPart] = dateTimeStr.split(' - ');
+    const [startDate, startTime, startPeriod] = startPart.split(/\s+/);
+    const [endTime, endPeriod] = endPart.split(/\s+/);
+    
+    const parseTime = (dateStr, timeStr, period) => {
+      const [day, month, year] = dateStr.split('-').map(Number);
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      
+      let hours24 = hours;
+      if (period === 'PM' && hours < 12) hours24 += 12;
+      if (period === 'AM' && hours === 12) hours24 = 0;
+      
+      return new Date(year, month - 1, day, hours24, minutes);
+    };
+    
+    return {
+      start: parseTime(startDate, startTime, startPeriod),
+      end: parseTime(startDate, endTime, endPeriod)
+    };
+  };
+
+  useEffect(() => {
+    if (!feedbackData?.round?.dateTime) return;
+
+    // Parse start and end times
+    const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(feedbackData.round.dateTime);
+    if (!interviewStart || !interviewEnd) return;
+
+    // Format local times for display
+    const formatTime = (date) => {
+      return date.toLocaleString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    };
+
+    setLocalInterviewTime(formatTime(interviewStart));
+    setLocalEndTime(formatTime(interviewEnd));
+
+    // Update button state and countdown
+    const updateTimes = () => {
+      const now = new Date();
+      const startTime = interviewStart.getTime();
+      const endTime = interviewEnd.getTime();
+      const currentTime = now.getTime();
+      const fifteenMinutes = 15 * 60 * 1000;
+
+      // Enable button only if current time is within ±15 minutes of interview time
+      const shouldEnable = (currentTime >= startTime - fifteenMinutes) && 
+                         (currentTime <= endTime + fifteenMinutes);
+      setIsButtonEnabled(shouldEnable);
+
+      // Calculate time remaining
+      if (currentTime < startTime) {
+        // Before interview starts
+        const diff = startTime - currentTime;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        setTimeLeft(`Starts in ${hours}h ${minutes}m`);
+      } else if (currentTime <= endTime) {
+        // During interview
+        const diff = endTime - currentTime;
+        const minutes = Math.floor(diff / (1000 * 60));
+        setTimeLeft(`Ends in ${minutes}m`);
+      } else {
+        // After interview
+        setTimeLeft('Interview completed');
+      }
+    };
+
+    updateTimes();
+    const interval = setInterval(updateTimes, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [feedbackData?.round?.dateTime]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#217989] to-[#1a616e] p-4">
@@ -29,14 +114,15 @@ const CandidateView = ({ onBack,feedbackData,decodedData }) => {
                 <div className="w-20 h-20 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-6">
                   <Video className="w-10 h-10 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome, {feedbackData?.candidate?.FirstName || feedbackData?.candidate?.LastName ? feedbackData?.candidate?.FirstName + " " + feedbackData?.candidate?.LastName : "Not Available"}!</h1>
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome, {feedbackData?.FirstName || feedbackData?.LastName ? feedbackData?.FirstName + " " + feedbackData?.LastName : "Not Available"}!</h1>
                 <p className="text-gray-600 text-base">Ready to join your interview?</p>
-                {feedbackData?.interviewRound?.dateTime && (
+              
+                {feedbackData?.round?.dateTime && (
                   <div className="mt-3">
                     {(() => {
                       const status = getDateStatus(feedbackData?.round?.dateTime);
                       const statusConfig = {
-                        future: { text: 'Interview is scheduled', color: 'text-blue-600 bg-blue-100' },
+                        future: { text: `Interview is scheduled ${timeLeft}`, color: 'text-blue-600 bg-blue-100' },
                         present: { text: 'Interview is starting soon', color: 'text-green-600 bg-green-100' },
                         past: { text: 'Interview time has passed', color: 'text-red-600 bg-red-100' }
                       };
@@ -55,7 +141,7 @@ const CandidateView = ({ onBack,feedbackData,decodedData }) => {
               {/* Interview Details */}
               <div className="bg-gray-50 rounded-xl p-6 mb-8">
                 <h3 className="text-lg font-semibold text-gray-800 mb-6">Interview Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4 text-left">
                   <div className="space-y-3">
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Position</p>
@@ -71,20 +157,21 @@ const CandidateView = ({ onBack,feedbackData,decodedData }) => {
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Time</p>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-gray-400" />
-                        <p className="text-base font-semibold text-gray-900">
+                        {localInterviewTime || 'Calculating...'}
+                        {/* <p className="text-base font-semibold text-gray-900">
                           {formatToLocalTime(feedbackData?.round?.dateTime, 'start-only')}
-                        </p>
+                        </p> */}
                       </div>
-                      {feedbackData?.interviewRound?.dateTime && (
+                      {/* {feedbackData?.interviewRound?.dateTime && (
                         <p className="text-xs text-gray-500 mt-1">
-                          {getTimeUntilInterview(feedbackData?.interviewRound?.dateTime)}
+                          {getTimeUntilInterview(feedbackData?.round?.dateTime)}
                         </p>
-                      )}
+                      )} */}
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</p>
                       <p className="text-base font-semibold text-gray-900">
-                        {formatDuration(feedbackData?.interviewRound?.dateTime || feedbackData?.interviewRound?.duration)}
+                      {localInterviewTime} - {localEndTime}
                       </p>
                     </div>
                   </div>
@@ -92,13 +179,27 @@ const CandidateView = ({ onBack,feedbackData,decodedData }) => {
               </div>
 
               {/* Join Meeting Button */}
-              <button
+              {/* <button
                 onClick={() => window.open(decodedData?.meetLink, '_blank')}
                 className="w-full bg-[#217989] hover:bg-[#1a616e] text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg mb-4"
               >
                 <Video className="w-6 h-6" />
                 Join Meeting
-              </button>
+              </button> */}
+
+              {/* Join Meeting Button */}
+          <button
+            onClick={() => window.open(decodedData?.meetingId, '_blank')}
+            disabled={!isButtonEnabled}
+            className={`w-full ${
+              isButtonEnabled 
+                ? 'bg-[#217989] hover:bg-[#1a616e] hover:scale-105' 
+                : 'bg-gray-400 cursor-not-allowed'
+            } text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
+          >
+            <Video className="w-6 h-6" />
+            {isButtonEnabled ? 'Join Meeting' : 'Join Meeting (Available 15 mins before start)'}
+          </button>  
 
               <p className="text-sm text-gray-500">
                 Make sure your camera and microphone are working properly

@@ -60,7 +60,7 @@ export const formatToLocalTime = (dateTimeString, format = 'start-only') => {
         break;
       case 'full':
         options = {
-          weekday: 'long',
+          // weekday: 'long',
           year: 'numeric',
           month: 'long',
           day: 'numeric',
@@ -72,7 +72,7 @@ export const formatToLocalTime = (dateTimeString, format = 'start-only') => {
       case 'start-only':
       default:
         options = {
-          weekday: 'long',
+          // weekday: 'long',
           year: 'numeric',
           month: 'long',
           day: 'numeric',
@@ -244,7 +244,7 @@ const formatShortDateTime = (date) => {
  */
 const formatFullDateTime = (date) => {
   return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
+    // weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
