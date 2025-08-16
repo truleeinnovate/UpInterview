@@ -709,7 +709,7 @@ const getFeedbackByRoundId = async (req, res) => {
   }
 };
 
-
+// to get contact type of org or individual and datetime feedback by contactId and roundId
 const getFeedbackByContactIdRoundId =  async (req, res) => {
   try {
     const { contactId, roundId } = req.query;
@@ -764,8 +764,108 @@ const getFeedbackByContactIdRoundId =  async (req, res) => {
 };
 
 
+//  Fixed backend route - add this to your routes file
+// ✅ Get Candidate, Position & InterviewRound Details by RoundId
+const getCandidateByRoundId = async (req, res) => {
+  try {
+    console.log('📥 Received request for roundId:', req.query.roundId);
+
+    const roundId = req.query.roundId;
+
+    if (!roundId) {
+      return res.status(400).json({
+        success: false,
+        message: "Round ID is required"
+      });
+    }
+
+    // 🔍 Fetch Round + Interview + Candidate + Position + Interviewers
+    const round = await InterviewRounds.findById(roundId)
+      .populate({
+        path: 'interviewId',
+        populate: [
+          { path: 'candidateId', model: 'Candidate' },
+          { path: 'positionId', model: 'Position' },
+          { path: 'templateId', model: 'InterviewTemplate' } // ✅ Optional: interview template details
+        ]
+      })
+      .populate({
+        path: 'interviewers',
+        model: 'Contacts'
+      })
+      .populate({
+        path: 'assessmentId',
+        model: 'assessment'
+      });
+
+    if (!round) {
+      return res.status(404).json({
+        success: false,
+        message: "Round not found"
+      });
+    }
+
+    const candidate = round.interviewId?.candidateId;
+    const position = round.interviewId?.positionId;
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found for this round"
+      });
+    }
+
+    // ✅ Full Response with all details
+    return res.status(200).json({
+      success: true,
+      candidate,
+      position,
+      round   // this includes full InterviewRounds schema details
+    });
+
+  } catch (error) {
+    console.error('❌ Error in getCandidateByRoundId:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching candidate/round details",
+      error: error.message
+    });
+  }
+};
+
+
+// const  getCandidateByRoundId = async (req,res) => {
+//   try {
+//     const roundId = req.query.roundId;
+//     const round = await InterviewRounds.findById(roundId)
+//       .populate({
+//         path: 'interviewId',
+//         populate: {
+//           path: 'candidateId', // populate candidate from Interview
+//           model: 'Candidate'
+//         }
+//       });
+
+//     if (!round) {
+//       return { success: false, message: "Round not found" };
+//     }
+
+//     // candidate details will be inside round.interviewId.candidateId
+//     return {
+//       success: true,
+//       candidate: round.interviewId?.candidateId || null
+//     };
+
+//   } catch (error) {
+//     console.error(error);
+//     return { success: false, message: "Error fetching candidate details", error };
+//   }
+// }
+
 
 // Update feedback by ID
+
+
 const updateFeedback = async (req, res) => {
   try {
     const { id } = req.params;
@@ -830,6 +930,18 @@ const updateFeedback = async (req, res) => {
       error: error.message
     });
   }
+};
+
+module.exports = {
+  createFeedback,
+  // getFeedbackByTenantId,
+  // getFeedbackByInterviewerId,
+  getfeedbackById,
+  getFeedbackByRoundId,
+  getAllFeedback,
+  updateFeedback,
+  getFeedbackByContactIdRoundId,
+  getCandidateByRoundId
 };
 
 // const getFeedbackByRoundId = async (req, res) => {
@@ -1130,13 +1242,4 @@ const updateFeedback = async (req, res) => {
 //   }
 // };
 
-module.exports = {
-  createFeedback,
-  // getFeedbackByTenantId,
-  // getFeedbackByInterviewerId,
-  getfeedbackById,
-  getFeedbackByRoundId,
-  getAllFeedback,
-  updateFeedback,
-  getFeedbackByContactIdRoundId
-};
+

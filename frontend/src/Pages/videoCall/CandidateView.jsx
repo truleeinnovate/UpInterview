@@ -34,7 +34,7 @@ const CandidateView = ({ onBack,feedbackData,decodedData }) => {
                 {feedbackData?.interviewRound?.dateTime && (
                   <div className="mt-3">
                     {(() => {
-                      const status = getDateStatus(feedbackData?.interviewRound?.dateTime);
+                      const status = getDateStatus(feedbackData?.round?.dateTime);
                       const statusConfig = {
                         future: { text: 'Interview is scheduled', color: 'text-blue-600 bg-blue-100' },
                         present: { text: 'Interview is starting soon', color: 'text-green-600 bg-green-100' },
@@ -72,7 +72,7 @@ const CandidateView = ({ onBack,feedbackData,decodedData }) => {
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-gray-400" />
                         <p className="text-base font-semibold text-gray-900">
-                          {formatToLocalTime(feedbackData?.interviewRound?.dateTime, 'start-only')}
+                          {formatToLocalTime(feedbackData?.round?.dateTime, 'start-only')}
                         </p>
                       </div>
                       {feedbackData?.interviewRound?.dateTime && (

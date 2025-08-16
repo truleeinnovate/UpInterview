@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 
 import { useLocation } from 'react-router-dom';
 import { Award, Briefcase, ChevronDown, ChevronUp, GraduationCap, User,Video } from 'lucide-react';
+import { useScrollLock } from '../../../../../apiHooks/scrollHook/useScrollLock';
 // import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';
 const CandidateMiniTab = ({selectedData,isAddMode,decodedData}) => {
+     useScrollLock(true);
   const location = useLocation();
   const feedback = location.state?.feedback || {};
   const candidateData = selectedData?.candidate ? selectedData?.candidate : feedback.candidateId || {};
