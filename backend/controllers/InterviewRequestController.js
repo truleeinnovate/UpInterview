@@ -419,14 +419,18 @@ exports.acceptInterviewRequest = async (req, res) => {
       );
     }
 
-    // Delete all interview requests with the same roundId except the accepted one
-    const deleteResult = await InterviewRequest.deleteMany({
-      roundId: roundId,
-      _id: { $ne: requestId }, // Don't delete the accepted request
-    });
+    // Update all other interview requests with the same roundId to 'withdrawn' status
+    const updateResult = await InterviewRequest.updateMany(
+      {
+        roundId: roundId,
+        _id: { $ne: requestId }, // Don't update the accepted request
+        status: { $ne: 'withdrawn' } // Only update if not already withdrawn
+      },
+      { status: 'withdrawn', updatedAt: new Date() }
+    );
 
     console.log(
-      `Deleted ${deleteResult.deletedCount} other interview requests for round ${roundId}`
+      `Updated ${updateResult.modifiedCount} other interview requests to 'withdrawn' status for round ${roundId}`
     );
 
     // Update the status of the accepted request

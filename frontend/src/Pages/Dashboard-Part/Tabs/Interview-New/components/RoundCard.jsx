@@ -399,7 +399,7 @@ const RoundCard = ({
                   {round.dateTime && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-4 w-4 mr-1" />
-                      <span>Scheduled: {round.dateTime}</span>
+                      <span>Date and Time : {round.dateTime}</span>
                     </div>
                   )}
                   {round.completedDate && (

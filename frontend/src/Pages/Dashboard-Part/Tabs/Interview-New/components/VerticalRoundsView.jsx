@@ -72,7 +72,7 @@ const VerticalRoundsView = ({
       {sortedRounds.map((round) => (
         <div
           key={round._id}
-          className="bg-white rounded-lg shadow-md overflow-hidden"
+          className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
         >
           <button
             onClick={() => toggleRound(round?._id)}
