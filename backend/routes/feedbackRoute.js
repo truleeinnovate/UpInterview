@@ -2,7 +2,7 @@
 
 const express = require('express')
 
-const { createFeedback, getFeedbackByRoundId,getAllFeedback, updateFeedback, getFeedbackByContactIdRoundId } = require('../controllers/feedbackController.js')
+const { createFeedback, getFeedbackByRoundId,getAllFeedback, updateFeedback, getFeedbackByContactIdRoundId, getCandidateByRoundId } = require('../controllers/feedbackController.js')
 
 const router = express.Router()
 
@@ -24,6 +24,7 @@ router.get('/', getAllFeedback);//<----v1.0.0---
 
 router.get('/contact-details', getFeedbackByContactIdRoundId);
 
+router.get('/candidate-details', getCandidateByRoundId);
 
 
 
