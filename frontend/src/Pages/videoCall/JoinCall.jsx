@@ -27,6 +27,7 @@ function JoinMeeting() {
   const [preAuthPassed, setPreAuthPassed] = useState(false);
   const [preAuthLoading, setPreAuthLoading] = useState(true);
   const [authType, setAuthType] = useState(null);
+  const [schedulerFeedbackData, setSchedulerFeedback] = useState(null);
 
   // Purpose: Store candidate details fetched from candidate-details API for candidate view
   const [candidateDetails, setCandidateDetails] = useState(null);
@@ -320,6 +321,33 @@ useEffect(() => {
     setPreAuthLoading(false);
     setAuthError('Invalid meeting link: missing required parameters');
   }
+
+   // 🔹 CHANGED: Scheduler calls new API
+   if (isSchedule && decryptedRound) {
+    const fetchSchedulerRoundDetails = async () => {
+      try {
+        setPreAuthLoading(true);
+        const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/round/${decryptedRound}`); ///round/:roundId
+        if (res.data && res.data.success) {
+          console.log('Scheduler round details:', res.data.data);
+          setSchedulerFeedback(res.data.data);
+          setPreAuthPassed(true);
+        } else {
+          setAuthError(res.data?.message || 'Error fetching round details');
+        }
+      } catch (err) {
+        console.error('Scheduler API call failed:', err);
+        setAuthError('Failed to fetch scheduler round details');
+      } finally {
+        setPreAuthLoading(false);
+        setIsAuthChecking(false); // 🔹 scheduler doesn't need further auth
+      }
+    };
+    fetchSchedulerRoundDetails();
+  }
+
+
+
 }, [location.search]);
 console.log("decodedData",decodedData);
 console.log("auth check",isAuthChecking);
@@ -587,6 +615,8 @@ console.log("auth check",isAuthChecking);
           feedbackData={feedbackDatas}
           feedbackLoading={feedbackLoading}
           feedbackError={feedbackError}
+          isScheduler={currentRole === 'scheduler'}
+          schedulerFeedbackData={schedulerFeedbackData}
         />
       </>
     );

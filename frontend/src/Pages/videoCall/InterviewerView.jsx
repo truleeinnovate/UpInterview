@@ -8,11 +8,11 @@ import FeedbackForm from './FeedbackForm';
 
 import InterviewsMiniTabComponent from '../Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews';
 
-const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feedbackError}) => {
+const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feedbackError,isScheduler,schedulerFeedbackData}) => {
   const [activeTab, setActiveTab] = useState('candidate');
   const [selectedCandidate] = useState(feedbackData);
 
-  console.log("selectedCandidate",selectedCandidate);
+  console.log("selectedCandidate",selectedCandidate,isScheduler,feedbackData);
   
   // Question Bank State Management
   const initialQuestions = feedbackData?.questionFeedback;
@@ -244,6 +244,8 @@ console.log("mergedQuestions",mergedQuestions);
                 preselectedQuestionsResponses={preselectedQuestionsResponses}
                 decodedData={decodedData}
                 isAddMode={true}
+                isScheduler={isScheduler}
+                schedulerFeedbackData ={schedulerFeedbackData}
               />
             )}
             {/* {activeTab === 'management' && <FeedbackManagement />} */}
