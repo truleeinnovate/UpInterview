@@ -547,11 +547,11 @@ exports.acceptInterviewRequest = async (req, res) => {
       // Don't fail the request if email sending fails
     }
   
-    res.status(200).json({
-      message:
-        "Interview request accepted and other requests for this round removed",
-      deletedCount: deleteResult.deletedCount,
-    });
+    // res.status(200).json({
+    //   message:
+    //     "Interview request accepted and other requests for this round removed",
+    //   deletedCount: deleteResult.deletedCount,
+    // });
   } catch (error) {
     console.error("[acceptInterviewRequest] Error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
