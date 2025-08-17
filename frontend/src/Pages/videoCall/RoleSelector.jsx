@@ -83,11 +83,16 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
         } else {
           setTimeLeft(`Scheduled for ${formatTime(interviewStart)}`);
         }
-      } else if (currentTime < interviewEnd.getTime()) {
+      } 
+      else {
         setTimeLeft('Interview in progress');
-      } else {
-        setTimeLeft('Interview completed');
       }
+      // else if (currentTime < interviewEnd.getTime()) {
+      //   setTimeLeft('Interview in progress');
+      // } 
+      // else {
+      //   setTimeLeft('Interview completed');
+      // }
     };
 
     updateTimes();
@@ -111,11 +116,102 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
             <Users className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Interview Portal</h1>
-          {timeLeft && (
-            <div className="mt-2 text-lg font-semibold text-[#217989]">
-              {timeLeft}
-            </div>
+          {feedbackData?.interviewRound?.dateTime && (
+  <div className="mt-4 flex flex-col items-center">
+    <div className="flex items-center justify-center gap-4 mb-2">
+      {/* Calendar Icon */}
+      <div className="bg-[#217989] bg-opacity-10 p-2 rounded-full">
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-6 w-6 text-[#217989]" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+          />
+        </svg>
+      </div>
+      
+      {/* Clock Icon */}
+      <div className="bg-[#217989] bg-opacity-10 p-2 rounded-full">
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-6 w-6 text-[#217989]" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+          />
+        </svg>
+      </div>
+    </div>
+
+    {/* Main Time Display */}
+    <div className="text-center">
+     
+      
+      {/* Date */}
+      <div className="text-gray-600 font-medium mt-1">
+        {new Date(feedbackData.interviewRound.dateTime.split(' ')[0].split('-').reverse().join('-')).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
+      </div>
+
+      <div className="text-xl font-bold text-[#217989]">
+        {localInterviewTime} 
+        {/* - {localEndTime} */}
+      </div>
+      
+      {/* Countdown Timer */}
+      {/* {timeLeft && (
+        <div className={`mt-3 px-4 py-2 rounded-full inline-flex items-center ${
+          timeLeft.includes('Starts in') 
+            ? 'bg-blue-100 text-blue-800' 
+            : timeLeft.includes('Interview in progress') 
+              ? 'bg-green-100 text-green-800'
+              : 'bg-gray-100 text-gray-800'
+        }`}>
+          {timeLeft.includes('Starts in') && (
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-4 w-4 mr-1 animate-pulse" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" 
+              />
+            </svg>
           )}
+          <span className="text-sm font-semibold">{timeLeft}</span>
+        </div>
+      )} */}
+    </div>
+  </div>
+)}
+
+          {/* {feedbackData?.interviewRound?.dateTime && (
+            <div className="mt-2 text-lg font-semibold text-[#217989]">
+              {feedbackData?.interviewRound?.dateTime}
+            </div>
+          )} */}
           <p className="text-gray-600 mt-2">
             {isSingleRole 
               ? (roleInfo?.isCandidate ? 'Welcome Candidate!' : 'Welcome Interviewer!')
