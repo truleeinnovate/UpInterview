@@ -10,6 +10,7 @@ import { useCustomContext } from '../../../../../../Context/Contextfetch.js';
 import Wallet from '../../../../Accountsettings/account/wallet/Wallet.jsx';
 import { useWallet } from '../../../../../../apiHooks/useWallet';//<----v1.0.1-----
 import toast from 'react-hot-toast';//<----v1.0.1-----
+import { WalletTopupPopup } from '../../../../Accountsettings/account/wallet/WalletTopupPopup.jsx';
 
 const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDetails, navigatedfrom }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -96,7 +97,7 @@ function OutsourcedInterviewerModal({
 
   const { interviewers, contacts } = useCustomContext();//<----v1.0.1-----
   //console.log("contacts===",contacts)
-  const { data: walletBalance } = useWallet();//<----v1.0.1-----
+  const { data: walletBalance, refetch } = useWallet();//<----v1.0.1-----
 
   const [searchTerm, setSearchTerm] = useState('');
   const [rateRange, setRateRange] = useState([0, 250]);
@@ -166,7 +167,7 @@ function OutsourcedInterviewerModal({
             }
 
             // Convert all skills to lowercase for case-insensitive comparison
-            const interviewerSkillsLower = interviewerSkills.map(skill => skill.toLowerCase());
+            const interviewerSkillsLower = interviewerSkills.map(skill => skill?.toLowerCase());
 
             // Check if any of the required skills match the interviewer's skills
             const hasMatchingSkill = skills.some(requiredSkill => {
@@ -307,7 +308,7 @@ function OutsourcedInterviewerModal({
 
           const matchingSkills = interviewerSkills.filter(interviewerSkill =>
             positionSkills.some(positionSkill =>
-              positionSkill.skill.toLowerCase() === interviewerSkill.toLowerCase()
+              positionSkill.skill?.toLowerCase() === interviewerSkill?.toLowerCase()
             )
           );
 
@@ -346,7 +347,7 @@ function OutsourcedInterviewerModal({
         fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+        skills.some(skill => skill?.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const rateMatch = hourlyRate >= rateRange[0] && hourlyRate <= rateRange[1];
 
@@ -379,6 +380,17 @@ function OutsourcedInterviewerModal({
     });
   };
 
+  const handleTopup = async (topupData) => {
+    console.log('Processing top-up:', topupData);
+
+    try {
+      console.log('Refreshing wallet data after topup');
+      await refetch();
+    } catch (error) {
+      console.error('Error refreshing wallet data after topup:', error);
+    }
+  };
+
   const handleProceed = () => {
     //<----v1.0.1-----
     const balance = walletBalance?.balance || 0;
@@ -388,7 +400,13 @@ function OutsourcedInterviewerModal({
       onClose();
     } else {
       const required = Number(maxHourlyRate || 0).toFixed(2);
-      toast.error(`Your wallet balance is less than the highest interviewer hourly rate (required: $${required}). Please add funds to proceed.`);
+      toast.error(
+        `Your wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.`,
+        {
+          position: 'top-center',
+          style: { whiteSpace: 'pre-line', textAlign: 'center', maxWidth: '520px' }
+        }
+      );
       setTimeout(() => setShowWalletModal(true), 1000);
     }
     //----v1.0.1----->
@@ -574,33 +592,11 @@ function OutsourcedInterviewerModal({
       </AnimatePresence>
 
       {showWalletModal && (
-        //<----v1.0.1-----
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50"
-          onClick={() => setShowWalletModal(false)}
-        >
-          <motion.div
-            className={`bg-white h-full shadow-xl flex flex-col ${isFullscreen ? 'w-full' : 'w-full md:w-2/3 lg:w-1/2 xl:w-1/2 2xl:w-1/2'}`}
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-          <div className="flex items-center justify-end pt-2">
-            <button
-              aria-label="Close"
-              onClick={() => setShowWalletModal(false)}
-              className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
-            >
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
-            </div>
-            <Wallet/>
-          </motion.div>
-        </div>
-        //----v1.0.1----->
-      )}
+              <WalletTopupPopup
+                onClose={() => setShowWalletModal(false)}
+                onTopup={handleTopup}
+              />
+            )}
     </>
   );
 }
