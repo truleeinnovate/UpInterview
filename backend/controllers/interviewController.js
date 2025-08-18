@@ -568,11 +568,11 @@ const createInterview = async (req, res) => {
             instructions: round.instructions || "",
             dateTime: round.dateTime || "",
             interviewers: round.interviewers || [], // This should be ObjectId array
-            status: round.status || "Pending",
-            meetLink: round.meetLink || [],
+            status: "draft",
+            // meetLink: round.meetLink || [],
             meetingId: round.meetingId || "",
             assessmentId: round.assessmentId || null,
-            questions: [], // Initialize as empty array
+            // questions: [], // Initialize as empty array
             rejectionReason: round.rejectionReason || "",
             minimumInterviewers: round.minimumInterviewers || "", // This field doesn't exist in schema
             interviewerGroupId: round.interviewerGroupId || null, // This field doesn't exist in schema
