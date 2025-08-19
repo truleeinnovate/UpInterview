@@ -1029,7 +1029,7 @@ const RoundFormInterviews = () => {
               scheduledInterviewId: interviewId,
               interviewerType: selectedInterviewType,
               interviewerId: interviewer.contact?._id || interviewer._id,
-              status: isInternal ? "accepted" : "inprogress",
+              status: isInternal ? "accepted" : "Request Sent",
               dateTime: combinedDateTime,
               duration,
               candidateId: candidate?._id,

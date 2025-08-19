@@ -178,7 +178,7 @@ const InterviewRequests = () => {
                   <div>
                     <h4 className="text-sm font-semibold text-gray-900">
                       {/* {request.contactId?.firstName + " " + request.contactId?.lastName} */}
-                      {request.roundDetails.roundTitle}
+                      {request?.roundDetails?.roundTitle}
                     </h4>
                     <p className="text-xs text-gray-600">{request.positionId?.title || 'N/A'}</p>
                   </div>
