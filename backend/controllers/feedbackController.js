@@ -10,327 +10,538 @@ const CandidatePosition = require('../models/CandidatePosition.js');
 const { Contacts } = require('../models/Contacts.js');
 const { Interview } = require('../models/Interview.js');
 const Tenant = require('../models/Tenant.js');
-const createFeedback = async (req, res) => { 
-    try {
-        // console.log('📥 Received feedback data:', req.body);
-        
-        const {
-            tenantId,
-            ownerId,
-            interviewRoundId,
-            candidateId,
-            positionId,
-            interviewerId,
-            skills,
-            questionFeedback,
-            generalComments,
-            overallImpression,
-            status,
-            feedbackCode
-        } = req.body;
-
-        // Validate required fields
-        if (!interviewerId) {
-            console.log('❌ interviewerId is required');
-            return res.status(400).json({
-                success: false,
-                message: "Interviewer ID is required"
-            });
-        }
-
-        if (!interviewRoundId) {
-            console.log('❌ interviewRoundId is required');
-            return res.status(400).json({
-                success: false,
-                message: "Interview Round ID is required"
-            });
-        }
-
-        //added by venkatesh------ Check for existing feedback to prevent duplicates
-        if (interviewRoundId && candidateId && interviewerId) {
-            const existingFeedback = await FeedbackModel.findOne({
-                interviewRoundId,
-                candidateId,
-                interviewerId
-            });
-            if (existingFeedback) {
-                console.log('❌ Duplicate feedback found for this interview round, candidate, and interviewer');
-                return res.status(409).json({
-                    success: false,
-                    message: "Feedback already exists for this interview round and candidate from this interviewer",
-                    existingFeedbackId: existingFeedback._id
-                });
-            }
-        }
-
-        // Simple validation - just check if basic data exists
-        if (!skills || !Array.isArray(skills) || skills.length === 0) {
-            console.log('❌ No skills provided');
-            return res.status(400).json({
-                success: false,
-                message: "Skills are required"
-            });
-        }
-
-        console.log("questionFeedback",questionFeedback);
-
-        // Process questionFeedback to extract only question IDs
-        const processedQuestionFeedback = (questionFeedback || []).map(qFeedback => {
-            const rawQuestion = qFeedback?.questionId; // Could be string ID or full object
-            let onlyQuestionId = "";
-
-            if (typeof rawQuestion === 'string') {
-                onlyQuestionId = rawQuestion;
-            } else if (rawQuestion && typeof rawQuestion === 'object') {
-                onlyQuestionId = rawQuestion.questionId ;
-            }
-
-            return {
-                questionId: onlyQuestionId,
-                candidateAnswer: qFeedback.candidateAnswer || {
-                    answerType: (rawQuestion && rawQuestion.isAnswered) || "not answered",
-                    submittedAnswer: ""
-                },
-                interviewerFeedback: qFeedback.interviewerFeedback || {
-                    liked: (rawQuestion && rawQuestion.isLiked) || "none",
-                    note: (rawQuestion && rawQuestion.note) || "",
-                    dislikeReason: (rawQuestion && rawQuestion.whyDislike) || ""
-                }
-            };
-        });
-
-             // ===========================================
-        // ✅ Generate feedbackCode sequence per round
-        // ===========================================
-        let finalFeedbackCode = "";
-        if (interviewRoundId && feedbackCode) {
-            const existingCount = await FeedbackModel.countDocuments({ interviewRoundId });
-            if(existingCount === 0){
-              finalFeedbackCode = `${feedbackCode}`
-            }else{
-            const sequenceNumber = existingCount + 1;
-            finalFeedbackCode = `${feedbackCode}-${sequenceNumber}`;
-            console.log(`🆕 Generated feedbackCode for round ${interviewRoundId}:`, finalFeedbackCode);
-            }
-          }
-
-          console.log("finalFeedbackCode",finalFeedbackCode);
-          console.log("feedbackCode",feedbackCode);
 
 
-        // Create feedback data with defaults
-        const feedbackData = {
-            skills: skills,
-            questionFeedback: processedQuestionFeedback,
-            generalComments: generalComments || "",
-            overallImpression: overallImpression || {},
-            status: status || 'draft',
-            feedbackCode:finalFeedbackCode
-        };
+// const mongoose = require("mongoose");
+// const FeedbackModel = require("../models/InterviewFeedback"); 
+// const InterviewRounds = require("../models/InterviewRounds");
+// const InterviewQuestions = require("../models/InterviewQuestions");
+// const Interview = require("../models/Interview");
 
-        // Add fields only if they are not empty strings
-        if (tenantId && tenantId.trim() !== "") {
-            feedbackData.tenantId = tenantId;
-        }
-        
-        if (ownerId && ownerId.trim() !== "") {
-            feedbackData.ownerId = ownerId;
-        }
-        
-        if (interviewRoundId && interviewRoundId.trim() !== "") {
-            feedbackData.interviewRoundId = interviewRoundId;
-        }
-        
-        if (candidateId && candidateId.trim() !== "") {
-            feedbackData.candidateId = candidateId;
-        }
-        
-        if (interviewerId && interviewerId.trim() !== "") {
-            feedbackData.interviewerId = interviewerId;
-        }
+const createFeedback = async (req, res) => {
+  try {
+    const {
+      type, // "submit" | "draft"
+      tenantId,
+      ownerId,
+      interviewRoundId,
+      candidateId,
+      positionId,
+      interviewerId,
+      skills,
+      questionFeedback,
+      generalComments,
+      overallImpression,
+      status,
+      feedbackCode,
+    } = req.body;
 
-        // Add positionId if provided and not empty
-        if (positionId && positionId.trim() !== "") {
-            feedbackData.positionId = positionId;
-        }
-
-        console.log('💾 Saving feedback data:', feedbackData);
-
-        const feedbackInstance = new FeedbackModel(feedbackData);
-        await feedbackInstance.save();
-
-        console.log('✅ Feedback saved successfully with ID:', feedbackInstance._id);
-
-        // Resolve interviewId from the round so we can store it in interviewQuestions
-        let resolvedInterviewId = null;
-        try {
-          if (interviewRoundId) {
-            const roundDoc = await InterviewRounds.findById(interviewRoundId).select('interviewId');
-            resolvedInterviewId = roundDoc?.interviewId || null;
-          }
-        } catch (e) {
-          console.warn('⚠️ Unable to resolve interviewId from roundId:', interviewRoundId, e?.message);
-        }
-
-        // Save questions to InterviewQuestions collection ONLY for question bank questions
-        let questionBankQuestions = [];
-        let successfulSaves = [];
-        if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
-          console.log('📝 Checking for question bank questions to save...');
-          
-          // Filter only questions that are from question bank (type="feedback" or source="system")
-          questionBankQuestions = processedQuestionFeedback.filter((qFeedback, index) => {
-            const originalQuestionFeedback = questionFeedback[index];
-            const question = originalQuestionFeedback?.questionId;
-            
-            // Check if this is a question bank question
-            const isQuestionBankQuestion = question?.type === "feedback" || 
-                                         question?.source === "system" || 
-                                         question?.source === "questionbank" ||
-                                         (question?.snapshot && question?.snapshot.type === "feedback");
-            
-            console.log(`📋 Question ${index + 1}:`, {
-              questionId: qFeedback.questionId,
-              type: question?.type,
-              source: question?.source,
-              isQuestionBank: isQuestionBankQuestion
-            });
-            
-            return isQuestionBankQuestion;
-          });
-          
-          console.log(`📊 Found ${questionBankQuestions.length} question bank questions out of ${processedQuestionFeedback.length} total questions`);
-          
-          if (questionBankQuestions.length > 0) {
-            const questionsToSave = questionBankQuestions.map((qFeedback, index) => {
-              // Get the original question object from the frontend data for additional details
-              const originalIndex = processedQuestionFeedback.indexOf(qFeedback);
-              const originalQuestionFeedback = questionFeedback[originalIndex];
-              const question = originalQuestionFeedback?.questionId; // Could be object or string
-              console.log('📋 Processing question bank question:', question);
-              
-              // Extract the actual question data from the nested structure
-              const actualQuestion = (question && typeof question === 'object') ? (question.snapshot || question) : {};
-              const questionId = qFeedback.questionId; // Use the processed question ID (string)
-              const sourceVal = (question && typeof question === 'object') ? (question.source || actualQuestion.source || 'system') : 'system';
-              
-              return {
-                interviewId: resolvedInterviewId, // Link to Interview document
-                roundId: interviewRoundId,
-                order: index + 1,
-                mandatory: question?.mandatory || actualQuestion?.mandatory || 'false',
-                tenantId: tenantId || '',
-                ownerId:  ownerId , // track who added the question
-                questionId: questionId, // string ID
-                source: sourceVal,
-                snapshot: actualQuestion || {},
-                addedBy: 'interviewer'
-              };
-            });
-
-            console.log('📋 Question bank questions to save:', questionsToSave.length);
-
-            // Save each question bank question to InterviewQuestions collection
-            successfulSaves = await Promise.all(
-              questionsToSave.map(async (questionData) => {
-                try {
-                  const questionInstance = new InterviewQuestions(questionData);
-                  const savedQuestion = await questionInstance.save();
-                  console.log('✅ Question bank question saved for interviewer:', interviewerId, 'Question ID:', savedQuestion._id);
-                  return savedQuestion;
-                } catch (error) {
-                  console.error('❌ Error saving question bank question for interviewer:', interviewerId, 'Error:', error);
-                  // Don't throw error, just log it and continue
-                  console.log('⚠️ Skipping question save due to error, continuing with feedback submission');
-                  return null;
-                }
-              })
-            );
-
-            // Filter out null values from failed saves
-            successfulSaves = successfulSaves.filter(question => question !== null);
-            console.log('✅ Question bank questions saved successfully for interviewer:', interviewerId, 'Count:', successfulSaves.length);
-          } else {
-            console.log('ℹ️ No question bank questions found to save');
-          }
-        }
-
-        // Also persist interviewer-added questions (any question objects sent from frontend)
-        if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
-          console.log('📝 Checking for interviewer-added questions to save...');
-          const interviewerAddedToSave = processedQuestionFeedback
-            .map((qFeedback, index) => {
-              const original = questionFeedback[index]?.questionId;
-              if (original && typeof original === 'object') {
-                const actual = original.snapshot || original;
-                const normalizedQuestionId = qFeedback.questionId;
-                const src = original.source || actual.source || 'custom';
-                const mand = original.mandatory || actual.mandatory || 'false';
-                return {
-                  interviewId: resolvedInterviewId,
-                  roundId: interviewRoundId,
-                  order: index + 1,
-                  mandatory: mand,
-                  tenantId: tenantId || '',
-                  ownerId:  ownerId || '',
-                  questionId: normalizedQuestionId,
-                  source: src,
-                  snapshot: actual || {},
-                  addedBy: 'interviewer'
-                };
-              }
-              return null;
-            })
-            .filter(Boolean);
-
-          if (interviewerAddedToSave.length > 0) {
-            const saved = await Promise.all(
-              interviewerAddedToSave.map(async (q) => {
-                try {
-                  // Avoid duplicates per round/owner/question
-                  const exists = await InterviewQuestions.findOne({
-                    roundId: q.roundId,
-                    ownerId: q.ownerId,
-                    questionId: q.questionId,
-                    addedBy: 'interviewer'
-                  }).lean();
-                  if (exists) return null;
-                  const doc = new InterviewQuestions(q);
-                  return await doc.save();
-                } catch (e) {
-                  console.warn('⚠️ Skip saving interviewer-added question due to error:', e?.message);
-                  return null;
-                }
-              })
-            );
-            const count = (saved || []).filter(Boolean).length;
-            console.log(`✅ Interviewer-added questions saved: ${count}`);
-          } else {
-            console.log('ℹ️ No interviewer-added questions detected to save');
-          }
-        }
-
-        return res.status(201).json({
-            success: true,
-            message: "Feedback submitted successfully",
-            data: {
-                feedbackId: feedbackInstance._id,
-                submittedAt: feedbackInstance.createdAt,
-                interviewerId: interviewerId,
-                totalQuestions: processedQuestionFeedback?.length || 0,
-                questionBankQuestionsSaved: successfulSaves?.length || 0
-            }
-        });
-
-    } catch (error) {
-        console.error("❌ Error creating feedback:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to submit feedback",
-            error: error.message
-        });
+    // ✅ Validate required fields
+    if (!interviewerId || !interviewRoundId) {
+      return res.status(400).json({
+        success: false,
+        message: "Interviewer ID and Interview Round ID are required",
+      });
     }
+
+    // ✅ Process questions
+    const processedQuestionFeedback = (questionFeedback || []).map((qFeedback) => {
+      const rawQuestion = qFeedback?.questionId;
+      let onlyQuestionId = "";
+
+      if (typeof rawQuestion === "string") onlyQuestionId = rawQuestion;
+      else if (rawQuestion && typeof rawQuestion === "object")
+        onlyQuestionId = rawQuestion.questionId;
+
+      return {
+        questionId: onlyQuestionId,
+        candidateAnswer: qFeedback.candidateAnswer || {
+          answerType: (rawQuestion && rawQuestion.isAnswered) || "not answered",
+          submittedAnswer: "",
+        },
+        interviewerFeedback: qFeedback.interviewerFeedback || {
+          liked: (rawQuestion && rawQuestion.isLiked) || "none",
+          note: (rawQuestion && rawQuestion.note) || "",
+          dislikeReason: (rawQuestion && rawQuestion.whyDislike) || "",
+        },
+      };
+    });
+
+       // ===========================================
+    // ✅ Check if feedback already exists
+    // ===========================================
+    let existingFeedback = await FeedbackModel.findOne({
+      interviewRoundId,
+      candidateId,
+      interviewerId,
+    });
+
+    if (existingFeedback) {
+      if (type === "submit") {
+        // 🚨 Block duplicate submit
+        return res.status(409).json({
+          success: false,
+          message: "Feedback already submitted for this candidate and round by this interviewer",
+          feedbackId: existingFeedback._id,
+        });
+      }
+    }
+
+    // ===========================================
+    // ✅ Find existing feedback if draft
+    // ===========================================
+    let feedbackInstance;
+    if (type === "draft") {
+      feedbackInstance = await FeedbackModel.findOne({
+        interviewRoundId,
+        candidateId,
+        interviewerId,
+      });
+
+      if (feedbackInstance) {
+        // 🔹 Update draft
+        feedbackInstance.skills = skills || feedbackInstance.skills;
+        feedbackInstance.questionFeedback = processedQuestionFeedback || feedbackInstance.questionFeedback;
+        feedbackInstance.generalComments = generalComments || feedbackInstance.generalComments;
+        feedbackInstance.overallImpression = overallImpression || feedbackInstance.overallImpression;
+        feedbackInstance.status = "draft";
+      }
+    }
+
+    // ===========================================
+    // ✅ Generate feedbackCode (only for new feedback)
+    // ===========================================
+    let finalFeedbackCode = feedbackInstance?.feedbackCode;
+    if (!finalFeedbackCode && interviewRoundId && feedbackCode) {
+      const existingCount = await FeedbackModel.countDocuments({ interviewRoundId });
+      finalFeedbackCode = existingCount === 0
+        ? `${feedbackCode}`
+        : `${feedbackCode}-${existingCount + 1}`;
+    }
+
+    // ===========================================
+    // ✅ Create new feedback (draft or submit)
+    // ===========================================
+    if (!feedbackInstance) {
+      feedbackInstance = new FeedbackModel({
+        tenantId,
+        ownerId,
+        interviewRoundId,
+        candidateId,
+        positionId,
+        interviewerId,
+        skills,
+        questionFeedback: processedQuestionFeedback,
+        generalComments: generalComments || "",
+        overallImpression: overallImpression || {},
+        status: type === "submit" ? "submitted" : "draft",
+        feedbackCode: finalFeedbackCode,
+      });
+    }
+
+    await feedbackInstance.save();
+
+    // ===========================================
+    // ✅ Resolve interviewId from round
+    // ===========================================
+    let resolvedInterviewId = null;
+    try {
+      if (interviewRoundId) {
+        const roundDoc = await InterviewRounds.findById(interviewRoundId).select("interviewId");
+        resolvedInterviewId = roundDoc?.interviewId || null;
+      }
+    } catch (e) {
+      console.warn("⚠️ Unable to resolve interviewId:", interviewRoundId, e?.message);
+    }
+
+    // ===========================================
+    // ✅ Handle InterviewQuestions logic
+    // ===========================================
+    if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
+      for (let i = 0; i < processedQuestionFeedback.length; i++) {
+        const qFeedback = processedQuestionFeedback[i];
+        const original = questionFeedback[i]?.questionId;
+
+        if (original && typeof original === "object") {
+          const actual = original.snapshot || original;
+          const normalizedQuestionId = qFeedback.questionId;
+          const src = original.source || actual.source || "custom";
+          const mand = original.mandatory || actual.mandatory || "false";
+
+          // 🔹 Avoid duplicates in draft updates
+          const exists = await InterviewQuestions.findOne({
+            roundId: interviewRoundId,
+            ownerId,
+            questionId: normalizedQuestionId,
+            addedBy: "interviewer",
+          }).lean();
+
+          if (!exists) {
+            const doc = new InterviewQuestions({
+              interviewId: resolvedInterviewId,
+              roundId: interviewRoundId,
+              order: i + 1,
+              mandatory: mand,
+              tenantId: tenantId || "",
+              ownerId: ownerId || "",
+              questionId: normalizedQuestionId,
+              source: src,
+              snapshot: actual || {},
+              addedBy: "interviewer",
+            });
+            await doc.save();
+          }
+        }
+      }
+    }
+
+    // ===========================================
+    // ✅ Final Response
+    // ===========================================
+    return res.status(201).json({
+      success: true,
+      message: type === "submit" ? "Feedback submitted successfully" : "Draft saved successfully",
+      data: {
+        feedbackId: feedbackInstance._id,
+        status: feedbackInstance.status,
+        submittedAt: feedbackInstance.createdAt,
+        interviewerId: interviewerId,
+        totalQuestions: processedQuestionFeedback?.length || 0,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error creating/updating feedback:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process feedback",
+      error: error.message,
+    });
+  }
 };
+
+
+// const createFeedback = async (req, res) => { 
+//     try {
+//         // console.log('📥 Received feedback data:', req.body);
+        
+//         const {
+//           type,
+//             tenantId,
+//             ownerId,
+//             interviewRoundId,
+//             candidateId,
+//             positionId,
+//             interviewerId,
+//             skills,
+//             questionFeedback,
+//             generalComments,
+//             overallImpression,
+//             status,
+//             feedbackCode
+//         } = req.body;
+
+//         // Validate required fields
+//         if (!interviewerId) {
+//             console.log('❌ interviewerId is required');
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Interviewer ID is required"
+//             });
+//         }
+
+//         if (!interviewRoundId) {
+//             console.log('❌ interviewRoundId is required');
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Interview Round ID is required"
+//             });
+//         }
+
+//         //added by venkatesh------ Check for existing feedback to prevent duplicates
+//         if (interviewRoundId && candidateId && interviewerId) {
+//             const existingFeedback = await FeedbackModel.findOne({
+//                 interviewRoundId,
+//                 candidateId,
+//                 interviewerId
+//             });
+//             if (existingFeedback) {
+//                 console.log('❌ Duplicate feedback found for this interview round, candidate, and interviewer');
+//                 return res.status(409).json({
+//                     success: false,
+//                     message: "Feedback already exists for this interview round and candidate from this interviewer",
+//                     existingFeedbackId: existingFeedback._id
+//                 });
+//             }
+//         }
+
+//         // Simple validation - just check if basic data exists
+//         if (!skills || !Array.isArray(skills) || skills.length === 0) {
+//             console.log('❌ No skills provided');
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Skills are required"
+//             });
+//         }
+
+//         console.log("questionFeedback",questionFeedback);
+
+//         // Process questionFeedback to extract only question IDs
+//         const processedQuestionFeedback = (questionFeedback || []).map(qFeedback => {
+//             const rawQuestion = qFeedback?.questionId; // Could be string ID or full object
+//             let onlyQuestionId = "";
+
+//             if (typeof rawQuestion === 'string') {
+//                 onlyQuestionId = rawQuestion;
+//             } else if (rawQuestion && typeof rawQuestion === 'object') {
+//                 onlyQuestionId = rawQuestion.questionId ;
+//             }
+
+//             return {
+//                 questionId: onlyQuestionId,
+//                 candidateAnswer: qFeedback.candidateAnswer || {
+//                     answerType: (rawQuestion && rawQuestion.isAnswered) || "not answered",
+//                     submittedAnswer: ""
+//                 },
+//                 interviewerFeedback: qFeedback.interviewerFeedback || {
+//                     liked: (rawQuestion && rawQuestion.isLiked) || "none",
+//                     note: (rawQuestion && rawQuestion.note) || "",
+//                     dislikeReason: (rawQuestion && rawQuestion.whyDislike) || ""
+//                 }
+//             };
+//         });
+
+//              // ===========================================
+//         // ✅ Generate feedbackCode sequence per round
+//         // ===========================================
+//         let finalFeedbackCode = "";
+//         if (interviewRoundId && feedbackCode) {
+//             const existingCount = await FeedbackModel.countDocuments({ interviewRoundId });
+//             if(existingCount === 0){
+//               finalFeedbackCode = `${feedbackCode}`
+//             }else{
+//             const sequenceNumber = existingCount + 1;
+//             finalFeedbackCode = `${feedbackCode}-${sequenceNumber}`;
+//             console.log(`🆕 Generated feedbackCode for round ${interviewRoundId}:`, finalFeedbackCode);
+//             }
+//           }
+
+//           console.log("finalFeedbackCode",finalFeedbackCode);
+//           console.log("feedbackCode",feedbackCode);
+
+
+//         // Create feedback data with defaults
+//         const feedbackData = {
+//             skills: skills,
+//             questionFeedback: processedQuestionFeedback,
+//             generalComments: generalComments || "",
+//             overallImpression: overallImpression || {},
+//             status: status || 'draft',
+//             feedbackCode:finalFeedbackCode
+//         };
+
+//         // Add fields only if they are not empty strings
+//         if (tenantId && tenantId.trim() !== "") {
+//             feedbackData.tenantId = tenantId;
+//         }
+        
+//         if (ownerId && ownerId.trim() !== "") {
+//             feedbackData.ownerId = ownerId;
+//         }
+        
+//         if (interviewRoundId && interviewRoundId.trim() !== "") {
+//             feedbackData.interviewRoundId = interviewRoundId;
+//         }
+        
+//         if (candidateId && candidateId.trim() !== "") {
+//             feedbackData.candidateId = candidateId;
+//         }
+        
+//         if (interviewerId && interviewerId.trim() !== "") {
+//             feedbackData.interviewerId = interviewerId;
+//         }
+
+//         // Add positionId if provided and not empty
+//         if (positionId && positionId.trim() !== "") {
+//             feedbackData.positionId = positionId;
+//         }
+
+//         console.log('💾 Saving feedback data:', feedbackData);
+
+//         const feedbackInstance = new FeedbackModel(feedbackData);
+//         await feedbackInstance.save();
+
+//         console.log('✅ Feedback saved successfully with ID:', feedbackInstance._id);
+
+//         // Resolve interviewId from the round so we can store it in interviewQuestions
+//         let resolvedInterviewId = null;
+//         try {
+//           if (interviewRoundId) {
+//             const roundDoc = await InterviewRounds.findById(interviewRoundId).select('interviewId');
+//             resolvedInterviewId = roundDoc?.interviewId || null;
+//           }
+//         } catch (e) {
+//           console.warn('⚠️ Unable to resolve interviewId from roundId:', interviewRoundId, e?.message);
+//         }
+
+//         // Save questions to InterviewQuestions collection ONLY for question bank questions
+//         let questionBankQuestions = [];
+//         let successfulSaves = [];
+//         if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
+//           console.log('📝 Checking for question bank questions to save...');
+          
+//           // Filter only questions that are from question bank (type="feedback" or source="system")
+//           questionBankQuestions = processedQuestionFeedback.filter((qFeedback, index) => {
+//             const originalQuestionFeedback = questionFeedback[index];
+//             const question = originalQuestionFeedback?.questionId;
+            
+//             // Check if this is a question bank question
+//             const isQuestionBankQuestion = question?.type === "feedback" || 
+//                                          question?.source === "system" || 
+//                                          question?.source === "questionbank" ||
+//                                          (question?.snapshot && question?.snapshot.type === "feedback");
+            
+//             console.log(`📋 Question ${index + 1}:`, {
+//               questionId: qFeedback.questionId,
+//               type: question?.type,
+//               source: question?.source,
+//               isQuestionBank: isQuestionBankQuestion
+//             });
+            
+//             return isQuestionBankQuestion;
+//           });
+          
+//           console.log(`📊 Found ${questionBankQuestions.length} question bank questions out of ${processedQuestionFeedback.length} total questions`);
+          
+//           if (questionBankQuestions.length > 0) {
+//             const questionsToSave = questionBankQuestions.map((qFeedback, index) => {
+//               // Get the original question object from the frontend data for additional details
+//               const originalIndex = processedQuestionFeedback.indexOf(qFeedback);
+//               const originalQuestionFeedback = questionFeedback[originalIndex];
+//               const question = originalQuestionFeedback?.questionId; // Could be object or string
+//               console.log('📋 Processing question bank question:', question);
+              
+//               // Extract the actual question data from the nested structure
+//               const actualQuestion = (question && typeof question === 'object') ? (question.snapshot || question) : {};
+//               const questionId = qFeedback.questionId; // Use the processed question ID (string)
+//               const sourceVal = (question && typeof question === 'object') ? (question.source || actualQuestion.source || 'system') : 'system';
+              
+//               return {
+//                 interviewId: resolvedInterviewId, // Link to Interview document
+//                 roundId: interviewRoundId,
+//                 order: index + 1,
+//                 mandatory: question?.mandatory || actualQuestion?.mandatory || 'false',
+//                 tenantId: tenantId || '',
+//                 ownerId:  ownerId , // track who added the question
+//                 questionId: questionId, // string ID
+//                 source: sourceVal,
+//                 snapshot: actualQuestion || {},
+//                 addedBy: 'interviewer'
+//               };
+//             });
+
+//             console.log('📋 Question bank questions to save:', questionsToSave.length);
+
+//             // Save each question bank question to InterviewQuestions collection
+//             successfulSaves = await Promise.all(
+//               questionsToSave.map(async (questionData) => {
+//                 try {
+//                   const questionInstance = new InterviewQuestions(questionData);
+//                   const savedQuestion = await questionInstance.save();
+//                   console.log('✅ Question bank question saved for interviewer:', interviewerId, 'Question ID:', savedQuestion._id);
+//                   return savedQuestion;
+//                 } catch (error) {
+//                   console.error('❌ Error saving question bank question for interviewer:', interviewerId, 'Error:', error);
+//                   // Don't throw error, just log it and continue
+//                   console.log('⚠️ Skipping question save due to error, continuing with feedback submission');
+//                   return null;
+//                 }
+//               })
+//             );
+
+//             // Filter out null values from failed saves
+//             successfulSaves = successfulSaves.filter(question => question !== null);
+//             console.log('✅ Question bank questions saved successfully for interviewer:', interviewerId, 'Count:', successfulSaves.length);
+//           } else {
+//             console.log('ℹ️ No question bank questions found to save');
+//           }
+//         }
+
+//         // Also persist interviewer-added questions (any question objects sent from frontend)
+//         if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
+//           console.log('📝 Checking for interviewer-added questions to save...');
+//           const interviewerAddedToSave = processedQuestionFeedback
+//             .map((qFeedback, index) => {
+//               const original = questionFeedback[index]?.questionId;
+//               if (original && typeof original === 'object') {
+//                 const actual = original.snapshot || original;
+//                 const normalizedQuestionId = qFeedback.questionId;
+//                 const src = original.source || actual.source || 'custom';
+//                 const mand = original.mandatory || actual.mandatory || 'false';
+//                 return {
+//                   interviewId: resolvedInterviewId,
+//                   roundId: interviewRoundId,
+//                   order: index + 1,
+//                   mandatory: mand,
+//                   tenantId: tenantId || '',
+//                   ownerId:  ownerId || '',
+//                   questionId: normalizedQuestionId,
+//                   source: src,
+//                   snapshot: actual || {},
+//                   addedBy: 'interviewer'
+//                 };
+//               }
+//               return null;
+//             })
+//             .filter(Boolean);
+
+//           if (interviewerAddedToSave.length > 0) {
+//             const saved = await Promise.all(
+//               interviewerAddedToSave.map(async (q) => {
+//                 try {
+//                   // Avoid duplicates per round/owner/question
+//                   const exists = await InterviewQuestions.findOne({
+//                     roundId: q.roundId,
+//                     ownerId: q.ownerId,
+//                     questionId: q.questionId,
+//                     addedBy: 'interviewer'
+//                   }).lean();
+//                   if (exists) return null;
+//                   const doc = new InterviewQuestions(q);
+//                   return await doc.save();
+//                 } catch (e) {
+//                   console.warn('⚠️ Skip saving interviewer-added question due to error:', e?.message);
+//                   return null;
+//                 }
+//               })
+//             );
+//             const count = (saved || []).filter(Boolean).length;
+//             console.log(`✅ Interviewer-added questions saved: ${count}`);
+//           } else {
+//             console.log('ℹ️ No interviewer-added questions detected to save');
+//           }
+//         }
+
+//         return res.status(201).json({
+//             success: true,
+//             message: "Feedback submitted successfully",
+//             data: {
+//                 feedbackId: feedbackInstance._id,
+//                 submittedAt: feedbackInstance.createdAt,
+//                 interviewerId: interviewerId,
+//                 totalQuestions: processedQuestionFeedback?.length || 0,
+//                 questionBankQuestionsSaved: successfulSaves?.length || 0
+//             }
+//         });
+
+//     } catch (error) {
+//         console.error("❌ Error creating feedback:", error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Failed to submit feedback",
+//             error: error.message
+//         });
+//     }
+// };
 
 //<----v1.0.0---
 // Get feedback by tenant ID
@@ -833,37 +1044,61 @@ const getCandidateByRoundId = async (req, res) => {
   }
 };
 
+// getting all feedbacks  by roundid for scheduler only 
 
-// const  getCandidateByRoundId = async (req,res) => {
-//   try {
-//     const roundId = req.query.roundId;
-//     const round = await InterviewRounds.findById(roundId)
-//       .populate({
-//         path: 'interviewId',
-//         populate: {
-//           path: 'candidateId', // populate candidate from Interview
-//           model: 'Candidate'
-//         }
-//       });
+// In your getFeedbackRoundId controller
+const getFeedbackRoundId = async (req, res) => {
+  try {
+    const { roundId } = req.params;
 
-//     if (!round) {
-//       return { success: false, message: "Round not found" };
-//     }
+    // 🔹 Cast properly
+    const objectRoundId = new mongoose.Types.ObjectId(roundId);
 
-//     // candidate details will be inside round.interviewId.candidateId
-//     return {
-//       success: true,
-//       candidate: round.interviewId?.candidateId || null
-//     };
+    // 1️⃣ Find round
+    const round = await InterviewRounds.findById(objectRoundId)
+      .populate("interviewId")
+      .populate("interviewers");
 
-//   } catch (error) {
-//     console.error(error);
-//     return { success: false, message: "Error fetching candidate details", error };
-//   }
-// }
+    if (!round) {
+      return res.status(404).json({ message: "Round not found" });
+    }
 
+    // 2️⃣ Get Interview, Candidate, Position details
+    const interview = await Interview.findById(round.interviewId)
+      .populate("candidateId")
+      .populate("positionId");
 
-// Update feedback by ID
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    // 3️⃣ Get Feedbacks (important: cast roundId to ObjectId)
+    const feedbacks = await FeedbackModel.find({ interviewRoundId: objectRoundId })
+      .populate("interviewerId") // gives contact details
+      .populate("candidateId")
+      .populate("positionId");
+
+    // 4️⃣ Prepare response
+    const response = {
+      success: true,
+      message: feedbacks.length ? "Feedback found" : "No feedback submitted yet",
+      interviewRound: round,
+      candidate: interview.candidateId,
+      position: interview.positionId,
+      interviewers: round.interviewers || [],
+      feedbacks,
+      interviewQuestions: {
+        preselectedQuestions: round.preselectedQuestions || [],
+        interviewerAddedQuestions: round.interviewerAddedQuestions || []
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error("Error fetching round details:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 
 const updateFeedback = async (req, res) => {
@@ -941,7 +1176,8 @@ module.exports = {
   getAllFeedback,
   updateFeedback,
   getFeedbackByContactIdRoundId,
-  getCandidateByRoundId
+  getCandidateByRoundId,
+  getFeedbackRoundId // getting all feedbacks  by roundid for scheduler only 
 };
 
 // const getFeedbackByRoundId = async (req, res) => {

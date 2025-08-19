@@ -38,7 +38,7 @@ export const formatToLocalTime = (dateTimeString, format = 'start-only') => {
         options = {
           hour: '2-digit',
           minute: '2-digit',
-          timeZoneName: 'short'
+          // timeZoneName: 'short'
         };
         break;
       case 'date':
@@ -46,7 +46,7 @@ export const formatToLocalTime = (dateTimeString, format = 'start-only') => {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
-          timeZoneName: 'short'
+          // timeZoneName: 'short'
         };
         break;
       case 'short':
@@ -55,30 +55,30 @@ export const formatToLocalTime = (dateTimeString, format = 'start-only') => {
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
-          timeZoneName: 'short'
+          // timeZoneName: 'short'
         };
         break;
       case 'full':
         options = {
-          weekday: 'long',
+          // weekday: 'long',
           year: 'numeric',
           month: 'long',
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
-          timeZoneName: 'long'
+          // timeZoneName: 'long'
         };
         break;
       case 'start-only':
       default:
         options = {
-          weekday: 'long',
+          // weekday: 'long',
           year: 'numeric',
           month: 'long',
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
-          timeZoneName: 'long'
+          // timeZoneName: 'long'
         };
         break;
     }
@@ -125,7 +125,8 @@ const formatTimeRange = (timeRangeString, format = 'full') => {
 
     // Get user's timezone
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const timeZoneName = timeZone.replace(/_/g, ' ');
+    // const timeZoneName = timeZone.replace(/_/g, ' ');
+    const timeZoneName = ""
 
     // Format based on the requested format
     switch (format) {
@@ -139,7 +140,7 @@ const formatTimeRange = (timeRangeString, format = 'full') => {
         return `${formatFullDateTime(startDate)} ${timeZoneName}`;
       case 'full':
       default:
-        return `${formatFullDateTime(startDate)} - ${formatTime(endDate)} ${timeZoneName}`;
+        return `${formatFullDateTime(startDate)} - ${formatTime(endDate)}`;  // ${timeZoneName}
     }
   } catch (error) {
     console.error('Error formatting time range:', error);
@@ -244,7 +245,7 @@ const formatShortDateTime = (date) => {
  */
 const formatFullDateTime = (date) => {
   return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
+    // weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -354,7 +355,7 @@ export const getLocalTimezoneInfo = () => {
   
   return {
     timeZone,
-    timeZoneName: timeZone.replace(/_/g, ' '),
+    // timeZoneName: timeZone.replace(/_/g, ' '),
     offset: `${offsetSign}${offsetHours.toString().padStart(2, '0')}:${offsetMinutes.toString().padStart(2, '0')}`,
     offsetHours,
     offsetMinutes,

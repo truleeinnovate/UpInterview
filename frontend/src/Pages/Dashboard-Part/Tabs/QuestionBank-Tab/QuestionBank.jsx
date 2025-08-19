@@ -46,12 +46,14 @@ const QuestionBank = ({ assessmentId,
           <button
             className={`px-6 py-3 font-medium text-sm ${activeTab === "SuggesstedQuestions" ? "text-custom-blue border-b-2 border-custom-blue" : "text-gray-500 hover:text-gray-700 transition-colors duration-200"}`}
             onClick={() => handleSuggestedTabClick()}
+            type="button"
           >
             Suggested Questions
           </button>
           <button
             className={`px-6 py-3 font-medium text-sm ${activeTab === "MyQuestionsList" ? "text-custom-blue border-b-2 border-custom-blue" : "text-gray-500 hover:text-gray-700 transition-colors duration-200"}`}
             onClick={() => handleFavoriteTabClick()}
+            type="button"
           >
             My Questions List
           </button>

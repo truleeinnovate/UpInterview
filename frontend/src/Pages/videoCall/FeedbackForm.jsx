@@ -16,6 +16,8 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import { useCreateFeedback, useUpdateFeedback } from '../../apiHooks/useFeedbacks';
 import { useScrollLock } from '../../apiHooks/scrollHook/useScrollLock.js';
+import toast from 'react-hot-toast';
+import { SchedulerViewMode } from './SchedulerViewMode.jsx';
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -64,7 +66,9 @@ const FeedbackForm = ({
   preselectedQuestionsResponses = [],
 
   decodedData,
-  isAddMode 
+  isAddMode ,
+  isScheduler,
+  schedulerFeedbackData
 }) => {
   console.log("feedbackCandidate",feedbackCandidate)
   useScrollLock(true);
@@ -97,6 +101,8 @@ const FeedbackForm = ({
   );
 
   // console.log("overallImpressionTabData",overallRating);
+
+  
 
 
   // Fixed: Proper initialization for communication rating with proper fallbacks
@@ -876,6 +882,7 @@ const FeedbackForm = ({
 
       // Prepare feedback data
       const feedbackData = {
+        type:"submit",
         tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
@@ -1009,6 +1016,7 @@ const FeedbackForm = ({
 
       // Prepare feedback data for draft save
       const feedbackData = {
+        type:"draft",
         tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
@@ -1101,29 +1109,29 @@ const FeedbackForm = ({
           updateFeedback({ feedbackId, feedbackData: updatedFeedbackData }, {
             onSuccess: (data) => {
               if (data.success) {
-                alert('Feedback saved as draft successfully!');
+                toast.success('Feedback saved as draft successfully!');
               } else {
-                alert('Failed to save feedback as draft: ' + data.message);
+                toast.error('Failed to save feedback as draft: ' + data.message);
               }
             },
             onError: (error) => {
-              alert('Failed to save feedback as draft: ' + error.message);
+              toast.error('Failed to save feedback as draft: ' + error.message);
             }
           });
         } else {
-          alert('No feedback ID found, cannot save draft.');
+          toast.error('No feedback ID found, cannot save draft.');
         }
       } else {
         createFeedback(feedbackData, {
           onSuccess: (data) => {
             if (data.success) {
-              alert('Feedback saved as draft!');
+              toast.success('Feedback saved as draft!');
             } else {
-              alert('Failed to save feedback as draft: ' + data.message);
+              toast.error('Failed to save feedback as draft: ' + data.message);
             }
           },
           onError: (error) => {
-            alert('Failed to save feedback as draft: ' + error.message);
+            toast.error('Failed to save feedback as draft: ' + error.message);
           }
         });
       }
@@ -1132,6 +1140,14 @@ const FeedbackForm = ({
       alert('Failed to save draft. Please try again.');
     }
   };
+
+  
+  console.log("schedulerFeedbackData",schedulerFeedbackData);
+  if (isScheduler || decodedData?.schedule) {
+    console.log("schedulerFeedbackData",schedulerFeedbackData);
+    return <SchedulerViewMode feedbackData={schedulerFeedbackData} />;
+  }
+console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
 
   // Button component for consistency
   const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', style = {}, disabled = false, type = 'button' }) => {
@@ -1158,6 +1174,8 @@ const FeedbackForm = ({
       </button>
     );
   };
+
+
 
   return (
     <>
@@ -1217,7 +1235,7 @@ const FeedbackForm = ({
               <label className="block text-sm font-medium text-gray-700">
                 Skill Ratings {!isViewMode && <span className="text-red-500">*</span>}
               </label>
-              {(isViewMode || isEditMode  || decodedData?.schedule) ? (
+              {(isViewMode || isEditMode ) ? (
                 <div></div>
               ) : (
               // {!isViewMode &&
@@ -1277,7 +1295,7 @@ const FeedbackForm = ({
                           placeholder="Comments (optional)"
                           className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        <Button
+                        {/* <Button
                           type="button"
                           onClick={() => handleRemoveSkill(index)}
                           variant="ghost"
@@ -1286,7 +1304,7 @@ const FeedbackForm = ({
                           disabled={skillRatings.length <= 1}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   </div>
@@ -1308,14 +1326,14 @@ const FeedbackForm = ({
                   {questionsWithFeedback.length} question(s) from question bank
                 </span>
               </div>
-              {(isViewMode || isEditMode  || decodedData?.schedule) ? (
+              {(isViewMode || isEditMode  ) ? (
                 <div></div>
               ) : (
                 <button
                   className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
                   onClick={openQuestionBank}
                   title="Add Question from Question Bank"
-                  disabled={decodedData?.schedule}
+                  // disabled={decodedData?.schedule}
                 >
                   <FaPlus className="text-sm" />
                   <span>Add Question</span>
@@ -1465,12 +1483,12 @@ const FeedbackForm = ({
                                   {question.note?.length || 0}/250
                                 </span>
                               </div>
-                              <button
+                              {/* <button
                                 onClick={() => onClickDeleteNote(question.questionId || question.id)}
                                 className="text-red-500 text-lg mt-2"
                               >
                                 <FaTrash size={20} />
-                              </button>
+                              </button> */}
                             </div>
                           </div>
                         </div>
@@ -1537,7 +1555,7 @@ const FeedbackForm = ({
                 </select>
               )}
             </div>
-            {isViewMode || decodedData?.schedule ? 
+            {isViewMode  ? 
             <div>
             </div>
             : (

@@ -202,7 +202,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
   return (
     <Modal
       isOpen={true}
-      onRequestClose={handleClose}
+      onRequestClose={() => navigate(-1)}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
     >

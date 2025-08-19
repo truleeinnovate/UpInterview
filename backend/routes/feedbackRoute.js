@@ -2,7 +2,7 @@
 
 const express = require('express')
 
-const { createFeedback, getFeedbackByRoundId,getAllFeedback, updateFeedback, getFeedbackByContactIdRoundId, getCandidateByRoundId } = require('../controllers/feedbackController.js')
+const { createFeedback, getFeedbackByRoundId,getAllFeedback, updateFeedback, getFeedbackByContactIdRoundId, getCandidateByRoundId, getFeedbackRoundId } = require('../controllers/feedbackController.js')
 
 const router = express.Router()
 
@@ -26,6 +26,9 @@ router.get('/contact-details', getFeedbackByContactIdRoundId);
 
 router.get('/candidate-details', getCandidateByRoundId);
 
+
+// get feedback by roundId for scheduler
+router.get('/round/:roundId', getFeedbackRoundId);
 
 
 module.exports = router 

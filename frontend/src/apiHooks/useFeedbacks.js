@@ -2,6 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { fetchFilterData } from '../api.js';
 import { usePermissions } from '../Context/PermissionsContext';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
@@ -37,8 +38,13 @@ export const useCreateFeedback = () => {
       return response.data;
     },
     onError: (error) => {
-      console.error('Error creating feedback:', error);
-      throw error;
+      if (error.response?.status === 409) {
+        toast.error("⚠️ Feedback already exists for this candidate and round!");
+      } else {
+        toast.error("❌ Failed to submit feedback: " + error.message);
+      }
+      // console.error('Error creating feedback:', error);
+      // throw error;
     },
   });
 };

@@ -346,6 +346,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       const interviewMode = round.interviewMode || 'Online';
       const dateTime = round.dateTime || 'To be scheduled';
       const duration = round.duration || '60 minutes';
+      const instructions = round.instructions || 'Please join the meeting on time.';
+
 
       const emailSubject = schedulerTemplate.subject
         .replace('{{companyName}}', companyName)
@@ -358,6 +360,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         .replace('{{interviewMode}}', interviewMode)
         .replace('{{dateTime}}', dateTime)
         .replace('{{duration}}', duration)
+        .replace('{{instructions}}', instructions)
         .replace('{{supportEmail}}', supportEmail);
 
       // Add meeting links if available

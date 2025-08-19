@@ -1,11 +1,12 @@
 // v1.0.0  -  mansoor  -  removed the format function and used the date.toISOString() instead to store the date of birth in the database
+// v1.0.1  -  Venkatesh  -  removed the format function
 import React, { useRef, useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { XCircle } from "lucide-react";
 import noImage from "../../Dashboard-Part/Images/no-photo.png";
 import InfoBox from "./InfoBox.jsx";
-import { format } from "date-fns";
+//import { format } from "date-fns";
 import { ReactComponent as MdArrowDropDown } from "../../../icons/MdArrowDropDown.svg";
 import { validateFile } from "../../../utils/FileValidation/FileValidation.js";
 
@@ -26,8 +27,19 @@ const BasicDetails = ({
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
   const [suggestedProfileIds, setSuggestedProfileIds] = useState("");
-  const [startDate, setStartDate] = useState(
-    basicDetailsData.dateOfBirth ? new Date(basicDetailsData.dateOfBirth) : null
+//  const [startDate, setStartDate] = useState(
+//     basicDetailsData.dateOfBirth? new Date(basicDetailsData.dateOfBirth):null
+//   );
+//<----v1.0.1-----
+  // Ensure we never pass an Invalid Date to DatePicker
+  const toValidDate = (v) => {
+    if (!v) return null;
+    const d = v instanceof Date ? v : new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const [startDate, setStartDate] = useState(() =>
+    toValidDate(basicDetailsData.dateOfBirth)
+  //----v1.0.1----->
   );
   const [selectedGender, setSelectedGender] = useState(
     basicDetailsData.gender || ""
@@ -51,11 +63,12 @@ const BasicDetails = ({
 
   // Update local state when basicDetailsData changes
   useEffect(() => {
-    if (basicDetailsData.dateOfBirth) {
-      setStartDate(new Date(basicDetailsData.dateOfBirth));
-    } else {
-      setStartDate(null);
-    }
+    // if (basicDetailsData.dateOfBirth) {
+    //   setStartDate(new Date(basicDetailsData.dateOfBirth));
+    // } else {
+    //   setStartDate(null);
+    // }
+    setStartDate(toValidDate(basicDetailsData.dateOfBirth));//----v1.0.1---->
     if (basicDetailsData.gender) {
       setSelectedGender(basicDetailsData.gender);
     } else {

@@ -18,10 +18,13 @@ const SubscriptionPlan = () => {
   const { isMutationLoading } = usePositions();
 
   const authToken = Cookies.get("authToken");
+  console.log("authToken---",authToken);
   const tokenPayload = decodeJwt(authToken);
+  console.log("tocken--",tokenPayload);
 
   // Extract user details from token payload
   const ownerId = tokenPayload?.userId;
+  console.log("ownerid---",ownerId);
   const organization = tokenPayload?.organization;
   console.log("organization ----", organization);
   const tenantId = tokenPayload?.tenantId;
