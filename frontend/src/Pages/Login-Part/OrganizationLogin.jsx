@@ -206,15 +206,15 @@ const OrganizationLogin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateLogin()) return;
-  
+
     setIsLoading(true);
     const loginStartTime = new Date().toISOString();
-  
+
     try {
-      // Step 1: Clear all existing cookies
+      // Clear existing cookies
       await clearAllAuth();
-  
-      // Step 2: Authenticate user with email and password
+
+      // Authenticate user
       const loginURL = `${config.REACT_APP_API_URL}/Organization/Login`;
       const response = await axios.post(
         loginURL,
@@ -224,7 +224,7 @@ const OrganizationLogin = () => {
         },
         { withCredentials: true }
       );
-  
+
       const {
         authToken,
         impersonationToken,
@@ -238,94 +238,70 @@ const OrganizationLogin = () => {
         contactEmailFromOrg,
         roleType,
         subdomain,
-        fullDomain,
         subdomainStatus,
       } = response.data;
-  
-      // Step 3: Handle internal users (admin dashboard)
+
+      // Handle internal users
       if (roleType === 'internal') {
         setAuthCookies({ impersonationToken, impersonatedUserId });
         await refreshPermissions();
         navigate('/admin-dashboard');
         return;
       }
-  
-      // Step 4: Set authentication cookies for regular users
+
+      // Set authentication cookies
       await setAuthCookies({
         authToken,
         userId: ownerId,
         tenantId,
         organization: true
       });
-  
-      // Step 5: Handle email verification
+
+      // Handle email verification
       if (!isEmailVerified) {
         setIsEmailVerified(false);
         await handleResendVerification();
         setCountdown(60);
         return;
       }
-  
-      // Step 6: Check subdomain and handle subdomain routing
+
+      // Handle returnUrl
+      const query = new URLSearchParams(location.search);
+      const returnUrl = query.get('returnUrl');
+      if (returnUrl) {
+        // Redirect to the returnUrl as-is without parsing/decoding
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        window.location.href = returnUrl;
+        return;
+      }
+
+      // Handle subdomain redirection
       if (subdomain && subdomainStatus === 'active') {
         const currentDomain = window.location.hostname;
         const targetDomain = `${subdomain}.app.upinterview.io`;
-  
+
         if (!currentDomain.includes(subdomain)) {
           const protocol = window.location.protocol;
           let targetPath = '/';
-          // Prioritize returnUrl if present
-          const query = new URLSearchParams(location.search);
-          const returnUrl = query.get('returnUrl');
-          if (returnUrl) {
-            try {
-              const decodedReturnUrl = decodeURIComponent(returnUrl);
-              const returnUrlObj = new URL(decodedReturnUrl);
-              if (returnUrlObj.hostname === currentDomain || returnUrlObj.hostname.endsWith('.app.upinterview.io')) {
-                targetPath = returnUrlObj.pathname + returnUrlObj.search;
-              }
-            } catch (error) {
-              console.error('Error processing returnUrl for subdomain:', error);
-            }
-          } else if (status === 'active' && isProfileCompleted !== false) {
+          if (status === 'active' && isProfileCompleted !== false) {
             targetPath = '/home';
           } else if (status === 'submitted' || status === 'payment_pending') {
             targetPath = '/subscription-plans';
           } else if (isProfileCompleted === false && roleName) {
             targetPath = '/create-profile';
           }
-  
+
           const targetUrl = `${protocol}//${targetDomain}${targetPath}`;
           await new Promise(resolve => setTimeout(resolve, 4000));
           window.location.href = targetUrl;
           return;
         }
       }
-  
-      // Step 7: Refresh permissions for non-subdomain cases
+
+      // Refresh permissions for non-subdomain cases
       await refreshPermissions();
-  
-      // Step 8: Handle returnUrl if present
-      const query = new URLSearchParams(location.search);
-      const returnUrl = query.get('returnUrl');
-      if (returnUrl) {
-        try {
-          const decodedReturnUrl = decodeURIComponent(returnUrl);
-          const returnUrlObj = new URL(decodedReturnUrl);
-          const currentDomain = window.location.hostname;
-          if (returnUrlObj.hostname === currentDomain || returnUrlObj.hostname.endsWith('.app.upinterview.io')) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            window.location.href = decodedReturnUrl;
-            return;
-          } else {
-            console.warn('Invalid returnUrl domain, falling back to default navigation');
-          }
-        } catch (error) {
-          console.error('Error processing returnUrl:', error);
-        }
-      }
-  
-      // Step 9: Handle navigation based on user status (default navigation)
+
+      // Default navigation based on user status
       switch (status) {
         case 'submitted':
         case 'payment_pending':
@@ -347,7 +323,7 @@ const OrganizationLogin = () => {
     } catch (error) {
       setIsLoading(false);
       setErrors({ email: '', password: '' });
-  
+
       if (error.response) {
         const { status, data } = error.response;
         if (status === 400) {

@@ -1,6 +1,4 @@
-
-
-
+// JoinMeeting.jsx
 
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -28,110 +26,88 @@ function JoinMeeting() {
   const [preAuthLoading, setPreAuthLoading] = useState(true);
   const [authType, setAuthType] = useState(null);
   const [schedulerFeedbackData, setSchedulerFeedback] = useState(null);
-
-  // Purpose: Store candidate details fetched from candidate-details API for candidate view
   const [candidateDetails, setCandidateDetails] = useState(null);
   const [candidateLoading, setCandidateLoading] = useState(false);
   const [candidateError, setCandidateError] = useState(null);
 
-  
-
-
-// Improved fetchCandidateDetails with retry logic and better timeout handling
-const fetchCandidateDetails = async (roundId, retryCount = 0) => {
- 
-  
-  if (!roundId) {
-    console.error("❌ No roundId provided to fetchCandidateDetails");
-    setCandidateError("Round ID is required");
-    return;
-  }
-
-  try {
-    setCandidateLoading(true);
-    setCandidateError(null);
-    
-    const apiUrl = `${config.REACT_APP_API_URL}/feedback/candidate-details`;
-  
-    // Start with a shorter timeout for faster failure detection
-    const timeout = retryCount === 0 ? 5000 : 10000; // 5s first try, 10s for retries
-    
-    const res = await axios.get(apiUrl, {
-      params: { roundId },
-      timeout: timeout,
-      headers: {
-        'Accept': 'application/json',
-      }
-    });
-    //  console.log("decodedData?.meetLink",decodedData?.meetLink);
-     
-
-    
-    if (res.data && res.data.success) {
-      if (res.data.candidate) {
-        console.log("✅ Setting candidate details:", res.data);
-        // setCandidateDetails(res.data.candidate);
-        setCandidateDetails({
-          ...res.data.candidate,
-          position: res.data.position,
-          round: res.data.round,
-          // meetingLink: decodedData?.meetLink || null, 
-          // meetingLink:  decodedData?.meetLink
-        });
-        
-      } else {
-        console.warn("⚠️ API returned success but no candidate data");
-        setCandidateError("Candidate data not found in response");
-      }
-    } else {
-      const errorMessage = res.data?.message || "API returned unsuccessful response";
-      console.error("❌ API returned error:", errorMessage);
-      setCandidateError(errorMessage);
-    }
-  } catch (err) {
-    console.error(`❌ Candidate API error (attempt ${retryCount + 1}):`, {
-      message: err.message,
-      code: err.code,
-      status: err.response?.status,
-      statusText: err.response?.statusText,
-      data: err.response?.data,
-    });
-    
-    // Retry logic for timeout errors
-    if ((err.code === 'ECONNABORTED' || err.message.includes('timeout')) && retryCount < 2) {
-      console.log(`🔄 Retrying request (attempt ${retryCount + 2}/3)...`);
-      setTimeout(() => {
-        fetchCandidateDetails(roundId, retryCount + 1);
-      }, 1000); // Wait 1 second before retry
+  const fetchCandidateDetails = async (roundId, retryCount = 0) => {
+    if (!roundId) {
+      console.error("❌ No roundId provided to fetchCandidateDetails");
+      setCandidateError("Round ID is required");
       return;
     }
-    
-    // Set appropriate error messages
-    if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-      setCandidateError("Request timeout - server is not responding. Please check if the backend server is running on port 5000.");
-    } else if (err.code === 'ERR_NETWORK') {
-      setCandidateError("Network error - please check CORS configuration or server status");
-    } else if (err.response?.status === 404) {
-      setCandidateError("Candidate not found for this round");
-    } else if (err.response?.status === 500) {
-      setCandidateError("Server error occurred");
-    } else {
-      setCandidateError(err.response?.data?.message || "Failed to fetch candidate details");
-    }
-  } finally {
-    setCandidateLoading(false);
-  }
-};
-  // console.log("candidateDetails", candidateDetails,"decodedData",decodedData);
 
-  // Centralized navigation function
+    try {
+      setCandidateLoading(true);
+      setCandidateError(null);
+
+      const apiUrl = `${config.REACT_APP_API_URL}/feedback/candidate-details`;
+      const timeout = retryCount === 0 ? 5000 : 10000;
+
+      const res = await axios.get(apiUrl, {
+        params: { roundId },
+        timeout: timeout,
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (res.data && res.data.success) {
+        if (res.data.candidate) {
+          console.log("✅ Setting candidate details:", res.data);
+          setCandidateDetails({
+            ...res.data.candidate,
+            position: res.data.position,
+            round: res.data.round,
+          });
+        } else {
+          console.warn("⚠️ API returned success but no candidate data");
+          setCandidateError("Candidate data not found in response");
+        }
+      } else {
+        const errorMessage = res.data?.message || "API returned unsuccessful response";
+        console.error("❌ API returned error:", errorMessage);
+        setCandidateError(errorMessage);
+      }
+    } catch (err) {
+      console.error(`❌ Candidate API error (attempt ${retryCount + 1}):`, {
+        message: err.message,
+        code: err.code,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+      });
+
+      if ((err.code === 'ECONNABORTED' || err.message.includes('timeout')) && retryCount < 2) {
+        console.log(`🔄 Retrying request (attempt ${retryCount + 2}/3)...`);
+        setTimeout(() => {
+          fetchCandidateDetails(roundId, retryCount + 1);
+        }, 1000);
+        return;
+      }
+
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        setCandidateError("Request timeout - server is not responding. Please check if the backend server is running on port 5000.");
+      } else if (err.code === 'ERR_NETWORK') {
+        setCandidateError("Network error - please check CORS configuration or server status");
+      } else if (err.response?.status === 404) {
+        setCandidateError("Candidate not found for this round");
+      } else if (err.response?.status === 500) {
+        setCandidateError("Server error occurred");
+      } else {
+        setCandidateError(err.response?.data?.message || "Failed to fetch candidate details");
+      }
+    } finally {
+      setCandidateLoading(false);
+    }
+  };
+
   const redirectToLogin = (isIndividual) => {
     const returnUrl = encodeURIComponent(window.location.href);
     const loginPath = isIndividual ? '/individual-login' : '/organization-login';
     navigate(`${loginPath}?returnUrl=${returnUrl}`);
   };
 
-  // Authentication check function
   const checkAuthentication = () => {
     try {
       if (!AuthCookieManager.isAuthenticated()) {
@@ -190,309 +166,160 @@ const fetchCandidateDetails = async (roundId, retryCount = 0) => {
     }
   };
 
-  // In your useEffect where you fetch pre-auth details, modify it like this:
-useEffect(() => {
-  // Parse URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const schedule = urlParams.get('scheduler');
+    const meeting = urlParams.get('meeting');
+    const round = urlParams.get('round');
+    const candidate = urlParams.get('candidate');
+    const interviewer = urlParams.get('interviewer');
+    const interviewerToken = urlParams.get('interviewertoken');
+    const schedulerToken = urlParams.get('schedulertoken');
 
-  
-  const urlParams = new URLSearchParams(location.search);
-  const schedule = urlParams.get('scheduler');
-  const meeting = urlParams.get('meeting');
-  const round = urlParams.get('round');
-  const candidate = urlParams.get('candidate');
-  const interviewer = urlParams.get('interviewer');
-  const interviewerToken = urlParams.get('interviewertoken');
-  const schedulerToken = urlParams.get('schedulertoken');
+    const isSchedule = schedule === 'true';
+    const isCandidate = candidate === 'true';
+    const isInterviewer = interviewer === 'true';
 
-  const isSchedule = schedule === 'true';
-  const isCandidate = candidate === 'true';
-  const isInterviewer = interviewer === 'true';
-
-  // Decrypt meeting data
-  let decryptedMeeting = null;
-  if (meeting) {
-    try {
-      const decodedMeeting = decodeURIComponent(meeting);
-      decryptedMeeting = decryptData(decodedMeeting);
-    } catch (error) {
-      console.error('Error decrypting meeting data:', error);
-    }
-  }
-
-  // Decrypt round data
-  let decryptedRound = null;
-  if (round) {
-    try {
-      const decodedRound = decodeURIComponent(round);
-      decryptedRound = decryptData(decodedRound);
-    } catch (error) {
-      console.error('Error decrypting round data:', error);
-    }
-  }
-
-  // Decrypt interviewer/scheduler token
-  let decryptedInterviewerId = null;
-  if (interviewerToken || schedulerToken) {
-    try {
-      const decodedToken = decodeURIComponent(interviewerToken || schedulerToken);
-      decryptedInterviewerId = decryptData(decodedToken);
-    } catch (error) {
-      console.error('Error decrypting token data:', error);
-    }
-  }
-
-  // Skip auth for candidate links
-  if (isCandidate) {
-    setIsAuthChecking(false);
-    setPreAuthPassed(true);
-    setPreAuthLoading(false);
-    if (decryptedRound) {
-      fetchCandidateDetails(decryptedRound);
-    }
-    if (decryptedMeeting) {
-      setCandidateDetails(prev => prev ? { ...prev, meetingLink: decryptedMeeting } : prev);
-    }
-  }
-
-  // Extract key information
-  const extractedData = {
-    schedule: isSchedule,
-    isCandidate: isCandidate,
-    isInterviewer: isInterviewer,
-    meetLink: decryptedMeeting,
-    roundData: decryptedRound,
-    interviewRoundId: decryptedRound || '',
-    interviewerId: decryptedInterviewerId || '',
-  };
-
-  setDecodedData(extractedData);
-
-  // Set role information for RoleSelector
-  const effectiveIsInterviewer = isInterviewer || isSchedule;
-  const roleInfo = {
-    isCandidate: false,
-    isInterviewer: effectiveIsInterviewer,
-    hasRolePreference: isCandidate || effectiveIsInterviewer,
-  };
-  setUrlRoleInfo(roleInfo);
-
-  // Auto-select candidate role if URL indicates candidate
-  if (isCandidate) {
-    setCurrentRole('candidate');
-  }
-
-  // Pre-Auth API Call - only if we have required params
-  if (!isCandidate && decryptedInterviewerId && decryptedRound) {
-    const fetchPreAuthDetails = async () => {
+    let decryptedMeeting = null;
+    if (meeting) {
       try {
-        setPreAuthLoading(true);
-        const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/contact-details`, {
-          params: {
-            contactId: decryptedInterviewerId,
-            roundId: decryptedRound,
-          },
-        });
+        const decodedMeeting = decodeURIComponent(meeting);
+        decryptedMeeting = decryptData(decodedMeeting);
+      } catch (error) {
+        console.error('Error decrypting meeting data:', error);
+        setAuthError('Invalid meeting link: unable to decrypt meeting information');
+        setPreAuthLoading(false);
+        setIsAuthChecking(false);
+        return;
+      }
+    }
 
-        const result = res.data;
-        if (result && res.status === 200) {
-          setPreAuthPassed(true);
-          setAuthType(result?.tenant?.type);
-        } else {
-          setAuthError(result?.error || 'Error fetching meeting details');
-          if (result?.error === 'Owner mismatch between contact and tenant') {
-            redirectToLogin(result?.tenant?.type === 'individual');
+    let decryptedRound = null;
+    if (round) {
+      try {
+        const decodedRound = decodeURIComponent(round);
+        decryptedRound = decryptData(decodedRound);
+      } catch (error) {
+        console.error('Error decrypting round data:', error);
+        setAuthError('Invalid meeting link: unable to decrypt round information');
+        setPreAuthLoading(false);
+        setIsAuthChecking(false);
+        return;
+      }
+    }
+
+    let decryptedInterviewerId = null;
+    if (interviewerToken || schedulerToken) {
+      try {
+        const decodedToken = decodeURIComponent(interviewerToken || schedulerToken);
+        decryptedInterviewerId = decryptData(decodedToken);
+      } catch (error) {
+        console.error('Error decrypting token data:', error);
+        setAuthError('Invalid meeting link: unable to decrypt token information');
+        setPreAuthLoading(false);
+        setIsAuthChecking(false);
+        return;
+      }
+    }
+
+    if (isCandidate) {
+      setIsAuthChecking(false);
+      setPreAuthPassed(true);
+      setPreAuthLoading(false);
+      if (decryptedRound) {
+        fetchCandidateDetails(decryptedRound);
+      }
+      if (decryptedMeeting) {
+        setCandidateDetails(prev => prev ? { ...prev, meetingLink: decryptedMeeting } : prev);
+      }
+    }
+
+    const extractedData = {
+      schedule: isSchedule,
+      isCandidate: isCandidate,
+      isInterviewer: isInterviewer,
+      meetLink: decryptedMeeting,
+      roundData: decryptedRound,
+      interviewRoundId: decryptedRound || '',
+      interviewerId: decryptedInterviewerId || '',
+    };
+
+    setDecodedData(extractedData);
+
+    const effectiveIsInterviewer = isInterviewer || isSchedule;
+    const roleInfo = {
+      isCandidate: isCandidate,
+      isInterviewer: effectiveIsInterviewer,
+      hasRolePreference: isCandidate || effectiveIsInterviewer,
+    };
+    setUrlRoleInfo(roleInfo);
+
+    if (isCandidate) {
+      setCurrentRole('candidate');
+    }
+
+    if (!isCandidate && decryptedInterviewerId && decryptedRound) {
+      const fetchPreAuthDetails = async () => {
+        try {
+          setPreAuthLoading(true);
+          const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/contact-details`, {
+            params: {
+              contactId: decryptedInterviewerId,
+              roundId: decryptedRound,
+            },
+          });
+
+          const result = res.data;
+          if (result && res.status === 200) {
+            setPreAuthPassed(true);
+            setAuthType(result?.tenant?.type);
+          } else {
+            setAuthError(result?.error || 'Error fetching meeting details');
+            if (result?.error === 'Owner mismatch between contact and tenant') {
+              redirectToLogin(result?.tenant?.type === 'individual');
+            }
           }
+        } catch (err) {
+          console.error('API call failed:', err);
+          if (err.response?.status === 403 && err.response?.data?.error === 'Owner mismatch between contact and tenant') {
+            redirectToLogin(authType === 'individual' || err.response?.data?.tenant?.type === 'individual');
+          } else {
+            setAuthError('Failed to check meeting details');
+          }
+        } finally {
+          setPreAuthLoading(false);
         }
-      } catch (err) {
-        console.error('API call failed:', err);
-        if (err.response?.status === 403 && err.response?.data?.error === 'Owner mismatch between contact and tenant') {
-          redirectToLogin(authType === 'individual' || err.response?.data?.tenant?.type === 'individual');
-        } else {
-          setAuthError('Failed to check meeting details');
+      };
+
+      fetchPreAuthDetails();
+    } else if (!isCandidate) {
+      setPreAuthLoading(false);
+      setAuthError('Invalid meeting link: missing required parameters');
+    }
+
+    if (isSchedule && decryptedRound) {
+      const fetchSchedulerRoundDetails = async () => {
+        try {
+          setPreAuthLoading(true);
+          const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/round/${decryptedRound}`);
+          if (res.data && res.data.success) {
+            console.log('Scheduler round details:', res.data.data);
+            setSchedulerFeedback(res.data.data);
+            setPreAuthPassed(true);
+          } else {
+            setAuthError(res.data?.message || 'Error fetching round details');
+          }
+        } catch (err) {
+          console.error('Scheduler API call failed:', err);
+          setAuthError('Failed to fetch scheduler round details');
+        } finally {
+          setPreAuthLoading(false);
+          setIsAuthChecking(false);
         }
-      } finally {
-        setPreAuthLoading(false);
-      }
-    };
-
-    fetchPreAuthDetails();
-  } else if (!isCandidate) {
-    // If we don't have required params but it's not a candidate link
-    setPreAuthLoading(false);
-    setAuthError('Invalid meeting link: missing required parameters');
-  }
-
-   // 🔹 CHANGED: Scheduler calls new API
-   if (isSchedule && decryptedRound) {
-    const fetchSchedulerRoundDetails = async () => {
-      try {
-        setPreAuthLoading(true);
-        const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/round/${decryptedRound}`); ///round/:roundId
-        if (res.data && res.data.success) {
-          console.log('Scheduler round details:', res.data.data);
-          setSchedulerFeedback(res.data.data);
-          setPreAuthPassed(true);
-        } else {
-          setAuthError(res.data?.message || 'Error fetching round details');
-        }
-      } catch (err) {
-        console.error('Scheduler API call failed:', err);
-        setAuthError('Failed to fetch scheduler round details');
-      } finally {
-        setPreAuthLoading(false);
-        setIsAuthChecking(false); // 🔹 scheduler doesn't need further auth
-      }
-    };
-    fetchSchedulerRoundDetails();
-  }
-
-
-
-}, [location.search]);
-console.log("decodedData",decodedData);
-console.log("auth check",isAuthChecking);
-
-
-  // useEffect(() => {
-  //   // Parse URL parameters
-  //   const urlParams = new URLSearchParams(location.search);
-  //   const schedule = urlParams.get('scheduler');
-  //   const meeting = urlParams.get('meeting');
-  //   const round = urlParams.get('round');
-  //   const candidate = urlParams.get('candidate');
-  //   const interviewer = urlParams.get('interviewer');
-  //   const interviewerToken = urlParams.get('interviewertoken');
-  //   const schedulerToken = urlParams.get('schedulertoken');
-
-  //   const isSchedule = schedule === 'true';
-  //   const isCandidate = candidate === 'true';
-  //   const isInterviewer = interviewer === 'true';
-  //   console.log('Schedule boolean:', isSchedule);
-  //   console.log('Is Candidate:', isCandidate);
-  //   console.log('Is Interviewer:', isInterviewer);
-
-  //     // Decrypt meeting data
-  //     let decryptedMeeting = null;
-  //     if (meeting) {
-  //       try {
-  //         const decodedMeeting = decodeURIComponent(meeting);
-  //         decryptedMeeting = decryptData(decodedMeeting);
-  //         console.log('Decrypted meeting data:', decryptedMeeting);
-  //       } catch (error) {
-  //         console.error('Error decrypting meeting data:', error);
-  //       }
-  //     }
-  
-  //     // Decrypt round data
-  //     let decryptedRound = null;
-  //     if (round) {
-  //       try {
-  //         const decodedRound = decodeURIComponent(round);
-  //         decryptedRound = decryptData(decodedRound);
-  //         console.log('Decrypted round data:', decryptedRound);
-  //       } catch (error) {
-  //         console.error('Error decrypting round data:', error);
-  //       }
-  //     }
-  
-  //     // Decrypt interviewer/scheduler token
-  //     let interviewerId = null;
-  //     if (interviewerToken || schedulerToken) {
-  //       try {
-  //         const decodedToken = decodeURIComponent(interviewerToken || schedulerToken);
-  //         interviewerId = decryptData(decodedToken);
-  //         console.log('Decrypted interviewer/scheduler data:', interviewerId);
-  //       } catch (error) {
-  //         console.error('Error decrypting token data:', error);
-  //       }
-  //     }
-
-  //   // Skip auth for candidate links
-  //   if (isCandidate) {
-  //     console.log('Candidate link detected, skipping pre-auth & auth');
-  //     setIsAuthChecking(false);
-  //     setPreAuthPassed(true);
-  //     setPreAuthLoading(false);
-  //     // return;
-  //      // Purpose: Fetch candidate data without any authentication requirements
-  //      if (decryptedRound) {
-  //       fetchCandidateDetails(decryptedRound);
-  //     }
-  //     console.log("decryptedMeeting",decryptedMeeting);
-  //     if (decryptedMeeting) {
-  //       setCandidateDetails(prev => prev ? { ...prev, meetingLink: decryptedMeeting } : prev);
-  //     }
-
-  //   }
-
-  
-
-  //   // Extract key information
-  //   const extractedData = {
-  //     schedule: isSchedule,
-  //     isCandidate: isCandidate,
-  //     isInterviewer: isInterviewer,
-  //     meetLink: decryptedMeeting,
-  //     roundData: decryptedRound,
-  //     interviewRoundId: decryptedRound || '',
-  //     interviewerId: interviewerId || 'not found',
-  //   };
-
-  //   setDecodedData(extractedData);
-  //   console.log("extractedData",extractedData);
-
-  //   // Set role information for RoleSelector
-  //   const effectiveIsInterviewer = isInterviewer || isSchedule;
-  //   const roleInfo = {
-  //     isCandidate: false,
-  //     isInterviewer: effectiveIsInterviewer,
-  //     hasRolePreference: isCandidate || effectiveIsInterviewer,
-  //   };
-  //   setUrlRoleInfo(roleInfo);
-
-  //   // Auto-select candidate role if URL indicates candidate
-  //   if (isCandidate) {
-  //     setCurrentRole('candidate');
-  //   }
-
-  //   // Pre-Auth API Call
-  //   if (!isCandidate){
-  //   const fetchPreAuthDetails = async () => {
-  //     try {
-  //       const res = await axios.get(`${config.REACT_APP_API_URL}/feedback/contact-details`, {
-  //         params: {
-  //           contactId: extractedData.interviewerId,
-  //           roundId: extractedData.interviewRoundId,
-  //         },
-  //       });
-
-  //       const result = res.data;
-  //       if (result && res.status === 200) {
-  //         console.log('📅 Pre-auth API data:', result);
-  //         setPreAuthPassed(true);
-  //         setAuthType(result?.tenant?.type);
-  //       } else {
-  //         console.error('❌ API error:', result?.error);
-  //         setAuthError(result?.error || 'Error fetching meeting details');
-  //         if (result?.error === 'Owner mismatch between contact and tenant') {
-  //           redirectToLogin(result?.tenant?.type === 'individual');
-  //         }
-  //       }
-  //     } catch (err) {
-  //       console.error('❌ API call failed:', err);
-  //       if (err.response?.status === 403 && err.response?.data?.error === 'Owner mismatch between contact and tenant') {
-  //         redirectToLogin(authType === 'individual' || err.response?.data?.tenant?.type === 'individual');
-  //       } else {
-  //         setAuthError('Failed to check meeting details');
-  //       }
-  //     } finally {
-  //       setPreAuthLoading(false);
-  //     }
-  //   };
-
-  //   fetchPreAuthDetails();
-  // }
-  // }, [location.search,]);
+      };
+      fetchSchedulerRoundDetails();
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (!preAuthLoading && preAuthPassed) {
@@ -548,22 +375,6 @@ console.log("auth check",isAuthChecking);
     }
   }, [feedbackLoading, feedbackData, decodedData?.interviewRoundId]);
 
-  if (preAuthLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Checking meeting details...</p>
-      </div>
-    );
-  }
-
-  if (feedbackLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (feedbackError) {
-    return <div>Error loading feedback</div>;
-  }
-
   if (preAuthLoading || isAuthChecking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -574,7 +385,6 @@ console.log("auth check",isAuthChecking);
       </div>
     );
   }
-  
 
   if (authError) {
     return (
@@ -593,10 +403,9 @@ console.log("auth check",isAuthChecking);
     );
   }
 
-  if (currentRole === 'candidate'  || urlRoleInfo?.isCandidate) {
+  if (currentRole === 'candidate' || urlRoleInfo?.isCandidate) {
     return (
       <CandidateView
-        // onBack={() => setCurrentRole(null)}
         decodedData={decodedData}
         feedbackData={candidateDetails}
         feedbackLoading={candidateLoading}
@@ -621,8 +430,9 @@ console.log("auth check",isAuthChecking);
       </>
     );
   }
+
   if (!currentRole && urlRoleInfo?.isInterviewer) {
-    return <RoleSelector onRoleSelect={setCurrentRole} roleInfo={urlRoleInfo}   feedbackData={feedbackDatas} />;
+    return <RoleSelector onRoleSelect={setCurrentRole} roleInfo={urlRoleInfo} feedbackData={feedbackDatas} />;
   }
 
   return (
