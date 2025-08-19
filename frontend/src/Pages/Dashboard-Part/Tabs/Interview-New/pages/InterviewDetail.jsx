@@ -21,6 +21,7 @@ import {
   LayoutGrid,
   ExternalLink,
   Users,
+  UserX,
 } from "lucide-react";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import InterviewProgress from "../components/InterviewProgress";
@@ -42,9 +43,7 @@ import { calculateTimeBeforeInterview, getFeeBracket, calculateFees } from '../.
 
 const InterviewDetail = () => {
   const { id } = useParams();
-  const { interviewData, updateInterviewStatus } = useInterviews();
-
-  // const [showFeeModal, setShowFeeModal] = useState(false);
+  const { interviewData, updateInterviewStatus, isQueryLoading, isError, error } = useInterviews();
   const [modalAction, setModalAction] = useState(null); // 'reschedule' or 'cancel'
   const [selectedRound, setSelectedRound] = useState(null);
   const [calculatedFees, setCalculatedFees] = useState(null);
@@ -185,6 +184,52 @@ const InterviewDetail = () => {
   //   return <Loading />;
   // }
 
+  // Handle loading state
+  if (isQueryLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loading />
+          <p className="mt-4 text-gray-600">Loading interview details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-0">
+            <Breadcrumb
+              items={[
+                { label: "Interviews", path: "/interviewList" },
+                { label: "Error" },
+              ]}
+            />
+            <div className="mt-6 text-center py-12 bg-white rounded-lg shadow">
+              <XCircle className="mx-auto h-12 w-12 text-red-500" />
+              <h3 className="mt-2 text-lg font-medium text-gray-900">Error loading interview</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {error?.message || 'Failed to load interview details. Please try again later.'}
+              </p>
+              <div className="mt-6">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Handle case when interview is not found
   if (!interview) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -197,13 +242,17 @@ const InterviewDetail = () => {
               ]}
             />
             <div className="mt-6 text-center py-12 bg-white rounded-lg shadow">
-              <p className="text-gray-500">Interview not found.</p>
-              <Link
-                to="/interviewList"
-                className="mt-4 inline-block text-custom-blue hover:text-custom-blue/90"
-              >
-                Back to Interviews
-              </Link>
+              <UserX className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-lg font-medium text-gray-900">Interview not found</h3>
+              <p className="mt-1 text-sm text-gray-500">The requested interview could not be found.</p>
+              <div className="mt-6">
+                <Link
+                  to="/interviewList"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                >
+                  Back to Interviews
+                </Link>
+              </div>
             </div>
           </div>
         </main>

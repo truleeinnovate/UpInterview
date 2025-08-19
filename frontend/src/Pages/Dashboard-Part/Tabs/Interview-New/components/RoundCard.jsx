@@ -399,7 +399,7 @@ const RoundCard = ({
                   {round.dateTime && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-4 w-4 mr-1" />
-                      <span>Date and Time : {round.dateTime}</span>
+                      <span>Scheduled At: {round.dateTime}</span>
                     </div>
                   )}
                   {round.completedDate && (
@@ -856,12 +856,14 @@ const RoundCard = ({
 
                   {['scheduled', 'pending'].includes(round.status?.toLowerCase()) && (
                     <>
-                      <button
-                        onClick={() => onInitiateAction(round, 'reschedule')}
-                        className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
-                      >
-                        <Calendar className="h-4 w-4 mr-1" /> Reschedule
-                      </button>
+                      {round.interviewerType === 'outsource' && !round.isInstant && (
+                        <button
+                          onClick={() => onInitiateAction(round, 'reschedule')}
+                          className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                        >
+                          <Calendar className="h-4 w-4 mr-1" /> Reschedule
+                        </button>
+                      )}
                       <button
                         onClick={() => onInitiateAction(round, 'cancel')}
                         className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
@@ -880,7 +882,7 @@ const RoundCard = ({
                     </button>
                   )}
 
-                  {canEdit && (
+                  {canEdit && !['Completed', 'Cancelled', 'Rejected'].includes(round.status) && (
                     <button
                       onClick={onEdit}
                       className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
@@ -889,12 +891,14 @@ const RoundCard = ({
                     </button>
                   )}
 
-                  <button
-                    onClick={() => setShowFeedbackModal(true)}
-                    className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-1" /> Feedback
-                  </button>
+                  {round.status === "Completed" && (
+                    <button
+                      onClick={() => setShowFeedbackModal(true)}
+                      className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+                    </button>
+                  )}
 
                   {round.status === "Pending" && (
                     <button
@@ -919,7 +923,7 @@ const RoundCard = ({
                       >
                         <CheckCircle className="h-4 w-4 mr-1" /> Complete
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => {
                           setConfirmAction("Cancelled");
                           setShowConfirmModal(true);
@@ -927,7 +931,7 @@ const RoundCard = ({
                         className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
                       >
                         <XCircle className="h-4 w-4 mr-1" /> Cancel
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => setShowRejectionModal(true)}
                         className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
@@ -937,7 +941,7 @@ const RoundCard = ({
                     </>
                   )}
 
-                  {canEdit && (
+                  {canEdit && round.status !== "Request Sent" && (
                     <button
                       onClick={() => setShowDeleteConfirmModal(true)}
                       className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
