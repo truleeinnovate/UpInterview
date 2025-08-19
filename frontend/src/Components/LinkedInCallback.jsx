@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { config } from '../config.js';
-import { setAuthCookies, clearAllAuth, getAuthToken, debugCookieState } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { setAuthCookies, clearAllAuth, getAuthToken, 
+  // debugCookieState
+ } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 import Loading from '../Components/Loading.js';
 import { useIndividualLogin } from '../apiHooks/useIndividualLogin';
 
@@ -147,7 +149,7 @@ const LinkedInCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('🔍 Initial cookie state:', debugCookieState());
+        // console.log('🔍 Initial cookie state:', debugCookieState());
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const returnUrl = urlParams.get('returnUrl'); // Extract returnUrl
@@ -173,7 +175,7 @@ const LinkedInCallback = () => {
         // Clear all cookies and localStorage before setting new ones
         console.log('🧹 Clearing all auth data');
         await clearAllAuth();
-        console.log('✅ Cleared all cookies and localStorage, post-clear state:', debugCookieState());
+        // console.log('✅ Cleared all cookies and localStorage, post-clear state:', debugCookieState());
     
         // Set the authToken with retries
         if (token) {
@@ -186,7 +188,7 @@ const LinkedInCallback = () => {
             await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
     
             const authToken = getAuthToken();
-            console.log(`🔍 Verification attempt ${retries + 1}, cookie state:`, debugCookieState());
+            // console.log(`🔍 Verification attempt ${retries + 1}, cookie state:`, debugCookieState());
     
             verified = !!authToken;
             if (!verified) {

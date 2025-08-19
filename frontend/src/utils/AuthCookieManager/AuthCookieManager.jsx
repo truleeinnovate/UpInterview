@@ -1,6 +1,8 @@
 // v1.0.0  -  Ashraf  -  effectivePermissions_RoleName added to smartLogout,when individual logout navigate to there linked page
 // v1.0.1  -  Ashraf  -  login as user issue
 // v1.0.2  -  Ashraf  -  using authcookie manager to get current tokein,cookies works in all browsers correctly,creaing cookies or expiry cookies correctly
+// v1.0.3  -  Ashraf  -  in local cookies expiring issue colved
+
 import Cookies from 'js-cookie';
 // <---------------------- v1.0.2
 import { jwtDecode } from 'jwt-decode';
@@ -21,65 +23,26 @@ const SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP = 'super_admin_permissions_timesta
 
 class AuthCookieManager {
   // Get auth token (effective user token)
+  // FIXED - Don't clear tokens in getter methods!
   static getAuthToken() {
     try {
-      // <---------------------- v1.0.2
       const token = Cookies.get(AUTH_TOKEN_KEY);
 
-      // If token exists, validate it's not expired
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          if (decoded && decoded.exp) {
-            const currentTime = Math.floor(Date.now() / 1000);
-            if (currentTime >= decoded.exp) {
-              // Token is expired, clear it
-              this.clearExpiredToken(AUTH_TOKEN_KEY);
-              return null;
-            }
-          }
-        } catch (error) {
-          console.warn('Error decoding auth token:', error);
-          this.clearExpiredToken(AUTH_TOKEN_KEY);
-          return null;
-        }
-      }
-
+      // JUST return the token - don't validate expiration here!
+      // Expiration validation should happen separately
       return token;
-      // ---------------------- v1.0.2 >
     } catch (error) {
       console.warn('Error getting auth token:', error);
       return null;
     }
   }
 
-  // Get impersonation token (super admin token)
   static getImpersonationToken() {
     try {
-      // <---------------------- v1.0.2
       const token = Cookies.get(IMPERSONATION_TOKEN_KEY);
 
-      // If token exists, validate it's not expired
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          if (decoded && decoded.exp) {
-            const currentTime = Math.floor(Date.now() / 1000);
-            if (currentTime >= decoded.exp) {
-              // Token is expired, clear it
-              this.clearExpiredToken(IMPERSONATION_TOKEN_KEY);
-              return null;
-            }
-          }
-        } catch (error) {
-          console.warn('Error decoding impersonation token:', error);
-          this.clearExpiredToken(IMPERSONATION_TOKEN_KEY);
-          return null;
-        }
-      }
-
+      // JUST return the token - don't validate expiration here!
       return token;
-      // ---------------------- v1.0.2 >
     } catch (error) {
       console.warn('Error getting impersonation token:', error);
       return null;
@@ -88,12 +51,13 @@ class AuthCookieManager {
   // ---------------------- v1.0.2 >
 
   // Clear expired token and trigger smart logout
+  // 
   static clearExpiredToken(tokenKey) {
     try {
-      // Clear the expired cookie
       const currentDomain = window.location.hostname;
       const isLocalhost = currentDomain === 'localhost' || currentDomain.includes('127.0.0.1');
 
+      // Clear with proper options
       const clearOptions = {
         expires: new Date(0),
         path: '/',
@@ -104,22 +68,21 @@ class AuthCookieManager {
       if (!isLocalhost && currentDomain.includes('upinterview.io')) {
         clearOptions.domain = '.upinterview.io';
       }
+// <---------------------- v1.0.3
 
-      Cookies.set(tokenKey, '', clearOptions);
+      Cookies.remove(tokenKey, clearOptions);
 
-      // Clear any localStorage backup (cleanup)
-      try {
-        localStorage.removeItem(`${tokenKey}_backup`);
-      } catch (e) {
-        // Ignore localStorage errors
+      // Only trigger logout if BOTH tokens are gone
+      const remainingAuthToken = this.getAuthToken();
+      const remainingImpersonationToken = this.getImpersonationToken();
+
+      if (!remainingAuthToken && !remainingImpersonationToken) {
+        window.dispatchEvent(new CustomEvent('tokenExpired', {
+          detail: { tokenKey }
+        }));
       }
+  // ---------------------- v1.0.3 >
 
-      // Trigger token expired event for smart logout
-      window.dispatchEvent(new CustomEvent('tokenExpired', {
-        detail: { tokenKey }
-      }));
-
-      // console.log(`Expired token cleared: ${tokenKey}`);
     } catch (error) {
       console.error(`Error clearing expired token ${tokenKey}:`, error);
     }
@@ -927,7 +890,7 @@ class AuthCookieManager {
   static setAuthCookies(data) {
     try {
       console.log("🔐 setAuthCookies called with data:", data);
-  
+
       // Step 1: Set auth token (effective user token) if provided
       if (data.authToken) {
         console.log("➡️ Setting Auth Token...");
@@ -936,7 +899,7 @@ class AuthCookieManager {
       } else {
         console.log("⚠️ No auth token provided");
       }
-  
+
       // Step 2: Set impersonation token (super admin token) if provided
       if (data.impersonationToken) {
         console.log("➡️ Setting Impersonation Token for user:", data.impersonatedUser);
@@ -945,28 +908,28 @@ class AuthCookieManager {
       } else {
         console.log("⚠️ No impersonation token provided");
       }
-  
+
       // Step 3: Update user type based on current token state
       console.log("➡️ Updating user type...");
       AuthCookieManager.updateUserType();
       console.log("✅ User type updated");
-  
+
       // Step 4: Verify final state
       const finalAuthToken = AuthCookieManager.getAuthToken();
       const finalImpersonationToken = AuthCookieManager.getImpersonationToken();
       const finalUserType = AuthCookieManager.getUserType();
-  
+
       console.log("🔎 Final Auth State:", {
         finalAuthToken: finalAuthToken ? "[EXISTS]" : null,
         finalImpersonationToken: finalImpersonationToken ? "[EXISTS]" : null,
         finalUserType,
       });
-  
+
     } catch (error) {
       console.error("❌ Error setting auth cookies:", error);
       throw error; // Re-throw to allow calling code to handle
     }
-  }  
+  }
 
   // Test cookie functionality (legacy function)
   static testCookieFunctionality() {
@@ -1045,58 +1008,58 @@ class AuthCookieManager {
   /**
    * Debug function to check cookie state and help identify issues
    */
-  static debugCookieState() {
-    try {
-      const currentDomain = window.location.hostname;
-      const authToken = AuthCookieManager.getAuthToken();
-      const impersonationToken = AuthCookieManager.getImpersonationToken();
+  // static debugCookieState() {
+  //   try {
+  //     const currentDomain = window.location.hostname;
+  //     const authToken = AuthCookieManager.getAuthToken();
+  //     const impersonationToken = AuthCookieManager.getImpersonationToken();
 
-      // Count cookies in document.cookie
-      const allCookies = document.cookie.split(';').map(c => c.trim());
-      const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
-      const impersonationTokenCount = allCookies.filter(c => c.startsWith('impersonationToken=')).length;
+  //     // Count cookies in document.cookie
+  //     const allCookies = document.cookie.split(';').map(c => c.trim());
+  //     const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
+  //     const impersonationTokenCount = allCookies.filter(c => c.startsWith('impersonationToken=')).length;
 
-      // console.log('🔍 Cookie State Debug:', {
-      //   currentDomain,
-      //   authToken: {
-      //     exists: !!authToken,
-      //     length: authToken ? authToken.length : 0,
-      //     count: authTokenCount,
-      //     preview: authToken ? `${authToken.substring(0, 20)}...` : 'null'
-      //   },
-      //   impersonationToken: {
-      //     exists: !!impersonationToken,
-      //     length: impersonationToken ? impersonationToken.length : 0,
-      //     count: impersonationTokenCount,
-      //     preview: impersonationToken ? `${impersonationToken.substring(0, 20)}...` : 'null'
-      //   },
-      //   totalCookies: allCookies.length,
-      //   allCookieNames: allCookies.map(c => c.split('=')[0]),
-      //   documentCookie: document.cookie
-      // });
+  //     // console.log('🔍 Cookie State Debug:', {
+  //     //   currentDomain,
+  //     //   authToken: {
+  //     //     exists: !!authToken,
+  //     //     length: authToken ? authToken.length : 0,
+  //     //     count: authTokenCount,
+  //     //     preview: authToken ? `${authToken.substring(0, 20)}...` : 'null'
+  //     //   },
+  //     //   impersonationToken: {
+  //     //     exists: !!impersonationToken,
+  //     //     length: impersonationToken ? impersonationToken.length : 0,
+  //     //     count: impersonationTokenCount,
+  //     //     preview: impersonationToken ? `${impersonationToken.substring(0, 20)}...` : 'null'
+  //     //   },
+  //     //   totalCookies: allCookies.length,
+  //     //   allCookieNames: allCookies.map(c => c.split('=')[0]),
+  //     //   documentCookie: document.cookie
+  //     // });
 
-      // Check for duplicate cookies
-      if (authTokenCount > 1) {
-        console.warn('⚠️ Multiple authToken cookies detected:', authTokenCount);
-      }
-      if (impersonationTokenCount > 1) {
-        console.warn('⚠️ Multiple impersonationToken cookies detected:', impersonationTokenCount);
-      }
+  //     // Check for duplicate cookies
+  //     if (authTokenCount > 1) {
+  //       console.warn('⚠️ Multiple authToken cookies detected:', authTokenCount);
+  //     }
+  //     if (impersonationTokenCount > 1) {
+  //       console.warn('⚠️ Multiple impersonationToken cookies detected:', impersonationTokenCount);
+  //     }
 
-      return {
-        currentDomain,
-        authToken: !!authToken,
-        impersonationToken: !!impersonationToken,
-        authTokenCount,
-        impersonationTokenCount,
-        hasDuplicates: authTokenCount > 1 || impersonationTokenCount > 1,
-        totalCookies: allCookies.length
-      };
-    } catch (error) {
-      console.error('Error debugging cookie state:', error);
-      return { error: error.message };
-    }
-  }
+  //     return {
+  //       currentDomain,
+  //       authToken: !!authToken,
+  //       impersonationToken: !!impersonationToken,
+  //       authTokenCount,
+  //       impersonationTokenCount,
+  //       hasDuplicates: authTokenCount > 1 || impersonationTokenCount > 1,
+  //       totalCookies: allCookies.length
+  //     };
+  //   } catch (error) {
+  //     console.error('Error debugging cookie state:', error);
+  //     return { error: error.message };
+  //   }
+  // }
   // ---------------------- v1.0.2 >
   // Check browser permissions and capabilities
   static checkBrowserPermissions() {
@@ -1221,9 +1184,81 @@ class AuthCookieManager {
   }
   // ---------------------- v1.0.2 >
 
-  // Inside AuthCookieManager class
 
+  // Add these validation methods (but don't call them in getters)
+  static validateTokenExpiration(token) {
+    if (!token) return { isValid: false, reason: 'No token' };
 
+    try {
+      const decoded = jwtDecode(token);
+      if (decoded && decoded.exp) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (currentTime >= decoded.exp) {
+          return { isValid: false, reason: 'Token expired' };
+        }
+        return { isValid: true, expiresIn: decoded.exp - currentTime };
+      }
+      return { isValid: false, reason: 'Invalid token format' };
+    } catch (error) {
+      return { isValid: false, reason: 'Token decode error' };
+    }
+  }
+
+  // Use this for checking if tokens need to be cleared
+  static checkAndHandleExpiredTokens() {
+    const authToken = this.getAuthToken();
+    const impersonationToken = this.getImpersonationToken();
+
+    if (authToken) {
+      const validation = this.validateTokenExpiration(authToken);
+      if (!validation.isValid) {
+        console.log('Auth token invalid:', validation.reason);
+        this.clearExpiredToken(AUTH_TOKEN_KEY);
+      }
+    }
+
+    if (impersonationToken) {
+      const validation = this.validateTokenExpiration(impersonationToken);
+      if (!validation.isValid) {
+        console.log('Impersonation token invalid:', validation.reason);
+        this.clearExpiredToken(IMPERSONATION_TOKEN_KEY);
+      }
+    }
+  }
+
+  // static debugCookieStateDetailed() {
+  //   try {
+  //     console.log('=== COOKIE DEBUG ===');
+  //     console.log('Current domain:', window.location.hostname);
+  //     console.log('All cookies:', document.cookie);
+
+  //     // Check specific cookies
+  //     const authToken = Cookies.get(AUTH_TOKEN_KEY);
+  //     const impersonationToken = Cookies.get(IMPERSONATION_TOKEN_KEY);
+
+  //     console.log('Auth token exists:', !!authToken);
+  //     console.log('Impersonation token exists:', !!impersonationToken);
+
+  //     if (authToken) {
+  //       try {
+  //         const decoded = jwtDecode(authToken);
+  //         const currentTime = Math.floor(Date.now() / 1000);
+  //         console.log('Auth token expires in:', decoded.exp - currentTime, 'seconds');
+  //       } catch (e) {
+  //         console.log('Auth token decode error:', e.message);
+  //       }
+  //     }
+
+  //     return {
+  //       authToken: !!authToken,
+  //       impersonationToken: !!impersonationToken,
+  //       documentCookie: document.cookie
+  //     };
+  //   } catch (error) {
+  //     console.error('Debug error:', error);
+  //     return { error: error.message };
+  //   }
+  // }
 }
 
 
@@ -1235,7 +1270,8 @@ export const clearCookie = AuthCookieManager.clearCookie.bind(AuthCookieManager)
 export const debugTokenSources = AuthCookieManager.debugTokenSources;
 export const testCookieFunctionality = AuthCookieManager.testCookieFunctionality;
 export const verifyCookieState = AuthCookieManager.verifyCookieState;
-export const debugCookieState = AuthCookieManager.debugCookieState;
+// export const debugCookieState = AuthCookieManager.debugCookieState;
+// export const debugCookieStateDetailed = AuthCookieManager.debugCookieStateDetailed;
 
 // Token getters
 export const getAuthToken = AuthCookieManager.getAuthToken;

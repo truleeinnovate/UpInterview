@@ -206,7 +206,7 @@ function UsersTab({ users, viewMode }) {
           await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
           const verifyAuthToken = getAuthToken();
           const verifyImpersonationToken = getImpersonationToken();
-          console.log("🔍 Cookie state:", AuthCookieManager.debugCookieState());
+          // console.log("🔍 Cookie state:", AuthCookieManager.debugCookieState());
           verified = verifyAuthToken && !verifyImpersonationToken;
           if (!verified) {
             console.warn(`Retry ${i + 1}: Clearing and re-setting cookies`);
