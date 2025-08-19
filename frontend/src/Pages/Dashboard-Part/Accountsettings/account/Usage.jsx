@@ -2,12 +2,12 @@
 
 /* eslint-disable react-hooks/exhaustive-deps */
 //<----v1.0.0---Venkatesh---add loading skelton view and api loading issues solved
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import { usePermissions } from '../../../../Context/PermissionsContext';
-import { usePermissionCheck } from '../../../../utils/permissionUtils';
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { usePermissions } from "../../../../Context/PermissionsContext";
+import { usePermissionCheck } from "../../../../utils/permissionUtils";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 
 const Usage = () => {
   const authToken = Cookies.get("authToken");
@@ -15,13 +15,13 @@ const Usage = () => {
   //const organization = tokenPayload?.organization;
   const tenantId = tokenPayload?.tenantId;
   console.log("tenantId", tenantId);
-  
+
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { effectivePermissions } = usePermissions();
 
   // Local state for usage API
   const [usage, setUsage] = useState({});
-  console.log("usage--",usage)
+  console.log("usage--", usage);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -48,16 +48,16 @@ const Usage = () => {
 
         const res = await axios.get(url, {
           headers: {
-            Authorization: authToken ? `Bearer ${authToken}` : '',
-            'x-permissions': JSON.stringify(effectivePermissions || {}),
+            Authorization: authToken ? `Bearer ${authToken}` : "",
+            "x-permissions": JSON.stringify(effectivePermissions || {}),
           },
           withCredentials: true,
         });
 
         setUsage(res.data);
       } catch (err) {
-        console.error('Error fetching usage:', err);
-        setError('Failed to load usage');
+        console.error("Error fetching usage:", err);
+        setError("Failed to load usage");
       } finally {
         setLoading(false);
       }
@@ -66,35 +66,67 @@ const Usage = () => {
     fetchUsage();
   }, [isInitialized, effectivePermissions, authToken, tenantId]);
 
+  // v1.0.2 <------------------------------------------------------------------------
   // Loading skeleton view (initializing or fetching)
+  // if (!isInitialized || loading) {
+  //   return (
+  //     <div className="space-y-6 animate-pulse">
+  //       <div className="h-8 w-48 bg-gray-200 rounded" />
+
+  //       <div className="bg-white p-6 rounded-lg shadow">
+  //         <div className="h-5 w-40 bg-gray-200 rounded" />
+  //         <div className="mt-3 h-4 w-64 bg-gray-200 rounded" />
+  //       </div>
+
+  //       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  //         {[1,2,3].map((i) => (
+  //           <div key={i} className="bg-white p-6 rounded-lg shadow">
+  //             <div className="h-5 w-36 bg-gray-200 rounded" />
+  //             <div className="mt-3 h-4 w-full bg-gray-200 rounded" />
+  //             <div className="mt-2 h-2 w-full bg-gray-200 rounded-full" />
+  //           </div>
+  //         ))}
+  //       </div>
+
+  //       <div className="bg-white p-6 rounded-lg shadow">
+  //         <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
+  //         <div className="h-4 w-80 bg-gray-200 rounded mb-3" />
+  //         <div className="h-2 w-full bg-gray-200 rounded-full" />
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
   if (!isInitialized || loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 w-48 bg-gray-200 rounded" />
+      <div className="space-y-6">
+        <div className="h-8 w-48 bg-gray-200 rounded shimmer" />
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <div className="h-5 w-40 bg-gray-200 rounded" />
-          <div className="mt-3 h-4 w-64 bg-gray-200 rounded" />
+          <div className="h-5 w-40 bg-gray-200 rounded shimmer" />
+          <div className="mt-3 h-4 w-64 bg-gray-200 rounded shimmer" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1,2,3].map((i) => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white p-6 rounded-lg shadow">
-              <div className="h-5 w-36 bg-gray-200 rounded" />
-              <div className="mt-3 h-4 w-full bg-gray-200 rounded" />
-              <div className="mt-2 h-2 w-full bg-gray-200 rounded-full" />
+              <div className="h-5 w-36 bg-gray-200 rounded shimmer" />
+              <div className="mt-3 h-4 w-full bg-gray-200 rounded shimmer" />
+              <div className="mt-2 h-2 w-full bg-gray-200 rounded-full shimmer" />
             </div>
           ))}
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
-          <div className="h-4 w-80 bg-gray-200 rounded mb-3" />
-          <div className="h-2 w-full bg-gray-200 rounded-full" />
+          <div className="h-5 w-40 bg-gray-200 rounded mb-4 shimmer" />
+          <div className="h-4 w-80 bg-gray-200 rounded mb-3 shimmer" />
+          <div className="h-2 w-full bg-gray-200 rounded-full shimmer" />
         </div>
       </div>
     );
   }
+  // v1.0.2 ------------------------------------------------------------------------>
+
 
   // Permission check after initialization
   if (!checkPermission("Usage")) {
@@ -102,11 +134,20 @@ const Usage = () => {
   }
 
   // Derived metrics from API
-  const interviewerAttrs = usage?.attributes?.filter(a => /Interviewer/i.test(a.type)) || [];
-  const interviewerEntitled = interviewerAttrs.reduce((sum, a) => sum + (Number(a.entitled) || 0), 0);
-  const interviewerUtilized = interviewerAttrs.reduce((sum, a) => sum + (Number(a.utilized) || 0), 0);
+  const interviewerAttrs =
+    usage?.attributes?.filter((a) => /Interviewer/i.test(a.type)) || [];
+  const interviewerEntitled = interviewerAttrs.reduce(
+    (sum, a) => sum + (Number(a.entitled) || 0),
+    0
+  );
+  const interviewerUtilized = interviewerAttrs.reduce(
+    (sum, a) => sum + (Number(a.utilized) || 0),
+    0
+  );
 
-  const assessmentAttr = usage?.attributes?.find(a => (a.type || '').toLowerCase() === 'assessments');
+  const assessmentAttr = usage?.attributes?.find(
+    (a) => (a.type || "").toLowerCase() === "assessments"
+  );
   const assessmentsEntitled = Number(assessmentAttr?.entitled || 0);
   const assessmentsUtilized = Number(assessmentAttr?.utilized || 0);
 
@@ -119,13 +160,15 @@ const Usage = () => {
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium">Current Period</h3>
         <p className="text-gray-600 mt-2">
-          {usage?.period?.fromDate || usage?.period?.toDate ? (
+          {usage?.period?.fromDate || usage?.period?.toDate
+            ? `${new Date(
+                usage?.period?.fromDate
+              )?.toLocaleDateString()} to ${new Date(
+                usage?.period?.toDate
+              )?.toLocaleDateString()}`
+            : //             `${usage?.period?.fromDate ? new Date(usage.period.fromDate).toLocaleDateString() : '—'} to ${usage?.period?.toDate ? new Date(usage.period.toDate).toLocaleDateString() : '—'}`
 
-            `${new Date(usage?.period?.fromDate)?.toLocaleDateString()} to ${new Date(usage?.period?.toDate)?.toLocaleDateString()}`
-
-//             `${usage?.period?.fromDate ? new Date(usage.period.fromDate).toLocaleDateString() : '—'} to ${usage?.period?.toDate ? new Date(usage.period.toDate).toLocaleDateString() : '—'}`
-
-          ) : (error || '—')}
+              error || "—"}
         </p>
       </div>
       {/* v1.0.0 -------------------------------------------------------------------------> */}
@@ -138,13 +181,22 @@ const Usage = () => {
           <div className="mt-2">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Used: {interviewerUtilized}</span>
-              <span className="text-gray-600">Limit: {interviewerEntitled}</span>
+              <span className="text-gray-600">
+                Limit: {interviewerEntitled}
+              </span>
             </div>
             <div className="mt-2 h-2 bg-gray-200 rounded-full">
               <div
                 className="h-full bg-custom-blue rounded-full"
                 style={{
-                  width: `${interviewerEntitled > 0 ? Math.min((interviewerUtilized / interviewerEntitled) * 100, 100) : 0}%`
+                  width: `${
+                    interviewerEntitled > 0
+                      ? Math.min(
+                          (interviewerUtilized / interviewerEntitled) * 100,
+                          100
+                        )
+                      : 0
+                  }%`,
                 }}
               />
             </div>
@@ -157,13 +209,22 @@ const Usage = () => {
           <div className="mt-2">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Used: {assessmentsUtilized}</span>
-              <span className="text-gray-600">Limit: {assessmentsEntitled}</span>
+              <span className="text-gray-600">
+                Limit: {assessmentsEntitled}
+              </span>
             </div>
             <div className="mt-2 h-2 bg-gray-200 rounded-full">
               <div
                 className="h-full bg-green-600 rounded-full"
                 style={{
-                  width: `${assessmentsEntitled > 0 ? Math.min((assessmentsUtilized / assessmentsEntitled) * 100, 100) : 0}%`
+                  width: `${
+                    assessmentsEntitled > 0
+                      ? Math.min(
+                          (assessmentsUtilized / assessmentsEntitled) * 100,
+                          100
+                        )
+                      : 0
+                  }%`,
                 }}
               />
             </div>
@@ -176,7 +237,9 @@ const Usage = () => {
           <div className="mt-2">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Value:</span>
-              <span className="text-gray-600">{usage?.usersBandWidth ?? '—'}</span>
+              <span className="text-gray-600">
+                {usage?.usersBandWidth ?? "—"}
+              </span>
             </div>
           </div>
         </div>
@@ -186,15 +249,26 @@ const Usage = () => {
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium mb-4">Active Users</h3>
         <div className="flex justify-between items-center mb-4">
-          <span className="text-gray-600">Current: {usage?.currentUsers ?? '—'}</span>
-          <span className="text-gray-600">Limit: {usage?.totalUsers ?? '—'}</span>
+          <span className="text-gray-600">
+            Current: {usage?.currentUsers ?? "—"}
+          </span>
+          <span className="text-gray-600">
+            Limit: {usage?.totalUsers ?? "—"}
+          </span>
         </div>
         <div className="h-2 bg-gray-200 rounded-full">
           <div
             className="h-full bg-custom-blue rounded-full"
             // v1.0.0 <------------------------------------------------------------------------------------------
             style={{
-              width: `${usage?.totalUsers ? Math.min((usage?.currentUsers / usage?.totalUsers) * 100, 100) : 0}%`
+              width: `${
+                usage?.totalUsers
+                  ? Math.min(
+                      (usage?.currentUsers / usage?.totalUsers) * 100,
+                      100
+                    )
+                  : 0
+              }%`,
             }}
             // v1.0.0 ------------------------------------------------------------------------------------------>
           />
@@ -203,8 +277,8 @@ const Usage = () => {
 
       {/* Usage Trends */}
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> */}
-        {/* Interview Trend */}
-        {/* <div className="bg-white p-6 rounded-lg shadow">
+      {/* Interview Trend */}
+      {/* <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium mb-4">Interview Trend</h3>
           <div className="space-y-2">
             {usageMetrics.interviews.breakdown.map((day, index) => (
@@ -228,8 +302,8 @@ const Usage = () => {
           </div>
         </div> */}
 
-        {/* Assessment Trend */}
-        {/* <div className="bg-white p-6 rounded-lg shadow">
+      {/* Assessment Trend */}
+      {/* <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium mb-4">Assessment Trend</h3>
           <div className="space-y-2">
             {usageMetrics.assessments.breakdown.map((day, index) => (
@@ -254,9 +328,9 @@ const Usage = () => {
         </div> */}
       {/* </div> */}
     </div>
-  )
-}
+  );
+};
 
-export default Usage
+export default Usage;
 
 //-----v1.0.0-------->
