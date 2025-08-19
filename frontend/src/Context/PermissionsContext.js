@@ -142,17 +142,17 @@ export const PermissionsProvider = ({ children }) => {
       const userType = AuthCookieManager.getUserType();
       const permissionsUrl = `${config.REACT_APP_API_URL}/users/permissions`;
 
-      console.log('[PermissionsContext] Fetching permissions with token:', {
-        hasToken: !!activeToken,
-        tokenLength: activeToken ? activeToken.length : 0,
-        userType
-      });
+      // console.log('[PermissionsContext] Fetching permissions with token:', {
+      //   hasToken: !!activeToken,
+      //   tokenLength: activeToken ? activeToken.length : 0,
+      //   userType
+      // });
 
-      console.log('[PermissionsContext] Making request to:', permissionsUrl);
-      console.log('[PermissionsContext] Request headers:', {
-        'Authorization': `Bearer ${activeToken ? activeToken.substring(0, 20) + '...' : 'null'}`,
-        'withCredentials': true
-      });
+      // console.log('[PermissionsContext] Making request to:', permissionsUrl);
+      // console.log('[PermissionsContext] Request headers:', {
+      //   'Authorization': `Bearer ${activeToken ? activeToken.substring(0, 20) + '...' : 'null'}`,
+      //   'withCredentials': true
+      // });
 
       const response = await axios.get(permissionsUrl, {
         withCredentials: true,
@@ -161,21 +161,21 @@ export const PermissionsProvider = ({ children }) => {
         }
       });
 
-      console.log('[PermissionsContext] Permissions response received:', {
-        status: response.status,
-        hasData: !!response.data,
-        dataKeys: response.data ? Object.keys(response.data) : []
-      });
+      // console.log('[PermissionsContext] Permissions response received:', {
+      //   status: response.status,
+      //   hasData: !!response.data,
+      //   dataKeys: response.data ? Object.keys(response.data) : []
+      // });
 
       const permissionData = response.data;
       
-      console.log('[PermissionsContext] Permission data details:', {
-        effectivePermissions: permissionData.effectivePermissions ? Object.keys(permissionData.effectivePermissions) : [],
-        superAdminPermissions: permissionData.superAdminPermissions ? Object.keys(permissionData.superAdminPermissions) : [],
-        isImpersonating: permissionData.isImpersonating,
-        roleType: permissionData.effectivePermissions_RoleType,
-        roleName: permissionData.effectivePermissions_RoleName
-      });
+      // console.log('[PermissionsContext] Permission data details:', {
+      //   effectivePermissions: permissionData.effectivePermissions ? Object.keys(permissionData.effectivePermissions) : [],
+      //   superAdminPermissions: permissionData.superAdminPermissions ? Object.keys(permissionData.superAdminPermissions) : [],
+      //   isImpersonating: permissionData.isImpersonating,
+      //   roleType: permissionData.effectivePermissions_RoleType,
+      //   roleName: permissionData.effectivePermissions_RoleName
+      // });
 
       // Separate permissions based on user type and cache appropriately
       let permissionsToCache;
@@ -304,17 +304,17 @@ export const PermissionsProvider = ({ children }) => {
         isInitialized: true,
       });
     } catch (error) {
-      console.error('Permission refresh error:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers
-        }
-      });
+      // console.error('Permission refresh error:', {
+      //   message: error.message,
+      //   status: error.response?.status,
+      //   statusText: error.response?.statusText,
+      //   data: error.response?.data,
+      //   config: {
+      //     url: error.config?.url,
+      //     method: error.config?.method,
+      //     headers: error.config?.headers
+      //   }
+      // });
       
       setPermissionState((prev) => ({
         ...prev,

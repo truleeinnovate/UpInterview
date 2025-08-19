@@ -278,12 +278,12 @@ export const Organization = () => {
 
     try {
       // Clear all cookies before setting new ones
-      clearAllAuth();
+      await clearAllAuth();
 
       const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Signup`, organizationData);
       const { token } = response.data;
 
-      setAuthCookies(token);
+      await setAuthCookies(token);
       setEmail(selectedEmail);
       setFormSubmitted(true);
       toast.success('Verification email sent! Please check your inbox.');

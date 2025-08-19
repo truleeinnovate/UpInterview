@@ -1,76 +1,97 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { config } from '../../../config.js';
-import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js'; // Import the utility
+import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js';
 import Cookies from "js-cookie";
 import LoadingButton from "../../../Components/LoadingButton.jsx";
 import { usePositions } from '../../../apiHooks/usePositions.js';
 
-
 const SubscriptionPlan = () => {
-  // console.log('subscription plan')
+  const [authToken, setAuthToken] = useState(Cookies.get("authToken") || null);
+  const [tokenPayload, setTokenPayload] = useState({});
+  const [subscriptionData, setSubscriptionData] = useState([]);
+
+  const navigate = useNavigate();
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
-
   const { isMutationLoading } = usePositions();
-
-  const authToken = Cookies.get("authToken");
-  console.log("authToken---",authToken);
-  const tokenPayload = decodeJwt(authToken);
-  console.log("tocken--",tokenPayload);
-
-  // Extract user details from token payload
-  const ownerId = tokenPayload?.userId;
-  console.log("ownerid---",ownerId);
-  const organization = tokenPayload?.organization;
-  console.log("organization ----", organization);
-  const tenantId = tokenPayload?.tenantId;
 
   const [isAnnual, setIsAnnual] = useState(false);
   const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
+
+  // 1. Immediately log when the component mounts
+  useEffect(() => {
+    console.log("🚀 SubscriptionPlan mounted");
+    console.log("Initial authToken ----", authToken);
+  }, []);
+
+  // 2. Log whenever authToken changes
+  useEffect(() => {
+    if (!authToken) {
+      console.warn("⚠️ No authToken in cookies yet");
+    } else {
+      console.log("✅ Current authToken ----", authToken);
+      console.log("🔎 Decoded Token ----", decodeJwt(authToken));
+    }
+  }, [authToken]);
+
+  // 2. Whenever authToken changes, decode and save payload
+  useEffect(() => {
+    if (!authToken) {
+      console.warn("⚠️ No authToken in cookies yet");
+      setTokenPayload({});
+    } else {
+      const decoded = decodeJwt(authToken);
+      console.log("✅ Current authToken ----", authToken);
+      console.log("🔎 Decoded Token ----", decoded);
+      setTokenPayload(decoded || {});
+    }
+  }, [authToken]);
+
+  console.log('authToken ----', authToken);
+  console.log('tokenPayload ----', tokenPayload);
+
+  const ownerId = tokenPayload?.userId;
+  console.log('ownerId 1----', ownerId);
+  const organization = tokenPayload?.organization;
+  console.log('organization 1----', organization);
+  const tenantId = tokenPayload?.tenantId;
+  console.log('tenantId 1----', tenantId);
+
   const [user] = useState({
     userType: organization === true ? "organization" : "individual",
-    tenantId: tenantId,
-    ownerId: ownerId,
+    // tenantId,
+    // ownerId,
   });
 
-  const navigate = useNavigate();
-
   const toggleBilling = () => setIsAnnual(!isAnnual);
-  const [subscriptionData, setSubscriptionData] = useState([]);
-  // const [loading, setLoading] = useState(true);
 
-  // Fetch subscription data
+  // fetch subscription data
   useEffect(() => {
+    // if (!authToken) return;  // wait
+    // const decoded = decodeJwt(authToken);
+    // if (!decoded?.userId) return; // still not ready
+
     const fetchData = async () => {
       try {
-        if (!ownerId) {
-          throw new Error('User ID not found');
-        }
-        const Sub_res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${ownerId}`, {
-          headers: {
-            Authorization: `Bearer ${authToken}`, // Include token in request headers
-          },
-        });
+        const Sub_res = await axios.get(
+          `${config.REACT_APP_API_URL}/subscriptions/${ownerId}`,
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        );
         const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
         if (Subscription_data.subscriptionPlanId) {
           setSubscriptionData(Subscription_data);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        // setLoading(false);
+        console.error("❌ Error fetching data:", error);
       }
     };
 
-    if (ownerId) {
-      fetchData();
-    }
-  }, [ownerId, authToken]);
+    fetchData();
+  }, [authToken, ownerId]);
 
   // Fetch subscription plans
   useEffect(() => {
@@ -117,28 +138,28 @@ const SubscriptionPlan = () => {
             ),
             monthlyBadge:
               monthlyPricing?.discountType === "percentage" &&
-              monthlyPricing?.discount > 0
+                monthlyPricing?.discount > 0
                 ? `Save ${calculateDiscountPercentage(
-                    monthlyPricing.price,
-                    monthlyPricing.discount
-                  )}%`
+                  monthlyPricing.price,
+                  monthlyPricing.discount
+                )}%`
                 : null,
             annualBadge:
               annualPricing?.discountType === "percentage" &&
-              annualPricing?.discount > 0
+                annualPricing?.discount > 0
                 ? `Save ${calculateDiscountPercentage(
-                    annualPricing.price,
-                    annualPricing.discount
-                  )}%`
+                  annualPricing.price,
+                  annualPricing.discount
+                )}%`
                 : null,
             monthlyDiscount:
               monthlyPricing?.discountType === "percentage" &&
-              monthlyPricing?.discount > 0
+                monthlyPricing?.discount > 0
                 ? parseInt(monthlyPricing.discount)
                 : null,
             annualDiscount:
               annualPricing?.discountType === "percentage" &&
-              annualPricing?.discount > 0
+                annualPricing?.discount > 0
                 ? parseInt(annualPricing?.discount)
                 : null,
           };
@@ -170,8 +191,8 @@ const SubscriptionPlan = () => {
         annualDiscount: plan.annualDiscount,
       },
       userDetails: {
-        tenantId: user.tenantId,
-        ownerId: user.ownerId,
+        tenantId,
+        ownerId,
         userType: user.userType,
         membershipType: isAnnual ? "annual" : "monthly",
       },
@@ -196,10 +217,10 @@ const SubscriptionPlan = () => {
           tenantId: user.tenantId,
         });
 
-              axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-                tenantId: tenantId,
-                ownerId: ownerId,
-              }).catch((err) => console.error('Email error:', err));
+        axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
+          tenantId: tenantId,
+          ownerId: ownerId,
+        }).catch((err) => console.error('Email error:', err));
 
         // If upgrading, navigate to a specific page; otherwise, go to home
         navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
@@ -244,28 +265,24 @@ const SubscriptionPlan = () => {
         {/* Toggle Section */}
         <div className="flex justify-center items-center space-x-2 mb-16">
           <p
-            className={`text-custom-blue ${
-              !isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
-            }`}
+            className={`text-custom-blue ${!isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
+              }`}
           >
             Bill Monthly
           </p>
           <div
             onClick={toggleBilling}
-            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-              isAnnual ? "bg-[#217989]" : "bg-[#217989]"
-            }`}
+            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${isAnnual ? "bg-[#217989]" : "bg-[#217989]"
+              }`}
           >
             <div
-              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${
-                isAnnual ? "translate-x-6 bg-yellow-500" : "translate-x-0 bg-yellow-500"
-              }`}
+              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${isAnnual ? "translate-x-6 bg-yellow-500" : "translate-x-0 bg-yellow-500"
+                }`}
             ></div>
           </div>
           <p
-            className={`text-[#217989] ${
-              isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
-            }`}
+            className={`text-[#217989] ${isAnnual ? "font-semibold text-lg sm:text-sm" : "font-medium sm:text-xs"
+              }`}
           >
             Bill Annually
           </p>
@@ -276,19 +293,17 @@ const SubscriptionPlan = () => {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 ${
-                isHighlighted(plan)
+              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 ${isHighlighted(plan)
                   ? "-translate-y-6 z-10 bg-[#217989] text-white"
                   : "bg-white text-[#217989]"
-              }`}
+                }`}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
             >
               <div className="flex justify-between items-center">
                 <h5
-                  className={`text-xl sm:text-md font-semibold ${
-                    isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                  }`}
+                  className={`text-xl sm:text-md font-semibold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                    }`}
                 >
                   {plan.name}
                 </h5>
@@ -326,10 +341,10 @@ const SubscriptionPlan = () => {
                 disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
               >
                 {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
-              ? "Subscribed"
-              : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
-              ? "Continue to Payment"
-              : "Choose"}
+                  ? "Subscribed"
+                  : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
+                    ? "Continue to Payment"
+                    : "Choose"}
               </LoadingButton>
             </div>
           ))}
