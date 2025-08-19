@@ -39,13 +39,13 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
 
   useEffect(() => {
     if (!feedbackData?.interviewRound?.dateTime) return;
-
+  
     // Parse start and end times from the interview data
     const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
       feedbackData.interviewRound.dateTime
     );
     if (!interviewStart || !interviewEnd) return;
-
+  
     // Format times for display in user's local timezone
     const formatTime = (date) => {
       return date.toLocaleTimeString(undefined, {
@@ -54,30 +54,27 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
         hour12: true
       });
     };
-
+  
     setLocalInterviewTime(formatTime(interviewStart));
     setLocalEndTime(formatTime(interviewEnd));
-
+  
     // Update button state and countdown timer
     const updateTimes = () => {
       const now = new Date();
       const startTime = interviewStart.getTime();
       const currentTime = now.getTime();
       const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
-
-      // CHANGED: Enable button ONLY if current time is within 15 minutes before start time
-      // (Removed the end time check to only enable before interview starts)
-      const shouldEnable = (currentTime >= startTime - fifteenMinutes) && 
-                         (currentTime < startTime); // Only enable before start time
+  
+      // NEW: Enable button ONLY if current time is within 15 minutes before start time OR after start time
+      const shouldEnable = (currentTime >= startTime - fifteenMinutes);
       setIsButtonEnabled(shouldEnable);
-
+  
       // Calculate time remaining display
       if (currentTime < startTime) {
         const diff = startTime - currentTime;
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         
-        // CHANGED: Only show countdown when within the 15 minute window
         if (diff <= fifteenMinutes) {
           setTimeLeft(`Starts in ${hours}h ${minutes}m`);
         } else {
@@ -85,23 +82,84 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
         }
       } 
       else {
-        setTimeLeft('Interview in progress');
+        setTimeLeft('Interview has started - Join now');
       }
-      // else if (currentTime < interviewEnd.getTime()) {
-      //   setTimeLeft('Interview in progress');
-      // } 
-      // else {
-      //   setTimeLeft('Interview completed');
-      // }
     };
-
+  
     updateTimes();
     const interval = setInterval(updateTimes, 60000); // Update every minute
-
+  
     return () => clearInterval(interval);
   }, [feedbackData?.interviewRound?.dateTime]);
 
+  // useEffect(() => {
+  //   if (!feedbackData?.interviewRound?.dateTime) return;
+
+  //   // Parse start and end times from the interview data
+  //   const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
+  //     feedbackData.interviewRound.dateTime
+  //   );
+  //   if (!interviewStart || !interviewEnd) return;
+
+  //   // Format times for display in user's local timezone
+  //   const formatTime = (date) => {
+  //     return date.toLocaleTimeString(undefined, {
+  //       hour: '2-digit',
+  //       minute: '2-digit',
+  //       hour12: true
+  //     });
+  //   };
+
+  //   setLocalInterviewTime(formatTime(interviewStart));
+  //   setLocalEndTime(formatTime(interviewEnd));
+
+  //   // Update button state and countdown timer
+  //   const updateTimes = () => {
+  //     const now = new Date();
+  //     const startTime = interviewStart.getTime();
+  //     const currentTime = now.getTime();
+  //     const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+  //     // CHANGED: Enable button ONLY if current time is within 15 minutes before start time
+  //     // (Removed the end time check to only enable before interview starts)
+  //     const shouldEnable = (currentTime >= startTime - fifteenMinutes) && 
+  //                        (currentTime < startTime); // Only enable before start time
+  //     setIsButtonEnabled(shouldEnable);
+
+  //     // Calculate time remaining display
+  //     if (currentTime < startTime) {
+  //       const diff = startTime - currentTime;
+  //       const hours = Math.floor(diff / (1000 * 60 * 60));
+  //       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+  //       // CHANGED: Only show countdown when within the 15 minute window
+  //       if (diff <= fifteenMinutes) {
+  //         setTimeLeft(`Starts in ${hours}h ${minutes}m`);
+  //       } else {
+  //         setTimeLeft(`Scheduled for ${formatTime(interviewStart)}`);
+  //       }
+  //     } 
+  //     else {
+  //       setTimeLeft('Interview in progress');
+  //     }
+  //     // else if (currentTime < interviewEnd.getTime()) {
+  //     //   setTimeLeft('Interview in progress');
+  //     // } 
+  //     // else {
+  //     //   setTimeLeft('Interview completed');
+  //     // }
+  //   };
+
+  //   updateTimes();
+  //   const interval = setInterval(updateTimes, 60000); // Update every minute
+
+  //   return () => clearInterval(interval);
+  // }, [feedbackData?.interviewRound?.dateTime]);
+
   // Determine which sections to show based on roleInfo
+  
+  
+  
   const showCandidateSection = !roleInfo?.hasRolePreference || roleInfo?.isCandidate;
   const showInterviewerSection = !roleInfo?.hasRolePreference || roleInfo?.isInterviewer;
   const isSingleRole = roleInfo?.hasRolePreference && (roleInfo?.isCandidate || roleInfo?.isInterviewer);

@@ -480,6 +480,8 @@ const FeedbackForm = ({
     questions: ''
   });
 
+  
+
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -884,7 +886,7 @@ const FeedbackForm = ({
       const feedbackData = {
         type:"submit",
         tenantId: currentTenantId || "",
-        ownerId: currentOwnerId || "",
+        ownerId: decodedData?.ownerId || currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         feedbackCode: feedbackCandidate?.interviewRound?.interviewCode || "" + "-" + feedbackCandidate?.interviewRound?.sequence || "",
@@ -1018,7 +1020,7 @@ const FeedbackForm = ({
       const feedbackData = {
         type:"draft",
         tenantId: currentTenantId || "",
-        ownerId: currentOwnerId || "",
+        ownerId:decodedData?.ownerId || currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         positionId: positionId || "",

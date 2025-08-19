@@ -432,7 +432,7 @@ function InterviewList() {
         const currentRound =
           rounds
             .filter((round) =>
-              ["Pending", "Scheduled", "Request Sent"].includes(round.status)
+              ["Pending", "scheduled", "Request Sent"].includes(round.status)
             )
             .sort((a, b) => a.sequence - b.sequence)[0] || null;
         return (
@@ -469,7 +469,7 @@ function InterviewList() {
         const nextRound =
           rounds
             .filter((round) =>
-              ["Pending", "Scheduled", "Request Sent"].includes(round.status)
+              ["Pending", "scheduled", "Request Sent"].includes(round.status)
             )
             .sort((a, b) => a.sequence - b.sequence)[1] || null;
         return (
