@@ -1254,10 +1254,10 @@ const MainAppRoutes = ({
 
 const App = () => {
 
-  console.log('1 config.REACT_APP_GOOGLE_AUTH_URL', config.REACT_APP_GOOGLE_AUTH_URL);
-  console.log('2 config.REACT_APP_GOOGLE_CLIENT_ID', config.REACT_APP_GOOGLE_CLIENT_ID);
-  console.log('3 config.REACT_APP_GOOGLE_REDIRECT_URI', config.REACT_APP_GOOGLE_REDIRECT_URI);
-  console.log('4 config.REACT_APP_GOOGLE_SCOPES', config.REACT_APP_GOOGLE_SCOPES);
+  // console.log('1 config.REACT_APP_GOOGLE_AUTH_URL', config.REACT_APP_GOOGLE_AUTH_URL);
+  // console.log('2 config.REACT_APP_GOOGLE_CLIENT_ID', config.REACT_APP_GOOGLE_CLIENT_ID);
+  // console.log('3 config.REACT_APP_GOOGLE_REDIRECT_URI', config.REACT_APP_GOOGLE_REDIRECT_URI);
+  // console.log('4 config.REACT_APP_GOOGLE_SCOPES', config.REACT_APP_GOOGLE_SCOPES);
 
   const location = useLocation();
   // <---------------------- v1.0.4
@@ -1332,11 +1332,11 @@ const App = () => {
 
     // Check browser permissions and capabilities
     const browserPermissions = AuthCookieManager.checkBrowserPermissions();
-    console.log('Browser permissions check:', browserPermissions);
+    // console.log('Browser permissions check:', browserPermissions);
 
     // Detect new browser context
     if (AuthCookieManager.isNewBrowserContext()) {
-      console.log('New browser context detected - syncing auth state');
+      // console.log('New browser context detected - syncing auth state');
       AuthCookieManager.syncAuthAcrossTabs();
     }
 
@@ -1354,7 +1354,7 @@ const App = () => {
 
     // Listen for token expiration events
     const handleTokenExpired = async (event) => {
-      console.log('Token expired event received:', event.detail);
+      // console.log('Token expired event received:', event.detail);
 
       // Use the dedicated token expiration handler
       await AuthCookieManager.handleTokenExpiration();

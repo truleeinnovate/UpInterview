@@ -119,7 +119,7 @@ class AuthCookieManager {
         detail: { tokenKey }
       }));
 
-      console.log(`Expired token cleared: ${tokenKey}`);
+      // console.log(`Expired token cleared: ${tokenKey}`);
     } catch (error) {
       console.error(`Error clearing expired token ${tokenKey}:`, error);
     }
@@ -432,7 +432,7 @@ class AuthCookieManager {
       }
     }
 
-    console.log('⚠️ No user ID found for user type:', userType);
+    // console.log('⚠️ No user ID found for user type:', userType);
     return null;
   }
 
@@ -574,7 +574,7 @@ class AuthCookieManager {
         Cookies.remove(name, { ...baseOptions, domain: 'upinterview.io' });
       }
 
-      console.log(`Cleared cookie: ${name}`);
+      // console.log(`Cleared cookie: ${name}`);
     } catch (error) {
       console.error(`Error clearing cookie ${name}:`, error);
     }
@@ -705,11 +705,11 @@ class AuthCookieManager {
 
       // Step 8: Log final state
       const finalAuthToken = AuthCookieManager.getAuthToken();
-      console.log('✅ Login as user completed:', {
-        authToken: !!finalAuthToken,
-        impersonationToken: !!AuthCookieManager.getImpersonationToken(),
-        userType: AuthCookieManager.getUserType(),
-      });
+      // console.log('✅ Login as user completed:', {
+      //   authToken: !!finalAuthToken,
+      //   impersonationToken: !!AuthCookieManager.getImpersonationToken(),
+      //   userType: AuthCookieManager.getUserType(),
+      // });
     } catch (error) {
       console.error('❌ Error during login as user:', error);
       throw error;
@@ -819,7 +819,7 @@ class AuthCookieManager {
   // Simplified logout for token expiration (no navigation required)
   static async handleTokenExpiration() {
     try {
-      console.log('🔄 Handling token expiration...');
+      // console.log('🔄 Handling token expiration...');
 
       const { resetPermissionPreload } = await import("../permissionPreloader");
       resetPermissionPreload();
@@ -905,7 +905,7 @@ class AuthCookieManager {
       });
 
       // Log cookie state after clearing
-      console.log('All auth cleared, final cookie state:', this.debugCookieState());
+      // console.log('All auth cleared, final cookie state:', this.debugCookieState());
     } catch (error) {
       console.error('Error clearing all auth data:', error);
       throw error; // Rethrow to propagate to calling functions
@@ -925,35 +925,48 @@ class AuthCookieManager {
    * @param {string} data.organization - Organization name (legacy)
    */
   static setAuthCookies(data) {
-
     try {
+      console.log("🔐 setAuthCookies called with data:", data);
+  
       // Step 1: Set auth token (effective user token) if provided
       if (data.authToken) {
+        console.log("➡️ Setting Auth Token...");
         AuthCookieManager.setAuthToken(data.authToken);
+        console.log("✅ Auth Token set successfully");
       } else {
-        console.log('⚠️ No auth token provided');
+        console.log("⚠️ No auth token provided");
       }
-
+  
       // Step 2: Set impersonation token (super admin token) if provided
       if (data.impersonationToken) {
+        console.log("➡️ Setting Impersonation Token for user:", data.impersonatedUser);
         AuthCookieManager.setImpersonationToken(data.impersonationToken, data.impersonatedUser);
+        console.log("✅ Impersonation Token set successfully");
       } else {
-        console.log('⚠️ No impersonation token provided');
+        console.log("⚠️ No impersonation token provided");
       }
-
+  
       // Step 3: Update user type based on current token state
+      console.log("➡️ Updating user type...");
       AuthCookieManager.updateUserType();
-
+      console.log("✅ User type updated");
+  
       // Step 4: Verify final state
       const finalAuthToken = AuthCookieManager.getAuthToken();
       const finalImpersonationToken = AuthCookieManager.getImpersonationToken();
       const finalUserType = AuthCookieManager.getUserType();
-
+  
+      console.log("🔎 Final Auth State:", {
+        finalAuthToken: finalAuthToken ? "[EXISTS]" : null,
+        finalImpersonationToken: finalImpersonationToken ? "[EXISTS]" : null,
+        finalUserType,
+      });
+  
     } catch (error) {
-      console.error('❌ Error setting auth cookies:', error);
+      console.error("❌ Error setting auth cookies:", error);
       throw error; // Re-throw to allow calling code to handle
     }
-  }
+  }  
 
   // Test cookie functionality (legacy function)
   static testCookieFunctionality() {
@@ -1043,24 +1056,24 @@ class AuthCookieManager {
       const authTokenCount = allCookies.filter(c => c.startsWith('authToken=')).length;
       const impersonationTokenCount = allCookies.filter(c => c.startsWith('impersonationToken=')).length;
 
-      console.log('🔍 Cookie State Debug:', {
-        currentDomain,
-        authToken: {
-          exists: !!authToken,
-          length: authToken ? authToken.length : 0,
-          count: authTokenCount,
-          preview: authToken ? `${authToken.substring(0, 20)}...` : 'null'
-        },
-        impersonationToken: {
-          exists: !!impersonationToken,
-          length: impersonationToken ? impersonationToken.length : 0,
-          count: impersonationTokenCount,
-          preview: impersonationToken ? `${impersonationToken.substring(0, 20)}...` : 'null'
-        },
-        totalCookies: allCookies.length,
-        allCookieNames: allCookies.map(c => c.split('=')[0]),
-        documentCookie: document.cookie
-      });
+      // console.log('🔍 Cookie State Debug:', {
+      //   currentDomain,
+      //   authToken: {
+      //     exists: !!authToken,
+      //     length: authToken ? authToken.length : 0,
+      //     count: authTokenCount,
+      //     preview: authToken ? `${authToken.substring(0, 20)}...` : 'null'
+      //   },
+      //   impersonationToken: {
+      //     exists: !!impersonationToken,
+      //     length: impersonationToken ? impersonationToken.length : 0,
+      //     count: impersonationTokenCount,
+      //     preview: impersonationToken ? `${impersonationToken.substring(0, 20)}...` : 'null'
+      //   },
+      //   totalCookies: allCookies.length,
+      //   allCookieNames: allCookies.map(c => c.split('=')[0]),
+      //   documentCookie: document.cookie
+      // });
 
       // Check for duplicate cookies
       if (authTokenCount > 1) {
@@ -1178,7 +1191,7 @@ class AuthCookieManager {
 
         // Validation is already done in getAuthToken() and getImpersonationToken()
         // This just ensures we check periodically
-        console.log('Token validation check completed');
+        // console.log('Token validation check completed');
 
       } catch (error) {
         console.error('Error during token validation:', error);
