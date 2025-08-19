@@ -176,12 +176,15 @@ exports.resendAssessmentLink = async (req, res) => {
     const results = [];
     let successCount = 0;
     let failureCount = 0;
+    console.log("candidateAssessmentIdArray",candidateAssessmentIdArray)
 
     for (const candidateAssessmentId of candidateAssessmentIdArray) {
+      console.log("candidateAssessmentId",candidateAssessmentId)
       try {
         const candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId)
           .populate('candidateId')
           .populate('scheduledAssessmentId');
+          console.log("candidateAssessment",candidateAssessment)
 
         if (!candidateAssessment) {
           results.push({

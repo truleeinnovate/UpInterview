@@ -120,7 +120,8 @@ const VerticalRoundsView = ({
                 isActive={false}
                 hideHeader={true}
                 onInitiateAction={onInitiateAction}
-                isExpanded={isExpanded}
+                // isExpanded={isExpanded}
+                isExpanded={isExpanded(round._id)}
               />
             </div>
           )}
