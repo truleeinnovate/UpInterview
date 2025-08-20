@@ -6,10 +6,10 @@ import { config } from '../config';
  */
 export class GoogleMeetPlatform {
   constructor() {
-    console.log('1 config.REACT_APP_GOOGLE_AUTH_URL', config.REACT_APP_GOOGLE_AUTH_URL);
-    console.log('2 config.REACT_APP_GOOGLE_CLIENT_ID', config.REACT_APP_GOOGLE_CLIENT_ID);
-    console.log('3 config.REACT_APP_GOOGLE_REDIRECT_URI', config.REACT_APP_GOOGLE_REDIRECT_URI);
-    console.log('4 config.REACT_APP_GOOGLE_SCOPES', config.REACT_APP_GOOGLE_SCOPES);
+    // console.log('1 config.REACT_APP_GOOGLE_AUTH_URL', config.REACT_APP_GOOGLE_AUTH_URL);
+    // console.log('2 config.REACT_APP_GOOGLE_CLIENT_ID', config.REACT_APP_GOOGLE_CLIENT_ID);
+    // console.log('3 config.REACT_APP_GOOGLE_REDIRECT_URI', config.REACT_APP_GOOGLE_REDIRECT_URI);
+    // console.log('4 config.REACT_APP_GOOGLE_SCOPES', config.REACT_APP_GOOGLE_SCOPES);
     this.GOOGLE_AUTH_URL = config.REACT_APP_GOOGLE_AUTH_URL;
     this.GOOGLE_CLIENT_ID = config.REACT_APP_GOOGLE_CLIENT_ID;
     this.REDIRECT_URI = config.REACT_APP_GOOGLE_REDIRECT_URI;
@@ -45,10 +45,10 @@ export class GoogleMeetPlatform {
         `&access_type=offline&prompt=consent` +
         `&scope=${this.SCOPES}`;
       
-      console.log("Redirecting to Google OAuth for authorization...");
-      console.log("Auth URL:", authUrl);
-      console.log("Client ID:", this.GOOGLE_CLIENT_ID);
-      console.log("Redirect URI:", this.REDIRECT_URI);
+      // console.log("Redirecting to Google OAuth for authorization...");
+      // console.log("Auth URL:", authUrl);
+      // console.log("Client ID:", this.GOOGLE_CLIENT_ID);
+      // console.log("Redirect URI:", this.REDIRECT_URI);
       
       // Open OAuth popup
       const popup = window.open(authUrl, 'googleOAuth', 'width=500,height=600');
@@ -72,43 +72,43 @@ export class GoogleMeetPlatform {
            }
           
           if (code) {
-            console.log("Received authorization code, exchanging for tokens...");
+            // console.log("Received authorization code, exchanging for tokens...");
             onProgress?.('Exchanging authorization code for tokens...');
             
             try {
               // Step 2: Exchange code for tokens
               const tokenResponse = await axios.post(`${config.REACT_APP_API_URL}/googlemeet/exchange_token`, { code });
-              console.log("Token exchange successful");
+              // console.log("Token exchange successful");
               onProgress?.('Creating Google Meet event...');
               
               // Step 3: Create Google Meet event
-              console.log("Creating meet with data:", {
-                startDateTime: combinedDateTime,
-                duration,
-                roundTitle,
-                instructions,
-                selectedInterviewers: selectedInterviewers,
-                selectedInterviewersLength: selectedInterviewers?.length || 0
-              });
+              // console.log("Creating meet with data:", {
+              //   startDateTime: combinedDateTime,
+              //   duration,
+              //   roundTitle,
+              //   instructions,
+              //   selectedInterviewers: selectedInterviewers,
+              //   selectedInterviewersLength: selectedInterviewers?.length || 0
+              // });
               
               // Handle case where combinedDateTime might be empty or invalid
               let finalDateTime = combinedDateTime;
               if (!finalDateTime) {
-                console.log("No combinedDateTime, using current time + 15 minutes");
+                // console.log("No combinedDateTime, using current time + 15 minutes");
                 const now = new Date();
                 now.setMinutes(now.getMinutes() + 15);
                 finalDateTime = now.toISOString();
               }
               
               // Parse the finalDateTime format: "05-08-2025 11:30 AM - 12:00 PM"
-              console.log("finalDateTime value:", finalDateTime);
-              console.log("finalDateTime type:", typeof finalDateTime);
+              // console.log("finalDateTime value:", finalDateTime);
+              // console.log("finalDateTime type:", typeof finalDateTime);
               
               let startDate;
               if (finalDateTime.includes(" - ")) {
                 // Format: "05-08-2025 11:30 AM - 12:00 PM"
                 const startTimePart = finalDateTime.split(" - ")[0]; // "05-08-2025 11:30 AM"
-                console.log("Extracted start time part:", startTimePart);
+                // console.log("Extracted start time part:", startTimePart);
                 
                 // Parse DD-MM-YYYY HH:MM AM/PM format
                 const dateTimeMatch = startTimePart.match(/(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)/);
@@ -120,7 +120,7 @@ export class GoogleMeetPlatform {
                   
                   // Create date in YYYY-MM-DDTHH:MM:SS format
                   const isoDateString = `${year}-${month}-${day}T${hour24.toString().padStart(2, '0')}:${minute}:00`;
-                  console.log("Converted to ISO format:", isoDateString);
+                  // console.log("Converted to ISO format:", isoDateString);
                   startDate = new Date(isoDateString);
                 } else {
                   throw new Error(`Could not parse date format: ${startTimePart}`);
@@ -130,8 +130,8 @@ export class GoogleMeetPlatform {
                 startDate = new Date(finalDateTime);
               }
               
-              console.log("startDate:", startDate);
-              console.log("startDate.getTime():", startDate.getTime());
+              // console.log("startDate:", startDate);
+              // console.log("startDate.getTime():", startDate.getTime());
               if (isNaN(startDate.getTime())) {
                 throw new Error(`Invalid start date: ${finalDateTime}`);
               }
@@ -141,9 +141,9 @@ export class GoogleMeetPlatform {
                 throw new Error(`Invalid end date calculation`);
               }
               
-              console.log("Final start date ISO:", startDate.toISOString());
-              console.log("Final end date ISO:", endDate.toISOString());
-              console.log("Duration in minutes:", duration);
+              // console.log("Final start date ISO:", startDate.toISOString());
+              // console.log("Final end date ISO:", endDate.toISOString());
+              // console.log("Duration in minutes:", duration);
               
               const meetData = {
                 refreshToken: tokenResponse.data.refresh_token,
@@ -159,12 +159,12 @@ export class GoogleMeetPlatform {
                 }).filter(attendee => attendee.email) : []
               };
               
-              console.log("Final attendees array:", meetData.attendees);
+              // console.log("Final attendees array:", meetData.attendees);
               
                              const meetResponse = await axios.post(`${config.REACT_APP_API_URL}/googlemeet/create_event`, meetData);
                
-               console.log("Google Meet created successfully:", meetResponse.data.meetLink);
-               console.log("Meet Link:", meetResponse.data.meetLink);
+              //  console.log("Google Meet created successfully:", meetResponse.data.meetLink);
+              //  console.log("Meet Link:", meetResponse.data.meetLink);
                
                // Close popup only after meeting creation is complete
                popup.close();

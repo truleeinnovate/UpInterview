@@ -12,6 +12,7 @@ const InterviewRequests = () => {
 
   const [contacts, setContacts] = useState([]);
   const [requests, setRequests] = useState([]);
+  //console.log("request",requests);
   const [selectedContact, setSelectedContact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -240,7 +241,7 @@ const InterviewRequests = () => {
                   ) : (
                     <button
                       onClick={() => handleAccept(request.id, request.interviewerId, request.roundId)}
-                      className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300"
+                      className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 cursor-pointer"
                     >
                       Accept
                     </button>
@@ -255,57 +256,77 @@ const InterviewRequests = () => {
       {/* Details Popup */}
       {selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg max-w-md w-full">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Interview Request Details</h3>
-            <div className="space-y-3">
-              <p>
-                <strong>Candidate:</strong> {selectedRequest.candidate}
-              </p>
-              <p>
-                <strong>Position:</strong> {selectedRequest.position}
-              </p>
-              <p>
-                <strong>Company:</strong> {selectedRequest.company}
-              </p>
-              <p>
-                <strong>Interview Type:</strong> {selectedRequest.type}
-              </p>
-              <p>
-                <strong>Status:</strong> {selectedRequest.status}
-              </p>
-              <p>
-                <strong>Requested Date:</strong> {selectedRequest.requestedDate}
-              </p>
-              <p>
-                <strong>Urgency:</strong> {selectedRequest.urgency}
-              </p>
+          <div className="bg-white p-6 rounded-xl shadow-lg w-1/2 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">Interview Request Details</h3>
+              <button onClick={closePopup} className="text-gray-500 hover:text-gray-700 text-xl font-bold">&times;</button>
+            </div>
+            
+            <div className="space-y-5">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                <h4 className="text-lg font-medium text-gray-700 mb-2">Candidate Information:-</h4>
+                <div className="space-y-2 text-gray-600">
+                  <p><strong>Candidate:</strong> {selectedRequest.candidateId?.FirstName + " " + selectedRequest.candidateId?.LastName}</p>
+                  <p><strong>Position:</strong> {selectedRequest.positionId?.title || 'N/A'}</p>
+                  <p><strong>Company:</strong> {selectedRequest.positionId?.companyname || 'N/A'}</p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                <h4 className="text-lg font-medium text-gray-700 mb-2">Interview Details:-</h4>
+                <div className="space-y-2 text-gray-600">
+                  <p><strong>Interview Type:</strong> {selectedRequest.type}</p>
+                  <p><strong>Status: </strong> 
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${selectedRequest.status === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {selectedRequest.status}
+                    </span>
+                  </p>
+                  <p><strong>Requested Date:</strong> {selectedRequest.requestedDate}</p>
+                  <p><strong>Urgency: </strong> 
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${selectedRequest.urgency === 'High' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                      {selectedRequest.urgency}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              
               {selectedRequest.roundDetails && (
-                <>
-                  <p>
-                    <strong>Round Title:</strong> {selectedRequest.roundDetails.roundTitle}
-                  </p>
-                  <p>
-                    <strong>Duration:</strong> {selectedRequest.roundDetails.duration}
-                  </p>
-                  <p>
-                    <strong>Date & Time:</strong> {selectedRequest.roundDetails.dateTime}
-                  </p>
-                </>
+                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <h4 className="text-lg font-medium text-gray-700 mb-2">Round Information:-</h4>
+                  <div className="space-y-2 text-gray-600">
+                    <p><strong>Round Title:</strong> {selectedRequest.roundDetails.roundTitle}</p>
+                    <p><strong>Duration:</strong> {selectedRequest.roundDetails.duration}</p>
+                    <p><strong>Date & Time:</strong> {selectedRequest.roundDetails.dateTime}</p>
+                  </div>
+                </div>
               )}
             </div>
-            <div className="flex justify-end gap-2 mt-6">
+            
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={closePopup}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300"
               >
                 Close
               </button>
-              <button
-                onClick={() => handleAccept(selectedRequest.id, selectedRequest.interviewerId, selectedRequest.roundId)}
-                className="px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80"
-              >
-                Accept
-              </button>
+              {selectedRequest.status === 'accepted' ? (
+                <button
+                  className="px-2.5 py-1 text-xs font-medium text-white bg-green-600/60 rounded-lg cursor-default"
+                  disabled
+                >
+                  Accepted
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    handleAccept(selectedRequest.id, selectedRequest.interviewerId, selectedRequest.roundId);
+                    setSelectedRequest(null);
+                  }}
+                  className="px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 cursor-pointer"
+                >
+                  Accept
+                </button>
+              )}
             </div>
           </div>
         </div>

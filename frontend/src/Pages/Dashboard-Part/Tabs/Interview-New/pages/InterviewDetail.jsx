@@ -161,7 +161,7 @@ const InterviewDetail = () => {
 
       // Set the active round to the first non-completed round
       const nextRound = rounds
-        .filter((round) => ["Pending", "Scheduled"].includes(round.status))
+        .filter((round) => [ "Scheduled"].includes(round.status))
         .sort((a, b) => a.sequence - b.sequence)[0];
 
       if (nextRound) {
@@ -368,7 +368,7 @@ const InterviewDetail = () => {
   };
 
   const pendingRounds = rounds?.filter((round) =>
-    ["Pending", "Scheduled"].includes(round.status)
+    [ "Scheduled"].includes(round.status)
   );
 
   const handleViewEntityDetails = (entity, type, viewType = "sidebar") => {

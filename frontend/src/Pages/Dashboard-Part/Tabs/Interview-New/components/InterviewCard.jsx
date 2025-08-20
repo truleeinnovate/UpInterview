@@ -65,11 +65,11 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
 //<-----v1.0.0-------
   const rounds = interview.rounds || [];
   const currentRound = rounds
-    .filter((round) => ['Pending', 'Scheduled', 'Request Sent'].includes(round.status))
+    .filter((round) => [ 'Scheduled', 'Request Sent'].includes(round.status))
     .sort((a, b) => a.sequence - b.sequence)[0] || null;
   const currentRoundInterviewers = currentRound?.interviewers || [];
   const nextRound = rounds
-    .filter((round) => ['Pending', 'Scheduled', 'Request Sent'].includes(round.status))
+    .filter((round) => [ 'Scheduled', 'Request Sent'].includes(round.status))
     .sort((a, b) => a.sequence - b.sequence)[1] || null;
   const nextRoundInterviewers = nextRound?.interviewers || [];
   const totalRounds = rounds.length;

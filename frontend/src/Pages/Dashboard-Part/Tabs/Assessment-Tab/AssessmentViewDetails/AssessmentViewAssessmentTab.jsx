@@ -96,6 +96,7 @@ function AssessmentsTab({ assessment }) {
         return;
       }
 
+      console.log('candidateAssessmentId', candidateAssessmentId);
 
 
       if (!userId || !organizationId) {

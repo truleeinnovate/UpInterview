@@ -356,7 +356,11 @@ const InterviewForm = () => {
       });
       // On success, navigate to rounds step and pass state
       const interviewId = result?._id || id;
-      navigate(`/interviews/${interviewId}/rounds/new`, { state: { candidateId, from360 } });
+      if ( interviewId && templateId) {
+        navigate(`/interviews/${interviewId}`);
+      }else{
+        navigate(`/interviews/${interviewId}/rounds/new`, { state: { candidateId, from360 } });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {

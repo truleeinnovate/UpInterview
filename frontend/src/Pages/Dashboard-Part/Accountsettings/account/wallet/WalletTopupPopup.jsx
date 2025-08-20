@@ -31,6 +31,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
   const tokenPayload = decodeJwt(authToken);
 
   const tenantId = tokenPayload?.tenantId;
+  console.log("tenantId", tenantId)
   const ownerId = tokenPayload?.userId;
   //<----v1.0.0-----
   const verifyWalletPayment = useVerifyWalletPayment();

@@ -7,6 +7,8 @@
 */
 // v1.0.3 - Ashok - In the showConfirmModal fixed z-index issue and disabled outer scrollbar using useScrollLock hook
 
+// v1.0.4  -  mansoor  -  added the buttons visibility based on the statuses
+
 import React, { useState, useEffect } from "react";
 import {
   Calendar,
@@ -43,6 +45,9 @@ import { createPortal } from "react-dom";
 import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI";
 // v1.0.2 -------------------------------------------->
 import { useQueryClient } from "@tanstack/react-query";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+
 const RoundCard = ({
   round,
   interviewData,
@@ -62,7 +67,7 @@ const RoundCard = ({
   //   questionsError,
   //   setSectionQuestions,
   // } = useCustomContext();
-  const { deleteRoundMutation } = useInterviews();
+  const { deleteRoundMutation,saveInterviewRound } = useInterviews();
   const { fetchAssessmentQuestions } = useAssessments();
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
@@ -81,7 +86,7 @@ const RoundCard = ({
   // v1.0.3 -------------------------------------------------------->
   // v1.0.1 -------------------------------------------->
 
-  const [linkExpiryDays, setLinkExpiryDays] = useState(3);
+  // const [linkExpiryDays, setLinkExpiryDays] = useState(3);
 
   // useEffect(() => {
   //   if (round.assessmentId) {
@@ -92,9 +97,19 @@ const RoundCard = ({
 
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
+//  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
+const [showAssessmentCard, setShowAssessmentCard] = useState(false);
+
+const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
+  const orgId = tokenPayload?.tenantId;
+
+
+  const [actionInProgress, setActionInProgress] = useState(false);
 
   useEffect(() => {
-    if (showQuestions && round?.assessmentId) {
+    if (isExpanded  && round?.assessmentId) {
       // const data = fetchAssessmentQuestions(round.assessmentId);
       // setSectionQuestions(data)
       setQuestionsLoading(true);
@@ -102,6 +117,7 @@ const RoundCard = ({
         if (data) {
           setQuestionsLoading(false);
           setSectionQuestions(data?.sections);
+          setShowAssessmentCard(true)
           // Only initialize toggleStates if it's empty or length doesn't match sections
           // setToggleStates((prev) => {
           //   if (prev.length !== data.sections.length) {
@@ -115,11 +131,18 @@ const RoundCard = ({
         }
       });
     }
-  }, [showQuestions, round?.assessmentId]);
+  }, [isExpanded, round?.assessmentId,]);
 
   // Remove console.log to prevent loops
   // console.log("round", round);
   console.log("interviewData", interviewData);
+  console.log("showAssessmentCard", showAssessmentCard);
+
+  useEffect(() => {
+    if (isExpanded) {
+      setShowQuestions(true);
+    }
+  }, [isExpanded]);
 
 
   const toggleSection = async (sectionId) => {
@@ -236,6 +259,7 @@ const RoundCard = ({
       handleStatusChange(confirmAction);
     }
     setShowConfirmModal(false);
+    setActionInProgress(false);
   };
 
   const handleReject = (reason) => {
@@ -282,69 +306,264 @@ const RoundCard = ({
   };
   console.log("round", round);
 
+console.log("sectionQuestions", sectionQuestions);
 
-  const handleShareClick = async () => {
-    // Validate assessment selection when fromscheduleAssessment is true
-    // if (fromscheduleAssessment && !selectedAssessment) {
-    //   setErrors({
-    //     ...errors,
-    //     Assessment: "Please select an assessment template.",
-    //   });
-    //   return;
-    // }
 
-    // if (selectedCandidates.length === 0) {
-    //   setErrors({
-    //     ...errors,
-    //     Candidate: "Please select at least one candidate.",
-    //   });
-    //   return;
-    // }
-
-    console.log("selectedAssessment",
+  const handleShareClick = async (round) => {
+  
+console.log("round", round);
+    if (!round?.assessmentId) {
+      throw new Error('Unable to determine assessment ID for resend operation');
+    }
+    
+    // Use the same API endpoint for both single and multiple candidates
+    const response = await axios.post(
+      `${config.REACT_APP_API_URL}/emails/resend-link`,
       {
-        assessmentId: round?.assessmentId,
-        selectedCandidates: interviewData?.candidateId,
-        userId: interviewData?.candidateId?.ownerId,
-        // selectedCandidates,
-        // linkExpiryDays,
-        // onClose: onCloseshare,
-        // setErrors,
-        // setIsLoading,
-        // organizationId,
+
+        // candidateAssessmentIds: selectedCandidates,
         // userId,
-        queryClient,
+        // organizationId,
+        // assessmentId,
+
+
+        // candidateAssessmentId: interviewData?.candidateId,
+        candidateAssessmentIds: [interviewData?.candidateId?._id],
+        userId,
+        organizationId: orgId,
+        assessmentId: round?.assessmentId,
+       
+       
+    
       }
     );
 
-    const linkExpiryDays = round?.dateTime
-    // setIsLoading(true);
-    const result = await shareAssessmentAPI({
-      assessmentId: round?.assessmentId,
-      selectedCandidates: interviewData?.candidateId,
-      userId: interviewData?.candidateId?.ownerId,
-      // ? selectedAssessment._id
-      // : assessment._id,
-      // selectedCandidates,
-      linkExpiryDays,
-      // onClose: onCloseshare,
-      // setErrors,
-      // setIsLoading,
-      // organizationId,
-      // userId,
-      queryClient,
-    });
-    console.log("assessment result", result);
 
-
-    if (result.success) {
+    if (response?.data?.success) {
       // React Query will handle data refresh automatically
       // No need to manually fetch data
+      toast.success("Assessment link resent successfully");
     } else {
-      toast.error(result.message || "Failed to schedule assessment");
+      toast.error(response?.message || "Failed to schedule assessment");
     }
     // setIsLoading(false);
   };
+
+  // <----------------------- v1.0.4
+  const handleActionClick = (action) => {
+    setActionInProgress(true);
+    if (action === "Completed" || action === "Cancelled" || action === "Rejected" || action === "Selected") {
+      setConfirmAction(action);
+      setShowConfirmModal(true);
+    }
+  };
+
+  const handleSelect = () => {
+    setActionInProgress(true);
+    setConfirmAction("Selected");
+    setShowConfirmModal(true);
+  };
+
+  const roundActionPermissions = {
+    Draft: {
+      canEdit: true,
+      canDelete: true,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    "Request Sent": {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Scheduled: {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: true,
+      canComplete: true,
+      canReject: true,
+      canSelect: true,
+      canFeedback: false,
+    },
+    Rescheduled: {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: true,
+      canComplete: true,
+      canReject: true,
+      canSelect: true,
+      canFeedback: false,
+    },
+    Completed: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: true,
+    },
+    Cancelled: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Rejected: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Selected: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Interview_Completed: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Feedback_Submitted: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+  };
+
+  // Helper to get permissions for current round status
+  const getRoundPermissions = (status) =>
+    roundActionPermissions[status] || roundActionPermissions["Draft"];
+
+  const permissions = getRoundPermissions(round.status);
+
+  // v1.0.4 -------------------------->
+
+  const handleCreateAssessmentClick = async(round) => {
+  
+
+      if (round?.roundTitle === "Assessment") {
+
+        // Calculate link expiry days
+        let linkExpiryDays = null;
+        if (sectionQuestions?.ExpiryDate) {
+          const expiryDate = new Date(sectionQuestions?.ExpiryDate);
+          const today = new Date();
+          const diffTime = expiryDate.getTime() - today.getTime();
+          linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
+        }
+
+        // setIsLoading(true);
+        const result = await shareAssessmentAPI({
+          assessmentId: round?.assessmentId,
+          selectedCandidates: [interviewData?.candidateId],
+          linkExpiryDays,
+          // userId: userId,
+          organizationId: orgId,
+          // setErrors,
+          queryClient,
+
+          // onClose: onCloseshare,
+          // setErrors,
+          // setIsLoading,
+          // organizationId,
+          // userId,
+        });
+        // console.log("assessment result", result);
+        if (result.success) {
+          let isEditing = true;
+          // const payload = isEditing 
+          // && {
+          //   interviewId,
+          //   round: roundData,
+          //   roundId,
+          //   questions: interviewQuestionsList,
+          // }
+
+          const roundData = {
+            ...round,
+            status: "scheduled", // or whatever status you want to set
+            completedDate: null,
+            rejectionReason: null,
+          };
+  
+         const  payload = isEditing 
+          && {
+            interviewId: interview._id,
+            round: { ...roundData },
+            roundId: round._id,
+            isEditing: true,
+          };
+             // Use saveInterviewRound mutation from useInterviews hook
+      console.log("Calling saveInterviewRound...");
+      const response = await saveInterviewRound(payload);
+      console.log("response",response);
+      
+          // navigate(`/interviews/${interviewId}`);
+          if(response?.status === "ok"){
+          toast.success('Round Status updated successfully!');
+          }
+        }else {
+          toast.error(result.message || "Failed to schedule assessment");
+        }
+
+      }
+    // console.log("assessment result", result);
+
+
+    // if (result.success) {
+    //   // React Query will handle data refresh automatically
+    //   // No need to manually fetch data
+    // } else {
+    //   toast.error(result.message || "Failed to schedule assessment");
+    // }
+  }
 
   return (
     <>
@@ -614,7 +833,7 @@ const RoundCard = ({
                 </div>
               )}
 
-              {round.assessmentId && (
+              {round?.assessmentId && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="text-sm font-medium text-gray-700">
@@ -849,12 +1068,11 @@ const RoundCard = ({
                 </div>
               )}
 
+              {/* <---------------------------v1.0.4 */}
 
-
-              {isRoundActive && (
+              {/* {isRoundActive && (
                 <div className="mt-6 flex flex-wrap justify-end space-x-2">
-
-                  {['scheduled', 'pending'].includes(round.status?.toLowerCase()) && (
+                  {['scheduled'].includes(round.status?.toLowerCase()) && (
                     <>
                       {round.interviewerType === 'outsource' && !round.isInstant && (
                         <button
@@ -864,25 +1082,39 @@ const RoundCard = ({
                           <Calendar className="h-4 w-4 mr-1" /> Reschedule
                         </button>
                       )}
-                      <button
-                        onClick={() => onInitiateAction(round, 'cancel')}
-                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                      >
-                        <XCircle className="h-4 w-4 mr-1" /> Cancel
-                      </button>
+                      {['scheduled'].includes(round.status?.toLowerCase()) && (
+                        <button
+                          onClick={() => { setActionInProgress(true); onInitiateAction(round, 'cancel'); }}
+                          className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" /> Cancel
+                        </button>
+                      )}
                     </>
                   )}
 
-                  {round.roundTitle === "Assessment" && (
+                  
+{round?.roundTitle === "Assessment" && round?.status === "draft"  && (
                     <button
-                      onClick={handleShareClick}
+                    onClick={() => handleCreateAssessmentClick(round)}
+                      // onClick={handleCreateAssessmentClick(round)}
                       className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
                     >
-                      <Share2 className="h-4 w-4 mr-1" /> Share
+                      <Share2 className="h-4 w-4 mr-1" /> Create Assessment Link
                     </button>
                   )}
 
-                  {canEdit && !['Completed', 'Cancelled', 'Rejected'].includes(round.status) && (
+                  {round.roundTitle === "Assessment" && round?.status !== "draft"  && (
+                    <button
+                      onClick={() => handleShareClick(round)}
+                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                    >
+                      <Share2 className="h-4 w-4 mr-1" /> Resend Assessment Link
+                    </button>
+                  )}
+
+                  
+                  {canEdit && !['Completed', 'Cancelled', 'Rejected', 'Selected'].includes(round.status) && !actionInProgress && (
                     <button
                       onClick={onEdit}
                       className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
@@ -899,13 +1131,9 @@ const RoundCard = ({
                       <MessageSquare className="h-4 w-4 mr-1" /> Feedback
                     </button>
                   )}
-
-                  {round.status === "Pending" && (
+                  {!["Draft", "Request Sent"].includes(round.status) && (
                     <button
-                      onClick={() => {
-                        setConfirmAction("Scheduled");
-                        setShowConfirmModal(true);
-                      }}
+                      onClick={() => handleActionClick("Scheduled")}
                       className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
                     >
                       <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
@@ -915,33 +1143,75 @@ const RoundCard = ({
                   {round.status === "Scheduled" && (
                     <>
                       <button
-                        onClick={() => {
-                          setConfirmAction("Completed");
-                          setShowConfirmModal(true);
-                        }}
+                        onClick={() => handleActionClick("Completed")}
                         className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
                       >
                         <CheckCircle className="h-4 w-4 mr-1" /> Complete
                       </button>
-                      {/* <button
-                        onClick={() => {
-                          setConfirmAction("Cancelled");
-                          setShowConfirmModal(true);
-                        }}
-                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                      >
-                        <XCircle className="h-4 w-4 mr-1" /> Cancel
-                      </button> */}
                       <button
-                        onClick={() => setShowRejectionModal(true)}
+                        onClick={() => setShowRejectionModal(true) || setActionInProgress(true)}
                         className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
                       >
                         <ThumbsDown className="h-4 w-4 mr-1" /> Reject
                       </button>
+                      <button
+                        onClick={handleSelect}
+                        className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" /> Select
+                      </button>
                     </>
                   )}
 
-                  {canEdit && round.status !== "Request Sent" && (
+                  {canEdit &&
+                    ![
+                      "Request Sent",
+                      "Scheduled",
+                      "Completed",
+                      "Interview_Completed",
+                      "Feedback_Submitted",
+                    ].includes(round.status) && (
+                      <button
+                        onClick={() => setShowDeleteConfirmModal(true)}
+                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> Delete Round
+                      </button>
+                    )}
+                </div>
+              )} */}
+
+              {isRoundActive && (
+                <div className="mt-6 flex flex-wrap justify-end space-x-2">
+                  {/* Reschedule */}
+                  {permissions.canReschedule && round.interviewerType === 'outsource' && !round.isInstant && (
+                    <button
+                      onClick={() => onInitiateAction(round, 'reschedule')}
+                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    >
+                      <Calendar className="h-4 w-4 mr-1" /> Reschedule
+                    </button>
+                  )}
+                  {/* Cancel */}
+                  {permissions.canCancel && (
+                    <button
+                      onClick={() => { setActionInProgress(true); onInitiateAction(round, 'cancel'); }}
+                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                    >
+                      <XCircle className="h-4 w-4 mr-1" /> Cancel
+                    </button>
+                  )}
+                  {/* Edit */}
+                  {canEdit && permissions.canEdit && !actionInProgress && (
+                    <button
+                      onClick={onEdit}
+                      className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                    >
+                      <Edit className="h-4 w-4 mr-1" /> Edit Round
+                    </button>
+                  )}
+                  {/* Delete */}
+                  {canEdit && permissions.canDelete && (
                     <button
                       onClick={() => setShowDeleteConfirmModal(true)}
                       className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
@@ -949,8 +1219,65 @@ const RoundCard = ({
                       <XCircle className="h-4 w-4 mr-1" /> Delete Round
                     </button>
                   )}
+                  {/* Mark Scheduled */}
+                  {permissions.canMarkScheduled && (
+                    <button
+                      onClick={() => handleActionClick("Scheduled")}
+                      className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                    >
+                      <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
+                    </button>
+                  )}
+                  {/* Complete */}
+                  {permissions.canComplete && (
+                    <button
+                      onClick={() => handleActionClick("Completed")}
+                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" /> Complete
+                    </button>
+                  )}
+                  {/* Reject */}
+                  {permissions.canReject && (
+                    <button
+                      onClick={() => setShowRejectionModal(true) || setActionInProgress(true)}
+                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                    >
+                      <ThumbsDown className="h-4 w-4 mr-1" /> Reject
+                    </button>
+                  )}
+                  {/* Select */}
+                  {permissions.canSelect && (
+                    <button
+                      onClick={handleSelect}
+                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" /> Select
+                    </button>
+                  )}
+                  {/* Feedback */}
+                  {permissions.canFeedback && (
+                    <button
+                      onClick={() => setShowFeedbackModal(true)}
+                      className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+                    </button>
+                  )}
+                  {/* Share (always for Assessment) */}
+                  {round.roundTitle === "Assessment" && (
+                    <button
+                      onClick={handleShareClick}
+                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                    >
+                      <Share2 className="h-4 w-4 mr-1" /> Share
+                    </button>
+                  )}
                 </div>
               )}
+
+
+              {/* v1.0.4 ----------------------------> */}
 
             </>
           ) : (
@@ -958,27 +1285,6 @@ const RoundCard = ({
           )}
         </div>
       </div>
-      {/* v1.0.3 <------------------------------------------------------------------------------------ */}
-      {/* {showConfirmModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-          <div className="bg-white p-5 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-3">
-              Are you sure you want to {confirmAction.toLowerCase()} this round?
-            </h3>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                No, Cancel
-              </Button>
-              <Button variant="success" onClick={handleConfirmStatusChange}>
-                Yes, Confirm
-              </Button>
-            </div>
-          </div>
-        </div>
-      )} */}
 
       {showConfirmModal &&
         createPortal(
@@ -1003,28 +1309,6 @@ const RoundCard = ({
           </div>,
           document.body
         )}
-      {/* v1.0.3 ---------------------------------------------------------------------------------------> */}
-      {/* v1.0.2 <-------------------------------------------------------------------------- */}
-      {/* {showDeleteConfirmModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-          <div className="bg-white p-5 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-3">
-              Are you sure you want to delete this round?
-            </h3>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirmModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteRound}>
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )} */}
       {showDeleteConfirmModal &&
         createPortal(
           <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
@@ -1047,7 +1331,6 @@ const RoundCard = ({
           </div>,
           document.body
         )}
-      {/* v1.0.2 --------------------------------------------------------------------------> */}
       {showRejectionModal && (
         <RejectionModal
           onClose={() => setShowRejectionModal(false)}

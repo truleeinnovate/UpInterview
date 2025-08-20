@@ -38,6 +38,8 @@ import LoadingButton from "../../../../../Components/LoadingButton";
 // v1.0.1 <----------------------------------------------------------------------------
 
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI.jsx";
+import { useQueryClient } from "@tanstack/react-query";
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -109,6 +111,8 @@ const RoundFormInterviews = () => {
   const [questionsLoading, setQuestionsLoading] = useState(false);
 
   const [ownerData, setOwnerData] = useState(null);
+  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -139,7 +143,7 @@ const RoundFormInterviews = () => {
   const [roundTitle, setRoundTitle] = useState("");
   const [customRoundTitle, setCustomRoundTitle] = useState("");
   const [interviewMode, setInterviewMode] = useState("");
-  const [status, setStatus] = useState("Pending");
+  const [status, setStatus] = useState("Draft");
   const [instructions, setInstructions] = useState("");
   const [sequence, setSequence] = useState(1);
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] =
@@ -171,6 +175,15 @@ const RoundFormInterviews = () => {
   console.log("internalInterviewers", internalInterviewers);
   console.log("interviewerViewType", interviewerViewType);
   console.log("interviewerGroupName", interviewerGroupName);
+
+
+  useEffect(() => {
+  if (selectedInterviewType === "External" && externalInterviewers.length > 0) {
+    setStatus("Request Sent");
+  } else if (selectedInterviewType !== "External") {
+    setStatus("Draft");
+  }
+}, [selectedInterviewType, externalInterviewers]);
 
 
   //<-----v1.0.4----
@@ -215,7 +228,7 @@ const RoundFormInterviews = () => {
         // start = now;
 
         // Convert to UTC
-        const localTimeStr = moment(now).format("YYYY-MM-DD HH:mm");
+        const localTimeStr = moment(now)?.format("YYYY-MM-DD HH:mm");
         start = moment
           .tz(
             localTimeStr,
@@ -415,7 +428,6 @@ const RoundFormInterviews = () => {
       setInstructions("");
       setInstructions("");
       setInterviewMode("");
-      setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
       setDuration(60);
@@ -424,13 +436,14 @@ const RoundFormInterviews = () => {
       setInterviewerGroupName("");
       setInterviewerViewType("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null)
       setCombinedDateTime("");
     } else {
       setRoundTitle(selectedTitle);
       setCustomRoundTitle("");
       setInstructions("");
       setInterviewMode("");
-      setStatus("Pending");
+      // setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
       setDuration(60);
@@ -441,6 +454,7 @@ const RoundFormInterviews = () => {
       setInterviewerViewType("");
       setCombinedDateTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null)
     }
 
     if (selectedTitle === "Other") {
@@ -453,26 +467,28 @@ const RoundFormInterviews = () => {
 
       setInterviewerGroupName("");
       setInterviewerViewType("");
-      setStatus("Pending");
+      // setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
       setDuration(60);
       setStartTime("");
       setEndTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null)
       setCombinedDateTime("");
     } else {
       setInterviewMode("");
       setInstructions("");
       setInstructions("");
       setInterviewMode("");
-      setStatus("Pending");
+      // setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
       setDuration(60);
       setStartTime("");
       setEndTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null)
       setCombinedDateTime("");
 
       setInterviewerGroupName("");
@@ -519,12 +535,19 @@ const RoundFormInterviews = () => {
   useEffect(() => {
     if (isEditing && roundEditData) {
       // Update assessmentTemplate only if different
+
+      // Find full assessment object
+      const fullAssessment =
+        roundEditData?.roundTitle === "Assessment" && roundEditData?.assessmentId
+          ? assessmentData?.find((a) => a._id === roundEditData?.assessmentId) || null
+          : null;
+
       const newAssessmentTemplate =
-        roundEditData.roundTitle === "Assessment" && roundEditData.assessmentId
+        roundEditData?.roundTitle === "Assessment" && roundEditData?.assessmentId
           ? {
-            assessmentId: roundEditData.assessmentId,
+            assessmentId: roundEditData?.assessmentId,
             assessmentName:
-              assessmentData.find((a) => a._id === roundEditData.assessmentId)
+              assessmentData?.find((a) => a._id === roundEditData?.assessmentId)
                 ?.AssessmentTitle || "",
           }
           : { assessmentId: "", assessmentName: "" };
@@ -533,6 +556,7 @@ const RoundFormInterviews = () => {
         JSON.stringify(newAssessmentTemplate)
       ) {
         setAssessmentTemplate(newAssessmentTemplate);
+        setSelectedAssessmentData(fullAssessment);
       }
 
       // Update other states only if different
@@ -847,6 +871,10 @@ const RoundFormInterviews = () => {
   //   // [rounds, isEditing, roundEditData, navigate, assessmentData, fetchAssessmentQuestions]
   // );
 
+  console.log("interview", interview);
+  // console.log("assessmentTemplate",assessmentTemplate);
+  console.log("selectedAssessmentData", selectedAssessmentData);
+
   const handleSubmit = async (e) => {
     // v1.0.2 <-----------------------------------------
     console.log("=== handleSubmit START ===");
@@ -1009,6 +1037,42 @@ const RoundFormInterviews = () => {
         "Response from selectedInterviewType:",
         selectedInterviewType
       );
+
+
+      if (payload.round.roundTitle === "Assessment") {
+
+        // Calculate link expiry days
+        let linkExpiryDays = null;
+        if (selectedAssessmentData?.ExpiryDate) {
+          const expiryDate = new Date(selectedAssessmentData.ExpiryDate);
+          const today = new Date();
+          const diffTime = expiryDate.getTime() - today.getTime();
+          linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
+        }
+
+        // setIsLoading(true);
+        const result = await shareAssessmentAPI({
+          assessmentId: assessmentTemplate?.assessmentId,
+          selectedCandidates: [interview?.candidateId],
+          linkExpiryDays,
+          userId: userId,
+          organizationId: orgId,
+          setErrors,
+          queryClient,
+
+          // onClose: onCloseshare,
+          // setErrors,
+          // setIsLoading,
+          // organizationId,
+          // userId,
+        });
+        console.log("assessment result", result);
+        if (result.success) {
+          navigate(`/interviews/${interviewId}`);
+          // toast.success('Assessment shared successfully!');
+        }
+
+      }
       if (payload.round.roundTitle !== "Assessment") {
 
 
@@ -1345,6 +1409,7 @@ const RoundFormInterviews = () => {
       assessmentName: assessment.AssessmentTitle,
     };
     setAssessmentTemplate(assessmentData);
+    setSelectedAssessmentData(assessment);
     setDuration(parseInt(assessment.Duration.replace(" minutes", "")));
     setInstructions(assessment.Instructions);
     setExpandedSections({});
@@ -1698,6 +1763,7 @@ const RoundFormInterviews = () => {
                                   assessmentId: prev.assessmentId, // Keep the existing assessmentId
                                   assessmentName: e.target.value, // Update assessmentName
                                 }));
+
                                 setErrors((prev) => ({
                                   ...prev,
                                   assessmentTemplate: "",

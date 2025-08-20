@@ -132,7 +132,7 @@ const InterviewDetails = ({
             setSelectedSkills(updatedSkills);
             setInterviewDetailsData((prev) => ({
                 ...prev,
-                skills: updatedSkills.map((s) => s.SkillName),
+                skills: updatedSkills.map((s) => s?.SkillName),
             }));
         }
         setShowSkillsPopup(false);

@@ -14,6 +14,8 @@ import { setAuthCookies, clearAllAuth } from "../../../utils/AuthCookieManager/A
 import { useIndividualLogin } from "../../../apiHooks/useIndividualLogin";
 import { uploadFile } from "../../../apiHooks/imageApis.js";
 import Loading from "../../../Components/Loading.js";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode.js";
 
 const FooterButtons = ({
   onNext,
@@ -315,6 +317,20 @@ const MultiStepForm = () => {
     isProfileCompleteStateOrg && roleName !== "Internal_Interviewer";
   const isInternalInterviewer = roleName === "Internal_Interviewer";
 
+  const [authToken, setAuthToken] = useState(Cookies.get("authToken"));
+
+  useEffect(() => {
+    // Keep token synced if cookie changes later
+    const interval = setInterval(() => {
+      const token = Cookies.get("authToken");
+      if (token !== authToken) {
+        setAuthToken(token);
+      }
+    }, 1000); // check every second (or use context instead)
+
+    return () => clearInterval(interval);
+  }, [authToken]);
+
   const handleNextStep = async () => {
     let isValid = false;
 
@@ -548,11 +564,13 @@ const MultiStepForm = () => {
       );
 
       if (response.data.token) {
-        // Clear all cookies and localStorage before setting new ones
-        clearAllAuth();
-        console.log('✅ Cleared all cookies and localStorage for individual signup');
-
-        setAuthCookies({ authToken: response.data.token });
+        await clearAllAuth();
+        await setAuthCookies({ authToken: response.data.token });
+  
+        // update state immediately after setting cookie
+        // setAuthToken(response.data.token);
+  
+        // console.log("✅ Updated authToken in state:", response.data.token);
 
         // CUSTOM PROFILE PIC OR LINKEDIN PROFILE PIC
         if (
@@ -642,6 +660,8 @@ const MultiStepForm = () => {
       setCurrentStep((prevStep) => (prevStep - 1 >= 0 ? prevStep - 1 : 0));
     }
   };
+  // const authToken = Cookies.get("authToken");
+  // console.log("authToken--- to check ", authToken);
 
   return (
     <>
