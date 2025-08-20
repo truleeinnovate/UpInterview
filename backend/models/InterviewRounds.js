@@ -100,6 +100,8 @@ const interviewRoundSchema = new mongoose.Schema({
     // v1.0.0------------------------->
     meetingId: String,
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "assessment" },
+    scheduleAssessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "ScheduledAssessment" },
+    
     questions: [{
         questionId: { type: mongoose.Schema.Types.Mixed },
         snapshot: { type: mongoose.Schema.Types.Mixed }
