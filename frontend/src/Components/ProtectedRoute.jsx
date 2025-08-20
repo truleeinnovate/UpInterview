@@ -1,5 +1,6 @@
 // v1.0.0  -  mansoor  -  removed total comments from this file
 // v1.0.1  -  Ashraf  -  using authcookie manager to get current tokein 
+// v1.0.2  -  Ashraf  -  in local cookies expiring issue colved
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -8,15 +9,14 @@ import { CustomProvider, useCustomContext } from '../Context/Contextfetch';
 import { PermissionsProvider, usePermissions } from '../Context/PermissionsContext';
 import { startActivityTracking } from '../utils/activityTracker';
 import { getActivityEmitter } from '../utils/activityTracker';
-  // <---------------------- v1.0.1
-
-import { 
-  debugTokenSources, 
-  getAuthToken, 
-  getImpersonationToken, 
-  debugCookieState,
-  handleTokenExpiration 
+// <---------------------- v1.0.1
+import {
+  debugTokenSources,
+  // debugCookieState,
+  handleTokenExpiration
 } from '../utils/AuthCookieManager/AuthCookieManager';
+import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
+
 // ---------------------- v1.0.1 >
 import Loading from './Loading';
 
@@ -25,16 +25,17 @@ const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   // <---------------------- v1.0.1
-  
+
   // Use the same token validation logic as AuthCookieManager
-  const authToken = getAuthToken(); // This now validates expiration
-  const impersonationToken = getImpersonationToken(); // This now validates expiration
+  const authToken = AuthCookieManager.getAuthToken(); // Simple getter
+  const impersonationToken = AuthCookieManager.getImpersonationToken(); // Simple getter
   // ---------------------- v1.0.1 >
   const tokenPayload = authToken ? decodeJwt(authToken) : null;
   const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
   const { usersData } = useCustomContext() || {};
   const { isInitialized } = usePermissions() || { isInitialized: false };
   // <---------------------------- v1.0.0
+
 
   useEffect(() => {
     // Start activity tracking
@@ -48,14 +49,14 @@ const ProtectedRoute = ({ children }) => {
     };
     emitter.on('logout', handleLogout);
     // <---------------------- v1.0.1
-    
+
     // Listen for token expiration events
     const handleTokenExpired = () => {
       console.log('Token expired in ProtectedRoute, redirecting to login');
       navigate('/organization-login');
     };
     window.addEventListener('tokenExpired', handleTokenExpired);
-    
+
     return () => {
       cleanupActivityTracker();
       emitter.off('logout', handleLogout);
@@ -69,15 +70,54 @@ const ProtectedRoute = ({ children }) => {
     // Clear the auth token
     Cookies.remove('authToken', { path: '/' });
   }, [navigate, location.pathname]);
+// <---------------------- v1.0.2
 
   // Set up activity tracking and event listeners
+  // useEffect(() => {
+  //   // Only set up activity tracking if user is authenticated
+  //   if (authToken || impersonationToken) {
+  //     // Start activity tracking
+  //     const cleanupActivityTracker = startActivityTracking();
+
+  //     // Add event listener for user inactivity
+  //     window.addEventListener('userInactive', handleUserInactive);
+
+  //     // Cleanup function
+  //     return () => {
+  //       cleanupActivityTracker();
+  //       window.removeEventListener('userInactive', handleUserInactive);
+  //     };
+  //   }
+  // }, [authToken, impersonationToken, handleUserInactive]);
+
+
+  // Update the activity tracker setup
   useEffect(() => {
     // Only set up activity tracking if user is authenticated
     if (authToken || impersonationToken) {
-      // Start activity tracking
-      const cleanupActivityTracker = startActivityTracking();
+      // Start activity tracking with proper configuration
+      const cleanupActivityTracker = startActivityTracking({
+        inactivityTimeout: 120 * 60 * 1000, // 2 hours in milliseconds
+        warningTimeout: 115 * 60 * 1000, // Show warning 5 minutes before
+      });
 
       // Add event listener for user inactivity
+      const handleUserInactive = () => {
+        console.log('User inactive, clearing auth tokens');
+        // Clear the auth tokens properly
+        Cookies.remove('authToken', {
+          path: '/',
+          domain: window.location.hostname.includes('upinterview.io') ? '.upinterview.io' : undefined
+        });
+        Cookies.remove('impersonationToken', {
+          path: '/',
+          domain: window.location.hostname.includes('upinterview.io') ? '.upinterview.io' : undefined
+        });
+
+        // Navigate to login
+        navigate('/organization-login');
+      };
+
       window.addEventListener('userInactive', handleUserInactive);
 
       // Cleanup function
@@ -86,35 +126,35 @@ const ProtectedRoute = ({ children }) => {
         window.removeEventListener('userInactive', handleUserInactive);
       };
     }
-  }, [authToken, impersonationToken, handleUserInactive]);
+  }, [authToken, impersonationToken, navigate]);
 
+  // In ProtectedRoute.js, simplify the auth check
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        // <---------------------- v1.0.1
-        // Check if tokens are valid (getAuthToken/getImpersonationToken already validate expiration)
-        const hasValidAuthToken = !!authToken;
-        const hasValidImpersonationToken = !!impersonationToken;
-
-        // SIMPLE CHECK: If we have any valid token at all, allow access
-        const hasAnyValidToken = hasValidAuthToken || hasValidImpersonationToken;
+        // SIMPLE CHECK: Just check if tokens exist in cookies
+        const hasAuthToken = !!AuthCookieManager.getAuthToken();
+        const hasImpersonationToken = !!AuthCookieManager.getImpersonationToken();
+        const hasAnyValidToken = hasAuthToken || hasImpersonationToken;
 
         if (hasAnyValidToken) {
           setIsChecking(false);
           return;
         }
 
-        // If no valid tokens at all, redirect to login
-        console.log('No valid tokens found, redirecting to login');
+        // If no tokens at all, redirect to login
+        console.log('No tokens found, redirecting to login');
         navigate('/organization-login');
       } catch (error) {
         console.error('Error checking authentication:', error);
         navigate('/organization-login');
       }
     };
-    // ---------------------- v1.0.1 >
+
     checkAuthAndRedirect();
-  }, [authToken, impersonationToken, navigate, location.pathname]);
+  }, [navigate, location.pathname]);
+  // ---------------------- v1.0.2 >
+
 
   // Show loading while checking
   if (isChecking) {
@@ -127,8 +167,8 @@ const ProtectedRoute = ({ children }) => {
     const { usersData } = useCustomContext() || {};
     // <---------------------- v1.0.1
     // Use the same token validation logic
-    const currentAuthToken = getAuthToken();
-    const currentImpersonationToken = getImpersonationToken();
+    const currentAuthToken = AuthCookieManager.getAuthToken();
+    const currentImpersonationToken = AuthCookieManager.getImpersonationToken();
     const currentTokenPayload = currentAuthToken ? decodeJwt(currentAuthToken) : null;
     const currentImpersonationPayload = currentImpersonationToken ? decodeJwt(currentImpersonationToken) : null;
 

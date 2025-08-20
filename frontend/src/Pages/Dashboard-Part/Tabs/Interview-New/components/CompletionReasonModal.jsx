@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - set overflow as hidden to fix the outer scroll
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { X, AlertTriangle, Clock } from 'lucide-react';
@@ -98,7 +99,9 @@ const CompletionReasonModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50 overflow-y-auto">
+    // v1.0.0 <-------------------------------------------------------------------------------------------------------
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50 overflow-hidden">
+    {/* // v1.0.0 ---------------------------------------------------------------------------------------------------> */}
       <motion.div
         ref={modalRef}
         className="bg-card h-full w-1/2 shadow-xl p-6 overflow-y-auto glass-sidebar"

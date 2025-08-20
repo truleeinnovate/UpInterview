@@ -45,6 +45,9 @@ import { createPortal } from "react-dom";
 import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI";
 // v1.0.2 -------------------------------------------->
 import { useQueryClient } from "@tanstack/react-query";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+
 const RoundCard = ({
   round,
   interviewData,
@@ -64,7 +67,7 @@ const RoundCard = ({
   //   questionsError,
   //   setSectionQuestions,
   // } = useCustomContext();
-  const { deleteRoundMutation } = useInterviews();
+  const { deleteRoundMutation,saveInterviewRound } = useInterviews();
   const { fetchAssessmentQuestions } = useAssessments();
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
@@ -83,7 +86,7 @@ const RoundCard = ({
   // v1.0.3 -------------------------------------------------------->
   // v1.0.1 -------------------------------------------->
 
-  const [linkExpiryDays, setLinkExpiryDays] = useState(3);
+  // const [linkExpiryDays, setLinkExpiryDays] = useState(3);
 
   // useEffect(() => {
   //   if (round.assessmentId) {
@@ -94,11 +97,19 @@ const RoundCard = ({
 
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
+//  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
+const [showAssessmentCard, setShowAssessmentCard] = useState(false);
+
+const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const userId = tokenPayload?.userId;
+  const orgId = tokenPayload?.tenantId;
+
 
   const [actionInProgress, setActionInProgress] = useState(false);
 
   useEffect(() => {
-    if (showQuestions && round?.assessmentId) {
+    if (isExpanded  && round?.assessmentId) {
       // const data = fetchAssessmentQuestions(round.assessmentId);
       // setSectionQuestions(data)
       setQuestionsLoading(true);
@@ -106,6 +117,7 @@ const RoundCard = ({
         if (data) {
           setQuestionsLoading(false);
           setSectionQuestions(data?.sections);
+          setShowAssessmentCard(true)
           // Only initialize toggleStates if it's empty or length doesn't match sections
           // setToggleStates((prev) => {
           //   if (prev.length !== data.sections.length) {
@@ -119,11 +131,18 @@ const RoundCard = ({
         }
       });
     }
-  }, [showQuestions, round?.assessmentId]);
+  }, [isExpanded, round?.assessmentId,]);
 
   // Remove console.log to prevent loops
   // console.log("round", round);
   console.log("interviewData", interviewData);
+  console.log("showAssessmentCard", showAssessmentCard);
+
+  useEffect(() => {
+    if (isExpanded) {
+      setShowQuestions(true);
+    }
+  }, [isExpanded]);
 
 
   const toggleSection = async (sectionId) => {
@@ -287,66 +306,45 @@ const RoundCard = ({
   };
   console.log("round", round);
 
+console.log("sectionQuestions", sectionQuestions);
 
-  const handleShareClick = async () => {
-    // Validate assessment selection when fromscheduleAssessment is true
-    // if (fromscheduleAssessment && !selectedAssessment) {
-    //   setErrors({
-    //     ...errors,
-    //     Assessment: "Please select an assessment template.",
-    //   });
-    //   return;
-    // }
 
-    // if (selectedCandidates.length === 0) {
-    //   setErrors({
-    //     ...errors,
-    //     Candidate: "Please select at least one candidate.",
-    //   });
-    //   return;
-    // }
-
-    console.log("selectedAssessment",
+  const handleShareClick = async (round) => {
+  
+console.log("round", round);
+    if (!round?.assessmentId) {
+      throw new Error('Unable to determine assessment ID for resend operation');
+    }
+    
+    // Use the same API endpoint for both single and multiple candidates
+    const response = await axios.post(
+      `${config.REACT_APP_API_URL}/emails/resend-link`,
       {
-        assessmentId: round?.assessmentId,
-        selectedCandidates: interviewData?.candidateId,
-        userId: interviewData?.candidateId?.ownerId,
-        // selectedCandidates,
-        // linkExpiryDays,
-        // onClose: onCloseshare,
-        // setErrors,
-        // setIsLoading,
-        // organizationId,
+
+        // candidateAssessmentIds: selectedCandidates,
         // userId,
-        queryClient,
+        // organizationId,
+        // assessmentId,
+
+
+        // candidateAssessmentId: interviewData?.candidateId,
+        candidateAssessmentIds: [interviewData?.candidateId?._id],
+        userId,
+        organizationId: orgId,
+        assessmentId: round?.assessmentId,
+       
+       
+    
       }
     );
 
-    const linkExpiryDays = round?.dateTime
-    // setIsLoading(true);
-    const result = await shareAssessmentAPI({
-      assessmentId: round?.assessmentId,
-      selectedCandidates: interviewData?.candidateId,
-      userId: interviewData?.candidateId?.ownerId,
-      // ? selectedAssessment._id
-      // : assessment._id,
-      // selectedCandidates,
-      linkExpiryDays,
-      // onClose: onCloseshare,
-      // setErrors,
-      // setIsLoading,
-      // organizationId,
-      // userId,
-      queryClient,
-    });
-    console.log("assessment result", result);
 
-
-    if (result.success) {
+    if (response?.data?.success) {
       // React Query will handle data refresh automatically
       // No need to manually fetch data
+      toast.success("Assessment link resent successfully");
     } else {
-      toast.error(result.message || "Failed to schedule assessment");
+      toast.error(response?.message || "Failed to schedule assessment");
     }
     // setIsLoading(false);
   };
@@ -486,6 +484,87 @@ const RoundCard = ({
   const permissions = getRoundPermissions(round.status);
 
   // v1.0.4 -------------------------->
+
+  const handleCreateAssessmentClick = async(round) => {
+  
+
+      if (round?.roundTitle === "Assessment") {
+
+        // Calculate link expiry days
+        let linkExpiryDays = null;
+        if (sectionQuestions?.ExpiryDate) {
+          const expiryDate = new Date(sectionQuestions?.ExpiryDate);
+          const today = new Date();
+          const diffTime = expiryDate.getTime() - today.getTime();
+          linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
+        }
+
+        // setIsLoading(true);
+        const result = await shareAssessmentAPI({
+          assessmentId: round?.assessmentId,
+          selectedCandidates: [interviewData?.candidateId],
+          linkExpiryDays,
+          // userId: userId,
+          organizationId: orgId,
+          // setErrors,
+          queryClient,
+
+          // onClose: onCloseshare,
+          // setErrors,
+          // setIsLoading,
+          // organizationId,
+          // userId,
+        });
+        // console.log("assessment result", result);
+        if (result.success) {
+          let isEditing = true;
+          // const payload = isEditing 
+          // && {
+          //   interviewId,
+          //   round: roundData,
+          //   roundId,
+          //   questions: interviewQuestionsList,
+          // }
+
+          const roundData = {
+            ...round,
+            status: "scheduled", // or whatever status you want to set
+            completedDate: null,
+            rejectionReason: null,
+          };
+  
+         const  payload = isEditing 
+          && {
+            interviewId: interview._id,
+            round: { ...roundData },
+            roundId: round._id,
+            isEditing: true,
+          };
+             // Use saveInterviewRound mutation from useInterviews hook
+      console.log("Calling saveInterviewRound...");
+      const response = await saveInterviewRound(payload);
+      console.log("response",response);
+      
+          // navigate(`/interviews/${interviewId}`);
+          if(response?.status === "ok"){
+          toast.success('Round Status updated successfully!');
+          }
+        }else {
+          toast.error(result.message || "Failed to schedule assessment");
+        }
+
+      }
+    // console.log("assessment result", result);
+
+
+    // if (result.success) {
+    //   // React Query will handle data refresh automatically
+    //   // No need to manually fetch data
+    // } else {
+    //   toast.error(result.message || "Failed to schedule assessment");
+    // }
+  }
+
   return (
     <>
       <div
@@ -754,7 +833,7 @@ const RoundCard = ({
                 </div>
               )}
 
-              {round.assessmentId && (
+              {round?.assessmentId && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="text-sm font-medium text-gray-700">
@@ -1014,12 +1093,23 @@ const RoundCard = ({
                     </>
                   )}
 
-                  {round.roundTitle === "Assessment" && (
+                  
+{round?.roundTitle === "Assessment" && round?.status === "draft"  && (
                     <button
-                      onClick={handleShareClick}
+                    onClick={() => handleCreateAssessmentClick(round)}
+                      // onClick={handleCreateAssessmentClick(round)}
                       className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
                     >
-                      <Share2 className="h-4 w-4 mr-1" /> Share
+                      <Share2 className="h-4 w-4 mr-1" /> Create Assessment Link
+                    </button>
+                  )}
+
+                  {round.roundTitle === "Assessment" && round?.status !== "draft"  && (
+                    <button
+                      onClick={() => handleShareClick(round)}
+                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                    >
+                      <Share2 className="h-4 w-4 mr-1" /> Resend Assessment Link
                     </button>
                   )}
 
