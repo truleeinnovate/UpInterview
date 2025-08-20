@@ -1,3 +1,4 @@
+// v1.0.0 - mansoor - change technology and skills showing ui color to custom blue
 import React, { useEffect, useRef, useState } from 'react'
 import { Trash2, X, Search, ChevronDown } from 'lucide-react';
 import InfoBox from './InfoBox.jsx';
@@ -12,6 +13,7 @@ const InterviewDetails = ({
     setSelectedTechnologyies,
     interviewDetailsData,
     setInterviewDetailsData,
+
     selectedSkills,
     setSelectedSkills,
     previousInterviewExperience,
@@ -46,7 +48,9 @@ const InterviewDetails = ({
 
     const handleRemoveTechnology = (index) => {
         const updatedCandidates = selectedTechnologyies.filter((_, i) => i !== index);
+
         setSelectedTechnologyies(updatedCandidates);
+
         setInterviewDetailsData((prev) => ({
             ...prev,
             technologies: updatedCandidates.map((t) => t.TechnologyMasterName),
@@ -55,6 +59,7 @@ const InterviewDetails = ({
 
     const clearRemoveTechnology = () => {
         setSelectedTechnologyies([]);
+
         setInterviewDetailsData((prev) => ({
             ...prev,
             technologies: [],
@@ -81,6 +86,23 @@ const InterviewDetails = ({
         });
     };
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                (techPopupRef.current && !techPopupRef.current.contains(event.target)) &&
+                (skillsPopupRef.current && !skillsPopupRef.current.contains(event.target))
+            ) {
+                setTechpopup(false);
+                setShowSkillsPopup(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     const handleRemoveSkill = (index) => {
         setSelectedSkills(selectedSkills.filter((_, i) => i !== index));
     };
@@ -91,14 +113,17 @@ const InterviewDetails = ({
 
     const handleChangeforExp = (e) => {
         const value = e.target.value;
-        setInterviewDetailsData((prev) => ({
-            ...prev,
-            mock_interview_discount: value,
-        }));
-        setErrors((prevErrors) => ({
-            ...prevErrors,
-            mock_interview_discount: "",
-        }));
+        setInterviewDetailsData((prev) => {
+            return {
+                ...prev,
+                expectedRatePerMockInterview: value,
+            };
+        });
+        setErrors((prevErrors) => {
+            const errorMessage =
+                value >= 20 && value <= 500 ? "" : "Hourly rate must be between $20 and $500.";
+            return { ...prevErrors, expectedRatePerMockInterview: errorMessage };
+        });
     };
 
     const handleSelectSkill = (skill) => {
@@ -107,7 +132,7 @@ const InterviewDetails = ({
             setSelectedSkills(updatedSkills);
             setInterviewDetailsData((prev) => ({
                 ...prev,
-                skills: updatedSkills.map((s) => s?.SkillName),
+                skills: updatedSkills.map((s) => s.SkillName),
             }));
         }
         setShowSkillsPopup(false);
@@ -119,9 +144,10 @@ const InterviewDetails = ({
         setPreviousInterviewExperience(value);
         setInterviewDetailsData((prev) => ({
             ...prev,
-            previousInterviewExperience: value,
+            previousInterviewExperience: value,  // This is what's currently being set
             previousInterviewExperienceYears: value === "no" ? "" : prev.previousInterviewExperienceYears,
         }));
+        // Clear any previous errors
         setErrors((prev) => ({
             ...prev,
             previousInterviewExperience: "",
@@ -130,10 +156,12 @@ const InterviewDetails = ({
 
     const expertiseLevel_ConductingInterviews = (e) => {
         const value = e.target.value;
-        setInterviewDetailsData((prev) => ({
-            ...prev,
-            expertiseLevel_ConductingInterviews: value,
-        }));
+        setInterviewDetailsData((prev) => {
+            return {
+                ...prev,
+                expertiseLevel_ConductingInterviews: value,
+            };
+        });
         setErrors((prevErrors) => ({
             ...prevErrors,
             expertiseLevel_ConductingInterviews: "",
@@ -158,6 +186,7 @@ const InterviewDetails = ({
             ...prevData,
             noShowPolicy: value,
         }));
+        // Clear any previous errors
         setErrors((prev) => ({
             ...prev,
             noShowPolicy: "",
@@ -173,16 +202,19 @@ const InterviewDetails = ({
         }));
     };
 
-    const handleHourlyRateChange = (level) => (e) => {
+    const handleHourlyRateChange = (e) => {
         const value = e.target.value;
-        setInterviewDetailsData((prev) => ({
-            ...prev,
-            [level]: value,
-        }));
-        setErrors((prevErrors) => ({
-            ...prevErrors,
-            [level]: value ? "" : `${level.replace('_', ' ')} rate is required`,
-        }));
+        setInterviewDetailsData((prev) => {
+            return {
+                ...prev,
+                hourlyRate: value,
+            };
+        });
+        setErrors((prevErrors) => {
+            const errorMessage =
+                value >= 20 && value <= 500 ? "" : "Hourly rate must be between $20 and $500.";
+            return { ...prevErrors, hourlyRate: errorMessage };
+        });
     };
 
     const handleInterviewFormatChange = (event) => {
@@ -208,6 +240,7 @@ const InterviewDetails = ({
             setIsMockInterviewSelected(checked);
         }
 
+        // Clear any previous errors
         setErrors((prev) => ({
             ...prev,
             interviewFormatWeOffer: "",
@@ -240,6 +273,7 @@ const InterviewDetails = ({
 
     return (
         <>
+            {/* Info Box */}
             <div className="mb-6">
                 <InfoBox
                     title="Interview Expertise"
@@ -253,6 +287,7 @@ const InterviewDetails = ({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
+                {/* Technology Section */}
                 <div className="col-span-1 sm:col-span-6" ref={techPopupRef}>
                     <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-3">
                         Select Your Comfortable Technologies <span className="text-red-500">*</span>
@@ -262,7 +297,8 @@ const InterviewDetails = ({
                             placeholder="Select Multiple Technologies"
                             readOnly
                             onClick={toggleTechPopup}
-                            className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.technologies ? "border-red-500" : "border-gray-300"}`}
+                            className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.technologies ? "border-red-500" : "border-gray-300"
+                                }`}
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
                             <ChevronDown className="text-lg" onClick={toggleTechPopup} />
@@ -290,12 +326,14 @@ const InterviewDetails = ({
                                         {tech.TechnologyMasterName}
                                     </div>
                                 ))}
+
                             </div>
                         )}
                         {errors.technologies && <p className="text-red-500 text-sm sm:text-xs">{errors.technologies}</p>}
                     </div>
                 </div>
 
+                {/* Display Selected Technologies */}
                 <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 -mt-3">
                     {selectedTechnologyies.length === 0 ? (
                         <p className="text-sm text-gray-500 text-center">No technologies selected</p>
@@ -319,22 +357,30 @@ const InterviewDetails = ({
                                     </button>
                                 )}
                             </div>
+
+                            {/* Selected Technologies */}
                             <div className="flex flex-wrap gap-2">
                                 {selectedTechnologyies.map((candidate, index) => (
                                     <div
                                         key={index}
+                                        // <------------------------ v1.0.0
                                         className="flex items-center justify-between bg-custom-blue/10 border border-custom-blue/10 rounded-md p-2"
-                                        style={{ minWidth: '150px', maxWidth: '250px' }}
+                                        //    v1.0.0 ------------------------>
+                                        style={{ minWidth: '150px', maxWidth: '250px' }} // Inline styles for better control
                                     >
                                         <div className="flex-1 overflow-hidden">
+                                            {/* <------------------------ v1.0.0 */}
                                             <span className="ml-2 text-sm text-custom-blue truncate whitespace-nowrap">
+                                                {/*    v1.0.0 ------------------------> */}
                                                 {candidate.TechnologyMasterName}
                                             </span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveTechnology(index)}
+                                            // <------------------------ v1.0.0
                                             className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-custom-blue/10 ml-2"
+                                            //    v1.0.0 ------------------------>
                                             title="Remove technology"
                                         >
                                             <X className="h-4 w-4" />
@@ -346,6 +392,7 @@ const InterviewDetails = ({
                     )}
                 </div>
 
+                {/* skills */}
                 <div className="col-span-1 sm:col-span-6" ref={skillsPopupRef}>
                     <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
                         Select Skills <span className="text-red-500">*</span>
@@ -353,8 +400,7 @@ const InterviewDetails = ({
                     <div className="relative">
                         <input
                             onClick={toggleSkillsPopup}
-                            className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.skills ? 'border-red-500' : 'border-gray-300'}`} 
-                            placeholder="Select Multiple Skills"
+                            className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.skills ? 'border-red-500' : 'border-gray-300'} `} placeholder="Select Multiple Skills"
                         />
                         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
                             <ChevronDown className="text-lg" onClick={toggleSkillsPopup} />
@@ -369,7 +415,7 @@ const InterviewDetails = ({
                                             placeholder="Search Skills"
                                             value={searchTermSkills}
                                             onChange={(e) => setSearchTermSkills(e.target.value)}
-                                            className="pl-8 focus:border-black focus:outline-none w-full"
+                                            className="pl-8  focus:border-black focus:outline-none w-full"
                                         />
                                     </div>
                                 </div>
@@ -382,7 +428,9 @@ const InterviewDetails = ({
                                         <div
                                             key={skill._id}
                                             onClick={() => handleSelectSkill(skill)}
+                                            // <------------------------ v1.0.0
                                             className="cursor-pointer hover:bg-custom-blue/10 p-2"
+                                        //    v1.0.0 ------------------------>
                                         >
                                             {skill.SkillName}
                                         </div>
@@ -396,6 +444,7 @@ const InterviewDetails = ({
                     </div>
                 </div>
 
+                {/* Display Selected Skills */}
                 <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 -mt-3">
                     {selectedSkills.length === 0 ? (
                         <p className="text-sm text-gray-500 text-center">No skills selected</p>
@@ -419,22 +468,30 @@ const InterviewDetails = ({
                                     </button>
                                 )}
                             </div>
+
+                            {/* Selected Skills */}
                             <div className="flex flex-wrap gap-2">
                                 {selectedSkills.map((skill, index) => (
                                     <div
                                         key={index}
+                                        // <------------------------ v1.0.0
                                         className="flex items-center justify-between bg-custom-blue/10 border border-custom-blue/10 rounded-md p-2"
+                                        //    v1.0.0 ------------------------>
                                         style={{ minWidth: '150px', maxWidth: '250px' }}
                                     >
                                         <div className="flex-1 overflow-hidden">
+                                            {/* <------------------------ v1.0.0 */}
                                             <span className="ml-2 text-sm text-custom-blue truncate whitespace-nowrap">
+                                                {/* v1.0.0 ------------------------> */}
                                                 {skill.SkillName}
                                             </span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveSkill(index)}
+                                            // <------------------------ v1.0.0
                                             className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-custom-blue/10 ml-2"
+                                            //    v1.0.0 ------------------------>
                                             title="Remove skill"
                                         >
                                             <X className="h-4 w-4" />
@@ -447,6 +504,8 @@ const InterviewDetails = ({
                 </div>
 
                 <div className="col-span-2 sm:col-span-6 space-y-6">
+
+                    {/* Previous Experience */}
                     <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
                         <p>
                             Do you have any previous experience conducting interviews? <span className="text-red-500">*</span>
@@ -480,6 +539,7 @@ const InterviewDetails = ({
                         )}
                     </div>
 
+                    {/* Conditional Experience Years */}
                     {previousInterviewExperience === "yes" && (
                         <div>
                             <label htmlFor="previousInterviewExperienceYears" className="block text-sm font-medium text-gray-900 mb-2">
@@ -502,90 +562,78 @@ const InterviewDetails = ({
                         </div>
                     )}
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-4">
-                            Hourly Rates by Experience Level (USD) <span className="text-red-500">*</span>
-                        </label>
-                        <div className="space-y-4">
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label htmlFor="junior_rate" className="text-sm font-medium text-gray-700">
-                                        Junior Level (0-3 years)
-                                    </label>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 sm:text-sm">$</span>
-                                    </div>
+                    {/* Level of Expertise */}
+                    <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+                        <p>Choose your level of expertise in conducting interviews <span className="text-red-500">*</span></p>
+                        <div className="mt-3 flex flex-wrap space-x-20 md:space-x-10 sm:space-x-0 sm:flex-col">
+                            {["junior", "mid-level", "senior", "lead"].map((level, index) => (
+                                <label key={index} className="inline-flex items-center">
                                     <input
-                                        id="junior_rate"
-                                        type="number"
-                                        className="block w-full pl-7 pr-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        placeholder="Enter junior rate"
-                                        value={interviewDetailsData.junior_rate || ""}
-                                        onChange={handleHourlyRateChange('junior_rate')}
+                                        type="radio"
+                                        className="form-radio text-gray-600"
+                                        name="expertiseLevel_ConductingInterviews"
+                                        value={level}
+                                        checked={interviewDetailsData.expertiseLevel_ConductingInterviews === level}
+                                        onChange={expertiseLevel_ConductingInterviews}
                                     />
-                                </div>
-                                {errors.junior_rate && (
-                                    <p className="mt-1.5 text-sm text-red-600">{errors.junior_rate}</p>
-                                )}
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label htmlFor="mid_rate" className="text-sm font-medium text-gray-700">
-                                        Mid-Level (3-6 years)
-                                    </label>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 sm:text-sm">$</span>
-                                    </div>
-                                    <input
-                                        id="mid_rate"
-                                        type="number"
-                                        className="block w-full pl-7 pr-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        placeholder="Enter mid-level rate"
-                                        value={interviewDetailsData.mid_rate || ""}
-                                        onChange={handleHourlyRateChange('mid_rate')}
-                                    />
-                                </div>
-                                {errors.mid_rate && (
-                                    <p className="mt-1.5 text-sm text-red-600">{errors.mid_rate}</p>
-                                )}
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label htmlFor="senior_rate" className="text-sm font-medium text-gray-700">
-                                        Senior Level (6+ years)
-                                    </label>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 sm:text-sm">$</span>
-                                    </div>
-                                    <input
-                                        id="senior_rate"
-                                        type="number"
-                                        className="block w-full pl-7 pr-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        placeholder="Enter senior rate"
-                                        value={interviewDetailsData.senior_rate || ""}
-                                        onChange={handleHourlyRateChange('senior_rate')}
-                                    />
-                                </div>
-                                {errors.senior_rate && (
-                                    <p className="mt-1.5 text-sm text-red-600">{errors.senior_rate}</p>
-                                )}
-                            </div>
+                                    <span className="ml-2 capitalize">{level.replace("-", " ")} ({index * 3}-{(index + 1) * 3} years)</span>
+                                </label>
+                            ))}
                         </div>
-                        <p className="mt-2 text-xs text-gray-500">Set competitive rates based on candidate experience levels.</p>
+                        {errors.expertiseLevel_ConductingInterviews && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.expertiseLevel_ConductingInterviews}</p>}
                     </div>
 
+                    {/* Expected Rate Per Hour */}
+                    <div>
+                        <label
+                            htmlFor="hourly_rate"
+                            className="block text-sm font-medium text-gray-900 mb-2"
+                        >
+                            Expected Hourly Rate (USD) <span className="text-red-500">*</span>
+                        </label>
+
+                        <div className="relative">
+                            {/* Dollar Symbol */}
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span className="text-gray-500 sm:text-sm">$</span>
+                            </div>
+
+                            {/* Hourly Rate Input */}
+                            <input
+                                id="hourly_rate"
+                                type="number"
+                                name="hourly_rate"
+                                min="20"
+                                max="500"
+                                value={interviewDetailsData.hourlyRate}
+                                onChange={handleHourlyRateChange}
+                                className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.hourlyRate ? "border-red-500" : "border-gray-300"
+                                    }`}
+                                placeholder="75"
+                            />
+                        </div>
+
+                        {/* Error Message */}
+                        {errors.hourlyRate && (
+                            <p className="mt-1.5 text-sm text-red-600">{errors.hourlyRate}</p>
+                        )}
+
+                        {/* Helper Text */}
+                        <p className="mt-1.5 text-xs text-gray-500">
+                            Set a competitive rate based on your experience level.
+                        </p>
+                    </div>
+
+                    {/* Interview Formats You Offer */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Interview Formats You Offer <span className="text-red-500">*</span>
+                            Interview Formats You Offer
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                            {/* Technical Coding */}
+                            {/* <------------------------------ v1.0.0 */}
                             <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                               {/* v1.0.0 ----------------------------> */}
                                 <div className="flex items-center h-5">
                                     <input
                                         id="format_technical"
@@ -593,8 +641,10 @@ const InterviewDetails = ({
                                         value="technical"
                                         checked={interviewDetailsData?.interviewFormatWeOffer?.includes("technical")}
                                         onChange={handleInterviewFormatChange}
+                                        // <------------------------------ v1.0.0
                                         className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
-                                    />
+                                        //    v1.0.0 ---------------------------->
+                                   />
                                 </div>
                                 <div className="ml-3">
                                     <label htmlFor="format_technical" className="font-medium text-gray-700">
@@ -603,7 +653,11 @@ const InterviewDetails = ({
                                     <p className="text-sm text-gray-500">Algorithmic problem-solving and coding challenges</p>
                                 </div>
                             </div>
+
+                            {/* System Design */}
+                            {/* <------------------------------ v1.0.0 */}
                             <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                              {/* v1.0.0 ----------------------------> */}
                                 <div className="flex items-center h-5">
                                     <input
                                         id="format_system_design"
@@ -611,7 +665,9 @@ const InterviewDetails = ({
                                         value="system_design"
                                         checked={interviewDetailsData?.interviewFormatWeOffer?.includes("system_design")}
                                         onChange={handleInterviewFormatChange}
+                                        // <------------------------------ v1.0.0
                                         className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                                        //    v1.0.0 ---------------------------->
                                     />
                                 </div>
                                 <div className="ml-3">
@@ -621,7 +677,11 @@ const InterviewDetails = ({
                                     <p className="text-sm text-gray-500">Architecture and scalability discussions</p>
                                 </div>
                             </div>
+
+                            {/* Behavioral */}
+                            {/* <------------------------------ v1.0.0 */}
                             <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                              {/* v1.0.0 ----------------------------> */}
                                 <div className="flex items-center h-5">
                                     <input
                                         id="format_behavioral"
@@ -629,7 +689,9 @@ const InterviewDetails = ({
                                         value="behavioral"
                                         checked={interviewDetailsData?.interviewFormatWeOffer?.includes("behavioral")}
                                         onChange={handleInterviewFormatChange}
+                                        // <------------------------------ v1.0.0
                                         className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                                        //    v1.0.0 ---------------------------->
                                     />
                                 </div>
                                 <div className="ml-3">
@@ -639,7 +701,11 @@ const InterviewDetails = ({
                                     <p className="text-sm text-gray-500">Soft skills and situational questions</p>
                                 </div>
                             </div>
+
+                            {/* Mock Interviews */}
+                            {/* <------------------------------ v1.0.0 */}
                             <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                              {/* v1.0.0 ----------------------------> */}
                                 <div className="flex items-center h-5">
                                     <input
                                         id="format_mock"
@@ -647,7 +713,9 @@ const InterviewDetails = ({
                                         value="mock"
                                         checked={interviewDetailsData?.interviewFormatWeOffer?.includes("mock")}
                                         onChange={handleInterviewFormatChange}
+                                        // <------------------------------ v1.0.0
                                         className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                                        //    v1.0.0 ---------------------------->
                                     />
                                 </div>
                                 <div className="ml-3">
@@ -658,33 +726,47 @@ const InterviewDetails = ({
                                 </div>
                             </div>
                         </div>
-                        {errors.interviewFormatWeOffer && (
-                            <p className="mt-2 text-sm text-red-600">{errors.interviewFormatWeOffer}</p>
-                        )}
                     </div>
 
+                    {/* Expected Rate Per Mock Interview */}
                     {isMockInterviewSelected && (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                            <label htmlFor="mock_interview_discount" className="block text-sm font-medium text-gray-700 mb-2">
-                                Mock Interview Discount Percentage
-                            </label>
-                            <select
-                                id="mock_interview_discount"
-                                className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                value={interviewDetailsData.mock_interview_discount || ""}
-                                onChange={handleChangeforExp}
+                        <div>
+                            <label
+                                htmlFor="hourly_rate"
+                                className="block text-sm font-medium text-gray-900 mb-2"
                             >
-                                <option value="">Select discount percentage</option>
-                                <option value="10">10% discount</option>
-                                <option value="20">20% discount</option>
-                                <option value="30">30% discount</option>
-                            </select>
-                            <p className="mt-1.5 text-xs text-blue-600">
-                                Offer a discount for mock interviews to attract more candidates
-                            </p>
+                                Expected rate per mock interview (USD) <span className="text-red-500">*</span>
+                            </label>
+
+                            <div className="relative">
+                                {/* Dollar Symbol */}
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span className="text-gray-500 sm:text-sm">$</span>
+                                </div>
+
+                                {/* Hourly Rate Input */}
+                                <input
+                                    id="expectedRatePerMockInterview"
+                                    type="number"
+                                    name="expectedRatePerMockInterview"
+                                    min="20"
+                                    max="500"
+                                    value={interviewDetailsData.expectedRatePerMockInterview}
+                                    onChange={handleChangeforExp}
+                                    className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.expectedRatePerMockInterview ? "border-red-500" : "border-gray-300"
+                                        }`}
+                                    placeholder="75"
+                                />
+                            </div>
+
+                            {/* Error Message */}
+                            {errors.expectedRatePerMockInterview && (
+                                <p className="mt-1.5 text-sm text-red-600">{errors.expectedRatePerMockInterview}</p>
+                            )}
                         </div>
                     )}
 
+                    {/* No-Show Policy */}
                     <div>
                         <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
                             Policy for No-Show Cases <span className="text-red-500">*</span>
@@ -707,6 +789,7 @@ const InterviewDetails = ({
                         {errors.noShowPolicy && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.noShowPolicy}</p>}
                     </div>
 
+                    {/* Professional Title */}
                     <div className="sm:col-span-6 col-span-2">
                         <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                             Professional Title <span className="text-red-500">*</span>
@@ -723,6 +806,7 @@ const InterviewDetails = ({
                                         ...prevData,
                                         professionalTitle: e.target.value,
                                     }));
+                                    // Clear error when user starts typing
                                     if (e.target.value.length >= 50) {
                                         setErrors(prev => ({ ...prev, professionalTitle: '' }));
                                     }
@@ -759,6 +843,7 @@ const InterviewDetails = ({
                         </div>
                     </div>
 
+                    {/* Professional Bio */}
                     <div className="sm:col-span-6 col-span-2">
                         <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
                             Professional Bio <span className="text-red-500">*</span>
@@ -771,6 +856,7 @@ const InterviewDetails = ({
                                 value={interviewDetailsData.bio || ''}
                                 onChange={(e) => {
                                     handleBioChange(e);
+                                    // Clear error when user starts typing
                                     if (e.target.value.length >= 150) {
                                         setErrors(prev => ({ ...prev, bio: '' }));
                                     }
@@ -806,6 +892,7 @@ const InterviewDetails = ({
                             )}
                         </div>
                     </div>
+
                 </div>
             </div>
         </>

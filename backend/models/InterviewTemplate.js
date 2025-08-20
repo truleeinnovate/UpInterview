@@ -67,7 +67,6 @@ const InterviewTemplateSchema = new mongoose.Schema(
         ],
       },
     ],
-    roundsModified: { type: Boolean, default: false },
     isSaved: { type: Boolean, default: false },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
