@@ -7,6 +7,8 @@
 */
 // v1.0.3 - Ashok - In the showConfirmModal fixed z-index issue and disabled outer scrollbar using useScrollLock hook
 
+// v1.0.4  -  mansoor  -  added the buttons visibility based on the statuses
+
 import React, { useState, useEffect } from "react";
 import {
   Calendar,
@@ -92,6 +94,8 @@ const RoundCard = ({
 
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
+
+  const [actionInProgress, setActionInProgress] = useState(false);
 
   useEffect(() => {
     if (showQuestions && round?.assessmentId) {
@@ -236,6 +240,7 @@ const RoundCard = ({
       handleStatusChange(confirmAction);
     }
     setShowConfirmModal(false);
+    setActionInProgress(false);
   };
 
   const handleReject = (reason) => {
@@ -346,6 +351,141 @@ const RoundCard = ({
     // setIsLoading(false);
   };
 
+  // <----------------------- v1.0.4
+  const handleActionClick = (action) => {
+    setActionInProgress(true);
+    if (action === "Completed" || action === "Cancelled" || action === "Rejected" || action === "Selected") {
+      setConfirmAction(action);
+      setShowConfirmModal(true);
+    }
+  };
+
+  const handleSelect = () => {
+    setActionInProgress(true);
+    setConfirmAction("Selected");
+    setShowConfirmModal(true);
+  };
+
+  const roundActionPermissions = {
+    Draft: {
+      canEdit: true,
+      canDelete: true,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    "Request Sent": {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Scheduled: {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: true,
+      canComplete: true,
+      canReject: true,
+      canSelect: true,
+      canFeedback: false,
+    },
+    Rescheduled: {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: true,
+      canComplete: true,
+      canReject: true,
+      canSelect: true,
+      canFeedback: false,
+    },
+    Completed: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: true,
+    },
+    Cancelled: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Rejected: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Selected: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Interview_Completed: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+    Feedback_Submitted: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canReject: false,
+      canSelect: false,
+      canFeedback: false,
+    },
+  };
+
+  // Helper to get permissions for current round status
+  const getRoundPermissions = (status) =>
+    roundActionPermissions[status] || roundActionPermissions["Draft"];
+
+  const permissions = getRoundPermissions(round.status);
+
+  // v1.0.4 -------------------------->
   return (
     <>
       <div
@@ -849,12 +989,11 @@ const RoundCard = ({
                 </div>
               )}
 
+              {/* <---------------------------v1.0.4 */}
 
-
-              {isRoundActive && (
+              {/* {isRoundActive && (
                 <div className="mt-6 flex flex-wrap justify-end space-x-2">
-
-                  {['scheduled', 'pending'].includes(round.status?.toLowerCase()) && (
+                  {['scheduled'].includes(round.status?.toLowerCase()) && (
                     <>
                       {round.interviewerType === 'outsource' && !round.isInstant && (
                         <button
@@ -864,12 +1003,14 @@ const RoundCard = ({
                           <Calendar className="h-4 w-4 mr-1" /> Reschedule
                         </button>
                       )}
-                      <button
-                        onClick={() => onInitiateAction(round, 'cancel')}
-                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                      >
-                        <XCircle className="h-4 w-4 mr-1" /> Cancel
-                      </button>
+                      {['scheduled'].includes(round.status?.toLowerCase()) && (
+                        <button
+                          onClick={() => { setActionInProgress(true); onInitiateAction(round, 'cancel'); }}
+                          className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" /> Cancel
+                        </button>
+                      )}
                     </>
                   )}
 
@@ -882,7 +1023,8 @@ const RoundCard = ({
                     </button>
                   )}
 
-                  {canEdit && !['Completed', 'Cancelled', 'Rejected'].includes(round.status) && (
+                  
+                  {canEdit && !['Completed', 'Cancelled', 'Rejected', 'Selected'].includes(round.status) && !actionInProgress && (
                     <button
                       onClick={onEdit}
                       className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
@@ -899,13 +1041,9 @@ const RoundCard = ({
                       <MessageSquare className="h-4 w-4 mr-1" /> Feedback
                     </button>
                   )}
-
-                  {round.status === "Pending" && (
+                  {!["Draft", "Request Sent"].includes(round.status) && (
                     <button
-                      onClick={() => {
-                        setConfirmAction("Scheduled");
-                        setShowConfirmModal(true);
-                      }}
+                      onClick={() => handleActionClick("Scheduled")}
                       className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
                     >
                       <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
@@ -915,33 +1053,75 @@ const RoundCard = ({
                   {round.status === "Scheduled" && (
                     <>
                       <button
-                        onClick={() => {
-                          setConfirmAction("Completed");
-                          setShowConfirmModal(true);
-                        }}
+                        onClick={() => handleActionClick("Completed")}
                         className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
                       >
                         <CheckCircle className="h-4 w-4 mr-1" /> Complete
                       </button>
-                      {/* <button
-                        onClick={() => {
-                          setConfirmAction("Cancelled");
-                          setShowConfirmModal(true);
-                        }}
-                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                      >
-                        <XCircle className="h-4 w-4 mr-1" /> Cancel
-                      </button> */}
                       <button
-                        onClick={() => setShowRejectionModal(true)}
+                        onClick={() => setShowRejectionModal(true) || setActionInProgress(true)}
                         className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
                       >
                         <ThumbsDown className="h-4 w-4 mr-1" /> Reject
                       </button>
+                      <button
+                        onClick={handleSelect}
+                        className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" /> Select
+                      </button>
                     </>
                   )}
 
-                  {canEdit && round.status !== "Request Sent" && (
+                  {canEdit &&
+                    ![
+                      "Request Sent",
+                      "Scheduled",
+                      "Completed",
+                      "Interview_Completed",
+                      "Feedback_Submitted",
+                    ].includes(round.status) && (
+                      <button
+                        onClick={() => setShowDeleteConfirmModal(true)}
+                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> Delete Round
+                      </button>
+                    )}
+                </div>
+              )} */}
+
+              {isRoundActive && (
+                <div className="mt-6 flex flex-wrap justify-end space-x-2">
+                  {/* Reschedule */}
+                  {permissions.canReschedule && round.interviewerType === 'outsource' && !round.isInstant && (
+                    <button
+                      onClick={() => onInitiateAction(round, 'reschedule')}
+                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    >
+                      <Calendar className="h-4 w-4 mr-1" /> Reschedule
+                    </button>
+                  )}
+                  {/* Cancel */}
+                  {permissions.canCancel && (
+                    <button
+                      onClick={() => { setActionInProgress(true); onInitiateAction(round, 'cancel'); }}
+                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                    >
+                      <XCircle className="h-4 w-4 mr-1" /> Cancel
+                    </button>
+                  )}
+                  {/* Edit */}
+                  {canEdit && permissions.canEdit && !actionInProgress && (
+                    <button
+                      onClick={onEdit}
+                      className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                    >
+                      <Edit className="h-4 w-4 mr-1" /> Edit Round
+                    </button>
+                  )}
+                  {/* Delete */}
+                  {canEdit && permissions.canDelete && (
                     <button
                       onClick={() => setShowDeleteConfirmModal(true)}
                       className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
@@ -949,8 +1129,65 @@ const RoundCard = ({
                       <XCircle className="h-4 w-4 mr-1" /> Delete Round
                     </button>
                   )}
+                  {/* Mark Scheduled */}
+                  {permissions.canMarkScheduled && (
+                    <button
+                      onClick={() => handleActionClick("Scheduled")}
+                      className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                    >
+                      <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
+                    </button>
+                  )}
+                  {/* Complete */}
+                  {permissions.canComplete && (
+                    <button
+                      onClick={() => handleActionClick("Completed")}
+                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" /> Complete
+                    </button>
+                  )}
+                  {/* Reject */}
+                  {permissions.canReject && (
+                    <button
+                      onClick={() => setShowRejectionModal(true) || setActionInProgress(true)}
+                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                    >
+                      <ThumbsDown className="h-4 w-4 mr-1" /> Reject
+                    </button>
+                  )}
+                  {/* Select */}
+                  {permissions.canSelect && (
+                    <button
+                      onClick={handleSelect}
+                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" /> Select
+                    </button>
+                  )}
+                  {/* Feedback */}
+                  {permissions.canFeedback && (
+                    <button
+                      onClick={() => setShowFeedbackModal(true)}
+                      className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+                    </button>
+                  )}
+                  {/* Share (always for Assessment) */}
+                  {round.roundTitle === "Assessment" && (
+                    <button
+                      onClick={handleShareClick}
+                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                    >
+                      <Share2 className="h-4 w-4 mr-1" /> Share
+                    </button>
+                  )}
                 </div>
               )}
+
+
+              {/* v1.0.4 ----------------------------> */}
 
             </>
           ) : (
@@ -958,27 +1195,6 @@ const RoundCard = ({
           )}
         </div>
       </div>
-      {/* v1.0.3 <------------------------------------------------------------------------------------ */}
-      {/* {showConfirmModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-          <div className="bg-white p-5 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-3">
-              Are you sure you want to {confirmAction.toLowerCase()} this round?
-            </h3>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                No, Cancel
-              </Button>
-              <Button variant="success" onClick={handleConfirmStatusChange}>
-                Yes, Confirm
-              </Button>
-            </div>
-          </div>
-        </div>
-      )} */}
 
       {showConfirmModal &&
         createPortal(
@@ -1003,28 +1219,6 @@ const RoundCard = ({
           </div>,
           document.body
         )}
-      {/* v1.0.3 ---------------------------------------------------------------------------------------> */}
-      {/* v1.0.2 <-------------------------------------------------------------------------- */}
-      {/* {showDeleteConfirmModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-          <div className="bg-white p-5 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-3">
-              Are you sure you want to delete this round?
-            </h3>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirmModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteRound}>
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )} */}
       {showDeleteConfirmModal &&
         createPortal(
           <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
@@ -1047,7 +1241,6 @@ const RoundCard = ({
           </div>,
           document.body
         )}
-      {/* v1.0.2 --------------------------------------------------------------------------> */}
       {showRejectionModal && (
         <RejectionModal
           onClose={() => setShowRejectionModal(false)}

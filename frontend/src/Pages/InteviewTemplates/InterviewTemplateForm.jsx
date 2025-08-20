@@ -225,6 +225,7 @@ const InterviewSlideover = ({ mode }) => {
         label: newTemplate.label,
         description: newTemplate.description,
         status: newTemplate.status,
+        isSaved: !isTemplate,
       };
       // console.log('Template Data:', templateData);
 
