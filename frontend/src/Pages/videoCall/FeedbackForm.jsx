@@ -1030,7 +1030,7 @@ const FeedbackForm = ({
           rating: skill.rating,
           note: skill.comments || ""
         })),
-        feedbackCode: feedbackCandidate?.interviewRound?.interviewCode + "_" + feedbackCandidate?.interviewRound?.sequence || "",
+        feedbackCode: feedbackCandidate?.interviewRound?.interviewCode || "" + "-" + feedbackCandidate?.interviewRound?.sequence || "",
         questionFeedback: [
           // Interviewer section questions
           ...interviewerSectionData.map(question => ({
