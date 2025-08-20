@@ -7,6 +7,7 @@ import CandidateMiniTab from '../Dashboard-Part/Tabs/Feedback/MiniTabs/Candidate
 import FeedbackForm from './FeedbackForm';
 
 import InterviewsMiniTabComponent from '../Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews';
+import InterviewActions from './InterviewActions';
 
 const InterviewerView = ({ onBack,decodedData, feedbackData,feedbackLoading,feedbackError,isScheduler,schedulerFeedbackData}) => {
   const [activeTab, setActiveTab] = useState('candidate');
@@ -156,7 +157,8 @@ console.log("mergedQuestions",mergedQuestions);
 
   const tabs = [
     { id: 'candidate', label: 'Candidate Details', icon: User },
-    { id: 'questions', label: 'Interview Questions', icon: MessageSquare },
+   { id: 'questions', label: 'Interview Questions', icon: MessageSquare },
+    {id:'interviewActions',label:'Interview Actions',icon:FileText},
     { id: 'feedback', label: 'Feedback Form', icon: FileText },
     // { id: 'management', label: 'Feedback Management', icon: Users }
   ];
@@ -189,10 +191,15 @@ console.log("mergedQuestions",mergedQuestions);
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-[#217989] text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors
+                      ${decodedData?.schedule && tab.id === 'questions' ? 'hidden' : ''}
+                      ${
+                        activeTab === tab.id
+                        ? 'bg-blue-50 text-custom-blue border-r-4 border-custom-blue'
+                        : 'text-gray-600 hover:bg-gray-50'
+                      // activeTab === tab.id
+                      //   ? 'bg-[#217989] text-white'
+                      //   : 'text-gray-600 hover:bg-gray-100'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -208,7 +215,7 @@ console.log("mergedQuestions",mergedQuestions);
         <div className="flex-1 bg-gray-50 mb-10 overflow-y-auto">
           <div className="p-8">
             {activeTab === 'candidate' && <CandidateMiniTab selectedData={selectedCandidate} isAddMode={true} decodedData={decodedData} />}
-            {activeTab === 'questions' && (
+             {!decodedData?.schedule && activeTab === 'questions' && (
               <InterviewsMiniTabComponent 
                 interviewData={selectedCandidate} 
                 isAddMode={true}
@@ -229,6 +236,15 @@ console.log("mergedQuestions",mergedQuestions);
                 
               />
             )}
+            {
+              activeTab === 'interviewActions' && (
+                <InterviewActions 
+                  interviewData={selectedCandidate}
+                  isAddMode={true}
+                  decodedData={decodedData}
+                />
+              )
+            }
             {activeTab === 'feedback' && (
               <FeedbackForm 
                 interviewerSectionData={interviewerSectionData}

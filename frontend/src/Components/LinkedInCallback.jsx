@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { config } from '../config.js';
-import { setAuthCookies, clearAllAuth, getAuthToken, debugCookieState } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
+import { setAuthCookies, clearAllAuth, getAuthToken, 
+  // debugCookieState
+ } from '../utils/AuthCookieManager/AuthCookieManager.jsx';
 import Loading from '../Components/Loading.js';
 import { useIndividualLogin } from '../apiHooks/useIndividualLogin';
 
@@ -131,13 +133,7 @@ const LinkedInCallback = () => {
         });
       }
       
-      // // For active users, go to home
-      // if (tenant.status === 'active') {
-      //   console.log('Tenant is active, navigating to home');
-      //   return navigate('/home', { replace: true });
-      // }
-      
-      // For any other status, default to home
+      // For any status, default to home
       return navigate('/home', {
         replace: true,
         state: { token, linkedIn_email: email }
@@ -153,7 +149,7 @@ const LinkedInCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('🔍 Initial cookie state:', debugCookieState());
+        // console.log('🔍 Initial cookie state:', debugCookieState());
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const returnUrl = urlParams.get('returnUrl'); // Extract returnUrl
@@ -179,7 +175,7 @@ const LinkedInCallback = () => {
         // Clear all cookies and localStorage before setting new ones
         console.log('🧹 Clearing all auth data');
         await clearAllAuth();
-        console.log('✅ Cleared all cookies and localStorage, post-clear state:', debugCookieState());
+        // console.log('✅ Cleared all cookies and localStorage, post-clear state:', debugCookieState());
     
         // Set the authToken with retries
         if (token) {
@@ -192,7 +188,7 @@ const LinkedInCallback = () => {
             await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
     
             const authToken = getAuthToken();
-            console.log(`🔍 Verification attempt ${retries + 1}, cookie state:`, debugCookieState());
+            // console.log(`🔍 Verification attempt ${retries + 1}, cookie state:`, debugCookieState());
     
             verified = !!authToken;
             if (!verified) {
@@ -211,23 +207,34 @@ const LinkedInCallback = () => {
     
         // Handle returnUrl if present
         if (returnUrl) {
-          try {
-            const decodedReturnUrl = decodeURIComponent(returnUrl);
-            const returnUrlObj = new URL(decodedReturnUrl);
-            const currentDomain = window.location.hostname;
-            if (
-              returnUrlObj.hostname === currentDomain ||
-              returnUrlObj.hostname.endsWith('.app.upinterview.io') ||
-              (process.env.NODE_ENV === 'development' && returnUrlObj.hostname === 'localhost')
-            ) {
+          // Basic validation to ensure returnUrl is for the correct domain
+          const currentDomain = window.location.hostname;
+          const validDomains = [
+            currentDomain,
+            '.app.upinterview.io',
+            ...(process.env.NODE_ENV === 'development' ? ['localhost'] : [])
+          ];
+          
+          // Check if returnUrl starts with a valid protocol and domain
+          if (
+            returnUrl.startsWith('http://') || 
+            returnUrl.startsWith('https://')
+          ) {
+            const hostname = returnUrl.split('/')[2]; // Extract hostname from URL
+            const isValidDomain = validDomains.some(domain => 
+              hostname === domain || hostname.endsWith(domain)
+            );
+            
+            if (isValidDomain) {
+              console.log('Redirecting to returnUrl:', returnUrl);
               await new Promise(resolve => setTimeout(resolve, 2000));
-              window.location.href = decodedReturnUrl;
+              window.location.href = returnUrl; // Use returnUrl as-is
               return;
             } else {
               console.warn('Invalid returnUrl domain, proceeding with default navigation');
             }
-          } catch (error) {
-            console.error('Error processing returnUrl:', error);
+          } else {
+            console.warn('Invalid returnUrl format, proceeding with default navigation');
           }
         }
     
@@ -258,18 +265,6 @@ const LinkedInCallback = () => {
   
     handleCallback();
   }, [navigate]);
-
-  // useEffect(() => {
-  //   let timer;
-  //   if (error) {
-  //     timer = setTimeout(() => {
-  //       navigate('/login', {
-  //         state: { error: 'LinkedIn login failed. Please try again.' },
-  //       });
-  //     }, 5000);
-  //   }
-  //   return () => clearTimeout(timer);
-  // }, [error, navigate]);
 
   return (
     <div className="linkedin-callback">

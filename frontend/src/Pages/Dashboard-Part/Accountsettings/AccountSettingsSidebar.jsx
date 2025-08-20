@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Added new Tab hrms-ats-integrations-hub
 import { useCallback, useEffect, useState } from 'react';
 import Cookies from "js-cookie";
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -73,8 +74,11 @@ const AccountSettingsSidebar = () => {
   ];
 
   const integrationNavigation = [
-    { name: 'Webhooks', icon: CodeBracketIcon, id: 'webhooks' },
-    { name: 'HRMS/ATS API', icon: ArrowsRightLeftIcon, id: 'hrms-ats' }
+    // v1.0.0 <----------------------------------------------------------------------------------------
+    // { name: 'Webhooks', icon: CodeBracketIcon, id: 'webhooks' },
+    // { name: 'HRMS/ATS API', icon: ArrowsRightLeftIcon, id: 'hrms-ats' },
+    { name: 'HRMS ATS & Integrations', icon: ArrowsRightLeftIcon, id: 'hrms-ats-integrations-hub' },
+    // v1.0.0 ---------------------------------------------------------------------------------------->
   ];
 
   const navigation = [
@@ -120,8 +124,12 @@ const AccountSettingsSidebar = () => {
     'roles': 'Roles',
     'sharing': 'Sharing',
     'sub-domain': 'Subdomain',
-    'webhooks': 'Webhooks',
-    'hrms-ats': 'HrmsAts'
+    // v1.0.0 <--------------------------------------
+    // 'webhooks': 'Webhooks',
+    'webhooks': 'Integration',
+    'hrms-ats': 'Integration',
+    'hrms-ats-integrations-hub': 'Integration',
+    // v1.0.0 -------------------------------------->
   };
   
 

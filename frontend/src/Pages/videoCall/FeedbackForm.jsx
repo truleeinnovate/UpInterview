@@ -480,6 +480,8 @@ const FeedbackForm = ({
     questions: ''
   });
 
+  
+
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -884,7 +886,7 @@ const FeedbackForm = ({
       const feedbackData = {
         type:"submit",
         tenantId: currentTenantId || "",
-        ownerId: currentOwnerId || "",
+        ownerId: decodedData?.ownerId || currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         feedbackCode: feedbackCandidate?.interviewRound?.interviewCode || "" + "-" + feedbackCandidate?.interviewRound?.sequence || "",
@@ -1018,7 +1020,7 @@ const FeedbackForm = ({
       const feedbackData = {
         type:"draft",
         tenantId: currentTenantId || "",
-        ownerId: currentOwnerId || "",
+        ownerId:decodedData?.ownerId || currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         positionId: positionId || "",
@@ -1028,7 +1030,7 @@ const FeedbackForm = ({
           rating: skill.rating,
           note: skill.comments || ""
         })),
-        feedbackCode: feedbackCandidate?.interviewRound?.interviewCode + "_" + feedbackCandidate?.interviewRound?.sequence || "",
+        feedbackCode: feedbackCandidate?.interviewRound?.interviewCode || "" + "-" + feedbackCandidate?.interviewRound?.sequence || "",
         questionFeedback: [
           // Interviewer section questions
           ...interviewerSectionData.map(question => ({

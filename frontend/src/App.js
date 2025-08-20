@@ -8,7 +8,7 @@
 // v1.0.6 - Mansoor - removed the navbar in the login pages 
 
 // v1.0.5 - Ashok - Added Analytics related pages 
-
+// v1.0.6 - Ashok - Added SettingsIntegrations page
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -322,6 +322,11 @@ const Webhooks = lazy(() =>
 const HrmsAtsApi = lazy(() =>
   import("./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi")
 );
+// v1.0.6 <-----------------------------------------------------------------------------
+const SettingsIntegrations = lazy(() =>
+  import("./Pages/Dashboard-Part/Accountsettings/account/WebHooks/MainContent.jsx")
+);
+// v1.0.6 ----------------------------------------------------------------------------->
 const InterviewTemplates = lazy(() =>
   import("../src/Pages/InteviewTemplates/InterviewTemplates")
 );
@@ -966,6 +971,9 @@ const MainAppRoutes = ({
                 )}
                 <Route path="webhooks" element={<Webhooks />} />
                 <Route path="hrms-ats" element={<HrmsAtsApi />} />
+                {/* v1.0.6 <----------------------------------------------------------------------------- */}
+                <Route path="hrms-ats-integrations-hub" element={<SettingsIntegrations />} />
+                {/* v1.0.6 -----------------------------------------------------------------------------> */}
               </Route>
 
               {/* Interview Templates */}
