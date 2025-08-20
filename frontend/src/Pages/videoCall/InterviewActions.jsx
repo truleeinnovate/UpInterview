@@ -12,16 +12,57 @@ import {
   X,
 } from "lucide-react";
 
-const InterviewActions = ({ interview, onActionComplete }) => {
+const InterviewActions = ({ interviewData,isAddMode,decodedData, onActionComplete }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [modal, setModal] = useState(null);
   const [formData, setFormData] = useState({ reason: "", comments: "" });
 
+  console.log("interviewData InterviewActions ",interviewData);
+
   // Mock interview times for demonstration
-  const startTime = new Date();
-  startTime.setHours(startTime.getHours() - 1); // Started 1 hour ago
-  const endTime = new Date();
-  endTime.setHours(endTime.getHours() + 1); // Ends in 1 hour
+ // Replace the mock start/end time with real ones
+ const parseInterviewTimes = (interviewData) => {
+  if (!interviewData?.interviewRound?.dateTime) return {};
+
+  // Example: "17-08-2025 1:32 PM - 07:25 PM"
+  const dateTimeString = interviewData.interviewRound.dateTime;
+  
+  // Split on space to get all parts
+  const parts = dateTimeString.split(" ");
+  
+  // Extract date (first part)
+  const date = parts[0];
+  
+  // Extract start time (second and third parts)
+  const startTime = `${parts[1]} ${parts[2]}`;
+  
+  // Extract end time (fourth and fifth parts)
+  const endTime = `${parts[4]} ${parts[5]}`;
+  
+  const [day, month, year] = date.split("-");
+
+  // Build Date strings
+  const startDateTime = new Date(`${year}-${month}-${day} ${startTime}`);
+  const endDateTime = new Date(`${year}-${month}-${day} ${endTime}`);
+
+  return { startDateTime, endDateTime };
+};
+
+const { startDateTime, endDateTime } = parseInterviewTimes(interviewData);
+
+// Fallback if parsing fails
+const startTime = startDateTime || new Date();
+const endTime =
+  endDateTime ||
+  new Date(startTime.getTime() + (interviewData?.interviewRound?.duration || 30) * 60000);
+
+// Status calculation
+const getStatus = () => {
+  if (!startTime || !endTime) return "Unknown";
+  if (currentTime < startTime) return "Upcoming";
+  if (currentTime >= startTime && currentTime <= endTime) return "In Progress";
+  return "Completed";
+};
 
   // Timer updater
   useEffect(() => {
@@ -160,18 +201,18 @@ const InterviewActions = ({ interview, onActionComplete }) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 text-sm">
           <div>
             <p className="text-white text-opacity-80">Start Time</p>
             <p className="font-semibold">{startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
           </div>
           <div>
             <p className="text-white text-opacity-80">End Time</p>
-            <p className="font-semibold">{endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            <p className="font-semibold">{endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
           </div>
           <div>
             <p className="text-white text-opacity-80">Status</p>
-            <p className="font-semibold">In Progress</p>
+            <p className="font-semibold">{getStatus()}</p>
           </div>
         </div>
       </div>
@@ -180,7 +221,7 @@ const InterviewActions = ({ interview, onActionComplete }) => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-800">Available Actions</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           {/* Candidate Participation */}
           <ActionCard
             icon={CheckCircle}
