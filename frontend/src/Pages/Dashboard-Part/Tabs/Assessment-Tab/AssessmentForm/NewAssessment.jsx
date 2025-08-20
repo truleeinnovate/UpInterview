@@ -148,6 +148,7 @@ const NewAssessment = () => {
         (pos) => pos._id === assessment.Position
       );
       console.log("matchedPosition", matchedPosition);
+      console.log("Ass",assessment);
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",

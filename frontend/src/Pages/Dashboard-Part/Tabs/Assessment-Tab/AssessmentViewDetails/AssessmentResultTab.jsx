@@ -2,12 +2,13 @@
 // v1.0.1  -  Ashraf  -  displaying more fileds in result
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { ChevronUpIcon, ChevronDownIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import ScheduledAssessmentResultView from './ScheduledAssessmentResultView';
 import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
 
 function AssessmentResultsTab({ assessment, toggleStates, toggleArrow1, isFullscreen, assessmentQuestions }) {
   const [results, setResults] = useState([]);
+  //console.log("result",results)
   const [loading, setLoading] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -27,7 +28,7 @@ useEffect(() => {
   if (assessment._id) {
     getResults();
   }
-}, [assessment._id]);
+}, []);
 
   const toggleSchedule = (index) => {
     toggleArrow1(index);
@@ -131,9 +132,15 @@ useEffect(() => {
                   <div className="flex items-center mt-2 space-x-4">
                     <span className="text-sm text-gray-600">
                       <span className="font-medium">Expiry:</span>{' '}
-                      {isValidDate(schedule.expiryAt)
-                        ? format(new Date(schedule.expiryAt), 'MMM dd, yyyy')
-                        : 'N/A'}
+                      {(() => {
+                        const candidates = schedule.candidates || [];
+                        const validDates = candidates
+                          .filter(c => isValidDate(c.expiryAt))
+                          .map(c => new Date(c.expiryAt));
+                        return validDates.length > 0
+                          ? format(new Date(Math.min(...validDates)), 'MMM dd, yyyy')
+                          : 'N/A';
+                      })()}
                     </span>
                     <span
                       className={`px-2.5 py-1 text-xs font-medium rounded-full ${
