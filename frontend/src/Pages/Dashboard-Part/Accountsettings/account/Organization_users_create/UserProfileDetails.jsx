@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Removed border left and set outline as none
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -226,7 +227,9 @@ const UserProfileDetails = ({ type }) => {
   };
 
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200",
+    // v1.0.0 <--------------------------------------------------
+    "fixed bg-white shadow-2xl outline-none",
+    // v1.0.0 -------------------------------------------------->
     {
       "overflow-y-auto": !isModalOpen,
       "overflow-hidden": isModalOpen,

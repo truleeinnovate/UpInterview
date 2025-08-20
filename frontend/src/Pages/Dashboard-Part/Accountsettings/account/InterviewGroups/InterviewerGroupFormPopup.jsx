@@ -1,5 +1,6 @@
 // v.0.0.1  changes made in interviwers getting data and creating groups and editing groups view group data
 // v.0.0.2 - Venkatesh---  add error msg scroll
+// v1.0.2 - Ashok - Removed border left and set outline as none and improved some styles
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -118,11 +119,11 @@ const InterviewerGroupFormPopup = () => {
 
   //<-----v1.0.2------
   const fieldRefs = {
-        name: useRef(null),
-        description: useRef(null),
-        status: useRef(null),
-        members: useRef(null),
-        };
+    name: useRef(null),
+    description: useRef(null),
+    status: useRef(null),
+    members: useRef(null),
+  };
   //-----v1.0.2------>
 
   const handleSubmit = async (e) => {
@@ -132,7 +133,7 @@ const InterviewerGroupFormPopup = () => {
     setFormErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      scrollToFirstError(errors, fieldRefs )//<-----v1.0.2------
+      scrollToFirstError(errors, fieldRefs); //<-----v1.0.2------
       return;
     }
 
@@ -173,7 +174,6 @@ const InterviewerGroupFormPopup = () => {
         : [...(prev.members || []), memberId], // Handle case where members is undefined
     }));
   };
-
 
   //     const handleSubmit = async (e) => {
   //       e.preventDefault();
@@ -219,7 +219,9 @@ const InterviewerGroupFormPopup = () => {
   // }
 
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
+    // v1.0.3 <---------------------------------------------------------------
+    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
+    // v1.0.2 --------------------------------------------------------------->
     {
       "inset-0": isFullScreen,
       "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
@@ -281,7 +283,7 @@ const InterviewerGroupFormPopup = () => {
                   <input
                     type="text"
                     placeholder="Enter Group Name"
-                    ref={fieldRefs.name}//<-----v1.0.2------
+                    ref={fieldRefs.name} //<-----v1.0.2------
                     value={formData.name}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, name: e.target.value }))
@@ -299,7 +301,7 @@ const InterviewerGroupFormPopup = () => {
                   </label>
                   <textarea
                     placeholder="Write a description of the group"
-                    ref={fieldRefs.description}//<-----v1.0.2------
+                    ref={fieldRefs.description} //<-----v1.0.2------
                     value={formData.description}
                     onChange={(e) =>
                       setFormData((prev) => ({
@@ -323,7 +325,7 @@ const InterviewerGroupFormPopup = () => {
                   </label>
                   <select
                     value={formData.status}
-                    ref={fieldRefs.status}//<-----v1.0.2------
+                    ref={fieldRefs.status} //<-----v1.0.2------
                     placeholder="Select Status"
                     onChange={(e) =>
                       setFormData((prev) => ({
@@ -346,16 +348,16 @@ const InterviewerGroupFormPopup = () => {
                 Select Members <span className="text-red-500">*</span>
               </h3>
               <div className="space-y-2">
-                {/* <div className=""> */}
                 {formErrors.members && (
                   <p className="text-red-500 text-sm mt-2">
                     {formErrors.members}
                   </p>
                 )}
                 <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50 ">
-                      <tr>
+                  {/* v1.0.3 <-------------------------------------------------------------------- */}
+                  {/* <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr className="bg-gray-50">
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Select
                         </th>
@@ -365,12 +367,6 @@ const InterviewerGroupFormPopup = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Role
                         </th>
-                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Expertise
-                        </th> */}
-                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rating
-                    </th> */}
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y  divide-gray-200">
@@ -412,16 +408,8 @@ const InterviewerGroupFormPopup = () => {
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex flex-wrap gap-1">
-                                {/* {member.expertise.map((skill, index) => (
-                            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                              {skill || "N/A"}
-                            </span>
-                          ))} */}
                               </div>
                             </td>
-                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {member.rating || "N/A"}
-                      </td> */}
                           </tr>
                         ))
                       ) : (
@@ -430,7 +418,70 @@ const InterviewerGroupFormPopup = () => {
                         </p>
                       )}
                     </tbody>
+                  </table> */}
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Select
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Role
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {users.length > 0 ? (
+                        users.map((member) => (
+                          <tr key={member._id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={formData.members.includes(
+                                  member?.contact?._id
+                                )}
+                                onChange={() =>
+                                  handleMemberToggle(member?.contact?._id)
+                                }
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="font-medium text-gray-900">
+                                  {member?.contact?.firstName ||
+                                  member?.contact?.lastName
+                                    ? `${member?.contact?.firstName || ""} ${
+                                        member?.contact?.lastName || ""
+                                      }`
+                                    : "Not Provided"}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {member?.contact?.email || "Not Provided"}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {member?.roleLabel || "Not Provided"}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="3"
+                            className="px-6 py-4 text-center text-gray-500"
+                          >
+                            No Interviewers Found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
                   </table>
+                  {/* v1.0.3 --------------------------------------------------------------------> */}
                 </div>
               </div>
             </div>
