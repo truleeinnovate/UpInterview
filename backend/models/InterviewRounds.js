@@ -1,3 +1,5 @@
+// v1.0.0  -  mansoor  -  added total statuses to the enum
+
 // const mongoose = require('mongoose');
 
 // const interviewRoundsSchema = new mongoose.Schema({
@@ -52,7 +54,24 @@ const interviewRoundSchema = new mongoose.Schema({
     interviewers: [
         { type: mongoose.Schema.Types.ObjectId, ref: 'Contacts' }
     ],
-    status:  { type: String }, // draft - if accept - scheduled, if request sent then (request sent)
+    // <------------------------ v1.0.0
+    status: {
+        type: String,
+        enum: [
+            "Draft",
+            "Request Sent",
+            "Scheduled",
+            "Rescheduled",
+            "Completed",
+            "Cancelled",
+            "Rejected",
+            "Selected",
+            "Interview_Completed",
+            "Feedback_Submitted"
+        ],
+        default: "Draft"
+    },
+    // v1.0.0------------------------->
     meetingId: String,
             meetLink: {
             type: [{

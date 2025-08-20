@@ -32,7 +32,7 @@ const InterviewTemplateSchema = new mongoose.Schema(
         //     questionId: { type: String },
         //     snapshot: [{ type: mongoose.Schema.Types.Mixed, required: true }]
         // }],
-         interviewerViewType:{ type: String }, // group or individual
+        interviewerViewType: { type: String }, // group or individual
         duration: { type: String }, // Changed to String and made optional
         instructions: { type: String }, // Special notes for the round
         interviewMode: { type: String }, // Made optional
@@ -40,8 +40,8 @@ const InterviewTemplateSchema = new mongoose.Schema(
         selectedInterviewers: [{ type: String }], // Made array items optional
         interviewerType: { type: String }, // Made optional
         selectedInterviewersType: { type: String }, // user or group
-         interviewerViewType:{ type: String },  // 
-         interviewerGroupName:{type:String}, // group name
+        interviewerViewType: { type: String },  // 
+        interviewerGroupName: { type: String }, // group name
         // interviewerGroupId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewerGroup' },
         //   internalInterviewers: [
         //         mongoose.Schema.Types.ObjectId,
@@ -67,6 +67,8 @@ const InterviewTemplateSchema = new mongoose.Schema(
         ],
       },
     ],
+    roundsModified: { type: Boolean, default: false },
+    isSaved: { type: Boolean, default: false },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     ownerId: String,

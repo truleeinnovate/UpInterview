@@ -143,7 +143,7 @@ const RoundFormInterviews = () => {
   const [roundTitle, setRoundTitle] = useState("");
   const [customRoundTitle, setCustomRoundTitle] = useState("");
   const [interviewMode, setInterviewMode] = useState("");
-  const [status, setStatus] = useState("Pending");
+  const [status, setStatus] = useState("Draft");
   const [instructions, setInstructions] = useState("");
   const [sequence, setSequence] = useState(1);
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] =
@@ -175,6 +175,15 @@ const RoundFormInterviews = () => {
   console.log("internalInterviewers", internalInterviewers);
   console.log("interviewerViewType", interviewerViewType);
   console.log("interviewerGroupName", interviewerGroupName);
+
+
+  useEffect(() => {
+  if (selectedInterviewType === "External" && externalInterviewers.length > 0) {
+    setStatus("Request Sent");
+  } else if (selectedInterviewType !== "External") {
+    setStatus("Draft");
+  }
+}, [selectedInterviewType, externalInterviewers]);
 
 
   //<-----v1.0.4----
@@ -419,7 +428,6 @@ const RoundFormInterviews = () => {
       setInstructions("");
       setInstructions("");
       setInterviewMode("");
-      setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
       setDuration(60);
@@ -435,7 +443,7 @@ const RoundFormInterviews = () => {
       setCustomRoundTitle("");
       setInstructions("");
       setInterviewMode("");
-      setStatus("Pending");
+      // setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
       setDuration(60);
@@ -459,7 +467,7 @@ const RoundFormInterviews = () => {
 
       setInterviewerGroupName("");
       setInterviewerViewType("");
-      setStatus("Pending");
+      // setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
       setDuration(60);
@@ -473,7 +481,7 @@ const RoundFormInterviews = () => {
       setInstructions("");
       setInstructions("");
       setInterviewMode("");
-      setStatus("Pending");
+      // setStatus("Pending");
       setInterviewType("instant");
       setScheduledDate("");
       setDuration(60);
