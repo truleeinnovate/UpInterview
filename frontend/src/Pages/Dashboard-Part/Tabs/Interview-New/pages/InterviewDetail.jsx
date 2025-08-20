@@ -161,7 +161,7 @@ const InterviewDetail = () => {
 
       // Set the active round to the first non-completed round
       const nextRound = rounds
-        .filter((round) => [ "Scheduled"].includes(round.status))
+        .filter((round) => ["Scheduled"].includes(round.status))
         .sort((a, b) => a.sequence - b.sequence)[0];
 
       if (nextRound) {
@@ -368,7 +368,7 @@ const InterviewDetail = () => {
   };
 
   const pendingRounds = rounds?.filter((round) =>
-    [ "Scheduled"].includes(round.status)
+    ["Scheduled"].includes(round.status)
   );
 
   const handleViewEntityDetails = (entity, type, viewType = "sidebar") => {
@@ -551,10 +551,11 @@ const InterviewDetail = () => {
                   </dt>
                   <dd className="mt-1 text-sm text-gray-900">
                     <div className="font-medium">
-                      {template?.templateName
-                        ? template.templateName.charAt(0).toUpperCase() +
-                        template.templateName.slice(1)
-                        : "Not selected any template"}
+                      {position?.roundsModified
+                        ? "Selected Custom round"
+                        : template?.templateName
+                          ? template.templateName.charAt(0).toUpperCase() + template.templateName.slice(1)
+                          : "Not selected any template"}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {template && (

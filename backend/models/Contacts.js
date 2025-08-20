@@ -161,10 +161,16 @@ const ContactsSchema = new mongoose.Schema(
     professionalTitle: String,
     bio: String,
     InterviewFormatWeOffer: [String],
-    NoShowPolicy: String,
+    mock_interview_discount: { type: String },
+    isMockInterviewSelected: { type: Boolean },
+    NoShowPolicy: { type: String },
     PreviousExperienceConductingInterviews: String,
     PreviousExperienceConductingInterviewsYears: String,
-    ExpertiseLevel_ConductingInterviews: String,
+    // ExpertiseLevel_ConductingInterviews: String,
+        junior_rate: { type: Number },
+    mid_rate: { type: Number },
+    senior_rate: { type: Number },
+    lead_rate: { type: Number },
     expectedRatePerMockInterview: String, //newly added  Ranjith
     technologies: [String],
     isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly

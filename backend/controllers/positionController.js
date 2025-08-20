@@ -817,6 +817,9 @@ const saveInterviewRoundPosition = async (req, res) => {
       // Reorder sequences
       reorderInterviewRounds(position);
 
+       // Set roundsModified to true
+      position.roundsModified = true;
+
       await position.save();
 
       return res.status(200).json({
@@ -837,6 +840,9 @@ const saveInterviewRoundPosition = async (req, res) => {
       position.rounds.splice(newIndex, 0, newRound);
 
       reorderInterviewRounds(position);
+
+        // Set roundsModified to true
+      position.roundsModified = true;
 
       await position.save();
 
