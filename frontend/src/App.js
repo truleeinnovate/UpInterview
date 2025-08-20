@@ -5,10 +5,11 @@
 // v1.0.4 - Ashraf - added token expire then clearing cookies  and navigating correctly
 // v1.0.5 - Mansoor - Added custom video call application routes
 
-// v1.0.6 - Mansoor - removed the navbar in the login pages 
+// v1.0.6 - Mansoor - removed the navbar in the login pages
 
-// v1.0.5 - Ashok - Added Analytics related pages 
+// v1.0.5 - Ashok - Added Analytics related pages
 // v1.0.6 - Ashok - Added SettingsIntegrations page
+// v1.0.7 - Ashok - Added InterviewerRates and Interviewers pages in super Admin
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -18,10 +19,12 @@ import CombinedNavbar from "./Components/Navbar/CombinedNavbar";
 import Logo from "./Pages/Login-Part/Logo";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
-import AuthCookieManager, { getAuthToken } from "./utils/AuthCookieManager/AuthCookieManager";
+import AuthCookieManager, {
+  getAuthToken,
+} from "./utils/AuthCookieManager/AuthCookieManager";
 import {
   usePermissions,
-  PermissionsProvider, 
+  PermissionsProvider,
 } from "./Context/PermissionsContext";
 import { CustomProvider } from "./Context/Contextfetch";
 import PageSetter from "./Components/PageSetter";
@@ -43,11 +46,6 @@ import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upi
 // import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
 import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
 import { config } from "./config.js";
-
-
-
-
-
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
@@ -78,11 +76,14 @@ const SubscriptionCardDetails = lazy(() =>
 const ForgetPassword = lazy(() => import("./Pages/Login-Part/ForgetPassword"));
 const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
 
-
 // <------------------------------- v1.0.5
 //  Video Call Application Components
-const VideoCallLanding = lazy(() => import("./Pages/CustomVideoCall/Landing.jsx"));
-const VideoCallJoinRoom = lazy(() => import("./Pages/CustomVideoCall/JoinRoom.jsx"));
+const VideoCallLanding = lazy(() =>
+  import("./Pages/CustomVideoCall/Landing.jsx")
+);
+const VideoCallJoinRoom = lazy(() =>
+  import("./Pages/CustomVideoCall/JoinRoom.jsx")
+);
 const VideoCallRoom = lazy(() => import("./Pages/CustomVideoCall/Room.jsx"));
 // v1.0.5 ------------------------------>
 
@@ -324,7 +325,9 @@ const HrmsAtsApi = lazy(() =>
 );
 // v1.0.6 <-----------------------------------------------------------------------------
 const SettingsIntegrations = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/WebHooks/MainContent.jsx")
+  import(
+    "./Pages/Dashboard-Part/Accountsettings/account/WebHooks/MainContent.jsx"
+  )
 );
 // v1.0.6 ----------------------------------------------------------------------------->
 const InterviewTemplates = lazy(() =>
@@ -360,19 +363,17 @@ const Task = lazy(() =>
 const VerifyEmail = lazy(() => import("./VerifyWorkEmail.jsx"));
 
 // v1.0.5 <--------------------------------------------------------------------------------
-const AnalyticsLayout = lazy(() => 
-  import("./Components/Analytics/Layout.jsx")
-);
-const AnalyticsDashboard = lazy(() => 
+const AnalyticsLayout = lazy(() => import("./Components/Analytics/Layout.jsx"));
+const AnalyticsDashboard = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Analytics/Dashboard.jsx")
 );
-const AnalyticsReports = lazy(() => 
+const AnalyticsReports = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Analytics/Reports.jsx")
 );
-const AnalyticsReportDetail= lazy(() => 
+const AnalyticsReportDetail = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Analytics/ReportDetail.jsx")
 );
-const AnalyticsTrends = lazy(() => 
+const AnalyticsTrends = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Analytics/Trends.jsx")
 );
 // v1.0.5 -------------------------------------------------------------------------------->
@@ -437,6 +438,15 @@ const ContactProfileDetails = lazy(() =>
     "./Components/SuperAdminComponents/TenantDetails/Contact/ContactProfileDetails.jsx"
   )
 );
+
+// v1.0.7 <-------------------------------------------------------------------------------
+const InterviewerRatesPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InterviewerRates/InterviewerRatesPage.jsx")
+);
+const Interviewers = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Interviewers/Interviewers.jsx")
+);
+// v1.0.7 ------------------------------------------------------------------------------->
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
@@ -513,11 +523,9 @@ const MainAppRoutes = ({
             />
             <Route path="/callback" element={<LinkedInCallback />} />
             <Route path="/oauth2callback" element={<OAuthCallback />} />
-            <Route path='/join-meeting' element={<JoinMeeting />} />
-           
+            <Route path="/join-meeting" element={<JoinMeeting />} />
 
             {/* <Route path ='/join-meeting' element={<VideoCAllActionButtons />} /> */}
-
 
             <Route
               path="/payment-details"
@@ -553,8 +561,14 @@ const MainAppRoutes = ({
             {/* Video Call Public Routes */}
             <Route path="/video-call" element={<VideoCallLanding />} />
             <Route path="/video-call/join" element={<VideoCallJoinRoom />} />
-            <Route path="/video-call/join/:roomID" element={<VideoCallJoinRoom />} />
-            <Route path="/video-call/room/:roomID/:userName" element={<VideoCallRoom />} />
+            <Route
+              path="/video-call/join/:roomID"
+              element={<VideoCallJoinRoom />}
+            />
+            <Route
+              path="/video-call/room/:roomID/:userName"
+              element={<VideoCallRoom />}
+            />
             {/* v1.0.5 ------------------------------> */}
 
             {/* Protected Routes */}
@@ -809,8 +823,6 @@ const MainAppRoutes = ({
                 </Route>
               )}
 
-
-
               {/* Account Settings Routes from effective user */}
 
               <Route
@@ -972,7 +984,10 @@ const MainAppRoutes = ({
                 <Route path="webhooks" element={<Webhooks />} />
                 <Route path="hrms-ats" element={<HrmsAtsApi />} />
                 {/* v1.0.6 <----------------------------------------------------------------------------- */}
-                <Route path="hrms-ats-integrations-hub" element={<SettingsIntegrations />} />
+                <Route
+                  path="hrms-ats-integrations-hub"
+                  element={<SettingsIntegrations />}
+                />
                 {/* v1.0.6 -----------------------------------------------------------------------------> */}
               </Route>
 
@@ -1024,13 +1039,24 @@ const MainAppRoutes = ({
               {hasPermission("Feedback") && (
                 <>
                   <Route path="/feedback" element={<FeedbackTab />} />
-                  <Route path="/feedback/view/:id" element={<><FeedbackFormModel /> <FeedbackTab /></>} />
-                  <Route path="/feedback/edit/:id" element={<><FeedbackFormModel /> <FeedbackTab /></>} />
-
+                  <Route
+                    path="/feedback/view/:id"
+                    element={
+                      <>
+                        <FeedbackFormModel /> <FeedbackTab />
+                      </>
+                    }
+                  />
+                  <Route
+                    path="/feedback/edit/:id"
+                    element={
+                      <>
+                        <FeedbackFormModel /> <FeedbackTab />
+                      </>
+                    }
+                  />
                 </>
               )}
-
-
 
               {/* Support Desk Admin*/}
               {hasPermission("SupportDesk") && (
@@ -1085,20 +1111,23 @@ const MainAppRoutes = ({
               {/* v1.0.6 <--------------------------------------------------------------------------- */}
               {hasPermission("Analytics") && (
                 <>
-                <Route path="/analytics" element={<AnalyticsLayout />}>
-                  {hasPermission("Analytics") && (
-                    <Route index element={<AnalyticsDashboard />} />
-                  )}
-                  {hasPermission("Analytics") && (
-                    <Route path="reports" element={<AnalyticsReports />} />
-                  )}
-                  {hasPermission("Analytics") && (
-                    <Route path="reports/:reportId" element={<AnalyticsReportDetail />} />
-                  )}
-                  {hasPermission("Analytics") && (
-                    <Route path="trends" element={<AnalyticsTrends />} />
-                  )}
-                </Route>
+                  <Route path="/analytics" element={<AnalyticsLayout />}>
+                    {hasPermission("Analytics") && (
+                      <Route index element={<AnalyticsDashboard />} />
+                    )}
+                    {hasPermission("Analytics") && (
+                      <Route path="reports" element={<AnalyticsReports />} />
+                    )}
+                    {hasPermission("Analytics") && (
+                      <Route
+                        path="reports/:reportId"
+                        element={<AnalyticsReportDetail />}
+                      />
+                    )}
+                    {hasPermission("Analytics") && (
+                      <Route path="trends" element={<AnalyticsTrends />} />
+                    )}
+                  </Route>
                 </>
               )}
               {/* v1.0.6 <--------------------------------------------------------------------------- */}
@@ -1244,6 +1273,10 @@ const MainAppRoutes = ({
                 path="/admin-dashboard"
                 element={<SuperAdminDashboard />}
               />
+              {/* v1.0.7 <--------------------------------------------------------------- */}
+              <Route path="/interviewer-rates" element={<InterviewerRatesPage />} />
+              <Route path="/interviewers" element={<Interviewers />} />
+              {/* v1.0.7 ---------------------------------------------------------------> */}
             </Route>
           </Routes>
         )}
@@ -1253,11 +1286,22 @@ const MainAppRoutes = ({
 };
 
 const App = () => {
-
-  console.log('1 config.REACT_APP_GOOGLE_AUTH_URL', config.REACT_APP_GOOGLE_AUTH_URL);
-  console.log('2 config.REACT_APP_GOOGLE_CLIENT_ID', config.REACT_APP_GOOGLE_CLIENT_ID);
-  console.log('3 config.REACT_APP_GOOGLE_REDIRECT_URI', config.REACT_APP_GOOGLE_REDIRECT_URI);
-  console.log('4 config.REACT_APP_GOOGLE_SCOPES', config.REACT_APP_GOOGLE_SCOPES);
+  console.log(
+    "1 config.REACT_APP_GOOGLE_AUTH_URL",
+    config.REACT_APP_GOOGLE_AUTH_URL
+  );
+  console.log(
+    "2 config.REACT_APP_GOOGLE_CLIENT_ID",
+    config.REACT_APP_GOOGLE_CLIENT_ID
+  );
+  console.log(
+    "3 config.REACT_APP_GOOGLE_REDIRECT_URI",
+    config.REACT_APP_GOOGLE_REDIRECT_URI
+  );
+  console.log(
+    "4 config.REACT_APP_GOOGLE_SCOPES",
+    config.REACT_APP_GOOGLE_SCOPES
+  );
 
   const location = useLocation();
   // <---------------------- v1.0.4
@@ -1266,7 +1310,6 @@ const App = () => {
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
   const [sessionExpired, setSessionExpired] = useState(false);
-
 
   // <----------------v1.0.6
   const showLogoPaths = useMemo(
@@ -1317,7 +1360,7 @@ const App = () => {
   useEffect(() => {
     if (authToken && !hasValidCachedPermissions()) {
       // <--------------------- v1.0.0
-      preloadPermissions().catch(() => { });
+      preloadPermissions().catch(() => {});
       // v1.0.0 --------------------->
     }
 
@@ -1332,11 +1375,11 @@ const App = () => {
 
     // Check browser permissions and capabilities
     const browserPermissions = AuthCookieManager.checkBrowserPermissions();
-    console.log('Browser permissions check:', browserPermissions);
+    console.log("Browser permissions check:", browserPermissions);
 
     // Detect new browser context
     if (AuthCookieManager.isNewBrowserContext()) {
-      console.log('New browser context detected - syncing auth state');
+      console.log("New browser context detected - syncing auth state");
       AuthCookieManager.syncAuthAcrossTabs();
     }
 
@@ -1347,20 +1390,20 @@ const App = () => {
         try {
           await AuthCookieManager.requestNotificationPermission();
         } catch (error) {
-          console.warn('Failed to request notification permission:', error);
+          console.warn("Failed to request notification permission:", error);
         }
       }, 2000); // Wait 2 seconds after app loads
     }
 
     // Listen for token expiration events
     const handleTokenExpired = async (event) => {
-      console.log('Token expired event received:', event.detail);
+      console.log("Token expired event received:", event.detail);
 
       // Use the dedicated token expiration handler
       await AuthCookieManager.handleTokenExpiration();
     };
 
-    window.addEventListener('tokenExpired', handleTokenExpired);
+    window.addEventListener("tokenExpired", handleTokenExpired);
 
     // Start token validation if user is authenticated
     let tokenValidationCleanup = null;
@@ -1375,7 +1418,7 @@ const App = () => {
       if (tokenValidationCleanup) {
         tokenValidationCleanup();
       }
-      window.removeEventListener('tokenExpired', handleTokenExpired);
+      window.removeEventListener("tokenExpired", handleTokenExpired);
     };
   }, [authToken]); // Only run when authToken changes (login/logout)
   // ---------------------- v1.0.4 >

@@ -1,5 +1,5 @@
 // v1.0.0 - Ashok - Disabled outer scrollbar when popup is open for better user experience
-
+// v1.0.1 - Ashok - Removed border left and set outline as none for better UI
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -67,7 +67,9 @@ const UserInvoiceDetails = () => {
   }
 
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
+    // v1.0.1 <-----------------------------------------------------
+    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
+    // v1.0.1 ----------------------------------------------------->
     {
       "inset-0": isFullScreen,
       "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,

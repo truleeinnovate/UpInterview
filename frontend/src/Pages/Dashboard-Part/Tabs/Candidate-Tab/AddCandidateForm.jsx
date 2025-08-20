@@ -6,7 +6,7 @@
 // v1.0.2 - Ashok - disabled the scroll conditionally based on the isModalOpen state and added scroll to top logic after form submission
 // v1.0.3 - Ashok - Added navigating to invalid fields after form submission and removed form outline
 // v1.0.4 - Ashok - improved outline and border when errors in fields
-
+// v1.0.5 - Ashok - Fixed style issues
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect, forwardRef } from "react";
 import Modal from "react-modal";
@@ -1591,13 +1591,14 @@ const AddCandidateForm = ({
                 {/* Current Role */}
 
                 <div ref={currentRoleDropdownRef}>
+                  {/* v1.0.5 <-------------------------------------------------------- */}
                   <label
                     htmlFor="CurrentRole"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Current Role
-                    <span className="text-red-500">*</span>
+                    Current Role <span className="text-red-500">*</span>
                   </label>
+                  {/* v1.0.5 --------------------------------------------------------> */}
                   <div className="relative">
                     <input
                       // v1.0.3 <--------------------------------------------------------

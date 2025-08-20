@@ -4,6 +4,9 @@
 // v1.0.3  -  Ashraf  -  updated loading tabs issue
 // v1.0.4  -  Ashok   -  changed tab name from "Integrations" to "Integration Logs" in super admin navbar
 // v1.0.5  -  Ashraf  -  using authcookie manager to get current tokein 
+/* v1.0.6  -  Ashok   -  Added new Tab names "Interviewer Rates" and "Interviewers" under More at Super Admin
+                         and improved active name borders under tab names in both nav bars */
+
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
@@ -341,6 +344,18 @@ const CombinedNavbar = () => {
           permissionKey: "IntegrationLogs.ViewTab",
         },
         // v1.0.4 ----------------------------------------------------->
+        // v1.0.6 <---------------------------------------------------------
+        {
+          path: "/interviewer-rates",
+          label: "Interviewer Rates",
+          // permissionKey: "InterviewerRates.ViewTab",
+        },
+        {
+          path: "/interviewers",
+          label: "Interviewers",
+          // permissionKey: "Interviewers.ViewTab",
+        },
+        // v1.0.6 --------------------------------------------------------->
       ];
     } else {
       return [
@@ -687,7 +702,9 @@ const CombinedNavbar = () => {
                       >
                         Tenants
                         {isActive("/tenants") && (
-                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-0 left-0 right-0 h-[1px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 <---------------------------------------------------------------------------------------------------------
+                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 --------------------------------------------------------------------------------------------------------->
                         )}
                       </NavLink>
                     )}
@@ -703,7 +720,9 @@ const CombinedNavbar = () => {
                       >
                         Interviewer Requests
                         {isActive("/interviewer-requests") && (
-                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-0 left-0 right-0 h-[1px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 <---------------------------------------------------------------------------------------------------------
+                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 --------------------------------------------------------------------------------------------------------->
                         )}
                       </NavLink>
                     )}
@@ -719,7 +738,9 @@ const CombinedNavbar = () => {
                       >
                         Outsource Interviewers
                         {isActive("/outsource-interviewers") && (
-                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-0 left-0 right-0 h-[1px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 <---------------------------------------------------------------------------------------------------------
+                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 --------------------------------------------------------------------------------------------------------->
                         )}
                       </NavLink>
                     )}
@@ -735,7 +756,9 @@ const CombinedNavbar = () => {
                       >
                         Support Desk
                         {isActive("/support-desk") && (
-                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-0 left-0 right-0 h-[1px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 <---------------------------------------------------------------------------------------------------------
+                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 --------------------------------------------------------------------------------------------------------->
                         )}
                       </NavLink>
                     )}
@@ -751,7 +774,9 @@ const CombinedNavbar = () => {
                       >
                         Billing
                         {isActive("/admin-billing") && (
-                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-0 left-0 right-0 h-[1px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 <---------------------------------------------------------------------------------------------------------
+                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 --------------------------------------------------------------------------------------------------------->
                         )}
                       </NavLink>
                     )}
@@ -775,12 +800,16 @@ const CombinedNavbar = () => {
                           dropdownState.moreDropdown ? <IoIosArrowUp /> : <IoIosArrowDown />
                         )}
                         {getMoreDropdownItems().some((item) => isActive(item.path)) && (
-                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-0 left-0 right-0 h-[1px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 <---------------------------------------------------------------------------------------------------------
+                          <div className={`absolute ${userType === 'superAdmin' ? 'bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue' : 'bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue'}`}></div>
+                          // v1.0.6 --------------------------------------------------------------------------------------------------------->
                         )}
                       </button>
 
                       {dropdownState.moreDropdown && (
-                        <div className={`absolute ${userType === 'superAdmin' ? 'left-0 top-10 z-50 w-max bg-white rounded-md shadow-lg border transform transition-all duration-300 ease-in-out origin-top' : 'top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border'}`}>
+                        // v1.0.6 <-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                        <div className={`absolute ${userType === 'superAdmin' ? 'left-0 top-10 z-50 w-52 bg-white rounded-md shadow-lg border ring-black transform transition-all duration-300 ease-in-out origin-top p-2 pr-6' : 'top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border'}`}> 
+                        {/* // v1.0.6 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------> */}
                           <div className={userType === 'superAdmin' ? 'flex flex-col min-w-[150px]' : 'space-y-1'}>
                             {getMoreDropdownItems().map(({ path, label }) => (
                               <NavLink
@@ -788,7 +817,7 @@ const CombinedNavbar = () => {
                                 to={path}
                                 className={`${userType === 'superAdmin' ? 'h-[42px] flex items-center px-4 relative' : 'block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md'} ${isActive(path)
                                   ? userType === 'superAdmin' ? "text-custom-blue font-bold" : "bg-gray-100 text-custom-blue"
-                                  : userType === 'superAdmin' ? "text-gray-600 hover:text-custom-blue" : ""
+                                  : userType === 'superAdmin' ? "text-gray-700 hover:text-custom-blue" : ""
                                   }`}
                                 onClick={closeAllDropdowns}
                               >
@@ -816,7 +845,9 @@ const CombinedNavbar = () => {
                       >
                         Candidates
                         {isActive("/candidate") && (
-                          <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          // v1.0.6 <----------------------------------------------------------------------------
+                          <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          // v1.0.6 ---------------------------------------------------------------------------->
                         )}
                       </NavLink>
                     )}
@@ -832,7 +863,9 @@ const CombinedNavbar = () => {
                       >
                         Positions
                         {isActive("/position") && (
-                          <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          // v1.0.6 <----------------------------------------------------------------------------
+                          <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          // v1.0.6 ---------------------------------------------------------------------------->
                         )}
                       </NavLink>
                     )}
@@ -862,7 +895,9 @@ const CombinedNavbar = () => {
                             {(isActive("/interviewList") ||
                               isActive("/mockinterview") ||
                               isActive("/interview-templates")) && (
-                                <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                              // v1.0.6 <----------------------------------------------------------------------------
+                                <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                              // v1.0.6 ---------------------------------------------------------------------------->
                               )}
                           </button>
                           {dropdownState.interviewDropdown && (
@@ -929,7 +964,9 @@ const CombinedNavbar = () => {
                             )}
                             {(isActive("/assessments") ||
                               isActive("/assessments-template")) && (
-                                <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                              // v1.0.6 <----------------------------------------------------------------------------
+                                <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                              // v1.0.6 <----------------------------------------------------------------------------
                               )}
                           </button>
                           {dropdownState.assessmentDropdown && (
@@ -988,7 +1025,9 @@ const CombinedNavbar = () => {
                               isActive("/support-desk") ||
                               isActive("/feedback") ||
                               isActive("/questionBank")) && (
-                                <div className="absolute bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                                // v1.0.6 <----------------------------------------------------------------------------
+                                <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                                // v1.0.6 <----------------------------------------------------------------------------
                               )}
                           </button>
                           {dropdownState.moreDropdown && (

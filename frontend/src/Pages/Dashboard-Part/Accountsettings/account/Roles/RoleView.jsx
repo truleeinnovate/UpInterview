@@ -174,6 +174,7 @@
 
 // v1.0.0  -  Ashraf  -  displaying label.level UI changed
 // v1.0.1  -  Ashok   -  fixed expanded view
+// v1.0.2 - Ashok - Removed border left and set outline as none
 
 import { useState } from "react";
 import {
@@ -217,7 +218,9 @@ const RoleView = ({ type }) => {
     ) || [];
 
   const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
+    // v1.0.2 <-----------------------------------------------
+    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
+    // v1.0.2 ----------------------------------------------->
     {
       "top-0 left-0 right-0 bottom-0": isFullScreen,
       "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,

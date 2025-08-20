@@ -1,5 +1,6 @@
 //<-----v1.0.0-----Venkatesh---add scroll into view for error msg
 // v1.0.1 - Ashok - Added border and text color for cancel button
+// v1.0.2 - Ashok - Removed border left and set outline as none for modal
 
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom'
@@ -284,7 +285,9 @@ export function BankAccountsPopup({ onClose, onSave }) {
     };
   
     const modalClass = classNames(
-      'fixed bg-white shadow-2xl border-l border-gray-200',
+      // v1.0.2 <----------------------------------
+      'fixed bg-white shadow-2xl outline-none',
+      // v1.0.2 ---------------------------------->
       {
         'inset-0': isFullScreen,
         'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen

@@ -1,4 +1,5 @@
 //<-------v1.0.0--------Venkatesh-------feedback data fetching and display dynamically
+// v1.0.1 - Ashok - Improved Loading from animate-pulse to shimmer effect
 
 
 import React from 'react';
@@ -103,11 +104,18 @@ const FeedbackList = () => {
           </div>
         )}
         {isLoading ? (
+          // v1.0.1 <------------------------------------------------------------------
+          // <div className="space-y-4">
+          //   <div className="h-28 bg-gray-100 rounded-xl animate-pulse" />
+          //   <div className="h-28 bg-gray-100 rounded-xl animate-pulse" />
+          //   <div className="h-28 bg-gray-100 rounded-xl animate-pulse" />
+          // </div>
           <div className="space-y-4">
-            <div className="h-28 bg-gray-100 rounded-xl animate-pulse" />
-            <div className="h-28 bg-gray-100 rounded-xl animate-pulse" />
-            <div className="h-28 bg-gray-100 rounded-xl animate-pulse" />
+            <div className="h-28 bg-gray-100 rounded-xl shimmer" />
+            <div className="h-28 bg-gray-100 rounded-xl shimmer" />
+            <div className="h-28 bg-gray-100 rounded-xl shimmer" />
           </div>
+          // v1.0.1 ------------------------------------------------------------------>
         ) : recentFeedbacks.length === 0 ? (
           <div className="text-sm text-gray-500">No feedback yet.</div>
         ) : (
