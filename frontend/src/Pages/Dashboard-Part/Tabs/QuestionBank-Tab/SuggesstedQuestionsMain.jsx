@@ -37,7 +37,7 @@ const SuggestedQuestionsComponent = ({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const itemsPerPage = 10;
   const [dropdownOpen, setDropdownOpen] = useState(null);
-  const [dropdownValue, setDropdownValue] = useState("Interviews");
+  const [dropdownValue, setDropdownValue] = useState("");
   const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
 
 
@@ -538,7 +538,7 @@ const SuggestedQuestionsComponent = ({
                 className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
                 onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
               >
-                <span className="truncate">{dropdownValue}</span>
+                <span className="truncate">{dropdownValue || "Select Question Type"}</span>
                 <svg
                   className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen ? "rotate-180" : "rotate-0"}`}
                   xmlns="http://www.w3.org/2000/svg"
@@ -552,16 +552,16 @@ const SuggestedQuestionsComponent = ({
               {isInterviewTypeOpen && (
                 <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
                   <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interviews" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Interviews"); setIsInterviewTypeOpen(false);}}
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interview Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
+                    onClick={() => {setDropdownValue("Interview Questions"); setIsInterviewTypeOpen(false);}}
                   >
-                    Interviews
+                    Interview Questions
                   </div>
                   <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignments" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Assignments"); setIsInterviewTypeOpen(false);}}
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignment Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
+                    onClick={() => {setDropdownValue("Assignment Questions"); setIsInterviewTypeOpen(false);}}
                   >
-                    Assignments
+                    Assignment Questions
                   </div>
                   
                 </div>

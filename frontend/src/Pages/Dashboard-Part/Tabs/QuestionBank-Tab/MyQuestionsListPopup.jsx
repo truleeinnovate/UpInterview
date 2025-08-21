@@ -52,7 +52,7 @@ const MyQuestionsList1 = forwardRef(
     const [selectedCandidates, setSelectedCandidates] = useState([]);
     // console.log('selectedCandidates ----------------',selectedCandidates)
     const [inputError, setInputError] = useState('');
-    const [dropdownValue, setDropdownValue] = useState('Interviews');//<----v1.0.2----
+    const [dropdownValue, setDropdownValue] = useState('');//<----v1.0.2----
 
     const authToken = Cookies.get('authToken');
     const tokenPayload = decodeJwt(authToken);
@@ -87,22 +87,22 @@ const MyQuestionsList1 = forwardRef(
         // Sync the Type dropdown with caller or existing list type (supports boolean or string)
         if (typeof defaultType !== 'undefined') {
           if (typeof defaultType === 'boolean') {
-            setDropdownValue(defaultType ? 'Interviews' : 'Assignments');
+            setDropdownValue(defaultType ? 'Interview Questions' : 'Assignment Questions');
           } else if (typeof defaultType === 'string') {
             const dt = defaultType.toLowerCase();
-            if (dt === 'true' || dt === 'interviews') setDropdownValue('Interviews');
-            else if (dt === 'false' || dt === 'assignments') setDropdownValue('Assignments');
-            else setDropdownValue('Interviews');
+            if (dt === 'true' || dt === 'interview questions') setDropdownValue('Interview Questions');
+            else if (dt === 'false' || dt === 'assignment questions') setDropdownValue('Assignment Questions');
+            else setDropdownValue('Interview Questions');
           }
         } else if (isEditingMode) {
           const existing = createdLists.find((l) => l._id === sectionId);
           if (existing && typeof existing.type !== 'undefined') {
             if (typeof existing.type === 'boolean') {
-              setDropdownValue(existing.type ? 'Interviews' : 'Assignments');
+              setDropdownValue(existing.type ? 'Interview Questions' : 'Assignment Questions');
             } else if (typeof existing.type === 'string') {
               const et = existing.type.toLowerCase();
-              if (et === 'true' || et === 'interviews') setDropdownValue('Interviews');
-              else if (et === 'false' || et === 'assignments') setDropdownValue('Assignments');
+              if (et === 'true' || et === 'interview questions') setDropdownValue('Interview Questions');
+              else if (et === 'false' || et === 'assignment questions') setDropdownValue('Assignment Questions');
             }
           }
         }
@@ -175,7 +175,7 @@ const MyQuestionsList1 = forwardRef(
           userId,
           orgId: tokenPayload?.tenantId,
           // Map selected label to boolean for backend: Interviews=true, Assignments=false
-          type: dropdownValue === 'Interviews',//<----v1.0.2----
+          type: dropdownValue === 'Interview Questions',//<----v1.0.2----
         });
 
         if (isEditing && result?.updated) {
@@ -582,11 +582,11 @@ const MyQuestionsList1 = forwardRef(
                   </label>
               <select
                 className="flex-1 border rounded-md p-2 pr-8 text-sm focus:outline-none cursor-pointer"
-                value={dropdownValue}
+                value={dropdownValue || "Select Question Type"}
                 onChange={(e) => setDropdownValue(e.target.value)}
               >
-                <option value="Interviews">Interviews</option>
-                <option value="Assignments">Assignments</option>
+                <option value="Interview Questions">Interview Questions</option>
+                <option value="Assignments Questions">Assignment Questions</option>
               </select>
             {/*----v1.0.2---->*/}
             </div>
