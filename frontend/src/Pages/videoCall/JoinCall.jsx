@@ -29,6 +29,7 @@ function JoinMeeting() {
   const [candidateDetails, setCandidateDetails] = useState(null);
   const [candidateLoading, setCandidateLoading] = useState(false);
   const [candidateError, setCandidateError] = useState(null);
+  console.log("candidateDetails currentRole", currentRole);
 
   const fetchCandidateDetails = async (roundId, retryCount = 0) => {
     if (!roundId) {
@@ -179,6 +180,7 @@ function JoinMeeting() {
     const isSchedule = schedule === 'true';
     const isCandidate = candidate === 'true';
     const isInterviewer = interviewer === 'true';
+    
 
     let decryptedMeeting = null;
     if (meeting) {
@@ -414,9 +416,15 @@ function JoinMeeting() {
     );
   }
 
-  if (currentRole === 'interviewer' || currentRole === 'scheduler') {
+
+
+  if (!currentRole && urlRoleInfo?.isInterviewer) {
+    return <RoleSelector onRoleSelect={setCurrentRole} roleInfo={urlRoleInfo} feedbackData={feedbackDatas} />;
+  }
+
+  if ( urlRoleInfo?.isInterviewer || currentRole === 'interviewer' || currentRole === 'scheduler') {
     return (
-      <>
+      <div className="h-screen flex flex-col overflow-hidden">
         <CombinedNavbar />
         <InterviewerView
           onBack={() => setCurrentRole(null)}
@@ -427,12 +435,8 @@ function JoinMeeting() {
           isScheduler={currentRole === 'scheduler'}
           schedulerFeedbackData={schedulerFeedbackData}
         />
-      </>
+      </div>
     );
-  }
-
-  if (!currentRole && urlRoleInfo?.isInterviewer) {
-    return <RoleSelector onRoleSelect={setCurrentRole} roleInfo={urlRoleInfo} feedbackData={feedbackDatas} />;
   }
 
   return (
