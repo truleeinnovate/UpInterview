@@ -61,20 +61,20 @@ const MyQuestionsList = ({
   const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
-  const [dropdownValue, setDropdownValue] = useState("Interviews");
+  const [dropdownValue, setDropdownValue] = useState("");
 
   //<----v1.0.4---
   // Map list type to display value
   const mapListTypeToDisplay = (type) => {
-    if (typeof type === 'boolean') return type ? 'Interviews' : 'Assignments';
+    if (typeof type === 'boolean') return type ? 'Interview Questions' : 'Assignment Questions';
     if (typeof type === 'string') {
       const t = type.toLowerCase();
-      if (t.includes('interview')) return 'Interviews';
-      if (t.includes('assignment')) return 'Assignments';
-      if (t === 'interviews') return 'Interviews';
-      if (t === 'assignments') return 'Assignments';
+      if (t.includes('interview questions')) return 'Interview Questions';
+      if (t.includes('assignment questions')) return 'Assignment Questions';
+      if (t === 'interview questions') return 'Interview Questions';
+      if (t === 'assignment questions') return 'Assignment Questions';
     }
-    return 'Interviews';
+    return 'Interview Questions';
   };
   //----v1.0.4--->
 
@@ -716,7 +716,7 @@ const MyQuestionsList = ({
                 className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
                 onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
               >
-                <span className="truncate">{dropdownValue}</span>
+                <span className="truncate">{dropdownValue || "Select Question Type"}</span>
                 <svg
                   className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen? "rotate-180" : "rotate-0"}`}
                   xmlns="http://www.w3.org/2000/svg"
@@ -730,16 +730,16 @@ const MyQuestionsList = ({
               {isInterviewTypeOpen && (
                 <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
                   <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interviews" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Interviews"); setIsInterviewTypeOpen(false);}}
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interview Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
+                    onClick={() => {setDropdownValue("Interview Questions"); setIsInterviewTypeOpen(false);}}
                   >
-                    Interviews
+                    Interview Questions
                   </div>
                   <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignments" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Assignments"); setIsInterviewTypeOpen(false);}}
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignment Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
+                    onClick={() => {setDropdownValue("Assignment Questions"); setIsInterviewTypeOpen(false);}}
                   >
-                    Assignments
+                    Assignment Questions
                   </div>
                   
                 </div>
@@ -1039,7 +1039,7 @@ const MyQuestionsList = ({
             onClose={closeSidebar}
             onOutsideClick={handleOutsideClick}
             selectedLabelId={selectedLabelId}
-            isInterviewType={dropdownValue === "Interviews"}//<----v1.0.3------
+            isInterviewType={dropdownValue === "Interview Questions"}//<----v1.0.3------
           />
         )}
       </div>
