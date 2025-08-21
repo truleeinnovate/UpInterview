@@ -2,8 +2,8 @@
 
 const CryptoJS = require('crypto-js');
 const { Interview } = require("../../models/Interview");
-const { InterviewRounds } = require("../../models/InterviewRounds");
-const { Candidate } = require("../../models/Candidate");
+const { InterviewRounds } = require("../../models/Interview/InterviewRounds.js");
+const { Candidate } = require("../../models/Candidate/candidate.js");
 const { Contacts } = require("../../models/Contacts");
 const emailTemplateModel = require("../../models/EmailTemplatemodel");
 const sendEmail = require('../../utils/sendEmail');

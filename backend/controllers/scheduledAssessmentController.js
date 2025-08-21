@@ -1,8 +1,8 @@
 // v1.0.0  -  Ashraf  -  fixed name schedule assessment to assessment schema
-const { CandidateAssessment } = require("../models/candidateAssessment");
+const { CandidateAssessment } = require("../models/Assessment/candidateAssessment");
 const Otp = require("../models/Otp");
 // <-------------------------------v1.0.0
-const scheduledAssessmentsSchema = require("../models/assessmentsSchema");
+const scheduledAssessmentsSchema = require("../models/Assessment/assessmentsSchema");
 // ------------------------------v1.0.0 >
 const mongoose = require("mongoose");
 

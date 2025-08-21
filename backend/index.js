@@ -510,11 +510,11 @@ app.use((err, req, res, next) => {
 
 
 // this is common code for datautils
-const { Candidate } = require("./models/candidate.js");
-const { Position } = require("./models/position.js");
+const { Candidate } = require("./models/Candidate/candidate.js");
+const { Position } = require("./models/Position/position.js");
 const TeamMember = require("./models/TeamMembers.js");
 // <-------------------------------v1.0.2
-const Assessment = require("./models/assessmentTemplates");
+const Assessment = require("./models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.2 >
 const { Interview } = require("./models/Interview.js");
 const { MockInterview } = require("./models/mockinterview.js");
@@ -891,7 +891,7 @@ const pushNotificationRoutes = require("./routes/pushNotificationRoutes");
 app.use("/", pushNotificationRoutes);
 
 const suggestedQuestionRouter = require("./routes/suggestedQuestionRoute.js");
-const interviewQuestions = require("./models/interviewQuestions.js");
+const interviewQuestions = require("./models/QuestionBank/interviewQuestions.js");
 app.use("/suggested-questions", suggestedQuestionRouter);
 
 const interviewQuestionsRoute = require("./routes/interviewQuestionsRoutes.js");

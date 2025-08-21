@@ -4,8 +4,8 @@
 const FeedbackModel = require('../models/feedback.js')
 const mongoose = require('mongoose'); // Import mongoose to use ObjectId
 
-const InterviewQuestions = require('../models/interviewQuestions.js');
-const { InterviewRounds } = require('../models/InterviewRounds.js');
+const InterviewQuestions = require('../models/Interview/selectedInterviewQuestion.js');
+const { InterviewRounds } = require('../models/Interview/InterviewRounds.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
 const { Contacts } = require('../models/Contacts.js');
 const { Interview } = require('../models/Interview.js');

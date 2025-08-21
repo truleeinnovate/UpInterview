@@ -1,4 +1,4 @@
-const QuestionbankFavList = require("../models/tenantQuestionsListNames.js");
+const QuestionbankFavList = require("../models/QuestionBank/tenantQuestionsListNames.js");
 const getList = async (req, res) => {
   const { userId } = req.params;
   const { tenantId, organization } = req.query; // Get these from query parameters

@@ -1,11 +1,11 @@
 // v1.0.0  -  Ashraf  -  fixed name  scheduleassessment to assessment schema,added extend,cancel,schedule status api code based on policy
-const { CandidateAssessment } = require("../models/candidateAssessment");
+const { CandidateAssessment } = require("../models/Assessment/candidateAssessment");
 const { generateOTP } = require('../utils/generateOtp')
 const Otp = require("../models/Otp");
 const mongoose = require('mongoose');
 const cron = require('node-cron');
 // <-------------------------------v1.0.0
-const ScheduleAssessment = require("../models/assessmentsSchema"); 
+const ScheduleAssessment = require("../models/Assessment/assessmentsSchema"); 
 // ------------------------------v1.0.0 >
 
 // exports.updateCandidateAssessment = async (req, res) => {

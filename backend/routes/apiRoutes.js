@@ -10,24 +10,24 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const { Candidate } = require('../models/Candidate');
+const { Candidate } = require('../models/Candidate/candidate.js');
 // <-------------------------------v1.0.6
-const Assessment = require("../models/assessmentTemplates");
+const Assessment = require("../models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.6 >
-const { Position } = require('../models/Position');
+const { Position } = require('../models/Position/position.js');
 const InterviewTemplate = require("../models/InterviewTemplate");
 const { Interview } = require('../models/Interview');
 // v1.0.5 <-----------------------------
 const { MockInterview } = require('../models/MockInterview');
 // v1.0.5-------------------------------->
 const { TenantQuestions } = require('../models/TenantQuestions');
-const TenantQuestionsListNames = require('../models/TenantQuestionsListNames');
-const { InterviewRounds } = require('../models/InterviewRounds');
-const InterviewQuestions = require('../models/interviewQuestions.js');
+const TenantQuestionsListNames = require('../models/QuestionBank/tenantQuestionsListNames.js');
+const { InterviewRounds } = require('../models/Interview/InterviewRounds.js');
+const InterviewQuestions = require('../models/Interview/selectedInterviewQuestion.js');
 const Users = require('../models/Users');
 const { permissionMiddleware } = require('../middleware/permissionMiddleware');
 // <-------------------------------v1.0.6
-const ScheduledAssessmentSchema = require('../models/assessmentsSchema');
+const ScheduledAssessmentSchema = require('../models/Assessment/assessmentsSchema.js');
 // ------------------------------v1.0.6 >
 // <-------------------------------v1.0.7
 

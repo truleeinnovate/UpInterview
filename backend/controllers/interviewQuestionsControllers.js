@@ -1,4 +1,4 @@
-const interviewQuestions = require("../models/interviewQuestions")
+const interviewQuestions = require("../models/Interview/selectedInterviewQuestion.js")
 
 
 const AddQuestion = async(req,res)=>{

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Candidate } = require('../models/candidate.js');
+const { Candidate } = require('../models/Candidate/candidate.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
 
 

@@ -1,4 +1,4 @@
-const { InterviewRounds } = require('../models/InterviewRounds');
+const { InterviewRounds } = require('../models/Interview/InterviewRounds');
 
 const getAllInterviewRounds = async (req, res) => {
   try {
