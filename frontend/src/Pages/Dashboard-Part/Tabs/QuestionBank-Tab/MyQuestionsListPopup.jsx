@@ -1,6 +1,7 @@
 // v1.0.0 ------ Venkatesh------ I’ve set both “Save” buttons inside to type="button", preventing them from triggering the parent <form> submit.Now, when you create or update a Question List, the main form’s validation won’t fire unexpectedly.
 //<---------------------- v1.0.0------Venkatesh------Simple check to ensure the list label and name are unique (case-insensitive)
 //<---------------------- v1.0.1------Venkatesh------Prevent double-click save (simplified)
+//<---------------------- v1.0.2------Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
 
 import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
@@ -51,6 +52,7 @@ const MyQuestionsList1 = forwardRef(
     const [selectedCandidates, setSelectedCandidates] = useState([]);
     // console.log('selectedCandidates ----------------',selectedCandidates)
     const [inputError, setInputError] = useState('');
+    const [dropdownValue, setDropdownValue] = useState('Interviews');//<----v1.0.2----
 
     const authToken = Cookies.get('authToken');
     const tokenPayload = decodeJwt(authToken);
@@ -74,13 +76,37 @@ const MyQuestionsList1 = forwardRef(
         setSelectedCandidates(defaultTenantList);
       }
     }, [defaultTenantList]);
-
+    
+    //<----v1.0.2----
     useImperativeHandle(ref, () => ({
-      openPopup: ({ isEditingMode = false, sectionId = null, label = '' } = {}) => {
+      openPopup: ({ isEditingMode = false, sectionId = null, label = '', defaultType } = {}) => {
         setIsEditing(isEditingMode);
         setEditingSectionId(sectionId);
         setNewListName(label);
         setNewListNameForName(label.replace(/\s+/g, '_'));
+        // Sync the Type dropdown with caller or existing list type (supports boolean or string)
+        if (typeof defaultType !== 'undefined') {
+          if (typeof defaultType === 'boolean') {
+            setDropdownValue(defaultType ? 'Interviews' : 'Assignments');
+          } else if (typeof defaultType === 'string') {
+            const dt = defaultType.toLowerCase();
+            if (dt === 'true' || dt === 'interviews') setDropdownValue('Interviews');
+            else if (dt === 'false' || dt === 'assignments') setDropdownValue('Assignments');
+            else setDropdownValue('Interviews');
+          }
+        } else if (isEditingMode) {
+          const existing = createdLists.find((l) => l._id === sectionId);
+          if (existing && typeof existing.type !== 'undefined') {
+            if (typeof existing.type === 'boolean') {
+              setDropdownValue(existing.type ? 'Interviews' : 'Assignments');
+            } else if (typeof existing.type === 'string') {
+              const et = existing.type.toLowerCase();
+              if (et === 'true' || et === 'interviews') setDropdownValue('Interviews');
+              else if (et === 'false' || et === 'assignments') setDropdownValue('Assignments');
+            }
+          }
+        }
+        //----v1.0.2---->
         setShowNewListPopup(true);
       },
       clearSelection: () => {
@@ -148,6 +174,8 @@ const MyQuestionsList1 = forwardRef(
           newListNameForName,
           userId,
           orgId: tokenPayload?.tenantId,
+          // Map selected label to boolean for backend: Interviews=true, Assignments=false
+          type: dropdownValue === 'Interviews',//<----v1.0.2----
         });
 
         if (isEditing && result?.updated) {
@@ -268,7 +296,7 @@ const MyQuestionsList1 = forwardRef(
 
     useEffect(() => {
       onSelectList(selectedCandidates.map((candidate) => candidate._id));
-    }, [selectedCandidates]);
+    }, [selectedCandidates, onSelectList]);//<----v1.0.2----
 
     return (
       <div>
@@ -547,6 +575,21 @@ const MyQuestionsList1 = forwardRef(
                     className="flex-1 px-3 py-2 h-10 border border-gray-200 bg-gray-100 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue"
                   />
                 </div>
+                {/*<----v1.0.2---- */}
+                <div className="flex items-center">
+                <label className="text-sm font-medium w-20">
+                    Type <span className="text-red-500">*</span>
+                  </label>
+              <select
+                className="flex-1 border rounded-md p-2 pr-8 text-sm focus:outline-none cursor-pointer"
+                value={dropdownValue}
+                onChange={(e) => setDropdownValue(e.target.value)}
+              >
+                <option value="Interviews">Interviews</option>
+                <option value="Assignments">Assignments</option>
+              </select>
+            {/*----v1.0.2---->*/}
+            </div>
               </div>
               <div className="flex justify-end border-t p-3 rounded-b-md text-sm">
                 <LoadingButton

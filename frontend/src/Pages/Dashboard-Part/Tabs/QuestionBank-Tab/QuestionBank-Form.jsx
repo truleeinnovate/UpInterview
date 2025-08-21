@@ -11,6 +11,8 @@
 // v1.0.5 - ASHOK  - fixed style issues at MCQ's input fields
 // v1.0.6 - ASHOK  - Removed border left and set outline as none and improved scroll to first error logic
 
+// v1.0.7 - Venkatesh - if myquestionlist type is interview then hidden interview questions in question bank form 
+
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -64,6 +66,7 @@ const QuestionBankForm = ({
   updateQuestionsInAddedSectionFromQuestionBank,
   question = {},
   selectedLabelId,
+  isInterviewType = false,//<----v1.0.7------
 }) => {
   const formRef = useRef(null);
 
@@ -111,7 +114,7 @@ const QuestionBankForm = ({
   }, [isEdit, selectedLabelId, createdLists]);
 
   const questionTypeOptions = [
-    "Interview Questions",
+    ...(isInterviewType ? ["Interview Questions"] : []),//<----v1.0.7------
     "MCQ",
     "Short Text(Single line)",
     "Long Text(Paragraph)",
@@ -123,7 +126,7 @@ const QuestionBankForm = ({
   const [questionNumber, setQuestionNumber] = useState(1);
   const [formData, setFormData] = useState({
     questionText: "",
-    questionType: "",
+    questionType: isInterviewType ? "Interview Questions" : "",//<----v1.0.7------
     skill: "",
     difficultyLevel: "",
     correctAnswer: "",
@@ -148,7 +151,7 @@ const QuestionBankForm = ({
   const [showDropdownDifficultyLevel, setShowDropdownDifficultyLevel] =
     useState(false);
   const [selectedQuestionType, setSelectedQuestionType] = useState(
-    type === "Feedback" ? "Interview Questions" : ""
+    (isInterviewType || type === "Feedback") ? "Interview Questions" : ""//<----v1.0.7------
   );
   const [showDropdownQuestionType, setShowDropdownQuestionType] =
     useState(false);
@@ -280,10 +283,22 @@ const QuestionBankForm = ({
     }
   }, [selectedQuestionType]);
 
+  //<----v1.0.7------
+  // Auto-set and lock question type when invoked for Interview lists (Add flow)
+  useEffect(() => {
+    if (isInterviewType && !isEdit) {
+      setSelectedQuestionType("Interview Questions");
+      setFormData((prev) => ({ ...prev, questionType: "Interview Questions" }));
+      setShowMcqFields(false);
+      setErrors((prev) => ({ ...prev, questionType: "" }));
+    }
+  }, [isInterviewType, isEdit]);
+  //----v1.0.7------>
+
   const clearFormFields = () => {
     setFormData({
       questionText: "",
-      questionType: "",
+      questionType: isInterviewType ? "Interview Questions" : "",//<----v1.0.7------
       skill: "",
       difficultyLevel: "",
       score: "",
@@ -296,7 +311,7 @@ const QuestionBankForm = ({
     });
 
     setSelectedSkill("");
-    setSelectedQuestionType("");
+    setSelectedQuestionType(isInterviewType ? "Interview Questions" : "");//<----v1.0.7------
     setSelectedDifficultyLevel("");
     setAutoAssessment("");
     setHintContent("");
@@ -330,7 +345,8 @@ const QuestionBankForm = ({
     const newErrors = validateQuestionBankData(
       updatedFormData,
       mcqOptions,
-      type
+      type,
+      { skipQuestionType: isInterviewType }//<----v1.0.7------
     );
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -925,6 +941,7 @@ const QuestionBankForm = ({
                   </div>
 
                   {/* Question Type Selection */}
+                  { !isInterviewType && (//<----v1.0.7------
                   <div className="flex flex-col gap-1 mb-4">
                     <div>
                       <label
@@ -993,6 +1010,8 @@ const QuestionBankForm = ({
                     </div>
                     {/* </div> */}
                   </div>
+                //----v1.0.7------>
+                  )}
 
                   {/* My Question List */}
                   {type === "feedback" ? null : (

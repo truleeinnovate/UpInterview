@@ -1,9 +1,13 @@
-export const validateQuestionBankData = (formData, mcqOptions,section) => {
+//<-----v1.0.0-----Venkatesh-----if skipQuestionType is true then skip question type validation
+
+
+export const validateQuestionBankData = (formData, mcqOptions, section, options = {}) => {
+    const { skipQuestionType = false } = options || {};
     const errors = {};
     const requiredFields = {
         questionText: "Question is required",
         tenantListId: "Question List is required",
-        questionType: "Question Type is required",
+        ...(skipQuestionType ? {} : { questionType: "Question Type is required" }),//-----v1.0.0----->
         skill: "Skill is required",
         difficultyLevel: "Difficulty Level is required",
         minexperience: "Min Experience is required",
