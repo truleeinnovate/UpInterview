@@ -62,7 +62,7 @@ const interviewRoundSchema = new mongoose.Schema({
             "Draft",
             "RequestSent",
             "Scheduled",
-            "In Progress",
+            "InProgress",
             "Completed",
             "Rescheduled",
             "Rejected",
