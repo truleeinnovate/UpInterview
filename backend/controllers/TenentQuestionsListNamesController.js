@@ -1,3 +1,5 @@
+//<----v1.0.0----Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
+
 const QuestionbankFavList = require("../models/tenantQuestionsListNames.js");
 const getList = async (req, res) => {
   const { userId } = req.params;
@@ -24,7 +26,7 @@ const getList = async (req, res) => {
 const createList = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = 'Create new list';
-  const { label, ownerId, tenantId, name } = req.body;
+  const { label, ownerId, tenantId, name, type } = req.body;//<----v1.0.0----
 
   try {
     const newList = await QuestionbankFavList.create({
@@ -32,6 +34,7 @@ const createList = async (req, res) => {
       ownerId,
       tenantId,
       name,
+      type,//<----v1.0.0----
     });
     // Generate feed
     res.locals.feedData = {

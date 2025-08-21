@@ -171,6 +171,11 @@ exports.updateQuestion = async (req, res) => {
     const uniqueListIds = [...new Set(tenantListId)].map(id => new mongoose.Types.ObjectId(id));
     // apply any other fields being edited
     Object.assign(question, updateFields);
+    //<--v1.0.0---added by Venkatesh----- Ensure identifiers are set when provided (important for individual accounts)
+    if (tenantId) question.tenantId = tenantId;
+    if (ownerId) question.ownerId = ownerId;
+
+    //-----v1.0.0-------->
 
     // if (tenantListId) {
     //       const uniqueListIds = [...new Set(tenantListId)]
