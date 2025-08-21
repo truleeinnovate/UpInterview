@@ -1,23 +1,29 @@
+// v1.0.0 - Ashok - fixed z-index issue for confirmation modal
 // ConfirmationModal.jsx
-const ConfirmationModal = ({ 
-  show, 
-  userName, 
-  newStatus, 
-  onCancel, 
-  onConfirm 
+// v1.0.0 <----------------------------------------------------------
+import { createPortal } from "react-dom";
+// v1.0.0 ---------------------------------------------------------->
+const ConfirmationModal = ({
+  show,
+  userName,
+  newStatus,
+  onCancel,
+  onConfirm,
 }) => {
   if (!show) return null;
 
-  return (
-    
-    // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    // <div className="fixed inset-0 z-50 flex items-start justify-center pt-32 bg-black bg-opacity-50">
-
- <div className="absolute w-[100%] h-[100%] inset-0 z-50 flex items-center justify-center">
+  return createPortal(
+    // v1.0.0 <----------------------------------------------------------------------------------------------
+    //  <div className="absolute w-[100%] h-[100%] inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]">
       <div className="bg-white border border-gray-300 p-6 rounded-lg shadow-lg max-w-md w-full">
         <h3 className="text-lg font-medium mb-2">Confirm Status Change</h3>
         <p className="mb-2">
-          Are you sure you want to change the status of <span className="font-bold">{userName} to {newStatus}</span>?
+          Are you sure you want to change the status of{" "}
+          <span className="font-bold">
+            {userName} to {newStatus}
+          </span>
+          ?
         </p>
         <div className="flex justify-end space-x-3">
           <button
@@ -34,7 +40,9 @@ const ConfirmationModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
+    // v1.0.0 ---------------------------------------------------------------------------------------------->
   );
 };
 

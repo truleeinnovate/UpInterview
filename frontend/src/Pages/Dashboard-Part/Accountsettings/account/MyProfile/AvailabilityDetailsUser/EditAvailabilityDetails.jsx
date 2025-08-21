@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Removed border left and set outline as none
+// v1.0.1 - Ashok - Changed Maximize and Minimize icons to follow consistent design
 import React, { useEffect, useState } from 'react'
 import TimezoneSelect from 'react-timezone-select'; // Make sure to install this package
 import DatePicker from 'react-datepicker';
@@ -18,7 +19,9 @@ import { config } from '../../../../../../config';
 import Availability from '../../../../Tabs/CommonCode-AllTabs/Availability';
 import { useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers';
 import { useQueryClient } from '@tanstack/react-query';
-
+// v1.0.1 <---------------------------------------------------------------------------------
+import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
+// v1.0.1 --------------------------------------------------------------------------------->
 
 
 Modal.setAppElement('#root');
@@ -334,11 +337,15 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
               onClick={() => setIsFullScreen(!isFullScreen)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
+              {/* v1.0.4 <---------------------------------------------------------- */}
               {isFullScreen ? (
-                <Minimize className="w-5 h-5 text-gray-500" />
+                // <Minimize className="w-5 h-5 text-gray-500" />
+                <ArrowsPointingInIcon className="w-5 h-5" />
               ) : (
-                <Maximize className="w-5 h-5 text-gray-500" />
+                // <Maximize className="w-5 h-5 text-gray-500" />
+                <ArrowsPointingOutIcon className="w-5 h-5" />
               )}
+              {/* v1.0.4 ----------------------------------------------------------> */}
             </button>
             <button
               onClick={handleCloseModal}

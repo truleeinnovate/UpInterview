@@ -1,15 +1,17 @@
 // v1.0.0  -  Ashraf  -  assessment to assesment templates added in fileds
 // v1.0.1  -  Ashok   -  Added scroll to first error functionality
 
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { ReactComponent as CgInfo } from "../../../../../icons/CgInfo.svg";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
 import { ReactComponent as IoIosAddCircle } from "../../../../../icons/IoIosAddCircle.svg";
 import Switch from "react-switch";
 import DatePicker from "react-datepicker";
+import PositionForm from "../../Position-Tab/Position-Form";
 
 const BasicDetailsTab = ({
+  isEditing,
   linkExpiryDays,
   toggleLinkExpiryDropdown,
   setLinkExpiryDays,
@@ -65,6 +67,10 @@ const BasicDetailsTab = ({
   const positionRef = useRef(null);
   const difficultyRef = useRef(null);
   const durationRef = useRef(null);
+
+  const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
+
+
 
   // Close all dropdowns except the one specified
   const closeAllDropdowns = (except = null) => {
@@ -124,6 +130,25 @@ const BasicDetailsTab = ({
     if (e) e.stopPropagation();
     closeAllDropdowns("duration");
     toggleDropdownDuration();
+  };
+
+  
+
+  const handleModalBackdropClick = (e, modalType) => {
+    if (e.target === e.currentTarget) {
+      if (modalType === "position") {
+        setIsPositionModalOpen(false);
+      }
+    }
+  };
+
+  const handlePositionCreated = (newPosition) => {
+    setSelectedPosition(newPosition);
+    setFormData((prevData) => ({
+      ...prevData,
+      Position: newPosition._id,
+    }));
+    setIsPositionModalOpen(false);
   };
 
   return (
@@ -457,6 +482,7 @@ const BasicDetailsTab = ({
                         onClick={(e) => {
                           e.stopPropagation();
                           handleAddNewPositionClick();
+                          setIsPositionModalOpen(true)
                           setShowDropdownPosition(false);
                         }}
                         className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none"
@@ -580,7 +606,7 @@ const BasicDetailsTab = ({
               {/* // <---------------------- v1.0.0 */}
               <div className="mt-1">
                 <DatePicker
-                  selected={startDate}
+                  selected={isEditing ? formData.ExpiryDate : startDate}
                   onChange={handleDateChange}
                   dateFormat="dd-MM-yyyy"
                   minDate={new Date()}
@@ -671,6 +697,20 @@ const BasicDetailsTab = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Position Modal */}
+      {isPositionModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+          onClick={(e) => handleModalBackdropClick(e, 'position')}
+        >
+          <PositionForm
+            mode="new"
+            onClose={handlePositionCreated}
+            isModal={true}
+          />
         </div>
       )}
     </div>

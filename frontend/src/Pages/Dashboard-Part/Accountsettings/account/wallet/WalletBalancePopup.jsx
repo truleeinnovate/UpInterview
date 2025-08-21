@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Removed border left and set outline as none
 import { Expand, Minimize, X } from 'lucide-react';
 import classNames from 'classnames';
 import { useState } from 'react';
@@ -54,7 +55,9 @@ const WalletBalancePopup = ({ walletBalance }) => {
   // }, [userId]);
 
   const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
+    // v1.0.0 <---------------------------------------------------
+    'fixed bg-white shadow-2xl overflow-y-auto outline-none',
+    // v1.0.0 --------------------------------------------------->
     {
       'inset-0': isFullScreen,
       'inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen

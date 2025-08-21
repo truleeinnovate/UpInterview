@@ -11,6 +11,12 @@ import {
   MessageSquare,
   X,
 } from "lucide-react";
+import axios from "axios";
+import SupportForm from "../Dashboard-Part/Tabs/SupportDesk/SupportForm";
+import { toast } from "react-toastify";
+import { config } from "../../config";
+
+
 
 const InterviewActions = ({ interviewData,isAddMode,decodedData, onActionComplete }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -51,18 +57,9 @@ const InterviewActions = ({ interviewData,isAddMode,decodedData, onActionComplet
 const { startDateTime, endDateTime } = parseInterviewTimes(interviewData);
 
 // Fallback if parsing fails
-const startTime = startDateTime || new Date();
-const endTime =
-  endDateTime ||
-  new Date(startTime.getTime() + (interviewData?.interviewRound?.duration || 30) * 60000);
+const startTime = startDateTime 
+const endTime =   endDateTime 
 
-// Status calculation
-const getStatus = () => {
-  if (!startTime || !endTime) return "Unknown";
-  if (currentTime < startTime) return "Upcoming";
-  if (currentTime >= startTime && currentTime <= endTime) return "In Progress";
-  return "Completed";
-};
 
   // Timer updater
   useEffect(() => {
@@ -71,16 +68,96 @@ const getStatus = () => {
   }, []);
 
   // Time-based conditions
-  const candidateActionEnabled = currentTime >= new Date(startTime.getTime() + 15 * 60000);
-  const completionActionEnabled = currentTime >= new Date(endTime.getTime() - 15 * 60000);
+  // const candidateActionEnabled = currentTime >= new Date(startTime.getTime() + 15 * 60000);
+  // const completionActionEnabled = currentTime >= new Date(endTime.getTime() - 15 * 60000);
   const canCancel = currentTime <= endTime;
-  const canRaiseIssue = currentTime >= startTime && currentTime <= endTime;
+  // const canRaiseIssue = currentTime >= startTime && currentTime <= endTime;
+const candidateActionEnabled = startDateTime
+  const completionActionEnabled = startDateTime 
+  // const canCancel = currentTime <= endTime;
+  const canRaiseIssue =startTime
+
+
+
 
   // Handlers
-  const handleConfirm = (type, extra = {}) => {
-    onActionComplete({ type, timestamp: new Date(), ...extra });
-    setModal(null);
-    setFormData({ reason: "", comments: "" });
+  // const handleConfirm = (type, extra = {}) => {
+  //   onActionComplete({ type, timestamp: new Date(), ...extra });
+  //   setModal(null);
+  //   setFormData({ reason: "", comments: "" });
+  // };
+ 
+  const handleConfirm = async (type, extra = {}) => {
+    try {
+      if (type === "completion" || type === "noShow" || type === "cancel") {
+        // Determine the new status based on the action type
+        let newStatus;
+        let rejectionReason = null;
+        
+        if (type === "completion") {
+          newStatus = extra.status === "completed" ? "Completed" : "incomplete";
+          rejectionReason = extra.comments || null;
+        } else if (type === "noShow") {
+          newStatus = "no-show";
+          rejectionReason = extra.comments || null;
+        } else if (type === "cancel") {
+          newStatus = "Cancelled";
+          rejectionReason = extra.reason || null;
+        }
+  
+  
+        // Prepare the round data for API call
+        const roundData = {
+          status: newStatus,
+          completedDate: newStatus === "completed" ? new Date() : null,
+          rejectionReason: rejectionReason,
+        };
+  
+        const payload = {
+          interviewId: interviewData?.interviewRound?.interviewId,
+          round: { ...roundData },
+          roundId: interviewData?.interviewRound?._id,
+          isEditing: true,
+        };
+  
+        try {
+          const response = await axios.post(
+            `${config.REACT_APP_API_URL}/interview/save-round`,
+            payload
+          );
+          
+          console.log("Status updated:", response.data);
+          
+          // Show success toast based on action type
+          if (type === "completion") {
+            toast.success(`Interview marked as ${newStatus}`, {});
+          } else if (type === "noShow") {
+            toast.success("Candidate marked as no-show", {});
+          }
+          
+          // Update local state after success
+          // onActionComplete({ type, timestamp: new Date(), ...extra });
+         
+            // Update local state after success - ADD SAFETY CHECK
+        if (typeof onActionComplete === 'function') {
+          onActionComplete({ type, timestamp: new Date(), ...extra });
+        }
+
+        } catch (error) {
+          console.error("Error updating status:", error);
+          toast.error("Failed to update status");
+        }
+      } else {
+        // For other actions (techIssue, cancel), just complete without API call
+        onActionComplete({ type, timestamp: new Date(), ...extra });
+      }
+    } catch (error) {
+      console.error("Error updating interview:", error);
+      toast.error("An error occurred");
+    } finally {
+      setModal(null);
+      setFormData({ reason: "", comments: "" });
+    }
   };
 
   const openModal = (type, status = null) => {
@@ -99,6 +176,10 @@ const getStatus = () => {
     const minutes = Math.ceil(diff / (1000 * 60));
     return `${minutes} min`;
   };
+
+  const isCompleted = interviewData?.interviewRound?.status === "completed";
+
+
 
   const ActionCard = ({ 
     icon: Icon, 
@@ -152,12 +233,12 @@ const getStatus = () => {
               {description}
             </p>
             
-            {timeUntil && (
+            {/* {timeUntil && (
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Clock size={12} />
                 <span>Available in {timeUntil}</span>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
@@ -188,17 +269,17 @@ const getStatus = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Status Card */}
       <div className="bg-gradient-to-r from-[#217989] to-[#1a616e] rounded-xl p-6 text-white">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Interview Status</h2>
-          <div className="flex items-center gap-2 bg-white bg-opacity-20 rounded-lg px-3 py-1">
+          {/* <div className="flex items-center gap-2 bg-white bg-opacity-20 rounded-lg px-3 py-1">
             <Clock size={16} />
             <span className="text-sm font-medium">
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
-          </div>
+          </div> */}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 text-sm">
@@ -212,7 +293,7 @@ const getStatus = () => {
           </div>
           <div>
             <p className="text-white text-opacity-80">Status</p>
-            <p className="font-semibold">{getStatus()}</p>
+            <p className="font-semibold">{interviewData?.interviewRound?.status}</p>
           </div>
         </div>
       </div>
@@ -228,9 +309,9 @@ const getStatus = () => {
             title="Candidate Joined"
             description="Confirm that the candidate has successfully joined the interview"
             onClick={() => handleConfirm("candidateJoined")}
-            disabled={!candidateActionEnabled}
+            disabled={isCompleted || !candidateActionEnabled}
             variant="success"
-            timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
+            // timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
             ready={candidateActionEnabled}
           />
 
@@ -239,9 +320,9 @@ const getStatus = () => {
             title="Candidate No-Show"
             description="Mark candidate as no-show if they haven't joined after 15 minutes"
             onClick={() => openModal("noShow")}
-            disabled={!candidateActionEnabled}
+            disabled={isCompleted || !candidateActionEnabled}
             variant="danger"
-            timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
+            // timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
           />
 
           {/* Interview Completion */}
@@ -250,9 +331,9 @@ const getStatus = () => {
             title="Mark Completed"
             description="Mark the interview as successfully completed"
             onClick={() => openModal("completion", "completed")}
-            disabled={!completionActionEnabled}
+            disabled={isCompleted ||!completionActionEnabled}
             variant="success"
-            timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
+            // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
             ready={completionActionEnabled}
           />
 
@@ -261,9 +342,9 @@ const getStatus = () => {
             title="Mark Incomplete"
             description="Mark the interview as incomplete due to issues"
             onClick={() => openModal("completion", "incomplete")}
-            disabled={!completionActionEnabled}
+            disabled={isCompleted || !completionActionEnabled}
             variant="warning"
-            timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
+            // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
           />
 
           {/* Technical Issues */}
@@ -272,7 +353,7 @@ const getStatus = () => {
             title="Report Technical Issue"
             description="Report any technical problems during the interview"
             onClick={() => openModal("techIssue")}
-            disabled={!canRaiseIssue}
+            disabled={isCompleted || !canRaiseIssue}
             variant="warning"
             ready={canRaiseIssue}
           />
@@ -283,7 +364,7 @@ const getStatus = () => {
             title="Cancel Interview"
             description="Cancel the interview and notify all parties"
             onClick={() => openModal("cancel")}
-            disabled={!canCancel}
+            disabled={isCompleted || !canCancel}
             variant="danger"
             ready={canCancel}
           />
@@ -360,7 +441,7 @@ const getStatus = () => {
               }
             </p>
           </div>
-          
+          {modal?.status === "completed" ? "" :
           <textarea
             className="w-full border border-gray-300 rounded-lg p-3 text-sm"
             placeholder="Add any comments about the interview completion..."
@@ -368,6 +449,7 @@ const getStatus = () => {
             onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
             rows={3}
           />
+}
           
           <div className="flex justify-end gap-3">
             <button
@@ -390,7 +472,16 @@ const getStatus = () => {
         </div>
       </Modal>
 
-      <Modal
+      {
+    modal?.type === "techIssue" && (
+      <SupportForm  
+      onClose={closeModal}
+      FeedbackIssueType="FeedbackInterviewTechIssue"
+      />
+    )
+   }
+
+      {/* <Modal
         isOpen={modal?.type === "techIssue"}
         onClose={closeModal}
         title="Report Technical Issue"
@@ -454,8 +545,23 @@ const getStatus = () => {
             </button>
           </div>
         </div>
-      </Modal>
+      </Modal> */}
 
+
+   {/* // cancellation modal */}
+
+   {/* SupportForm */}
+   {/* {
+    modal?.type === "cancel" && (
+      <SupportForm  
+      onClose={closeModal}
+      FeedbackIssueType="FeedbackInterviewCancel"
+      />
+    )
+   } */}
+      
+  
+      
       <Modal
         isOpen={modal?.type === "cancel"}
         onClose={closeModal}
@@ -472,7 +578,7 @@ const getStatus = () => {
             </p>
           </div>
           
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Cancellation Reason <span className="text-red-500">*</span>
             </label>
@@ -489,9 +595,9 @@ const getStatus = () => {
               <option value="technical-issue">Technical Issue</option>
               <option value="other">Other</option>
             </select>
-          </div>
+          </div> */}
           
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Additional Comments
             </label>
@@ -502,7 +608,7 @@ const getStatus = () => {
               onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
               rows={3}
             />
-          </div>
+          </div> */}
           
           <div className="flex justify-end gap-3">
             <button
@@ -513,7 +619,7 @@ const getStatus = () => {
             </button>
             <button
               onClick={() => handleConfirm("cancel", formData)}
-              disabled={!formData.reason}
+              // disabled={!formData.reason}
               className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel Interview
@@ -521,6 +627,7 @@ const getStatus = () => {
           </div>
         </div>
       </Modal>
+
     </div>
   );
 };
