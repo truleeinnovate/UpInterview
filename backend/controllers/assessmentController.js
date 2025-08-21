@@ -2,14 +2,14 @@
 // v1.0.1  -  Ashraf  -  fixed assessment code issue.now it will generate assessment code like ASMT-TPL-00001 and assessment name to assessment template
 // v1.0.2  -  Ashraf  -  fixed assessment code issue.now it will generate assessment code like ASMT-TPL-00001 and assessment name to assessment template
  // <-------------------------------v1.0.1
-const Assessment = require("../models/assessmentTemplates");
+const Assessment = require("../models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.1 >
 const { isValidObjectId } = require("mongoose");
-const { CandidateAssessment } = require("../models/candidateAssessment");
+const { CandidateAssessment } = require("../models/Assessment/candidateAssessment.js");
 
 const mongoose = require("mongoose");
-const ScheduleAssessment = require("../models/assessmentsSchema"); 
-const { Candidate } = require("../models/candidate");
+const ScheduleAssessment = require("../models/Assessment/assessmentsSchema.js"); 
+const { Candidate } = require("../models/Candidate/candidate.js");
 const Notification = require("../models/notification");
 const { encrypt } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");

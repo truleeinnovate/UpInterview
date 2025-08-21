@@ -1,6 +1,4 @@
-//<----v1.0.0----Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
-
-const QuestionbankFavList = require("../models/tenantQuestionsListNames.js");
+const QuestionbankFavList = require("../models/QuestionBank/tenantQuestionsListNames.js");
 const getList = async (req, res) => {
   const { userId } = req.params;
   const { tenantId, organization } = req.query; // Get these from query parameters

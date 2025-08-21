@@ -419,18 +419,18 @@
 
 const mongoose = require("mongoose");
 const { Interview } = require("../models/Interview");
-const { InterviewRounds } = require("../models/InterviewRounds.js");
+const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 const InterviewTemplate = require("../models/InterviewTemplate.js");
 const { Contacts } = require("../models/Contacts");
 const { Users } = require("../models/Users");
 // v1.0.2 <-----------------------------------------
-const { Candidate } = require("../models/Candidate");
+const { Candidate } = require("../models/Candidate/candidate.js");
 const { encrypt, generateOTP } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");
-const interviewQuestions = require("../models/InterviewQuestions");
-const { Position } = require("../models/Position.js");
+const interviewQuestions = require('../models/Interview/selectedInterviewQuestion.js');
+const { Position } = require("../models/Position/position.js");
 // <-------------------------------v1.0.0
-const Assessment = require("../models/assessmentTemplates");
+const Assessment = require("../models/Assessment/assessmentTemplates.js");
 const { sendInterviewRoundEmails } = require("./EmailsController/interviewEmailController");
 // v1.0.2 <-----------------------------------------
 // ------------------------------v1.0.0 >

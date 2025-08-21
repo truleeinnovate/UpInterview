@@ -3,12 +3,12 @@
 // v1.0.2  -  Ashraf  -  fixed name schedule assessment to assessment schema and schedule assessment to assessment schema
 // v1.0.3  -  Ashraf  -  fixed assessment resend link for mutiple and single candidate assessment
 
-const { CandidateAssessment } = require("../../models/candidateAssessment");
+const { CandidateAssessment } = require("../../models/Assessment/candidateAssessment.js");
 const { encrypt } = require('../../utils/generateOtp')
 // <-------------------------------v1.0.2 
-const ScheduleAssessment = require('../../models/assessmentsSchema');
+const ScheduleAssessment = require('../../models/Assessment/assessmentsSchema.js');
 // ------------------------------v1.0.2 >
-const { Candidate } = require("../../models/candidate");
+const { Candidate } = require("../../models/Candidate/candidate.js");
 const CryptoJS = require("crypto-js");
 const crypto = require("crypto");
 const emailTemplateModel = require("../../models/EmailTemplatemodel");
@@ -19,7 +19,7 @@ const Otp = require("../../models/Otp");
 const mongoose = require("mongoose");
 const Notification = require("../../models/notification");
 // <-------------------------------v1.0.2
-const Assessment = require("../../models/assessmentTemplates");
+const Assessment = require("../../models/Assessment/assessmentTemplates.js");
 const config = require("../../config");
 // ------------------------------v1.0.2 >
 

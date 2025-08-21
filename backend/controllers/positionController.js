@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - fixed updating rounds based on sequence
 
 const { mongoose } = require("mongoose");
-const { Position } = require("../models/position.js");
+const { Position } = require("../models/Position/position.js");
 
 // const createPosition = async (req, res) => {
 //   res.locals.loggedByController = true;

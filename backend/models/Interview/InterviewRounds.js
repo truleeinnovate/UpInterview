@@ -68,7 +68,8 @@ const interviewRoundSchema = new mongoose.Schema({
             "Rescheduled",
             "Rejected",
             "Selected",
-            "Cancelled"
+            "Cancelled",
+            "Incomplete",
         ],
         default: "Draft"
     },
@@ -99,15 +100,27 @@ const interviewRoundSchema = new mongoose.Schema({
         createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         createdAt: { type: Date, default: Date.now }
     }],
+
+    participants: [{
+        role: { type: String, enum: ["Candidate", "Interviewer"] },
+        // interviewerId: { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" },
+        joinedAt: { type: Date, default: Date.now }, // only track join time
+        status: { 
+            type: String, 
+            enum: ["Joined", "Not Joined"], 
+            default: "Not Joined" 
+        }
+    }],
+    
     // v1.0.0------------------------->
     meetingId: String,
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "assessment" },
     scheduleAssessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "ScheduledAssessment" },
     
-    questions: [{
-        questionId: { type: mongoose.Schema.Types.Mixed },
-        snapshot: { type: mongoose.Schema.Types.Mixed }
-    }],
+    // questions: [{
+    //     questionId: { type: mongoose.Schema.Types.Mixed },
+    //     snapshot: { type: mongoose.Schema.Types.Mixed }
+    // }],
 
     rejectionReason: String
 });

@@ -51,4 +51,4 @@ const assessmentQuestionsSchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
-module.exports = mongoose.model("AssessmentQuestion", assessmentQuestionsSchema);
+module.exports = mongoose.model("SelectedAssessmentQuestions", assessmentQuestionsSchema);

@@ -1,8 +1,8 @@
 // v1.0.0  -  Ashraf  -  fixed name assessment to assessment template
-const AssessmentQuestionsSchema = require('../models/AssessmentQuestions')
+const AssessmentQuestionsSchema = require('../models/Assessment/selectedAssessmentquestions.js')
 const mongoose = require('mongoose');
  // <-------------------------------v1.0.0
-const Assessment = require("../models/assessmentTemplates");
+const Assessment = require("../models/Assessment/assessmentTemplates");
 // ------------------------------v1.0.0 >
 
 

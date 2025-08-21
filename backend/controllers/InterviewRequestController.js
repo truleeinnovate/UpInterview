@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const Interview = require("../models/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest");
 const { Contacts } = require("../models/Contacts");
-const { InterviewRounds } = require("../models/InterviewRounds");
+const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 const Wallet = require("../models/WalletTopup");
 
 //old mansoor code i have changed this code because each interviwer send one request
