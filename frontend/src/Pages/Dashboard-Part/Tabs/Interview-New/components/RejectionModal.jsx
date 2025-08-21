@@ -44,7 +44,7 @@ const RejectionModal = ({ onClose, onReject, roundName }) => {
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-foreground">Reject Round: {roundName}</h2>
+          <h2 className="text-xl font-semibold text-foreground">Reject Round : {roundName}</h2>
           <Button
             onClick={onClose}
             variant="ghost"
@@ -57,7 +57,7 @@ const RejectionModal = ({ onClose, onReject, roundName }) => {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="reason" className="block text-sm font-medium text-foreground mb-1">
-              Rejection Reason *
+              Rejection Reason <span className="text-red-500">*</span>
             </label>
             <textarea
               id="reason"

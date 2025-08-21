@@ -568,7 +568,7 @@ const createInterview = async (req, res) => {
             instructions: round.instructions || "",
             dateTime: round.dateTime || "",
             interviewers: round.interviewers || [], // This should be ObjectId array
-            status: "draft",
+            status: "Draft",
             // meetLink: round.meetLink || [],
             meetingId: round.meetingId || "",
             assessmentId: round.assessmentId || null,

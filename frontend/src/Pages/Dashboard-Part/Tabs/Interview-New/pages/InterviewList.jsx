@@ -468,9 +468,9 @@ function InterviewList() {
         const rounds = row.rounds || [];
         const nextRound =
           rounds
-            .filter((round) =>
-              [ "Scheduled", "RequestSent"].includes(round.status)
-            )
+            // .filter((round) =>
+            //   [ "Scheduled", "RequestSent"].includes(round.status)
+            // )
             .sort((a, b) => a.sequence - b.sequence)[1] || null;
         return (
           <Tooltip

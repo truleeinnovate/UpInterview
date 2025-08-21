@@ -67,7 +67,7 @@ const RoundCard = ({
   //   questionsError,
   //   setSectionQuestions,
   // } = useCustomContext();
-  const { deleteRoundMutation,saveInterviewRound } = useInterviews();
+  const { deleteRoundMutation, saveInterviewRound } = useInterviews();
   const { fetchAssessmentQuestions } = useAssessments();
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
@@ -97,10 +97,10 @@ const RoundCard = ({
 
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
-//  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
-const [showAssessmentCard, setShowAssessmentCard] = useState(false);
+  //  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
+  const [showAssessmentCard, setShowAssessmentCard] = useState(false);
 
-const authToken = Cookies.get("authToken");
+  const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
@@ -109,7 +109,7 @@ const authToken = Cookies.get("authToken");
   const [actionInProgress, setActionInProgress] = useState(false);
 
   useEffect(() => {
-    if (isExpanded  && round?.assessmentId) {
+    if (isExpanded && round?.assessmentId) {
       // const data = fetchAssessmentQuestions(round.assessmentId);
       // setSectionQuestions(data)
       setQuestionsLoading(true);
@@ -283,12 +283,12 @@ const authToken = Cookies.get("authToken");
   // Get questions
   const questions = round?.questions || [];
 
-  // Check if round is active (can be modified)
-  const isRoundActive =
-    round.status !== "Completed" &&
-    round.status !== "Cancelled" &&
-    round.status !== "Rejected" &&
-    !isInterviewCompleted;
+  // // Check if round is active (can be modified)
+  // const isRoundActive =
+  //   round.status !== "Completed" &&
+  //   round.status !== "Cancelled" &&
+  //   round.status !== "Rejected" &&
+  //   !isInterviewCompleted;
 
   // Check if round has feedback
   const hasFeedback =
@@ -306,16 +306,16 @@ const authToken = Cookies.get("authToken");
   };
   console.log("round", round);
 
-console.log("sectionQuestions", sectionQuestions);
+  console.log("sectionQuestions", sectionQuestions);
 
 
   const handleShareClick = async (round) => {
-  
-console.log("round", round);
+
+    console.log("round", round);
     if (!round?.assessmentId) {
       throw new Error('Unable to determine assessment ID for resend operation');
     }
-    
+
     // Use the same API endpoint for both single and multiple candidates
     const response = await axios.post(
       `${config.REACT_APP_API_URL}/emails/resend-link`,
@@ -332,9 +332,9 @@ console.log("round", round);
         userId,
         organizationId: orgId,
         assessmentId: round?.assessmentId,
-       
-       
-    
+
+
+
       }
     );
 
@@ -352,9 +352,18 @@ console.log("round", round);
   // <----------------------- v1.0.4
   const handleActionClick = (action) => {
     setActionInProgress(true);
-    if (action === "Completed" || action === "Cancelled" || action === "Rejected" || action === "Selected") {
+    if (
+      action === "Completed" ||
+      action === "Cancelled" ||
+      action === "Rejected" ||
+      action === "Selected"
+    ) {
       setConfirmAction(action);
       setShowConfirmModal(true);
+    } else if (action === "Scheduled") {
+      // Directly update status to Scheduled
+      handleStatusChange("Scheduled");
+      setActionInProgress(false);
     }
   };
 
@@ -368,18 +377,29 @@ console.log("round", round);
     Draft: {
       canEdit: true,
       canDelete: true,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canReject: false,
-      canSelect: false,
-      canFeedback: false,
+      canMarkScheduled: true,
+      canReschedule: true,
+      canCancel: true,
+      canComplete: true,
+      canReject: true,
+      canSelect: true,
+      canFeedback: true,
     },
+    // Draft: {
+    //   canEdit: true,
+    //   canDelete: true,
+    //   canMarkScheduled: true,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
+    //   canFeedback: false,
+    // },
     RequestSent: {
       canEdit: true,
       canDelete: false,
-      canMarkScheduled: false,
+      canMarkScheduled: true,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
@@ -399,14 +419,14 @@ console.log("round", round);
       canFeedback: false,
     },
     Rescheduled: {
-      canEdit: true,
+      canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      canReject: true,
-      canSelect: true,
+      canReject: false,
+      canSelect: false,
       canFeedback: false,
     },
     Completed: {
@@ -440,7 +460,7 @@ console.log("round", round);
       canComplete: false,
       canReject: false,
       canSelect: false,
-      canFeedback: false,
+      canFeedback: true,
     },
     Selected: {
       canEdit: false,
@@ -451,30 +471,19 @@ console.log("round", round);
       canComplete: false,
       canReject: false,
       canSelect: false,
-      canFeedback: false,
+      canFeedback: true,
     },
-    Interview_Completed: {
+    InComplete: {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: false,
+      canReschedule: true,
       canCancel: false,
       canComplete: false,
       canReject: false,
       canSelect: false,
       canFeedback: false,
-    },
-    Feedback_Submitted: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canReject: false,
-      canSelect: false,
-      canFeedback: false,
-    },
+    }
   };
 
   // Helper to get permissions for current round status
@@ -486,75 +495,75 @@ console.log("round", round);
 
   // v1.0.4 -------------------------->
 
-  const handleCreateAssessmentClick = async(round) => {
-  
+  const handleCreateAssessmentClick = async (round) => {
 
-      if (round?.roundTitle === "Assessment") {
 
-        // Calculate link expiry days
-        let linkExpiryDays = null;
-        if (sectionQuestions?.ExpiryDate) {
-          const expiryDate = new Date(sectionQuestions?.ExpiryDate);
-          const today = new Date();
-          const diffTime = expiryDate.getTime() - today.getTime();
-          linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
-        }
+    if (round?.roundTitle === "Assessment") {
 
-        // setIsLoading(true);
-        const result = await shareAssessmentAPI({
-          assessmentId: round?.assessmentId,
-          selectedCandidates: [interviewData?.candidateId],
-          linkExpiryDays,
-          // userId: userId,
-          organizationId: orgId,
-          // setErrors,
-          queryClient,
-
-          // onClose: onCloseshare,
-          // setErrors,
-          // setIsLoading,
-          // organizationId,
-          // userId,
-        });
-        // console.log("assessment result", result);
-        if (result.success) {
-          let isEditing = true;
-          // const payload = isEditing 
-          // && {
-          //   interviewId,
-          //   round: roundData,
-          //   roundId,
-          //   questions: interviewQuestionsList,
-          // }
-
-          const roundData = {
-            ...round,
-            status: "scheduled", // or whatever status you want to set
-            completedDate: null,
-            rejectionReason: null,
-          };
-  
-         const  payload = isEditing 
-          && {
-            interviewId: interview._id,
-            round: { ...roundData },
-            roundId: round._id,
-            isEditing: true,
-          };
-             // Use saveInterviewRound mutation from useInterviews hook
-      console.log("Calling saveInterviewRound...");
-      const response = await saveInterviewRound(payload);
-      console.log("response",response);
-      
-          // navigate(`/interviews/${interviewId}`);
-          if(response?.status === "ok"){
-          toast.success('Round Status updated successfully!');
-          }
-        }else {
-          toast.error(result.message || "Failed to schedule assessment");
-        }
-
+      // Calculate link expiry days
+      let linkExpiryDays = null;
+      if (sectionQuestions?.ExpiryDate) {
+        const expiryDate = new Date(sectionQuestions?.ExpiryDate);
+        const today = new Date();
+        const diffTime = expiryDate.getTime() - today.getTime();
+        linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
       }
+
+      // setIsLoading(true);
+      const result = await shareAssessmentAPI({
+        assessmentId: round?.assessmentId,
+        selectedCandidates: [interviewData?.candidateId],
+        linkExpiryDays,
+        // userId: userId,
+        organizationId: orgId,
+        // setErrors,
+        queryClient,
+
+        // onClose: onCloseshare,
+        // setErrors,
+        // setIsLoading,
+        // organizationId,
+        // userId,
+      });
+      // console.log("assessment result", result);
+      if (result.success) {
+        let isEditing = true;
+        // const payload = isEditing 
+        // && {
+        //   interviewId,
+        //   round: roundData,
+        //   roundId,
+        //   questions: interviewQuestionsList,
+        // }
+
+        const roundData = {
+          ...round,
+          status: "scheduled", // or whatever status you want to set
+          completedDate: null,
+          rejectionReason: null,
+        };
+
+        const payload = isEditing
+          && {
+          interviewId: interview._id,
+          round: { ...roundData },
+          roundId: round._id,
+          isEditing: true,
+        };
+        // Use saveInterviewRound mutation from useInterviews hook
+        console.log("Calling saveInterviewRound...");
+        const response = await saveInterviewRound(payload);
+        console.log("response", response);
+
+        // navigate(`/interviews/${interviewId}`);
+        if (response?.status === "ok") {
+          toast.success('Round Status updated successfully!');
+        }
+      } else {
+        toast.error(result.message || "Failed to schedule assessment");
+      }
+
+    }
     // console.log("assessment result", result);
 
 
@@ -1182,102 +1191,104 @@ console.log("round", round);
                 </div>
               )} */}
 
-              {isRoundActive && (
-                <div className="mt-6 flex flex-wrap justify-end space-x-2">
-                  {/* Reschedule */}
-                  {permissions.canReschedule && round.interviewerType === 'External' && !round.isInstant && (
-                    <button
-                      onClick={() => onInitiateAction(round, 'reschedule')}
-                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
-                    >
-                      <Calendar className="h-4 w-4 mr-1" /> Reschedule
-                    </button>
-                  )}
-                  {/* Cancel */}
-                  {permissions.canCancel && (
-                    <button
-                      onClick={() => { setActionInProgress(true); onInitiateAction(round, 'cancel'); }}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" /> Cancel
-                    </button>
-                  )}
-                  {/* Edit */}
-                  {canEdit && permissions.canEdit && !actionInProgress && (
-                    <button
-                      onClick={onEdit}
-                      className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
-                    >
-                      <Edit className="h-4 w-4 mr-1" /> Edit Round
-                    </button>
-                  )}
-                  {/* Delete */}
-                  {canEdit && permissions.canDelete && (
-                    <button
-                      onClick={() => setShowDeleteConfirmModal(true)}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" /> Delete Round
-                    </button>
-                  )}
-                  {/* Mark Scheduled */}
-                  {permissions.canMarkScheduled && (
-                    <button
-                      onClick={() => handleActionClick("Scheduled")}
-                      className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
-                    >
-                      <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
-                    </button>
-                  )}
-                  {/* Complete */}
-                  {permissions.canComplete && (
-                    <button
-                      onClick={() => handleActionClick("Completed")}
-                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" /> Complete
-                    </button>
-                  )}
-                   {/* Select */}
-                   {console.log('333', permissions.canSelect)}
-                  {permissions.canSelect && (
-                    <button
-                      onClick={handleSelect}
-                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" /> Select
-                    </button>
-                  )}
-                  {/* Reject */}
-                  {console.log('333', permissions.canReject)}
-                  {permissions.canReject && (
-                    <button
-                      onClick={() => setShowRejectionModal(true) || setActionInProgress(true)}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <ThumbsDown className="h-4 w-4 mr-1" /> Reject
-                    </button>
-                  )}
-                  {/* Feedback */}
-                  {permissions.canFeedback && (
-                    <button
-                      onClick={() => setShowFeedbackModal(true)}
-                      className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-1" /> Feedback
-                    </button>
-                  )}
-                  {/* Share (always for Assessment) */}
-                  {round.roundTitle === "Assessment" && (
-                    <button
-                      onClick={handleShareClick}
-                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
-                    >
-                      <Share2 className="h-4 w-4 mr-1" /> Share
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="mt-6 flex flex-wrap justify-end space-x-2">
+                {/* Reschedule */}
+                {permissions.canReschedule && round.interviewerType === 'External' && !round.isInstant && (
+                  <button
+                    onClick={() => onEdit(round, { isReschedule: true })}
+                    className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                  >
+                    <Calendar className="h-4 w-4 mr-1" /> Reschedule
+                  </button>
+                )}
+                {/* Cancel */}
+                {permissions.canCancel && (
+                  <button
+                    onClick={() => {
+                      setActionInProgress(true);
+                      setConfirmAction("Cancel");
+                      setShowConfirmModal(true);
+                    }}
+                    className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" /> Cancel
+                  </button>
+                )}
+                {/* Edit */}
+                {canEdit && permissions.canEdit && !actionInProgress && (
+                  <button
+                    onClick={onEdit}
+                    className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                  >
+                    <Edit className="h-4 w-4 mr-1" /> Edit Round
+                  </button>
+                )}
+                {/* Delete */}
+                {canEdit && permissions.canDelete && (
+                  <button
+                    onClick={() => setShowDeleteConfirmModal(true)}
+                    className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" /> Delete Round
+                  </button>
+                )}
+                {/* Mark Scheduled */}
+                {permissions.canMarkScheduled && (
+                  <button
+                    onClick={() => handleActionClick("Scheduled")}
+                    className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                  >
+                    <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
+                  </button>
+                )}
+                {/* Complete */}
+                {permissions.canComplete && (
+                  <button
+                    onClick={() => handleActionClick("Completed")}
+                    className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" /> Complete
+                  </button>
+                )}
+                {/* Select */}
+                {console.log('333', permissions.canSelect)}
+                {permissions.canSelect && (
+                  <button
+                    onClick={handleSelect}
+                    className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" /> Select
+                  </button>
+                )}
+                {/* Reject */}
+                {console.log('333', permissions.canReject)}
+                {permissions.canReject && (
+                  <button
+                    onClick={() => setShowRejectionModal(true) || setActionInProgress(true)}
+                    className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                  >
+                    <ThumbsDown className="h-4 w-4 mr-1" /> Reject
+                  </button>
+                )}
+                {/* Feedback */}
+                {permissions.canFeedback && (
+                  <button
+                    onClick={() => setShowFeedbackModal(true)}
+                    className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+                  </button>
+                )}
+                {/* Share (always for Assessment) */}
+                {round.roundTitle === "Assessment" && (
+                  <button
+                    onClick={handleShareClick}
+                    className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                  >
+                    <Share2 className="h-4 w-4 mr-1" /> Share
+                  </button>
+                )}
+              </div>
 
 
               {/* v1.0.4 ----------------------------> */}
