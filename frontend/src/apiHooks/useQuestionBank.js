@@ -1,6 +1,8 @@
+//<-----v1.0.0----Venkatesh--------update get added suggested to myquestionlist question api
+
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useMemo } from 'react';
 import { fetchFilterData } from "../api";
 import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
@@ -15,6 +17,7 @@ export const useQuestions = (filters = {}) => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
+  const ownerId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
@@ -135,6 +138,7 @@ export const useQuestions = (filters = {}) => {
         ...questionData,
         suggestedQuestionId: questionData.suggestedQuestionId || '',
         ownerId: userId || '',  // Add ownerId from current user
+        tenantId: tenantId || '',//<-----v1.0.0----
         isEdit: isEdit
       };
 
@@ -178,7 +182,7 @@ export const useQuestions = (filters = {}) => {
         }
       });
       
-      queryClient.invalidateQueries(['myQuestions']);
+      queryClient.invalidateQueries(['questions']);//<-----v1.0.0----
     },
     onError: (error) => {
       console.error('saveOrUpdateQuestion mutation failed:', error.response?.data?.message || error.message);
@@ -186,14 +190,16 @@ export const useQuestions = (filters = {}) => {
   });
 
   // ✅ Mutation #2: Create or Update a List
+  //<----v1.0.0----
   const saveOrUpdateListMutation = useMutation({
-    mutationFn: async ({ isEditing, editingSectionId, newListName, newListNameForName, userId, orgId }) => {
+    mutationFn: async ({ isEditing, editingSectionId, newListName, newListNameForName, userId, orgId, type }) => {
       if (isEditing && editingSectionId) {
         const response = await axios.patch(`${config.REACT_APP_API_URL}/tenant-list/lists/${editingSectionId}`, {
           label: newListName,
           name: newListNameForName,
           ownerId: userId,
           tenantId: orgId,
+          ...(typeof type !== 'undefined' ? { type } : {}),
         });
         return { updated: true, data: response.data };
       } else {
@@ -202,6 +208,7 @@ export const useQuestions = (filters = {}) => {
           name: newListNameForName,
           ownerId: userId,
           tenantId: orgId,
+          type,
         });
         return response.data;
       }
@@ -215,7 +222,13 @@ export const useQuestions = (filters = {}) => {
           // Update existing list
           return oldData.map(list => 
             list._id === variables.editingSectionId 
-              ? { ...list, label: variables.newListName, name: variables.newListNameForName }
+              ? { 
+                  ...list, 
+                  label: variables.newListName, 
+                  name: variables.newListNameForName,
+                  ...(typeof variables.type !== 'undefined' ? { type: variables.type } : {})
+                }
+                //----v1.0.0---->
               : list
           );
         } else {
@@ -242,7 +255,7 @@ export const useQuestions = (filters = {}) => {
         // First get existing question with current lists
         const { data } = await axios.get(
           `${config.REACT_APP_API_URL}/tenant-questions/${suggestedQuestionId}`,
-          { params: { [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId } }
+          { params: { [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : ownerId } }
         );
 
         // Merge existing and new list IDs
@@ -252,7 +265,13 @@ export const useQuestions = (filters = {}) => {
         // Update question with merged list IDs
         const response = await axios.patch(
           `${config.REACT_APP_API_URL}/newquestion/${data.data._id}`,
-          { tenantListId: updatedListIds }
+          //<-----v1.0.0----
+          {
+            tenantListId: updatedListIds,
+            tenantId,
+            ...(organization ? {} : { ownerId: userId })
+          }
+          //-----v1.0.0---->
         );
         return response.data;
       } catch (error) {
@@ -263,7 +282,10 @@ export const useQuestions = (filters = {}) => {
             {
               suggestedQuestionId,
               tenantListId: listIds,
-              [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId
+              //<-----v1.0.0----
+              tenantId,
+              ...(organization ? {} : { ownerId: userId })
+              //-----v1.0.0---->
             }
           );
           return createResponse.data;
@@ -272,9 +294,11 @@ export const useQuestions = (filters = {}) => {
       }
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(['myQuestions']);
+      //queryClient.invalidateQueries(['myQuestions']);
+      queryClient.invalidateQueries(['questions']);//<-----v1.0.0----
       queryClient.invalidateQueries(['questionBySuggestedId', variables.suggestedQuestionId]);
-      queryClient.invalidateQueries(['allQuestionLists']);
+      //queryClient.invalidateQueries(['allQuestionLists']);
+      queryClient.invalidateQueries(['createdLists']);//<-----v1.0.0----
     },
     onError: (error) => {
       console.error('Update failed:', error.response?.data?.message || error.message);
@@ -301,17 +325,21 @@ export const useQuestions = (filters = {}) => {
           `${config.REACT_APP_API_URL}/newquestion/${existingQuestion.data._id}`,
           {
             tenantListId: updatedListIds,
-            [organization ? 'tenantId' : 'ownerId']: organization ? tenantId : userId,
-            ownerId: userId,
+            //<-----v1.0.0----
+            tenantId,
+            ...(organization ? {} : { ownerId: userId })
+            //-----v1.0.0---->
           }
         );
         return updateResponse.data;
       }
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(['myQuestions']);
+      //queryClient.invalidateQueries(['myQuestions']);
+      queryClient.invalidateQueries(['questions']);
       queryClient.invalidateQueries(['questionBySuggestedId', variables.suggestedQuestionId]);
-      queryClient.invalidateQueries(['allQuestionLists']);
+      //queryClient.invalidateQueries(['allQuestionLists']);
+      queryClient.invalidateQueries(['createdLists']);
     },
     onError: (error) => {
       console.error('Remove failed:', error.response?.data?.message || error.message);

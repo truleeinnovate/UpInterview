@@ -166,6 +166,7 @@ console.log("mergedQuestions",mergedQuestions);
   console.log("mergedQuestions",mergedQuestions);
 
   return (
+    <div className="flex-1 flex flex-col overflow-hidden">
     <div className="min-h-screen bg-gray-50 ">
       {/* Meeting Controls - Floating */}
       {/* <div className="fixed top-14 right-4 z-40 bg-white shadow-lg rounded-lg p-3">
@@ -191,7 +192,7 @@ console.log("mergedQuestions",mergedQuestions);
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors
+                    className={`w-full flex items-center gap-3 px-4 py-3  font-medium transition-colors
                       ${decodedData?.schedule && tab.id === 'questions' ? 'hidden' : ''}
                       ${
                         activeTab === tab.id
@@ -268,6 +269,7 @@ console.log("mergedQuestions",mergedQuestions);
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

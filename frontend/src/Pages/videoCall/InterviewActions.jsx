@@ -1,3 +1,5 @@
+// v.0.0 ---------------------------------------------------------- Ranjith added entire changes made for v.0.0
+
 import React, { useState, useEffect } from "react";
 import {
   CheckCircle,
@@ -93,13 +95,16 @@ const candidateActionEnabled = startDateTime
         // Determine the new status based on the action type
         let newStatus;
         let rejectionReason = null;
+        let event = null;
+        let eventReason = null;
         
         if (type === "completion") {
-          newStatus = extra.status === "completed" ? "Completed" : "incomplete";
+          newStatus = extra.status === "completed" ? "Completed" : "InCompleted";
           rejectionReason = extra.comments || null;
         } else if (type === "noShow") {
-          newStatus = "no-show";
-          rejectionReason = extra.comments || null;
+          // newStatus = "no-show";
+          event = "Candidate_NoShow";
+          eventReason = extra.comments 
         } else if (type === "cancel") {
           newStatus = "Cancelled";
           rejectionReason = extra.reason || null;
@@ -109,8 +114,11 @@ const candidateActionEnabled = startDateTime
         // Prepare the round data for API call
         const roundData = {
           status: newStatus,
-          completedDate: newStatus === "completed" ? new Date() : null,
+          completedDate: newStatus === "Completed" ? new Date() : null,
           rejectionReason: rejectionReason,
+          // NEW: Add event and eventReason for Candidate No-Show
+          ...(event && { event }),
+          ...(eventReason && { eventReason })
         };
   
         const payload = {
@@ -127,13 +135,22 @@ const candidateActionEnabled = startDateTime
           );
           
           console.log("Status updated:", response.data);
+
+            // Show success toast based on action type
+        if (type === "completion") {
+          toast.success(`Interview marked as ${newStatus}`, {});
+        } else if (type === "noShow") {
+          toast.success("Candidate marked as no-show", {});
+        } else if (type === "cancel") {
+          toast.success("Interview cancelled successfully", {});
+        }
           
           // Show success toast based on action type
-          if (type === "completion") {
-            toast.success(`Interview marked as ${newStatus}`, {});
-          } else if (type === "noShow") {
-            toast.success("Candidate marked as no-show", {});
-          }
+          // if (type === "completion") {
+          //   toast.success(`Interview marked as ${newStatus}`, {});
+          // } else if (type === "noShow") {
+          //   toast.success("Candidate marked as no-show", {});
+          // }
           
           // Update local state after success
           // onActionComplete({ type, timestamp: new Date(), ...extra });
@@ -293,7 +310,7 @@ const candidateActionEnabled = startDateTime
           </div>
           <div>
             <p className="text-white text-opacity-80">Status</p>
-            <p className="font-semibold">{interviewData?.interviewRound?.status}</p>
+            <p className="font-semibold">{interviewData?.interviewRound?.status === "InProgress" ? "In Progress" : interviewData?.interviewRound?.status}</p>
           </div>
         </div>
       </div>
@@ -441,7 +458,7 @@ const candidateActionEnabled = startDateTime
               }
             </p>
           </div>
-          {modal?.status === "completed" ? "" :
+          {/* {modal?.status === "completed" ? "" :
           <textarea
             className="w-full border border-gray-300 rounded-lg p-3 text-sm"
             placeholder="Add any comments about the interview completion..."
@@ -449,7 +466,7 @@ const candidateActionEnabled = startDateTime
             onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
             rows={3}
           />
-}
+} */}
           
           <div className="flex justify-end gap-3">
             <button
@@ -633,3 +650,5 @@ const candidateActionEnabled = startDateTime
 };
 
 export default InterviewActions;
+
+// v.0.0.0 ---------------------------------------------------------- Ranjith added entire changes made

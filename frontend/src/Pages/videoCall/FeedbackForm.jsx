@@ -1,5 +1,7 @@
 //<---v1.0.0-----Venkatesh----solved edit mode issues
 //<---v1.0.1-----Venkatesh----solved edit mode issues
+//<---v1.0.2-----Ranjith----solved feedback issues
+
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -1145,11 +1147,14 @@ const FeedbackForm = ({
 
   
   console.log("schedulerFeedbackData",schedulerFeedbackData);
-  if (isScheduler || decodedData?.schedule) {
+  //<---v1.0.2-----Ranjith----solved feedback issues
+
+  if ( decodedData?.schedule) {
     console.log("schedulerFeedbackData",schedulerFeedbackData);
     return <SchedulerViewMode feedbackData={schedulerFeedbackData} />;
   }
 console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
+//<---v1.0.2-----Ranjith----solved feedback issues
 
   // Button component for consistency
   const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', style = {}, disabled = false, type = 'button' }) => {

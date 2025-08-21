@@ -26,7 +26,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
         const payload = {
           interviewId: feedbackData?.interviewRound?.interviewId,
           round: {
-            status: "In Progress",
+            status: "InProgress",
             startedAt: new Date() // Add timestamp when interview started
           },
           roundId: feedbackData?.interviewRound?._id,
@@ -214,7 +214,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
 
   console.log("feedbackData",feedbackData);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
+    <div className=" bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl">
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -325,7 +325,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
           </p>
         </div>
         
-        <div className={`grid gap-8 mb-8 ${isSingleRole ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
+        <div className={`grid gap-8 mb-8 ${isSingleRole ? 'grid-cols-1 ' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2'}`}>
          
 
           {/* Interviewer Instructions */}
@@ -402,7 +402,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
             <MessageSquare className="w-5 h-5 text-[#217989]" />
             General Interview Guidelines
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-600">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6 text-sm text-gray-600">
             <div>
               <h4 className="font-semibold text-gray-700 mb-2">Technical Requirements</h4>
               <ul className="space-y-1">

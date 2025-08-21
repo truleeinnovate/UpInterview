@@ -1,6 +1,7 @@
 // v1.0.0 ------ Venkatesh--- check list name using ternary operator
 // v1.0.1  -  Ashraf  -  fixed toast error
 // v1.0.2  -  Venkatesh  -  fixed selected label issue now default first label is selected
+// v1.0.3  -  Venkatesh  -  pass isInterviewType to sidebar
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
@@ -56,8 +57,10 @@ const MyQuestionsList = ({
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [showNewCandidateContent, setShowNewCandidateContent] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
+  const [dropdownValue, setDropdownValue] = useState("Interviews");
 
   // Centralized filter data state
   const [filtrationData, setFiltrationData] = useState([
@@ -172,7 +175,7 @@ const MyQuestionsList = ({
 
   const openListPopup = () => {
     if (myQuestionsListRef.current) {
-      myQuestionsListRef.current.openPopup();
+      myQuestionsListRef.current.openPopup({ defaultType: dropdownValue });////<----v1.0.2----
     }
   };
 
@@ -667,6 +670,40 @@ const MyQuestionsList = ({
                 </div>
               )}
             </div>
+            <div className="relative inline-block w-48">
+              <button
+                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+                onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
+              >
+                <span className="truncate">{dropdownValue}</span>
+                <svg
+                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen? "rotate-180" : "rotate-0"}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isInterviewTypeOpen && (
+                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                  <div
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interviews" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
+                    onClick={() => {setDropdownValue("Interviews"); setIsInterviewTypeOpen(false);}}
+                  >
+                    Interviews
+                  </div>
+                  <div
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignments" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
+                    onClick={() => {setDropdownValue("Assignments"); setIsInterviewTypeOpen(false);}}
+                  >
+                    Assignments
+                  </div>
+                  
+                </div>
+              )}
+            </div>
             <button
               className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
               onClick={openListPopup}
@@ -961,6 +998,7 @@ const MyQuestionsList = ({
             onClose={closeSidebar}
             onOutsideClick={handleOutsideClick}
             selectedLabelId={selectedLabelId}
+            isInterviewType={dropdownValue === "Interviews"}//<----v1.0.3------
           />
         )}
       </div>
