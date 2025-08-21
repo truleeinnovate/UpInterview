@@ -57,7 +57,7 @@ const validateFile = async (file, type = "attachment") => {
   return ""; // No error
 };
 
-const SupportForm = () => {
+const SupportForm = ({ onClose,FeedbackIssueType}) => {
   const { isMutationLoading, submitTicket } = useSupportTickets();
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const ownerId = tokenPayload?.userId;
@@ -89,8 +89,26 @@ const SupportForm = () => {
       { id: 4, issue: "Scheduling Problem" },
       { id: 5, issue: "Video/Audio Issue" },
       { id: 6, issue: "Assessment Issue" },
+      // Add the new options for FeedbackInterviewCancel
+      ...(FeedbackIssueType === "FeedbackInterviewCancel" ? [
+        { id: 7, issue: "Candidate Not Available" },
+        { id: 8, issue: "Interviewer Not Available" },
+        { id: 9, issue: "Reschedule Request" },
+        { id: 10, issue: "Technical Issue" }
+      ] : []),
+      ...(FeedbackIssueType === "FeedbackInterviewTechIssue" ? [
+        { id: 7, issue: "Internet Connectivity (Candidate)" },
+        { id: 8, issue: "Internet Connectivity (Interviewer)" },
+        { id: 9, issue: "Audio/Video Problem" },
+        { id: 10, issue: "Platform Issue" }
+      ] : [])
+      // FeedbackInterviewTechIssue
+      // <option value="connectivity-candidate">Internet Connectivity (Candidate)</option>
+      // <option value="connectivity-interviewer">Internet Connectivity (Interviewer)</option>
+      // <option value="audio-video">Audio/Video Problem</option>
+      // <option value="platform-issue">Platform Issue</option>
     ],
-    []
+    [FeedbackIssueType]
   );
 // v1.0.3 ------------------------------------------------------------------------->
 
@@ -314,7 +332,14 @@ const SupportForm = () => {
         });
 
         setFormState(initialFormState);
-        navigate("/support-desk");
+  //  <---------------- added by ranjith
+        if (onClose) {
+          onClose(); // Call the onClose prop if provided
+        } else {
+          navigate("/support-desk"); // Fallback to navigation
+        }
+        // ----------------------->
+        // navigate("/support-desk");
       } catch (error) {
         // Error is already handled in mutation's onError
       }
@@ -331,6 +356,18 @@ const SupportForm = () => {
       attachmentFile,
     ]
   );
+
+  //  <------------------ added by ranjith
+   // Handle close button click
+   const handleClose = useCallback(() => {
+    if (onClose) {
+      onClose(); // Call the onClose prop if provided
+    } else {
+      navigate("/support-desk"); // Fallback to navigation
+    }
+  }, [onClose, navigate]);
+
+  // ----------------------- added by Ranjith for ffedback supprot ticket>
 
   // <--------v1.0.1 ------ 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -385,6 +422,8 @@ const SupportForm = () => {
   ];
   // --------v1.0.1 ------>
 
+
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50">
       <div
@@ -396,7 +435,8 @@ const SupportForm = () => {
         <div>
           <div className="flex justify-between items-center p-4">
             <button
-              onClick={() => navigate("/support-desk")}
+              // onClick={() => navigate("/support-desk")}
+              onClick={handleClose}
               className="focus:outline-none md:hidden lg:hidden xl:hidden 2xl:hidden sm:w-8"
             >
               <IoArrowBack className="text-2xl" />
@@ -418,7 +458,8 @@ const SupportForm = () => {
                   )}
                 </button>
                 <button
-                  onClick={() => navigate("/support-desk")}
+                 onClick={handleClose}
+                  // onClick={() => navigate("/support-desk")}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="w-4 h-4" />

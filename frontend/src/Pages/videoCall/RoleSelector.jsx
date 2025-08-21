@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Users, User, MessageSquare } from 'lucide-react';
+import axios from 'axios';
+import { config } from '../../config';
 
 const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
   // Determine which sections to show based on roleInfo
@@ -11,6 +13,51 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
   const [timeLeft, setTimeLeft] = useState('');
   const [localInterviewTime, setLocalInterviewTime] = useState('');
   const [localEndTime, setLocalEndTime] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+
+
+    // Function to update interview status to "in-progress"
+    const updateInterviewStatus = async () => {
+      try {
+        setIsUpdatingStatus(true);
+        
+        // Prepare the payload to update status to "in-progress"
+        const payload = {
+          interviewId: feedbackData?.interviewRound?.interviewId,
+          round: {
+            status: "In Progress",
+            startedAt: new Date() // Add timestamp when interview started
+          },
+          roundId: feedbackData?.interviewRound?._id,
+          isEditing: true,
+        };
+  
+        const response = await axios.post(
+          `${config.REACT_APP_API_URL}/interview/save-round`,
+          payload
+        );
+        
+        console.log("Status updated to in-progress:", response.data);
+        // toast.success("Interview marked as in progress", {});
+        
+      } catch (error) {
+        console.error("Error updating status:", error);
+        // toast.error("Failed to update status");
+      } finally {
+        setIsUpdatingStatus(false);
+      }
+    };
+  
+
+    // Handle role selection
+    const handleRoleSelect = async (role) => {
+      if (role === 'interviewer') {
+        // Update status to "in-progress" before proceeding
+        await updateInterviewStatus();
+      }
+      onRoleSelect(role);
+    };
 
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
   const parseCustomDateTime = (dateTimeStr) => {
@@ -312,13 +359,15 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
               </div>
              
               <button
-                onClick={() => onRoleSelect('interviewer')}
-                disabled={!isButtonEnabled}
-                className={`w-full ${
-                  isButtonEnabled 
-                    ? 'bg-[#217989] hover:bg-[#1a616e] hover:scale-105' 
-                    : 'bg-gray-400 cursor-not-allowed'
-                } text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3`}
+                onClick={() => handleRoleSelect('interviewer')}
+
+                // onClick={() => onRoleSelect('interviewer')}
+                // disabled={!isButtonEnabled}
+                // className={`w-full ${
+                //   isButtonEnabled 
+                //     ? 'bg-[#217989] hover:bg-[#1a616e] hover:scale-105' 
+                //     : 'bg-gray-400 cursor-not-allowed'
+                // } text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3`}
               >
                 <Users className="w-5 h-5" />
                 {isButtonEnabled 
