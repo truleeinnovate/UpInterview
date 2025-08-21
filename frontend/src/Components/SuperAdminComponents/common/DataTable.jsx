@@ -32,11 +32,11 @@ function DataTable({
   // Filter data based on search term
   const filteredData =
     searchable && searchTerm
-      ? data.filter((item) =>
+      ? data?.filter((item) =>
           Object.values(item).some(
             (value) =>
               value &&
-              value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+              value.toString().toLowerCase().includes(searchTerm?.toLowerCase())
           )
         )
       : data;
@@ -96,7 +96,7 @@ function DataTable({
                   setCurrentPage(1);
                 }}
               >
-                {itemsPerPageOptions.map((option) => (
+                {itemsPerPageOptions?.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
@@ -114,21 +114,21 @@ function DataTable({
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {columns.map((column) => (
+                  {columns?.map((column) => (
                     <th
-                      key={column.field}
+                      key={column?.field}
                       onClick={() =>
-                        column.sortable !== false && handleSort(column.field)
+                        column?.sortable !== false && handleSort(column?.field)
                       }
                       className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
-                        column.sortable !== false
+                        column?.sortable !== false
                           ? "cursor-pointer hover:bg-gray-100"
                           : ""
                       }`}
                     >
                       <div className="flex items-center">
-                        {column.header}
-                        {sortField === column.field && (
+                        {column?.header}
+                        {sortField === column?.field && (
                           <span className="ml-1">
                             {sortDirection === "asc" ? (
                               <AiOutlineCaretUp />
@@ -143,17 +143,17 @@ function DataTable({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((row, rowIndex) => (
-                    <tr key={row.id || rowIndex} className="hover:bg-gray-50">
+                {paginatedData?.length > 0 ? (
+                  paginatedData?.map((row, rowIndex) => (
+                    <tr key={row?.id || rowIndex} className="hover:bg-gray-50">
                       {columns.map((column) => (
                         <td
-                          key={`${row._id || rowIndex}-${column.field}`}
+                          key={`${row?._id || rowIndex}-${column?.field}`}
                           className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap"
                         >
-                          {column.render
-                            ? column.render(row)
-                            : row[column.field]}
+                          {column?.render
+                            ? column?.render(row)
+                            : row[column?.field]}
                         </td>
                       ))}
                     </tr>
@@ -161,7 +161,7 @@ function DataTable({
                 ) : (
                   <tr>
                     <td
-                      colSpan={columns.length}
+                      colSpan={columns?.length}
                       className="text-center py-4 text-sm text-gray-500"
                     >
                       No data available
@@ -179,8 +179,8 @@ function DataTable({
         <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="text-sm text-gray-700">
             Showing{" "}
-            {Math.min((currentPage - 1) * itemsPerPage + 1, sortedData.length)}{" "}
-            to {Math.min(currentPage * itemsPerPage, sortedData.length)} of{" "}
+            {Math.min((currentPage - 1) * itemsPerPage + 1, sortedData?.length)}{" "}
+            to {Math.min(currentPage * itemsPerPage, sortedData?.length)} of{" "}
             {sortedData.length} results
           </div>
           <div className="flex flex-wrap justify-center gap-2">
@@ -191,7 +191,7 @@ function DataTable({
             >
               Previous
             </button>
-            {[...Array(Math.min(5, totalPages))].map((_, i) => {
+            {[...Array(Math.min(5, totalPages))]?.map((_, i) => {
               let pageToShow;
               if (totalPages <= 5) {
                 pageToShow = i + 1;

@@ -22,6 +22,9 @@ function InterviewerRatesPage() {
   const [selectedRateCard, setSelectedRateCard] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
 
+  const [modalMode, setModalMode] = useState("create");
+
+
   useScrollLock(showRateCardModal);
 
   const categories = [
@@ -32,19 +35,48 @@ function InterviewerRatesPage() {
     "Specialized Skills",
   ];
 
+  // const handleCreateRateCard = () => {
+  //   setSelectedRateCard(null);
+  //   setShowRateCardModal(true);
+  // };
+
+  // const handleEditRateCard = (rateCard) => {
+  //   setSelectedRateCard(rateCard);
+  //   setShowRateCardModal(true);
+  // };
+
+  // const handleCloseModal = () => {
+  //   setShowRateCardModal(false);
+  //   setSelectedRateCard(null);
+  // };
+
+  // const handleViewRateCard = (rateCard) => {
+  //   setSelectedRateCard(rateCard);
+  //   setShowRateCardModal(true);
+  // }
+
   const handleCreateRateCard = () => {
     setSelectedRateCard(null);
+    setModalMode("create");
     setShowRateCardModal(true);
   };
 
   const handleEditRateCard = (rateCard) => {
     setSelectedRateCard(rateCard);
+    setModalMode("edit");
+    setShowRateCardModal(true);
+  };
+
+  const handleViewRateCard = (rateCard) => {
+    setSelectedRateCard(rateCard);
+    setModalMode("view");
     setShowRateCardModal(true);
   };
 
   const handleCloseModal = () => {
     setShowRateCardModal(false);
     setSelectedRateCard(null);
+    setModalMode("create");
   };
 
   return (
@@ -56,7 +88,7 @@ function InterviewerRatesPage() {
         <div className="flex space-x-2 mr-4">
           <div className="flex rounded-lg border border-gray-300 p-1 bg-white">
             <select
-              className="focus:ring-teal-500 focus:border-teal-500 block sm:text-sm border-gray-300 rounded-md"
+              className="focus:ring-teal-500 focus:border-teal-500 block sm:text-sm border-gray-300 rounded-md outline-none"
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
             >
@@ -109,12 +141,14 @@ function InterviewerRatesPage() {
             <RatesTableView
               filterCategory={filterCategory}
               onEdit={handleEditRateCard}
+              onView={handleViewRateCard}
             />
           )}
           {activeView === "kanban" && (
             <RatesKanbanView
               filterCategory={filterCategory}
               onEdit={handleEditRateCard}
+              onView={handleViewRateCard}
             />
           )}
         </div>
@@ -125,6 +159,7 @@ function InterviewerRatesPage() {
           <RateCardModal
             rateCard={selectedRateCard}
             onClose={handleCloseModal}
+            mode={modalMode}
           />
         )}
       </div>
