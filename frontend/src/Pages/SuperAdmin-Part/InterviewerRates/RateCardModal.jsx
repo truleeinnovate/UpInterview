@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Adding form submission and modal functionality for interviewer rates
 import { useState, useEffect } from "react";
 import {
   // AiOutlineClose,
@@ -7,8 +8,15 @@ import {
   AiOutlineDelete,
 } from "react-icons/ai";
 import { Minimize, Expand, X } from "lucide-react";
+// v1.0.0 <--------------------------------------
+import axios from "axios";
+import { config } from "../../../config";
+import toast from "react-hot-toast";
+// v1.0.0 -------------------------------------->
 
-function RateCardModal({ rateCard, onClose }) {
+// v1.0.0 <-------------------------------------------------------
+function RateCardModal({ rateCard, onClose, mode = "create" }) {
+  // v1.0.0 <-------------------------------------------------------
   const [isExpanded, setIsExpanded] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
@@ -50,10 +58,11 @@ function RateCardModal({ rateCard, onClose }) {
   ];
 
   const experienceLevels = ["Junior", "Mid-Level", "Senior"];
-
+  // v1.0.0 <------------------------------------------------------- 
   useEffect(() => {
     if (rateCard) {
       setFormData({
+        _id: rateCard._id,
         category: rateCard.category,
         technology: rateCard.technology,
         levels: rateCard.levels,
@@ -63,6 +72,7 @@ function RateCardModal({ rateCard, onClose }) {
       });
     }
   }, [rateCard]);
+  // v1.0.0 <-------------------------------------------------------
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -125,12 +135,50 @@ function RateCardModal({ rateCard, onClose }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  // v1.0.0 <------------------------------------------------------
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   // Handle form submission
+
+  //   console.log("Form submitted:", formData);
+  //   onClose();
+  // };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
-    onClose();
+
+    console.log("Form data before submission:", formData);
+
+    try {
+      let response;
+
+      if (formData._id) {
+        // Update existing card
+        response = await axios.put(
+          `${config.REACT_APP_API_URL}/rate-cards/${formData._id}`,
+          formData
+        );
+      } else {
+        // Create new card
+        response = await axios.post(
+          `${config.REACT_APP_API_URL}/rate-cards`,
+          formData
+        );
+      }
+
+      console.log("Form submitted successfully:", response.data);
+
+      // Close popup only if request was successful
+      if (response.status === 200 || response.status === 201) {
+        toast.success(response.data.message);
+        onClose();
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
+
+  // v1.0.0 ------------------------------------------------------>
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
@@ -139,10 +187,13 @@ function RateCardModal({ rateCard, onClose }) {
           isExpanded ? "w-full" : "w-1/2"
         }`}
       >
-        <div className="bg-white sticky top-0 p-6">
+        {/* v1.0.0 <--------------------------------------------- */}
+        <div className="bg-white sticky top-0 p-6 z-50">
+          {/* v1.0.0 ---------------------------------------------> */}
+
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-custom-blue">
                 {rateCard ? "Edit Rate Card" : "Create Rate Card"}
               </h2>
               <p className="text-gray-500 mt-1">
@@ -184,15 +235,19 @@ function RateCardModal({ rateCard, onClose }) {
                 isExpanded ? "grid-cols-2" : "grid-cols-1"
               }`}
             >
-              <div>
-                <label className="form-label">Category *</label>
+              <div className="flex items-center gap-2">
+                <label className="form-label">
+                  Category <span className="text-red-500"> *</span>
+                </label>
+                {/*  v1.0.0 <------------------------------------------------------------------ */}
                 <select
-                  className="input"
+                  className="input border border-gray-300 rounded-md px-2 py-1 outline-none"
                   value={formData.category}
                   onChange={(e) =>
                     handleInputChange("category", e.target.value)
                   }
                   required
+                  disabled={mode === "view"}
                 >
                   <option value="">Select Category</option>
                   {categories.map((category) => (
@@ -201,20 +256,26 @@ function RateCardModal({ rateCard, onClose }) {
                     </option>
                   ))}
                 </select>
+                {/*  v1.0.0 --------------------------------------------------------------------> */}
               </div>
 
-              <div>
-                <label className="form-label">Technology / Role *</label>
+              <div className="flex items-center gap-2">
+                <label className="form-label">
+                  Technology / Role <span className="text-red-500"> *</span>
+                </label>
+                {/*  v1.0.0 <------------------------------------------------------------------ */}
                 <input
                   type="text"
-                  className="input"
+                  className="input border border-gray-300 rounded-md px-2 py-1 outline-none"
                   value={formData.technology}
                   onChange={(e) =>
                     handleInputChange("technology", e.target.value)
                   }
                   placeholder="e.g., Full-Stack Developer, Data Scientist"
                   required
+                  disabled={mode === "view"}
                 />
+                {/*  v1.0.0 --------------------------------------------------------------------> */}
               </div>
             </div>
 
@@ -223,20 +284,23 @@ function RateCardModal({ rateCard, onClose }) {
                 isExpanded ? "grid-cols-3" : "grid-cols-2"
               }`}
             >
-              <div>
+              <div className="flex items-center gap-2">
                 <label className="form-label">Default Currency</label>
+                {/*  v1.0.0 <-------------------------------------------------------------------- */}
                 <select
-                  className="input"
+                  className="input border border-gray-300 rounded-md px-2 py-1 outline-none"
                   value={formData.defaultCurrency}
                   onChange={(e) =>
                     handleInputChange("defaultCurrency", e.target.value)
                   }
+                  disabled={mode === "view"}
                 >
                   <option value="INR">INR (₹)</option>
                   <option value="USD">USD ($)</option>
                 </select>
+                {/*  v1.0.0 --------------------------------------------------------------------> */}
               </div>
-              
+
               {/* <div>
                 <label className="form-label">Mock Interview Discount (%)</label>
                 <input
@@ -250,15 +314,18 @@ function RateCardModal({ rateCard, onClose }) {
               </div> */}
 
               <div className="flex items-center">
+                {/*  v1.0.0 <-------------------------------------------------------------------- */}
                 <input
                   type="checkbox"
                   id="isActive"
-                  className="rounded text-custom-blue focus:ring-custom-blue"
+                  className="rounded accent-custom-blue focus:ring-custom-blue"
                   checked={formData.isActive}
                   onChange={(e) =>
                     handleInputChange("isActive", e.target.checked)
                   }
+                  disabled={mode === "view"}
                 />
+                {/*  v1.0.0 --------------------------------------------------------------------> */}
                 <label
                   htmlFor="isActive"
                   className="ml-2 text-sm text-gray-700"
@@ -278,7 +345,11 @@ function RateCardModal({ rateCard, onClose }) {
               <button
                 type="button"
                 onClick={addLevel}
-                className="inline-flex items-center px-3 py-1 bg-custom-blue text-white text-sm font-medium rounded-md hover:bg-teal-700"
+                // v1.0.0 <--------------------------------------------------------------------------------------------------------------------------
+                className={`inline-flex items-center px-3 py-1 bg-custom-blue text-white text-sm font-medium rounded-md hover:bg-teal-700 ${
+                  mode === "view" ? "hidden" : ""
+                }`}
+                // v1.0.0 -------------------------------------------------------------------------------------------------------------------------->
               >
                 <AiOutlinePlus className="mr-1" size={14} />
                 Add Level
@@ -290,13 +361,17 @@ function RateCardModal({ rateCard, onClose }) {
                 <div key={levelIndex} className="bg-gray-50 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-3">
                     <div className="flex-1">
-                      <label className="form-label">Experience Level</label>
+                      {/*  v1.0.0 <------------------------------------------------------------------ */}
+                      <label className="form-label mr-2">
+                        Experience Level
+                      </label>
                       <select
-                        className="input"
+                        className="input border border-gray-200 rounded-md px-1 py-1 outline-none"
                         value={level.level}
                         onChange={(e) =>
                           handleLevelChange(levelIndex, "level", e.target.value)
                         }
+                        disabled={mode === "view"}
                       >
                         {experienceLevels.map((expLevel) => (
                           <option key={expLevel} value={expLevel}>
@@ -305,8 +380,10 @@ function RateCardModal({ rateCard, onClose }) {
                         ))}
                         <option value="Custom">Custom</option>
                       </select>
+                      {/*  v1.0.0 <------------------------------------------------------------------ */}
                     </div>
-                    {formData.levels.length > 1 && (
+                    {/* v1.0.0 <------------------------------------------------------------------------- */}
+                    {/* {formData.levels.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeLevel(levelIndex)}
@@ -314,7 +391,8 @@ function RateCardModal({ rateCard, onClose }) {
                       >
                         <AiOutlineDelete size={16} />
                       </button>
-                    )}
+                    )} */}
+                    {/* v1.0.0 <------------------------------------------------------------------------- */}
                   </div>
 
                   <div
@@ -323,10 +401,11 @@ function RateCardModal({ rateCard, onClose }) {
                     }`}
                   >
                     <div>
+                      {/* v1.0.0 <---------------------------------------------------------------------- */}
                       <label className="form-label">INR Min (₹)</label>
                       <input
                         type="number"
-                        className="input"
+                        className="input border border-gray-200 rounded-md px-1 py-1 outline-none"
                         value={level.rateRange.inr.min}
                         onChange={(e) =>
                           handleRateChange(
@@ -337,13 +416,16 @@ function RateCardModal({ rateCard, onClose }) {
                           )
                         }
                         min="0"
+                        readOnly={mode === "view"}
                       />
+                      {/* v1.0.0 -----------------------------------------------------------------------> */}
                     </div>
                     <div>
                       <label className="form-label">INR Max (₹)</label>
+                      {/* v1.0.0 <------------------------------------------------------ */}
                       <input
                         type="number"
-                        className="input"
+                        className="input border border-gray-200 rounded-md px-1 py-1 outline-none"
                         value={level.rateRange.inr.max}
                         onChange={(e) =>
                           handleRateChange(
@@ -354,13 +436,16 @@ function RateCardModal({ rateCard, onClose }) {
                           )
                         }
                         min="0"
+                        readOnly={mode === "view"}
                       />
+                      {/* v1.0.0 ------------------------------------------------------> */}
                     </div>
                     <div>
                       <label className="form-label">USD Min ($)</label>
+                      {/* v1.0.0 <------------------------------------------------------ */}
                       <input
                         type="number"
-                        className="input"
+                        className="input border border-gray-200 rounded-md px-1 py-1 outline-none"
                         value={level.rateRange.usd.min}
                         onChange={(e) =>
                           handleRateChange(
@@ -371,13 +456,16 @@ function RateCardModal({ rateCard, onClose }) {
                           )
                         }
                         min="0"
+                        readOnly={mode === "view"}
                       />
+                      {/* v1.0.0 ------------------------------------------------------> */}
                     </div>
                     <div>
                       <label className="form-label">USD Max ($)</label>
+                      {/* v1.0.0 <---------------------------------------------------- */}
                       <input
                         type="number"
-                        className="input"
+                        className="input border border-gray-200 rounded-md px-1 py-1 outline-none"
                         value={level.rateRange.usd.max}
                         onChange={(e) =>
                           handleRateChange(
@@ -388,7 +476,9 @@ function RateCardModal({ rateCard, onClose }) {
                           )
                         }
                         min="0"
+                        readOnly={mode === "view"}
                       />
+                      {/* v1.0.0 ----------------------------------------------------> */}
                     </div>
                   </div>
                 </div>
@@ -397,19 +487,24 @@ function RateCardModal({ rateCard, onClose }) {
           </div>
 
           {/* Form Actions */}
+          {/* v1.0.0 <-------------------------------------------------------------- */}
           <div
-            className={`flex space-x-3 ${isExpanded ? "justify-center" : ""}`}
+            className={`flex space-x-3 ${mode === "view" ? "hidden" : ""} ${
+              isExpanded ? "justify-center" : ""
+            }`}
           >
             <button
+              disabled={mode === "view"}
               type="button"
               onClick={onClose}
-              className={`inline-flex items-center justify-center px-4 py-2 bg-white text-gray-700 border border-gray-300 font-medium rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 ${
+              className={`inline-flex items-center justify-center px-4 py-2 bg-white text-custom-blue border border-custom-blue font-medium rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 ${
                 isExpanded ? "px-8" : "flex-1"
               }`}
             >
               Cancel
             </button>
             <button
+              disabled={mode === "view"}
               type="submit"
               className={`inline-flex items-center justify-center px-4 py-2 bg-custom-blue text-white font-medium rounded-md hover:bg-custom-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${
                 isExpanded ? "px-8" : "flex-1"
@@ -418,6 +513,7 @@ function RateCardModal({ rateCard, onClose }) {
               {rateCard ? "Update Rate Card" : "Create Rate Card"}
             </button>
           </div>
+          {/* v1.0.0 <-------------------------------------------------------------- */}
         </form>
       </div>
     </div>

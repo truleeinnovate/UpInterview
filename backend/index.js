@@ -4,17 +4,18 @@
 // this is new
 // v1.0.3  -  Ashraf  -  added health check endpoints for monitoring
 // v1.0.4  -  Ashok   -  added analytics
-require('dotenv').config();
+// v1.0.5  -  Ashok   -  Added Rate Cards
+require("dotenv").config();
 
-const cors = require('cors');
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const cors = require("cors");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const app = express();
 
 // ✅ Trust Azure's proxy to detect HTTPS correctly
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // ✅ Parse cookies
 app.use(cookieParser());
@@ -28,58 +29,57 @@ const corsOptions = {
   origin: function (origin, callback) {
     // console.log('Origin:', origin);
     const allowedOrigins = [
-      'https://app.upinterview.io',
+      "https://app.upinterview.io",
       /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/,
-      'http://localhost:3000',
-      'http://localhost:5000'
+      "http://localhost:3000",
+      "http://localhost:5000",
     ];
 
     if (!origin) return callback(null, true);
 
     // Check if the origin is allowed
-    if (allowedOrigins.some((allowed) =>
-      typeof allowed === 'string'
-        ? allowed === origin
-        : allowed.test(origin)
-    )) {
+    if (
+      allowedOrigins.some((allowed) =>
+        typeof allowed === "string" ? allowed === origin : allowed.test(origin)
+      )
+    ) {
       // console.log('Origin allowed:', origin);
       return callback(null, true);
     }
 
-    console.warn('CORS: Origin not allowed:', origin);
-    return callback(new Error('Not allowed by CORS'));
+    console.warn("CORS: Origin not allowed:", origin);
+    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true, // Important: Allow credentials (cookies, authorization headers)
   allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Cookie',
-    'Accept',
-    'x-user-id',
-    'x-tenant-id',
-    'x-impersonation-userid',
-    'x-permissions',
-    'x-forwarded-proto',
-    'x-forwarded-host',
-    'x-forwarded-port'
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Cookie",
+    "Accept",
+    "x-user-id",
+    "x-tenant-id",
+    "x-impersonation-userid",
+    "x-permissions",
+    "x-forwarded-proto",
+    "x-forwarded-host",
+    "x-forwarded-port",
   ],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   optionsSuccessStatus: 200,
   exposedHeaders: [
-    'x-user-id',
-    'x-tenant-id',
-    'x-impersonation-userid',
-    'x-permissions',
+    "x-user-id",
+    "x-tenant-id",
+    "x-impersonation-userid",
+    "x-permissions",
     // 'set-cookie',
-    'x-new-token'
-  ]
+    "x-new-token",
+  ],
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options("*", cors(corsOptions));
 // <---------------------- v1.0.3
-
 
 // Enhanced MongoDB connection with Azure-specific configurations
 const mongooseOptions = {
@@ -103,8 +103,8 @@ const mongooseOptions = {
   writeConcern: {
     w: 1, // Changed from 'majority' to 1
     j: false, // Changed to false for better compatibility
-    wtimeout: 30000
-  }
+    wtimeout: 30000,
+  },
 };
 
 // MongoDB connection with retry mechanism
@@ -113,18 +113,24 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
     try {
       // console.log(`🔄 Attempting MongoDB connection (attempt ${i + 1}/${retries})...`);
       await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
-      console.log('✅ MongoDB connected successfully');
+      console.log("✅ MongoDB connected successfully");
       // console.log('MongoDB URI:', process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED');
       return;
     } catch (err) {
-      console.error(`❌ MongoDB connection attempt ${i + 1} failed:`, err.message);
+      console.error(
+        `❌ MongoDB connection attempt ${i + 1} failed:`,
+        err.message
+      );
       if (i === retries - 1) {
-        console.error('❌ All MongoDB connection attempts failed');
-        console.error('MongoDB URI status:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+        console.error("❌ All MongoDB connection attempts failed");
+        console.error(
+          "MongoDB URI status:",
+          process.env.MONGODB_URI ? "SET" : "NOT SET"
+        );
         process.exit(1);
       }
       // console.log(`⏳ Retrying in ${delay / 1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 };
@@ -133,30 +139,30 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
 connectWithRetry();
 
 // Handle MongoDB connection events with enhanced logging
-mongoose.connection.on('error', (err) => {
-  console.error('❌ MongoDB connection error:', err);
-  console.error('Error details:', {
+mongoose.connection.on("error", (err) => {
+  console.error("❌ MongoDB connection error:", err);
+  console.error("Error details:", {
     name: err.name,
     message: err.message,
     code: err.code,
-    stack: err.stack
+    stack: err.stack,
   });
 });
 
-mongoose.connection.on('disconnected', () => {
+mongoose.connection.on("disconnected", () => {
   // console.log('⚠️ MongoDB disconnected - attempting to reconnect...');
 });
 
-mongoose.connection.on('reconnected', () => {
+mongoose.connection.on("reconnected", () => {
   // console.log('✅ MongoDB reconnected successfully');
 });
 
 // mongoose.connection.on('connected', async () => {
 //   console.log('✅ MongoDB c onnected successfully');
-  
+
 //   // Wait a short moment to ensure the connection is fully established
 //   await new Promise(resolve => setTimeout(resolve, 1000));
-  
+
 //   // Start the schedule assessment cron job after database connection is established
 //   try {
 //     const { startScheduleAssessmentCronJob, runInitialScheduleAssessmentCheck } = require('./controllers/candidateAssessmentController');
@@ -175,18 +181,21 @@ mongoose.connection.on('reconnected', () => {
 setInterval(() => {
   const state = mongoose.connection.readyState;
   const states = {
-    0: 'disconnected',
-    1: 'connected',
-    2: 'connecting',
-    3: 'disconnecting'
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
   };
   // console.log(`📊 MongoDB connection state: ${states[state]} (${state})`);
 }, 30000); // Log every 30 seconds
 
 // Middleware to capture raw body for webhook endpoints
-const rawBodyParser = require('body-parser').raw({ type: '*/*' });
+const rawBodyParser = require("body-parser").raw({ type: "*/*" });
 app.use((req, res, next) => {
-  if (req.originalUrl === '/payment/webhook' || req.path === '/payment/webhook') {
+  if (
+    req.originalUrl === "/payment/webhook" ||
+    req.path === "/payment/webhook"
+  ) {
     rawBodyParser(req, res, (err) => {
       if (err) return next(err);
       req.rawBody = req.body.toString();
@@ -203,169 +212,182 @@ app.use(bodyParser.json());
 // Enhanced health check endpoints for monitoring
 
 // Main health check endpoint
-app.get('/health', (req, res) => {
+app.get("/health", (req, res) => {
   const isHealthy = mongoose.connection.readyState === 1;
   const healthCheck = {
-    status: isHealthy ? 'OK' : 'UNHEALTHY',
+    status: isHealthy ? "OK" : "UNHEALTHY",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0',
+    environment: process.env.NODE_ENV || "development",
+    version: "1.0.0",
     mongodb: {
-      status: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      status:
+        mongoose.connection.readyState === 1 ? "connected" : "disconnected",
       readyState: mongoose.connection.readyState,
-      host: mongoose.connection.host || 'unknown',
-      port: mongoose.connection.port || 'unknown',
-      name: mongoose.connection.name || 'unknown'
+      host: mongoose.connection.host || "unknown",
+      port: mongoose.connection.port || "unknown",
+      name: mongoose.connection.name || "unknown",
     },
     memory: {
       ...process.memoryUsage(),
-      heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
-      heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB',
-      external: Math.round(process.memoryUsage().external / 1024 / 1024) + ' MB'
+      heapUsed:
+        Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + " MB",
+      heapTotal:
+        Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + " MB",
+      external:
+        Math.round(process.memoryUsage().external / 1024 / 1024) + " MB",
     },
     system: {
       platform: process.platform,
       nodeVersion: process.version,
-      pid: process.pid
+      pid: process.pid,
     },
     env: {
-      MONGODB_URI: process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED',
-      NODE_ENV: process.env.NODE_ENV || 'development',
-      COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || 'NOT SET'
-    }
+      MONGODB_URI: process.env.MONGODB_URI ? "CONFIGURED" : "NOT CONFIGURED",
+      NODE_ENV: process.env.NODE_ENV || "development",
+      COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || "NOT SET",
+    },
   };
 
   res.status(isHealthy ? 200 : 503).json(healthCheck);
 });
 
 // Simple health check for load balancers
-app.get('/health/simple', (req, res) => {
+app.get("/health/simple", (req, res) => {
   const isHealthy = mongoose.connection.readyState === 1;
   res.status(isHealthy ? 200 : 503).json({
-    status: isHealthy ? 'OK' : 'UNHEALTHY',
-    timestamp: new Date().toISOString()
+    status: isHealthy ? "OK" : "UNHEALTHY",
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Detailed health check with database test
-app.get('/health/detailed', async (req, res) => {
+app.get("/health/detailed", async (req, res) => {
   try {
     const isConnected = mongoose.connection.readyState === 1;
-    let dbTest = { status: 'not_connected', error: null };
+    let dbTest = { status: "not_connected", error: null };
 
     if (isConnected) {
       try {
         // Test database connection with a simple ping
         await mongoose.connection.db.admin().ping();
-        dbTest = { status: 'connected', ping: 'success' };
+        dbTest = { status: "connected", ping: "success" };
       } catch (pingError) {
-        dbTest = { status: 'connected_but_ping_failed', error: pingError.message };
+        dbTest = {
+          status: "connected_but_ping_failed",
+          error: pingError.message,
+        };
       }
     }
 
     const detailedHealth = {
-      status: isConnected && dbTest.status === 'connected' ? 'OK' : 'UNHEALTHY',
+      status: isConnected && dbTest.status === "connected" ? "OK" : "UNHEALTHY",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
+      environment: process.env.NODE_ENV || "development",
       mongodb: {
         connection: {
-          status: isConnected ? 'connected' : 'disconnected',
+          status: isConnected ? "connected" : "disconnected",
           readyState: mongoose.connection.readyState,
-          host: mongoose.connection.host || 'unknown',
-          port: mongoose.connection.port || 'unknown',
-          name: mongoose.connection.name || 'unknown'
+          host: mongoose.connection.host || "unknown",
+          port: mongoose.connection.port || "unknown",
+          name: mongoose.connection.name || "unknown",
         },
-        test: dbTest
+        test: dbTest,
       },
       memory: {
         ...process.memoryUsage(),
-        heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
-        heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB',
-        external: Math.round(process.memoryUsage().external / 1024 / 1024) + ' MB'
+        heapUsed:
+          Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + " MB",
+        heapTotal:
+          Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + " MB",
+        external:
+          Math.round(process.memoryUsage().external / 1024 / 1024) + " MB",
       },
       system: {
         platform: process.platform,
         nodeVersion: process.version,
         pid: process.pid,
-        cpuUsage: process.cpuUsage()
-      }
+        cpuUsage: process.cpuUsage(),
+      },
     };
 
-    const isHealthy = isConnected && dbTest.status === 'connected';
+    const isHealthy = isConnected && dbTest.status === "connected";
     res.status(isHealthy ? 200 : 503).json(detailedHealth);
-
   } catch (error) {
     res.status(503).json({
-      status: 'ERROR',
+      status: "ERROR",
       timestamp: new Date().toISOString(),
       error: error.message,
       mongodb: {
         connection: {
-          status: 'error',
-          readyState: mongoose.connection.readyState
-        }
-      }
+          status: "error",
+          readyState: mongoose.connection.readyState,
+        },
+      },
     });
   }
 });
 
 // Readiness probe for Kubernetes/Azure
-app.get('/ready', (req, res) => {
+app.get("/ready", (req, res) => {
   const isReady = mongoose.connection.readyState === 1;
   res.status(isReady ? 200 : 503).json({
     ready: isReady,
     timestamp: new Date().toISOString(),
     mongodb: {
-      status: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-      readyState: mongoose.connection.readyState
-    }
+      status:
+        mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+      readyState: mongoose.connection.readyState,
+    },
   });
 });
 
 // Liveness probe for Kubernetes/Azure
-app.get('/live', (req, res) => {
+app.get("/live", (req, res) => {
   res.status(200).json({
     alive: true,
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
 // Database connection check middleware
 const dbConnectionMiddleware = (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
-    console.error('❌ Database not connected. ReadyState:', mongoose.connection.readyState);
+    console.error(
+      "❌ Database not connected. ReadyState:",
+      mongoose.connection.readyState
+    );
     return res.status(503).json({
-      error: 'Database connection unavailable',
-      message: 'Service temporarily unavailable. Please try again later.',
-      timestamp: new Date().toISOString()
+      error: "Database connection unavailable",
+      message: "Service temporarily unavailable. Please try again later.",
+      timestamp: new Date().toISOString(),
     });
   }
   next();
 };
 // ------------------------------v1.0.3 >
 // Apply permission middleware to all routes except authentication routes
-const { permissionMiddleware } = require('./middleware/permissionMiddleware');
+const { permissionMiddleware } = require("./middleware/permissionMiddleware");
 
 // Create a middleware that skips permission check for auth routes
 const conditionalPermissionMiddleware = (req, res, next) => {
   // Skip permission middleware for authentication routes
   const authRoutes = [
-    '/Organization/Login',
-    '/Organization/Signup',
-    '/Organization/reset-password',
-    '/Organization/verify-email',
-    '/Organization/verify-user-email',
-    '/Individual/Login',
-    '/Individual/Signup',
-    '/linkedin/auth',
-    '/linkedin/callback',
+    "/Organization/Login",
+    "/Organization/Signup",
+    "/Organization/reset-password",
+    "/Organization/verify-email",
+    "/Organization/verify-user-email",
+    "/Individual/Login",
+    "/Individual/Signup",
+    "/linkedin/auth",
+    "/linkedin/callback",
     // Remove /users/permissions from excluded routes - it needs permission middleware
   ];
 
-  const isAuthRoute = authRoutes.some(route => req.path.includes(route));
+  const isAuthRoute = authRoutes.some((route) => req.path.includes(route));
 
   if (isAuthRoute) {
     return next();
@@ -378,35 +400,35 @@ const conditionalPermissionMiddleware = (req, res, next) => {
 app.use(conditionalPermissionMiddleware);
 
 // API Routes
-const apiRoutes = require('./routes/apiRoutes');
-const linkedinAuthRoutes = require('./routes/linkedinAuthRoute.js');
-const individualLoginRoutes = require('./routes/individualLoginRoutes.js');
-const SubscriptionRouter = require('./routes/SubscriptionRoutes.js');
-const CustomerSubscriptionRouter = require('./routes/CustomerSubscriptionRoutes.js');
-const organizationRoutes = require('./routes/organizationLoginRoutes.js');
-const Cardrouter = require('./routes/Carddetailsroutes.js');
-const EmailRouter = require('./routes/EmailsRoutes/emailsRoute.js');
-const usersRoutes = require('./routes/usersRoutes.js');
+const apiRoutes = require("./routes/apiRoutes");
+const linkedinAuthRoutes = require("./routes/linkedinAuthRoute.js");
+const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
+const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
+const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
+const organizationRoutes = require("./routes/organizationLoginRoutes.js");
+const Cardrouter = require("./routes/Carddetailsroutes.js");
+const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
+const usersRoutes = require("./routes/usersRoutes.js");
 // Add import for agoraRoomRoute
-const agoraRoomRoute = require('./routes/agoraRoomRoute.js');
-const feedbackRoute = require('./routes/feedbackRoute.js');
-const usageRoutes = require('./routes/usageRoutes.js');
+const agoraRoomRoute = require("./routes/agoraRoomRoute.js");
+const feedbackRoute = require("./routes/feedbackRoute.js");
+const usageRoutes = require("./routes/usageRoutes.js");
 
-app.use('/api/agora', agoraRoomRoute);
+app.use("/api/agora", agoraRoomRoute);
 // ------------------------------v1.0.3 >
 // Apply database connection middleware to all API routes except health check
-app.use('/api', dbConnectionMiddleware, apiRoutes);
-app.use('/linkedin', dbConnectionMiddleware, linkedinAuthRoutes);
-app.use('/Individual', dbConnectionMiddleware, individualLoginRoutes);
+app.use("/api", dbConnectionMiddleware, apiRoutes);
+app.use("/linkedin", dbConnectionMiddleware, linkedinAuthRoutes);
+app.use("/Individual", dbConnectionMiddleware, individualLoginRoutes);
 // ------------------------------v1.0.3 >
-app.use('/', SubscriptionRouter);
-app.use('/', CustomerSubscriptionRouter);
-app.use('/Organization', organizationRoutes);
-app.use('/', Cardrouter);
-app.use('/emails', EmailRouter);
-app.use('/users', usersRoutes);
-app.use('/feedback', feedbackRoute);
-app.use('/usage', usageRoutes);
+app.use("/", SubscriptionRouter);
+app.use("/", CustomerSubscriptionRouter);
+app.use("/Organization", organizationRoutes);
+app.use("/", Cardrouter);
+app.use("/emails", EmailRouter);
+app.use("/users", usersRoutes);
+app.use("/feedback", feedbackRoute);
+app.use("/usage", usageRoutes);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
@@ -416,7 +438,9 @@ const { Skills } = require("./models/MasterSchemas/skills.js");
 const { LocationMaster } = require("./models/MasterSchemas/LocationMaster.js");
 const { Industry } = require("./models/MasterSchemas/industries.js");
 const { RoleMaster } = require("./models/MasterSchemas/RoleMaster.js");
-const { TechnologyMaster } = require("./models/MasterSchemas/TechnologyMaster.js");
+const {
+  TechnologyMaster,
+} = require("./models/MasterSchemas/TechnologyMaster.js");
 const { HigherQualification } = require("./models/higherqualification.js");
 const { University_CollegeName } = require("./models/college.js");
 const { Company } = require("./models/company.js");
@@ -505,9 +529,6 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "Something went wrong!" });
 });
-
-
-
 
 // this is common code for datautils
 const { Candidate } = require("./models/Candidate/candidate.js");
@@ -1095,7 +1116,7 @@ app.get("/check-email", async (req, res) => {
 // emailCommonRoutes.js
 // app.use('/', Emailrouter)
 
-app.get('/check-profileId', async (req, res) => {
+app.get("/check-profileId", async (req, res) => {
   try {
     const { profileId } = req.query;
     if (!profileId) {
@@ -1104,7 +1125,9 @@ app.get('/check-profileId', async (req, res) => {
     const user = await Users.findOne({ profileId });
     res.json({ exists: !!user });
   } catch (error) {
-    res.status(500).json({ message: "Error checking username", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error checking username", error: error.message });
   }
 });
 
@@ -1183,12 +1206,10 @@ app.get("/sharing-rules-objects", async (req, res) => {
     const sharingRulesObjects = await SharingRulesObject.find();
     res.status(200).json(sharingRulesObjects);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error fetching sharing rules objects",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error fetching sharing rules objects",
+      error: error.message,
+    });
   }
 });
 
@@ -1204,13 +1225,10 @@ app.use("/upload", uploadRoute);
 const tenantRoutes = require("./routes/tenantRoutes");
 app.use("/tenants", tenantRoutes);
 
-
-
 // <==================================================================================
 const InvoiceRouter = require("./routes/InvoiceRoutes.js");
 const PaymentsRoute = require("./routes/paymentsRoutes.js"); // SUPER ADMIN added by Ashok
 const ReceiptsRoute = require("./routes/receiptsRoute.js"); // SUPER ADMIN added by Ashok
-
 
 // SUPER ADMIN added by Ashok
 // invoices
@@ -1224,8 +1242,6 @@ app.use("/payments", PaymentsRoute);
 // receipts
 app.use("/receipts", ReceiptsRoute);
 
-
-
 // integration logs Added by Ashok
 // const integrationLogRoutes = require("./routes/integrationLogRoutes");
 // app.use("/api/integration-logs", integrationLogRoutes); // original one
@@ -1233,9 +1249,9 @@ app.use("/receipts", ReceiptsRoute);
 
 // ==================================================================================>
 
-const feedbackRoutes = require('./routes/feedbackRoute')
+const feedbackRoutes = require("./routes/feedbackRoute");
 
-app.use('/feedback', feedbackRoutes)
+app.use("/feedback", feedbackRoutes);
 
 // <================ getting the availability by contact id to show in the account settings user profile ==============>
 const interviewAvailabilityRoutes = require("./routes/interviewAvailabilityRoutes");
@@ -1247,10 +1263,16 @@ app.use("/googlemeet", googlemeetRoutes);
 
 // v1.0.0 ---------------------->
 
+// v1.0.5 <--------------------------------SUPER ADMIN--------------------------------
+const RateCardRoutes = require("./routes/RateCardsRoutes/RateCardsRoutes.js");
+app.use("/rate-cards", RateCardRoutes);
+// v1.0.5 --------------------------------------------------------------------------->
+
+
 //  v1.0.4 <------------------------------------------------------------------------------
-const filterRoutes = require('./routes/AnalyticsRoutes/filterRoutes.js');
-const columnRoutes = require('./routes/AnalyticsRoutes/columnRoutes');
-const reportRoutes = require('./routes/AnalyticsRoutes/reportRoutes');
+const filterRoutes = require("./routes/AnalyticsRoutes/filterRoutes.js");
+const columnRoutes = require("./routes/AnalyticsRoutes/columnRoutes");
+const reportRoutes = require("./routes/AnalyticsRoutes/reportRoutes");
 const {
   interviews,
   interviewers,
@@ -1261,155 +1283,163 @@ const {
   getKPIData,
   getChartData,
   getTopSkills,
-  getTopExternalInterviewers
-} = require('./data/mockData.js');
+  getTopExternalInterviewers,
+} = require("./data/mockData.js");
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Interview SaaS Backend is running' });
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK", message: "Interview SaaS Backend is running" });
 });
 // Dashboard endpoints
 // Filter routes
-app.use('/api/filters', filterRoutes);
+app.use("/api/filters", filterRoutes);
 
 // Column management routes
-app.use('/api/columns', columnRoutes);
+app.use("/api/columns", columnRoutes);
 
 // Report management routes
-app.use('/api/reports', reportRoutes);
+app.use("/api/reports", reportRoutes);
 
-app.get('/api/kpis', (req, res) => {
+app.get("/api/kpis", (req, res) => {
   try {
     const kpis = getKPIData();
     res.json(kpis);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch KPI data' });
+    res.status(500).json({ error: "Failed to fetch KPI data" });
   }
 });
 
-app.get('/api/charts', (req, res) => {
+app.get("/api/charts", (req, res) => {
   try {
     const data = getChartData();
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch chart data' });
+    res.status(500).json({ error: "Failed to fetch chart data" });
   }
 });
 
 // Data endpoints
-app.get('/api/interviews', (req, res) => {
+app.get("/api/interviews", (req, res) => {
   try {
     res.json(interviews);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch interviews data' });
+    res.status(500).json({ error: "Failed to fetch interviews data" });
   }
 });
 
-app.get('/api/interviews/:id', (req, res) => {
+app.get("/api/interviews/:id", (req, res) => {
   try {
-    const interview = interviews.find(i => i.id === req.params.id);
+    const interview = interviews.find((i) => i.id === req.params.id);
     if (!interview) {
-      return res.status(404).json({ error: 'Interview not found' });
+      return res.status(404).json({ error: "Interview not found" });
     }
     res.json(interview);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch interview data' });
+    res.status(500).json({ error: "Failed to fetch interview data" });
   }
 });
 
-app.get('/api/interviewers', (req, res) => {
+app.get("/api/interviewers", (req, res) => {
   try {
     res.json(interviewers);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch interviewers data' });
+    res.status(500).json({ error: "Failed to fetch interviewers data" });
   }
 });
 
-app.get('/api/interviewers/:id', (req, res) => {
+app.get("/api/interviewers/:id", (req, res) => {
   try {
-    const interviewer = interviewers.find(i => i.id === req.params.id);
+    const interviewer = interviewers.find((i) => i.id === req.params.id);
     if (!interviewer) {
-      return res.status(404).json({ error: 'Interviewer not found' });
+      return res.status(404).json({ error: "Interviewer not found" });
     }
     res.json(interviewer);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch interviewer data' });
+    res.status(500).json({ error: "Failed to fetch interviewer data" });
   }
 });
 
-app.get('/api/assessments', (req, res) => {
+app.get("/api/assessments", (req, res) => {
   try {
     res.json(assessments);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch assessments data' });
+    res.status(500).json({ error: "Failed to fetch assessments data" });
   }
 });
 
-app.get('/api/candidates', (req, res) => {
+app.get("/api/candidates", (req, res) => {
   try {
     res.json(candidates);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch candidates data' });
+    res.status(500).json({ error: "Failed to fetch candidates data" });
   }
 });
 
-app.get('/api/organizations', (req, res) => {
+app.get("/api/organizations", (req, res) => {
   try {
     res.json(organizations);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch organizations data' });
+    res.status(500).json({ error: "Failed to fetch organizations data" });
   }
 });
 
-app.get('/api/report-templates', (req, res) => {
+app.get("/api/report-templates", (req, res) => {
   try {
     res.json(reportTemplates);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch report templates data' });
+    res.status(500).json({ error: "Failed to fetch report templates data" });
   }
 });
 
 // Trends endpoints
-app.get('/api/trends/skills', (req, res) => {
+app.get("/api/trends/skills", (req, res) => {
   try {
     const data = getTopSkills();
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch top skills data' });
+    res.status(500).json({ error: "Failed to fetch top skills data" });
   }
 });
 
-app.get('/api/trends/external-interviewers', (req, res) => {
+app.get("/api/trends/external-interviewers", (req, res) => {
   try {
     const data = getTopExternalInterviewers();
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch top external interviewers data' });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch top external interviewers data" });
   }
 });
 
 // Export endpoints (placeholders)
-app.post('/api/export/csv', (req, res) => {
+app.post("/api/export/csv", (req, res) => {
   try {
     // Placeholder for CSV export functionality
-    res.json({ message: 'CSV export functionality would be implemented here', data: req.body });
+    res.json({
+      message: "CSV export functionality would be implemented here",
+      data: req.body,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to export CSV' });
+    res.status(500).json({ error: "Failed to export CSV" });
   }
 });
 
-app.post('/api/export/pdf', (req, res) => {
+app.post("/api/export/pdf", (req, res) => {
   try {
     // Placeholder for PDF export functionality
-    res.json({ message: 'PDF export functionality would be implemented here', data: req.body });
+    res.json({
+      message: "PDF export functionality would be implemented here",
+      data: req.body,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to export PDF' });
+    res.status(500).json({ error: "Failed to export PDF" });
   }
 });
 
 // Catch-all for undefined routes
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+app.use("*", (req, res) => {
+  res.status(404).json({ error: "Endpoint not found" });
 });
 
 //  v1.0.4 ------------------------------------------------------------------------------>
