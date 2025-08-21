@@ -179,7 +179,7 @@ const RoundFormInterviews = () => {
 
   useEffect(() => {
   if (selectedInterviewType === "External" && externalInterviewers.length > 0) {
-    setStatus("Request Sent");
+    setStatus("RequestSent");
   } else if (selectedInterviewType !== "External") {
     setStatus("Draft");
   }
@@ -1093,7 +1093,7 @@ const RoundFormInterviews = () => {
               scheduledInterviewId: interviewId,
               interviewerType: selectedInterviewType,
               interviewerId: interviewer.contact?._id || interviewer._id,
-              status: isInternal ? "accepted" : "Request Sent",
+              status: isInternal ? "accepted" : "RequestSent",
               dateTime: combinedDateTime,
               duration,
               candidateId: candidate?._id,

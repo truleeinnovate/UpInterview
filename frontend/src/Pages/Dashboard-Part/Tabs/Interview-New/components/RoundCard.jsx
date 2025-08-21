@@ -376,7 +376,7 @@ console.log("round", round);
       canSelect: false,
       canFeedback: false,
     },
-    "Request Sent": {
+    RequestSent: {
       canEdit: true,
       canDelete: false,
       canMarkScheduled: false,
@@ -388,14 +388,14 @@ console.log("round", round);
       canFeedback: false,
     },
     Scheduled: {
-      canEdit: true,
+      canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      canReject: true,
-      canSelect: true,
+      canReject: false,
+      canSelect: false,
       canFeedback: false,
     },
     Rescheduled: {
@@ -416,8 +416,8 @@ console.log("round", round);
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
+      canReject: true,
+      canSelect: true,
       canFeedback: true,
     },
     Cancelled: {
@@ -481,6 +481,7 @@ console.log("round", round);
   const getRoundPermissions = (status) =>
     roundActionPermissions[status] || roundActionPermissions["Draft"];
 
+  console.log('status', round.status)
   const permissions = getRoundPermissions(round.status);
 
   // v1.0.4 -------------------------->
@@ -1184,7 +1185,7 @@ console.log("round", round);
               {isRoundActive && (
                 <div className="mt-6 flex flex-wrap justify-end space-x-2">
                   {/* Reschedule */}
-                  {permissions.canReschedule && round.interviewerType === 'outsource' && !round.isInstant && (
+                  {permissions.canReschedule && round.interviewerType === 'External' && !round.isInstant && (
                     <button
                       onClick={() => onInitiateAction(round, 'reschedule')}
                       className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
@@ -1237,22 +1238,24 @@ console.log("round", round);
                       <CheckCircle className="h-4 w-4 mr-1" /> Complete
                     </button>
                   )}
-                  {/* Reject */}
-                  {permissions.canReject && (
-                    <button
-                      onClick={() => setShowRejectionModal(true) || setActionInProgress(true)}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <ThumbsDown className="h-4 w-4 mr-1" /> Reject
-                    </button>
-                  )}
-                  {/* Select */}
+                   {/* Select */}
+                   {console.log('333', permissions.canSelect)}
                   {permissions.canSelect && (
                     <button
                       onClick={handleSelect}
                       className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
                     >
                       <CheckCircle className="h-4 w-4 mr-1" /> Select
+                    </button>
+                  )}
+                  {/* Reject */}
+                  {console.log('333', permissions.canReject)}
+                  {permissions.canReject && (
+                    <button
+                      onClick={() => setShowRejectionModal(true) || setActionInProgress(true)}
+                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                    >
+                      <ThumbsDown className="h-4 w-4 mr-1" /> Reject
                     </button>
                   )}
                   {/* Feedback */}
