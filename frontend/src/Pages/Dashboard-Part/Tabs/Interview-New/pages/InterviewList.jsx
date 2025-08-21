@@ -360,7 +360,7 @@ function InterviewList() {
         const nextRound =
           rounds
             .filter((round) =>
-              [ "Scheduled", "Request Sent"].includes(round.status)
+              [ "Scheduled", "RequestSent"].includes(round.status)
             )
             .sort((a, b) => a.sequence - b.sequence)[0] || null;
         const nextRoundInterviewers =
@@ -432,7 +432,7 @@ function InterviewList() {
         const currentRound =
           rounds
             .filter((round) =>
-              [ "Scheduled", "Request Sent"].includes(round.status)
+              [ "Scheduled", "RequestSent"].includes(round.status)
             )
             .sort((a, b) => a.sequence - b.sequence)[0] || null;
         return (
@@ -469,7 +469,7 @@ function InterviewList() {
         const nextRound =
           rounds
             .filter((round) =>
-              [ "Scheduled", "Request Sent"].includes(round.status)
+              [ "Scheduled", "RequestSent"].includes(round.status)
             )
             .sort((a, b) => a.sequence - b.sequence)[1] || null;
         return (
@@ -660,7 +660,7 @@ function InterviewList() {
                               .filter((round) =>
                                 [
                                   "Scheduled",
-                                  "Request Sent",
+                                  "RequestSent",
                                 ].includes(round.status)
                               )
                               .sort((a, b) => a.sequence - b.sequence)[0] ||

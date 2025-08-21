@@ -60,6 +60,7 @@ const interviewRoundSchema = new mongoose.Schema({
         type: String,
         enum: [
             "Draft",
+            "RequestSent",
             "Scheduled",
             "In Progress",
             "Completed",
