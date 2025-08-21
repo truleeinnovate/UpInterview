@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  fixed toast error
 // v1.0.2  -  Venkatesh  -  fixed selected label issue now default first label is selected
 // v1.0.3  -  Venkatesh  -  pass isInterviewType to sidebar
+// v1.0.4  -  Venkatesh  -  fixed selected label issue now default first label is selected
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
@@ -44,7 +45,7 @@ const MyQuestionsList = ({
   removedQuestionIds = [],
   activeTab,
 }) => {
-  const { myQuestionsList, isLoading } = useQuestions();
+  const { myQuestionsList, createdLists, isLoading } = useQuestions();//<----v1.0.4---
   console.log("myQuestionsList:", myQuestionsList);
 
   const myQuestionsListRef = useRef(null);
@@ -61,6 +62,21 @@ const MyQuestionsList = ({
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
   const [dropdownValue, setDropdownValue] = useState("Interviews");
+
+  //<----v1.0.4---
+  // Map list type to display value
+  const mapListTypeToDisplay = (type) => {
+    if (typeof type === 'boolean') return type ? 'Interviews' : 'Assignments';
+    if (typeof type === 'string') {
+      const t = type.toLowerCase();
+      if (t.includes('interview')) return 'Interviews';
+      if (t.includes('assignment')) return 'Assignments';
+      if (t === 'interviews') return 'Interviews';
+      if (t === 'assignments') return 'Assignments';
+    }
+    return 'Interviews';
+  };
+  //----v1.0.4--->
 
   // Centralized filter data state
   const [filtrationData, setFiltrationData] = useState([
@@ -224,9 +240,34 @@ const MyQuestionsList = ({
     if (matchingQuestion) {
       Cookies.set("lastSelectedListId", matchingQuestion.listId);
     }
+    //<----v1.0.4---
+    // Immediately sync dropdown with selected label's type (if available)
+    const meta = Array.isArray(createdLists)
+      ? createdLists.find((l) => l?.label === label || l?.name === label)
+      : null;
+    if (meta && typeof meta.type !== 'undefined') {
+      setDropdownValue(mapListTypeToDisplay(meta.type));
+    }
+    //----v1.0.4--->
     setSelectedLabel(label);
     setIsDropdownOpen(false);
   };
+
+  //<----v1.0.4---
+  // Keep dropdown synced with selectedLabel whenever createdLists load/update
+  useEffect(() => {
+    if (!selectedLabel) return;
+    const meta = Array.isArray(createdLists)
+      ? createdLists.find((l) => l?.label === selectedLabel || l?.name === selectedLabel)
+      : null;
+    if (meta && typeof meta.type !== 'undefined') {
+      const display = mapListTypeToDisplay(meta.type);
+      if (dropdownValue !== display) {
+        setDropdownValue(display);
+      }
+    }
+  }, [selectedLabel, createdLists, dropdownValue]);
+  //----v1.0.4--->
 
   const toggleActionSection = (sectionIndex) => {
     setActionViewMoreSection((prev) => (prev === sectionIndex ? null : sectionIndex));
