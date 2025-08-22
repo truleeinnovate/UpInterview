@@ -6,6 +6,7 @@
 // v1.0.5  -  Mansoor  -  fixed mockinterview model mapping issue
 // v1.0.6  -  Ashraf  -  fixed assessment to assessment template,schedule assessment to assessment schema
 // v1.0.7  -  Ashraf  -  fixed feedback model mapping issue
+// v1.0.8  -  Venkatesh  -  fixed tenantquestions model mapping issue and add tenantinterviewquestions and tenantassessmentquestions model mapping
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -20,8 +21,10 @@ const { Interview } = require('../models/Interview');
 // v1.0.5 <-----------------------------
 const { MockInterview } = require('../models/MockInterview');
 // v1.0.5-------------------------------->
-const { TenantQuestions } = require('../models/TenantQuestions');
+const { TenantQuestions } = require('../models/tenantQuestions');
 const TenantQuestionsListNames = require('../models/QuestionBank/tenantQuestionsListNames.js');
+const { TenantInterviewQuestions } = require('../models/QuestionBank/tenantInterviewQuestions.js');//<--------v1.0.8-----
+const { TenantAssessmentQuestions } = require('../models/QuestionBank/tenantAssessmentQuestions.js');//<--------v1.0.8-----
 const { InterviewRounds } = require('../models/Interview/InterviewRounds.js');
 const InterviewQuestions = require('../models/Interview/selectedInterviewQuestion.js');
 const Users = require('../models/Users');
@@ -249,27 +252,33 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         break;
 
       case 'tenantquestions':
-        // console.log('[21] Processing TenantQuestions model');
+        //<--------v1.0.8-----
+        // console.log('[21] Processing TenantQuestions model (aggregated from interview + assessment)');
         const lists = await TenantQuestionsListNames.find(query).lean();
         // console.log('[22] Found', lists.length, 'question lists');
 
         const listIds = lists.map((list) => list._id);
         // console.log('[23] List IDs to filter questions:', listIds);
 
-        const questions = await TenantQuestions.find({
-          ...query,
-          tenantListId: { $in: listIds },
-        })
-          .populate({
-            path: 'suggestedQuestionId',
-            model: 'suggestedQuestions', // Fix: changed model name to 'suggestedQuestions'
+        // Fetch across all tenant question sources in parallel
+        const [interviewQs, assessmentQs] = await Promise.all([
+          TenantInterviewQuestions.find({
+            ...query,
+            tenantListId: { $in: listIds },
           })
-          .populate({
-            path: 'tenantListId',
-            model: 'TenantQuestionsListNames',
-            select: 'label name ownerId tenantId',
+            .populate({ path: 'suggestedQuestionId', model: 'suggestedQuestions' })
+            .populate({ path: 'tenantListId', model: 'TenantQuestionsListNames', select: 'label name ownerId type tenantId' })
+            .lean(),
+          TenantAssessmentQuestions.find({
+            ...query,
+            tenantListId: { $in: listIds },
           })
-          .lean();
+            .populate({ path: 'suggestedQuestionId', model: 'suggestedQuestions' })
+            .populate({ path: 'tenantListId', model: 'TenantQuestionsListNames', select: 'label name ownerId type tenantId' })
+            .lean(),
+        ]);
+
+        const questions = [...interviewQs, ...assessmentQs];
 
         // console.log('[24] Found', questions.length, 'questions matching lists');
 
@@ -280,7 +289,7 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
 
         questions.forEach((question) => {
           const questionData = question.isCustom ? question : question.suggestedQuestionId;
-          question.tenantListId.forEach((list) => {
+          (question.tenantListId || []).forEach((list) => {//--------v1.0.8----->
             if (groupedQuestions[list.label]) {
               groupedQuestions[list.label].push({
                 ...questionData,
@@ -294,8 +303,6 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
         data = groupedQuestions;
         // console.log('[25] Grouped questions by', Object.keys(groupedQuestions).length, 'categories');
         break;
-
-
 
       case 'interview':
         // console.log('[26] Processing Interview model');

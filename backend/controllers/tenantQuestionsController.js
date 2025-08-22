@@ -1,4 +1,8 @@
+//<---v1.0.0---Venkatesh---added tenantInterviewQuestions and tenantAssessmentQuestions
+
 const { TenantQuestions } = require("../models/tenantQuestions");
+const { TenantInterviewQuestions } = require("../models/QuestionBank/tenantInterviewQuestions");
+const { TenantAssessmentQuestions } = require("../models/QuestionBank/tenantAssessmentQuestions");
 
 const mongoose = require('mongoose');
 
@@ -65,7 +69,8 @@ const mongoose = require('mongoose');
 exports.newQuestion = async (req, res) => {
   try {
     const { isEdit, ...questionBody } = req.body;
-    const { suggestedQuestionId, tenantListId, ownerId, tenantId } = questionBody;
+    const { suggestedQuestionId, tenantListId, ownerId, tenantId, isInterviewType } = questionBody;//<---v1.0.0---
+    //console.log("interviewType=",isInterviewType);
     
     if (!tenantId && !ownerId) {
       return res.status(400).json({ message: 'Missing required fields: either tenantId or ownerId' });
@@ -80,6 +85,7 @@ exports.newQuestion = async (req, res) => {
       // Prepare question data with all fields
       questionData = {
         ...questionBody,
+        isInterviewQuestionType: isInterviewType,
         ...(tenantListId && { tenantListId: tenantListId.map(id => new mongoose.Types.ObjectId(id)) }),
         ...(ownerId && { ownerId }),
         ...(tenantId && { tenantId })
@@ -89,6 +95,7 @@ exports.newQuestion = async (req, res) => {
       // Prepare question data with suggestedQuestionId
       questionData = {
         ...{suggestedQuestionId: new mongoose.Types.ObjectId(suggestedQuestionId)},
+        isInterviewQuestionType: isInterviewType,
         ...(tenantListId && { tenantListId: tenantListId.map(id => new mongoose.Types.ObjectId(id)) }),
         ...(ownerId && { ownerId }),
         ...(tenantId && { tenantId })
@@ -96,7 +103,12 @@ exports.newQuestion = async (req, res) => {
     }
     //console.log('questionData:',questionData)
 
-    const newQuestion = await TenantQuestions.create(questionData);
+    //<---v1.0.0---
+    //const newQuestion = await TenantQuestions.create(questionData);
+    const Model = isInterviewType ? TenantInterviewQuestions : TenantAssessmentQuestions;
+    const newQuestion = await Model.create(questionData);
+    //---v1.0.0--->
+    //console.log('Created question:', newQuestion);
     //console.log('Created question:', newQuestion)
 
     res.locals.feedData = {
@@ -150,51 +162,54 @@ exports.updateQuestion = async (req, res) => {
     res.locals.loggedByController = true;
     res.locals.processName = 'Update question';
 
-    //console.log('req.params.id:',req.params.id)
-
     const questionId = req.params.id;
-    //console.log('questionId:',questionId)
     const { tenantId, ownerId, tenantListId, ...updateFields } = req.body;
-    // console.log('suggestedQuestionId:',updateFields.suggestedQuestionId)
-    console.log('updateFields:',updateFields)
+    console.log('updateFields:', updateFields);
 
     // Remove invalid id
     if (!updateFields.suggestedQuestionId) delete updateFields.suggestedQuestionId;
-    
-    const question = await TenantQuestions.findById(questionId);
-    
+
+    //<---v1.0.0---
+    // Try to find the question across models (assessment, interview, legacy)
+    let Model = null;
+    let question = await TenantAssessmentQuestions.findById(questionId);
+    if (question) Model = TenantAssessmentQuestions;
+    if (!question) {
+      question = await TenantInterviewQuestions.findById(questionId);
+      if (question) Model = TenantInterviewQuestions;
+    }
+    // if (!question) {
+    //   question = await TenantQuestions.findById(questionId);
+    //   if (question) Model = TenantQuestions;
+    // }
+
     if (!question) return res.status(404).json({ message: 'Question not found' });
 
-  
     
-    // Remove duplicates and convert to ObjectIds
-    const uniqueListIds = [...new Set(tenantListId)].map(id => new mongoose.Types.ObjectId(id));
+    //<---v1.0.0---
+    // Handle list updates if provided
+    let uniqueListIds = null;
+    if (Array.isArray(tenantListId)) {
+      uniqueListIds = [...new Set(tenantListId)].map(id => new mongoose.Types.ObjectId(id));
+      question.tenantListId = uniqueListIds;
+    }
+    //---v1.0.0--->
     // apply any other fields being edited
     Object.assign(question, updateFields);
-    //<--v1.0.0---added by Venkatesh----- Ensure identifiers are set when provided (important for individual accounts)
+    // Ensure identifiers are set when provided (important for individual accounts)
     if (tenantId) question.tenantId = tenantId;
     if (ownerId) question.ownerId = ownerId;
 
-    //-----v1.0.0-------->
-
-    // if (tenantListId) {
-    //       const uniqueListIds = [...new Set(tenantListId)]
-    //                             .map(id => new mongoose.Types.ObjectId(id));
-    //       question.tenantListId = uniqueListIds;
-    //     }
-      
-    //     // apply any other fields being edited
-    //     Object.assign(question, updateFields);
-
-    const changes = [
-      {
+    //<---v1.0.0---
+    const changes = [];
+    if (uniqueListIds) {
+      changes.push({
         fieldName: 'tenantListId',
-        oldValue: question.tenantListId.map(String),
+        oldValue: question.tenantListId?.map(String),
         newValue: uniqueListIds.map(String)
-      }
-    ];
-    
-    question.tenantListId = uniqueListIds;
+      });//---v1.0.0--->
+    }
+
     await question.save();
 
     res.locals.feedData = {
@@ -255,17 +270,22 @@ exports.getQuestionBySuggestedId = async (req, res) => {
 
   try {
     let question;
-    const query = {
+    const baseQuery = {
       suggestedQuestionId: new mongoose.Types.ObjectId(suggestedQuestionId)
     };
 
-    if (tenantId) {
-      query.tenantId = tenantId;
-      question = await TenantQuestions.findOne(query).populate('tenantListId');
-    } else if (ownerId) {
-      query.ownerId = ownerId;
-      question = await TenantQuestions.findOne(query).populate('tenantListId');
+    //<---v1.0.0---
+    // Build query with tenant/owner filter
+    const query = { ...baseQuery, ...(tenantId ? { tenantId } : {}), ...(ownerId ? { ownerId } : {}) };
+
+    // Try across models in order: assessment, interview, legacy
+    question = await TenantAssessmentQuestions.findOne(query).populate('tenantListId');
+    if (!question) {
+      question = await TenantInterviewQuestions.findOne(query).populate('tenantListId');
     }
+    // if (!question) {
+    //   question = await TenantQuestions.findOne(query).populate('tenantListId');
+    // }
 
     if (!question) {
       return res.status(404).json({ message: 'Question not found' });
@@ -274,7 +294,7 @@ exports.getQuestionBySuggestedId = async (req, res) => {
     // Ensure list IDs are strings
     const responseData = {
       ...question.toObject(),
-      tenantListId: question.tenantListId.map(id => id._id?.toString() || id.toString())
+      tenantListId: (question.tenantListId || []).map(id => id._id?.toString() || id.toString())//---v1.0.0--->
     };
 
     res.status(200).json({

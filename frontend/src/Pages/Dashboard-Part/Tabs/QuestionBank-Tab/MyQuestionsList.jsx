@@ -61,7 +61,7 @@ const MyQuestionsList = ({
   const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
-  const [dropdownValue, setDropdownValue] = useState("");
+  const [dropdownValue, setDropdownValue] = useState("Interview Questions");
 
   //<----v1.0.4---
   // Map list type to display value

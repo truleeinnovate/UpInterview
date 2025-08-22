@@ -25,6 +25,7 @@ const TenantInterviewQuestionsSchema = new mongoose.Schema({
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     ownerId: String,
     tenantId: String,
+    isInterviewQuestionType: Boolean,
 }, { timestamps: true });
 
 const TenantInterviewQuestions = mongoose.models.tenantInterviewQuestions || mongoose.model("tenantInterviewQuestions", TenantInterviewQuestionsSchema);

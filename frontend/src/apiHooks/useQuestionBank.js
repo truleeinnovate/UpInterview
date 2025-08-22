@@ -246,7 +246,7 @@ export const useQuestions = (filters = {}) => {
 
   // ✅ Mutation #3: Add or Update Question in Lists
   const addQuestionToListMutation = useMutation({
-    mutationFn: async ({ listIds, suggestedQuestionId }) => {
+    mutationFn: async ({ listIds, suggestedQuestionId, isInterviewType }) => {
       if (!suggestedQuestionId || !listIds?.length) {
         throw new Error('Missing required fields');
       }
@@ -284,7 +284,9 @@ export const useQuestions = (filters = {}) => {
               tenantListId: listIds,
               //<-----v1.0.0----
               tenantId,
-              ...(organization ? {} : { ownerId: userId })
+              ...(organization ? {} : { ownerId: userId }),
+              // Pass through interview/assessment type for correct collection routing
+              ...(typeof isInterviewType !== 'undefined' ? { isInterviewType } : {})
               //-----v1.0.0---->
             }
           );

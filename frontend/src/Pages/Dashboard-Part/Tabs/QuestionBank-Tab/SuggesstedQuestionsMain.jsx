@@ -29,6 +29,7 @@ const SuggestedQuestionsComponent = ({
   removedQuestionIds = [],
 }) => {
   const { suggestedQuestions, isLoading } = useQuestions();
+  console.log("suggestedQuestions", suggestedQuestions)
   const [skillInput, setSkillInput] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +38,7 @@ const SuggestedQuestionsComponent = ({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const itemsPerPage = 10;
   const [dropdownOpen, setDropdownOpen] = useState(null);
-  const [dropdownValue, setDropdownValue] = useState("");
+  const [dropdownValue, setDropdownValue] = useState("Interview Questions");
   const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
 
 
@@ -107,13 +108,23 @@ const SuggestedQuestionsComponent = ({
           question.difficultyLevel.toLowerCase()
         );
 
-      return matchesSearch && matchesType && matchesDifficultyLevel;
+      //<----v1.0.2-----Venkatesh---- Filter by Interview vs Assignment selection
+      // "Interview Questions" => show only questions where isInterviewQuestionOnly === true
+      // "Assignment Questions" => show only questions where isInterviewQuestionOnly === false
+      const matchesInterviewOnly =
+        dropdownValue === "Interview Questions"
+          ? question.isInterviewQuestionOnly === true
+          : question.isInterviewQuestionOnly === false;
+
+      return matchesSearch && matchesType && matchesDifficultyLevel && matchesInterviewOnly;
+      //----v1.0.2----->
     });
   }, [
     suggestedQuestions,
     searchInput,
     questionTypeFilterItems,
     difficultyLevelFilterItems,
+    dropdownValue,
   ]);
 
   // Pagination
