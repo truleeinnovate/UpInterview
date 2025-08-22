@@ -205,7 +205,7 @@ exports.updateRequestStatus = async (req, res) => {
         interview.Status = "Scheduled";
         interview.rounds = interview.rounds.map((round) => ({
           ...round,
-          Status: "scheduled",
+          Status: "Scheduled",
         }));
         await interview.save();
 
@@ -413,7 +413,7 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     if (!round.interviewers.includes(contactId)) {
       round.interviewers.push(contactId);
-      round.status = "scheduled";
+      round.status = "Scheduled";
       await round.save();
     } else {
       console.log(

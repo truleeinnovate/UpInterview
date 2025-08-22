@@ -143,10 +143,10 @@ const BasicDetailsTab = ({
   };
 
   const handlePositionCreated = (newPosition) => {
-    setSelectedPosition(newPosition);
+    setSelectedPosition(newPosition ? newPosition : null);
     setFormData((prevData) => ({
       ...prevData,
-      Position: newPosition._id,
+      Position: newPosition ? newPosition._id : "",
     }));
     setIsPositionModalOpen(false);
   };

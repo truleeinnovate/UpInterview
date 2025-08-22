@@ -2,6 +2,7 @@
 //<---------------------- v1.0.0------Venkatesh------Simple check to ensure the list label and name are unique (case-insensitive)
 //<---------------------- v1.0.1------Venkatesh------Prevent double-click save (simplified)
 //<---------------------- v1.0.2------Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
+//<---------------------- v1.0.3------Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
 
 import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
@@ -27,6 +28,7 @@ const MyQuestionsList1 = forwardRef(
       notEditmode,
       selectedListId,
       setSelectedLabelnew,
+      isInterviewType,
       setActionViewMoreSection,
     },
     ref
@@ -221,14 +223,37 @@ const MyQuestionsList1 = forwardRef(
         console.log("listsToRemove ------", listsToRemove);
         
         if (listsToAdd.length > 0) {
-        console.log('addQuestionToList------------1111111111111111',)
-         const addQuestion = await addQuestionToList({
+          //<--------v1.0.3-----
+          // Determine question type from selected lists; enforce single type
+          const normalizeType = (t) => {
+            if (typeof t === 'boolean') return t;
+            if (typeof t === 'string') {
+              const s = t.toLowerCase();
+              if (s === 'true' || s === 'interview questions' || s === 'interview' || s === 'interviews') return true;
+              if (s === 'false' || s === 'assignment questions' || s === 'assignment' || s === 'assignments') return false;
+            }
+            return undefined;
+          };
+          const selectedTypes = listsToAdd
+            .map(id => createdLists.find(l => l._id === id)?.type)
+            .map(normalizeType)
+            .filter(t => typeof t === 'boolean');
+          const uniqueTypes = Array.from(new Set(selectedTypes));
+          if (uniqueTypes.length > 1) {
+            alert('Please select lists of the same type (Interview or Assignment) when adding a question.');
+            return;
+          }
+          const isInterviewType = uniqueTypes[0]; // may be undefined; backend defaults to assessment if not provided
+          //console.log('addQuestionToList------------1111111111111111');
+          const addQuestion = await addQuestionToList({
             listIds: listsToAdd,
             suggestedQuestionId: question._id,
             userId,
+            ...(typeof isInterviewType !== 'undefined' ? { isInterviewType } : {})
           });
 
-          console.log('addQuestionToList------------',addQuestion)
+          console.log('addQuestionToList------------', addQuestion)
+          //--------v1.0.3----->
         }
 
         if (listsToRemove.length > 0) {
@@ -413,11 +438,13 @@ const MyQuestionsList1 = forwardRef(
                         .filter((service) =>
                           service.label &&
                           service.label.toLowerCase().includes(searchTermTechnology.toLowerCase())
+                          && service.type === isInterviewType
                         ).length > 0 ? (
                         createdLists
                           .filter((service) =>
                             service.label &&
                             service.label.toLowerCase().includes(searchTermTechnology.toLowerCase())
+                            && service.type === isInterviewType
                           )
                           .map((service) => (
                             <li
@@ -586,7 +613,7 @@ const MyQuestionsList1 = forwardRef(
                 onChange={(e) => setDropdownValue(e.target.value)}
               >
                 <option value="Interview Questions">Interview Questions</option>
-                <option value="Assignments Questions">Assignment Questions</option>
+                <option value="Assignment Questions">Assignment Questions</option>
               </select>
             {/*----v1.0.2---->*/}
             </div>

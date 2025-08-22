@@ -428,6 +428,8 @@ const QuestionBankForm = ({
       createdBy: userId,
       updatedBy: userId,
       ownerId: userId,
+      // v1.0.7 - include flag so backend can route to correct schema
+      isInterviewType: Boolean(isInterviewType),
     };
 
     // Add conditional data based on question type
@@ -1030,6 +1032,7 @@ const QuestionBankForm = ({
                         notEditmode={!isEdit}
                         selectedListId={selectedLabelId}
                         onErrorClear={handleErrorClear}
+                        isInterviewType={isInterviewType}
                       />
                       {/* v1.0.4 -----------------------------------------------------------> */}
                     </div>
