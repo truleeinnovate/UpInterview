@@ -9,7 +9,7 @@ import InterviewerDetailsModal from '../Internal-Or-Outsource/OutsourceInterview
 import { useCustomContext } from '../../../../../../Context/Contextfetch.js';
 import Wallet from '../../../../Accountsettings/account/wallet/Wallet.jsx';
 import { useWallet } from '../../../../../../apiHooks/useWallet';//<----v1.0.1-----
-import toast from 'react-hot-toast';//<----v1.0.1-----
+import toast, { Toaster } from 'react-hot-toast';//<----v1.0.1-----
 import { WalletTopupPopup } from '../../../../Accountsettings/account/wallet/WalletTopupPopup.jsx';
 
 const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDetails, navigatedfrom }) => {
@@ -416,6 +416,7 @@ function OutsourcedInterviewerModal({
 
   return (
     <>
+    <Toaster/>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50">
         <motion.div
           className={`bg-white h-full shadow-xl flex flex-col ${isFullscreen ? 'w-full' : 'w-full md:w-2/3 lg:w-1/2 xl:w-1/2 2xl:w-1/2'}`}
