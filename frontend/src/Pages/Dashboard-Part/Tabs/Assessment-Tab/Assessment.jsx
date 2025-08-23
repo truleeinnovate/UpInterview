@@ -6,6 +6,7 @@
 /* v1.0.5  -  Ashok   -  fixed previously filter by duration not working and in the table 
                          create new assessment popup has z-index issues 
 */
+// v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -460,7 +461,9 @@ const Assessment = () => {
                             type="checkbox"
                             checked={selectedDifficulty.includes(option)}
                             onChange={() => handleDifficultyToggle(option)}
-                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            // v1.0.6 <------------------------------------------------------------
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.6 ------------------------------------------------------------>
                           />
                           <span className="text-sm">{option}</span>
                         </label>
@@ -491,7 +494,9 @@ const Assessment = () => {
                             type="checkbox"
                             checked={selectedDuration.includes(option)}
                             onChange={() => handleDurationToggle(option)}
-                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            // v1.0.6 <------------------------------------------------------------
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.6 ------------------------------------------------------------>
                           />
                           <span className="text-sm">{option}</span>
                         </label>

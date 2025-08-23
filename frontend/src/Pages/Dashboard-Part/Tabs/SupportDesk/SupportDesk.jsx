@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 //<---------------------- v1.0.0----Venkatesh----in header add padding at top
 // v1.0.1 - Ashraf - Added subject field
-
+// v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Plus } from "lucide-react";
@@ -384,7 +384,9 @@ function SupportDesk() {
                             type="checkbox"
                             checked={selectedStatus.includes(option)}
                             onChange={() => handleStatusToggle(option)}
-                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            // v1.0.2 <-------------------------------------------------------------
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.2 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{option}</span>
                         </label>

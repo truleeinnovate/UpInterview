@@ -1,5 +1,6 @@
 //<---------v1.0.0---------Venkatesh-----add current round column
 // v1.0.1 - Ashok - improved searching by full name
+// v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -893,7 +894,9 @@ function InterviewList() {
                               type="checkbox"
                               checked={selectedStatus.includes(status)}
                               onChange={() => handleStatusToggle(status)}
-                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                              // v1.0.2 <---------------------------------------------------------------
+                              className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                              // v1.0.2 --------------------------------------------------------------->
                             />
                             <span className="text-sm">{status}</span>
                           </label>

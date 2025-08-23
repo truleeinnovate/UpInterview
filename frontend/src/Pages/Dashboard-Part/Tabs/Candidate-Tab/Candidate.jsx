@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
 // v1.0.1  -  Ashraf  -  added extend/cancel functionality for individual candidate assessments. show all data when isAssessmentView is true and add status column for assessment view
 // v1.0.2  -  Ashok   -  fixed search by name as can search by full name
+// v1.0.3  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -884,7 +885,9 @@ function Candidate({
                                   onChange={() =>
                                     handleStatusToggle(q.QualificationName)
                                   }
-                                  className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                  // v1.0.3 <--------------------------------------------------------------
+                                  className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                  // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {q.QualificationName}
@@ -929,7 +932,9 @@ function Candidate({
                                   onChange={() =>
                                     handleTechToggle(skill.SkillName)
                                   }
-                                  className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                  // v1.0.3 <--------------------------------------------------------------
+                                  className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                  // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {skill.SkillName}

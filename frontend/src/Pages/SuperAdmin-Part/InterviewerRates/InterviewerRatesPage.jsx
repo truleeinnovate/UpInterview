@@ -1,16 +1,96 @@
-import { useState, useEffect } from "react";
+// v1.0.0 - Ashok - Changed styles to improve UI
+import { useState, useEffect, useRef } from "react";
 import { Tab } from "../../../Components/SuperAdminComponents/common/Tab";
 import {
   AiOutlineTable,
   AiOutlineAppstore,
-  AiOutlinePlus,
+  // AiOutlinePlus,
   AiOutlineFilter,
   AiOutlineExport,
 } from "react-icons/ai";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
 import RatesTableView from "../../../Pages/SuperAdmin-Part/InterviewerRates/RatesTableView";
 import RatesKanbanView from "../../../Pages/SuperAdmin-Part/InterviewerRates/RatesKanbanView";
 import RateCardModal from "../../../Pages/SuperAdmin-Part/InterviewerRates/RateCardModal";
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock";
+import { Button } from "../../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
+
+// v1.0.0 <--------------------------------------------------------------------
+function CategoryDropdown({ categories, filterCategory, setFilterCategory }) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const handleSelect = (value) => {
+    setFilterCategory(value);
+    setOpen(false);
+  };
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
+  return (
+    <div ref={dropdownRef} className="relative inline-block w-56">
+      {/* Trigger */}
+      <div
+        className="flex justify-between items-center px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-teal-500"
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        <span className="text-sm text-gray-700 truncate">
+          {filterCategory === "all" ? "All Categories" : filterCategory}
+        </span>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-gray-500" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-gray-500" />
+        )}
+      </div>
+
+      {/* Dropdown list */}
+      {open && (
+        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div
+            className={`px-3 py-2 text-sm cursor-pointer hover:bg-teal-50 hover:text-custom-blue ${
+              filterCategory === "all" ? "bg-teal-100 text-custom-blue" : ""
+            }`}
+            onClick={() => handleSelect("all")}
+          >
+            All Categories
+          </div>
+          {categories.map((category) => (
+            <div
+              key={category}
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-teal-50 hover:text-custom-blue ${
+                filterCategory === category
+                  ? "bg-teal-100 text-custom-blue font-medium"
+                  : ""
+              }`}
+              onClick={() => handleSelect(category)}
+            >
+              {category}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+// v1.0.0 -------------------------------------------------------------------->
 
 function InterviewerRatesPage() {
   useEffect(() => {
@@ -23,7 +103,6 @@ function InterviewerRatesPage() {
   const [filterCategory, setFilterCategory] = useState("all");
 
   const [modalMode, setModalMode] = useState("create");
-
 
   useScrollLock(showRateCardModal);
 
@@ -86,7 +165,8 @@ function InterviewerRatesPage() {
           Interviewer Rates
         </h1>
         <div className="flex space-x-2 mr-4">
-          <div className="flex rounded-lg border border-gray-300 p-1 bg-white">
+          {/* v1.0.0 <----------------------------------------------------------------------------- */}
+          {/* <div className="flex rounded-lg border border-gray-300 p-1 bg-white">
             <select
               className="focus:ring-teal-500 focus:border-teal-500 block sm:text-sm border-gray-300 rounded-md outline-none"
               value={filterCategory}
@@ -99,23 +179,51 @@ function InterviewerRatesPage() {
                 </option>
               ))}
             </select>
-          </div>
-          <button className="flex items-center p-2 rounded-md bg-gray-300">
+          </div> */}
+          <CategoryDropdown
+            categories={categories}
+            filterCategory={filterCategory}
+            setFilterCategory={setFilterCategory}
+          />
+          {/* <button className="flex items-center p-2 rounded-md bg-gray-300">
             <AiOutlineFilter className="mr-2" />
             Filter
-          </button>
-          <button className="flex items-center p-2 rounded-md bg-gray-300">
+          </button> */}
+          <Button
+            size="sm"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-600  transition-colors"
+          >
+            <AiOutlineFilter className="h-4 w-4 mr-1" />
+            Filter
+          </Button>
+          {/* <button className="flex items-center p-2 rounded-md bg-gray-300">
             <AiOutlineExport className="mr-2" />
             Export
-          </button>
-          <button
+          </button> */}
+          <Button
+            size="sm"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-600  transition-colors"
+          >
+            <AiOutlineExport className="h-4 w-4 mr-1" />
+            Export
+          </Button>
+          {/* <button
             onClick={handleCreateRateCard}
             className="flex items-center p-2 rounded-md text-white bg-custom-blue hover:bg-custom-blue focus:ring-custom-blue"
           >
             <AiOutlinePlus className="mr-2" />
             Add Rate Card
-          </button>
+          </button> */}
+          <Button
+            onClick={handleCreateRateCard}
+            size="sm"
+            className="bg-custom-blue hover:bg-custom-blue/90 text-white"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Rate Card
+          </Button>
         </div>
+        {/* v1.0.0 --------------------------------------------------------------------------------> */}
       </div>
 
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">

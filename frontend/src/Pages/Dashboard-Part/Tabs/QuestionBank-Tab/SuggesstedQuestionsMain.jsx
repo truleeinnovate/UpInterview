@@ -1,5 +1,6 @@
 // v1.0.0 ------ Venkatesh--- added loading state and skeleton loader
 // v1.0.1 - Ashok - Improved loader animation from animate-pulse to shimmer (custom css styles)
+// v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
@@ -40,7 +41,6 @@ const SuggestedQuestionsComponent = ({
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [dropdownValue, setDropdownValue] = useState("Interview Questions");
   const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
-
 
   const [filtrationData, setFiltrationData] = useState([
     {
@@ -543,42 +543,64 @@ const SuggestedQuestionsComponent = ({
               onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
-          
+
           <div className="relative inline-block w-48">
-              <button
-                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-                onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
+            <button
+              className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+              onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
+            >
+              <span className="truncate">
+                {dropdownValue || "Select Question Type"}
+              </span>
+              <svg
+                className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${
+                  isInterviewTypeOpen ? "rotate-180" : "rotate-0"
+                }`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <span className="truncate">{dropdownValue || "Select Question Type"}</span>
-                <svg
-                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen ? "rotate-180" : "rotate-0"}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {isInterviewTypeOpen && (
+              <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                <div
+                  className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+                    dropdownValue === "Interview Questions"
+                      ? "bg-blue-50 text-custom-blue font-semibold"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    setDropdownValue("Interview Questions");
+                    setIsInterviewTypeOpen(false);
+                  }}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {isInterviewTypeOpen && (
-                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                  <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interview Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Interview Questions"); setIsInterviewTypeOpen(false);}}
-                  >
-                    Interview Questions
-                  </div>
-                  <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignment Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Assignment Questions"); setIsInterviewTypeOpen(false);}}
-                  >
-                    Assignment Questions
-                  </div>
-                  
+                  Interview Questions
                 </div>
-              )}
+                <div
+                  className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+                    dropdownValue === "Assignment Questions"
+                      ? "bg-blue-50 text-custom-blue font-semibold"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    setDropdownValue("Assignment Questions");
+                    setIsInterviewTypeOpen(false);
+                  }}
+                >
+                  Assignment Questions
+                </div>
+              </div>
+            )}
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div className="flex items-center">
               <p>
@@ -959,7 +981,9 @@ const SuggestedQuestionsComponent = ({
                       checked={tempQuestionTypeFilterItems.includes(
                         type.type.toLowerCase()
                       )}
-                      className="w-4 cursor-pointer"
+                      // v1.0.2 <-------------------------------------------------------------------
+                      className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
+                      // v1.0.2 ------------------------------------------------------------------->
                       value={type.type.toLowerCase()}
                       id={`question-type-${type.type}`}
                       onChange={(e) => {
@@ -1007,7 +1031,9 @@ const SuggestedQuestionsComponent = ({
                       checked={tempDifficultyLevelFilterItems.includes(
                         type.level.toLowerCase()
                       )}
-                      className="w-4 cursor-pointer"
+                      // v1.0.2 <-------------------------------------------------------------------
+                      className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
+                      // v1.0.2 ------------------------------------------------------------------->
                       value={type.level.toLowerCase()}
                       id={`question-type-${type.level}`}
                       onChange={(e) => {

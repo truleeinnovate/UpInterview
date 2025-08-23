@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
 // v1.0.1  -  Ashok   -  added status badge as common code
 // v1.0.2  -  Ashok   -  Disabled outer scrollbar when popups (reschedule and cancel schedule) open
+// v1.0.3  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -382,7 +383,9 @@ const MockInterview = () => {
                             type="checkbox"
                             checked={selectedStatus.includes(status)}
                             onChange={() => handleStatusToggle(status)}
-                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            // v1.0.3 <-------------------------------------------------------------
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.3 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{status}</span>
                         </label>
