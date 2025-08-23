@@ -5,7 +5,7 @@
 // v1.0.4  -  Venkatesh  -  fixed selected label issue now default first label is selected
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { ChevronUp, ChevronDown, Plus, Pencil } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, Pencil, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { ReactComponent as IoIosArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { ReactComponent as IoIosArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
@@ -44,6 +44,8 @@ const MyQuestionsList = ({
   handleRemoveQuestion,
   removedQuestionIds = [],
   activeTab,
+  sidebarOpen,
+  setSidebarOpen,
 }) => {
   const { myQuestionsList, createdLists, isLoading } = useQuestions();//<----v1.0.4---
   console.log("myQuestionsList:", myQuestionsList);
@@ -51,7 +53,6 @@ const MyQuestionsList = ({
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
   const filterIconRef = useRef(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState("");
   const [actionViewMoreSection, setActionViewMoreSection] = useState({});
@@ -62,6 +63,9 @@ const MyQuestionsList = ({
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
   const [dropdownValue, setDropdownValue] = useState("Interview Questions");
+  const [searchInput, setSearchInput] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   //<----v1.0.4---
   // Map list type to display value
@@ -206,9 +210,9 @@ const MyQuestionsList = ({
     }
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+  // const toggleSidebar = () => {
+  //   setSidebarOpen(!sidebarOpen);
+  // };
 
   const closeSidebar = useCallback(() => {
     setSidebarOpen(false);
@@ -245,9 +249,9 @@ const MyQuestionsList = ({
     const meta = Array.isArray(createdLists)
       ? createdLists.find((l) => l?.label === label || l?.name === label)
       : null;
-    if (meta && typeof meta.type !== 'undefined') {
-      setDropdownValue(mapListTypeToDisplay(meta.type));
-    }
+    // if (meta && typeof meta.type !== 'undefined') {
+    //   setDropdownValue(mapListTypeToDisplay(meta.type));
+    // }
     //----v1.0.4--->
     setSelectedLabel(label);
     setIsDropdownOpen(false);
@@ -260,12 +264,12 @@ const MyQuestionsList = ({
     const meta = Array.isArray(createdLists)
       ? createdLists.find((l) => l?.label === selectedLabel || l?.name === selectedLabel)
       : null;
-    if (meta && typeof meta.type !== 'undefined') {
-      const display = mapListTypeToDisplay(meta.type);
-      if (dropdownValue !== display) {
-        setDropdownValue(display);
-      }
-    }
+    // if (meta && typeof meta.type !== 'undefined') {
+    //   const display = mapListTypeToDisplay(meta.type);
+    //   if (dropdownValue !== display) {
+    //     setDropdownValue(display);
+    //   }
+    // }
   }, [selectedLabel, createdLists, dropdownValue]);
   //----v1.0.4--->
 
@@ -611,6 +615,15 @@ const MyQuestionsList = ({
     setIsPopupOpen(false);
   };
 
+  const onClickLeftPaginationIcon = () => {
+    if (currentPage > 1) setCurrentPage((p) => p - 1);
+  };
+
+  const onClickRightPagination = () => {
+    const tp = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    if (currentPage < tp) setCurrentPage((p) => p + 1);
+  };
+
   // Find the listId for the selectedLabel
   const selectedLabelId = useMemo(() => {
     if (!selectedLabel || !myQuestionsList) return null;
@@ -619,7 +632,84 @@ const MyQuestionsList = ({
     return matchingQuestion ? matchingQuestion.listId : null;
   }, [selectedLabel, myQuestionsList]);
 
-  const groupedQuestions = filteredMyQuestionsList;
+  //<----v1.0.4---
+  const groupedQuestions = useMemo(() => {
+    if (!filteredMyQuestionsList || typeof filteredMyQuestionsList !== "object") return {};
+    // If createdLists not ready yet, show all lists unfiltered
+    if (!Array.isArray(createdLists) || createdLists.length === 0) return filteredMyQuestionsList;
+    const result = {};
+    Object.keys(filteredMyQuestionsList).forEach((listName) => {
+      const meta = createdLists.find((l) => l?.label === listName || l?.name === listName);
+      if (typeof meta?.type === 'undefined') return; // skip lists without known type
+      const displayType = mapListTypeToDisplay(meta.type);
+      if (displayType === dropdownValue) {
+        result[listName] = filteredMyQuestionsList[listName];
+      }
+    });
+    return result;
+  }, [filteredMyQuestionsList, createdLists, dropdownValue]);
+
+  // Ensure selectedLabel is valid for the currently filtered lists
+  useEffect(() => {
+    const availableLabels = Object.keys(groupedQuestions || {});
+    if (availableLabels.length === 0) {
+      if (selectedLabel) setSelectedLabel("");
+      return;
+    }
+    if (!selectedLabel || !availableLabels.includes(selectedLabel)) {
+      setSelectedLabel(availableLabels[0]);
+    }
+  }, [groupedQuestions, dropdownValue, selectedLabel]);
+  
+
+  // Search + Pagination for selected label
+  const selectedLabelItems = useMemo(() => {
+    return selectedLabel && groupedQuestions[selectedLabel]
+      ? groupedQuestions[selectedLabel]
+      : [];
+  }, [groupedQuestions, selectedLabel]);
+
+  const filteredSelectedItems = useMemo(() => {
+    if (!searchInput) return selectedLabelItems;
+    const s = searchInput.toLowerCase();
+    return selectedLabelItems.filter((q) => {
+      const inText = q?.questionText?.toLowerCase()?.includes(s);
+      const inTags = Array.isArray(q?.tags) && q.tags.some((t) => t?.toLowerCase()?.includes(s));
+      const inSkill =
+        Array.isArray(q?.skill)
+          ? q.skill.some((sk) => sk?.toLowerCase()?.includes(s))
+          : typeof q?.skill === "string"
+            ? q.skill.toLowerCase().includes(s)
+            : false;
+      return inText || inTags || inSkill;
+    });
+  }, [selectedLabelItems, searchInput]);
+
+  const totalItems = filteredSelectedItems.length;
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredSelectedItems.slice(start, start + itemsPerPage);
+  }, [filteredSelectedItems, currentPage]);
+
+  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+  const rangeLabel =
+    totalItems === 0
+      ? "0/0"
+      : startIndex === endIndex
+        ? `${endIndex}/${totalItems}`
+        : `${startIndex}-${endIndex}/${totalItems}`;
+
+  // Reset/clamp page on changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedLabel, searchInput, selectedQuestionTypeFilterItems, selectedDifficultyLevelFilterItems, dropdownValue]);
+
+  useEffect(() => {
+    const tp = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    if (currentPage > tp) setCurrentPage(tp);
+  }, [totalItems, currentPage]);
+  //----v1.0.4--->
 
   // Skeleton Loader Component
   const SkeletonLoader = () => (
@@ -657,12 +747,47 @@ const MyQuestionsList = ({
       <div className="w-full px-4 py-2 bg-white">
         <div className={`flex items-center justify-between ${type === "interviewerSection" || type === "feedback" || type === "assessment" ? "" : ""}`}>
           <div className="flex items-center gap-2">
+
+          <div className="relative inline-block w-48">
+              <button
+                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+                onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
+              >
+                <span className="truncate">{dropdownValue || "Select Question Type"}</span>
+                <svg
+                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen? "rotate-180" : "rotate-0"}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isInterviewTypeOpen && (
+                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                  <div
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interview Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
+                    onClick={() => {setDropdownValue("Interview Questions"); setIsInterviewTypeOpen(false);}}
+                  >
+                    Interview Questions
+                  </div>
+                  <div
+                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignment Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
+                    onClick={() => {setDropdownValue("Assignment Questions"); setIsInterviewTypeOpen(false);}}
+                  >
+                    Assignment Questions
+                  </div>
+                  
+                </div>
+              )}
+            </div>
             <div className="relative inline-block w-48">
               <button
                 className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <span className="truncate">{selectedLabel || "Select Label"}</span>
+                <span className="truncate">{selectedLabel ? selectedLabel.charAt(0).toUpperCase() + selectedLabel.slice(1) : "Select Label"}</span>
                 <svg
                   className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"}`}
                   xmlns="http://www.w3.org/2000/svg"
@@ -711,54 +836,80 @@ const MyQuestionsList = ({
                 </div>
               )}
             </div>
-            <div className="relative inline-block w-48">
-              <button
-                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-                onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
-              >
-                <span className="truncate">{dropdownValue || "Select Question Type"}</span>
-                <svg
-                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen? "rotate-180" : "rotate-0"}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {isInterviewTypeOpen && (
-                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                  <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interview Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Interview Questions"); setIsInterviewTypeOpen(false);}}
-                  >
-                    Interview Questions
-                  </div>
-                  <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignment Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Assignment Questions"); setIsInterviewTypeOpen(false);}}
-                  >
-                    Assignment Questions
-                  </div>
-                  
-                </div>
-              )}
-            </div>
+            <button
+              className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
+              onClick={() => {
+                //<-----v1.0.4-----
+                // Prefer createdLists to resolve the list id (works even for empty lists)
+                const meta = Array.isArray(createdLists)
+                  ? createdLists.find((l) => l?.label === selectedLabel || l?.name === selectedLabel)
+                  : null;
+                const listId = meta?._id || selectedLabelId;
+                if (listId && selectedLabel) {
+                  handleEdit(listId, selectedLabel);
+                } else {
+                  toast.error("Please select a label to edit");
+                }
+              }}
+              //-------v1.0.4----->
+            >
+             Edit List
+            </button>
+            <strong className="text-md text-gray-400"> | </strong>
             <button
               className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
               onClick={openListPopup}
             >
-              <Plus size={14} /> Create New List
+             Create New List
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              className="text-md bg-custom-blue text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
-              onClick={toggleSidebar}
-            >
-              <Plus /> Add Question
-            </button>
+          {/*<-----v1.0.4----Serach bar and pagination */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center rounded-md border">
+              <span className="p-2 text-custom-blue">
+                <Search className="w-5 h-5" />
+              </span>
+              <input
+                type="search"
+                placeholder="Search by Skills & Questions"
+                className="w-[200px] rounded-md focus:outline-none pr-2"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center">
+                <p>{rangeLabel}</p>
+              </div>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  title="Previous"
+                  onClick={onClickLeftPaginationIcon}
+                  disabled={currentPage === 1}
+                  className={`border p-2 mr-2 text-xl rounded-md ${
+                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
+                  }`}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  title="Next"
+                  onClick={onClickRightPagination}
+                  disabled={currentPage * itemsPerPage >= totalItems || totalItems === 0}
+                  className={`border p-2 text-xl rounded-md ${
+                    currentPage * itemsPerPage >= totalItems || totalItems === 0
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+           {/*-----v1.0.4-----> */}
             <div
               ref={filterIconRef}
               onClick={() => setIsPopupOpen(!isPopupOpen)}
@@ -837,7 +988,7 @@ const MyQuestionsList = ({
                           {items.length} {items.length > 1 ? "Questions" : "Question"}
                         </span>
                       </div>
-                      <div className="flex items-center">
+                      {/* <div className="flex items-center">
                         <div className="relative">
                           <div className="flex items-center">
                             {isOpen[listName] && items.length > 0 && (
@@ -861,22 +1012,9 @@ const MyQuestionsList = ({
                               </button>
                             )}
                           </div>
-                          {actionViewMoreSection === listName && (
-                            <div className="absolute right-10 w-24 bg-white hover:bg-gray-200 rounded-md shadow-lg border border-gray-200 z-10">
-                              <p
-                                className="px-2 py-1 flex items-center gap-2 text-sm text-gray-700 cursor-pointer transition-colors"
-                                onClick={() => {
-                                  items.forEach((item) => {
-                                    handleEdit(item.listId, item.label);
-                                  });
-                                }}
-                              >
-                                <Pencil className="w-4 h-4 text-blue-600" /> Edit List
-                              </p>
-                            </div>
-                          )}
+                         
                         </div>
-                      </div>
+                      </div> */}
                     </div>
 
                     {isOpen[listName] && items.length > 0 && (
@@ -884,14 +1022,15 @@ const MyQuestionsList = ({
                         className={`p-4  rounded-b-lg border border-t-0 border-gray-300 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-250px)]"
                           } overflow-y-auto`}
                       >
-                        {items.map((question, index) => (
+                        {paginatedItems.map((question, index) => (
                           <div
                             key={index}
                             className="border border-gray-300 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
                           >
-                            <div className="flex justify-between items-center p-4 border-b border-gray-300">
+                            <div className="flex flex-col p-4 border-b border-gray-300">
+                            <div className="flex justify-between items-center w-full">
                               <div className="flex items-start w-3/4">
-                                <span className="font-semibold w-8">{index + 1}.</span>
+                                <span className="font-semibold w-8">{(currentPage - 1) * itemsPerPage + index + 1}.</span>
                                 <p className="text-gray-700">{question.questionText}</p>
                               </div>
                               <div className="flex items-center gap-2">
@@ -969,7 +1108,7 @@ const MyQuestionsList = ({
                                 )}
                               </div>
                             </div>
-                            {question.questionType === "MCQ" && question.options && (
+                              {question.questionType === "MCQ" && question.options && (
                               <div className="mb-2 ml-12 mt-2">
                                 <ul className="list-none">
                                   {(() => {
@@ -984,6 +1123,7 @@ const MyQuestionsList = ({
                                 </ul>
                               </div>
                             )}
+                            </div>
                             <div className="p-4 pt-0">
                               <p className="text-sm break-words whitespace-pre-wrap pt-2">
                                 <span className="font-medium text-gray-700">Answer: </span>
