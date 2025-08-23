@@ -7,6 +7,6 @@ const listSchema = new mongoose.Schema({
   ownerId: { type: String },
   tenantId: String,
   type: { type: Boolean },//<----v1.0.0----
-});
+});//tenantListNames
 
 module.exports = mongoose.models.TenantQuestionsListNames || mongoose.model('TenantQuestionsListNames', listSchema);

@@ -55,7 +55,7 @@ const programmingSchema = new mongoose.Schema({
 
 // Main schema
 const suggestedQuestionSchema = new mongoose.Schema({
-  questionNo: { type: String }, // From existing schema
+  // questionNo: { type: String }, // From existing schema
   questionOrderId: { type: String }, // ASSQ-00000, ASSQ-00001, ASSQ-00002
   questionText: { type: String, required: true },
   questionType: { type: String, required: true },

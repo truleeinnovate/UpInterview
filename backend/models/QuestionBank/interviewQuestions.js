@@ -12,7 +12,7 @@ const mongoose = require("mongoose");
   
   // Main schema
   const suggestedQuestionSchema = new mongoose.Schema({
-    questionNo: { type: String }, // From existing schema
+    // questionNo: { type: String }, // From existing schema
     questionOrderId: { type: String }, // INTQ-00000, INTQ-00001, INTQ-00002
     questionText: { type: String, required: true },
     questionType: { type: String, required: true },
@@ -29,10 +29,10 @@ const mongoose = require("mongoose");
     explanation: { type: String }, // NEW FIELD from JSON
     minexperience: { type: Number },
     maxexperience: { type: Number },
-    charLimits: {
-      min: { type: Number },
-      max: { type: Number }
-    },
+    // charLimits: {
+    //   min: { type: Number },
+    //   max: { type: Number }
+    // },
     solutions: [solutionSchema], // NEW FIELD from JSON
     relatedQuestions: [{ type: String }], // NEW FIELD from JSON
     attachments: [{ type: String }], // NEW FIELD from JSON
