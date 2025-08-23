@@ -68,59 +68,59 @@ const FeedbackForm = ({
   preselectedQuestionsResponses = [],
 
   decodedData,
-  isAddMode ,
+  isAddMode,
   isScheduler,
   schedulerFeedbackData
 }) => {
-  console.log("feedbackCandidate",feedbackCandidate)
+  console.log("feedbackCandidate", feedbackCandidate)
   useScrollLock(true);
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
-    const feedbackData = useMemo(() => {
-      return locationFeedback || feedbackCandidate || {};
-    }, [locationFeedback, feedbackCandidate]);
+  const feedbackData = useMemo(() => {
+    return locationFeedback || feedbackCandidate || {};
+  }, [locationFeedback, feedbackCandidate]);
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
   const feedbackId = feedbackData._id || null;
   // const skillsData = feedbackData.skills || [];
   // const overallImpressionTabData = feedbackData.overallImpression || {};
   // console.log("feedbackData edit mode", feedbackData);
- // Fixed: Properly initialize skills data with fallback
- const skillsData = feedbackData.skills || [];
-  
- // Fixed: Properly initialize overall impression data with fallback
- const overallImpressionTabData = feedbackData?.overallImpression || {};
-//  console.log("feedbackData edit mode", feedbackData);
-//  console.log("overallImpressionTabData",overallImpressionTabData?.overallRating,isAddMode);
+  // Fixed: Properly initialize skills data with fallback
+  const skillsData = feedbackData.skills || [];
+
+  // Fixed: Properly initialize overall impression data with fallback
+  const overallImpressionTabData = feedbackData?.overallImpression || {};
+  //  console.log("feedbackData edit mode", feedbackData);
+  //  console.log("overallImpressionTabData",overallImpressionTabData?.overallRating,isAddMode);
   const navigate = useNavigate();
 
   // const [overallRating, setOverallRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.overallRating) || 0);
   // const [communicationRating, setCommunicationRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.communicationRating) || 0);
   // const [skillRatings, setSkillRatings] = useState(((isEditMode || isViewMode) && skillsData.map(skill => ({ skill: skill.skillName, rating: skill.rating, comments: skill.note }))) || [{ skill: '', rating: 0, comments: '' }]);
- 
+
   // Fixed: Proper initialization for overall rating with proper fallbacks
   const [overallRating, setOverallRating] = useState(
-    (isEditMode || isViewMode || isAddMode) ? (overallImpressionTabData?.overallRating ) : 0
+    (isEditMode || isViewMode || isAddMode) ? (overallImpressionTabData?.overallRating) : 0
   );
 
   // console.log("overallImpressionTabData",overallRating);
 
-  
+
 
 
   // Fixed: Proper initialization for communication rating with proper fallbacks
   const [communicationRating, setCommunicationRating] = useState(
     (isEditMode || isViewMode || isAddMode) ? (overallImpressionTabData?.communicationRating) : 0
   );
-  console.log("skillsData",overallImpressionTabData);
-  
+  console.log("skillsData", overallImpressionTabData);
+
 
   // Fixed: Proper initialization for skill ratings with proper conditional checks
-  const initialSkillRatings = (isEditMode || isViewMode || isAddMode) && skillsData.length > 0 
-    ? skillsData.map(skill => ({ 
-        skill: skill.skillName, 
-        rating: skill.rating, 
-        comments: skill.note 
-      }))
+  const initialSkillRatings = (isEditMode || isViewMode || isAddMode) && skillsData.length > 0
+    ? skillsData.map(skill => ({
+      skill: skill.skillName,
+      rating: skill.rating,
+      comments: skill.note
+    }))
     : [{ skill: '', rating: 0, comments: '' }];
 
   const [skillRatings, setSkillRatings] = useState(initialSkillRatings);
@@ -129,50 +129,50 @@ const FeedbackForm = ({
   const [recommendation, setRecommendation] = useState(
     (isEditMode || isViewMode || isAddMode) ? (overallImpressionTabData.recommendation || 'Maybe') : 'Maybe'
   );
-  
+
   // General comments uses feedbackData.generalComments directly
   const [comments, setComments] = useState(
     (isEditMode || isViewMode || isAddMode) ? (feedbackData?.generalComments || '') : ''
   );
 
-    // Merge answered and newly added
-    const mergedQuestions = useMemo(() => {
-      // Get existing interviewer questions from API
-      const existingInterviewerQuestions = feedbackCandidate?.interviewData?.questionFeedback || [];
-      
-      // Get newly added questions from interviewerSectionData
-      const newlyAddedQuestions = (interviewerSectionData || [])
-  .filter(newQ => {
-    const newId = newQ.questionId || newQ._id || newQ.id;
-    const isNotDuplicate = !existingInterviewerQuestions.some(existingQ => {
-      const existingId = existingQ.questionId || existingQ._id || existingQ.id;
-      return existingId === newId;
-    });
-    const isAddedByInterviewer = (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
-    return isNotDuplicate && isAddedByInterviewer;
-  });
+  // Merge answered and newly added
+  const mergedQuestions = useMemo(() => {
+    // Get existing interviewer questions from API
+    const existingInterviewerQuestions = feedbackCandidate?.interviewData?.questionFeedback || [];
+
+    // Get newly added questions from interviewerSectionData
+    const newlyAddedQuestions = (interviewerSectionData || [])
+      .filter(newQ => {
+        const newId = newQ.questionId || newQ._id || newQ.id;
+        const isNotDuplicate = !existingInterviewerQuestions.some(existingQ => {
+          const existingId = existingQ.questionId || existingQ._id || existingQ.id;
+          return existingId === newId;
+        });
+        const isAddedByInterviewer = (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
+        return isNotDuplicate && isAddedByInterviewer;
+      });
 
 
 
-      
-      // const newlyAddedQuestions = (interviewerSectionData || []).filter(newQ => {
-      //   const newId = newQ.questionId || newQ._id || newQ.id;
-      //   return !existingInterviewerQuestions.some(existingQ => {
-      //     const existingId = existingQ.questionId || existingQ._id || existingQ.id;
-      //     return existingId === newId;
-      //   });
-      // });
+
+    // const newlyAddedQuestions = (interviewerSectionData || []).filter(newQ => {
+    //   const newId = newQ.questionId || newQ._id || newQ.id;
+    //   return !existingInterviewerQuestions.some(existingQ => {
+    //     const existingId = existingQ.questionId || existingQ._id || existingQ.id;
+    //     return existingId === newId;
+    //   });
+    // });
 
 
-    
-      // Combine both for submission purposes
-      return [...existingInterviewerQuestions, ...newlyAddedQuestions];
-    }, [feedbackCandidate, interviewerSectionData]);
+
+    // Combine both for submission purposes
+    return [...existingInterviewerQuestions, ...newlyAddedQuestions];
+  }, [feedbackCandidate, interviewerSectionData]);
   // console.log("mergedQuestions",mergedQuestions);
 
   //<---v1.0.0-----
   const filteredInterviewerQuestions = React.useMemo(() => {
-    const all = (isEditMode || isViewMode ) ? feedbackData.preSelectedQuestions : mergedQuestions
+    const all = (isEditMode || isViewMode) ? feedbackData.preSelectedQuestions : mergedQuestions
     return Array.isArray(all)
       ? all.filter((q) => (q.addedBy) === "interviewer")
       : [];
@@ -181,16 +181,16 @@ const FeedbackForm = ({
 
 
   // const questionsWithFeedback = React.useMemo(() => {
-      
-      
-    
+
+
+
   //   const existingQuestions  = [
   //     ...(filteredInterviewerQuestions || []),
   //     ...(interviewerSectionData || [])
   //   ];
   //   // filteredInterviewerQuestions || [];
   //   // console.log("existingQuestions",existingQuestions);
-      
+
   //   // Get newly added questions from interviewerSectionData that are not in existing questions
   //   const newlyAddedQuestions = (interviewerSectionData || []).filter(newQ => {
   //     const newId = newQ.questionId || newQ._id || newQ.id;
@@ -199,18 +199,18 @@ const FeedbackForm = ({
   //       return existingId === newId;
   //     });
   //   });
-  
+
   //   // Combine both arrays
   //   const allCombinedQuestions = [...existingQuestions, ...newlyAddedQuestions];
   //   // console.log("feedbackData",feedbackData);
-    
-      
+
+
   //     const shouldApplyFeedback = (isEditMode || isViewMode || isAddMode) && feedbackData && Array.isArray(feedbackData.questionFeedback) && feedbackData.questionFeedback.length > 0;
   //     console.log("shouldApplyFeedback",shouldApplyFeedback,isAddMode);
-      
+
   //     if (!shouldApplyFeedback) return allCombinedQuestions;
   //     console.log("allCombinedQuestions",allCombinedQuestions);
-      
+
   //     const feedbackMap = feedbackData.questionFeedback.reduce((acc, f) => {
   //       const k = f.questionId || f._id;
   //       if (!k) return acc;
@@ -247,60 +247,60 @@ const FeedbackForm = ({
   //         merged.notesBool = true;
   //       }
   //       console.log("merged",merged);
-        
+
   //       return merged;
   //     });
   //   }, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
- 
+
   const questionsWithFeedback = React.useMemo(() => {
-  // Start with all questions from all sources
-  const allQuestions = [
-    ...(filteredInterviewerQuestions || []),
-    // ...(interviewerSectionData || [])
-  ];
+    // Start with all questions from all sources
+    const allQuestions = [
+      ...(filteredInterviewerQuestions || []),
+      // ...(interviewerSectionData || [])
+    ];
 
-  console.log("allQuestions",allQuestions);
+    console.log("allQuestions", allQuestions);
 
-  // Create a map by question ID for quick lookup
-  const questionsMap = new Map();
-  allQuestions.forEach(q => {
-    const id = q.questionId || q._id || q.id;
-    if (id) {
-      questionsMap.set(id, {...q});
-    }
-  });
-
-  // Apply feedback data if available
-  if ((isEditMode || isViewMode || isAddMode) && feedbackData?.questionFeedback) {
-    feedbackData.questionFeedback.forEach(feedback => {
-      const id = feedback.questionId || feedback._id;
-      if (id && questionsMap.has(id)) {
-        const question = questionsMap.get(id);
-        
-        // Merge answer data
-        if (feedback.candidateAnswer) {
-          question.isAnswered = fromBackendAnswerType(feedback.candidateAnswer.answerType);
-          question.answer = feedback.candidateAnswer.submittedAnswer || question.answer;
-        }
-        
-        // Merge feedback data
-        if (feedback.interviewerFeedback) {
-          question.isLiked = feedback.interviewerFeedback.liked || question.isLiked;
-          question.whyDislike = feedback.interviewerFeedback.dislikeReason || question.whyDislike;
-          question.note = feedback.interviewerFeedback.note || question.note;
-          question.notesBool = !!feedback.interviewerFeedback.note;
-        }
+    // Create a map by question ID for quick lookup
+    const questionsMap = new Map();
+    allQuestions.forEach(q => {
+      const id = q.questionId || q._id || q.id;
+      if (id) {
+        questionsMap.set(id, { ...q });
       }
     });
-  }
 
-  return Array.from(questionsMap.values());
-}, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
+    // Apply feedback data if available
+    if ((isEditMode || isViewMode || isAddMode) && feedbackData?.questionFeedback) {
+      feedbackData.questionFeedback.forEach(feedback => {
+        const id = feedback.questionId || feedback._id;
+        if (id && questionsMap.has(id)) {
+          const question = questionsMap.get(id);
+
+          // Merge answer data
+          if (feedback.candidateAnswer) {
+            question.isAnswered = fromBackendAnswerType(feedback.candidateAnswer.answerType);
+            question.answer = feedback.candidateAnswer.submittedAnswer || question.answer;
+          }
+
+          // Merge feedback data
+          if (feedback.interviewerFeedback) {
+            question.isLiked = feedback.interviewerFeedback.liked || question.isLiked;
+            question.whyDislike = feedback.interviewerFeedback.dislikeReason || question.whyDislike;
+            question.note = feedback.interviewerFeedback.note || question.note;
+            question.notesBool = !!feedback.interviewerFeedback.note;
+          }
+        }
+      });
+    }
+
+    return Array.from(questionsMap.values());
+  }, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
 
 
-    // console.log("questionsWithFeedback",questionsWithFeedback);
- 
-    // Build a single, de-duplicated list that prefers current UI state and only falls back to persisted feedback
+  // console.log("questionsWithFeedback",questionsWithFeedback);
+
+  // Build a single, de-duplicated list that prefers current UI state and only falls back to persisted feedback
   // const questionsWithFeedback = React.useMemo(() => {
   //   // Start with interviewer-added questions (from preselected in edit/view) as the base for text/snapshot
   //   const mapById = new Map();
@@ -313,16 +313,16 @@ const FeedbackForm = ({
   //   (interviewerSectionData || []).forEach((q) => {
   //     const key = q?.questionId || q?.id || q?._id;
   //     // console.log("key",key);
-      
+
   //     if (!key) return;
   //     const base = mapById.get(key);
   //     // console.log("base",base);
-      
+
   //     if (!base) return; // only overlay onto interviewer-added base questions
   //     const merged = { ...base };
   //     console.log("merged",merged);
   //     console.log("q",q);
-      
+
   //     if (q.answer || q.candidateAnswer?.submittedAnswer !== undefined) merged.answer = q.answer;
   //     if (q.isAnswered || q.candidateAnswer?.isAnswered !== undefined) merged.isAnswered = q.isAnswered;
   //     if (q.notesBool || q.candidateAnswer?.notesBool !== undefined) merged.notesBool = q.notesBool;
@@ -349,11 +349,11 @@ const FeedbackForm = ({
   //       return undefined;
   //     };
   //     console.log("mapById",mapById);
-      
+
   //     Array.from(mapById.keys()).forEach((key) => {
   //       const item = mapById.get(key) || {};
   //       // console.log("item",item);
-        
+
   //       const f = feedbackMap[key];
   //       if (!f) return item;
   //       const submittedAns = f.candidateAnswer?.submittedAnswer || item.candidateAnswer?.submittedAnswer || "";
@@ -380,8 +380,8 @@ const FeedbackForm = ({
   //---v1.0.0----->
 
   // Final list of questions to render in the interviewer section
-  
-  
+
+
   const questionsToRender = React.useMemo(() => {
     if (isEditMode || isViewMode || isAddMode) {
       return Array.isArray(questionsWithFeedback) ? questionsWithFeedback : [];
@@ -482,7 +482,7 @@ const FeedbackForm = ({
     questions: ''
   });
 
-  
+
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
@@ -610,7 +610,7 @@ const FeedbackForm = ({
   };
 
   const onChangeRadioInput = (questionId, value) => {
-   //<---v1.0.0-----
+    //<---v1.0.0-----
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === questionId);
       if (exists) {
@@ -676,37 +676,37 @@ const FeedbackForm = ({
   const DisLikeSection = React.memo(({ each }) => {
     return (
       <>
-              {(isEditMode || isAddMode) ? (
-                <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
-                  <div className="flex justify-between items-center mb-2">
-                    <h1>Tell us more :</h1>
-                    <button onClick={() => setDislikeQuestionId(null)}>
-                      <IoIosCloseCircleOutline />
-                    </button>
-                  </div>
-                  <ul className="flex flex-wrap gap-3">
-                    {dislikeOptions.map((option) => (
-                      <li key={option.value} className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          id={`dislike-${each.questionId || each.id}-${option.value}`}
-                          name={`dislike-${each.questionId || each.id}`}
-                          value={option.value}
-                          checked={each.whyDislike === option.value}
-                          onChange={(e) => onChangeDislikeRadioInput(each.questionId || each.id, e.target.value)}
-                        />
-                        <label htmlFor={`dislike-${each.questionId || each.id}-${option.value}`} className="cursor-pointer">
-                         {option.label}
-                       </label>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <p className="w-full flex gap-x-8 gap-y-2 ">{each.whyDislike || "N/A"}</p>
-              )}
-              </>
-  );
+        {(isEditMode || isAddMode) ? (
+          <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
+            <div className="flex justify-between items-center mb-2">
+              <h1>Tell us more :</h1>
+              <button onClick={() => setDislikeQuestionId(null)}>
+                <IoIosCloseCircleOutline />
+              </button>
+            </div>
+            <ul className="flex flex-wrap gap-3">
+              {dislikeOptions.map((option) => (
+                <li key={option.value} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id={`dislike-${each.questionId || each.id}-${option.value}`}
+                    name={`dislike-${each.questionId || each.id}`}
+                    value={option.value}
+                    checked={each.whyDislike === option.value}
+                    onChange={(e) => onChangeDislikeRadioInput(each.questionId || each.id, e.target.value)}
+                  />
+                  <label htmlFor={`dislike-${each.questionId || each.id}-${option.value}`} className="cursor-pointer">
+                    {option.label}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="w-full flex gap-x-8 gap-y-2 ">{each.whyDislike || "N/A"}</p>
+        )}
+      </>
+    );
   });
 
   const SharePopupSection = () => {
@@ -766,8 +766,8 @@ const FeedbackForm = ({
             onClick={() => setRating(star)}
             disabled={isViewMode}
             className={`w-6 h-6 ${star <= rating
-                ? 'text-yellow-400 fill-current'
-                : 'text-gray-300'
+              ? 'text-yellow-400 fill-current'
+              : 'text-gray-300'
               } hover:text-yellow-400 transition-colors`}
           >
             ★
@@ -886,7 +886,7 @@ const FeedbackForm = ({
 
       // Prepare feedback data
       const feedbackData = {
-        type:"submit",
+        type: "submit",
         tenantId: currentTenantId || "",
         ownerId: decodedData?.ownerId || currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
@@ -1005,7 +1005,7 @@ const FeedbackForm = ({
         });
       }
 
-    navigate('/feedback');
+      navigate('/feedback');
     } catch (error) {
       console.error('💥 Error submitting feedback:', error);
       alert('Failed to submit feedback. Please try again.');
@@ -1020,9 +1020,9 @@ const FeedbackForm = ({
 
       // Prepare feedback data for draft save
       const feedbackData = {
-        type:"draft",
+        type: "draft",
         tenantId: currentTenantId || "",
-        ownerId:decodedData?.ownerId || currentOwnerId || "",
+        ownerId: decodedData?.ownerId || currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         positionId: positionId || "",
@@ -1105,7 +1105,7 @@ const FeedbackForm = ({
       };
 
       // console.log('📤 Update payload (draft):', updatedFeedbackData);
-// 
+      // 
       // console.log('📤 Sending draft data:', feedbackData);
 
       if (isEditMode) {
@@ -1145,16 +1145,16 @@ const FeedbackForm = ({
     }
   };
 
-  
-  console.log("schedulerFeedbackData",schedulerFeedbackData);
+
+  console.log("schedulerFeedbackData", schedulerFeedbackData);
   //<---v1.0.2-----Ranjith----solved feedback issues
 
-  if ( decodedData?.schedule) {
-    console.log("schedulerFeedbackData",schedulerFeedbackData);
+  if (decodedData?.schedule) {
+    console.log("schedulerFeedbackData", schedulerFeedbackData);
     return <SchedulerViewMode feedbackData={schedulerFeedbackData} />;
   }
-console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
-//<---v1.0.2-----Ranjith----solved feedback issues
+  console.log("schedulerFeedbackData", isScheduler, decodedData?.schedule);
+  //<---v1.0.2-----Ranjith----solved feedback issues
 
   // Button component for consistency
   const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', style = {}, disabled = false, type = 'button' }) => {
@@ -1186,7 +1186,7 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
 
   return (
     <>
-        {isAddMode === true && (
+      {isAddMode === true && (
         <div className="  right-4 z-40  pb-3 top-5">
           <div className="flex justify-end items-center gap-3">
             <button
@@ -1198,11 +1198,11 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
             </button>
           </div>
         </div>
-      )} 
+      )}
 
       <div className="bg-white rounded-lg p-6 shadow-sm">
 
-   
+
 
 
         <div className="flex items-center mb-6">
@@ -1242,11 +1242,11 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
               <label className="block text-sm font-medium text-gray-700">
                 Skill Ratings {!isViewMode && <span className="text-red-500">*</span>}
               </label>
-              {(isViewMode || isEditMode ) ? (
+              {(isViewMode || isEditMode) ? (
                 <div></div>
               ) : (
-              // {!isViewMode &&
-                 
+                // {!isViewMode &&
+
                 <Button
                   type="button"
                   onClick={handleAddSkill}
@@ -1259,7 +1259,7 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
                 </Button>
               )}
             </div>
-            {isViewMode  ? (
+            {isViewMode ? (
               <div className="space-y-3">
                 {skillRatings.map((skill, index) => (
                   <div key={index} className="p-3 bg-gray-50 rounded-md">
@@ -1333,14 +1333,14 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
                   {questionsWithFeedback.length} question(s) from question bank
                 </span>
               </div>
-              {(isViewMode || isEditMode  ) ? (
+              {(isViewMode || isEditMode) ? (
                 <div></div>
               ) : (
                 <button
                   className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
                   onClick={openQuestionBank}
                   title="Add Question from Question Bank"
-                  // disabled={decodedData?.schedule}
+                // disabled={decodedData?.schedule}
                 >
                   <FaPlus className="text-sm" />
                   <span>Add Question</span>
@@ -1348,97 +1348,98 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
               )}
             </div>
           </div>
-          
+
           {isViewMode ? (
             <>
-                {questionsWithFeedback?.length > 0 ? (
-                  questionsWithFeedback.map((question) => (
-                    <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2">
-                      <div className="flex items-start justify-between mb-3">
-                        <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                          {question.snapshot?.skill || question.category || 'N/A'}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {question.snapshot?.difficultyLevel || question.difficulty || 'N/A'}
-                        </span>
-                      </div>
+              {questionsWithFeedback?.length > 0 ? (
+                questionsWithFeedback.map((question) => (
+                  <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2">
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+                        {question.snapshot?.skill || question.category || 'N/A'}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {question.snapshot?.difficultyLevel || question.difficulty || 'N/A'}
+                      </span>
+                    </div>
 
-                      <h3 className="font-semibold text-gray-800 mb-2">
-                        {question.snapshot?.questionText || question.question || 'N/A'}
-                      </h3>
+                    <h3 className="font-semibold text-gray-800 mb-2">
+                      {question.snapshot?.questionText || question.question || 'N/A'}
+                    </h3>
 
-                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                        <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
-                        <p className="text-sm text-gray-700">
-                          {question.snapshot?.correctAnswer || question.expectedAnswer || 'N/A'}
-                        </p>
-                      </div>
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
+                      <p className="text-sm text-gray-700">
+                        {question.snapshot?.correctAnswer || question.expectedAnswer || 'N/A'}
+                      </p>
+                    </div>
 
-                      <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-                        <span>Mandatory: {(question.mandatory === "true" || question.snapshot?.mandatory === "true") ? "Yes" : "No"}</span>
-                      </div>
+                    <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
+                      <span>Mandatory: {(question.mandatory === "true" || question.snapshot?.mandatory === "true") ? "Yes" : "No"}</span>
+                    </div>
 
-                      <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2">
                       <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
-                            }`}
-                          onClick={() => handleLikeToggle(question.questionId || question.id)}
-                          disabled={!isViewMode}
-                        >
-                          <SlLike />
-                        </span>
-                        <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked" ? "text-red-500" : ""
-                            }`}
-                          style={{ cursor: "pointer" }}
-                          onClick={() => handleDislikeToggle(question.questionId || question.id)}
-                          disabled={!isViewMode}
-                        >
-                          <SlDislike />
-                        </span>
-                      </div>
-                      <div>
+                        className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
+                          }`}
+                        onClick={() => handleLikeToggle(question.questionId || question.id)}
+                        disabled={!isViewMode}
+                      >
+                        <SlLike />
+                      </span>
+                      <span
+                        className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked" ? "text-red-500" : ""
+                          }`}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => handleDislikeToggle(question.questionId || question.id)}
+                        disabled={!isViewMode}
+                      >
+                        <SlDislike />
+                      </span>
+                    </div>
+                    <div>
                       {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && (
-                         <DisLikeSection each={question} />
-                       )}
-                      </div>
-
-
-                      {/* Note display if available */}
-                      {question.notesBool && question.note && (
-                        <div className="mt-4">
-                          <p className="text-sm font-medium text-gray-600 mb-1">Note:</p>
-                          <p className="text-sm text-gray-800">{question.note}</p>
-                          { !isViewMode && <p className="text-xs text-gray-400 mt-1">{question.note.length}/250</p>}
-                        </div>
+                        <DisLikeSection each={question} />
                       )}
                     </div>
-                  ))
-                ) : null}
-              </>
-            ) : (
-              <div className="space-y-4">
-                {questionsToRender.map((question) => {
-              console.log("questionsToRender",question)
-              return (
-                    <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
-                      <div className="flex items-start justify-between mb-3">
-                        <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                          {question.snapshot?.skill || question.category || 'N/A'}
-                        </span>
-                        <span className="text-sm text-gray-500">{question.snapshot?.difficultyLevel || question.difficulty || 'N/A'}</span>
-                      </div>
-                      <h3 className="font-semibold text-gray-800 mb-2">{question.snapshot?.questionText || question.question || 'N/A'}</h3>
 
-                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                        <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
-                        <p className="text-sm text-gray-700">{question.snapshot?.correctAnswer || question.expectedAnswer || 'N/A'}</p>
-                      </div>
 
-                      <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-                        <span>Mandatory: {(question.mandatory === "true" || question.snapshot?.mandatory === "true") ? "Yes" : "No"}</span>
+                    {/* Note display if available */}
+                    {question.notesBool && question.note && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-600 mb-1">Note:</p>
+                        <p className="text-sm text-gray-800">{question.note}</p>
+                        {!isViewMode && <p className="text-xs text-gray-400 mt-1">{question.note.length}/250</p>}
                       </div>
+                    )}
+                  </div>
+                ))
+              ) : null}
+            </>
+          ) : (
+            <div className="space-y-4">
+              {questionsToRender.map((question) => {
+                console.log("questionsToRender", question)
+                return (
+                  <div key={question.questionId || question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+                        {question.snapshot?.skill || question.category || 'N/A'}
+                      </span>
+                      <span className="text-sm text-gray-500">{question.snapshot?.difficultyLevel || question.difficulty || 'N/A'}</span>
+                    </div>
+                    <h3 className="font-semibold text-gray-800 mb-2">{question.snapshot?.questionText || question.question || 'N/A'}</h3>
 
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
+                      <p className="text-sm text-gray-700">{question.snapshot?.correctAnswer || question.expectedAnswer || 'N/A'}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
+                      <span>Mandatory: {(question.mandatory === "true" || question.snapshot?.mandatory === "true") ? "Yes" : "No"}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 mt-2">
                       <RadioGroupInput each={question} />
 
                       <div className="flex items-center gap-4 mt-2">
@@ -1446,7 +1447,8 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
                           className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
                           onClick={() => onClickAddNote(question.questionId || question.id)}
                         >
-                          Add a Note
+                          {question.notesBool ? "Delete Note" : "Add a Note"}
+                          {/* Add a Note */}
                         </button>
                         <SharePopupSection />
                         <span
@@ -1465,104 +1467,110 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
                           <SlDislike />
                         </span>
                       </div>
-                      
-                      {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && (
-                         <DisLikeSection each={question} />
-                       )}
+                    </div>
 
-                      {question.notesBool && (
-                        <div>
-                          <div className="flex justify-start mt-4">
-                            <label htmlFor={`note-input-${question.questionId || question.id}`} className="w-[200px]">
-                              Note
-                            </label>
-                            <div className="flex items-start w-full">
-                              <div className="w-full relative mr-5 rounded-md h-[80px]">
-                                <input
-                                  className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                                  id={`note-input-${question.questionId || question.id}`}
-                                  type="text"
-                                  value={question.note}
-                                  onChange={(e) => onChangeInterviewQuestionNotes(question.questionId || question.id, e.target.value.slice(0, 250))}
-                                  placeholder="Add your note here"
-                                />
-                                <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
+
+                    {question.notesBool && (
+                      <div>
+                        <div className="flex justify-start mt-4">
+                          <label htmlFor={`note-input-${question.questionId || question.id}`} className="w-[180px] font-bold text-gray-700">
+                            Note
+                          </label>
+                          <div className="flex flex-col items-start w-full  h-[80px]">
+                            <div className="w-full relative  rounded-md">
+                              <input
+                                className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
+                                id={`note-input-${question.questionId || question.id}`}
+                                type="text"
+                                value={question.note}
+                                onChange={(e) => onChangeInterviewQuestionNotes(question.questionId || question.id, e.target.value.slice(0, 250))}
+                                placeholder="Add your note here"
+                              />
+                              {/* <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
                                   {question.note?.length || 0}/250
-                                </span>
-                              </div>
-                              {/* <button
+                                </span> */}
+                            </div>
+                            <span className="w-full text-sm text-right text-gray-500">
+                              {question.note?.length || 0}/250
+                            </span>
+                            {/* <button
                                 onClick={() => onClickDeleteNote(question.questionId || question.id)}
                                 className="text-red-500 text-lg mt-2"
                               >
                                 <FaTrash size={20} />
                               </button> */}
-                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
-                )}
-                )
-                }
-                { (questionsToRender.length === 0) && (
-                  <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
-                    <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">No questions selected from question bank</p>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Go to "Interview Questions" tab to add questions from the question bank
-                    </p>
+                    {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && question.isLiked === "disliked" && (
+                      <DisLikeSection each={question} />
+                    )}
                   </div>
-                )}
+
+                )
+              }
+              )
+              }
+              {(questionsToRender.length === 0) && (
+                <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
+                  <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">No questions selected from question bank</p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Go to "Interview Questions" tab to add questions from the question bank
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+
+          <div className="mt-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Overall Comments {!isViewMode && <span className="text-red-500">*</span>}
+            </label>
+            {isViewMode ? (
+              <div className="text-sm text-gray-800">
+                {comments || "Not Provided"}
               </div>
+            ) : (
+              <textarea
+                rows={4}
+                value={comments}
+                onChange={handleCommentsChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Provide overall feedback about the candidate's performance..."
+              />
             )}
+            {errors.comments && (
+              <p className="mt-1 text-sm text-red-600">{errors.comments}</p>
+            )}
+          </div>
 
-
-            <div className="mt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Overall Comments {!isViewMode && <span className="text-red-500">*</span>}
-              </label>
-              {isViewMode ? (
-                <div className="text-sm text-gray-800">
-                  {comments || "Not Provided"}
-                </div>
-              ) : (
-                <textarea
-                  rows={4}
-                  value={comments}
-                  onChange={handleCommentsChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Provide overall feedback about the candidate's performance..."
-                />
-              )}
-              {errors.comments && (
-                <p className="mt-1 text-sm text-red-600">{errors.comments}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Recommendation {!isViewMode && <span className="text-red-500">*</span>}
-              </label>
-              {isViewMode ? (
-                <div className="text-sm text-gray-800">
-                  {recommendation || "Not Provided"}
-                </div>
-              ) : (
-                <select
-                  value={recommendation}
-                  onChange={(e) => setRecommendation(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {/* <option value="Strong Yes">Strong Yes</option> */}
-                  <option value="Yes">Yes</option>
-                  <option value="Maybe">Maybe</option>
-                  <option value="No">No</option>
-                  {/* <option value="Strong No">Strong No</option> */}
-                </select>
-              )}
-            </div>
-            {isViewMode  ? 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Recommendation {!isViewMode && <span className="text-red-500">*</span>}
+            </label>
+            {isViewMode ? (
+              <div className="text-sm text-gray-800">
+                {recommendation || "Not Provided"}
+              </div>
+            ) : (
+              <select
+                value={recommendation}
+                onChange={(e) => setRecommendation(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {/* <option value="Strong Yes">Strong Yes</option> */}
+                <option value="Yes">Yes</option>
+                <option value="Maybe">Maybe</option>
+                <option value="No">No</option>
+                {/* <option value="Strong No">Strong No</option> */}
+              </select>
+            )}
+          </div>
+          {isViewMode ?
             <div>
             </div>
             : (
@@ -1580,52 +1588,52 @@ console.log("schedulerFeedbackData",isScheduler,decodedData?.schedule);
                   onClick={submitFeedback}
                   style={{ backgroundColor: 'rgb(33, 121, 137)' }}
                   className="text-white hover:opacity-90"
-                  // disabled={decodedData.schedule}
+                // disabled={decodedData.schedule}
                 >
                   Submit Feedback
                 </Button>
               </div>
             )}
-          </div>
+        </div>
 
-          {/* QuestionBank Modal */}
-          {isQuestionBankOpen && (
+        {/* QuestionBank Modal */}
+        {isQuestionBankOpen && (
+          <div
+            className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+            onClick={() => setIsQuestionBankOpen(false)}
+          >
             <div
-              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
-              onClick={() => setIsQuestionBankOpen(false)}
+              className="bg-white rounded-md w-[95%] h-[90%]"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="bg-white rounded-md w-[95%] h-[90%]"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="py-3 px-4 flex items-center justify-between">
-                  <h2 className="text-xl text-custom-blue font-semibold">
-                    Add Interview Question
-                  </h2>
-                  <button>
-                    <X
-                      className="text-2xl text-red-500"
-                      onClick={() => setIsQuestionBankOpen(false)}
-                    />
-                  </button>
-                </div>
-                {/* QuestionBank Content */}
-                <div className="flex-1 overflow-hidden">
-                  <QuestionBank
-                    interviewQuestionsLists={interviewerSectionData || []}
-                    type="feedback"
-                    fromScheduleLater={true}
-                    onAddQuestion={handleAddQuestionToRound}
-                    handleRemoveQuestion={handleRemoveQuestion}
-                    handleToggleMandatory={handleToggleMandatory}
-                    removedQuestionIds={removedQuestionIds}
-                    closeQuestionBank={() => setIsQuestionBankOpen(false)}
+              <div className="py-3 px-4 flex items-center justify-between">
+                <h2 className="text-xl text-custom-blue font-semibold">
+                  Add Interview Question
+                </h2>
+                <button>
+                  <X
+                    className="text-2xl text-red-500"
+                    onClick={() => setIsQuestionBankOpen(false)}
                   />
-                </div>
+                </button>
+              </div>
+              {/* QuestionBank Content */}
+              <div className="flex-1 overflow-hidden">
+                <QuestionBank
+                  interviewQuestionsLists={interviewerSectionData || []}
+                  type="feedback"
+                  fromScheduleLater={true}
+                  onAddQuestion={handleAddQuestionToRound}
+                  handleRemoveQuestion={handleRemoveQuestion}
+                  handleToggleMandatory={handleToggleMandatory}
+                  removedQuestionIds={removedQuestionIds}
+                  closeQuestionBank={() => setIsQuestionBankOpen(false)}
+                />
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };

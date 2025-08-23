@@ -19,7 +19,7 @@ const dislikeOptions = [
   { value: "Too basic", label: "Too basic" },
 ];
 
-const SchedulerSectionComponent = ({ 
+const SchedulerSectionComponent = ({
   isEditMode,
   isAddMode,
   interviewdata,
@@ -27,17 +27,17 @@ const SchedulerSectionComponent = ({
   preselectedQuestionsResponses,
   setPreselectedQuestionsResponses,
   handlePreselectedQuestionResponse,
-  
+
 }) => {
 
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
-  
+
   // Get preselected questions from the new API structure
-  const preselectedQuestionsFromAPI = interviewdata?.interviewQuestions?.preselectedQuestions ||  interviewdata?.questionFeedback || [];
-  const allQuestions = interviewdata?.interviewQuestions ? interviewdata?.interviewQuestions ||  interviewdata?.questionFeedback : feedbackData.preSelectedQuestions || [];
-  console.log("allQuestions",allQuestions);
-  
+  const preselectedQuestionsFromAPI = interviewdata?.interviewQuestions?.preselectedQuestions || interviewdata?.questionFeedback || [];
+  const allQuestions = interviewdata?.interviewQuestions ? interviewdata?.interviewQuestions || interviewdata?.questionFeedback : feedbackData.preSelectedQuestions || [];
+  console.log("allQuestions", allQuestions);
+
   // Use preselected questions from API if available, otherwise fallback to old logic
   // const schedulerQuestions = preselectedQuestionsFromAPI.length > 0 
   //   ? preselectedQuestionsFromAPI 
@@ -45,36 +45,36 @@ const SchedulerSectionComponent = ({
   //       ? allQuestions.filter(question => question.addedBy !== "interviewer" || !question.addedBy)
   //       : []);
 
-   // FIXED FILTERING LOGIC: Filter out questions added by interviewer
-   const schedulerQuestions = preselectedQuestionsFromAPI.length > 0 
-   ? preselectedQuestionsFromAPI.filter(question => {
-       // Exclude questions added by interviewer
-       return question.addedBy !== "interviewer";
-     })
-   : (Array.isArray(allQuestions) 
-       ? allQuestions.filter(question => {
-           // Exclude questions added by interviewer
-           if (question.addedBy === "interviewer") {
-             return false;
-           }
-           
-           // Additional logic: Keep questions that have feedback even if they were added by interviewer
-           // (This is commented out as per your requirement to completely exclude interviewer questions)
-           // const hasFeedback = questionsfeedback.some(f => f.questionId === question.questionId);
-           // return question.addedBy !== "interviewer" || hasFeedback;
-           
-           return true;
-         })
-       : []);
-  
-  const questionsfeedback = feedbackData.questionFeedback ||  interviewdata?.questionFeedback || [];
+  // FIXED FILTERING LOGIC: Filter out questions added by interviewer
+  const schedulerQuestions = preselectedQuestionsFromAPI.length > 0
+    ? preselectedQuestionsFromAPI.filter(question => {
+      // Exclude questions added by interviewer
+      return question.addedBy !== "interviewer";
+    })
+    : (Array.isArray(allQuestions)
+      ? allQuestions.filter(question => {
+        // Exclude questions added by interviewer
+        if (question.addedBy === "interviewer") {
+          return false;
+        }
+
+        // Additional logic: Keep questions that have feedback even if they were added by interviewer
+        // (This is commented out as per your requirement to completely exclude interviewer questions)
+        // const hasFeedback = questionsfeedback.some(f => f.questionId === question.questionId);
+        // return question.addedBy !== "interviewer" || hasFeedback;
+
+        return true;
+      })
+      : []);
+
+  const questionsfeedback = feedbackData.questionFeedback || interviewdata?.questionFeedback || [];
   console.log("All questions:", allQuestions.length);
   console.log("Preselected questions from API:", preselectedQuestionsFromAPI.length);
   console.log("Scheduler questions (not added by interviewer):", schedulerQuestions.length);
   console.log("Scheduler questions data:", schedulerQuestions);
   console.log("Preselected questions responses:", preselectedQuestionsResponses);
-  console.log("questionsfeedback",questionsfeedback);
-  
+  console.log("questionsfeedback", questionsfeedback);
+
 
 
 
@@ -86,8 +86,8 @@ const SchedulerSectionComponent = ({
       const feedback = questionsfeedback?.find((f) => f.questionId === q.questionId);
       // Find preselected response for this question
       const preselectedResponse = preselectedQuestionsResponses?.find((r) => r.questionId === q.questionId);
-      console.log("qda",feedback);
-      
+      console.log("qda", feedback);
+
       if (feedback) {
         return {
           ...q,
@@ -132,7 +132,7 @@ const SchedulerSectionComponent = ({
         question._id === id ? { ...question, isAnswered: value } : question
       )
     );
-    
+
     // Update preselected questions responses using the underlying bank questionId
     if (handlePreselectedQuestionResponse) {
       const q = schedulerQuestionsData.find((qq) => qq._id === id);
@@ -151,7 +151,7 @@ const SchedulerSectionComponent = ({
         return question;
       })
     );
-    
+
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
       const q = schedulerQuestionsData.find((qq) => qq._id === questionId);
@@ -161,50 +161,120 @@ const SchedulerSectionComponent = ({
   };
 
   // Function to handle dislike toggle
+  // const handleDislikeToggle = (id) => {
+  //   if (isViewMode) return;//<----v1.0.0---
+  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  //   else setDislikeQuestionId(id);
+  //   setSchedulerQuestionsData((prev) =>
+  //     prev.map((q) =>
+  //       q._id === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
+  //     )
+  //   );
+
+  //   // Update preselected questions responses
+  //   if (handlePreselectedQuestionResponse) {
+  //     const question = schedulerQuestionsData.find(q => q._id === id);
+  //     const newIsLiked = question?.isLiked === "disliked" ? "" : "disliked";
+  //     const bankQuestionId = question?.questionId || id;
+  //     handlePreselectedQuestionResponse(bankQuestionId, { isLiked: newIsLiked });
+  //   }
+  // };
+
+
+  // Function to handle dislike toggle
   const handleDislikeToggle = (id) => {
     if (isViewMode) return;//<----v1.0.0---
-    if (dislikeQuestionId === id) setDislikeQuestionId(null);
-    else setDislikeQuestionId(id);
+
     setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
-        q._id === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
+        q._id === id ? {
+          ...q,
+          isLiked: q.isLiked === "disliked" ? "" : "disliked",
+          // Clear dislike reason when toggling off dislike
+          whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike
+        } : q
       )
     );
-    
+
+    // Show/hide the "Tell us more" section
+    if (dislikeQuestionId === id) {
+      setDislikeQuestionId(null);
+    } else {
+      setDislikeQuestionId(id);
+    }
+
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
       const question = schedulerQuestionsData.find(q => q._id === id);
       const newIsLiked = question?.isLiked === "disliked" ? "" : "disliked";
       const bankQuestionId = question?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, { isLiked: newIsLiked });
+      handlePreselectedQuestionResponse(bankQuestionId, {
+        isLiked: newIsLiked,
+        // Clear dislike reason when toggling off dislike
+        whyDislike: newIsLiked === "disliked" ? question.whyDislike : ""
+      });
     }
   };
 
   // Function to handle like toggle
+  // const handleLikeToggle = (id) => {
+  //   if (isViewMode) return;//<----v1.0.0---
+  //   setSchedulerQuestionsData((prev) =>
+  //     prev.map((q) =>
+  //       q._id === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
+  //     )
+  //   );
+  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
+
+  //   // Update preselected questions responses
+  //   if (handlePreselectedQuestionResponse) {
+  //     const question = schedulerQuestionsData?.find(q => q?._id === id);
+  //     const newIsLiked = question?.isLiked === "liked" ? "" : "liked";
+  //     const bankQuestionId = question?.questionId || id;
+  //     handlePreselectedQuestionResponse(bankQuestionId, { isLiked: newIsLiked });
+  //   }
+  // };
+
+  // Function to handle like toggle
   const handleLikeToggle = (id) => {
     if (isViewMode) return;//<----v1.0.0---
+
     setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
-        q._id === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
+        q._id === id ? {
+          ...q,
+          isLiked: q.isLiked === "liked" ? "" : "liked",
+          // Clear dislike reason when liking
+          whyDislike: q.isLiked === "liked" ? q.whyDislike : ""
+        } : q
       )
     );
-    if (dislikeQuestionId === id) setDislikeQuestionId(null);
-    
+
+    // Hide the "Tell us more" section when liking
+    if (dislikeQuestionId === id) {
+      setDislikeQuestionId(null);
+    }
+
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
       const question = schedulerQuestionsData?.find(q => q?._id === id);
       const newIsLiked = question?.isLiked === "liked" ? "" : "liked";
       const bankQuestionId = question?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, { isLiked: newIsLiked });
+      handlePreselectedQuestionResponse(bankQuestionId, {
+        isLiked: newIsLiked,
+        // Clear dislike reason when liking
+        whyDislike: newIsLiked === "liked" ? "" : question.whyDislike
+      });
     }
   };
+
 
   // Function to handle add note
   const onClickAddNote = (id) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((q) => (q._id === id ? { ...q, notesBool: !q.notesBool } : q))
     );
-    
+
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
       const question = schedulerQuestionsData.find(q => q._id === id);
@@ -214,12 +284,28 @@ const SchedulerSectionComponent = ({
     }
   };
 
+  // // Function to handle delete note
+  // const onClickDeleteNote = (id) => {
+  //   setSchedulerQuestionsData((prev) =>
+  //     prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
+  //   );
+
+  //   // Update preselected questions responses
+  //   if (handlePreselectedQuestionResponse) {
+  //     const question = schedulerQuestionsData.find(q => q._id === id);
+  //     const bankQuestionId = question?.questionId || id;
+  //     handlePreselectedQuestionResponse(bankQuestionId, { notesBool: false, note: "" });
+  //   }
+  // };
+
+
+
   // Function to handle delete note
   const onClickDeleteNote = (id) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
     );
-    
+
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
       const question = schedulerQuestionsData.find(q => q._id === id);
@@ -235,7 +321,7 @@ const SchedulerSectionComponent = ({
         question._id === questionId ? { ...question, note: notes } : question
       )
     );
-    
+
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
       const q = schedulerQuestionsData.find(qq => qq._id === questionId);
@@ -247,38 +333,38 @@ const SchedulerSectionComponent = ({
   // Define DisLikeSection component
   const DisLikeSection = React.memo(({ each }) => {
     return (
-    <>
-    {(isEditMode  || isAddMode ) ? (
-    <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
-        <div className="flex justify-between items-center mb-2">
-          <h1>Tell us more :</h1>
-          <button onClick={() => setDislikeQuestionId(null)}>
-            <IoIosCloseCircleOutline />
-          </button>
-        </div>
-        <ul className="flex flex-wrap gap-3">
-          {dislikeOptions.map((option) => (
-            <li key={option.value} className="flex items-center gap-2">
-              <input
-                type="radio"
-                id={`dislike-${each._id}-${option.value}`}
-                name={`dislike-${each._id}`}
-                value={option.value}
-                checked={each.whyDislike === option.value}
-                onChange={(e) => onChangeDislikeRadioInput(each._id, e.target.value)}
-              />
-              <label htmlFor={`dislike-${each._id}-${option.value}`} className="cursor-pointer">
-                {option.label}
-              </label>
-            </li>
-          ))}
-        </ul>
-      </div>
-    ) : (
-     <p className="w-full flex gap-x-8 gap-y-2 ">{each.whyDislike || "N/A"}</p>
-    )}
-    </>
-      
+      <>
+        {(isEditMode || isAddMode) ? (
+          <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
+            <div className="flex justify-between items-center mb-2">
+              <h1>Tell us more :</h1>
+              <button onClick={() => setDislikeQuestionId(null)}>
+                <IoIosCloseCircleOutline />
+              </button>
+            </div>
+            <ul className="flex flex-wrap gap-3">
+              {dislikeOptions.map((option) => (
+                <li key={option.value} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id={`dislike-${each._id}-${option.value}`}
+                    name={`dislike-${each._id}`}
+                    value={option.value}
+                    checked={each.whyDislike === option.value}
+                    onChange={(e) => onChangeDislikeRadioInput(each._id, e.target.value)}
+                  />
+                  <label htmlFor={`dislike-${each._id}-${option.value}`} className="cursor-pointer">
+                    {option.label}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="w-full flex gap-x-8 gap-y-2 ">{each.whyDislike || "N/A"}</p>
+        )}
+      </>
+
     );
   });
 
@@ -309,28 +395,28 @@ const SchedulerSectionComponent = ({
         <p className="w-[200px] font-bold text-gray-700">
           Response Type {each.mandatory === "true" && <span className="text-[red]">*</span>}
         </p>
-        {(isEditMode  || isAddMode ) ? (
-        <div className={`w-full flex gap-x-8 gap-y-2 `}>
-          {["Not Answered", "Partially Answered", "Fully Answered"].map((option) => (
-            <span key={option} className="flex items-center gap-2">
-              <input
-                checked={each.isAnswered === option}
-                value={option}
-                name={`isAnswered-${each._id}`}
-                type="radio"
-                id={`isAnswered-${each._id}-${option}`}
-                onChange={(e) => onChangeRadioInput(each._id, e.target.value)}
-                className="whitespace-nowrap"
-              />
-              <label htmlFor={`isAnswered-${each._id}-${option}`} className="cursor-pointer">
-                {option}
-              </label>
-            </span>
-          ))}
-        </div>
-      ) : (
-        <p className="w-full flex gap-x-8 gap-y-2 ">{each.isAnswered || "Not Answered"}</p>
-      )}
+        {(isEditMode || isAddMode) ? (
+          <div className={`w-full flex gap-x-2 gap-y-2 `}>
+            {["Not Answered", "Partially Answered", "Fully Answered"].map((option) => (
+              <span key={option} className="flex items-center gap-2">
+                <input
+                  checked={each.isAnswered === option}
+                  value={option}
+                  name={`isAnswered-${each._id}`}
+                  type="radio"
+                  id={`isAnswered-${each._id}-${option}`}
+                  onChange={(e) => onChangeRadioInput(each._id, e.target.value)}
+                  className="whitespace-nowrap"
+                />
+                <label htmlFor={`isAnswered-${each._id}-${option}`} className="cursor-pointer">
+                  {option}
+                </label>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="w-full flex gap-x-8 gap-y-2 ">{each.isAnswered || "Not Answered"}</p>
+        )}
       </div>
     );
   });
@@ -356,79 +442,90 @@ const SchedulerSectionComponent = ({
                 <p className="text-sm text-gray-700">{question.snapshot.correctAnswer}</p>
               </div>
             )}
-            {(isEditMode  || isAddMode ) && (
+            {(isEditMode || isAddMode) && (
               <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
                 <span>Mandatory: {question.mandatory === "true" ? "Yes" : "No"}</span>
               </div>
             )}
-            <RadioGroupInput each={question} />
-            <div className="flex items-center gap-4 mt-2">
-            {(isEditMode  || isAddMode ) && (
-              <button
-                className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
-                onClick={() => onClickAddNote(question._id)}
-              >
-                Add a Note
-              </button>
-            )}
-              <SharePopupSection />
-              {(isEditMode || isViewMode  || isAddMode ) && (
-                <>
-                  <span
-                    className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                      question.isLiked === "liked" ? "text-green-700" : ""
-                    }`}
-                    onClick={() => handleLikeToggle(question._id)}
+            <div className="flex items-center justify-between gap-2 mt-2">
+              <RadioGroupInput each={question} />
+              <div className="flex items-center gap-4 mt-2">
+                {(isEditMode || isAddMode) && (
+                  <button
+                    className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
+                    // className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
+                    // onClick={() => onClickAddNote(question._id)}
+                    onClick={() => question.notesBool ? onClickDeleteNote(question._id) : onClickAddNote(question._id)}
                   >
-                    <SlLike />
-                  </span>
-                  <span
-                    className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                      question.isLiked === "disliked" ? "text-red-500" : ""
-                    }`}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => handleDislikeToggle(question._id)}
-                  >
-                    <SlDislike />
-                  </span>
-                </>
-              )}
+                    {question.notesBool ? "Delete Note" : "Add a Note"}
+                  </button>
+                )}
+                <SharePopupSection />
+                {(isEditMode || isViewMode || isAddMode) && (
+                  <>
+                    <span
+                      className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
+                        }`}
+                      onClick={() => handleLikeToggle(question._id)}
+                    >
+                      <SlLike />
+                    </span>
+                    <span
+                      // className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                      //   question.isLiked === "disliked" ? "text-red-500" : ""
+                      // }`}
+                      className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked" ? "text-red-500" : ""
+                        }`}
+                      style={{ cursor: "pointer" }}
+
+                      onClick={() => handleDislikeToggle(question._id)}
+                    >
+                      <SlDislike />
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-            {(dislikeQuestionId === question._id || question.questionId) && <DisLikeSection each={question} />}
+
             {question.notesBool && (
               <div>
                 <div className="flex justify-start mt-4">
-                  <label htmlFor={`note-input-${question._id}`} className="w-[200px]">
+                  <label htmlFor={`note-input-${question._id}`} className="w-[180px] font-bold text-gray-700">
                     Note
                   </label>
-                {(isEditMode || isAddMode ) ? (
-                  <div className="flex items-start w-full">
-                    <div className="w-full relative mr-5 rounded-md h-[80px]">
-                      <input
-                        className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                        id={`note-input-${question._id}`}
-                        type="text"
-                        value={question.note}
-                        onChange={(e) => onChangeInterviewQuestionNotes(question._id, e.target.value.slice(0, 250))}
-                        placeholder="Add your note here"
-                      />
-                      <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
+                  {(isEditMode || isAddMode) ? (
+                    <div className="flex flex-col items-start w-full h-[80px]">
+                      <div className="w-full relative  rounded-md ">
+                        <input
+                          className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
+                          id={`note-input-${question._id}`}
+                          type="text"
+                          value={question.note}
+                          onChange={(e) => onChangeInterviewQuestionNotes(question._id, e.target.value.slice(0, 250))}
+                          placeholder="Add your note here"
+                        />
+
+                      </div>
+                      <span className="w-full text-sm text-right text-gray-500">
                         {question.note?.length || 0}/250
                       </span>
-                    </div>
-                    <button
+                      {/* <span className=" text-md text-right text-gray-500">
+                        {question.note?.length || 0}/250
+                      </span> */}
+                      {/* <button
                       onClick={() => onClickDeleteNote(question._id)}
-                      className="text-red-500 text-lg mt-2"
+                      className="text-red-500 text- lg mt-2"
                     >
                       <FaTrash size={20}/>
-                    </button>
-                  </div>
-                ) : (
-                  <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">{question.note}</p>
-                )}
+                    </button> */}
+                    </div>
+                  ) : (
+                    <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">{question.note}</p>
+                  )}
                 </div>
               </div>
             )}
+            {(dislikeQuestionId === question._id || question.questionId) && question.isLiked === "disliked" && <DisLikeSection each={question} />}
           </div>
         ))
       ) : (
