@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Users, User, MessageSquare } from 'lucide-react';
 import axios from 'axios';
 import { config } from '../../config';
+import { useInterviews } from '../../apiHooks/useInterviews';
 
 const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
   // Determine which sections to show based on roleInfo
   // const showCandidateSection = !roleInfo?.hasRolePreference || roleInfo?.isCandidate;
   // const showInterviewerSection = !roleInfo?.hasRolePreference || roleInfo?.isInterviewer;
   // const isSingleRole = roleInfo?.hasRolePreference && (roleInfo?.isCandidate || roleInfo?.isInterviewer);
-
+  const { saveInterviewRound } = useInterviews();
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
   const [localInterviewTime, setLocalInterviewTime] = useState('');
@@ -33,11 +34,12 @@ const RoleSelector = ({ onRoleSelect, roleInfo,feedbackData }) => {
           isEditing: true,
         };
   
-        const response = await axios.post(
-          `${config.REACT_APP_API_URL}/interview/save-round`,
-          payload
-        );
-        
+        // const response = await axios.post(
+        //   `${config.REACT_APP_API_URL}/interview/save-round`,
+        //   payload
+        // );
+        const response = await saveInterviewRound(payload);
+
         console.log("Status updated to in-progress:", response.data);
         // toast.success("Interview marked as in progress", {});
         

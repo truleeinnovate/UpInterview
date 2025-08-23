@@ -185,7 +185,7 @@ const MultiStepForm = () => {
     technologies: [],
     previousInterviewExperience: "",
     previousInterviewExperienceYears: "",
-    expertiseLevel_ConductingInterviews: "",
+    // expertiseLevel_ConductingInterviews: "",
     hourlyRate: "",
     interviewFormatWeOffer: [], // This will be mapped to InterviewFormatWeOffer in the backend
     expectedRatePerMockInterview: "",
@@ -241,8 +241,9 @@ const MultiStepForm = () => {
           matchedContact.previousInterviewExperience || "",
         previousInterviewExperienceYears:
           matchedContact.previousInterviewExperienceYears || "",
-        expertiseLevel_ConductingInterviews:
-          matchedContact.expertiseLevel_ConductingInterviews || "",
+         // comment ed by Ranjith expertiseLevel_ConductingInterviews
+          // expertiseLevel_ConductingInterviews:
+        //   matchedContact.expertiseLevel_ConductingInterviews || "",
         hourlyRate: matchedContact.hourlyRate || "",
         interviewFormatWeOffer: matchedContact.interviewFormatWeOffer || [],
         expectedRatePerMockInterview:
@@ -372,15 +373,17 @@ const MultiStepForm = () => {
       if (!interviewDetailsData.previousInterviewExperience) {
         interviewErrors.previousInterviewExperience = "Previous interview experience is required";
       }
-      if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
-        interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
-      }
+       // comment ed by Ranjith expertiseLevel_ConductingInterviews
+      // if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
+      //   interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
+      // }
       if (!interviewDetailsData.interviewFormatWeOffer?.length) {
         interviewErrors.interviewFormatWeOffer = "At least one interview format is required";
       }
-      if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
-        interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
-      }
+       // comment ed by Ranjith expertiseLevel_ConductingInterviews
+      // if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
+      //   interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
+      // }
       if (!interviewDetailsData.interviewFormatWeOffer?.length) {
         interviewErrors.interviewFormatWeOffer = "At least one interview format is required";
       }
@@ -479,8 +482,9 @@ const MultiStepForm = () => {
             interviewDetailsData.previousInterviewExperience,
           previousInterviewExperienceYears:
             interviewDetailsData.previousInterviewExperienceYears,
-          expertiseLevel_ConductingInterviews:
-            interviewDetailsData.expertiseLevel_ConductingInterviews,
+            // comment ed by Ranjith expertiseLevel_ConductingInterviews
+          // expertiseLevel_ConductingInterviews:
+            // interviewDetailsData.expertiseLevel_ConductingInterviews,
           hourlyRate: interviewDetailsData.hourlyRate,
           interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
           expectedRatePerMockInterview:
@@ -537,7 +541,7 @@ const MultiStepForm = () => {
           technologies: interviewDetailsData.technologies,
           PreviousExperienceConductingInterviews: interviewDetailsData.previousInterviewExperience,  // Map to backend field name
           PreviousExperienceConductingInterviewsYears: interviewDetailsData.previousInterviewExperienceYears,
-          ExpertiseLevel_ConductingInterviews: interviewDetailsData.expertiseLevel_ConductingInterviews,
+          // ExpertiseLevel_ConductingInterviews: interviewDetailsData.expertiseLevel_ConductingInterviews,
           hourlyRate: interviewDetailsData.hourlyRate,
           InterviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
           expectedRatePerMockInterview: interviewDetailsData.expectedRatePerMockInterview,

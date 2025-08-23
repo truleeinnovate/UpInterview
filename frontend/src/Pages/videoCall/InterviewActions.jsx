@@ -17,10 +17,12 @@ import axios from "axios";
 import SupportForm from "../Dashboard-Part/Tabs/SupportDesk/SupportForm";
 import { toast } from "react-toastify";
 import { config } from "../../config";
+import { useInterviews } from "../../apiHooks/useInterviews";
 
 
 
 const InterviewActions = ({ interviewData,isAddMode,decodedData, onActionComplete }) => {
+ const { saveInterviewRound } = useInterviews();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [modal, setModal] = useState(null);
   const [formData, setFormData] = useState({ reason: "", comments: "" });
@@ -129,10 +131,11 @@ const candidateActionEnabled = startDateTime
         };
   
         try {
-          const response = await axios.post(
-            `${config.REACT_APP_API_URL}/interview/save-round`,
-            payload
-          );
+          // const response = await axios.post(
+          //   `${config.REACT_APP_API_URL}/interview/save-round`,
+          //   payload
+          // );
+          const response = await saveInterviewRound(payload);
           
           console.log("Status updated:", response.data);
 
@@ -304,10 +307,7 @@ const candidateActionEnabled = startDateTime
             <p className="text-white text-opacity-80">Start Time</p>
             <p className="font-semibold">{startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
           </div>
-          <div>
-            <p className="text-white text-opacity-80">End Time</p>
-            <p className="font-semibold">{endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
-          </div>
+         
           <div>
             <p className="text-white text-opacity-80">Status</p>
             <p className="font-semibold">{interviewData?.interviewRound?.status === "InProgress" ? "In Progress" : interviewData?.interviewRound?.status}</p>

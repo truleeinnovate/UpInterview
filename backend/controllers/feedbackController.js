@@ -944,9 +944,9 @@ const getFeedbackByContactIdRoundId =  async (req, res) => {
     }
 
     // Optional: verify that tenant.ownerId matches contact.ownerId
-    if (tenant.ownerId.toString() !== ownerId.toString()) {
-      return res.status(403).json({ error: "Owner mismatch between contact and tenant" });
-    }
+    // if (tenant.ownerId.toString() !== ownerId.toString()) {
+    //   return res.status(403).json({ error: "Owner mismatch between contact and tenant" });
+    // }
 
     // 3. Get round dateTime
     const round = await InterviewRounds.findById(roundId);

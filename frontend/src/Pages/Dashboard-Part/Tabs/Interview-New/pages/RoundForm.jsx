@@ -1085,7 +1085,8 @@ const RoundFormInterviews = () => {
 
       }
       if (payload.round.roundTitle !== "Assessment") {
-
+      
+        if(payload?.round?.interviewMode !== "Face to Face"){
 
         // Handle outsource request if interviewers are selected
         if (selectedInterviewers && selectedInterviewers.length > 0) {
@@ -1176,6 +1177,12 @@ const RoundFormInterviews = () => {
           }
         }
 
+      }else{
+        navigate(`/interviews/${interviewId}`);
+        toast.success("Selected interview mode is Face to Face");
+        
+      }
+
 
         // console.log("response", response);
 
@@ -1195,7 +1202,7 @@ const RoundFormInterviews = () => {
         // Meeting platform link creation
         if (response.status === 'ok') {
           console.log("Generating meeting link for the interview");
-
+          if(payload?.round?.interviewMode !== "Face to Face"){
           try {
             setIsMeetingCreationLoading(true);
             // v1.0.3 <-----------------------------------------------------------
@@ -1216,6 +1223,7 @@ const RoundFormInterviews = () => {
             }, (progress) => {
               setMeetingCreationProgress(progress);
             });
+
             // Persist meeting link on the round (avoid reassigning consts)
             if (meetingLink) {
               const updatedRoundData = {
@@ -1329,6 +1337,10 @@ const RoundFormInterviews = () => {
             setIsMeetingCreationLoading(false);
             setMeetingCreationProgress('');
           }
+        }
+        
+          toast.success('Selected interview mode is Face to Face');
+          navigate(`/interviews/${interviewId}`);
         }
       }
     } catch (err) {
@@ -2316,7 +2328,7 @@ const RoundFormInterviews = () => {
                               ? "opacity-50 cursor-not-allowed"
                               : ""
                               }`}
-                            disabled={isInternalSelected}
+                            disabled={isInternalSelected || interviewMode === "Face to Face"}
                             title={
                               isInternalSelected
                                 ? "Clear internal interviewers first"
