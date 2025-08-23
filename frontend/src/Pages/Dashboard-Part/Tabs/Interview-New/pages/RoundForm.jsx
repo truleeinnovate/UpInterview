@@ -5,7 +5,7 @@
 //<-----v1.0.4----Venkatesh-----default and enforce scheduledDate when switching to "scheduled" after 2 hours from now
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb";
 
 import {
@@ -178,12 +178,12 @@ const RoundFormInterviews = () => {
 
 
   useEffect(() => {
-  if (selectedInterviewType === "External" && externalInterviewers.length > 0) {
-    setStatus("RequestSent");
-  } else if (selectedInterviewType !== "External") {
-    setStatus("Draft");
-  }
-}, [selectedInterviewType, externalInterviewers]);
+    if (selectedInterviewType === "External" && externalInterviewers.length > 0) {
+      setStatus("RequestSent");
+    } else if (selectedInterviewType !== "External") {
+      setStatus("Draft");
+    }
+  }, [selectedInterviewType, externalInterviewers]);
 
 
   //<-----v1.0.4----
@@ -875,6 +875,9 @@ const RoundFormInterviews = () => {
   // console.log("assessmentTemplate",assessmentTemplate);
   console.log("selectedAssessmentData", selectedAssessmentData);
 
+  const location = useLocation();
+  const isReschedule = location.state?.isReschedule || false;
+
   const handleSubmit = async (e) => {
     // v1.0.2 <-----------------------------------------
     console.log("=== handleSubmit START ===");
@@ -961,11 +964,20 @@ const RoundFormInterviews = () => {
       //   }), // cleanedInterviewers
       // };
 
+      // If editing and rescheduling, increment rescheduleCount
+      let updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
+      if (isEditing && isReschedule) {
+        updatedRescheduleCount += 1;
+      } else if (isEditing) {
+        updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
+      }
+
       const roundData = {
         roundTitle: roundTitle === "Other" ? customRoundTitle : roundTitle,
         interviewMode,
         interviewerGroupName,
         interviewerViewType,
+        rescheduleCount: updatedRescheduleCount,
         sequence,
         ...(roundTitle === "Assessment" && assessmentTemplate.assessmentId
           ? { assessmentId: assessmentTemplate.assessmentId }
@@ -1009,14 +1021,13 @@ const RoundFormInterviews = () => {
         : {
           interviewId,
           round: roundData,
-          questions:
-            interviewQuestionsList.map((q) => ({
-              questionId: q.questionId,
-              snapshot: {
-                ...q.snapshot,
-                mandatory: q.snapshot.mandatory || "false",
-              },
-            })) || [],
+          questions: interviewQuestionsList.map((q) => ({
+            questionId: q.questionId,
+            snapshot: {
+              ...q.snapshot,
+              mandatory: q.snapshot.mandatory || "false",
+            },
+          })) || [],
         };
 
       console.log("=== Round Saving Process ===");
