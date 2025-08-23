@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved code and added API call for fetching rate cards
+// v1.0.1 - Ashok - Added delete button to implement delete action
 import { useEffect, useState } from "react";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
 import {
@@ -9,6 +10,10 @@ import {
 } from "react-icons/ai";
 import axios from "axios";
 import { config } from "../../../config";
+// v1.0.1 <------------------------------------------------------------
+import toast from "react-hot-toast";
+import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock";
+// v1.0.1 ------------------------------------------------------------>
 
 function RatesKanbanView({ filterCategory, onEdit, onView }) {
   // v1.0.0 <------------------------------------------------------
@@ -258,6 +263,34 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
 
   // v1.0.0 ------------------------------------------------------>
 
+  // v1.0.1 <-----------------------------------------------------------------------
+  const [deleteTarget, setDeleteTarget] = useState(null); // track which card is selected
+  const [loading, setLoading] = useState(false);
+
+  // Using this disable the outer scrollbar for better UX
+  useScrollLock(deleteTarget);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setLoading(true);
+
+      await axios.delete(
+        `${config.REACT_APP_API_URL}/rate-cards/${deleteTarget._id}`
+      );
+
+      setRateCards(rateCards.filter((card) => card._id !== deleteTarget._id));
+      toast.success("Rate card deleted successfully");
+      setDeleteTarget(null); // close modal
+    } catch (error) {
+      toast.error("Failed to delete rate card");
+      console.error("Error deleting rate card:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // v1.0.1 ------------------------------------------------------------------------->
+
   const categories = [
     "Software Development",
     "Data & AI",
@@ -320,6 +353,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
           >
             <AiOutlineEye size={14} />
           </button>
+          {/* v1.0.1 <---------------------------------------------------------------------- */}
           <button
             onClick={() => onEdit(rateCard)}
             className="p-1 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-50"
@@ -327,12 +361,14 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
           >
             <AiOutlineEdit size={14} />
           </button>
-          {/* <button
+          {/* v1.0.1 ----------------------------------------------------------------------> */}
+          <button
+            onClick={() => setDeleteTarget(rateCard)} // open modal
             className="p-1 text-red-600 hover:text-red-900 rounded hover:bg-red-50"
             title="Delete Rate Card"
           >
             <AiOutlineDelete size={14} />
-          </button> */}
+          </button>
           {/* v1.0.0 ------------------------------------------------------------------------> */}
         </div>
       </div>
@@ -386,7 +422,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
         </div>
         <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
           <div className="text-xs text-gray-500">Active</div>
-          <div className="text-xl font-semibold text-teal-600">
+          <div className="text-xl font-semibold text-gray-500">
             {rateCards?.filter((card) => card?.isActive)?.length}
           </div>
         </div>
@@ -436,7 +472,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {categoryCards?.length > 0 ? (
                   categoryCards?.map((rateCard) => (
-                    <RateCard key={rateCard.id} rateCard={rateCard} />
+                    <RateCard key={rateCard._id} rateCard={rateCard} />
                   ))
                 ) : (
                   <div className="text-center py-8 text-gray-500">
@@ -451,6 +487,41 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
           );
         })}
       </div>
+      {/* v1.0.1 <------------------------------------------------------------------------ */}
+      {/* Delete Confirmation Modal */}
+      <div>
+        {deleteTarget && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Confirm Delete
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                Are you sure you want to delete{" "}
+                <span className="font-medium">{deleteTarget?.technology}</span>?
+                This action cannot be undone.
+              </p>
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
+                  disabled={loading}
+                >
+                  {loading ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* v1.0.1 ------------------------------------------------------------------------> */}
     </div>
   );
 }

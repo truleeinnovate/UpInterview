@@ -4,7 +4,7 @@
 // v1.0.3  -  Ashraf  -  added extend/cancel functionality for candidate assessments. replaced actions button with direct extend/cancel buttons and restored original columns. added automatic expiry check functionality
 // v1.0.4  -  Venkatesh  -  added common status column style
 // v1.0.5  -  Ashok   -  Added new Kanban view
-
+// v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -569,7 +569,9 @@ const ScheduleAssessment = () => {
                             type="checkbox"
                             checked={tempSelectedStatus.includes(option)}
                             onChange={() => handleStatusToggle(option)}
-                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            // v1.0.6 <-------------------------------------------------------------
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.6 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{option}</span>
                         </label>

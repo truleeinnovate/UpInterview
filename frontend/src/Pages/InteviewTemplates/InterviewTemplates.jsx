@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Added status badge common code
+// v1.0.1  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -312,7 +313,9 @@ const InterviewTemplates = () => {
                             type="checkbox"
                             checked={selectedStatus.includes(status)}
                             onChange={() => handleStatusToggle(status)}
-                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            // v1.0.1 <------------------------------------------------------------
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.1 ------------------------------------------------------------>
                           />
                           <span className="text-sm">{status}</span>
                         </label>

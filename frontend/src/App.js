@@ -1273,10 +1273,12 @@ const MainAppRoutes = ({
                 path="/admin-dashboard"
                 element={<SuperAdminDashboard />}
               />
+              {/* v1.0.8 <--------------------------------------------------------------------- */}
               {/* v1.0.7 <--------------------------------------------------------------- */}
               <Route path="/interviewer-rates" element={<InterviewerRatesPage />} />
-              <Route path="/interviewers" element={<Interviewers />} />
+              <Route path="/interviews" element={<Interviewers />} />
               {/* v1.0.7 ---------------------------------------------------------------> */}
+              {/* v1.0.8 ---------------------------------------------------------------------> */}
             </Route>
           </Routes>
         )}

@@ -6,6 +6,7 @@
 // v1.0.5  -  Ashraf  -  using authcookie manager to get current tokein 
 /* v1.0.6  -  Ashok   -  Added new Tab names "Interviewer Rates" and "Interviewers" under More at Super Admin
                          and improved active name borders under tab names in both nav bars */
+// v1.0.7  -  Ashok   -  Tab name changed from "Interviewers" to "Interviews"
 
 import React, { useState, useEffect, useRef } from "react";
 import { FaCaretDown, FaCaretUp, FaBars } from "react-icons/fa";
@@ -344,6 +345,7 @@ const CombinedNavbar = () => {
           permissionKey: "IntegrationLogs.ViewTab",
         },
         // v1.0.4 ----------------------------------------------------->
+        // v1.0.7 <----------------------------------------------------------------------
         // v1.0.6 <---------------------------------------------------------
         {
           path: "/interviewer-rates",
@@ -351,11 +353,12 @@ const CombinedNavbar = () => {
           // permissionKey: "InterviewerRates.ViewTab",
         },
         {
-          path: "/interviewers",
-          label: "Interviewers",
+          path: "/interviews",
+          label: "Interviews",
           // permissionKey: "Interviewers.ViewTab",
         },
         // v1.0.6 --------------------------------------------------------->
+        // v1.0.7 ----------------------------------------------------------------------->
       ];
     } else {
       return [

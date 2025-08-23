@@ -2,6 +2,7 @@
 // v1.0.1  -  Venkatesh  -  Added toolbar with search, pagination, and filter functionality
 // v1.0.2  -  Venkatesh  -  Added edit modes for Candidate, Interviews, Skills, and Overall Impressions tabs
 // v1.0.3  -  Ashraf  -  added api get from apimodel
+// v1.0.4  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 
 import { useState, useRef, useEffect } from 'react';
 import '../../../../index.css';
@@ -459,7 +460,9 @@ const Feedback = () => {
                             type="checkbox"
                             checked={tempSelectedStatus.includes(option)}
                             onChange={() => handleStatusToggle(option)}
-                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            // v1.0.4 <------------------------------------------------------------- 
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            // v1.0.4 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{option}</span>
                         </label>

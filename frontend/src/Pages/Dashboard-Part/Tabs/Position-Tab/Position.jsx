@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
+// v1.0.1  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -425,7 +426,9 @@ const PositionTab = () => {
                                 type="checkbox"
                                 checked={selectedLocation.includes(location)}
                                 onChange={() => handleLocationToggle(location)}
-                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                // v1.0.1 <---------------------------------------------------------------
+                                className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                // v1.0.1 --------------------------------------------------------------->
                               />
                               <span className="text-sm">{location}</span>
                             </label>
@@ -466,7 +469,9 @@ const PositionTab = () => {
                                 onChange={() =>
                                   handleTechToggle(skill.SkillName)
                                 }
-                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                                // v1.0.1 <---------------------------------------------------------------
+                                className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                // v1.0.1 <---------------------------------------------------------------
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>
