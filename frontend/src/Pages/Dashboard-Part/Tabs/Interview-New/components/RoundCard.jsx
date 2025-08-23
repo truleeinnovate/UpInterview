@@ -356,14 +356,11 @@ const RoundCard = ({
       action === "Completed" ||
       action === "Cancelled" ||
       action === "Rejected" ||
-      action === "Selected"
+      action === "Selected" ||
+      action === "Scheduled" // <-- add this line
     ) {
       setConfirmAction(action);
       setShowConfirmModal(true);
-    } else if (action === "Scheduled") {
-      // Directly update status to Scheduled
-      handleStatusChange("Scheduled");
-      setActionInProgress(false);
     }
   };
 
@@ -625,10 +622,18 @@ const RoundCard = ({
                     )}
                   </div> */}
                   {console.log("round below", round)}
-                  {round.dateTime && (
+                  {/* {round.dateTime && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-4 w-4 mr-1" />
                       <span>Scheduled At: {round.dateTime}</span>
+                    </div>
+                  )} */}
+                  {round.dateTime && (
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>
+                        Scheduled At: {round.dateTime.split(' - ')[0]}
+                      </span>
                     </div>
                   )}
                   {round.completedDate && (

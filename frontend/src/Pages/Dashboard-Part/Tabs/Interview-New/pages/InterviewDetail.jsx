@@ -349,9 +349,10 @@ const InterviewDetail = () => {
     return interview?.status === "Draft" && round.status !== "Completed";
   };
 
-  const handleEditRound = (round) => {
-    navigate(`/interviews/${id}/rounds/${round._id}`);
-  };
+  const handleEditRound = (round, options = {}) => {
+    // Pass isReschedule to the form via navigation state or context
+    navigate(`/interviews/${id}/rounds/${round._id}`, { state: { isReschedule: options.isReschedule } });
+  };;
 
   const handleAddRound = () => {
     navigate(`/interviews/${id}/rounds/new`);
@@ -396,7 +397,7 @@ const InterviewDetail = () => {
     {
       label: candidate?.LastName || "Interview",
       path: `/interviews/${id}`,
-      status: interview?.status,
+      // status: interview?.status,
     },
   ];
 

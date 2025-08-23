@@ -30,30 +30,38 @@ const InterviewProgress = ({
     }
   };
 
-  const getStatusColor = (round, isCurrent) => {
-    if (isCurrent) return 'bg-blue-100 border-blue-500';
-    
-    switch (round.status) {
-      case 'Completed':
-        return 'bg-green-50 border-green-200';
-      case 'Scheduled':
-        return 'bg-blue-50 border-blue-200';
-      case 'Cancelled':
-        return 'bg-red-50 border-red-200';
-      case 'Rejected':
-        return 'bg-purple-50 border-purple-200';
-      case 'Pending':
-        return 'bg-yellow-50 border-yellow-200';
-      default:
-        return 'bg-gray-50 border-gray-200';
-    }
-  };
+const getStatusColor = (round, isCurrent) => {
+  if (isCurrent) return 'bg-blue-100 border-blue-500';
+
+  switch (round.status) {
+    case 'Draft':
+      return 'bg-gray-100 border-gray-400';
+    case 'RequestSent':
+      return 'bg-orange-50 border-orange-200';
+    case 'Scheduled':
+      return 'bg-blue-50 border-blue-200';
+    case 'Rescheduled':
+      return 'bg-blue-100 border-blue-400';
+    case 'Completed':
+      return 'bg-green-50 border-green-200';
+    case 'Cancelled':
+      return 'bg-red-50 border-red-200';
+    case 'Rejected':
+      return 'bg-purple-50 border-purple-200';
+    case 'Selected':
+      return 'bg-teal-50 border-teal-200';
+    case 'InComplete':
+      return 'bg-yellow-50 border-yellow-200';
+    default:
+      return 'bg-gray-50 border-gray-200';
+  }
+};
 
   return (
     <div className="w-full overflow-x-auto py-4">
       <div className="flex items-center min-w-max">
         {sortedRounds.map((round, index) => {
-          const isCurrent = round.id === currentRoundId;
+          const isCurrent = round._id === currentRoundId;
           const isLast = index === sortedRounds.length - 1;
           
           return (
