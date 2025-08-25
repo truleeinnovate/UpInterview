@@ -16,6 +16,7 @@ import Cookies from "js-cookie";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import LoadingButton from "../../../../Components/LoadingButton";
 import {useScrollLock} from "../../../../apiHooks/scrollHook/useScrollLock";
+import { toast, ToastContainer } from "react-toastify";
 // v1.0.3 <-------------------------------------------------------------------------
 const maxDescriptionLen = 1000;
 const maxSubjectLen = 150;
@@ -342,19 +343,10 @@ const SupportForm = ({ onClose,FeedbackIssueType}) => {
         // navigate("/support-desk");
       } catch (error) {
         // Error is already handled in mutation's onError
+        toast.error(error?.response?.data?.message || error.message)
       }
     },
-    [
-      validateForm,
-      createFormData,
-      submitTicket,
-      editMode,
-      initialTicketData?._id,
-      initialFormState,
-      navigate,
-      isAttachmentFileRemoved,
-      attachmentFile,
-    ]
+    [validateForm, createFormData, submitTicket, editMode, initialTicketData?._id, attachmentFile, isAttachmentFileRemoved, initialFormState, onClose, navigate]
   );
 
   //  <------------------ added by ranjith
@@ -425,6 +417,8 @@ const SupportForm = ({ onClose,FeedbackIssueType}) => {
 
 
   return (
+    <>
+    <ToastContainer />
     <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50">
       <div
         className={`fixed inset-y-0 right-0 z-50 bg-white shadow-lg transform transition-all duration-500 ease-in-out ${
@@ -685,6 +679,7 @@ const SupportForm = ({ onClose,FeedbackIssueType}) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
