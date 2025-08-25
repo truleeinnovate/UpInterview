@@ -1,4 +1,7 @@
+//<------v1.0.0---Venkatesh-----add validations
+
 const Task = require('../models/task');
+const { validateCreateTask, validateUpdateTask } = require('../validations/taskvalidation');//<------v1.0.0---
 
 // Get all tasks
 const getTasks = async (req, res) => {
@@ -13,6 +16,13 @@ const getTasks = async (req, res) => {
 
 // Create a new task
 const createTask = async (req, res) => {
+  //<------v1.0.0---
+  // Simple backend validation (mirrors frontend)
+  const { errors, isValid } = validateCreateTask(req.body);
+  if (!isValid) {
+    return res.status(400).json({ message: 'Validation failed', errors });
+  }
+  //------v1.0.0--->
   const lastTask = await Task.findOne({})
   .sort({ _id: -1 })
   .select('taskCode')
@@ -72,6 +82,14 @@ const updateTask = async (req, res) => {
     const { id } = req.params;
     const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments } = req.body;
 
+    //<------v1.0.0---
+    // Simple backend validation (mirrors frontend)
+    const { errors, isValid } = validateUpdateTask({ title, assignedTo, priority, status, relatedTo, dueDate });
+    if (!isValid) {
+      return res.status(400).json({ message: 'Validation failed', errors });
+    }
+    //------v1.0.0--->
+
     try {
       const updatedTask = await Task.findByIdAndUpdate(id, {
         title,
@@ -82,7 +100,13 @@ const updateTask = async (req, res) => {
         relatedTo,
         dueDate,
         comments,
-      }, { new: true });
+      //<------v1.0.0---
+      }, { new: true, runValidators: true });
+
+      if (!updatedTask) {
+        return res.status(404).json({ message: 'Cannot find task' });
+      }
+      //------v1.0.0--->
 
       res.json(updatedTask);
     } catch (err) {
