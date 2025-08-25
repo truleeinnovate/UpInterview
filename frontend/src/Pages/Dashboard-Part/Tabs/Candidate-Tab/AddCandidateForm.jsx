@@ -232,10 +232,9 @@ const CustomDropdown = forwardRef(
             //   error ? "border-red-500" : "border-gray-300"
             // }`}
             className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-              border ${
-                error
-                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                  : "border-gray-300 focus:ring-red-300"
+              border ${error
+                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                : "border-gray-300 focus:ring-red-300"
               }
               focus:outline-gray-300
             `}
@@ -461,27 +460,27 @@ const AddCandidateForm = ({
       const dob = selectedCandidate.Date_Of_Birth;
 
       setFormData({
-        FirstName: selectedCandidate.FirstName || "",
-        LastName: selectedCandidate.LastName || "",
-        Email: selectedCandidate.Email || "",
-        Phone: selectedCandidate.Phone || "",
+        FirstName: selectedCandidate?.FirstName || "",
+        LastName: selectedCandidate?.LastName || "",
+        Email: selectedCandidate?.Email || "",
+        Phone: selectedCandidate?.Phone || "",
         Date_Of_Birth: dob ? format(dob, "MMMM dd, yyyy") : "",
-        Gender: selectedCandidate.Gender || "",
-        HigherQualification: selectedCandidate.HigherQualification || "",
-        UniversityCollege: selectedCandidate.UniversityCollege || "",
-        CurrentExperience: selectedCandidate.CurrentExperience || "",
-        RelevantExperience: selectedCandidate.RelevantExperience || "",
-        skills: selectedCandidate.skills || [],
+        Gender: selectedCandidate?.Gender || "",
+        HigherQualification: selectedCandidate?.HigherQualification || "",
+        UniversityCollege: selectedCandidate?.UniversityCollege || "",
+        CurrentExperience: selectedCandidate?.CurrentExperience || "",
+        RelevantExperience: selectedCandidate?.RelevantExperience || "",
+        skills: selectedCandidate?.skills || [],
         // ImageData: selectedCandidate.imageUrl || null,
-        ImageData: selectedCandidate.ImageData || null, // Added by Ashok
-        resume: selectedCandidate.resume || null,
-        CurrentRole: selectedCandidate.CurrentRole || "",
-        CountryCode: selectedCandidate.CountryCode || "",
+        ImageData: selectedCandidate?.ImageData || null, // Added by Ashok
+        resume: selectedCandidate?.resume || null,
+        CurrentRole: selectedCandidate?.CurrentRole || "",
+        CountryCode: selectedCandidate?.CountryCode || "",
       });
 
       if (selectedCandidate.ImageData?.filename) {
-        setImagePreview(selectedCandidate.ImageData.path);
-        setSelectedImage(selectedCandidate.ImageData);
+        setImagePreview(selectedCandidate?.ImageData?.path);
+        setSelectedImage(selectedCandidate?.ImageData);
       } else {
         setImagePreview(null);
         setSelectedImage(null);
@@ -489,18 +488,18 @@ const AddCandidateForm = ({
 
       if (selectedCandidate.resume?.filename) {
         setSelectedResume({
-          path: selectedCandidate.resume.path,
-          name: selectedCandidate.resume.filename,
-          size: selectedCandidate.resume.fileSize,
+          path: selectedCandidate?.resume?.path,
+          name: selectedCandidate?.resume?.filename,
+          size: selectedCandidate?.resume?.fileSize,
         });
       } else {
         setSelectedResume(null);
       }
 
-      setEntries(selectedCandidate.skills || []);
+      setEntries(selectedCandidate?.skills || []);
       // Initialize allSelectedSkills with the skills from the candidate being edited
       setAllSelectedSkills(
-        selectedCandidate.skills?.map((skill) => skill.skill) || []
+        selectedCandidate?.skills?.map((skill) => skill.skill) || []
       );
       // setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
       // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
@@ -558,10 +557,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry
       );
       setEntries(updatedEntries);
@@ -833,7 +832,7 @@ const AddCandidateForm = ({
       HigherQualification: formData.HigherQualification,
       Gender: formData.Gender,
       UniversityCollege: formData.UniversityCollege,
-      Date_Of_Birth: formData.Date_Of_Birth,
+      Date_Of_Birth: formData.Date_Of_Birth || "",
       skills: entries.map((entry) => ({
         skill: entry.skill,
         experience: entry.experience,
@@ -876,13 +875,21 @@ const AddCandidateForm = ({
           const fromPath = location.state?.from;
           const returnTo = location.state?.returnTo;
 
+          console.log("response.data", response);
+          // if (response?.status === "no_changes") {
+          //   navigate(returnTo); // close modal safely
+          //   return;
+          // }
+          
+          
+
           if (fromPath === "/interviews/new" && returnTo) {
             navigate(returnTo);
             return;
           }
 
-          switch (mode) {
-            case "Edit":
+          switch (mode ) {
+            case "Edit" && response?.status === "no_changes":
               navigate(`/candidate`);
               break;
             case "Candidate Edit":
@@ -902,7 +909,16 @@ const AddCandidateForm = ({
       }
     } catch (error) {
       console.error("Error adding candidate:", error);
-      setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
+
+      if (error.response?.data?.errors) {
+        // Backend Joi validation errors
+        setErrors(error.response.data.errors);
+        scrollToFirstError(error.response.data.errors, fieldRefs);
+      } else {
+        // Fallback error
+        setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
+      }
+      // setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
     } finally {
       // Reset active button regardless of success or failure
       setActiveButton(null);
@@ -1060,11 +1076,11 @@ const AddCandidateForm = ({
                         <p className="text-xs text-gray-500">
                           {selectedResume?.fileSize || selectedResume?.size
                             ? `${(
-                                (selectedResume.size ||
-                                  selectedResume.fileSize) /
-                                1024 /
-                                1024
-                              ).toFixed(2)} MB`
+                              (selectedResume.size ||
+                                selectedResume.fileSize) /
+                              1024 /
+                              1024
+                            ).toFixed(2)} MB`
                             : ""}
                         </p>
                       </div>
@@ -1171,10 +1187,9 @@ const AddCandidateForm = ({
                     //   errors.LastName && "border-red-500"
                     // }`}
                     className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.LastName
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
+                      border ${errors.LastName
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
                       }
                       focus:outline-gray-300
                     `}
@@ -1239,10 +1254,9 @@ const AddCandidateForm = ({
                     //   errors.Email && "border-red-500"
                     // }`}
                     className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.Email
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
+                      border ${errors.Email
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
                       }
                       focus:outline-gray-300
                     `}
@@ -1297,10 +1311,9 @@ const AddCandidateForm = ({
                         //   errors.Phone && "border-red-500"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.Phone
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
+                          border ${errors.Phone
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
                           }
                           focus:outline-gray-300
                         `}
@@ -1362,10 +1375,9 @@ const AddCandidateForm = ({
                         //     : "border-gray-300"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.UniversityCollege
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
+                          border ${errors.UniversityCollege
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
                           }
                           focus:outline-gray-300
                         `}
@@ -1458,10 +1470,9 @@ const AddCandidateForm = ({
                         //     : "border-gray-300"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.UniversityCollege
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
+                          border ${errors.UniversityCollege
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
                           }
                           focus:outline-gray-300
                         `}
@@ -1529,10 +1540,9 @@ const AddCandidateForm = ({
                     //     : "border-gray-300"
                     // }`}
                     className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.CurrentExperience
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
+                      border ${errors.CurrentExperience
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
                       }
                       focus:outline-gray-300
                     `}
@@ -1571,10 +1581,9 @@ const AddCandidateForm = ({
                     //     : "border-gray-300"
                     // }`}
                     className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.RelevantExperience
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
+                      border ${errors.RelevantExperience
+                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        : "border-gray-300 focus:ring-red-300"
                       }
                       focus:outline-gray-300
                     `}
@@ -1619,10 +1628,9 @@ const AddCandidateForm = ({
                       //     : "border-gray-300"
                       // }`}
                       className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                        border ${
-                          errors.CurrentRole
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
+                        border ${errors.CurrentRole
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
                         }
                         focus:outline-gray-300
                       `}
@@ -1735,9 +1743,8 @@ const AddCandidateForm = ({
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${
-                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                 >
                   Cancel
                 </button>

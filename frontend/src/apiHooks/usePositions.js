@@ -79,10 +79,17 @@ export const usePositions = (filters = {}) => {
 
   const addRoundsMutation = useMutation({
     mutationFn: async (payload) => {
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/position/add-rounds`,
-        payload
-      );
+      // const response = await axios.post(
+      //   `${config.REACT_APP_API_URL}/position/add-rounds`,
+      //   payload
+      // );
+        // If editing, use PATCH, else POST
+    const method = payload.roundId ? 'patch' : 'post';
+    const url = payload.roundId
+      ? `${config.REACT_APP_API_URL}/position/update-round/${payload?.positionId}/${payload?.roundId}`
+      : `${config.REACT_APP_API_URL}/position/add-rounds`;
+
+    const response = await axios[method](url, payload);
       return response.data;
     },
     

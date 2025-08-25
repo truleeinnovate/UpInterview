@@ -6,6 +6,7 @@ const candidateSchema = new mongoose.Schema(
     LastName: String,
     Email: String,
     Phone: String,
+    CountryCode: String,
     Date_Of_Birth: Date,
     Gender: String,
     HigherQualification: String,
@@ -44,8 +45,10 @@ const candidateSchema = new mongoose.Schema(
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    ownerId: String,
-    tenantId: String,
+    // ownerId: String,
+    // tenantId: String,
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
   },
   { timestamps: true }
 );

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Candidate } = require('../models/Candidate/candidate.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
+const { validateCandidateData, candidateUpdateSchema } = require('../validations/candidateValidation.js');
 
 
 // patch call 
@@ -13,12 +14,34 @@ const updateCandidatePatchCall = async (req, res) => {
   const { tenantId, ownerId, ...updateFields } = req.body;
 
   try {
+
+        // ✅ Step 1: Validate incoming request body
+        const { error } = candidateUpdateSchema.validate(req.body, {
+          abortEarly: false,
+        });
+    
+        if (error) {
+          const errors = error.details.reduce((acc, err) => {
+            acc[err.context.key] = err.message;
+            return acc;
+          }, {});
+          return res.status(400).json({
+            status: "error",
+            message: "Validation failed",
+            errors,
+          });
+        }
+
+
+
     // feeds related data
     const currentCandidate = await Candidate.findById(candidateId).lean();
 
     if (!currentCandidate) {
       return res.status(404).json({ message: "Candidate not found" });
     }
+
+    
 
     // Compare current values with updateFields to identify changes
     const changes = Object.entries(updateFields)
@@ -142,7 +165,7 @@ const updateCandidatePatchCall = async (req, res) => {
   }
 };
 
-
+ 
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
 
@@ -153,11 +176,26 @@ const addCandidatePostCall = async (req, res) => {
   let newCandidate = null;
 
   try {
+
+     // Joi validation
+     const { isValid, errors } = validateCandidateData(req.body);
+     console.log("isValid", isValid);
+     console.log("errors", errors);
+     if (!isValid) {
+       return res.status(400).json({
+         status: "error",
+         message: "Validation failed",
+         errors,
+       });
+     }
+
+
     const {
       FirstName,
       LastName,
       Email,
       Phone,
+      CountryCode,
       Date_Of_Birth,
       Gender,
       HigherQualification,
@@ -180,6 +218,7 @@ const addCandidatePostCall = async (req, res) => {
       LastName,
       Email,
       Phone,
+      CountryCode,
       Date_Of_Birth,
       Gender,
       HigherQualification,
