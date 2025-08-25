@@ -11,6 +11,29 @@ const {
 } = require("../validations/supportUserValidation");
 //----v1.0.1---->
 
+//<-----v1.0.1---
+// Helper to read permissions regardless of Map vs plain object
+function hasPermission(permGroup, key) {
+  if (!permGroup) return false;
+  const truthy = (v) => v === true || v === 'true' || v === 1 || v === '1';
+  try {
+    if (typeof permGroup.get === 'function') {
+      const v = permGroup.get(key);
+      if (v !== undefined) return truthy(v);
+    }
+  } catch (_) {}
+  try {
+    if (typeof permGroup.has === 'function' && permGroup.has(key)) {
+      const v = permGroup.get(key);
+      if (v !== undefined) return truthy(v);
+    }
+  } catch (_) {}
+  const v = permGroup[key];
+  return truthy(v);
+}
+//-----v1.0.1--->
+
+
 exports.createTicket = async (req, res) => {
   try {
     console.log("Received ticket creation request body:", req.body);
@@ -37,6 +60,20 @@ exports.createTicket = async (req, res) => {
       return res.status(400).json({ message: "Validation failed", errors });
       //----v1.0.1---->
     }
+    
+    res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+      hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Create') ||
+      hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Create')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+    }
+    //-----v1.0.1--->
+
+
     const lastTicket = await SupportUser.findOne({})
       .sort({ _id: -1 })
       .select("ticketCode")
@@ -81,6 +118,18 @@ exports.createTicket = async (req, res) => {
 
 exports.getTicket = async (req, res) => {
   try {
+
+    res.locals.loggedByController = true;
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+      hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'ViewTab') ||
+      hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'ViewTab')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+    }
+    //-----v1.0.1--->
+
     const tickets = await SupportUser.find();
     return res.status(200).send({
       success: true,
@@ -110,6 +159,18 @@ exports.getTicketBasedonId = async (req, res) => {
         .status(400)
         .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
     }
+
+    res.locals.loggedByController = true;
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+      hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'ViewTab') ||
+      hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'ViewTab')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+    }
+    //-----v1.0.1--->
+
     const ticket = await SupportUser.findById(id);
     if (!ticket) {
       return res.status(404).send({ message: "Ticket not found" });
@@ -145,6 +206,18 @@ exports.updateTicketById = async (req, res) => {
       return res.status(400).json({ message: "Validation failed", errors });
     }
     //----v1.0.1---->
+
+    res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+      hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
+      hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Edit')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+    }
+    //-----v1.0.1--->
 
     const ticket = await SupportUser.findByIdAndUpdate(
       id,
@@ -196,6 +269,18 @@ exports.updateSupportTicket = async (req, res) => {
     }
     //----v1.0.1---->
 
+    res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+      hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
+      hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Edit')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+    }
+    //-----v1.0.1--->
+
     const ticket = await SupportUser.findById(id);
     if (!ticket) {
       return res.status(404).json({ message: "Ticket not found" });
@@ -231,6 +316,19 @@ exports.updateSupportTicket = async (req, res) => {
 // <------ SUPER ADMIN added by Ashok ------------------------>
 exports.getAllTickets = async (req, res) => {
   try {
+    res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+      hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'ViewTab') ||
+      hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'ViewTab')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+    }
+    //-----v1.0.1--->
+
+
     const now = new Date();
     const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);

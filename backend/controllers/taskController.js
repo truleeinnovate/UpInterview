@@ -1,7 +1,30 @@
 //<------v1.0.0---Venkatesh-----add validations
+//<-----v1.0.1---Venkatesh---apply permissions to post and update
 
 const Task = require('../models/task');
 const { validateCreateTask, validateUpdateTask } = require('../validations/taskvalidation');//<------v1.0.0---
+
+//<-----v1.0.1---
+// Helper to read permissions regardless of Map vs plain object
+function hasPermission(permGroup, key) {
+  if (!permGroup) return false;
+  const truthy = (v) => v === true || v === 'true' || v === 1 || v === '1';
+  try {
+    if (typeof permGroup.get === 'function') {
+      const v = permGroup.get(key);
+      if (v !== undefined) return truthy(v);
+    }
+  } catch (_) {}
+  try {
+    if (typeof permGroup.has === 'function' && permGroup.has(key)) {
+      const v = permGroup.get(key);
+      if (v !== undefined) return truthy(v);
+    }
+  } catch (_) {}
+  const v = permGroup[key];
+  return truthy(v);
+}
+//-----v1.0.1--->
 
 // Get all tasks
 const getTasks = async (req, res) => {
@@ -16,6 +39,17 @@ const getTasks = async (req, res) => {
 
 // Create a new task
 const createTask = async (req, res) => {
+
+  res.locals.loggedByController = true;
+  //<-----v1.0.1---
+  // Permission: Tasks.Create (or super admin override)
+  const canCreate =
+    hasPermission(res.locals?.effectivePermissions?.Tasks, 'Create')
+  if (!canCreate) {
+    return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+  }
+  //-----v1.0.1--->
+
   //<------v1.0.0---
   // Simple backend validation (mirrors frontend)
   const { errors, isValid } = validateCreateTask(req.body);
@@ -79,6 +113,21 @@ const getTaskById = async (req, res) => {
 
 // Update a task
 const updateTask = async (req, res) => {
+
+
+  res.locals.loggedByController = true;
+  //<-----v1.0.1---
+  //console.log("effective permissions", hasPermission(res.locals?.effectivePermissions?.Tasks, 'Edit'))
+  // Permission: Tasks.Edit (or super admin override)
+  const canEdit =
+    hasPermission(res.locals?.effectivePermissions?.Tasks, 'Edit');
+  if (!canEdit) {
+    return res.status(403).json({ message: 'Forbidden: missing Tasks.Edit permission' });
+  }
+  //-----v1.0.1--->
+
+
+
     const { id } = req.params;
     const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments } = req.body;
 
