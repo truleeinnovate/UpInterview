@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Fixed pagination border issue
 import { useState } from "react";
 import {
   AiOutlineSearch,
@@ -89,7 +90,9 @@ function DataTable({
             <div className="flex items-center">
               <span className="text-sm text-gray-700 mr-2">Show:</span>
               <select
-                className="focus:ring-primary-500 focus:border-primary-500 block sm:text-sm border-gray-300 rounded-md"
+              // v1.0.0 <----------------------------------------------------------------------------------------------------------------------
+                className="focus:ring-primary-500 focus:border-custom-blue block sm:text-sm border border-gray-300 rounded-md px-2 py-1"
+              // v1.0.0 ---------------------------------------------------------------------------------------------------------------------->
                 value={itemsPerPage}
                 onChange={(e) => {
                   setItemsPerPage(Number(e.target.value));

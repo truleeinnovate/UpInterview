@@ -415,7 +415,7 @@
 
 // v1.0.0  -  Ashraf  -  fixed name assessment to assessment template
 // v1.0.2  -  Ashraf  -  added sending interview email
-
+// v1.0.3  -  Ashok  -  Added new controller to get all interviews
 
 const mongoose = require("mongoose");
 const { Interview } = require("../models/Interview");
@@ -427,14 +427,15 @@ const { Users } = require("../models/Users");
 const { Candidate } = require("../models/Candidate/candidate.js");
 const { encrypt, generateOTP } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");
-const interviewQuestions = require('../models/Interview/selectedInterviewQuestion.js');
+const interviewQuestions = require("../models/Interview/selectedInterviewQuestion.js");
 const { Position } = require("../models/Position/position.js");
 // <-------------------------------v1.0.0
 const Assessment = require("../models/Assessment/assessmentTemplates.js");
-const { sendInterviewRoundEmails } = require("./EmailsController/interviewEmailController");
+const {
+  sendInterviewRoundEmails,
+} = require("./EmailsController/interviewEmailController");
 // v1.0.2 <-----------------------------------------
 // ------------------------------v1.0.0 >
-
 
 const createInterview = async (req, res) => {
   try {
@@ -816,10 +817,13 @@ const createInterview = async (req, res) => {
 async function handleInterviewQuestions(interviewId, roundId, questions) {
   // Add null check for questions parameter
   if (!questions || !Array.isArray(questions)) {
-    console.log("handleInterviewQuestions: questions is null, undefined, or not an array:", questions);
+    console.log(
+      "handleInterviewQuestions: questions is null, undefined, or not an array:",
+      questions
+    );
     return;
   }
-  
+
   const existingQuestions = await interviewQuestions.find({
     interviewId,
     roundId,
@@ -904,10 +908,10 @@ const saveInterviewRound = async (req, res) => {
     console.log("roundId:", roundId);
     console.log("round keys:", Object.keys(round || {}));
     console.log("meetLink field:", round?.meetLink);
-    
+
     // Initialize emailResult variable
     let emailResult = { success: false, message: "No email sending attempted" };
-    
+
     if (!interviewId || !round) {
       return res
         .status(400)
@@ -925,20 +929,32 @@ const saveInterviewRound = async (req, res) => {
       let existingRound = await InterviewRounds.findById(roundId);
       if (existingRound) {
         console.log("Found existing round:", existingRound._id);
-        console.log("Before update - existing round data:", JSON.stringify(existingRound.toObject(), null, 2));
-        
+        console.log(
+          "Before update - existing round data:",
+          JSON.stringify(existingRound.toObject(), null, 2)
+        );
+
         // Handle meetLink field separately to prevent conversion issues
         const { meetLink, ...otherRoundData } = round;
         Object.assign(existingRound, otherRoundData);
-        
+
         // Set meetLink directly if it exists
         if (meetLink && Array.isArray(meetLink)) {
-                       console.log("Setting meetLink directly:", meetLink);
-             console.log("meetLink structure:", meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
+          console.log("Setting meetLink directly:", meetLink);
+          console.log(
+            "meetLink structure:",
+            meetLink?.map((item) => ({
+              linkType: item.linkType,
+              link: item.link,
+            }))
+          );
           existingRound.meetLink = meetLink;
         }
-        
-        console.log("After update - round data:", JSON.stringify(existingRound.toObject(), null, 2));
+
+        console.log(
+          "After update - round data:",
+          JSON.stringify(existingRound.toObject(), null, 2)
+        );
         savedRound = await existingRound.save();
         console.log("Round saved successfully:", savedRound._id);
         await reorderInterviewRounds(interviewId);
@@ -965,8 +981,14 @@ const saveInterviewRound = async (req, res) => {
 
       // Set meetLink directly if it exists
       if (meetLink && Array.isArray(meetLink)) {
-                     console.log("Setting meetLink for new round:", meetLink);
-             console.log("meetLink structure:", meetLink?.map(item => ({ linkType: item.linkType, link: item.link })));
+        console.log("Setting meetLink for new round:", meetLink);
+        console.log(
+          "meetLink structure:",
+          meetLink?.map((item) => ({
+            linkType: item.linkType,
+            link: item.link,
+          }))
+        );
         newInterviewRound.meetLink = meetLink;
       }
 
@@ -978,14 +1000,17 @@ const saveInterviewRound = async (req, res) => {
     if (questions && Array.isArray(questions)) {
       await handleInterviewQuestions(interviewId, savedRound._id, questions);
     } else {
-      console.log("saveInterviewRound: questions is null, undefined, or not an array, skipping handleInterviewQuestions");
+      console.log(
+        "saveInterviewRound: questions is null, undefined, or not an array, skipping handleInterviewQuestions"
+      );
     }
 
     // Email sending is now handled in the frontend after meeting links are generated
     // This ensures emails contain the proper encrypted meeting links
-    emailResult = { 
-      success: true, 
-      message: 'Emails will be sent from frontend after meeting links are generated' 
+    emailResult = {
+      success: true,
+      message:
+        "Emails will be sent from frontend after meeting links are generated",
     };
 
     return res.status(200).json({
@@ -994,7 +1019,7 @@ const saveInterviewRound = async (req, res) => {
         : "Interview round created successfully.",
       savedRound,
       emailResult,
-      status:'ok'
+      status: "ok",
     });
 
     async function reorderInterviewRounds(interviewId) {
@@ -1012,7 +1037,9 @@ const saveInterviewRound = async (req, res) => {
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
     console.error("=== saveInterviewRound ERROR END ===");
-    return res.status(500).json({ message: "Internal server error.", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Internal server error.", error: error.message });
   }
 };
 // v1.0.2 <-----------------------------------------
@@ -1238,6 +1265,89 @@ const getInterviews = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+// v1.0.0 <---------------------SUPER ADMIN-----------------------------------------
+
+// Controller: Get all interviews with candidate details
+// const getAllInterviews = async (req, res) => {
+//   try {
+//     // fetch all interviews
+//     const interviews = await Interview.find();
+
+//     // enrich each interview with candidate data
+//     const interviewsWithCandidates = await Promise.all(
+//       interviews.map(async (interview) => {
+//         if (!interview.candidateId) {
+//           return { ...interview.toObject(), candidate: null };
+//         }
+
+//         try {
+//           const candidate = await Candidate.findById(interview.candidateId);
+//           return {
+//             ...interview.toObject(),
+//             candidate: candidate ? candidate.toObject() : null,
+//           };
+//         } catch (err) {
+//           console.error("Error fetching candidate:", err);
+//           return { ...interview.toObject(), candidate: null };
+//         }
+//       })
+//     );
+
+//     // reverse like frontend (latest first)
+//     res.status(200).json(interviewsWithCandidates.reverse());
+//   } catch (error) {
+//     console.error("Error fetching interviews:", error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// };
+
+const getAllInterviews = async (req, res) => {
+  try {
+    // fetch all interviews
+    const interviews = await Interview.find();
+
+    // enrich each interview with candidate + position data
+    const enrichedInterviews = await Promise.all(
+      interviews.map(async (interview) => {
+        let candidate = null;
+        let position = null;
+
+        // fetch candidate
+        if (interview.candidateId) {
+          try {
+            candidate = await Candidate.findById(interview.candidateId);
+          } catch (err) {
+            console.error("Error fetching candidate:", err);
+          }
+        }
+
+        // fetch position
+        if (interview.positionId) {
+          try {
+            position = await Position.findById(interview.positionId);
+          } catch (err) {
+            console.error("Error fetching position:", err);
+          }
+        }
+
+        return {
+          ...interview.toObject(),
+          candidate: candidate ? candidate.toObject() : null,
+          position: position ? position.toObject() : null,
+        };
+      })
+    );
+
+    // reverse like frontend (latest first)
+    res.status(200).json(enrichedInterviews.reverse());
+  } catch (error) {
+    console.error("Error fetching interviews:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+// v1.0.0 <-------------------------SUPER ADMIN------------------------------------->
+
 // -------------------------------------------------------------------------------------->
 
 module.exports = {
@@ -1246,4 +1356,5 @@ module.exports = {
   getDashboardStats,
   deleteRound,
   getInterviews,
+  getAllInterviews,
 };
