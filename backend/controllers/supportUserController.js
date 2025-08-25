@@ -1,6 +1,15 @@
 // v1.0.0 - Ashraf - Added subject field
+//<----v1.0.1----Venkatesh----add validation
 
 const SupportUser = require("../models/SupportUser");
+//<----v1.0.1----
+const mongoose = require("mongoose");
+const {
+  validateCreateSupportTicket,
+  validateUpdateSupportTicket,
+  validateStatusUpdate,
+} = require("../validations/supportUserValidation");
+//----v1.0.1---->
 
 exports.createTicket = async (req, res) => {
   try {
@@ -21,26 +30,12 @@ exports.createTicket = async (req, res) => {
       organization,
       createdByUserId,
     } = req.body;
-    if (!issueType) {
-      return res.status(400).send({ message: "Issue type is required" });
-    }
-    // v1.0.0 <----------------------------------------------------
-    if (!subject) {
-      return res.status(400).send({ message: "Subject is required" });
-    }
-    // v1.0.0 --------------------------------------------->
-    if (!description) {
-      return res.status(400).send({ message: "Description is required" });
-    }
-    if (!contact) {
-      return res.status(400).send({ message: "Contact is required" });
-    }
-    if (organization && !organization) {
-      return res
-        .status(400)
-        .send({
-          message: "Organization is required when organization flag is true",
-        });
+    //<----v1.0.1----
+    // Joi validation (mirrors frontend rules)
+    const { errors, isValid } = validateCreateSupportTicket(req.body);
+    if (!isValid) {
+      return res.status(400).json({ message: "Validation failed", errors });
+      //----v1.0.1---->
     }
     const lastTicket = await SupportUser.findOne({})
       .sort({ _id: -1 })
@@ -77,10 +72,9 @@ exports.createTicket = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating ticket:", error);
-    return res.status(500).send({
+    return res.status(500).json({
       message: "Failed to create ticket",
-      success: false,
-      error: error.message, // Sending error.message for better debugging
+      errors: { general: error.message },
     });
   }
 };
@@ -95,10 +89,9 @@ exports.getTicket = async (req, res) => {
     });
   } catch (error) {
     console.log("Error retrieving tickets:", error);
-    return res.status(500).send({
-      success: false,
+    return res.status(500).json({
       message: "Failed to retrieve tickets",
-      error,
+      errors: { general: error.message },
     });
   }
 };
@@ -107,20 +100,30 @@ exports.getTicketBasedonId = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
-      return res.status(400).send({ message: "ticket id is required" });
+     //<----v1.0.1----
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: { id: "Ticket id is required" } });
     }
-    const ticket = await SupportUser.findById({ _id: id });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
+    }
+    const ticket = await SupportUser.findById(id);
+    if (!ticket) {
+      return res.status(404).send({ message: "Ticket not found" });
+    }
+    //----v1.0.1---->
     return res.status(200).send({
       message: "Ticket retrieved successfully",
-      ticket,
       ticket,
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).send({
+    return res.status(500).json({
       message: "Failed to get ticket based on id",
-      success: false,
-      error,
+      errors: { general: error.message },
     });
   }
 };
@@ -131,20 +134,35 @@ exports.updateTicketById = async (req, res) => {
     // v1.0.0 <----------------------------------------------------
     const { issueType, description, subject, assignedTo, assignedToId } = req.body;
     // v1.0.0 --------------------------------------------->
+   //<----v1.0.1----
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
+    }
+    const { errors, isValid } = validateUpdateSupportTicket(req.body);
+    if (!isValid) {
+      return res.status(400).json({ message: "Validation failed", errors });
+    }
+    //----v1.0.1---->
 
     const ticket = await SupportUser.findByIdAndUpdate(
-      { _id: id },
+      id,
       {
         issueType,
         description,
         // v1.0.0 <----------------------------------------------------
         subject,
         // v1.0.0 --------------------------------------------->
-
         assignedTo,
         assignedToId,
-      }
+      },
+      { new: true, runValidators: true }
     );
+
+    if (!ticket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
 
     return res.status(200).send({
       success: true,
@@ -153,10 +171,9 @@ exports.updateTicketById = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).send({
-      message: "Failed to updated ticket based on id",
-      error,
-      success: false,
+    return res.status(500).json({
+      message: "Failed to update ticket",
+      errors: { general: error.message },
     });
   }
 };
@@ -166,14 +183,22 @@ exports.updateSupportTicket = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, comment, userComment, user, updatedByUserId, notifyUser } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ error: "Status is required" });
+    
+    //<----v1.0.1----
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
     }
+    const { errors, isValid } = validateStatusUpdate(req.body);
+    if (!isValid) {
+      return res.status(400).json({ message: "Validation failed", errors });
+    }
+    //----v1.0.1---->
 
     const ticket = await SupportUser.findById(id);
     if (!ticket) {
-      return res.status(404).json({ error: "Ticket not found" });
+      return res.status(404).json({ message: "Ticket not found" });
     }
 
     // Update ticket fields
@@ -196,7 +221,10 @@ exports.updateSupportTicket = async (req, res) => {
     return res.status(200).json(updatedTicket);
   } catch (error) {
     console.error("Error updating ticket:", error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      message: "Failed to update ticket",
+      errors: { general: error.message },
+    });
   }
 };
 
@@ -249,6 +277,7 @@ exports.getAllTickets = async (req, res) => {
     console.error("Error in get all tickets metric:", error.message);
     return res.status(500).json({
       message: "Internal server error",
+      errors: { general: error.message },
     });
   }
 };
@@ -283,7 +312,7 @@ exports.getTicketSummary = async (req, res) => {
     console.error("Error fetching ticket summary:", error);
     res.status(500).json({
       message: "Server error while fetching ticket summary",
-      details: error.message,
+      errors: { general: error.message },
     });
   }
 };

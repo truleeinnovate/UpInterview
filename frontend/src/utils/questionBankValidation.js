@@ -38,5 +38,14 @@ export const validateQuestionBankData = (formData, mcqOptions, section, options 
         }
     }
 
+    // Validate tenantListId shape (mirror backend: array of string ObjectIds)
+    if (formData.tenantListId) {
+        if (!Array.isArray(formData.tenantListId)) {
+            errors.tenantListId = errors.tenantListId || "Question List selection is invalid";
+        } else if (!formData.tenantListId.every(id => typeof id === 'string' && id.trim().length > 0)) {
+            errors.tenantListId = "Question List contains invalid entries";
+        }
+    }
+
     return errors;
 };

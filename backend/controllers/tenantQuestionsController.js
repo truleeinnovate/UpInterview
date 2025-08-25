@@ -1,10 +1,17 @@
 //<---v1.0.0---Venkatesh---added tenantInterviewQuestions and tenantAssessmentQuestions
+//<----v1.0.1----Venkatesh---add validations
 
 const { TenantQuestions } = require("../models/tenantQuestions");
 const { TenantInterviewQuestions } = require("../models/QuestionBank/tenantInterviewQuestions");
 const { TenantAssessmentQuestions } = require("../models/QuestionBank/tenantAssessmentQuestions");
 
 const mongoose = require('mongoose');
+//<----v1.0.1----
+const {
+  validateCreateTenantQuestion,
+  validateUpdateTenantQuestion,
+} = require("../validations/tenantQuestionValidation");
+//----v1.0.1---->
 
 // exports.newQuestion = async (req, res) => {
 //   try {
@@ -72,8 +79,16 @@ exports.newQuestion = async (req, res) => {
     const { suggestedQuestionId, tenantListId, ownerId, tenantId, isInterviewType } = questionBody;//<---v1.0.0---
     //console.log("interviewType=",isInterviewType);
     
+    //<----v1.0.1----
+    // Joi validation (simple and aligned with frontend rules)
+    const { errors, isValid } = validateCreateTenantQuestion(questionBody);
+    if (!isValid) {
+      return res.status(400).json({ message: "Validation failed", errors });
+    }
+    //----v1.0.1---->
+    
     if (!tenantId && !ownerId) {
-      return res.status(400).json({ message: 'Missing required fields: either tenantId or ownerId' });
+      return res.status(400).json({ message: 'Validation failed', errors: { tenantId: 'Either tenantId or ownerId is required', ownerId: 'Either ownerId or tenantId is required' } });
     }
 
     let questionData;
@@ -165,6 +180,21 @@ exports.updateQuestion = async (req, res) => {
     const questionId = req.params.id;
     const { tenantId, ownerId, tenantListId, ...updateFields } = req.body;
     console.log('updateFields:', updateFields);
+
+    //<----v1.0.1----
+    // Validate id param
+    if (!isValidObjectId(questionId)) {
+      return res.status(400).json({ message: 'Validation failed', errors: { id: 'Invalid question id' } });
+    }
+
+    // Joi validation for update
+    {
+      const { errors, isValid } = validateUpdateTenantQuestion(req.body);
+      if (!isValid) {
+        return res.status(400).json({ message: 'Validation failed', errors });
+      }
+    }
+    //----v1.0.1---->
 
     // Remove invalid id
     if (!updateFields.suggestedQuestionId) delete updateFields.suggestedQuestionId;
@@ -264,9 +294,26 @@ exports.getQuestionBySuggestedId = async (req, res) => {
   const suggestedQuestionId = req.params.suggestedQuestionId;
   const { tenantId, ownerId } = req.query;
 
-  if (!suggestedQuestionId || (!tenantId && !ownerId)) {
-    return res.status(400).json({ message: 'Missing required fields: suggestedQuestionId and either tenantId or ownerId' });
+  //<----v1.0.1----
+  // Required fields validation with consistent error shape
+  {
+    const errors = {};
+    if (!suggestedQuestionId) {
+      errors.suggestedQuestionId = 'suggestedQuestionId is required';
+    }
+    if (!tenantId && !ownerId) {
+      errors.tenantId = 'Either tenantId or ownerId is required';
+      errors.ownerId = 'Either ownerId or tenantId is required';
+    }
+    if (Object.keys(errors).length) {
+      return res.status(400).json({ message: 'Validation failed', errors });
+    }
   }
+
+  if (!isValidObjectId(suggestedQuestionId)) {
+    return res.status(400).json({ message: 'Validation failed', errors: { suggestedQuestionId: 'Invalid suggestedQuestionId' } });
+  }
+  //----v1.0.1---->
 
   try {
     let question;
