@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Adding form submission and modal functionality for interviewer rates
 // v1.0.1 - Ashok - changed header Title based on mode (view/create/edit)
+// v1.0.2 - Ashok - fixed issues in Technology dropdown enabled delete level button
 import { useState, useEffect, useRef } from "react";
 import {
   // AiOutlineClose,
@@ -19,14 +20,113 @@ import { useMasterData } from "../../../apiHooks/useMasterData";
 import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
 // v1.0.1 ------------------------------------------------------->
 
+// v1.0.2 <----------------------------------------------------------------------------
 // v1.0.1 <--------------------------------------------------------------------
+// function SearchableDropdown({ label, options, value, onChange, disabled }) {
+//   const [isOpen, setIsOpen] = useState(false);
+//   const [search, setSearch] = useState("");
+//   const dropdownRef = useRef(null);
+
+//   const filteredOptions = options.filter((opt) =>
+//     opt.TechnologyMasterName.toLowerCase().includes(search.toLowerCase())
+//   );
+
+//   const handleSelect = (val) => {
+//     onChange(val);
+//     setIsOpen(false);
+//     setSearch(""); // clear search after select
+//   };
+
+//   // Close when clicking outside
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+//         setIsOpen(false);
+//       }
+//     };
+
+//     if (isOpen) {
+//       document.addEventListener("mousedown", handleClickOutside);
+//     } else {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     }
+
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     };
+//   }, [isOpen]);
+
+//   return (
+//     <div ref={dropdownRef} className="relative w-full">
+//       {label && (
+//         <label className="block text-sm font-medium text-gray-700 mb-2">
+//           {label} <span className="text-red-500">*</span>
+//         </label>
+//       )}
+
+//       <div
+//         className={`flex items-center justify-between border border-gray-300 rounded-md px-3 py-2 bg-white cursor-pointer ${
+//           disabled ? "bg-gray-100 cursor-not-allowed" : ""
+//         }`}
+//         onClick={() => !disabled && setIsOpen((prev) => !prev)}
+//       >
+//         {/* <span className="text-sm text-gray-700">
+//           {value || "Select Technology"}
+//         </span> */}
+//         <span className="text-sm text-gray-700">
+//           {value || `Select ${label}`}
+//         </span>
+//         <ChevronDown size={16} className="text-gray-500" />
+//       </div>
+
+//       {isOpen && !disabled && (
+//         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+//           {/* Search input */}
+//           <div className="p-2">
+//             <input
+//               type="text"
+//               className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md outline-none"
+//               placeholder="Search..."
+//               value={search}
+//               onChange={(e) => setSearch(e.target.value)}
+//               autoFocus
+//             />
+//           </div>
+
+//           {/* Options */}
+//           <ul>
+//             {filteredOptions.length > 0 ? (
+//               filteredOptions.map((opt) => (
+//                 <li
+//                   key={opt._id}
+//                   className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+//                   onClick={() => handleSelect(opt.TechnologyMasterName)}
+//                 >
+//                   {opt.TechnologyMasterName}
+//                 </li>
+//               ))
+//             ) : (
+//               <li className="px-3 py-2 text-sm text-gray-400">
+//                 No results found
+//               </li>
+//             )}
+//           </ul>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
 function SearchableDropdown({ label, options, value, onChange, disabled }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef(null);
 
-  const filteredOptions = options.filter((opt) =>
-    opt.TechnologyMasterName.toLowerCase().includes(search.toLowerCase())
+  // const filteredOptions = options.filter((opt) =>
+  //   opt.name.toLowerCase().includes(search.toLowerCase())
+  // );
+  const filteredOptions = (options || []).filter(
+    (opt) => opt?.name && opt.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleSelect = (val) => {
@@ -45,10 +145,7 @@ function SearchableDropdown({ label, options, value, onChange, disabled }) {
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -69,7 +166,7 @@ function SearchableDropdown({ label, options, value, onChange, disabled }) {
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
       >
         <span className="text-sm text-gray-700">
-          {value || "Select Technology"}
+          {value || `Select ${label}`}
         </span>
         <ChevronDown size={16} className="text-gray-500" />
       </div>
@@ -95,9 +192,9 @@ function SearchableDropdown({ label, options, value, onChange, disabled }) {
                 <li
                   key={opt._id}
                   className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleSelect(opt.TechnologyMasterName)}
+                  onClick={() => handleSelect(opt.name)}
                 >
-                  {opt.TechnologyMasterName}
+                  {opt.name}
                 </li>
               ))
             ) : (
@@ -112,8 +209,8 @@ function SearchableDropdown({ label, options, value, onChange, disabled }) {
   );
 }
 
-
 // v1.0.1 -------------------------------------------------------------------->
+// v1.0.2 --------------------------------------------------------------------------->
 
 // v1.0.0 <-------------------------------------------------------
 function RateCardModal({ rateCard, onClose, mode = "create" }) {
@@ -364,6 +461,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 isExpanded ? "grid-cols-2" : "grid-cols-2"
               }`}
             >
+              {/* v1.0.2 <---------------------------------------------------------------------------------- */}
               {/* v1.0.1 <------------------------------------------------------------------------------ */}
               <div className="flex flex-col">
                 {/*  v1.0.0 <------------------------------------------------------------------ */}
@@ -371,7 +469,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                   label="Category"
                   options={categories.map((c) => ({
                     _id: c,
-                    TechnologyMasterName: c,
+                    name: c,
                   }))}
                   value={formData.category}
                   onChange={(val) => handleInputChange("category", val)}
@@ -381,21 +479,35 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 {/*  v1.0.0 --------------------------------------------------------------------> */}
               </div>
               {/* v1.0.1 <------------------------------------------------------------------------------ */}
+              {/* v1.0.2 <---------------------------------------------------------------------------------- */}
 
+              {/* v1.0.2 <-------------------------------------------------------------------------- */}
               {/* v1.0.1 <-------------------------------------------------------------------------- */}
               <div className="flex flex-col">
                 {/*  v1.0.0 <------------------------------------------------------------------ */}
-                <SearchableDropdown
+                {/* <SearchableDropdown
                   label="Technology / Role"
                   options={technologies || []}
                   value={formData.technology}
                   onChange={(val) => handleInputChange("technology", val)}
                   disabled={currentMode === "view"}
+                /> */}
+                <SearchableDropdown
+                  label="Technology / Role"
+                  options={(technologies || []).map((t) => ({
+                    _id: t._id,
+                    name: t.TechnologyMasterName, // 👈 map correctly
+                  }))}
+                  value={formData.technology}
+                  onChange={(val) => handleInputChange("technology", val)}
+                  disabled={currentMode === "view"}
                 />
+
                 {/*  v1.0.0 --------------------------------------------------------------------> */}
               </div>
             </div>
             {/* v1.0.1 <-------------------------------------------------------------------------- */}
+            {/* v1.0.2 <-------------------------------------------------------------------------- */}
 
             {/* v1.0.1 <----------------------------------------------------------- */}
             <div
@@ -538,7 +650,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                       {/*  v1.0.0 <------------------------------------------------------------------ */}
                     </div>
                     {/* v1.0.0 <------------------------------------------------------------------------- */}
-                    {/* {formData.levels.length > 1 && (
+                    {/* v1.0.2 <------------------------------------------------------------------------- */}
+                    {formData.levels.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeLevel(levelIndex)}
@@ -546,8 +659,9 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                       >
                         <AiOutlineDelete size={16} />
                       </button>
-                    )} */}
+                    )}
                     {/* v1.0.0 <------------------------------------------------------------------------- */}
+                    {/* v1.0.2 <------------------------------------------------------------------------- */}
                   </div>
 
                   <div
@@ -644,15 +758,16 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
           {/* Form Actions */}
           {/* v1.0.0 <-------------------------------------------------------------- */}
           <div
-            className={`flex space-x-3 ${currentMode === "view" ? "hidden" : ""} ${
-              isExpanded ? "justify-center" : ""
-            }`}
+            className={`flex space-x-3 ${
+              currentMode === "view" ? "hidden" : ""
+            } ${isExpanded ? "justify-center" : ""}`}
           >
+            {/* v1.0.2 <--------------------------------------------------------------------------------------------------------------------------- */}
             <button
               disabled={currentMode === "view"}
               type="button"
               onClick={onClose}
-              className={`inline-flex items-center justify-center px-4 py-2 bg-white text-custom-blue border border-custom-blue font-medium rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 ${
+              className={`inline-flex items-center justify-center px-4 py-2 bg-white text-custom-blue border border-custom-blue font-medium rounded-md hover:bg-gray-50 focus:outline-none ${
                 isExpanded ? "px-8" : "flex-1"
               }`}
             >
@@ -661,12 +776,13 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
             <button
               disabled={currentMode === "view"}
               type="submit"
-              className={`inline-flex items-center justify-center px-4 py-2 bg-custom-blue text-white font-medium rounded-md hover:bg-custom-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${
+              className={`inline-flex items-center justify-center px-4 py-2 bg-custom-blue text-white font-medium rounded-md hover:bg-custom-blue focus:outline-none ${
                 isExpanded ? "px-8" : "flex-1"
               }`}
             >
               {rateCard ? "Update Rate Card" : "Create Rate Card"}
             </button>
+            {/* v1.0.2 ---------------------------------------------------------------------------------------------------------------------------> */}
           </div>
           {/* v1.0.0 <-------------------------------------------------------------- */}
         </form>

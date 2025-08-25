@@ -10,6 +10,7 @@
 // v1.0.5 - Ashok - Added Analytics related pages
 // v1.0.6 - Ashok - Added SettingsIntegrations page
 // v1.0.7 - Ashok - Added InterviewerRates and Interviewers pages in super Admin
+// v1.0.8 - Ashok - Changed file name Interviewers to Interviews in super Admin
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -439,14 +440,16 @@ const ContactProfileDetails = lazy(() =>
   )
 );
 
+// v1.0.8 <-------------------------------------------------------------------------------
 // v1.0.7 <-------------------------------------------------------------------------------
 const InterviewerRatesPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/InterviewerRates/InterviewerRatesPage.jsx")
 );
 const Interviewers = lazy(() =>
-  import("./Pages/SuperAdmin-Part/Interviewers/Interviewers.jsx")
+  import("./Pages/SuperAdmin-Part/Interviews/Interviews.jsx")
 );
 // v1.0.7 ------------------------------------------------------------------------------->
+// v1.0.8 ------------------------------------------------------------------------------->
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
