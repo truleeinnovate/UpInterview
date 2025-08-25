@@ -484,7 +484,7 @@ const BasicDetails = ({
         </div>
 
         {/* First Name */}
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6">
           <label
             htmlFor="firstName"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -506,7 +506,7 @@ const BasicDetails = ({
         </div>
 
         {/* Last Name */}
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6">
           <label
             htmlFor="lastName"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -531,7 +531,7 @@ const BasicDetails = ({
         </div>
 
         {/* Date of Birth */}
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6">
           <label
             htmlFor="dateofbirth"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -562,7 +562,7 @@ const BasicDetails = ({
         </div>
 
         {/* Profile ID Field */}
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6">
           <label
             htmlFor="profileId"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -624,7 +624,7 @@ const BasicDetails = ({
         </div>
 
         {/* Gender */}
-        <div className="sm:col-span-3 relative" ref={genderDropdownRef}>
+        <div className="sm:col-span-6 relative" ref={genderDropdownRef}>
           <label
             htmlFor="gender"
             className="block text-sm font-medium text-gray-700 mb-1"
