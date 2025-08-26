@@ -8,6 +8,7 @@ import { ReactComponent as IoMdSearch } from '../../../icons/IoMdSearch.svg';
 import { ReactComponent as LuFilter } from '../../../icons/LuFilter.svg';
 import { ReactComponent as LuFilterX } from '../../../icons/LuFilterX.svg';
 import { ReactComponent as FaList } from '../../../icons/FaList.svg';
+import { useMediaQuery } from "react-responsive";
 
 const Toolbar = ({
   view,
@@ -26,6 +27,9 @@ const Toolbar = ({
   searchPlaceholder = 'Search...',
   filterIconRef
 }) => {
+
+  const isTablet = useMediaQuery({ maxWidth: 640 });
+
   return (
     <motion.div
       className="flex items-center justify-between flex-wrap lg:flex-nowrap mb-4 gap-4"
@@ -35,18 +39,24 @@ const Toolbar = ({
     >
       {/* View Toggle Icons */}
       {showViewToggles && (
-        <div className="flex items-center">
-          <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
-            <span onClick={() => setView('table')} className="cursor-pointer">
-              <FaList className={`text-xl mr-4 ${view === 'table' ? 'text-custom-blue' : ''}`} />
-            </span>
-          </Tooltip>
-          <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
-            <span onClick={() => setView('kanban')} className="cursor-pointer">
-              <TbLayoutGridRemove className={`text-xl ${view === 'kanban' ? 'text-custom-blue' : ''}`} />
-            </span>
-          </Tooltip>
-        </div>
+        <>
+          {!isTablet ? (
+            <div className="flex items-center">
+              <Tooltip title="List" enterDelay={300} leaveDelay={100} arrow>
+                <span onClick={() => setView('table')} className="cursor-pointer">
+                  <FaList className={`text-xl mr-4 ${view === 'table' ? 'text-custom-blue' : ''}`} />
+                </span>
+              </Tooltip>
+              <Tooltip title="Kanban" enterDelay={300} leaveDelay={100} arrow>
+                <span onClick={() => setView('kanban')} className="cursor-pointer">
+                  <TbLayoutGridRemove className={`text-xl ${view === 'kanban' ? 'text-custom-blue' : ''}`} />
+                </span>
+              </Tooltip>
+            </div>
+          ) : (
+            <div></div>
+          )}
+        </>
       )}
 
       <div className="flex items-center">

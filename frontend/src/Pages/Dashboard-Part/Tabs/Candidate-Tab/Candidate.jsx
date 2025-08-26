@@ -57,7 +57,7 @@ function Candidate({
   const { skills, qualifications } = useMasterData();
   const { candidateData, isLoading } = useCandidates();
   const navigate = useNavigate();
-  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+  const isTablet = useMediaQuery({ maxWidth: 1024 });
   const filterIconRef = useRef(null);
 
   // <---------------------- v1.0.2
@@ -65,67 +65,45 @@ function Candidate({
   const isCandidateCancelled = (candidate) => {
     const status = candidate?.status;
     if (!status) {
-      console.log("❌ No status found, returning false");
       return false;
     }
 
     // Simple case-insensitive check
     const normalizedStatus = status.toString().toLowerCase().trim();
-    console.log("Normalized status:", normalizedStatus);
 
     const isCancelled = normalizedStatus === "cancelled";
-
-    console.log("Is cancelled check result:", isCancelled);
-    console.log('  normalizedStatus === "cancelled":', isCancelled);
 
     return isCancelled;
   };
 
   // Helper function to check if any action buttons should be shown for a candidate
-  const shouldShowActionButtons = (candidate) => {
-    // Normalize status to lowercase for case-insensitive comparison
-    const status = candidate.status?.toString().toLowerCase().trim();
+  // const shouldShowActionButtons = (candidate) => {
+  //   // Normalize status to lowercase for case-insensitive comparison
+  //   const status = candidate.status?.toString().toLowerCase().trim();
 
-    // Debug log to see status values
-    console.log("=== CANDIDATE STATUS DEBUG ===");
-    console.log("Candidate ID:", candidate._id);
-    console.log("Original Status:", candidate.status);
-    console.log("Normalized Status:", status);
-    console.log("Status Type:", typeof candidate.status);
+  //   // Check for cancelled status - use the same logic as isCandidateCancelled
+  //   const isCancelled = status === "cancelled";
 
-    // Check for cancelled status - use the same logic as isCandidateCancelled
-    const isCancelled = status === "cancelled";
+  //   // Never show action buttons for cancelled candidates (case-insensitive)
+  //   if (isCancelled) {
+  //     return false;
+  //   }
 
-    console.log("Is Cancelled Check:", isCancelled);
-    console.log("=== END DEBUG ===");
+  //   // Don't show action buttons for completed, expired, failed, or pass statuses
+  //   if (["completed", "expired", "failed", "pass"].includes(status)) {
+  //     return false;
+  //   }
 
-    // Never show action buttons for cancelled candidates (case-insensitive)
-    if (isCancelled) {
-      console.log("❌ Candidate is cancelled - hiding all buttons");
-      return false;
-    }
-
-    // Don't show action buttons for completed, expired, failed, or pass statuses
-    if (["completed", "expired", "failed", "pass"].includes(status)) {
-      return false;
-    }
-
-    console.log("✅ Candidate can show action buttons");
-    return true;
-  };
+  //   return true;
+  // };
 
   // Simplified function to check if a specific button should be shown
   const shouldShowButton = (candidate, buttonType) => {
-    console.log(`🔍 shouldShowButton called for ${buttonType} button`);
-    console.log("Candidate status:", candidate.status);
-    console.log("Candidate status type:", typeof candidate.status);
 
     // Check if candidate is cancelled - if so, hide ALL buttons
     const isCancelled = isCandidateCancelled(candidate);
-    console.log("isCandidateCancelled result:", isCancelled);
 
     if (isCancelled) {
-      console.log(`❌ ${buttonType} button hidden - candidate is cancelled`);
       return false;
     }
 
@@ -135,11 +113,6 @@ function Candidate({
       const status = candidate.status?.toString().toLowerCase().trim();
       const canResend = !["completed", "cancelled", "failed", "pass"].includes(
         status
-      );
-      console.log(
-        `✅ ${buttonType} button ${
-          canResend ? "shown" : "hidden"
-        } - canResend: ${canResend}, status: ${status}`
       );
       return canResend;
     }
@@ -191,6 +164,8 @@ function Candidate({
       setView("table");
     }
   }, [isTablet]);
+
+  // No need for separate effect, we'll use gapOnTop directly in the style prop
 
   // Only after all hooks
   if (!isInitialized) {
@@ -623,14 +598,7 @@ function Candidate({
               }
             },
             show: (row) => {
-              console.log(
-                "🔍 TABLE Resend button show function called for:",
-                row._id,
-                "status:",
-                row.status
-              );
               const result = shouldShowButton(row, "resend");
-              console.log("🔍 TABLE Resend button result:", result);
               return result;
             },
             disabled: (row) => resendLoading[row.id],
@@ -642,7 +610,7 @@ function Candidate({
 
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink }) => (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center">
       {effectivePermissions.Candidates?.View && (
         <button
           onClick={(e) => {
@@ -691,14 +659,7 @@ function Candidate({
           {/* // <-------------------------------v1.0.1 */}
           {/* Only show resend link for candidates that can be resent */}
           {(() => {
-            console.log(
-              "🔍 KANBAN Resend button check for:",
-              item._id,
-              "status:",
-              item.status
-            );
             const result = shouldShowButton(item, "resend");
-            console.log("🔍 KANBAN Resend button result:", result);
             return result;
           })() && (
             <button
