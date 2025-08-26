@@ -1,6 +1,8 @@
+//<-----v1.0.1---Venkatesh------add permission
 const mongoose = require('mongoose');
 const { Candidate } = require('../models/Candidate/candidate.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
+const { hasPermission } = require("../middleware/permissionMiddleware");
 
 
 // patch call 
@@ -13,6 +15,20 @@ const updateCandidatePatchCall = async (req, res) => {
   const { tenantId, ownerId, ...updateFields } = req.body;
 
   try {
+    //res.locals.loggedByController = true;
+    //----v1.0.1---->
+
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Edit')
+        //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Edit')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing Candidates.Edit permission' });
+        }
+        //-----v1.0.1--->
+
     // feeds related data
     const currentCandidate = await Candidate.findById(candidateId).lean();
 
@@ -175,6 +191,18 @@ const addCandidatePostCall = async (req, res) => {
       return res.status(400).json({ error: "OwnerId field is required" });
     }
 
+    //res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+    await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
+   //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
+    }
+    //-----v1.0.1--->
+
     newCandidate = new Candidate({
       FirstName,
       LastName,
@@ -259,6 +287,19 @@ const getCandidates = async (req, res) => {
     // console.log('[getCandidates] Query params:', { tenantId, ownerId });
     const query = tenantId ? { tenantId } : ownerId ? { ownerId } : {};
     // console.log('[getCandidates] Mongo query:', query);
+
+    res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+    await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
+   //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
+    }
+    //-----v1.0.1--->
+
     const candidates = await Candidate.find(query);
     // console.log('[getCandidates] Candidates found:', candidates.length);
     res.json(candidates);
@@ -281,6 +322,18 @@ const getCandidateById = async (req, res) => {
       // console.log("❌ [getCandidateById] No ID provided");
       return res.status(400).json({ message: "Candidate ID is required" });
     }
+
+    res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+    await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
+   //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
+    }
+    //-----v1.0.1--->
 
     const candidate = await Candidate.findById(id);
     // console.log("✅ [getCandidateById] Candidate fetched:", candidate);

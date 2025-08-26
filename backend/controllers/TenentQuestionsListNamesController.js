@@ -1,6 +1,7 @@
 //<-----v1.0.0-----Venkatesh------add validations
 
 const QuestionbankFavList = require("../models/QuestionBank/tenantQuestionsListNames.js");
+const { hasPermission } = require("../middleware/permissionMiddleware");
 //<-----v1.0.0-----
 const mongoose = require('mongoose');
 const {
@@ -11,6 +12,18 @@ const {
 const getList = async (req, res) => {
   const { userId } = req.params;
   const { tenantId, organization } = req.query; // Get these from query parameters
+
+  res.locals.loggedByController = true;
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
+        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
+        }
+        //-----v1.0.1--->
 
   try {
     let query = {};
@@ -44,6 +57,16 @@ const createList = async (req, res) => {
       return res.status(400).json({ message: 'Validation failed', errors });
     }
     //-----v1.0.0----->
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Create')
+        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Create')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Create permission' });
+        }
+        //-----v1.0.1--->
     const newList = await QuestionbankFavList.create({
       label,
       ownerId,
@@ -120,6 +143,19 @@ const updateList = async (req, res) => {
       return res.status(400).json({ message: 'Validation failed', errors });
     }
     //-----v1.0.0----->
+    // res.locals.loggedByController = true;
+    //----v1.0.1---->
+
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
+        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
+        }
+        //-----v1.0.1--->
     // feeds related data
     const currentlist = await QuestionbankFavList.findById(listId).lean();
     if (!currentlist) {
