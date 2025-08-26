@@ -60,7 +60,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
     // v1.0.3 ------------------------------------------------------------>
     {
       "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
+      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
     // v1.0.2 --------------------------------------------------------------------->
   );
@@ -77,7 +77,6 @@ const CandidateDetails = ({ mode, candidateId }) => {
         );
         if (isMounted && selectedCandidate) {
           setCandidate(selectedCandidate);
-          console.log("candidate", selectedCandidate);
         }
       } catch (error) {
         console.error("Error fetching candidate:", error);
@@ -163,7 +162,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
-          <div className="flex justify-center items-center  gap-4 mb-4">
+          <div className="flex justify-center items-center gap-4 mb-4">
             <div className="relative">
               {candidate?.ImageData ? (
                 <img
@@ -208,13 +207,14 @@ const CandidateDetails = ({ mode, candidateId }) => {
           </div>
 
           <div className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">
                   Personal Details
                 </h4>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                    {/* name */}
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <User className="w-5 h-5 text-gray-500" />
@@ -233,6 +233,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                         </p>
                       </div>
                     </div>
+                    {/* dob */}
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <Calendar className="w-5 h-5 text-gray-500" />
@@ -247,7 +248,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <LiaGenderlessSolid className="w-5 h-5 text-gray-500" />
@@ -264,19 +265,19 @@ const CandidateDetails = ({ mode, candidateId }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">
                   Contact Information
                 </h4>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <Mail className="w-5 h-5 text-gray-500" />
                       </div>
 
-                      <span className="text-gray-700">
+                      <span className="text-gray-700 md:truncate md:max-w-[180px] lg:truncate lg:max-w-[180px]">
                         {candidate?.Email || "N/A"}
                       </span>
                     </div>
@@ -296,7 +297,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                   Professional Details
                 </h4>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <GraduationCap className="w-5 h-5" />
@@ -327,7 +328,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <Briefcase className="w-5 h-5" />
@@ -382,7 +383,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                       )}
                     </div>
                   </div> */}
-                  <div className="grid grid-cols-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                     <div className="flex items-center justify-between gap-3 w-full">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-custom-bg rounded-lg">

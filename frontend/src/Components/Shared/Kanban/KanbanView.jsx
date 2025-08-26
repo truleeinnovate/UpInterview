@@ -63,7 +63,7 @@ const KanbanView = ({
                         <div className="h-3 bg-gray-200 skeleton-animation rounded"></div>
                         <div className="h-3 bg-gray-200 skeleton-animation rounded"></div>
                       </div>
-                    </div>
+                    </div> 
                     <div className="mt-4 flex gap-2">
                       <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
                       <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
@@ -129,7 +129,7 @@ const KanbanView = ({
                   : "Candidates"}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
               {(groupedData[column.key] || []).map((item) => (
                 <motion.div
                   key={item.id}

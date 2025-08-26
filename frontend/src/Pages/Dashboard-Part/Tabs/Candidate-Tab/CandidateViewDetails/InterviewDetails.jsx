@@ -32,8 +32,6 @@ const InterviewDetails = ({ interview, onClose, onEdit }) => {
     status: "",
   });
 
-  // console.log("interview InterviewDetails", interview);
-
   // v1.0.0 <-----------------------------------------------------------
   useScrollLock(true);
   // v1.0.0 ----------------------------------------------------------->
