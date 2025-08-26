@@ -1,10 +1,13 @@
+// v1.0.0 - Ashok - commented man.png, woman.png, transgender.png
 import React from 'react'
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import { MoreHorizontal, Info } from 'lucide-react';
-import maleImage from "../../Images/man.png";
-import femaleImage from "../../Images/woman.png";
-import genderlessImage from "../../Images/transgender.png";
+// v1.0.0 <-----------------------------------------------------
+// import maleImage from "../../Images/man.png";
+// import femaleImage from "../../Images/woman.png";
+// import genderlessImage from "../../Images/transgender.png";
+// v1.0.0 ----------------------------------------------------->
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 

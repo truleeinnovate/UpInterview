@@ -1,9 +1,10 @@
 // v1.0.0  -  Mansoor  -  removed old ui
+// v1.0.1  -  Ashok    -  changed logo url from local to cloud storage url
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import Slideshow from './Slideshow';
-import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
+// import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 
 const Profile3 = () => {
     const [selectedTab, setSelectedTab] = useState('');
@@ -187,7 +188,10 @@ const Profile3 = () => {
                     <div className="max-w-lg w-full py-4">
                         <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
                             <div className="text-center mb-8">
-                                <img src={logo} alt="Upinterview Logo" className="w-32 object-contain mx-auto mb-3 hover:scale-110 transition-transform duration-300" />
+                                {/* v1.0.1 <-------------------------------------------------------------------------------------------------------------------------------------- */}
+                                {/* <img src={logo} alt="Upinterview Logo" className="w-32 object-contain mx-auto mb-3 hover:scale-110 transition-transform duration-300" /> */}
+                                <img src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp" alt="Upinterview Logo" className="w-32 object-contain mx-auto mb-3 hover:scale-110 transition-transform duration-300" />
+                                {/* v1.0.1 --------------------------------------------------------------------------------------------------------------------------------------> */}
                                 <h2 className="text-3xl font-bold text-gray-900 mb-3">Let us know your profession?</h2>
                                 <p className="text-gray-600">Select your role to get started with UpInterview</p>
                             </div>

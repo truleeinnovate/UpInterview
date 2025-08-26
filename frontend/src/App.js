@@ -11,6 +11,7 @@
 // v1.0.6 - Ashok - Added SettingsIntegrations page
 // v1.0.7 - Ashok - Added InterviewerRates and Interviewers pages in super Admin
 // v1.0.8 - Ashok - Changed file name Interviewers to Interviews in super Admin
+// v1.0.9 - Ashok - Added Master Data page at super admin
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -440,6 +441,7 @@ const ContactProfileDetails = lazy(() =>
   )
 );
 
+// v1.0.9 <-------------------------------------------------------------------------------
 // v1.0.8 <-------------------------------------------------------------------------------
 // v1.0.7 <-------------------------------------------------------------------------------
 const InterviewerRatesPage = lazy(() =>
@@ -448,8 +450,15 @@ const InterviewerRatesPage = lazy(() =>
 const Interviewers = lazy(() =>
   import("./Pages/SuperAdmin-Part/Interviews/Interviews.jsx")
 );
+const MasterData = lazy(() =>
+  import("./Pages/SuperAdmin-Part/MasterData/MasterData.jsx")
+);
+const MasterTable = lazy(() =>
+  import("./Pages/SuperAdmin-Part/MasterData/MasterTable/MasterTable.jsx")
+);
 // v1.0.7 ------------------------------------------------------------------------------->
 // v1.0.8 ------------------------------------------------------------------------------->
+// v1.0.9 ------------------------------------------------------------------------------->
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
@@ -1276,12 +1285,19 @@ const MainAppRoutes = ({
                 path="/admin-dashboard"
                 element={<SuperAdminDashboard />}
               />
+              {/* v1.0.9 <--------------------------------------------------------------------- */}
               {/* v1.0.8 <--------------------------------------------------------------------- */}
               {/* v1.0.7 <--------------------------------------------------------------- */}
-              <Route path="/interviewer-rates" element={<InterviewerRatesPage />} />
+              <Route
+                path="/interviewer-rates"
+                element={<InterviewerRatesPage />}
+              />
               <Route path="/interviews" element={<Interviewers />} />
+              <Route path="/master-data" element={<MasterData />} />
+              <Route path="/master-data/:type" element={<MasterTable />} />
               {/* v1.0.7 ---------------------------------------------------------------> */}
               {/* v1.0.8 ---------------------------------------------------------------------> */}
+              {/* v1.0.9 ---------------------------------------------------------------------> */}
             </Route>
           </Routes>
         )}
@@ -1291,7 +1307,6 @@ const MainAppRoutes = ({
 };
 
 const App = () => {
-
   const location = useLocation();
   // <---------------------- v1.0.4
   const authToken = getAuthToken(); // Use validated token getter

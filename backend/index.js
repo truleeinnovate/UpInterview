@@ -5,6 +5,7 @@
 // v1.0.3  -  Ashraf  -  added health check endpoints for monitoring
 // v1.0.4  -  Ashok   -  added analytics
 // v1.0.5  -  Ashok   -  Added Rate Cards
+// v1.0.6  -  Ashok   -  Added Master Routes
 require("dotenv").config();
 
 const cors = require("cors");
@@ -1268,6 +1269,10 @@ const RateCardRoutes = require("./routes/RateCardsRoutes/RateCardsRoutes.js");
 app.use("/rate-cards", RateCardRoutes);
 // v1.0.5 --------------------------------------------------------------------------->
 
+// v1.0.6 <---------------------------------------------------------------------------
+const MasterRoutes = require("./routes/MasterRoutes/masterRoutes.js");
+app.use("/master-data", MasterRoutes);
+// v1.0.6 --------------------------------------------------------------------------->
 
 //  v1.0.4 <------------------------------------------------------------------------------
 const filterRoutes = require("./routes/AnalyticsRoutes/filterRoutes.js");

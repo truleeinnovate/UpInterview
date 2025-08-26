@@ -1,6 +1,9 @@
 // v1.0.0  -  Ashraf  -  added data reverse to load updated first
 // v1.0.1 - Ashok - fixing Interviews and availability issues for users
 // v1.0.2 - Ashok - changes style of bullet points of user management, interviewer groups
+/* v1.0.3 - Ashok - changed maleImage (man.png), femaleImage (woman.png) and genderlessImage (transgender.png) 
+ path from local to cloud storage url
+ */
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -21,9 +24,11 @@ import { FilterPopup } from "../../../../../Components/Shared/FilterPopup/Filter
 import KanbanView from "./KanbanView";
 import Loading from "../../../../../Components/Loading";
 import toast from "react-hot-toast";
-import maleImage from "../../../Images/man.png";
-import femaleImage from "../../../Images/woman.png";
-import genderlessImage from "../../../Images/transgender.png";
+// v1.0.3 <------------------------------------------------------------
+// import maleImage from "../../../Images/man.png";
+// import femaleImage from "../../../Images/woman.png";
+// import genderlessImage from "../../../Images/transgender.png";
+// v1.0.3 ------------------------------------------------------------>
 import ConfirmationModal from "./ConfirmModel";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { config } from "../../../../../config";
@@ -258,12 +263,17 @@ const UsersAccountTab = () => {
                 src={row?.imageData?.path}
                 alt={`${row.firstName || ""} ${row.lastName || ""}`}
                 onError={(e) => {
+                  // v1.0.3 <-----------------------------------------------------------------------------------------------------
                   e.target.src =
                     row.gender === "Male"
-                      ? maleImage
+                      // ? maleImage
+                      ? "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                       : row.gender === "Female"
-                      ? femaleImage
-                      : genderlessImage;
+                      // ? femaleImage
+                      ? "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
+                      // : genderlessImage;
+                      : "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
+                  // v1.0.3 ----------------------------------------------------------------------------------------------------->
                 }}
               />
             ) : (

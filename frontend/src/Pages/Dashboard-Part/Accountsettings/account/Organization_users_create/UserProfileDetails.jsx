@@ -1,13 +1,18 @@
 // v1.0.0 - Ashok - Removed border left and set outline as none
+/* v1.0.1 - Ashok - changed maleImage (man.png), femaleImage (woman.png) and genderlessImage (transgender.png) 
+ path from local to cloud storage url
+ */
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { X, ArrowLeft, Edit2, Minus, Minimize, Expand } from "lucide-react";
 import Modal from "react-modal";
 import classNames from "classnames";
-import maleImage from "../../../Images/man.png";
-import femaleImage from "../../../Images/woman.png";
-import genderlessImage from "../../../Images/transgender.png";
+// v1.0.0 <--------------------------------------------------------------
+// import maleImage from "../../../Images/man.png";
+// import femaleImage from "../../../Images/woman.png";
+// import genderlessImage from "../../../Images/transgender.png";
+// v1.0.0 -------------------------------------------------------------->
 import { useCustomContext } from "../../../../../Context/Contextfetch";
 import BasicDetails from "../MyProfile/BasicDetails/BasicDetails";
 import AdvancedDetails from "../MyProfile/AdvancedDetails/AdvacedDetails";
@@ -17,7 +22,10 @@ import BasicDetailsEditPage from "../MyProfile/BasicDetails/BasicDetailsEditPage
 import EditAdvacedDetails from "../MyProfile/AdvancedDetails/EditAdvacedDetails";
 import EditInterviewDetails from "../MyProfile/InterviewDetails/EditInterviewDetails";
 import EditAvailabilityDetails from "../MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails";
-import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+} from "@heroicons/react/24/outline";
 // import ConfirmationModal from './ConfirmModel';
 
 //this is already have common code but due to z index i have added here
@@ -70,7 +78,10 @@ const UserProfileDetails = ({ type }) => {
   const location = useLocation();
   const userData = location.state?.userData;
   const { toggleUserStatus, refetchUsers } = useCustomContext();
-  console.log("SETTINGS SELECTED USER DATA ============================> : ", userData);
+  console.log(
+    "SETTINGS SELECTED USER DATA ============================> : ",
+    userData
+  );
   const [activeTab, setActiveTab] = useState("basic");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -162,18 +173,17 @@ const UserProfileDetails = ({ type }) => {
   const isInternalInterviewer = userData.roleName === "Internal_Interviewer";
   const tabs = isInternalInterviewer
     ? [
-      { id: "basic", label: "Basic Details" },
-      { id: "advanced", label: "Advanced Details" },
-      { id: "interview", label: "Interview Details" },
-      { id: "availability", label: "Availability" },
-    ]
+        { id: "basic", label: "Basic Details" },
+        { id: "advanced", label: "Advanced Details" },
+        { id: "interview", label: "Interview Details" },
+        { id: "availability", label: "Availability" },
+      ]
     : [
-      { id: "basic", label: "Basic Details" },
-      { id: "advanced", label: "Advanced Details" },
-    ];
+        { id: "basic", label: "Basic Details" },
+        { id: "advanced", label: "Advanced Details" },
+      ];
 
   console.log("userData", userData);
-
 
   const renderBasicDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
@@ -280,24 +290,38 @@ const UserProfileDetails = ({ type }) => {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <img
+                    // v1.0.1 <------------------------------------------------------------------------------------------------------
                     src={
                       userData.imageData?.path ||
                       (userData.gender === "Male"
-                        ? maleImage
+                        ? // ? maleImage
+                          "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                         : userData.gender === "Female"
-                          ? femaleImage
-                          : genderlessImage)
+                        ? // ? femaleImage
+                          "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
+                        : // : genderlessImage)
+                          "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png")
                     }
                     alt={userData?.firstName || "User"}
                     onError={(e) => {
-                      e.target.src = genderlessImage;
+                      // e.target.src = genderlessImage;
+                      e.target.src =
+                        "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
                     }}
+                    // v1.0.1 ------------------------------------------------------------------------------------------------------>
                     className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                   />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">
-                    {userData.firstName ? userData.firstName.charAt(0).toUpperCase() + userData.firstName.slice(1) : ""} {userData.lastName ? userData.lastName.charAt(0).toUpperCase() + userData.lastName.slice(1) : ""}
+                    {userData.firstName
+                      ? userData.firstName.charAt(0).toUpperCase() +
+                        userData.firstName.slice(1)
+                      : ""}{" "}
+                    {userData.lastName
+                      ? userData.lastName.charAt(0).toUpperCase() +
+                        userData.lastName.slice(1)
+                      : ""}
                   </h3>
                   <p className="text-gray-600">
                     {userData.currentRole || userData.label || "N/A"}
@@ -306,10 +330,11 @@ const UserProfileDetails = ({ type }) => {
               </div>
               <div className="flex items-center space-x-2">
                 <span
-                  className={`text-sm font-medium ${newStatus === "active"
-                    ? "text-custom-blue"
-                    : "text-gray-500"
-                    }`}
+                  className={`text-sm font-medium ${
+                    newStatus === "active"
+                      ? "text-custom-blue"
+                      : "text-gray-500"
+                  }`}
                 >
                   {newStatus === "active" ? "Active" : "Inactive"}
                 </span>
