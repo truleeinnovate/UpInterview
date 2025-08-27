@@ -47,6 +47,7 @@ import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upi
 // import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
 import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
 import { config } from "./config.js";
+import ToastProvider from "./Components/ToastProvider";
 
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
@@ -1433,6 +1434,7 @@ const App = () => {
         <CustomProvider>
           <PermissionsProvider>
             <UserDataLoader>
+              <ToastProvider />
               <MainAppRoutes
                 location={location}
                 organization={organization}
