@@ -151,6 +151,7 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 //   );
 // };
 
+import { notify } from "../../../../services/toastService";
 const CustomDropdown = forwardRef(
   (
     {
@@ -849,6 +850,7 @@ const AddCandidateForm = ({
         isProfilePicRemoved,
         isResumeRemoved,
       });
+      notify.success("Candidate added successfully");
 
       resetFormData();
 

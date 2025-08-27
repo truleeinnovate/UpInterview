@@ -17,6 +17,7 @@ const mongoose = require("mongoose");
     questionText: { type: String, required: true },
     questionType: { type: String, required: true },
     topic: { type: String }, // NEW FIELD from JSON
+    category: { type: String }, // NEW FIELD from JSON
     area: { type: String }, // NEW FIELD from JSON
     subTopic: { type: String }, // NEW FIELD from JSON
     technology: [{ type: String }],
