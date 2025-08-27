@@ -1,5 +1,6 @@
 //<----v1.0.0-----Venkatesh-----backend via TanStack Query added
 // v1.0.1 - Ashok - Removed border left and set outline as none
+// v1.0.2 - Ashok - Changed logo url from local to cloud storage url
 import { useState, useEffect } from "react";
 import Modal from "react-modal";
 import classNames from "classnames";
@@ -14,7 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
-import logo from "../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
+// import logo from "../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 import {
   useVerifyWalletPayment,
   useCreateWalletOrder,
@@ -108,7 +109,10 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         amount: parseFloat(amount) * 100, // Amount in paisa
         currency: "USD",
         name: "UpInterview",
-        image: logo,
+        // v1.0.2 <--------------------------------------------------------------------------------
+        // image: logo,
+        image: "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp",
+        // v1.0.2 --------------------------------------------------------------------------------->
         description: "Wallet Top-up",
         order_id: orderId,
         handler: async function (response) {
