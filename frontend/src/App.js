@@ -57,6 +57,7 @@ const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
 const ProfileWizard = lazy(() =>
   import("./Pages/Login-Part/Individual-4/Individual-4")
 );
+
 const OrganizationSignUp = lazy(() =>
   import("./Pages/Login-Part/OrganizationSignUp")
 );
