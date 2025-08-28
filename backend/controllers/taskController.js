@@ -19,7 +19,7 @@ const getTasks = async (req, res) => {
       }
       //-----v1.0.1--->
 
-      const tasks = await Task.find().sort({ _id: -1 });
+      const tasks = await Task.find().sort({ _id: -1 }).lean();
       res.json(tasks);
     } catch (err) {
       res.status(500).json({ message: err.message });

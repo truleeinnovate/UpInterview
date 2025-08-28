@@ -110,7 +110,7 @@ exports.getTicket = async (req, res) => {
     }
     //-----v1.0.1--->
 
-    const tickets = await SupportUser.find().sort({ _id: -1 });
+    const tickets = await SupportUser.find().sort({ _id: -1 }).lean();
     return res.status(200).send({
       success: true,
       message: "Tickets retrieved successfully",

@@ -266,14 +266,14 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
             ...query,
             tenantListId: { $in: listIds },
           })
-            .populate({ path: 'suggestedQuestionId', model: 'suggestedQuestions' })
+            .populate({ path: 'suggestedQuestionId', model: 'InterviewQuestions' })
             .populate({ path: 'tenantListId', model: 'TenantQuestionsListNames', select: 'label name ownerId type tenantId' })
             .lean(),
           TenantAssessmentQuestions.find({
             ...query,
             tenantListId: { $in: listIds },
           })
-            .populate({ path: 'suggestedQuestionId', model: 'suggestedQuestions' })
+            .populate({ path: 'suggestedQuestionId', model: 'AssessmentQuestions' })
             .populate({ path: 'tenantListId', model: 'TenantQuestionsListNames', select: 'label name ownerId type tenantId' })
             .lean(),
         ]);

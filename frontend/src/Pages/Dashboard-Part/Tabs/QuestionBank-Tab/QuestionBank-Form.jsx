@@ -13,7 +13,7 @@
 
 // v1.0.7 - Venkatesh - if myquestionlist type is interview then hidden interview questions in question bank form 
 // v1.0.8 - Venkatesh - validation updated 
-
+// v1.0.9 - Venkatesh - added isInterviewType to formData
 import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -104,6 +104,8 @@ const QuestionBankForm = ({
     selectedLabelId,
   ]);
 
+  const [dropdownValue, setDropdownValue] = useState(isInterviewType ? "Interview Questions" : "Assignment Questions");
+
   useEffect(() => {
     if (!isEdit && selectedLabelId && createdLists?.length > 0 && selectedListId.length === 0) {//<--v1.0.8-----
       // Find the matching label in createdLists
@@ -119,7 +121,7 @@ const QuestionBankForm = ({
   }, [isEdit, selectedLabelId, createdLists, selectedListId.length]);//<--v1.0.8-----
 
   const questionTypeOptions = [
-    ...(isInterviewType ? ["Interview Questions"] : []),//<----v1.0.7------
+    ...((isInterviewType && dropdownValue !== "Assignment Questions") ? ["Interview Questions"] : []),//<----v1.0.7------
     "MCQ",
     "Short Text(Single line)",
     "Long Text(Paragraph)",
@@ -131,7 +133,7 @@ const QuestionBankForm = ({
   const [questionNumber, setQuestionNumber] = useState(1);
   const [formData, setFormData] = useState({
     questionText: "",
-    questionType: isInterviewType ? "Interview Questions" : "",//<----v1.0.7------
+    questionType: (isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "",//<----v1.0.7------
     skill: "",
     difficultyLevel: "",
     correctAnswer: "",
@@ -156,7 +158,7 @@ const QuestionBankForm = ({
   const [showDropdownDifficultyLevel, setShowDropdownDifficultyLevel] =
     useState(false);
   const [selectedQuestionType, setSelectedQuestionType] = useState(
-    (isInterviewType || type === "Feedback") ? "Interview Questions" : ""//<----v1.0.7------
+    ((isInterviewType && dropdownValue !== "Assignment Questions") || type === "Feedback") ? "Interview Questions" : ""//<----v1.0.7------
   );
   const [showDropdownQuestionType, setShowDropdownQuestionType] =
     useState(false);
@@ -170,6 +172,7 @@ const QuestionBankForm = ({
   const [selectedBooleanAnswer, setSelectedBooleanAnswer] = useState("");
   const [showDropdownBooleanAnswer, setShowDropdownBooleanAnswer] =
     useState(false);
+  const [showDropdownAssInt, setShowDropdownAssInt] = useState(false);//<---v1.0.9-----
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -292,18 +295,18 @@ const QuestionBankForm = ({
   // Auto-set and lock question type when invoked for Interview lists (Add flow)
   useEffect(() => {
     if (isInterviewType && !isEdit) {
-      setSelectedQuestionType("Interview Questions");
-      setFormData((prev) => ({ ...prev, questionType: "Interview Questions" }));
+      setSelectedQuestionType((isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "");
+      setFormData((prev) => ({ ...prev, questionType: (isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "" }));
       setShowMcqFields(false);
-      setErrors((prev) => ({ ...prev, questionType: "" }));
+      setErrors((prev) => ({ ...prev, questionType: (isInterviewType && dropdownValue !== "Assignment Questions") && "" }));
     }
-  }, [isInterviewType, isEdit]);
+  }, [isInterviewType, isEdit, dropdownValue]);
   //----v1.0.7------>
 
   const clearFormFields = () => {
     setFormData({
       questionText: "",
-      questionType: isInterviewType ? "Interview Questions" : "",//<----v1.0.7------
+      questionType: (isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "",//<----v1.0.7------
       skill: "",
       difficultyLevel: "",
       score: "",
@@ -316,7 +319,7 @@ const QuestionBankForm = ({
     });
 
     setSelectedSkill("");
-    setSelectedQuestionType(isInterviewType ? "Interview Questions" : "");//<----v1.0.7------
+    setSelectedQuestionType((isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "");//<----v1.0.7------
     setSelectedDifficultyLevel("");
     setAutoAssessment("");
     setHintContent("");
@@ -379,7 +382,7 @@ const QuestionBankForm = ({
       updatedFormData,
       mcqOptions,
       type,
-      { skipQuestionType: isInterviewType }//<----v1.0.7------
+      { skipQuestionType: isInterviewType && dropdownValue !== "Assignment Questions" }//<----v1.0.7------
     );
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -469,7 +472,7 @@ const QuestionBankForm = ({
       updatedBy: userId,
       ownerId: userId,
       // v1.0.7 - include flag so backend can route to correct schema
-      isInterviewType: Boolean(isInterviewType),
+      isInterviewType: Boolean(dropdownValue === "Interview Questions"),//<---v1.0.9-----
     };
 
     // Add conditional data based on question type
@@ -731,6 +734,7 @@ const QuestionBankForm = ({
       setShowDropdownMaxExperience(false);
     if (currentDropdown !== "showDropdownBooleanAnswer")
       setShowDropdownBooleanAnswer(false);
+    if (currentDropdown !== "showDropdownAssInt") setShowDropdownAssInt(false);//<---v1.0.9-----
   };
   //---------v1.0.3--------->
 
@@ -757,6 +761,18 @@ const QuestionBankForm = ({
     closeOtherDropdowns("showDropdownQuestionType");
     setShowDropdownQuestionType(!showDropdownQuestionType);
   };
+
+  //<---v1.0.9-----
+  const toggleDropdownAssInt = () => {
+    closeOtherDropdowns("showDropdownAssInt");
+    setShowDropdownAssInt(!showDropdownAssInt);
+  };
+
+  const handleAssIntSelect = (value) => {
+    setDropdownValue(value);
+    setShowDropdownAssInt(false);
+  };
+  //---v1.0.9----->
 
   const handleQuestionTypeSelect = (questionType) => {
     setSelectedQuestionType(questionType);
@@ -1004,9 +1020,49 @@ const QuestionBankForm = ({
                   <div className="font-semibold text-xl mb-4">
                     Basic Information:
                   </div>
+                  
+                  {/*<---v1.0.9----- Ass/Int Questions (custom dropdown, no search) */}
+                  <div className="flex flex-col gap-1 mb-4">
+                    <div>
+                      <label
+                        htmlFor="isInterviewQuestion"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Ass/Int Questions
+                      </label>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm border border-gray-300 focus:ring-red-300 focus:outline-gray-300 cursor-pointer`}
+                        value={dropdownValue}
+                        onClick={toggleDropdownAssInt}
+                        readOnly
+                      />
+                      <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                        <MdArrowDropDown
+                          className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1"
+                          onClick={toggleDropdownAssInt}
+                        />
+                      </div>
+                      {showDropdownAssInt && (
+                        <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg max-h-40 overflow-y-auto text-sm">
+                          {["Interview Questions", "Assignment Questions"].map((opt) => (
+                            <div
+                              key={opt}
+                              className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleAssIntSelect(opt)}
+                            >
+                              {opt}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>{/*---v1.0.9----->*/}
+                  </div>
 
                   {/* Question Type Selection */}
-                  { !isInterviewType && (//<----v1.0.7------
+                  { (!isInterviewType || dropdownValue === "Assignment Questions") && (//<----v1.0.7------
                   <div className="flex flex-col gap-1 mb-4">
                     <div>
                       <label

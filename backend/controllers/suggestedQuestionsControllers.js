@@ -1,84 +1,139 @@
-const { SuggestedQuestion } = require('../models/SuggestedQuestion');
+//<----v1.0.0---Venkatesh----create post and get suggested questions from assessment and interview questions
 
+const { AssessmentQuestion } = require('../models/QuestionBank/assessmentQuestions');
+const { InterviewQuestion } = require('../models/QuestionBank/interviewQuestions');
 
-const createQuestion =async(req,res)=>{
-    const {questionText,questionType,isInterviewQuestionOnly,technology,skill,tags,difficultyLevel,correctAnswer,options,hints,isAutoAssessment,autoAssessment,programming,isActive,createdDate,createdBy,modifiedDate,modifiedBy}=req.body 
+const createQuestion = async (req, res) => {
+  try {
+    const isInterview = req.body?.isInterviewQuestionOnly === true
+    //   req.body?.isInterviewType === true ||
+    //   (typeof req.body?.type === 'string' && req.body.type.toLowerCase() === 'interview');
 
-    try {
-        const lastQuestion = await SuggestedQuestion.findOne()
-     .sort({createdDate:-1})
-     .select("questionNo");
-     let nextQuestionNo = 'SUGQ-00000';
+    const Model = isInterview ? InterviewQuestion : AssessmentQuestion;
+    const prefix = isInterview ? 'INTQ' : 'ASSQ';
 
-if (lastQuestion && lastQuestion.questionNo) {
-    const lastNumber = Number(lastQuestion.questionNo.split('-')[1]);
-
-    
-    const requiredNumber = lastNumber + 1;
-
-    const totalLength = lastQuestion.questionNo.split('-')[1].length; 
-    nextQuestionNo = `SUGQ-${requiredNumber.toString().padStart(totalLength, "0")}`;
-}
-console.log(nextQuestionNo)
-        const suggestionQuestionInstance = await SuggestedQuestion({
-            questionNo:nextQuestionNo,
-            questionText,
-            questionType,
-            isInterviewQuestionOnly,
-            technology,
-            skill,
-            tags,
-            difficultyLevel,
-            // score,
-            correctAnswer,
-            options,
-            hints,
-            isAutoAssessment,
-            autoAssessment,
-            programming,
-            isActive,
-            createdDate,
-            createdBy,
-            modifiedDate,
-            modifiedBy
-        })
-     
-        console.log(suggestionQuestionInstance)
-        await suggestionQuestionInstance.save()
-        return res.status(201).send({
-            success:true,
-            message:"Question Added",
-            question:suggestionQuestionInstance
-        })
-    } catch (error) {
-        console.log(error)
-        return res.status(500).send({
-            success:false,
-            message:"Failed to add question",
-            error:error.message
-        })
+    const lastDoc = await Model.findOne().sort({ createdAt: -1 }).select('questionOrderId createdAt');
+    let nextOrderId = `${prefix}-00000`;
+    if (lastDoc && lastDoc.questionOrderId) {
+      const parts = String(lastDoc.questionOrderId).split('-');
+      const lastNumStr = parts[1] || '0';
+      const nextNum = Number(lastNumStr) + 1;
+      nextOrderId = `${prefix}-${nextNum.toString().padStart(lastNumStr.length, '0')}`;
     }
 
-}
+    const payload = { ...req.body, questionOrderId: nextOrderId };
+    const doc = new Model(payload);
+    await doc.save();
 
+    const unified = {
+      _id: doc._id,
+      questionOrderId: doc.questionOrderId,
+      questionNo: doc.questionOrderId, 
+      questionText: doc.questionText,
+      questionType: doc.questionType,
+      technology: doc.technology || [],
+      skill: doc.skill || [],
+      tags: doc.tags || [],
+      difficultyLevel: doc.difficultyLevel,
+      correctAnswer: doc.correctAnswer,
+      options: doc.options || [],
+      hints: doc.hints || [],
+      explanation: doc.explanation,
+      isAutoAssessment: doc.isAutoAssessment || false,
+      autoAssessment: doc.autoAssessment || null,
+      programming: doc.programming || null,
+      solutions: doc.solutions || [],
+      relatedQuestions: doc.relatedQuestions || [],
+      attachments: doc.attachments || [],
+      reviewStatus: doc.reviewStatus,
+      version: doc.version,
+      isActive: doc.isActive,
+      createdBy: doc.createdBy,
+      modifiedDate: doc.modifiedDate,
+      modifiedBy: doc.modifiedBy,
+      minexperience: doc.minexperience,
+      maxexperience: doc.maxexperience,
+      charLimits: doc.charLimits,
+      isInterviewQuestionOnly: isInterview,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    };
 
-const getQuestions = async(req,res)=>{
-    try {
-        const questions = await SuggestedQuestion.find()
-        // console.log(questions)
-        return res.status(200).send({
-            success:true,
-            message:"Questions retrieved",
-            questions
-        })
-    } catch (error) {
-        console.log('error in getting questions')
-        return res.status(500).send({
-            success:false,
-            message:"Failed to get questions",
-            error:error.message
-        })
-    }
-}
+    return res.status(201).send({
+      success: true,
+      message: 'Question Added',
+      question: unified,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: 'Failed to add question',
+      error: error.message,
+    });
+  }
+};
 
-module.exports = {createQuestion,getQuestions}
+const getQuestions = async (req, res) => {
+  try {
+    const [assessments, interviews] = await Promise.all([
+      AssessmentQuestion.find().lean(),
+      InterviewQuestion.find().lean(),
+    ]);
+
+    const toUnified = (doc, isInterview) => ({
+      _id: doc._id,
+      questionOrderId: doc.questionOrderId,
+      questionNo: doc.questionOrderId, 
+      questionText: doc.questionText,
+      questionType: doc.questionType,
+      technology: Array.isArray(doc.technology) ? doc.technology : doc.technology ? [doc.technology].flat() : [],
+      skill: Array.isArray(doc.skill) ? doc.skill : doc.skill ? [doc.skill].flat() : [],
+      tags: Array.isArray(doc.tags) ? doc.tags : [],
+      difficultyLevel: doc.difficultyLevel,
+      correctAnswer: doc.correctAnswer,
+      options: Array.isArray(doc.options) ? doc.options : [],
+      hints: Array.isArray(doc.hints) ? doc.hints : [],
+      explanation: doc.explanation,
+      isAutoAssessment: !!doc.isAutoAssessment,
+      autoAssessment: doc.autoAssessment || null,
+      programming: doc.programming || null,
+      solutions: Array.isArray(doc.solutions) ? doc.solutions : [],
+      relatedQuestions: Array.isArray(doc.relatedQuestions) ? doc.relatedQuestions : [],
+      attachments: Array.isArray(doc.attachments) ? doc.attachments : [],
+      reviewStatus: doc.reviewStatus,
+      version: doc.version,
+      isActive: doc.isActive,
+      createdBy: doc.createdBy,
+      modifiedDate: doc.modifiedDate,
+      modifiedBy: doc.modifiedBy,
+      minexperience: doc.minexperience,
+      maxexperience: doc.maxexperience,
+      charLimits: doc.charLimits,
+      isInterviewQuestionOnly: isInterview,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    });
+
+    const unifiedQuestions = [
+      ...assessments.map((d) => toUnified(d, false)),
+      ...interviews.map((d) => toUnified(d, true)),
+    ];
+
+    return res.status(200).send({
+      success: true,
+      message: 'Questions retrieved',
+      questions: unifiedQuestions,
+    });
+  } catch (error) {
+    console.log('error in getting questions', error);
+    return res.status(500).send({
+      success: false,
+      message: 'Failed to get questions',
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { createQuestion, getQuestions }
+//-----v1.0.0--------------------------------->
