@@ -1,7 +1,7 @@
 // v1.0.0 ------ Venkatesh--- added loading state and skeleton loader
 // v1.0.1 - Ashok - Improved loader animation from animate-pulse to shimmer (custom css styles)
 // v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
-
+// v1.0.3 ----Venkatesh---add questions lengthn for pagination
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { Tooltip } from "@mui/material";
@@ -128,8 +128,12 @@ const SuggestedQuestionsComponent = ({
   ]);
 
   // Pagination
-  const totalPages = Math.ceil(
-    suggestedQuestionsFilteredData.length / itemsPerPage
+  //<-----v1.0.3-----
+  const totalItems = suggestedQuestionsFilteredData.length;
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(totalItems / itemsPerPage)),
+    [totalItems, itemsPerPage]
+    //-----v1.0.3----->
   );
   const paginatedData = useMemo(
     () =>
@@ -137,8 +141,30 @@ const SuggestedQuestionsComponent = ({
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
       ),
-    [suggestedQuestionsFilteredData, currentPage]
+    [suggestedQuestionsFilteredData, currentPage, itemsPerPage]
   );
+
+  //<-----v1.0.3-----
+  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+  const rangeLabel =
+    totalItems === 0
+      ? "0/0"
+      : startIndex === endIndex
+        ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
+        : `${startIndex}-${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`;
+
+        // Reset page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchInput, questionTypeFilterItems, difficultyLevelFilterItems, dropdownValue]);
+
+  // Clamp page if out of range
+  useEffect(() => {
+    const tp = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    if (currentPage > tp) setCurrentPage(tp);
+  }, [totalItems, itemsPerPage, currentPage]);
+  //-----v1.0.3----->
 
   // Update mandatory status
   useEffect(() => {
@@ -528,9 +554,12 @@ const SuggestedQuestionsComponent = ({
     <div className="h-full flex flex-col">
       {/* Search/Filter Bar */}
       <div
-        className={`flex items-center justify-end px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0`}
+        className={`flex items-center justify-end px-4 py-3 bg-white flex-shrink-0`}
       >
         <div className="flex gap-x-3">
+          <div className="flex items-center">
+            <p>{rangeLabel}</p>
+          </div>
           <div className="relative flex items-center rounded-md border">
             <span className="p-2 text-custom-blue">
               <Search className="w-5 h-5" />
