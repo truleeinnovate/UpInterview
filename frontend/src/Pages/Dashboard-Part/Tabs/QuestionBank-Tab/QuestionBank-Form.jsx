@@ -248,6 +248,7 @@ const QuestionBankForm = ({
         minexperience: question.minexperience || "",
         maxexperience: question.maxexperience || "",
       });
+      setDropdownValue(question.isInterviewQuestionType ?  "Interview Questions" : "Assignment Questions");
       setHintContent(question.hints || "");
       setSelectedSkill(question.skill || "");
       setSelectedQuestionType(question.questionType || "");
@@ -475,6 +476,12 @@ const QuestionBankForm = ({
       isInterviewType: Boolean(dropdownValue === "Interview Questions"),//<---v1.0.9-----
     };
 
+    // Ensure we don't carry over an empty options array from formData by default
+    // Options should only be attached when MCQ has at least one non-empty option
+    if (Object.prototype.hasOwnProperty.call(questionData, 'options')) {
+      delete questionData.options;
+    }
+
     // Add conditional data based on question type
     if (
       ["Short Text(Single line)", "Long Text(Paragraph)"].includes(
@@ -492,11 +499,15 @@ const QuestionBankForm = ({
       }
     }
 
-    if (
-      selectedQuestionType === "MCQ" &&
-      mcqOptions.some((option) => option.option)
-    ) {
-      questionData.options = mcqOptions.map((option) => option.option);
+    if (selectedQuestionType === "MCQ") {
+      const filteredOptions = (mcqOptions || [])
+        .map((o) => (o?.option ?? "").trim())
+        .filter((o) => o.length > 0);
+
+      if (filteredOptions.length > 0) {
+        questionData.options = filteredOptions;
+      }
+      // If no non-empty options, omit the field; frontend validation already blocks submission
     }
 
     if (
@@ -539,6 +550,7 @@ const QuestionBankForm = ({
             correctAnswer: formData.correctAnswer,
             questionType: formData.questionType,
             score: Number(formData.score),
+            isInterviewQuestionType: dropdownValue === "Interview Questions",
           },
         };
         updateQuestionsInAddedSectionFromQuestionBank(
