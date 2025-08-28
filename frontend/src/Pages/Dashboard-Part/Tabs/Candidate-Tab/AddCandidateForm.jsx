@@ -151,6 +151,7 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 //   );
 // };
 
+import { notify } from "../../../../services/toastService";
 const CustomDropdown = forwardRef(
   (
     {
@@ -232,9 +233,10 @@ const CustomDropdown = forwardRef(
             //   error ? "border-red-500" : "border-gray-300"
             // }`}
             className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-              border ${error
-                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                : "border-gray-300 focus:ring-red-300"
+              border ${
+                error
+                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                  : "border-gray-300 focus:ring-red-300"
               }
               focus:outline-gray-300
             `}
@@ -292,7 +294,6 @@ const AddCandidateForm = ({
 }) => {
   const { skills, colleges, qualifications, currentRoles } = useMasterData();
 
-  console.log("currentRoles:", currentRoles);
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const userId = tokenPayload?.userId;
@@ -557,10 +558,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
@@ -796,7 +797,6 @@ const AddCandidateForm = ({
 
   const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
-    console.log("Starting submit process...");
 
     // Set which button was clicked
     setActiveButton(isAddCandidate ? "add" : "save");
@@ -808,7 +808,6 @@ const AddCandidateForm = ({
     );
 
     if (!formIsValid) {
-      console.log("Form validation failed:", newErrors);
       setErrors(newErrors);
       // Reset active button on validation failure
       setActiveButton(null);
@@ -819,7 +818,6 @@ const AddCandidateForm = ({
     }
 
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log("Current date and time:", currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -843,15 +841,7 @@ const AddCandidateForm = ({
       tenantId: orgId,
     };
 
-    console.log("Submitting candidate data:", data);
-
     try {
-      console.log("Calling addOrUpdateCandidate with:", {
-        id,
-        data,
-        selectedImage,
-        selectedResume,
-      });
       const response = await addOrUpdateCandidate({
         id,
         data,
@@ -860,6 +850,7 @@ const AddCandidateForm = ({
         isProfilePicRemoved,
         isResumeRemoved,
       });
+      notify.success("Candidate added successfully");
 
       resetFormData();
 
@@ -875,20 +866,12 @@ const AddCandidateForm = ({
           const fromPath = location.state?.from;
           const returnTo = location.state?.returnTo;
 
-          console.log("response.data", response);
-          // if (response?.status === "no_changes") {
-          //   navigate(returnTo); // close modal safely
-          //   return;
-          // }
-          
-          
-
           if (fromPath === "/interviews/new" && returnTo) {
             navigate(returnTo);
             return;
           }
 
-          switch (mode ) {
+          switch (mode) {
             case "Edit" && response?.status === "no_changes":
               navigate(`/candidate`);
               break;
@@ -916,8 +899,11 @@ const AddCandidateForm = ({
         scrollToFirstError(error.response.data.errors, fieldRefs);
       } else {
         // Fallback error
-        setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
+        setErrors({
+          submit: `Failed to add/update candidate: ${error.message}`,
+        });
       }
+      // console.error("Error adding candidate:", error);
       // setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
     } finally {
       // Reset active button regardless of success or failure
@@ -945,7 +931,6 @@ const AddCandidateForm = ({
       "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
-  
 
   return (
     <>
@@ -1077,11 +1062,11 @@ const AddCandidateForm = ({
                         <p className="text-xs text-gray-500">
                           {selectedResume?.fileSize || selectedResume?.size
                             ? `${(
-                              (selectedResume.size ||
-                                selectedResume.fileSize) /
-                              1024 /
-                              1024
-                            ).toFixed(2)} MB`
+                                (selectedResume.size ||
+                                  selectedResume.fileSize) /
+                                1024 /
+                                1024
+                              ).toFixed(2)} MB`
                             : ""}
                         </p>
                       </div>
@@ -1148,627 +1133,673 @@ const AddCandidateForm = ({
               </div>
             </div>
 
-            <form className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                <p className="text-lg font-semibold col-span-2">
-                  Personal Details
-                </p>
-                {/* First Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    // v1.0.3 <--------------------------------------------------------
-                    ref={fieldRefs.FirstName}
-                    // v1.0.3 --------------------------------------------------------->
-                    name="FirstName"
-                    value={formData.FirstName}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300"
-                    placeholder="Enter First Name"
-                  />
-                </div>
-                {/* Last Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    // v1.0.3 <--------------------------------------------------------
-                    ref={fieldRefs.LastName}
-                    // v1.0.3 --------------------------------------------------------->
-                    type="text"
-                    name="LastName"
-                    value={formData.LastName}
-                    onChange={handleChange}
-                    // v1.0.4 <---------------------------------------------------------------------------------------------------------------------------
-                    // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
-                    //   errors.LastName && "border-red-500"
-                    // }`}
-                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.LastName
-                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                    // v1.0.4 --------------------------------------------------------------------------------------------------------------------------->
-                    placeholder="Enter Last Name"
-                  />
-                  {errors.LastName && (
-                    <p className="text-red-500 text-xs pt-1">
-                      {errors.LastName}
-                    </p>
-                  )}
-                </div>
-                {/* Date of Birth */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Date of Birth
-                  </label>
-                  <CustomDatePicker
-                    selectedDate={
-                      formData.Date_Of_Birth
-                        ? new Date(formData.Date_Of_Birth)
-                        : null
-                    }
-                    onChange={handleDateChange}
-                    placeholder="Select Date of Birth"
-                  />
-                </div>
-                {/* Gender */}
-
-                <CustomDropdown
-                  // v1.0.3 <--------------------------------------------------------
-                  ref={fieldRefs.Gender}
-                  // v1.0.3 --------------------------------------------------------->
-                  label="Gender"
-                  name="Gender"
-                  value={formData.Gender}
-                  options={genderOptions}
-                  onChange={handleChange}
-                  error={errors.Gender}
-                  placeholder="Select Gender"
-                  disableSearch={true}
-                />
-                <p className="text-lg font-semibold col-span-2">
-                  Contact Details
-                </p>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    // v1.0.3 <--------------------------------------------------------
-                    ref={fieldRefs.Email}
-                    // v1.0.3 --------------------------------------------------------->
-                    type="email"
-                    name="Email"
-                    value={formData.Email}
-                    onChange={handleChange}
-                    // v1.0.4 <----------------------------------------------------------------------------------------------------------------------
-                    // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${
-                    //   errors.Email && "border-red-500"
-                    // }`}
-                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.Email
-                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                    // v1.0.4 <---------------------------------------------------------------------------------------------------------------------->
-                    placeholder="Enter Email Address"
-                  />
-                  {errors.Email && (
-                    <p className="text-red-500 text-xs pt-1">{errors.Email}</p>
-                  )}
-                </div>
-                {/* Phone */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex  gap-2">
-                    <div className="w-20">
-                      <CustomDropdown
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-6">
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800">
+                    Personal Details
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                    {/* First Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
                         // v1.0.3 <--------------------------------------------------------
-                        ref={fieldRefs.CountryCode}
+                        ref={fieldRefs.FirstName}
                         // v1.0.3 --------------------------------------------------------->
-                        hideLabel
-                        name="CountryCode"
-                        value={formData.CountryCode}
-                        options={countryCodes}
+                        name="FirstName"
+                        value={formData.FirstName}
                         onChange={handleChange}
-                        placeholder="+91"
-                        error={errors.CountryCode}
-                        optionKey="label"
-                        optionValue="value"
-                        selectedValue={+91}
-                        disableSearch={true}
+                        className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300"
+                        placeholder="Enter First Name"
                       />
                     </div>
-                    <div className="flex-1">
+                    {/* Last Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last Name <span className="text-red-500">*</span>
+                      </label>
                       <input
                         // v1.0.3 <--------------------------------------------------------
-                        ref={fieldRefs.Phone}
+                        ref={fieldRefs.LastName}
                         // v1.0.3 --------------------------------------------------------->
                         type="text"
-                        name="Phone"
-                        value={formData.Phone}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, ""); // remove non-digits
-                          if (value.length <= 10) {
-                            handleChange({ target: { name: "Phone", value } });
-                          }
-                        }}
-                        maxLength={10}
-                        // v1.0.4 <-------------------------------------------------------------------------------------------------------------------------
+                        name="LastName"
+                        value={formData.LastName}
+                        onChange={handleChange}
+                        // v1.0.4 <---------------------------------------------------------------------------------------------------------------------------
                         // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
-                        //   errors.Phone && "border-red-500"
+                        //   errors.LastName && "border-red-500"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.Phone
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
+                      border ${
+                        errors.LastName
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
+                        // v1.0.4 --------------------------------------------------------------------------------------------------------------------------->
+                        placeholder="Enter Last Name"
+                      />
+                      {errors.LastName && (
+                        <p className="text-red-500 text-xs pt-1">
+                          {errors.LastName}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                    {/* Date of Birth */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Date of Birth
+                      </label>
+                      <CustomDatePicker
+                        selectedDate={
+                          formData.Date_Of_Birth
+                            ? new Date(formData.Date_Of_Birth)
+                            : null
+                        }
+                        onChange={handleDateChange}
+                        placeholder="Select Date of Birth"
+                      />
+                    </div>
+                    {/* Gender */}
+
+                    <CustomDropdown
+                      // v1.0.3 <--------------------------------------------------------
+                      ref={fieldRefs.Gender}
+                      // v1.0.3 --------------------------------------------------------->
+                      label="Gender"
+                      name="Gender"
+                      value={formData.Gender}
+                      options={genderOptions}
+                      onChange={handleChange}
+                      error={errors.Gender}
+                      placeholder="Select Gender"
+                      disableSearch={true}
+                    />
+                  </div>
+                  <p className="text-lg font-semibold col-span-2">
+                    Contact Details
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                    {/* Email */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        // v1.0.3 <--------------------------------------------------------
+                        ref={fieldRefs.Email}
+                        // v1.0.3 --------------------------------------------------------->
+                        type="email"
+                        name="Email"
+                        value={formData.Email}
+                        onChange={handleChange}
+                        // v1.0.4 <----------------------------------------------------------------------------------------------------------------------
+                        // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${
+                        //   errors.Email && "border-red-500"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${
+                        errors.Email
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
+                        // v1.0.4 <---------------------------------------------------------------------------------------------------------------------->
+                        placeholder="Enter Email Address"
+                      />
+                      {errors.Email && (
+                        <p className="text-red-500 text-xs pt-1">
+                          {errors.Email}
+                        </p>
+                      )}
+                    </div>
+                    {/* Phone */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex  gap-2">
+                        <div className="w-20">
+                          <CustomDropdown
+                            // v1.0.3 <--------------------------------------------------------
+                            ref={fieldRefs.CountryCode}
+                            // v1.0.3 --------------------------------------------------------->
+                            hideLabel
+                            name="CountryCode"
+                            value={formData.CountryCode}
+                            options={countryCodes}
+                            onChange={handleChange}
+                            placeholder="+91"
+                            error={errors.CountryCode}
+                            optionKey="label"
+                            optionValue="value"
+                            selectedValue={+91}
+                            disableSearch={true}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            // v1.0.3 <--------------------------------------------------------
+                            ref={fieldRefs.Phone}
+                            // v1.0.3 --------------------------------------------------------->
+                            type="text"
+                            name="Phone"
+                            value={formData.Phone}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+                              if (value.length <= 10) {
+                                handleChange({
+                                  target: { name: "Phone", value },
+                                });
+                              }
+                            }}
+                            maxLength={10}
+                            // v1.0.4 <-------------------------------------------------------------------------------------------------------------------------
+                            // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
+                            //   errors.Phone && "border-red-500"
+                            // }`}
+                            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.Phone
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
                           }
                           focus:outline-gray-300
                         `}
-                        // v1.0.4 ------------------------------------------------------------------------------------------------------------------------->
-                        placeholder="Enter Phone Number"
-                      />
+                            // v1.0.4 ------------------------------------------------------------------------------------------------------------------------->
+                            placeholder="Enter Phone Number"
+                          />
 
-                      {errors.Phone && (
+                          {errors.Phone && (
+                            <p className="text-red-500 text-xs pt-1">
+                              {errors.Phone}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-lg font-semibold col-span-2">
+                    Education Details
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                    {/* higher qualification */}
+                    <CustomDropdown
+                      // v1.0.3 <--------------------------------------------------------
+                      ref={fieldRefs.HigherQualification}
+                      // v1.0.3 --------------------------------------------------------->
+                      label="Higher Qualification"
+                      name="HigherQualification"
+                      value={formData.HigherQualification}
+                      options={qualifications}
+                      onChange={handleChange}
+                      error={errors.HigherQualification}
+                      placeholder="Select Higher Qualification"
+                      optionKey="QualificationName"
+                      optionValue="QualificationName"
+                    />
+
+                    {/* University/College */}
+                    {/* <--------v1.0.1----- */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        University/College{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      {!isCustomUniversity ? (
+                        <div className="relative" ref={universityDropdownRef}>
+                          <input
+                            // v1.0.3 <--------------------------------------------------------
+                            ref={fieldRefs.UniversityCollege}
+                            // v1.0.3 --------------------------------------------------------->
+                            type="text"
+                            value={formData.UniversityCollege}
+                            onClick={() =>
+                              setShowDropdownUniversity(!showDropdownUniversity)
+                            }
+                            placeholder="Select a University/College"
+                            autoComplete="off"
+                            // v1.0.4 <-----------------------------------------------------------------------------------------------------------------
+                            // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                            //   errors.UniversityCollege
+                            //     ? "border-red-500"
+                            //     : "border-gray-300"
+                            // }`}
+                            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.UniversityCollege
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
+                            // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
+                            readOnly
+                          />
+                          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                            <ChevronDown
+                              className="text-lg"
+                              onClick={() =>
+                                setShowDropdownUniversity(
+                                  !showDropdownUniversity
+                                )
+                              }
+                            />
+                          </div>
+                          {showDropdownUniversity && (
+                            <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
+                              <div className="border-b">
+                                <div className="flex items-center border rounded px-2 py-1 m-2">
+                                  <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                                  <input
+                                    // v1.0.3 <--------------------------------------------------------
+                                    ref={fieldRefs.UniversityCollegeSearch}
+                                    // v1.0.3 --------------------------------------------------------->
+                                    type="text"
+                                    placeholder="Search University/College"
+                                    value={universitySearchTerm}
+                                    onChange={(e) =>
+                                      setUniversitySearchTerm(e.target.value)
+                                    }
+                                    className="pl-8 focus:border-black focus:outline-none w-full"
+                                  />
+                                </div>
+                              </div>
+                              <div className="max-h-48 overflow-y-auto">
+                                {filteredUniversities?.length > 0 ? (
+                                  filteredUniversities.map(
+                                    (university, index) => (
+                                      <div
+                                        key={university._id || index}
+                                        onClick={() =>
+                                          handleUniversitySelect(university)
+                                        }
+                                        className="cursor-pointer hover:bg-gray-200 p-2"
+                                      >
+                                        {university.University_CollegeName}
+                                      </div>
+                                    )
+                                  )
+                                ) : (
+                                  <div className="p-2 text-gray-500">
+                                    No universities found
+                                  </div>
+                                )}
+                              </div>
+                              <div className="border-t border-gray-200">
+                                <div
+                                  onClick={() =>
+                                    handleUniversitySelect("others")
+                                  }
+                                  className="cursor-pointer hover:bg-gray-200 p-2"
+                                >
+                                  <span className="text-gray-900 font-medium">
+                                    + Others
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <input
+                            // v1.0.3 <--------------------------------------------------------
+                            ref={fieldRefs.UniversityCollege}
+                            // v1.0.3 --------------------------------------------------------->
+                            type="text"
+                            value={formData.UniversityCollege}
+                            onChange={(e) => {
+                              setFormData({
+                                ...formData,
+                                UniversityCollege: e.target.value,
+                              });
+                              if (errors.UniversityCollege) {
+                                setErrors((prevErrors) => ({
+                                  ...prevErrors,
+                                  UniversityCollege: "",
+                                }));
+                              }
+                            }}
+                            // v1.0.4 <--------------------------------------------------------------------------------------------------------------------
+                            // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                            //   errors.UniversityCollege
+                            //     ? "border-red-500"
+                            //     : "border-gray-300"
+                            // }`}
+                            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.UniversityCollege
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
+                            // v1.0.4 -------------------------------------------------------------------------------------------------------------------->
+                            placeholder="Enter custom university/college name"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCustomUniversity(false);
+                              setFormData({
+                                ...formData,
+                                UniversityCollege: "",
+                              });
+                            }}
+                            className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                      {errors.UniversityCollege && (
                         <p className="text-red-500 text-xs pt-1">
-                          {errors.Phone}
+                          {errors.UniversityCollege}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {/* --------v1.0.1----->*/}
+                  <p className="text-lg font-semibold col-span-2">
+                    Experience Details
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                    {/* current experience */}
+                    <div>
+                      <label
+                        htmlFor="CurrentExperience"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Current Experience{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        // v1.0.3 <--------------------------------------------------------
+                        ref={fieldRefs.CurrentExperience}
+                        // v1.0.3 --------------------------------------------------------->
+                        type="number"
+                        name="CurrentExperience"
+                        id="CurrentExperience"
+                        min="1"
+                        max="15"
+                        value={formData.CurrentExperience}
+                        onChange={handleChange}
+                        // v1.0.4 <-----------------------------------------------------------------------------------------------------------------
+                        // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                        //   errors.CurrentExperience
+                        //     ? "border-red-500"
+                        //     : "border-gray-300"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${
+                        errors.CurrentExperience
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
+                        // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
+                        placeholder="Enter Current Experience"
+                      />
+                      {errors.CurrentExperience && (
+                        <p className="text-red-500 text-xs pt-1">
+                          {errors.CurrentExperience}
+                        </p>
+                      )}
+                    </div>
+                    {/* Relevant Experience */}
+                    <div>
+                      <label
+                        htmlFor="CurrentExperience"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Relevant Experience{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        // v1.0.3 <--------------------------------------------------------
+                        ref={fieldRefs.RelevantExperience}
+                        // v1.0.3 --------------------------------------------------------->
+                        type="number"
+                        name="RelevantExperience"
+                        id="RelevantExperience"
+                        min="1"
+                        max="15"
+                        value={formData.RelevantExperience}
+                        onChange={handleChange}
+                        // v1.0.4 <--------------------------------------------------------------------------------------------------------
+                        // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                        //   errors.RelevantExperience
+                        //     ? "border-red-500"
+                        //     : "border-gray-300"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                      border ${
+                        errors.RelevantExperience
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
+                      focus:outline-gray-300
+                    `}
+                        // v1.0.4 -------------------------------------------------------------------------------------------------------->
+                        placeholder="Enter Relevant Experience"
+                      />
+                      {errors.RelevantExperience && (
+                        <p className="text-red-500 text-xs pt-1">
+                          {errors.RelevantExperience}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Current Role */}
+
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                    <div ref={currentRoleDropdownRef}>
+                      {/* v1.0.5 <-------------------------------------------------------- */}
+                      <label
+                        htmlFor="CurrentRole"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Current Role <span className="text-red-500">*</span>
+                      </label>
+                      {/* v1.0.5 --------------------------------------------------------> */}
+                      <div className="relative">
+                        <input
+                          // v1.0.3 <--------------------------------------------------------
+                          ref={fieldRefs.CurrentRole}
+                          // v1.0.3 --------------------------------------------------------->
+                          name="CurrentRole"
+                          type="text"
+                          id="CurrentRole"
+                          value={formData.CurrentRole}
+                          onClick={toggleCurrentRole}
+                          onChange={handleChange}
+                          placeholder="Select Current Role"
+                          autoComplete="off"
+                          // v1.0.4 <----------------------------------------------------------------------------------------------------------
+                          // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
+                          //   errors.CurrentRole
+                          //     ? "border-red-500"
+                          //     : "border-gray-300"
+                          // }`}
+                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        border ${
+                          errors.CurrentRole
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
+                        focus:outline-gray-300
+                      `}
+                          // v1.0.4 ---------------------------------------------------------------------------------------------------------->
+                          readOnly
+                        />
+                        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                          <ChevronDown
+                            className="text-lg w-5 h-5"
+                            onClick={toggleCurrentRole}
+                          />
+                        </div>
+                        {showDropdownCurrentRole && (
+                          <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+                            <div className="border-b">
+                              <div className="flex items-center border rounded px-2 py-1 m-2">
+                                <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
+                                <input
+                                  type="text"
+                                  placeholder="Search Current Role"
+                                  value={searchTermCurrentRole}
+                                  onChange={(e) =>
+                                    setSearchTermCurrentRole(e.target.value)
+                                  }
+                                  className="pl-8 focus:border-black focus:outline-none w-full"
+                                />
+                              </div>
+                            </div>
+                            {filteredCurrentRoles?.length > 0 ? (
+                              filteredCurrentRoles.map((role) => (
+                                <div
+                                  key={role._id}
+                                  onClick={() =>
+                                    handleRoleSelect(role.RoleName)
+                                  }
+                                  className="cursor-pointer hover:bg-gray-200 p-2"
+                                >
+                                  {role.RoleName}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-2 text-gray-500">
+                                No roles found
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {errors.CurrentRole && (
+                        <p className="text-red-500 text-xs pt-1">
+                          {errors.CurrentRole}
                         </p>
                       )}
                     </div>
                   </div>
                 </div>
-                <p className="text-lg font-semibold col-span-2">
-                  Education Details
-                </p>
-
-                {/* higher qualification */}
-                <CustomDropdown
-                  // v1.0.3 <--------------------------------------------------------
-                  ref={fieldRefs.HigherQualification}
-                  // v1.0.3 --------------------------------------------------------->
-                  label="Higher Qualification"
-                  name="HigherQualification"
-                  value={formData.HigherQualification}
-                  options={qualifications}
-                  onChange={handleChange}
-                  error={errors.HigherQualification}
-                  placeholder="Select Higher Qualification"
-                  optionKey="QualificationName"
-                  optionValue="QualificationName"
-                />
-
-                {/* University/College */}
-                {/* <--------v1.0.1----- */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    University/College <span className="text-red-500">*</span>
-                  </label>
-                  {!isCustomUniversity ? (
-                    <div className="relative" ref={universityDropdownRef}>
-                      <input
-                        // v1.0.3 <--------------------------------------------------------
-                        ref={fieldRefs.UniversityCollege}
-                        // v1.0.3 --------------------------------------------------------->
-                        type="text"
-                        value={formData.UniversityCollege}
-                        onClick={() =>
-                          setShowDropdownUniversity(!showDropdownUniversity)
-                        }
-                        placeholder="Select a University/College"
-                        autoComplete="off"
-                        // v1.0.4 <-----------------------------------------------------------------------------------------------------------------
-                        // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                        //   errors.UniversityCollege
-                        //     ? "border-red-500"
-                        //     : "border-gray-300"
-                        // }`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.UniversityCollege
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                        // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
-                        readOnly
-                      />
-                      <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <ChevronDown
-                          className="text-lg"
-                          onClick={() =>
-                            setShowDropdownUniversity(!showDropdownUniversity)
-                          }
-                        />
-                      </div>
-                      {showDropdownUniversity && (
-                        <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
-                          <div className="border-b">
-                            <div className="flex items-center border rounded px-2 py-1 m-2">
-                              <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                              <input
-                                // v1.0.3 <--------------------------------------------------------
-                                ref={fieldRefs.UniversityCollegeSearch}
-                                // v1.0.3 --------------------------------------------------------->
-                                type="text"
-                                placeholder="Search University/College"
-                                value={universitySearchTerm}
-                                onChange={(e) =>
-                                  setUniversitySearchTerm(e.target.value)
-                                }
-                                className="pl-8 focus:border-black focus:outline-none w-full"
-                              />
-                            </div>
-                          </div>
-                          <div className="max-h-48 overflow-y-auto">
-                            {filteredUniversities?.length > 0 ? (
-                              filteredUniversities.map((university, index) => (
-                                <div
-                                  key={university._id || index}
-                                  onClick={() =>
-                                    handleUniversitySelect(university)
-                                  }
-                                  className="cursor-pointer hover:bg-gray-200 p-2"
-                                >
-                                  {university.University_CollegeName}
-                                </div>
-                              ))
-                            ) : (
-                              <div className="p-2 text-gray-500">
-                                No universities found
-                              </div>
-                            )}
-                          </div>
-                          <div className="border-t border-gray-200">
-                            <div
-                              onClick={() => handleUniversitySelect("others")}
-                              className="cursor-pointer hover:bg-gray-200 p-2"
-                            >
-                              <span className="text-gray-900 font-medium">
-                                + Others
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <input
-                        // v1.0.3 <--------------------------------------------------------
-                        ref={fieldRefs.UniversityCollege}
-                        // v1.0.3 --------------------------------------------------------->
-                        type="text"
-                        value={formData.UniversityCollege}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            UniversityCollege: e.target.value,
-                          });
-                          if (errors.UniversityCollege) {
-                            setErrors((prevErrors) => ({
-                              ...prevErrors,
-                              UniversityCollege: "",
-                            }));
-                          }
-                        }}
-                        // v1.0.4 <--------------------------------------------------------------------------------------------------------------------
-                        // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                        //   errors.UniversityCollege
-                        //     ? "border-red-500"
-                        //     : "border-gray-300"
-                        // }`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.UniversityCollege
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                        // v1.0.4 -------------------------------------------------------------------------------------------------------------------->
-                        placeholder="Enter custom university/college name"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsCustomUniversity(false);
-                          setFormData({ ...formData, UniversityCollege: "" });
-                        }}
-                        className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                  {errors.UniversityCollege && (
-                    <p className="text-red-500 text-xs pt-1">
-                      {errors.UniversityCollege}
-                    </p>
-                  )}
-                </div>
-                {/* --------v1.0.1----->*/}
-                <p className="text-lg font-semibold col-span-2">
-                  Experience Details
-                </p>
-
-                {/* current experience */}
-                <div>
-                  <label
-                    htmlFor="CurrentExperience"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Current Experience <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    // v1.0.3 <--------------------------------------------------------
-                    ref={fieldRefs.CurrentExperience}
-                    // v1.0.3 --------------------------------------------------------->
-                    type="number"
-                    name="CurrentExperience"
-                    id="CurrentExperience"
-                    min="1"
-                    max="15"
-                    value={formData.CurrentExperience}
-                    onChange={handleChange}
-                    // v1.0.4 <-----------------------------------------------------------------------------------------------------------------
-                    // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                    //   errors.CurrentExperience
-                    //     ? "border-red-500"
-                    //     : "border-gray-300"
-                    // }`}
-                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.CurrentExperience
-                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                    // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
-                    placeholder="Enter Current Experience"
+                  <SkillsField
+                    entries={entries}
+                    errors={errors}
+                    onAddSkill={(setEditingIndex) => {
+                      setEntries((prevEntries) => {
+                        const newEntries = [
+                          ...prevEntries,
+                          { skill: "", experience: "", expertise: "" },
+                        ];
+                        setEditingIndex(newEntries.length - 1);
+                        return newEntries;
+                      });
+                      setSelectedSkill("");
+                      setSelectedExp("");
+                      setSelectedLevel("");
+                    }}
+                    onEditSkill={(index) => {
+                      const entry = entries[index];
+                      setSelectedSkill(entry.skill || "");
+                      setSelectedExp(entry.experience);
+                      setSelectedLevel(entry.expertise);
+                    }}
+                    onDeleteSkill={(index) => {
+                      const entry = entries[index];
+                      setAllSelectedSkills(
+                        allSelectedSkills.filter(
+                          (skill) => skill !== entry.skill
+                        )
+                      );
+                      setEntries(entries.filter((_, i) => i !== index));
+                    }}
+                    setIsModalOpen={setIsModalOpen}
+                    setEditingIndex={setEditingIndex}
+                    isModalOpen={isModalOpen}
+                    currentStep={currentStep}
+                    setCurrentStep={setCurrentStep}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    selectedSkill={selectedSkill}
+                    setSelectedSkill={setSelectedSkill}
+                    allSelectedSkills={allSelectedSkills}
+                    selectedExp={selectedExp}
+                    setSelectedExp={setSelectedExp}
+                    selectedLevel={selectedLevel}
+                    setSelectedLevel={setSelectedLevel}
+                    skills={skills}
+                    expertiseOptions={expertiseOptions}
+                    experienceOptions={experienceOptions}
+                    isNextEnabled={isNextEnabled}
+                    handleAddEntry={handleAddEntry}
+                    skillpopupcancelbutton={skillpopupcancelbutton}
+                    editingIndex={editingIndex}
                   />
-                  {errors.CurrentExperience && (
-                    <p className="text-red-500 text-xs pt-1">
-                      {errors.CurrentExperience}
-                    </p>
-                  )}
-                </div>
-                {/* Relevant Experience */}
-                <div>
-                  <label
-                    htmlFor="CurrentExperience"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Relevant Experience <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    // v1.0.3 <--------------------------------------------------------
-                    ref={fieldRefs.RelevantExperience}
-                    // v1.0.3 --------------------------------------------------------->
-                    type="number"
-                    name="RelevantExperience"
-                    id="RelevantExperience"
-                    min="1"
-                    max="15"
-                    value={formData.RelevantExperience}
-                    onChange={handleChange}
-                    // v1.0.4 <--------------------------------------------------------------------------------------------------------
-                    // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                    //   errors.RelevantExperience
-                    //     ? "border-red-500"
-                    //     : "border-gray-300"
-                    // }`}
-                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.RelevantExperience
-                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                    // v1.0.4 -------------------------------------------------------------------------------------------------------->
-                    placeholder="Enter Relevant Experience"
-                  />
-                  {errors.RelevantExperience && (
-                    <p className="text-red-500 text-xs pt-1">
-                      {errors.RelevantExperience}
-                    </p>
-                  )}
                 </div>
 
-                {/* Current Role */}
-
-                <div ref={currentRoleDropdownRef}>
-                  {/* v1.0.5 <-------------------------------------------------------- */}
-                  <label
-                    htmlFor="CurrentRole"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Current Role <span className="text-red-500">*</span>
-                  </label>
-                  {/* v1.0.5 --------------------------------------------------------> */}
-                  <div className="relative">
-                    <input
-                      // v1.0.3 <--------------------------------------------------------
-                      ref={fieldRefs.CurrentRole}
-                      // v1.0.3 --------------------------------------------------------->
-                      name="CurrentRole"
-                      type="text"
-                      id="CurrentRole"
-                      value={formData.CurrentRole}
-                      onClick={toggleCurrentRole}
-                      onChange={handleChange}
-                      placeholder="Select Current Role"
-                      autoComplete="off"
-                      // v1.0.4 <----------------------------------------------------------------------------------------------------------
-                      // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                      //   errors.CurrentRole
-                      //     ? "border-red-500"
-                      //     : "border-gray-300"
-                      // }`}
-                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                        border ${errors.CurrentRole
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
-                        }
-                        focus:outline-gray-300
-                      `}
-                      // v1.0.4 ---------------------------------------------------------------------------------------------------------->
-                      readOnly
-                    />
-                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <ChevronDown
-                        className="text-lg w-5 h-5"
-                        onClick={toggleCurrentRole}
-                      />
-                    </div>
-                    {showDropdownCurrentRole && (
-                      <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-                        <div className="border-b">
-                          <div className="flex items-center border rounded px-2 py-1 m-2">
-                            <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                            <input
-                              type="text"
-                              placeholder="Search Current Role"
-                              value={searchTermCurrentRole}
-                              onChange={(e) =>
-                                setSearchTermCurrentRole(e.target.value)
-                              }
-                              className="pl-8 focus:border-black focus:outline-none w-full"
-                            />
-                          </div>
-                        </div>
-                        {filteredCurrentRoles?.length > 0 ? (
-                          filteredCurrentRoles.map((role) => (
-                            <div
-                              key={role._id}
-                              onClick={() => handleRoleSelect(role.RoleName)}
-                              className="cursor-pointer hover:bg-gray-200 p-2"
-                            >
-                              {role.RoleName}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-2 text-gray-500">
-                            No roles found
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {errors.CurrentRole && (
-                    <p className="text-red-500 text-xs pt-1">
-                      {errors.CurrentRole}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <SkillsField
-                  entries={entries}
-                  errors={errors}
-                  onAddSkill={(setEditingIndex) => {
-                    setEntries((prevEntries) => {
-                      const newEntries = [
-                        ...prevEntries,
-                        { skill: "", experience: "", expertise: "" },
-                      ];
-                      setEditingIndex(newEntries.length - 1);
-                      return newEntries;
-                    });
-                    setSelectedSkill("");
-                    setSelectedExp("");
-                    setSelectedLevel("");
-                  }}
-                  onEditSkill={(index) => {
-                    const entry = entries[index];
-                    setSelectedSkill(entry.skill || "");
-                    setSelectedExp(entry.experience);
-                    setSelectedLevel(entry.expertise);
-                  }}
-                  onDeleteSkill={(index) => {
-                    const entry = entries[index];
-                    setAllSelectedSkills(
-                      allSelectedSkills.filter((skill) => skill !== entry.skill)
-                    );
-                    setEntries(entries.filter((_, i) => i !== index));
-                  }}
-                  setIsModalOpen={setIsModalOpen}
-                  setEditingIndex={setEditingIndex}
-                  isModalOpen={isModalOpen}
-                  currentStep={currentStep}
-                  setCurrentStep={setCurrentStep}
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  selectedSkill={selectedSkill}
-                  setSelectedSkill={setSelectedSkill}
-                  allSelectedSkills={allSelectedSkills}
-                  selectedExp={selectedExp}
-                  setSelectedExp={setSelectedExp}
-                  selectedLevel={selectedLevel}
-                  setSelectedLevel={setSelectedLevel}
-                  skills={skills}
-                  expertiseOptions={expertiseOptions}
-                  experienceOptions={experienceOptions}
-                  isNextEnabled={isNextEnabled}
-                  handleAddEntry={handleAddEntry}
-                  skillpopupcancelbutton={skillpopupcancelbutton}
-                  editingIndex={editingIndex}
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-6">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  disabled={isMutationLoading}
-                  className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                <div className="flex justify-end gap-3 pt-6">
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    disabled={isMutationLoading}
+                    className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${
+                      isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
-                >
-                  Cancel
-                </button>
-
-                <LoadingButton
-                  onClick={handleSubmit}
-                  isLoading={isMutationLoading && activeButton === "save"}
-                  loadingText={id ? "Updating..." : "Saving..."}
-                >
-                  {id ? "Update" : "Save"}
-                </LoadingButton>
-
-                {!hideAddButton && !id && (
-                  <LoadingButton
-                    onClick={(e) => handleSubmit(e, true)}
-                    isLoading={isMutationLoading && activeButton === "add"}
-                    loadingText="Adding..."
                   >
-                    <FaPlus className="w-5 h-5 mr-1" /> Add Candidate
+                    Cancel
+                  </button>
+
+                  <LoadingButton
+                    onClick={handleSubmit}
+                    isLoading={isMutationLoading && activeButton === "save"}
+                    loadingText={id ? "Updating..." : "Saving..."}
+                  >
+                    {id ? "Update" : "Save"}
                   </LoadingButton>
-                )}
+
+                  {!hideAddButton && !id && (
+                    <LoadingButton
+                      onClick={(e) => handleSubmit(e, true)}
+                      isLoading={isMutationLoading && activeButton === "add"}
+                      loadingText="Adding..."
+                    >
+                      <FaPlus className="w-5 h-5 mr-1 sm:hidden" /> Add
+                      Candidate
+                    </LoadingButton>
+                  )}
+                </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </Modal>
