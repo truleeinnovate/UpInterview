@@ -1107,7 +1107,7 @@ const AddCandidateForm = ({
                       <Trash className="w-3 h-3" />
                     </button>
                   )}
-                </div>
+                </div> 
 
                 <p className="mt-2 text-sm font-medium text-gray-700 text-center">
                   Resume
