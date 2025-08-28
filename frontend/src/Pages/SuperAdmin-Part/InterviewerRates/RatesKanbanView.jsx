@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Improved code and added API call for fetching rate cards
 // v1.0.1 - Ashok - Added delete button to implement delete action
+// v1.0.2 - Ashok - Handled more items to display for technology
 import { useEffect, useState } from "react";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
 import {
@@ -331,9 +332,26 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
     <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          <h4 className="font-medium text-gray-900 text-sm leading-tight mb-1">
+          {/* v1.0.2 <-------------------------------------------------------------------- */}
+          {/* <h4 className="font-medium text-gray-900 text-sm leading-tight mb-1">
             {rateCard.technology}
+          </h4> */}
+          <h4 className="font-medium text-gray-900 text-sm leading-tight mb-1 truncate">
+            {rateCard.technology && rateCard.technology.length > 0 ? (
+              <>
+                {rateCard.technology[0]}
+                {rateCard.technology.length > 1 && (
+                  <span className="text-gray-500">
+                    {" "}
+                    +{rateCard.technology.length - 1} more
+                  </span>
+                )}
+              </>
+            ) : (
+              "—"
+            )}
           </h4>
+          {/* v1.0.2 --------------------------------------------------------------------> */}
           <div className="flex items-center space-x-2">
             <StatusBadge
               status={rateCard.isActive ? "active" : "inactive"}
@@ -498,7 +516,12 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
               </h2>
               <p className="mt-2 text-sm text-gray-600">
                 Are you sure you want to delete{" "}
-                <span className="font-medium">{deleteTarget?.technology}</span>?
+                {/* v1.0.2 <-------------------------------------------------------------- */}
+                <span className="font-medium">
+                  {deleteTarget?.technology[0]}
+                </span>
+                ?
+                {/* v1.0.2 --------------------------------------------------------------> */}
                 This action cannot be undone.
               </p>
               <div className="mt-4 flex justify-end gap-2">

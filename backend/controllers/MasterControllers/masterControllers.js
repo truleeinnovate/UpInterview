@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - To handle bulk imports like .csv file improved careteMaster controller
 const { Industry } = require("../../models/MasterSchemas/industries");
 const { LocationMaster } = require("../../models/MasterSchemas/LocationMaster");
 const { RoleMaster } = require("../../models/MasterSchemas/RoleMaster");
@@ -33,20 +34,46 @@ const getModel = (type) => {
   }
 };
 
+// v1.0.0 <-----------------------------------------------------------
 // ✅ CREATE
+// const createMaster = async (req, res) => {
+//   try {
+//     const { type } = req.params;
+//     const Model = getModel(type);
+
+//     const newDoc = new Model(req.body);
+//     await newDoc.save();
+
+//     res.status(201).json(newDoc);
+//   } catch (error) {
+//     res.status(400).json({ error: error.message });
+//   }
+// };
+
+// ✅ CREATE (supports single + bulk via CSV)
 const createMaster = async (req, res) => {
   try {
     const { type } = req.params;
     const Model = getModel(type);
 
-    const newDoc = new Model(req.body);
-    await newDoc.save();
+    let result;
 
-    res.status(201).json(newDoc);
+    if (Array.isArray(req.body)) {
+      // Bulk insert (CSV upload)
+      result = await Model.insertMany(req.body, { ordered: false });
+    } else {
+      // Single insert
+      const newDoc = new Model(req.body);
+      result = await newDoc.save();
+    }
+
+    res.status(201).json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
+
+// v1.0.0 ----------------------------------------------------------->
 
 // ✅ READ (All)
 const getMasters = async (req, res) => {

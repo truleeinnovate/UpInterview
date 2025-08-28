@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Added Api Call for fetching rate cards data and improved code
 // v1.0.1 - Ashok - Added delete button and functionality to implement delete action
+// v1.0.2 - Ashok - Improved displaying table data
 import { useEffect, useState } from "react";
 import DataTable from "../../../Components/SuperAdminComponents/common/DataTable";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
@@ -258,16 +259,50 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
   };
 
   const columns = [
+    // v1.0.2 <-------------------------------------------------------------------------
+    // {
+    //   field: "technology",
+    //   header: "Technology / Role",
+    //   render: (row) => (
+    //     <div>
+    //       <div className="font-medium text-gray-900">{row?.technology}</div>
+    //       <div className="text-sm text-gray-500">{row?.category}</div>
+    //     </div>
+    //   ),
+    // },
     {
       field: "technology",
       header: "Technology / Role",
       render: (row) => (
         <div>
-          <div className="font-medium text-gray-900">{row?.technology}</div>
-          <div className="text-sm text-gray-500">{row?.category}</div>
+          <div
+            className="font-medium text-gray-900 truncate max-w-[200px]"
+            title={
+              Array.isArray(row?.technology)
+                ? row.technology.join(", ")
+                : row?.technology
+            }
+          >
+            {Array.isArray(row?.technology) && row.technology.length > 0 ? (
+              <>
+                {row.technology[0]}
+                {row.technology.length > 1 && (
+                  <span className="text-gray-500">
+                    {" "}
+                    +{row.technology.length - 1} more
+                  </span>
+                )}
+              </>
+            ) : (
+              row?.technology || "—"
+            )}
+          </div>
+          <div className="text-sm text-gray-500">{row?.category || "—"}</div>
         </div>
       ),
     },
+    // v1.0.2 ------------------------------------------------------------------------->
+
     {
       field: "rateRange",
       header: "Rate Range",
@@ -418,7 +453,9 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
               </h2>
               <p className="mt-2 text-sm text-gray-600">
                 Are you sure you want to delete{" "}
-                <span className="font-medium">{deleteTarget?.technology}</span>?
+                {/* v1.0.2 <-------------------------------------------------------- */}
+                <span className="font-medium">{deleteTarget?.technology[0]}</span>?
+                {/* v1.0.2 --------------------------------------------------------> */}
                 This action cannot be undone.
               </p>
               <div className="mt-4 flex justify-end gap-2">
