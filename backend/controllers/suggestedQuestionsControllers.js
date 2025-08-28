@@ -5,7 +5,7 @@ const { InterviewQuestion } = require('../models/QuestionBank/interviewQuestions
 
 const createQuestion = async (req, res) => {
   try {
-    const isInterview = req.body?.isInterviewQuestionOnly === true
+    const isInterview = req.body?.questionType === "Interview";
     //   req.body?.isInterviewType === true ||
     //   (typeof req.body?.type === 'string' && req.body.type.toLowerCase() === 'interview');
 
@@ -54,7 +54,6 @@ const createQuestion = async (req, res) => {
       minexperience: doc.minexperience,
       maxexperience: doc.maxexperience,
       charLimits: doc.charLimits,
-      isInterviewQuestionOnly: isInterview,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     };
@@ -76,15 +75,12 @@ const createQuestion = async (req, res) => {
 
 const getQuestions = async (req, res) => {
   try {
-    const [assessments, interviews] = await Promise.all([
-      AssessmentQuestion.find().lean(),
-      InterviewQuestion.find().lean(),
-    ]);
+    const questionType = req.query?.questionType;
 
-    const toUnified = (doc, isInterview) => ({
+    const toUnified = (doc) => ({
       _id: doc._id,
       questionOrderId: doc.questionOrderId,
-      questionNo: doc.questionOrderId, 
+      questionNo: doc.questionOrderId,
       questionText: doc.questionText,
       questionType: doc.questionType,
       technology: Array.isArray(doc.technology) ? doc.technology : doc.technology ? [doc.technology].flat() : [],
@@ -110,14 +106,40 @@ const getQuestions = async (req, res) => {
       minexperience: doc.minexperience,
       maxexperience: doc.maxexperience,
       charLimits: doc.charLimits,
-      isInterviewQuestionOnly: isInterview,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     });
 
+    // When explicitly requesting by type, only fetch from the respective collection
+    if (questionType === 'Interview') {
+      const interviews = await InterviewQuestion.find().lean();
+      const unifiedQuestions = interviews.map((d) => toUnified(d));
+      return res.status(200).send({
+        success: true,
+        message: 'Questions retrieved',
+        questions: unifiedQuestions,
+      });
+    }
+
+    if (questionType !== 'Interview') {
+      const assessments = await AssessmentQuestion.find().lean();
+      const unifiedQuestions = assessments.map((d) => toUnified(d));
+      return res.status(200).send({
+        success: true,
+        message: 'Questions retrieved',
+        questions: unifiedQuestions,
+      });
+    }
+
+    // Default: fetch both
+    const [assessments, interviews] = await Promise.all([
+      AssessmentQuestion.find().lean(),
+      InterviewQuestion.find().lean(),
+    ]);
+
     const unifiedQuestions = [
-      ...assessments.map((d) => toUnified(d, false)),
-      ...interviews.map((d) => toUnified(d, true)),
+      ...assessments.map((d) => toUnified(d)),
+      ...interviews.map((d) => toUnified(d)),
     ];
 
     return res.status(200).send({

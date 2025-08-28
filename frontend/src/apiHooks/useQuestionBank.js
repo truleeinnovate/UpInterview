@@ -133,7 +133,14 @@ export const useQuestions = (filters = {}) => {
   } = useQuery({
     queryKey: ['suggestedQuestions', filters],
     queryFn: async () => {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
+      const params = {};
+      if (filters?.questionType) {
+        params.questionType = filters.questionType;
+      }
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/suggested-questions/questions`,
+        { params }
+      );
       if (response.data.success) {
         return response.data.questions.map((q) => ({ ...q, isAdded: false }));
       }

@@ -87,7 +87,7 @@ const suggestedQuestionSchema = new mongoose.Schema({
   reviewStatus: { type: String }, // NEW FIELD from JSON
   version: { type: Number, default: 1 }, // NEW FIELD from JSON
   isActive: { type: Boolean, default: true },
-  isInterviewQuestionOnly: { type: Boolean, default: false },// NEW FIELD
+  // isInterviewQuestionOnly: { type: Boolean, default: false },// NEW FIELD
   createdBy: { type: String },
   modifiedDate: { type: Date },
   modifiedBy: { type: String }

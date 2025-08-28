@@ -29,18 +29,24 @@ const SuggestedQuestionsComponent = ({
   interviewQuestionsLists,
   removedQuestionIds = [],
 }) => {
-  const { suggestedQuestions, isLoading } = useQuestions();
-  console.log("suggestedQuestions", suggestedQuestions)
   const [skillInput, setSkillInput] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [questionInput, setQuestionInput] = useState("");
   const filterIconRef = useRef(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const itemsPerPage = 10;
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [dropdownValue, setDropdownValue] = useState("Interview Questions");
   const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
+
+  // Map dropdown selection to backend-supported questionType filter
+  const selectedQuestionType = useMemo(
+    () => (dropdownValue === "Interview Questions" ? "Interview" : "Assignment"),
+    [dropdownValue]
+  );
+  const { suggestedQuestions, isLoading } = useQuestions({
+    questionType: selectedQuestionType,
+  });
 
   const [filtrationData, setFiltrationData] = useState([
     {
@@ -108,23 +114,13 @@ const SuggestedQuestionsComponent = ({
           question.difficultyLevel.toLowerCase()
         );
 
-      //<----v1.0.2-----Venkatesh---- Filter by Interview vs Assignment selection
-      // "Interview Questions" => show only questions where isInterviewQuestionOnly === true
-      // "Assignment Questions" => show only questions where isInterviewQuestionOnly === false
-      const matchesInterviewOnly =
-        dropdownValue === "Interview Questions"
-          ? question.isInterviewQuestionOnly === true
-          : question.isInterviewQuestionOnly === false;
-
-      return matchesSearch && matchesType && matchesDifficultyLevel && matchesInterviewOnly;
-      //----v1.0.2----->
+      return matchesSearch && matchesType && matchesDifficultyLevel;
     });
   }, [
     suggestedQuestions,
     searchInput,
     questionTypeFilterItems,
     difficultyLevelFilterItems,
-    dropdownValue,
   ]);
 
   // Pagination
