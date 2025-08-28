@@ -85,14 +85,15 @@ const FeedbackList = () => {
   return (
     <div className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-sm border border-gray-200 col-span-2 hover:shadow-lg transition-all duration-300">
       <div className="flex items-center justify-between mb-8">
-        <div>
+        <div className='sm:w-[60%]'>
           <h3 className="text-xl font-semibold text-gray-800">Recent Feedback</h3>
           <p className="text-gray-500 text-sm mt-1">Latest interview feedback and evaluations</p>
         </div>
         <button 
         onClick={() => navigate('/feedback')}
-        className="flex items-center space-x-2 text-sm text-custom-blue hover:text-custom-blue/80 font-medium bg-indigo-50 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105">
-          <span>View All Feedback</span>
+        className="sm:-mt-10 flex items-center space-x-2 text-sm text-custom-blue hover:text-custom-blue/80 font-medium bg-indigo-50 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105">
+          <span className='sm:hidden'>View All Feedback</span>
+          <span className='md:hidden lg:hidden xl:hidden 2xl:hidden'>View All</span>
           <ChevronRight size={16} />
         </button>
       </div>
