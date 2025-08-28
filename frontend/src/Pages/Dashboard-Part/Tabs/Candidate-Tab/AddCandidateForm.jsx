@@ -945,6 +945,7 @@ const AddCandidateForm = ({
       "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
+  
 
   return (
     <>
