@@ -8,6 +8,52 @@ import { config } from '../config';
 import { usePermissions } from '../Context/PermissionsContext';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import { toast } from 'react-toastify';
+
+// Helper: format backend validation errors { message, errors } into a toast-friendly string
+const buildToastFromAxiosError = (err) => {
+  const data = err?.response?.data || {};
+  const main = typeof data?.message === 'string' && data.message.trim()
+    ? data.message
+    : err?.message || 'Request failed';
+
+  const errors = data?.errors;
+  const details = [];
+
+  if (errors) {
+    if (Array.isArray(errors)) {
+      for (const e of errors) {
+        if (!e) continue;
+        if (typeof e === 'string') details.push(e);
+        else if (typeof e === 'object') {
+          const path = Array.isArray(e.path)
+            ? e.path.join('.')
+            : typeof e.path === 'string'
+            ? e.path
+            : undefined;
+          if (path && e.message) details.push(`${path}: ${e.message}`);
+          else if (e.message) details.push(e.message);
+          else {
+            for (const [k, v] of Object.entries(e)) {
+              if (k === 'path' || k === 'context') continue;
+              if (typeof v === 'string') details.push(`${k}: ${v}`);
+            }
+          }
+        }
+      }
+    } else if (typeof errors === 'object') {
+      for (const [field, val] of Object.entries(errors)) {
+        if (Array.isArray(val)) details.push(...val.map((m) => `${field}: ${m}`));
+        else if (typeof val === 'string') details.push(`${field}: ${val}`);
+        else if (val && typeof val === 'object' && val.message) details.push(`${field}: ${val.message}`);
+      }
+    }
+  }
+
+  const lines = details.slice(0, 5).map((m) => `- ${m}`);
+  const extra = details.length > 5 ? `\n+ ${details.length - 5} more error(s)…` : '';
+  return lines.length ? `${main}\n${lines.join('\n')}${extra}` : main;
+};
 
 export const useQuestions = (filters = {}) => {
   const queryClient = useQueryClient();
@@ -241,13 +287,22 @@ export const useQuestions = (filters = {}) => {
     },
     onError: (error) => {
       console.error('Failed to save or update list:', error.response?.data?.message || error.message);
+      const msg = buildToastFromAxiosError(error);
+      toast.error(msg, { autoClose: 6000 });
     },
   });
 
   // ✅ Mutation #3: Add or Update Question in Lists
   const addQuestionToListMutation = useMutation({
     mutationFn: async ({ listIds, suggestedQuestionId, isInterviewType }) => {
-      if (!suggestedQuestionId || !listIds?.length) {
+      // Sanitize listIds: ensure non-empty strings
+      const cleanListIds = Array.isArray(listIds)
+        ? listIds
+            .map((id) => (id != null ? String(id).trim() : ''))
+            .filter((id) => id.length > 0)
+        : [];
+
+      if (!suggestedQuestionId || !cleanListIds.length) {
         throw new Error('Missing required fields');
       }
 
@@ -260,7 +315,7 @@ export const useQuestions = (filters = {}) => {
 
         // Merge existing and new list IDs
         const currentListIds = data.data?.tenantListId?.map(id => id.toString()) || [];
-        const updatedListIds = [...new Set([...currentListIds, ...listIds])];
+        const updatedListIds = [...new Set([...currentListIds, ...cleanListIds])].filter((id) => id && id.length > 0);
 
         // Update question with merged list IDs
         const response = await axios.patch(
@@ -281,7 +336,7 @@ export const useQuestions = (filters = {}) => {
             `${config.REACT_APP_API_URL}/newquestion`,
             {
               suggestedQuestionId,
-              tenantListId: listIds,
+              tenantListId: cleanListIds,
               //<-----v1.0.0----
               tenantId,
               ...(organization ? {} : { ownerId: userId }),
@@ -304,13 +359,22 @@ export const useQuestions = (filters = {}) => {
     },
     onError: (error) => {
       console.error('Update failed:', error.response?.data?.message || error.message);
+      const msg = buildToastFromAxiosError(error);
+      toast.error(msg, { autoClose: 6000 });
     }
   });
 
   // ✅ Mutation #4: Remove Question from Lists
   const removeQuestionFromListMutation = useMutation({
     mutationFn: async ({ suggestedQuestionId, listIdsToRemove, userId }) => {
-      if (!suggestedQuestionId || !listIdsToRemove?.length) {
+      // Sanitize listIdsToRemove: ensure non-empty strings
+      const cleanRemoveIds = Array.isArray(listIdsToRemove)
+        ? listIdsToRemove
+            .map((id) => (id != null ? String(id).trim() : ''))
+            .filter((id) => id.length > 0)
+        : [];
+
+      if (!suggestedQuestionId || !cleanRemoveIds.length) {
         throw new Error('Missing required fields: suggestedQuestionId or listIdsToRemove');
       }
       const response = await axios.get(`${config.REACT_APP_API_URL}/tenant-questions/${suggestedQuestionId}`, {
@@ -321,8 +385,8 @@ export const useQuestions = (filters = {}) => {
       const existingQuestion = response.data;
 
       if (existingQuestion && existingQuestion.data) {
-        const currentListIds = existingQuestion.data.tenantListId.map((id) => id.toString());
-        const updatedListIds = currentListIds.filter((id) => !listIdsToRemove.includes(id));
+        const currentListIds = existingQuestion.data?.tenantListId?.map((id) => id.toString()) || [];
+        const updatedListIds = currentListIds.filter((id) => !cleanRemoveIds.includes(id));
         const updateResponse = await axios.patch(
           `${config.REACT_APP_API_URL}/newquestion/${existingQuestion.data._id}`,
           {
@@ -345,6 +409,8 @@ export const useQuestions = (filters = {}) => {
     },
     onError: (error) => {
       console.error('Remove failed:', error.response?.data?.message || error.message);
+      const msg = buildToastFromAxiosError(error);
+      toast.error(msg, { autoClose: 6000 });
     }
   });
 
@@ -365,6 +431,11 @@ export const useQuestions = (filters = {}) => {
     isListsLoading,
     isSuggestedQuestionsLoading,
     isMutationLoading,
+    // Expose specific mutation loading states for finer UI control
+    saveOrUpdateQuestionLoading: saveOrUpdateQuestionMutation.isPending,
+    saveOrUpdateListLoading: saveOrUpdateListMutation.isPending,
+    addQuestionToListLoading: addQuestionToListMutation.isPending,
+    removeQuestionFromListLoading: removeQuestionFromListMutation.isPending,
     isMyQuestionsError,
     myQuestionsError,
     isListsError,

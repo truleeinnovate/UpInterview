@@ -461,27 +461,27 @@ const AddCandidateForm = ({
       const dob = selectedCandidate.Date_Of_Birth;
 
       setFormData({
-        FirstName: selectedCandidate?.FirstName || "",
-        LastName: selectedCandidate?.LastName || "",
-        Email: selectedCandidate?.Email || "",
-        Phone: selectedCandidate?.Phone || "",
+        FirstName: selectedCandidate.FirstName || "",
+        LastName: selectedCandidate.LastName || "",
+        Email: selectedCandidate.Email || "",
+        Phone: selectedCandidate.Phone || "",
         Date_Of_Birth: dob ? format(dob, "MMMM dd, yyyy") : "",
-        Gender: selectedCandidate?.Gender || "",
-        HigherQualification: selectedCandidate?.HigherQualification || "",
-        UniversityCollege: selectedCandidate?.UniversityCollege || "",
-        CurrentExperience: selectedCandidate?.CurrentExperience || "",
-        RelevantExperience: selectedCandidate?.RelevantExperience || "",
-        skills: selectedCandidate?.skills || [],
+        Gender: selectedCandidate.Gender || "",
+        HigherQualification: selectedCandidate.HigherQualification || "",
+        UniversityCollege: selectedCandidate.UniversityCollege || "",
+        CurrentExperience: selectedCandidate.CurrentExperience || "",
+        RelevantExperience: selectedCandidate.RelevantExperience || "",
+        skills: selectedCandidate.skills || [],
         // ImageData: selectedCandidate.imageUrl || null,
-        ImageData: selectedCandidate?.ImageData || null, // Added by Ashok
-        resume: selectedCandidate?.resume || null,
-        CurrentRole: selectedCandidate?.CurrentRole || "",
-        CountryCode: selectedCandidate?.CountryCode || "",
+        ImageData: selectedCandidate.ImageData || null, // Added by Ashok
+        resume: selectedCandidate.resume || null,
+        CurrentRole: selectedCandidate.CurrentRole || "",
+        CountryCode: selectedCandidate.CountryCode || "",
       });
 
       if (selectedCandidate.ImageData?.filename) {
-        setImagePreview(selectedCandidate?.ImageData?.path);
-        setSelectedImage(selectedCandidate?.ImageData);
+        setImagePreview(selectedCandidate.ImageData.path);
+        setSelectedImage(selectedCandidate.ImageData);
       } else {
         setImagePreview(null);
         setSelectedImage(null);
@@ -489,18 +489,18 @@ const AddCandidateForm = ({
 
       if (selectedCandidate.resume?.filename) {
         setSelectedResume({
-          path: selectedCandidate?.resume?.path,
-          name: selectedCandidate?.resume?.filename,
-          size: selectedCandidate?.resume?.fileSize,
+          path: selectedCandidate.resume.path,
+          name: selectedCandidate.resume.filename,
+          size: selectedCandidate.resume.fileSize,
         });
       } else {
         setSelectedResume(null);
       }
 
-      setEntries(selectedCandidate?.skills || []);
+      setEntries(selectedCandidate.skills || []);
       // Initialize allSelectedSkills with the skills from the candidate being edited
       setAllSelectedSkills(
-        selectedCandidate?.skills?.map((skill) => skill.skill) || []
+        selectedCandidate.skills?.map((skill) => skill.skill) || []
       );
       // setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
       // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
@@ -830,7 +830,7 @@ const AddCandidateForm = ({
       HigherQualification: formData.HigherQualification,
       Gender: formData.Gender,
       UniversityCollege: formData.UniversityCollege,
-      Date_Of_Birth: formData.Date_Of_Birth || "",
+      Date_Of_Birth: formData.Date_Of_Birth,
       skills: entries.map((entry) => ({
         skill: entry.skill,
         experience: entry.experience,

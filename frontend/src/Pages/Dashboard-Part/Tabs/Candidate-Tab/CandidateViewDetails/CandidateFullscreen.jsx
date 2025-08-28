@@ -40,7 +40,6 @@ const CandidateFullscreen = () => {
         );
         if (isMounted && selectedCandidate) {
           setCandidate(selectedCandidate);
-          console.log("candidate", selectedCandidate);
         }
       } catch (error) {
         console.error("Error fetching candidate:", error);

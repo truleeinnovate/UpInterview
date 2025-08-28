@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Disabled outer scrollbar when popup is open for better user experience
 // v1.0.1 - Ashok - Removed border left and set outline as none for better UI
+// v1.0.2 - commented man.png, woman.png, transgender.png
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -15,9 +16,11 @@ import {
   XCircle,
 } from "lucide-react";
 // import UserForm from './UserForm';
-import maleImage from "../../Images/man.png";
-import femaleImage from "../../Images/woman.png";
-import genderlessImage from "../../Images/transgender.png";
+// v1.0.2 <---------------------------------------------------
+// import maleImage from "../../Images/man.png";
+// import femaleImage from "../../Images/woman.png";
+// import genderlessImage from "../../Images/transgender.png";
+// v1.0.2 --------------------------------------------------->
 
 import classNames from "classnames";
 import Modal from "react-modal";

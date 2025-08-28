@@ -1,7 +1,29 @@
+//<-----v1.0.0-----Venkatesh------add validations
+
 const QuestionbankFavList = require("../models/QuestionBank/tenantQuestionsListNames.js");
+const { hasPermission } = require("../middleware/permissionMiddleware");
+//<-----v1.0.0-----
+const mongoose = require('mongoose');
+const {
+  validateQuestionListCreate,
+  validateQuestionListUpdate,
+} = require('../validations/tenantQuestionValidation');
+//-----v1.0.0----->
 const getList = async (req, res) => {
   const { userId } = req.params;
   const { tenantId, organization } = req.query; // Get these from query parameters
+
+  res.locals.loggedByController = true;
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
+        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
+        }
+        //-----v1.0.1--->
 
   try {
     let query = {};
@@ -21,19 +43,38 @@ const getList = async (req, res) => {
     res.status(500).json({ error: 'Error fetching lists' });
   }
 }
+
 const createList = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = 'Create new list';
-  const { label, ownerId, tenantId, name, type } = req.body;//<----v1.0.0----
+  const { label, ownerId, tenantId, name, type } = req.body;
 
   try {
+    //<-----v1.0.0-----
+    // Joi validation
+    const { errors, isValid } = validateQuestionListCreate(req.body);
+    if (!isValid) {
+      return res.status(400).json({ message: 'Validation failed', errors });
+    }
+    //-----v1.0.0----->
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Create')
+        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Create')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Create permission' });
+        }
+        //-----v1.0.1--->
     const newList = await QuestionbankFavList.create({
       label,
       ownerId,
       tenantId,
       name,
-      type,//<----v1.0.0----
+      type,
     });
+
     // Generate feed
     res.locals.feedData = {
       tenantId,
@@ -76,15 +117,12 @@ const createList = async (req, res) => {
       status: 'error',
     };
 
-    res.locals.responseData = {
+    res.status(500).json({
       status: 'error',
       message: error.message,
-    };
+    });
   }
 }
-
-
-
 
 const updateList = async (req, res) => {
   res.locals.loggedByController = true;
@@ -92,8 +130,32 @@ const updateList = async (req, res) => {
   const listId = req.params.id;
   const { tenantId, ownerId, ...updateFields } = req.body;
 
-
   try {
+    //<-----v1.0.0-----
+    // Validate list id
+    if (!mongoose.Types.ObjectId.isValid(listId)) {
+      return res.status(400).json({ message: 'Validation failed', errors: { id: 'Invalid list id' } });
+    }
+
+    // Joi validation for update
+    const { errors, isValid } = validateQuestionListUpdate(req.body);
+    if (!isValid) {
+      return res.status(400).json({ message: 'Validation failed', errors });
+    }
+    //-----v1.0.0----->
+    // res.locals.loggedByController = true;
+    //----v1.0.1---->
+
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
+        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
+        }
+        //-----v1.0.1--->
     // feeds related data
     const currentlist = await QuestionbankFavList.findById(listId).lean();
     if (!currentlist) {
@@ -113,7 +175,6 @@ const updateList = async (req, res) => {
         newValue,
       }));
 
-
     // If no changes detected, return early
     if (changes.length === 0) {
       return res.status(200).json({
@@ -125,7 +186,7 @@ const updateList = async (req, res) => {
     const updatedList = await QuestionbankFavList.findByIdAndUpdate(
       listId,
       updateFields,
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!updatedList) {
@@ -163,7 +224,7 @@ const updateList = async (req, res) => {
     };
 
     // Send response
-    res.status(201).json({
+    res.status(200).json({
       status: 'success',
       message: 'List updated successfully',
     });

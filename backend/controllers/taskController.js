@@ -1,12 +1,25 @@
 //<------v1.0.0---Venkatesh-----add validations
+//<-----v1.0.1---Venkatesh---apply permissions to post and update
 
 const Task = require('../models/task');
 const { validateCreateTask, validateUpdateTask } = require('../validations/taskvalidation');//<------v1.0.0---
+const { hasPermission } = require('../middleware/permissionMiddleware');
+
 
 // Get all tasks
 const getTasks = async (req, res) => {
     try {
-      const tasks = await Task.find();
+      res.locals.loggedByController = true;
+      //<-----v1.0.1---
+      // Permission: Tasks.Create (or super admin override)
+      const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.Tasks, 'View')
+      if (!canCreate) {
+        return res.status(403).json({ message: 'Forbidden: missing Tasks.View permission' });
+      }
+      //-----v1.0.1--->
+
+      const tasks = await Task.find().sort({ _id: -1 });
       res.json(tasks);
     } catch (err) {
       res.status(500).json({ message: err.message });
@@ -16,6 +29,17 @@ const getTasks = async (req, res) => {
 
 // Create a new task
 const createTask = async (req, res) => {
+
+  res.locals.loggedByController = true;
+  //<-----v1.0.1---
+  // Permission: Tasks.Create (or super admin override)
+  const canCreate =
+    await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Create')
+  if (!canCreate) {
+    return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+  }
+  //-----v1.0.1--->
+
   //<------v1.0.0---
   // Simple backend validation (mirrors frontend)
   const { errors, isValid } = validateCreateTask(req.body);
@@ -62,6 +86,16 @@ const taskCode = `TSK-${String(nextNumber).padStart(5, '0')}`;
 // Get a unique task by ID
 const getTaskById = async (req, res) => {
     const { id } = req.params;
+    res.locals.loggedByController = true;
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+      await hasPermission(res.locals?.effectivePermissions?.Tasks, 'View')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Tasks.View permission' });
+    }
+    //-----v1.0.1--->
+    
     try {
       const task = await Task.findById(id);
       if (task == null) {
@@ -79,6 +113,21 @@ const getTaskById = async (req, res) => {
 
 // Update a task
 const updateTask = async (req, res) => {
+
+
+  res.locals.loggedByController = true;
+  //<-----v1.0.1---
+  //console.log("effective permissions", hasPermission(res.locals?.effectivePermissions?.Tasks, 'Edit'))
+  // Permission: Tasks.Edit (or super admin override)
+  const canEdit =
+    await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Edit');
+  if (!canEdit) {
+    return res.status(403).json({ message: 'Forbidden: missing Tasks.Edit permission' });
+  }
+  //-----v1.0.1--->
+
+
+
     const { id } = req.params;
     const { title, assignedTo, assignedToId, priority, status, relatedTo, dueDate, comments } = req.body;
 

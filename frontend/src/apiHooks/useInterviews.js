@@ -276,15 +276,8 @@ export const useInterviews = (filters = {}) => {
       initialLoad.current = false;
       return;
     }
-    console.log('useInterviews state update:', {
-      interviewCount: interviewData.length,
-      isLoading,
-      isQueryLoading,
-      isMutationLoading
-    });
   }, [interviewData.length, isLoading, isQueryLoading, isMutationLoading]);
 
-  console.log("interviewData----===",interviewData)
   return {
     interviewData,
     isLoading,

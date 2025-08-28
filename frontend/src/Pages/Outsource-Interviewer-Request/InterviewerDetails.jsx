@@ -1,7 +1,10 @@
+// v1.0.0 - Ashok - changed url of maleImage (man.png) from local to cloud storage
 import { useEffect, useState, useCallback, useMemo } from "react";
 import InterviewStatusIndicator from "./InterviewStatusIndicator";
 import FeedbackStatusChangeModal from "./FeedbackStatusChangeModal";
-import maleImage from "../../Pages/Dashboard-Part/Images/man.png";
+// v1.0.0 <------------------------------------------------------------------
+// import maleImage from "../../Pages/Dashboard-Part/Images/man.png";
+// v1.0.0 ------------------------------------------------------------------>
 import Availability from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/Availability";
 // import axios from "axios";
 // import { config } from "../../config";
@@ -192,7 +195,7 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-bold text-custom-blue">
-          {/* v1.0.0 -------------------------------------------------------------------------------------------------------------------- */}
+                  {/* v1.0.0 -------------------------------------------------------------------------------------------------------------------- */}
                   Outsource Interviewer
                 </h2>
               </div>
@@ -235,7 +238,13 @@ const InterviewerDetails = ({ selectedInterviewersData, onClose }) => {
               }`}
             >
               <img
-                src={interviewer?.imageData?.path || maleImage}
+                // v1.0.0 <----------------------------------------------------------------------
+                // src={interviewer?.imageData?.path || maleImage}
+                src={
+                  interviewer?.imageData?.path ||
+                  "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
+                }
+                // v1.0.0 ---------------------------------------------------------------------->
                 alt={interviewer?.firstName || "Interviewer"}
                 className={`rounded-full object-cover mb-4 transition-all duration-300 
                 ${isExpanded ? "w-24 h-24" : "w-32 h-32"}

@@ -319,9 +319,19 @@ const MyQuestionsList1 = forwardRef(
       setShowPopup(false);
     };
 
+    const prevIdsRef = useRef([]);
+
     useEffect(() => {
-      onSelectList(selectedCandidates.map((candidate) => candidate._id));
-    }, [selectedCandidates, onSelectList]);//<----v1.0.2----
+      const ids = selectedCandidates
+        .map((candidate) => (candidate && typeof candidate === 'object' ? candidate._id : null))
+        .filter(Boolean);
+      const prev = prevIdsRef.current;
+      const changed = ids.length !== prev.length || ids.some((id, i) => id !== prev[i]);
+      if (changed) {
+        prevIdsRef.current = ids;
+        onSelectList(ids);
+      }
+    }, [selectedCandidates, onSelectList]);
 
     return (
       <div>
