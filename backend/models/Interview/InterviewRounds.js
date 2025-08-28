@@ -137,7 +137,7 @@ const interviewRoundSchema = new mongoose.Schema({
   interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],
 
   // Candidate (always one per round, included in participants too if needed)
-  candidateId: { type: mongoose.Schema.Types.ObjectId, ref: "Candidate", required: true },
+  // candidateId: { type: mongoose.Schema.Types.ObjectId, ref: "Candidate", required: true },
 
   // Current lifecycle status
   status: {

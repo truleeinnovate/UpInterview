@@ -281,9 +281,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     companyname: useRef(null),
     minexperience: useRef(null),
     maxexperience: useRef(null),
-    noOfPositions: useRef(null),
+    NoofPositions: useRef(null),
     location: useRef(null),
-    jobdescription: useRef(null),
+    jobDescription: useRef(null),
     skills: useRef(null),
     // Add more if needed
   };
@@ -608,7 +608,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     setErrors({});
 
     let basicdetails = {
-      ...dataToSubmit,
+      // ...dataToSubmit,
+      Location: dataToSubmit.Location,
+      title: dataToSubmit.title,
+      NoofPositions: dataToSubmit.NoofPositions,
       companyname: dataToSubmit.companyName,
       ...(dataToSubmit.minexperience && {
         minexperience: parseInt(dataToSubmit.minexperience),
@@ -616,6 +619,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       ...(dataToSubmit.maxexperience && {
         maxexperience: parseInt(dataToSubmit.maxexperience),
       }),
+        // ✅ salary must be string (backend requires it)
+  minSalary: dataToSubmit.minSalary ? String(dataToSubmit.minSalary) : "",
+  maxSalary: dataToSubmit.maxSalary ? String(dataToSubmit.maxSalary) : "",
       // minexperience: dataToSubmit.minexperience || "",
       // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
@@ -628,8 +634,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
       templateId: dataToSubmit.template?._id,
+        // ✅ fix naming mismatch (backend expects selectedTemplete)
+  // selectedTemplete: dataToSubmit.template?.templateName || null,
       // rounds: dataToSubmit.rounds || [],
     };
+    console.log("basicdetails", basicdetails);
 
     try {
       // let response;
@@ -688,7 +697,16 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         }
       }
     } catch (error) {
+      // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
+    if (error.response && error.response.status === 400) {
+      const backendErrors = error.response.data.errors || {};
+      console.log("backendErrors", backendErrors);
+      setErrors(backendErrors);
+      scrollToFirstError(backendErrors, fieldRefs);
+    } else {
       console.error("Error saving position:", error);
+    }
+      // console.error("Error saving position:", error);
     }
   };
 
@@ -998,8 +1016,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
     setShowDropdownLocation(false);
     setLocationSearchTerm("");
-    if (errors.location) {
-      setErrors((prevErrors) => ({ ...prevErrors, location: "" }));
+    if (errors.Location) {
+      setErrors((prevErrors) => ({ ...prevErrors, Location: "" }));
     }
   };
 
@@ -1566,7 +1584,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                         <input
                           // v1.0.1 <------------------------------------------
-                          ref={fieldRefs.noOfPositions}
+                          ref={fieldRefs.NoofPositions}
                           // v1.0.1 ------------------------------------------>
                           type="number"
                           min={1}
@@ -1582,7 +1600,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             if (value && parseInt(value) > 0) {
                               setErrors((prev) => ({
                                 ...prev,
-                                noOfPositions: "",
+                                NoofPositions: "",
                               }));
                             }
                           }}
@@ -1596,7 +1614,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           // }`}
                           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                             border ${
-                              errors.noOfPositions
+                              errors.NoofPositions
                                 ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
                                 : "border-gray-300 focus:ring-red-300"
                             }
@@ -1604,9 +1622,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           `}
                           // className="w-full px-3 py-2 border rounded-md focus:outline-none"
                         />
-                        {errors.noOfPositions && (
+                        {errors.NoofPositions && (
                           <p className="text-red-500 text-xs mt-1 ">
-                            {errors.noOfPositions}
+                            {errors.NoofPositions}
                           </p>
                         )}
                       </div>
@@ -1621,7 +1639,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           <div className="relative" ref={locationDropdownRef}>
                             <input
                               // v1.0.1 <------------------------------------------
-                              ref={fieldRefs.location}
+                              ref={fieldRefs.Location}
                               // v1.0.1 ------------------------------------------>
                               type="text"
                               value={formData.Location}
@@ -1637,7 +1655,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                                 border ${
-                                  errors.location
+                                  errors.Location
                                     ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
                                     : "border-gray-300 focus:ring-red-300"
                                 }
@@ -1707,7 +1725,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           <div className="relative">
                             <input
                               // v1.0.1 <------------------------------------------
-                              ref={fieldRefs.location}
+                              ref={fieldRefs.Location}
                               // v1.0.1 ------------------------------------------>
                               type="text"
                               value={formData.Location}
@@ -1716,10 +1734,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                   ...formData,
                                   Location: e.target.value,
                                 });
-                                if (errors.location) {
+                                if (errors.Location) {
                                   setErrors((prevErrors) => ({
                                     ...prevErrors,
-                                    location: "",
+                                    Location: "",
                                   }));
                                 }
                               }}
@@ -1730,7 +1748,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                                 border ${
-                                  errors.location
+                                  errors.Location
                                     ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
                                     : "border-gray-300 focus:ring-red-300"
                                 }
@@ -1762,9 +1780,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             </button>
                           </div>
                         )}
-                        {errors.location && (
+                        {errors.Location && (
                           <p className="text-red-500 text-xs pt-1">
-                            {errors.location}
+                            {errors.Location}
                           </p>
                         )}
                       </div>
@@ -1781,7 +1799,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         Job Description <span className="text-red-500">*</span>
                       </label>
                       <textarea
-                        ref={fieldRefs.jobdescription}
+                        ref={fieldRefs.jobDescription}
                         id="jobDescription"
                         name="jobDescription"
                         value={formData.jobDescription}
@@ -1789,10 +1807,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           const value = e.target.value;
                           setFormData({ ...formData, jobDescription: value });
                           // Clear jobdescription error when user starts typing
-                          if (errors.jobdescription) {
+                          if (errors.jobDescription) {
                             setErrors((prev) => ({
                               ...prev,
-                              jobdescription: "",
+                              jobDescription: "",
                             }));
                           }
                         }}
@@ -1803,7 +1821,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                           border ${
-                            errors.jobdescription
+                            errors.jobDescription
                               ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
                               : "border-gray-300 focus:ring-red-300"
                           }
@@ -1817,9 +1835,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       <div>
                         <div className="flex justify-between items-center mt-1">
                           <span className="text-sm text-gray-500">
-                            {errors.jobdescription ? (
+                            {errors.jobDescription ? (
                               <p className="text-red-500 text-xs pt-1">
-                                {errors.jobdescription}
+                                {errors.jobDescription}
                               </p>
                             ) : formData.jobDescription.length > 0 &&
                               formData.jobDescription.length < 50 ? (

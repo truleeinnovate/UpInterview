@@ -2,6 +2,7 @@
 //<-----v1.0.1---Venkatesh------add permission
 const { mongoose } = require("mongoose");
 const { Position } = require("../models/Position/position.js");
+const { validatePosition, validateRoundData, validateRoundPatchData, positionValidationSchema, positionPatchValidationSchema } = require("../validations/positionValidation.js");
 const { hasPermission } = require("../middleware/permissionMiddleware");
 
 // const createPosition = async (req, res) => {
@@ -215,7 +216,28 @@ const { hasPermission } = require("../middleware/permissionMiddleware");
 const createPosition = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Create Position";
-  console.log("🔁 Incoming request to createPosition:", req.body);
+
+  // --- VALIDATE REQUEST BODY ---
+  const { error } = positionValidationSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    const errors = {};
+    error.details.forEach((err) => {
+      errors[err.path.join(".")] = err.message;
+    });
+    return res.status(400).json({ status: "error", errors });
+  }
+
+  // // --- Validate req.body using Joi ---
+  // const { error } = Position.validate(req.body, { abortEarly: false });
+  // if (error) {
+  //   const errors = {};
+  //   error.details.forEach((err) => {
+  //     errors[err.path.join(".")] = err.message;
+  //   });
+  //   return res.status(400).json({ status: "error", errors });
+  // }
+
+  // console.log("🔁 Incoming request to createPosition:", req.body);
 
   // Check if ownerId exists
   if (!req.body.ownerId) {
@@ -260,7 +282,7 @@ const createPosition = async (req, res) => {
     // Map request body to schema fields
     const positionData = {
       title: req.body.title || "",
-      companyname: req.body.companyName || "",
+      companyname: req.body.companyname || "",
       jobDescription: req.body.jobDescription || "",
       minexperience: req.body.minexperience || undefined,
       maxexperience: req.body.maxexperience || undefined,
@@ -297,9 +319,9 @@ const createPosition = async (req, res) => {
         sequence: round.sequence || 0,
         questions: round.questions
           ? round.questions.map((q) => ({
-              questionId: q.questionId || null,
-              snapshot: q.snapshot || null,
-            }))
+            questionId: q.questionId || null,
+            snapshot: q.snapshot || null,
+          }))
           : [],
       }));
     } else {
@@ -370,6 +392,17 @@ const updatePosition = async (req, res) => {
   const positionId = req.params.id;
   const { tenantId, ownerId, ...updateFields } = req.body;
 
+//  Ranjith changes
+  // Validate incoming PATCH data
+  const { error } = positionPatchValidationSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    const errors = {};
+    error.details.forEach((err) => {
+      errors[err.path.join(".")] = err.message;
+    });
+    return res.status(400).json({ status: "error", errors });
+  }
+// venkatesh changes
   //res.locals.loggedByController = true;
   //console.log("effectivePermissions",res.locals?.effectivePermissions)
   //<-----v1.0.1---
@@ -428,9 +461,9 @@ const updatePosition = async (req, res) => {
         sequence: round.sequence || 0,
         questions: round.questions
           ? round.questions.map((q) => ({
-              questionId: q.questionId || null,
-              snapshot: q.snapshot || null,
-            }))
+            questionId: q.questionId || null,
+            snapshot: q.snapshot || null,
+          }))
           : [],
       }));
     } else {
@@ -825,6 +858,18 @@ const saveInterviewRoundPosition = async (req, res) => {
         .json({ message: "Position ID and round data are required." });
     }
 
+    // ✅ Backend validation
+    const { error } = validateRoundData.validate(round, {
+      abortEarly: false,
+    });
+    if (error) {
+      const errors = {};
+      error.details.forEach((err) => {
+        errors[err.path.join(".")] = err.message;
+      });
+      return res.status(400).json({ status: "error", errors });
+    }
+
     const position = await Position.findById(positionId);
     if (!position) {
       return res.status(404).json({ message: "Position not found." });
@@ -854,7 +899,7 @@ const saveInterviewRoundPosition = async (req, res) => {
       // Reorder sequences
       reorderInterviewRounds(position);
 
-       // Set roundsModified to true
+      // Set roundsModified to true
       position.roundsModified = true;
 
       await position.save();
@@ -878,7 +923,7 @@ const saveInterviewRoundPosition = async (req, res) => {
 
       reorderInterviewRounds(position);
 
-        // Set roundsModified to true
+      // Set roundsModified to true
       position.roundsModified = true;
 
       await position.save();
@@ -900,10 +945,280 @@ const saveInterviewRoundPosition = async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 };
-// v1.0.0 ----------------------------------------------------------------------------------->
-const deleteRound = async (req, res) => {
-  const { roundId } = req.params;
 
+// patch call for positons round 
+// PATCH: /api/positions/:positionId/rounds/:roundId
+// const updateInterviewRound = async (req, res) => {
+//   try {
+//     const { positionId, roundId } = req.params;
+//     const updates = req.body; // only the fields to update
+
+
+//     // Convert to ObjectId explicitly
+//     positionId = new mongoose.Types.ObjectId(positionId);
+//     roundId = new mongoose.Types.ObjectId(roundId);
+
+//     if (!mongoose.Types.ObjectId.isValid(positionId)) {
+//       return res.status(400).json({ message: "Invalid Position ID" });
+//     }
+
+//     if (!mongoose.Types.ObjectId.isValid(roundId)) {
+//       return res.status(400).json({ message: "Invalid Round ID" });
+//     }
+
+//     if (!positionId || !roundId) {
+//       return res
+//         .status(400)
+//         .json({ message: "Position ID and Round ID are required." });
+//     }
+
+
+
+//     // ✅ Find position
+//     const position = await Position.findById(positionId);
+//     if (!position) {
+//       return res.status(404).json({ message: "Position not found." });
+//     }
+
+//     // ✅ Find round inside position
+//     const round = position.rounds.id(roundId);
+//     if (!round) {
+//       return res.status(404).json({ message: "Round not found." });
+//     }
+
+//     // ✅ Apply only provided updates
+//     Object.keys(updates).forEach((key) => {
+//       round[key] = updates[key];
+//     });
+
+//         // ✅ Validate incoming data with Joi (partial validation)
+//    // PATCH/editing an existing round
+//    const { error } = validateRoundPatchData.validate(round, { abortEarly: false });
+//    if (error) {
+//      const errors = {};
+//      error.details.forEach((err) => {
+//        errors[err.path.join(".")] = err.message;
+//      });
+//      return res.status(400).json({ status: "error", errors });
+//    }
+
+//     // ✅ Reorder if sequence changed
+//     if (updates.sequence) {
+//       position.rounds = position.rounds.filter((r) => r._id.toString() !== roundId);
+//       const desiredIndex = Math.max(updates.sequence - 1, 0);
+//       position.rounds.splice(desiredIndex, 0, round);
+
+//       position.rounds.forEach((r, idx) => {
+//         r.sequence = idx + 1;
+//       });
+//     }
+
+//     position.roundsModified = true;
+
+//     await position.save();
+
+//     return res.status(200).json({
+//       message: "Round updated successfully.",
+//       data: round,
+//     });
+//   } catch (error) {
+//     console.error("Error updating interview round:", error);
+//     return res.status(500).json({ message: "Internal server error." });
+//   }
+// };
+// PATCH: /api/positions/:positionId/rounds/:roundId
+
+
+// ======================= PATCH Handler =======================
+
+
+
+// const updateInterviewRound = async (req, res) => {
+//   try {
+//     console.log("=== PATCH /positions/:positionId/rounds/:roundId called ===");
+
+//     const { positionId: rawPositionId, roundId: rawRoundId } = req.params;
+//     const { round: updates } = req.body;
+
+//     // ---------- Validate ObjectId ----------
+//     if (!mongoose.Types.ObjectId.isValid(rawPositionId)) {
+//       console.log("Invalid Position ID:", rawPositionId);
+//       return res.status(400).json({ message: "Invalid Position ID" });
+//     }
+
+//     if (!mongoose.Types.ObjectId.isValid(rawRoundId)) {
+//       console.log("Invalid Round ID:", rawRoundId);
+//       return res.status(400).json({ message: "Invalid Round ID" });
+//     }
+
+//     // ---------- Fetch Position ----------
+//     const position = await Position.findById(rawPositionId);
+//     if (!position) {
+//       console.log("Position not found:", rawPositionId);
+//       return res.status(404).json({ message: "Position not found." });
+//     }
+
+//     // ---------- Fetch Round ----------
+//     const round = position.rounds.id(rawRoundId);
+//     if (!round) {
+//       console.log("Round not found:", rawRoundId);
+//       return res.status(404).json({ message: "Round not found." });
+//     }
+//     // Remove system fields before validation
+// const { _id, createdAt, updatedAt, ...roundPlain } = round.toObject();
+
+//     // ---------- Merge & Validate Updates ----------
+//     const roundObjectForValidation = {
+//       ...roundPlain,
+//       ...updates,
+//     };
+
+//     const { error } = validateRoundPatchData.validate(roundObjectForValidation, { abortEarly: false });
+//     if (error) {
+//       const errors = {};
+//       error.details.forEach((err) => {
+//         errors[err.path.join(".")] = err.message;
+//       });
+//       console.log("Validation errors:", errors);
+//       return res.status(400).json({ status: "error", errors });
+//     }
+
+//     // ---------- Apply Updates ----------
+//     Object.keys(updates).forEach((key) => {
+//       if (key === "assessmentId" && updates.assessmentId) {
+//         round[key] = mongoose.Types.ObjectId(updates.assessmentId);
+//       } else if (key === "interviewers" && Array.isArray(updates.interviewers)) {
+//         round[key] = updates.interviewers.map((id) => mongoose.Types.ObjectId(id));
+//       } else {
+//         round[key] = updates[key];
+//       }
+//     });
+
+//     // ---------- Reorder Rounds if Sequence Changed ----------
+//     if (updates.sequence) {
+//       position.rounds = position.rounds.filter((r) => !r._id.equals(rawRoundId));
+//       const desiredIndex = Math.max(updates.sequence - 1, 0);
+//       position.rounds.splice(desiredIndex, 0, round);
+//       position.rounds.forEach((r, idx) => (r.sequence = idx + 1));
+//     }
+
+//     // ---------- Save Position ----------
+//     await position.save();
+//     console.log("Round updated successfully:", round._id);
+
+//     return res.status(200).json({
+//       message: "Round updated successfully.",
+//       data: round,
+//     });
+//   } catch (err) {
+//     console.error("Error updating interview round:", err);
+//     return res.status(500).json({ message: "Internal server error." });
+//   }
+// };
+
+// ======================= PATCH Handler =======================
+// const updateInterviewRound = async (req, res) => {
+//   try {
+//     console.log("=== PATCH /positions/:positionId/rounds/:roundId called ===");
+
+//     const { positionId: rawPositionId, roundId: rawRoundId } = req.params;
+//     const { round: updates } = req.body;
+
+//     // ---------- Validate ObjectId ----------
+//     if (!mongoose.Types.ObjectId.isValid(rawPositionId)) {
+//       console.log("Invalid Position ID:", rawPositionId);
+//       return res.status(400).json({ message: "Invalid Position ID" });
+//     }
+
+//     if (!mongoose.Types.ObjectId.isValid(rawRoundId)) {
+//       console.log("Invalid Round ID:", rawRoundId);
+//       return res.status(400).json({ message: "Invalid Round ID" });
+//     }
+
+//     // ---------- Fetch Position ----------
+//     const position = await Position.findById(rawPositionId);
+//     if (!position) {
+//       console.log("Position not found:", rawPositionId);
+//       return res.status(404).json({ message: "Position not found." });
+//     }
+
+//     // ---------- Fetch Round ----------
+//     const round = position.rounds.id(rawRoundId);
+//     if (!round) {
+//       console.log("Round not found:", rawRoundId);
+//       return res.status(404).json({ message: "Round not found." });
+//     }
+
+//     // ---------- Handle interviewer type transitions ----------
+//     // If changing interviewerType, clear dependent fields appropriately
+//     if (updates.interviewerType && updates.interviewerType !== round.interviewerType) {
+//       console.log(`Changing interviewerType from ${round.interviewerType} to ${updates.interviewerType}`);
+      
+//       if (updates.interviewerType === 'internal') {
+//         // Clear fields not relevant for internal interviewers
+//         updates.interviewerViewType = '';
+//         updates.selectedInterviewersType = '';
+//       } else if (updates.interviewerType === 'external') {
+//         // Clear fields not relevant for external interviewers
+//         updates.interviewerGroupName = '';
+//         updates.interviewers = [];
+//       }
+//     }
+
+//     // ---------- Merge & Validate Updates (skip system fields) ----------
+//     const { _id, createdAt, updatedAt, ...roundPlain } = round.toObject();
+
+//     const roundObjectForValidation = {
+//       ...roundPlain,
+//       ...updates,
+//     };
+
+//     const { error } = validateRoundPatchData.validate(roundObjectForValidation, { abortEarly: false });
+//     if (error) {
+//       const errors = {};
+//       error.details.forEach((err) => {
+//         errors[err.path.join(".")] = err.message;
+//       });
+//       console.log("Validation errors:", errors);
+//       return res.status(400).json({ status: "error", errors });
+//     }
+
+//     // ---------- Apply Updates ----------
+//     Object.keys(updates).forEach((key) => {
+//       if (key === "assessmentId" && updates.assessmentId) {
+//         round[key] = new mongoose.Types.ObjectId(updates.assessmentId);
+//       } else if (key === "interviewers" && Array.isArray(updates.interviewers)) {
+//         round[key] = updates.interviewers.map((id) => new mongoose.Types.ObjectId(id));
+//       } else {
+//         round[key] = updates[key];
+//       }
+//     });
+
+//     // ---------- Reorder Rounds if Sequence Changed ----------
+//     if (updates.sequence) {
+//       position.rounds = position.rounds.filter((r) => !r._id.equals(rawRoundId));
+//       const desiredIndex = Math.max(updates.sequence - 1, 0);
+//       position.rounds.splice(desiredIndex, 0, round);
+//       position.rounds.forEach((r, idx) => (r.sequence = idx + 1));
+//     }
+
+//     // ---------- Save Position ----------
+//     await position.save();
+//     console.log("Round updated successfully:", round._id);
+
+//     return res.status(200).json({
+//       message: "Round updated successfully.",
+//       data: round,
+//     });
+//   } catch (err) {
+//     console.error("Error updating interview round:", err);
+//     return res.status(500).json({ message: "Internal server error." });
+//   }
+// };
+
+
+// ======================= PATCH Handler =======================
+const updateInterviewRound = async (req, res) => {
   //res.locals.loggedByController = true;
   //console.log("effectivePermissions",res.locals?.effectivePermissions)
   //<-----v1.0.1---
@@ -917,35 +1232,153 @@ const deleteRound = async (req, res) => {
   //-----v1.0.1--->
 
   try {
-    const position = await Position.findOne({ "rounds._id": roundId });
+    console.log("=== PATCH /positions/:positionId/rounds/:roundId called ===");
+
+    const { positionId: rawPositionId, roundId: rawRoundId } = req.params;
+    const { round: updates } = req.body;
+
+    // ---------- Validate ObjectId ----------
+    if (!mongoose.Types.ObjectId.isValid(rawPositionId)) {
+      console.log("Invalid Position ID:", rawPositionId);
+      return res.status(400).json({ message: "Invalid Position ID" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(rawRoundId)) {
+      console.log("Invalid Round ID:", rawRoundId);
+      return res.status(400).json({ message: "Invalid Round ID" });
+    }
+
+    // ---------- Fetch Position ----------
+    const position = await Position.findById(rawPositionId);
     if (!position) {
-      return res.status(404).json({ message: "Round not found" });
+      console.log("Position not found:", rawPositionId);
+      return res.status(404).json({ message: "Position not found." });
     }
 
-    // Find the index of the round to delete
-    const roundIndex = position.rounds.findIndex(
-      (round) => round._id.toString() === roundId
-    );
-    if (roundIndex === -1) {
-      return res.status(404).json({ message: "Round not found" });
+    // ---------- Fetch Round ----------
+    const round = position.rounds.id(rawRoundId);
+    if (!round) {
+      console.log("Round not found:", rawRoundId);
+      return res.status(404).json({ message: "Round not found." });
     }
 
-    // Remove the round from the array
-    position.rounds.splice(roundIndex, 1);
+    // ---------- Handle assessment rounds (interviewerType should be empty) ----------
+    if (updates.assessmentId || round.assessmentId) {
+      console.log("Assessment round detected - clearing interviewer fields");
+      updates.interviewerType = '';
+      updates.interviewerGroupName = '';
+      updates.interviewerViewType = '';
+      updates.selectedInterviewersType = '';
+      updates.interviewers = [];
+    } else {
+      // ---------- Handle interviewer type transitions ----------
+      // If changing interviewerType, clear dependent fields appropriately
+      if (updates.interviewerType && updates.interviewerType !== round.interviewerType) {
+        console.log(`Changing interviewerType from ${round.interviewerType} to ${updates.interviewerType}`);
+        
+        if (updates.interviewerType === 'internal') {
+          // Clear fields not relevant for internal interviewers
+          updates.interviewerViewType = '';
+          updates.selectedInterviewersType = '';
+        } else if (updates.interviewerType === 'external') {
+          // Clear fields not relevant for external interviewers
+          updates.interviewerGroupName = '';
+          updates.interviewers = [];
+        }
+      }
+    }
 
-    // Save the updated position
+    // ---------- Merge & Validate Updates (skip system fields) ----------
+    const { _id, createdAt, updatedAt, ...roundPlain } = round.toObject();
+
+    const roundObjectForValidation = {
+      ...roundPlain,
+      ...updates,
+    };
+
+    const { error } = validateRoundPatchData.validate(roundObjectForValidation, { abortEarly: false });
+    if (error) {
+      const errors = {};
+      error.details.forEach((err) => {
+        errors[err.path.join(".")] = err.message;
+      });
+      console.log("Validation errors:", errors);
+      return res.status(400).json({ status: "error", errors });
+    }
+
+    // ---------- Apply Updates ----------
+    Object.keys(updates).forEach((key) => {
+      if (key === "assessmentId" && updates.assessmentId) {
+        round[key] = new mongoose.Types.ObjectId(updates.assessmentId);
+      } else if (key === "interviewers" && Array.isArray(updates.interviewers)) {
+        round[key] = updates.interviewers.map((id) => new mongoose.Types.ObjectId(id));
+      } else {
+        round[key] = updates[key];
+      }
+    });
+
+    // ---------- Reorder Rounds if Sequence Changed ----------
+    if (updates.sequence) {
+      position.rounds = position.rounds.filter((r) => !r._id.equals(rawRoundId));
+      const desiredIndex = Math.max(updates.sequence - 1, 0);
+      position.rounds.splice(desiredIndex, 0, round);
+      position.rounds.forEach((r, idx) => (r.sequence = idx + 1));
+    }
+
+    // ---------- Save Position ----------
     await position.save();
+    console.log("Round updated successfully:", round._id);
 
-    res.status(200).json({ message: "Round deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting round:", error);
-    res.status(500).json({ message: "Error deleting round" });
+    return res.status(200).json({
+      message: "Round updated successfully.",
+      data: round,
+    });
+  } catch (err) {
+    console.error("Error updating interview round:", err);
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
-module.exports = {
-  createPosition,
-  updatePosition,
-  saveInterviewRoundPosition,
-  deleteRound,
-};
+
+
+
+
+
+    // v1.0.0 ----------------------------------------------------------------------------------->
+    const deleteRound = async (req, res) => {
+      const { roundId } = req.params;
+
+      try {
+        const position = await Position.findOne({ "rounds._id": roundId });
+        if (!position) {
+          return res.status(404).json({ message: "Round not found" });
+        }
+
+        // Find the index of the round to delete
+        const roundIndex = position.rounds.findIndex(
+          (round) => round._id.toString() === roundId
+        );
+        if (roundIndex === -1) {
+          return res.status(404).json({ message: "Round not found" });
+        }
+
+        // Remove the round from the array
+        position.rounds.splice(roundIndex, 1);
+
+        // Save the updated position
+        await position.save();
+
+        res.status(200).json({ message: "Round deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting round:", error);
+        res.status(500).json({ message: "Error deleting round" });
+      }
+    };
+
+    module.exports = {
+      createPosition,
+      updatePosition,
+      saveInterviewRoundPosition,
+      deleteRound,
+      updateInterviewRound
+    };

@@ -104,7 +104,7 @@ const candidateActionEnabled = startDateTime
           newStatus = extra.status === "completed" ? "Completed" : "InCompleted";
           rejectionReason = extra.comments || null;
         } else if (type === "noShow") {
-          // newStatus = "no-show";
+          newStatus = "NoShow";
           event = "Candidate_NoShow";
           eventReason = extra.comments 
         } else if (type === "cancel") {
