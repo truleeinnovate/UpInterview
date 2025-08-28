@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - changed logo url from local to cloud storage url
 import { XCircle } from 'lucide-react';
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -11,7 +12,7 @@ import { handleMembershipChange } from "../../../utils/PaymentpageValidations.js
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../apiHooks/useUsers.js";
 import Loading from '../../../Components/Loading.js';
-import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
+// import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 
 // Simple function to load Razorpay script
 const loadRazorpayScript = () => {
@@ -272,7 +273,10 @@ const CardDetails = () => {
                             currency: 'INR',//orderResponse.data.currency || 
                             name: "UpInterview",
                             description: `${cardDetails.membershipType} Subscription for ${planDetails.name} - ₹${(orderResponse.data.amount / 100).toFixed(2)}`,
-                            image: logo,
+                            // v1.0.0 <--------------------------------------------------------------------------------------------------------------------
+                            // image: logo,
+                            image: "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp",
+                            // v1.0.0 -------------------------------------------------------------------------------------------------------------------->
                             prefill: {
                                 name: userProfileData?.name || "",
                                 email: userProfileData?.email || "",

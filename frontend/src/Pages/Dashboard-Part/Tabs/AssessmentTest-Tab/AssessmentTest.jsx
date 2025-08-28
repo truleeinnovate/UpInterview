@@ -1,4 +1,5 @@
 // v1.0.0  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
+// v1.0.1  -  Ashok   -  changed logo url from local to cloud storage url
 import axios from "axios";
 import CryptoJS from 'crypto-js';
 import React, { useState, useEffect } from "react";
@@ -7,7 +8,7 @@ import AssessmentTestPage1 from './Components/AssessmentTestPage1.jsx';
 import AssessmentTestPage2 from './Components/AssessmentTestPage2.jsx';
 import AssessmentExamStart from './Components/AssessmentExamStart.jsx';
 import toast from 'react-hot-toast';
-import logo from "../../../Dashboard-Part/Images/upinterviewLogo.webp";
+// import logo from "../../../Dashboard-Part/Images/upinterviewLogo.webp";
 import { config } from "../../../../config.js";
 // <---------------------- v1.0.0
 import { useAssessments } from '../../../../apiHooks/useAssessments.js';
@@ -220,7 +221,10 @@ const AssessmentTest = () => {
         <div className="max-w-[90rem] mx-auto px-8 py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
-              <img src={logo} alt="Logo" className="w-20" />
+              {/* v1.0.1 <--------------------------------------------------------------------------------------- */}
+              {/* <img src={logo} alt="Logo" className="w-20" /> */}
+              <img src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp" alt="Logo" className="w-20" />
+              {/* v1.0.1 <---------------------------------------------------------------------------------------  */}
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">Powered by</span>

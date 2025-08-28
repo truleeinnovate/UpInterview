@@ -1,3 +1,6 @@
+/* v1.0.0 - Ashok - changed maleImage (man.png), femaleImage (woman.png) and genderlessImage (transgender.png) 
+ path from local to cloud storage url
+ */
 /* eslint-disable no-lone-blocks */
 // import PropTypes from 'prop-types';
 import { motion } from "framer-motion";
@@ -11,9 +14,12 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import maleImage from "../../../Images/man.png";
-import femaleImage from "../../../Images/woman.png";
-import genderlessImage from "../../../Images/transgender.png";
+// v1.0.0 <--------------------------------------------------------------
+// import maleImage from "../../../Images/man.png";
+// import femaleImage from "../../../Images/woman.png";
+// import genderlessImage from "../../../Images/transgender.png";
+// v1.0.0 -------------------------------------------------------------->
+
 import { useNavigate } from "react-router-dom";
 // import axios from 'axios';
 // import { config } from '../../../../../config';
@@ -120,15 +126,22 @@ const KanbanView = ({
                         <img
                           className="h-8 w-8 rounded-full object-cover"
                           src={users.imageData.path}
-                          alt={`${users.firstName || ""} ${users.lastName || ""}`}
+                          alt={`${users.firstName || ""} ${
+                            users.lastName || ""
+                          }`}
+                          // v1.0.0 <----------------------------------------------------------------------------------------------------------
                           onError={(e) => {
                             e.target.src =
                               users.gender === "Male"
-                                ? maleImage
+                                ? // ? maleImage
+                                  "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                                 : users.gender === "Female"
-                                  ? femaleImage
-                                  : genderlessImage;
+                                ? // ? femaleImage
+                                  "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
+                                : // : genderlessImage;
+                                  "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
                           }}
+                          // v1.0.0 ---------------------------------------------------------------------------------------------------------->
                         />
                       ) : (
                         <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
@@ -140,29 +153,37 @@ const KanbanView = ({
                     </div>
                     <div className="ml-3">
                       <h4 className="text-sm font-medium text-gray-900">
-                        {users.firstName ? users.firstName.charAt(0).toUpperCase() + users.firstName.slice(1) : ""} {users.lastName ? users.lastName.charAt(0).toUpperCase() + users.lastName.slice(1) : ""}
+                        {users.firstName
+                          ? users.firstName.charAt(0).toUpperCase() +
+                            users.firstName.slice(1)
+                          : ""}{" "}
+                        {users.lastName
+                          ? users.lastName.charAt(0).toUpperCase() +
+                            users.lastName.slice(1)
+                          : ""}
                       </h4>
                     </div>
                   </div>
                   {/* Action buttons */}
                   <div className="flex items-center gap-1">
                     <button
-                      className={`p-1.5 ${users.status === "active"
+                      className={`p-1.5 ${
+                        users.status === "active"
                           ? "text-green-600"
                           : "text-red-600"
-                        } hover:bg-blue-50 rounded-lg transition-colors`}
+                      } hover:bg-blue-50 rounded-lg transition-colors`}
                       // className="hover:bg-gray-200 w-full p-1 rounded pl-3 cursor-pointer flex items-center gap-2"
                       onClick={() => handleStatusToggle(users)}
                     >
                       {users.status === "active" ? (
                         <CheckCircle
                           size={16}
-                        // className='fill-white-500'
+                          // className='fill-white-500'
                         />
                       ) : (
                         <XCircle
                           size={16}
-                        // className='fill-white-400'
+                          // className='fill-white-400'
                         />
                       )}
                       {/* {users.status === "active" ? "In Active" : "Active"} */}
@@ -217,7 +238,17 @@ const KanbanView = ({
       {/* Confirmation Popup */}
       <ConfirmationModal
         show={showConfirmation}
-        userName={`${selectedUser?.firstName ? selectedUser?.firstName.charAt(0).toUpperCase() + selectedUser?.firstName.slice(1) : ""} ${selectedUser?.lastName ? selectedUser?.lastName.charAt(0).toUpperCase() + selectedUser?.lastName.slice(1) : ""}`}
+        userName={`${
+          selectedUser?.firstName
+            ? selectedUser?.firstName.charAt(0).toUpperCase() +
+              selectedUser?.firstName.slice(1)
+            : ""
+        } ${
+          selectedUser?.lastName
+            ? selectedUser?.lastName.charAt(0).toUpperCase() +
+              selectedUser?.lastName.slice(1)
+            : ""
+        }`}
         newStatus={newStatus}
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}
@@ -228,9 +259,11 @@ const KanbanView = ({
 
 export default KanbanView;
 
-
-{/* Confirmation Popup */ }
-{/* {showConfirmation && (
+{
+  /* Confirmation Popup */
+}
+{
+  /* {showConfirmation && (
         // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-20">
 
@@ -255,4 +288,5 @@ export default KanbanView;
             </div>
           </div>
         </div>
-      )} */}
+      )} */
+}

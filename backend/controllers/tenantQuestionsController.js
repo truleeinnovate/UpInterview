@@ -11,6 +11,7 @@ const {
   validateCreateTenantQuestion,
   validateUpdateTenantQuestion,
 } = require("../validations/tenantQuestionValidation");
+const { hasPermission } = require("../middleware/permissionMiddleware");
 //----v1.0.1---->
 
 // exports.newQuestion = async (req, res) => {
@@ -90,6 +91,18 @@ exports.newQuestion = async (req, res) => {
     if (!tenantId && !ownerId) {
       return res.status(400).json({ message: 'Validation failed', errors: { tenantId: 'Either tenantId or ownerId is required', ownerId: 'Either ownerId or tenantId is required' } });
     }
+
+    res.locals.loggedByController = true;
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Create')
+        //await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Create')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Create permission' });
+        }
+        //-----v1.0.1--->
 
     let questionData;
     //console.log('questionBody:',questionBody)
@@ -195,6 +208,17 @@ exports.updateQuestion = async (req, res) => {
       }
     }
     //----v1.0.1---->
+
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
+        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
+        }
+        //-----v1.0.1--->
 
     // Remove invalid id
     if (!updateFields.suggestedQuestionId) delete updateFields.suggestedQuestionId;
@@ -314,6 +338,18 @@ exports.getQuestionBySuggestedId = async (req, res) => {
     return res.status(400).json({ message: 'Validation failed', errors: { suggestedQuestionId: 'Invalid suggestedQuestionId' } });
   }
   //----v1.0.1---->
+
+  res.locals.loggedByController = true;
+        //console.log("effectivePermissions",res.locals?.effectivePermissions)
+        //<-----v1.0.1---
+        // Permission: Tasks.Create (or super admin override)
+        const canCreate =
+        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
+        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
+        if (!canCreate) {
+          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
+        }
+        //-----v1.0.1--->
 
   try {
     let question;
