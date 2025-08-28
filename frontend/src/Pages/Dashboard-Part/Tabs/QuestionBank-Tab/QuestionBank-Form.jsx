@@ -12,9 +12,10 @@
 // v1.0.6 - ASHOK  - Removed border left and set outline as none and improved scroll to first error logic
 
 // v1.0.7 - Venkatesh - if myquestionlist type is interview then hidden interview questions in question bank form 
+// v1.0.8 - Venkatesh - validation updated 
 
 import React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-input-2/lib/style.css";
 import axios from "axios";
@@ -87,6 +88,10 @@ const QuestionBankForm = ({
   };
   // v1.0.4 -------------------------------------------------------------------->
 
+  // Map server-side field keys to UI refs for smooth scrolling on validation errors
+  // Backend uses `tenantListId`; the UI component uses `questionListRef`
+  fieldRefs.tenantListId = fieldRefs.questionListRef;
+
   const { saveOrUpdateQuestion, saveOrUpdateQuestionLoading, createdLists } =
     useQuestions();
   // console.log("selectedLabelId ================", selectedLabelId);
@@ -100,7 +105,7 @@ const QuestionBankForm = ({
   ]);
 
   useEffect(() => {
-    if (!isEdit && selectedLabelId && createdLists?.length > 0) {
+    if (!isEdit && selectedLabelId && createdLists?.length > 0 && selectedListId.length === 0) {//<--v1.0.8-----
       // Find the matching label in createdLists
       const matchedLabel = createdLists.find(
         (list) => list._id === selectedLabelId
@@ -111,7 +116,7 @@ const QuestionBankForm = ({
         setSelectedLabels([matchedLabel.label]); // Set the label name for display
       }
     }
-  }, [isEdit, selectedLabelId, createdLists]);
+  }, [isEdit, selectedLabelId, createdLists, selectedListId.length]);//<--v1.0.8-----
 
   const questionTypeOptions = [
     ...(isInterviewType ? ["Interview Questions"] : []),//<----v1.0.7------
@@ -220,9 +225,9 @@ const QuestionBankForm = ({
   const userId = tokenPayload?.userId;
   const orgId = tokenPayload?.tenantId;
 
-  const handleListSelection = (candidateId) => {
+  const handleListSelection = useCallback((candidateId) => {
     setSelectedListId(candidateId);
-  };
+  }, []);
 
   useEffect(() => {
     if (isEdit && Object.keys(question).length > 0) {
@@ -335,13 +340,41 @@ const QuestionBankForm = ({
   };
   const listRef = useRef();
 
+  // Extract and normalize backend validation errors for display and field mapping
+  const extractValidationErrors = (axiosError) => {
+    const data = axiosError?.response?.data || {};
+    const rootMessage = data?.message || axiosError?.message || 'Request failed';
+    const rawErrors = data?.errors || data?.error?.errors || {};
+
+    // Normalize error messages to simple strings per field
+    const fieldErrors = Object.entries(rawErrors).reduce((acc, [field, val]) => {
+      let msg = '';
+      if (typeof val === 'string') msg = val;
+      else if (val && typeof val === 'object' && 'message' in val) msg = val.message;
+      else msg = String(val ?? 'Invalid value');
+      acc[field] = msg;
+      return acc;
+    }, {});
+
+    const detailedMessages = Object.entries(fieldErrors).map(([k, v]) => `${k}: ${v}`);
+    return { message: rootMessage, fieldErrors, detailedMessages };
+  };
+
   const handleSubmit = async (e, isSaveAndNext) => {
     e.preventDefault();
     //<----v1.0.2-----Prevent double-click----
     if (saveOrUpdateQuestionLoading || isSubmitting) return; // Prevent multiple clicks
     setIsSubmitting(true);
 
-    const updatedFormData = { ...formData, tenantListId: selectedListId };
+   //<--v1.0.8-----
+    const updatedFormData = {
+      ...formData,
+      tenantListId:
+        !isEdit && selectedLabelId
+          ? [selectedLabelId, ...selectedListId]
+          : selectedListId,
+    };
+    //--v1.0.8----->
     const newErrors = validateQuestionBankData(
       updatedFormData,
       mcqOptions,
@@ -416,10 +449,17 @@ const QuestionBankForm = ({
       minexperience: parseInt(selectedMinExperience),
       maxexperience: parseInt(selectedMaxExperience),
       isCustom: true,
-      tenantListId:
-        !isEdit && selectedLabelId
-          ? [selectedLabelId, ...selectedListId]
-          : selectedListId,
+      //<--v1.0.8-----
+      // sanitize and de-duplicate list ids to satisfy backend Joi (array of ObjectId strings)
+      tenantListId: Array.from(
+        new Set(
+          ((!isEdit && selectedLabelId
+            ? [selectedLabelId, ...selectedListId]
+            : selectedListId) || [])
+            .filter((id) => typeof id === "string" && id.trim().length > 0)
+        )
+      ),
+      //---v1.0.8----->
       difficultyLevel: selectedDifficultyLevel,
       questionType: selectedQuestionType,
       skill: selectedSkill,
@@ -572,7 +612,30 @@ const QuestionBankForm = ({
       );
     } catch (error) {
       console.error("Error creating/updating question:", error);
-      toast.error("Failed to save or update question");
+
+      // Parse backend validation errors and show them in toast
+      const { message, fieldErrors, detailedMessages } = extractValidationErrors(error);
+
+      // Merge server-side field errors into local error state for inline display
+      if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+        setErrors((prev) => ({ ...(prev || {}), ...fieldErrors }));
+        // Scroll to the first erroneous field for better UX
+        try {
+          scrollToFirstError(fieldErrors, fieldRefs);
+        } catch (e) {
+          console.warn('scrollToFirstError failed:', e);
+        }
+      }
+
+      // Build a concise multi-line toast message with up to 5 details
+      const maxDetails = 5;
+      const detailsPreview = (detailedMessages || []).slice(0, maxDetails).join('\n- ');
+      const extraCount = (detailedMessages || []).length - Math.min((detailedMessages || []).length, maxDetails);
+      const composed = detailsPreview
+        ? `${message}\n- ${detailsPreview}${extraCount > 0 ? `\n(+${extraCount} more)` : ''}`
+        : message || 'Failed to save or update question';
+
+      toast.error(composed, { duration: 6000 });
     } finally {
       setIsSubmitting(false); //----v1.0.2-----Prevent double-click---->
     }

@@ -191,4 +191,26 @@ const permissionMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = { permissionMiddleware };
+//<-----v1.0.1---Venkatesh-----
+// Helper to read permissions regardless of Map vs plain object
+const hasPermission = async (permGroup, key)  => {
+  if (!permGroup) return false;
+  const truthy = (v) => v === true || v === 'true' || v === 1 || v === '1';
+  try {
+    if (typeof permGroup.get === 'function') {
+      const v = permGroup.get(key);
+      if (v !== undefined) return truthy(v);
+    }
+  } catch (_) {}
+  try {
+    if (typeof permGroup.has === 'function' && permGroup.has(key)) {
+      const v = permGroup.get(key);
+      if (v !== undefined) return truthy(v);
+    }
+  } catch (_) {}
+  const v = permGroup[key];
+  return truthy(v);
+}
+//-----v1.0.1--->
+
+module.exports = { permissionMiddleware, hasPermission };

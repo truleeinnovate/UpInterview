@@ -1,10 +1,10 @@
 // v1.0.0 - Ashok - fixed updating rounds based on sequence
-
+//<-----v1.0.1---Venkatesh------add permission
 const { mongoose } = require("mongoose");
 const { Position } = require("../models/Position/position.js");
-const { validatePosition, validateRoundData, validateRoundPatchData } = require("../validations/positionValidation.js");
-// const positionValidationSchema = require("../validations/positionValidation.js");
-const { positionValidationSchema, positionPatchValidationSchema } = require("../validations/positionValidation.js");
+const { validatePosition, validateRoundData, validateRoundPatchData, positionValidationSchema, positionPatchValidationSchema } = require("../validations/positionValidation.js");
+const { hasPermission } = require("../middleware/permissionMiddleware");
+
 // const createPosition = async (req, res) => {
 //   res.locals.loggedByController = true;
 //   res.locals.processName = 'Create Position';
@@ -248,6 +248,18 @@ const createPosition = async (req, res) => {
     return res.status(400).json(res.locals.responseData);
   }
 
+  res.locals.loggedByController = true;
+  //console.log("effectivePermissions",res.locals?.effectivePermissions)
+  //<-----v1.0.1---
+  // Permission: Tasks.Create (or super admin override)
+  const canCreate =
+  await hasPermission(res.locals?.effectivePermissions?.Positions, 'Create')
+ //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Create')
+  if (!canCreate) {
+    return res.status(403).json({ message: 'Forbidden: missing Positions.Create permission' });
+  }
+  //-----v1.0.1--->
+
   try {
     console.log("Position data received:", req.body);
 
@@ -380,6 +392,7 @@ const updatePosition = async (req, res) => {
   const positionId = req.params.id;
   const { tenantId, ownerId, ...updateFields } = req.body;
 
+//  Ranjith changes
   // Validate incoming PATCH data
   const { error } = positionPatchValidationSchema.validate(req.body, { abortEarly: false });
   if (error) {
@@ -389,6 +402,18 @@ const updatePosition = async (req, res) => {
     });
     return res.status(400).json({ status: "error", errors });
   }
+// venkatesh changes
+  //res.locals.loggedByController = true;
+  //console.log("effectivePermissions",res.locals?.effectivePermissions)
+  //<-----v1.0.1---
+  // Permission: Tasks.Create (or super admin override)
+  const canCreate =
+  await hasPermission(res.locals?.effectivePermissions?.Positions, 'Edit')
+ //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Edit')
+  if (!canCreate) {
+    return res.status(403).json({ message: 'Forbidden: missing Positions.Edit permission' });
+  }
+  //-----v1.0.1--->
 
   try {
     const currentPosition = await Position.findById(positionId).lean();
@@ -815,6 +840,18 @@ const saveInterviewRoundPosition = async (req, res) => {
   try {
     const { positionId, round, roundId } = req.body;
 
+    //res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+    await hasPermission(res.locals?.effectivePermissions?.Positions, 'Edit')
+   //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Edit')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Positions.Edit permission' });
+    }
+    //-----v1.0.1--->
+
     if (!positionId || !round) {
       return res
         .status(400)
@@ -1182,6 +1219,18 @@ const saveInterviewRoundPosition = async (req, res) => {
 
 // ======================= PATCH Handler =======================
 const updateInterviewRound = async (req, res) => {
+  //res.locals.loggedByController = true;
+  //console.log("effectivePermissions",res.locals?.effectivePermissions)
+  //<-----v1.0.1---
+  // Permission: Tasks.Create (or super admin override)
+  const canCreate =
+  await hasPermission(res.locals?.effectivePermissions?.Positions, 'Delete')
+ //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Delete')
+  if (!canCreate) {
+    return res.status(403).json({ message: 'Forbidden: missing Positions.Delete permission' });
+  }
+  //-----v1.0.1--->
+
   try {
     console.log("=== PATCH /positions/:positionId/rounds/:roundId called ===");
 

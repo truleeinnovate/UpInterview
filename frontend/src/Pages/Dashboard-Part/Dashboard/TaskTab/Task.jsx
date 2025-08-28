@@ -1,6 +1,6 @@
 
 //<---------------------- v1.0.0----Venkatesh----in task tab add filter with owner id
-
+// v1.0.1 - Ashok - commented man.png, woman.png, transgender.png
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -16,9 +16,11 @@ import TableView from '../../../../Components/Shared/Table/TableView';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
 import Loading from '../../../../Components/Loading';
 import toast from 'react-hot-toast';
-import maleImage from '../../Images/man.png';
-import femaleImage from '../../Images/woman.png';
-import genderlessImage from '../../Images/transgender.png';
+// v1.0.1 <--------------------------------------------------
+// import maleImage from '../../Images/man.png';
+// import femaleImage from '../../Images/woman.png';
+// import genderlessImage from '../../Images/transgender.png';
+// v1.0.1 --------------------------------------------------->
 import TaskForm from './Task_form.jsx';
 import TaskProfileDetails from './TaskProfileDetails.jsx';
 import axios from 'axios';

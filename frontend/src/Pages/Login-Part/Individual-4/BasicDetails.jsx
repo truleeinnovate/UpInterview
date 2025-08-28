@@ -1,10 +1,11 @@
 // v1.0.0  -  mansoor  -  removed the format function and used the date.toISOString() instead to store the date of birth in the database
 // v1.0.1  -  Venkatesh  -  removed the format function
+// v1.0.2  -  changed noImage url path from local to cloud storage url
 import React, { useRef, useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { XCircle } from "lucide-react";
-import noImage from "../../Dashboard-Part/Images/no-photo.png";
+// import noImage from "../../Dashboard-Part/Images/no-photo.png";
 import InfoBox from "./InfoBox.jsx";
 //import { format } from "date-fns";
 import { ReactComponent as MdArrowDropDown } from "../../../icons/MdArrowDropDown.svg";
@@ -397,7 +398,10 @@ const BasicDetails = ({
                     />
                   ) : (
                     <img
-                      src={noImage}
+                    // v1.0.2 <----------------------------------------------------------------------------------------------
+                      // src={noImage}
+                      src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/no-photo_ifdshr.png"
+                    // v1.0.2 ---------------------------------------------------------------------------------------------->
                       alt="Preview"
                       className="w-full h-full object-cover"
                     />
@@ -484,7 +488,7 @@ const BasicDetails = ({
         </div>
 
         {/* First Name */}
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6">
           <label
             htmlFor="firstName"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -506,7 +510,7 @@ const BasicDetails = ({
         </div>
 
         {/* Last Name */}
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6">
           <label
             htmlFor="lastName"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -531,7 +535,7 @@ const BasicDetails = ({
         </div>
 
         {/* Date of Birth */}
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6">
           <label
             htmlFor="dateofbirth"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -562,7 +566,7 @@ const BasicDetails = ({
         </div>
 
         {/* Profile ID Field */}
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6">
           <label
             htmlFor="profileId"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -624,7 +628,7 @@ const BasicDetails = ({
         </div>
 
         {/* Gender */}
-        <div className="sm:col-span-3 relative" ref={genderDropdownRef}>
+        <div className="sm:col-span-6 relative" ref={genderDropdownRef}>
           <label
             htmlFor="gender"
             className="block text-sm font-medium text-gray-700 mb-1"

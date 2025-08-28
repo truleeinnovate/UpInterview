@@ -9,6 +9,51 @@ import { useCustomContext } from "../Context/Contextfetch";
 import { uploadFile } from "../apiHooks/imageApis";
 import { usePermissions } from "../Context/PermissionsContext";
 
+// Helper: format backend validation errors { message, errors } into a toast-friendly string
+const buildToastFromAxiosError = (err) => {
+  const data = err?.response?.data || {};
+  const main = typeof data?.message === "string" && data.message.trim()
+    ? data.message
+    : err?.message || "Request failed";
+
+  const errors = data?.errors;
+  const details = [];
+
+  if (errors) {
+    if (Array.isArray(errors)) {
+      for (const e of errors) {
+        if (!e) continue;
+        if (typeof e === "string") details.push(e);
+        else if (typeof e === "object") {
+          const path = Array.isArray(e.path)
+            ? e.path.join(".")
+            : typeof e.path === "string"
+            ? e.path
+            : undefined;
+          if (path && e.message) details.push(`${path}: ${e.message}`);
+          else if (e.message) details.push(e.message);
+          else {
+            for (const [k, v] of Object.entries(e)) {
+              if (k === "path" || k === "context") continue;
+              if (typeof v === "string") details.push(`${k}: ${v}`);
+            }
+          }
+        }
+      }
+    } else if (typeof errors === "object") {
+      for (const [field, val] of Object.entries(errors)) {
+        if (Array.isArray(val)) details.push(...val.map((m) => `${field}: ${m}`));
+        else if (typeof val === "string") details.push(`${field}: ${val}`);
+        else if (val && typeof val === "object" && val.message) details.push(`${field}: ${val.message}`);
+      }
+    }
+  }
+
+  const lines = details.slice(0, 5).map((m) => `- ${m}`);
+  const extra = details.length > 5 ? `\n+ ${details.length - 5} more error(s)…` : "";
+  return lines.length ? `${main}\n${lines.join("\n")}${extra}` : main;
+};
+
 // Always send cookies across domains (needed when FE + BE sit on *.azurewebsites.net)
 axios.defaults.withCredentials = true;
 
@@ -123,10 +168,8 @@ export const useSupportTickets = () => {
 
     onError: (err) => {
       console.error("[useSupportTickets] submitTicket failed:", err);
-      toast.error(
-        err?.response?.data?.message ??
-          "Something went wrong while submitting the ticket"
-      );
+      const msg = buildToastFromAxiosError(err);
+      toast.error(msg, { autoClose: 6000 });
     },
   });
 

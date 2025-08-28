@@ -63,7 +63,7 @@ const KanbanView = ({
                         <div className="h-3 bg-gray-200 skeleton-animation rounded"></div>
                         <div className="h-3 bg-gray-200 skeleton-animation rounded"></div>
                       </div>
-                    </div>
+                    </div> 
                     <div className="mt-4 flex gap-2">
                       <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
                       <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
@@ -129,12 +129,11 @@ const KanbanView = ({
                   : "Candidates"}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
               {(groupedData[column.key] || []).map((item) => (
                 <motion.div
                   key={item.id}
-                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => onCardClick?.(item)}
+                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
@@ -159,7 +158,7 @@ const KanbanView = ({
                       </div>
                       <div className="ml-3 overflow-hidden">
                         <h4
-                          className="text-sm font-medium text-custom-blue truncate"
+                          className="text-sm font-medium text-custom-blue truncate hover:cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             onCardClick?.(item);
@@ -172,7 +171,7 @@ const KanbanView = ({
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                    <div className="flex items-center gap-1 flex-shrink-0 [&>*]:cursor-pointer">
                       {renderActions &&
                         renderActions(item, { onView, onEdit, onResendLink })}
                     </div>

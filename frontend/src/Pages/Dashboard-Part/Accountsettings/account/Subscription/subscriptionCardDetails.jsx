@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - fixed z-index issue subscription popup using createPortal
+// v1.0.1 - Ashok - changed logo url from local to cloud storage url
 
 import { XCircle } from "lucide-react";
 import React, { useState, useMemo, useEffect } from "react";
@@ -12,7 +13,7 @@ import { handleMembershipChange } from "../../../../../utils/PaymentpageValidati
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
 
-import logo from "../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
+// import logo from "../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 // v1.0.0 <---------------------------------------------------------------
 import { createPortal } from "react-dom";
 // v1.0.0 --------------------------------------------------------------->
@@ -339,7 +340,6 @@ const SubscriptionCardDetails = () => {
               "Order amount from backend:",
               orderResponse.data.amount
             );
-
             const options = {
               key: orderResponse.data.razorpayKeyId,
               subscription_id: orderResponse.data.subscriptionId,
@@ -351,7 +351,11 @@ const SubscriptionCardDetails = () => {
               description: `${cardDetails.membershipType} Subscription for ${
                 planDetails.name
               } - ₹${(orderResponse.data.amount / 100).toFixed(2)}`,
-              image: logo,
+              // v1.0.1 <----------------------------------------------------------------------------------------
+              // image: logo,
+              image:
+                "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp",
+              // v1.0.1 ---------------------------------------------------------------------------------------->
               prefill: {
                 name: userProfileData?.name || "",
                 email: userProfileData?.email || "",
@@ -647,7 +651,7 @@ const SubscriptionCardDetails = () => {
                 <div
                   className={`border p-2 flex justify-between items-center gap-4 rounded-md bg-gray-50 
                 ${
-                cardDetails.membershipType === "annual"
+                  cardDetails.membershipType === "annual"
                     ? "border-[#217989]"
                     : "border-gray-300"
                 }`}

@@ -54,8 +54,6 @@ const MainContent = () => {
   const fetchCandidate = async () => {
     try {
       const response = await axios.get(`${config.REACT_APP_API_URL}/candidate/${id}`);
-      console.log("response.data ", response.data);
-
       const { appliedPositions, ...candidateData } = response.data;
       setCandidate(candidateData);
       setPositions(appliedPositions || []);
@@ -80,7 +78,6 @@ const MainContent = () => {
     // setSelectedCandidate(candidate);
     setEditModeOn(true);
     setShowAddForm(true);
-    // console.log('Edit candidate:', candidate);
   };
 
   if (!candidate) return null;
