@@ -139,6 +139,7 @@ const SuggestedQuestionsComponent = ({
       ),
     [suggestedQuestionsFilteredData, currentPage, itemsPerPage]
   );
+  //console.log("pagedata",paginatedData);
 
   //<-----v1.0.3-----
   const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
@@ -397,6 +398,69 @@ const SuggestedQuestionsComponent = ({
   };
   const closeDropdown = () => {
     setDropdownOpen(null);
+  };
+
+  // Safely render solutions which can be string | object | array of objects
+  const renderSolutions = (solutions) => {
+    if (!solutions) return "N/A";
+    if (typeof solutions === "string") return solutions;
+
+    // If it's an array of solution objects
+    if (Array.isArray(solutions)) {
+      return (
+        <div className="space-y-2">
+          {solutions.map((sol, idx) => (
+            <div key={idx} className="border border-gray-200 rounded-md p-2">
+              {sol?.language && (
+                <div className="text-xs text-gray-600 mb-1">
+                  <span className="font-medium">Language:</span> {sol.language}
+                </div>
+              )}
+              {sol?.approach && (
+                <div className="text-xs text-gray-700 mb-1">
+                  <span className="font-medium">Approach:</span> {sol.approach}
+                </div>
+              )}
+              {sol?.code && (
+                <pre className="bg-gray-50 p-2 rounded-md overflow-x-auto text-xs text-gray-800">
+                  <code>{sol.code}</code>
+                </pre>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // If it's a single solution object
+    if (typeof solutions === "object") {
+      const sol = solutions;
+      return (
+        <div className="border border-gray-200 rounded-md p-2">
+          {sol?.language && (
+            <div className="text-xs text-gray-600 mb-1">
+              <span className="font-medium">Language:</span> {sol.language}
+            </div>
+          )}
+          {sol?.approach && (
+            <div className="text-xs text-gray-700 mb-1">
+              <span className="font-medium">Approach:</span> {sol.approach}
+            </div>
+          )}
+          {sol?.code && (
+            <pre className="bg-gray-50 p-2 rounded-md overflow-x-auto text-xs text-gray-800">
+              <code>{sol.code}</code>
+            </pre>
+          )}
+        </div>
+      );
+    }
+
+    try {
+      return String(solutions);
+    } catch {
+      return "N/A";
+    }
   };
 
   const openFilterPopup = () => {
@@ -866,14 +930,14 @@ const SuggestedQuestionsComponent = ({
                       )}
                     </div>
                     <div className="px-4 py-2">
-                      <p className="text-gray-600 mb-2">
+                      <div className="text-gray-600 mb-2">
                         <span className="font-medium">Answer: </span>
-                        {item.correctAnswer}
-                      </p>
+                        {renderSolutions(item.solutions)}
+                      </div>
                       <p className="font-medium">
                         Tags:{" "}
                         <span className="text-gray-600">
-                          {item.tags.join(", ")}
+                          {Array.isArray(item.tags) ? item.tags.join(", ") : String(item.tags || "")}
                         </span>
                       </p>
                     </div>
