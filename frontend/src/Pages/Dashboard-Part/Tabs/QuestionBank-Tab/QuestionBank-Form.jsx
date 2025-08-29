@@ -1074,7 +1074,7 @@ const QuestionBankForm = ({
                   </div>
 
                   {/* Question Type Selection */}
-                  { (!isInterviewType || dropdownValue === "Assignment Questions") && (//<----v1.0.7------
+                  { (dropdownValue === "Assignment Questions") && (//<----v1.0.7------
                   <div className="flex flex-col gap-1 mb-4">
                     <div>
                       <label

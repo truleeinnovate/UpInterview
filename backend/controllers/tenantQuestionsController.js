@@ -208,7 +208,7 @@ exports.updateQuestion = async (req, res) => {
       }
     }
     //----v1.0.1---->
-
+        res.locals.loggedByController = true;
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
