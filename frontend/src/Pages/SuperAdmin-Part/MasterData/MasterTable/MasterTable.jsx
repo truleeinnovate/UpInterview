@@ -191,15 +191,7 @@ const MasterTable = () => {
         }
 
         return (
-          <span
-            className={`font-medium text-custom-blue cursor-pointer text-gray-900"}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedMaster(row);
-              setPopupMode("view");
-              setIsPopupOpen(true);
-            }}
-          >
+          <span className={`font-medium text-gray-900"}`}>
             {capitalizeFirstLetter(displayName) || "N/A"}
           </span>
         );
@@ -238,16 +230,6 @@ const MasterTable = () => {
   ];
 
   const tableActions = [
-    {
-      key: "view",
-      label: "View",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
-      onClick: (item) => {
-        setSelectedMaster(item);
-        setPopupMode("view");
-        setIsPopupOpen(true);
-      },
-    },
     {
       key: "edit",
       label: "Edit",
@@ -319,44 +301,6 @@ const MasterTable = () => {
             {status}
           </label>
         ))}
-      </div>
-    );
-  };
-
-  console.log("SELECTED MASTER DATA ============> : ", selectedMaster);
-
-  // Render Popup content
-  const renderMasterDetailsPopup = (master) => {
-    return (
-      <div className="px-4">
-        <div className="rounded-sm px-6 w-full">
-          <div className="flex-1 overflow-y-auto">
-            <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
-              {tableColumns.map((col) => {
-                // Safely render using col.render
-                let content;
-                if (col.render) {
-                  // Pass row = master
-                  content = col.render(master[col.key], master);
-                } else {
-                  content = master[col.key] || "N/A";
-                }
-
-                return (
-                  <div
-                    key={col.key}
-                    className="flex justify-between items-start py-2"
-                  >
-                    <span className="font-medium text-gray-600">
-                      {col.header}:
-                    </span>
-                    <span className="text-gray-800">{content}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
       </div>
     );
   };
@@ -480,24 +424,11 @@ const MasterTable = () => {
           mode={popupMode}
         />
       )}
-      {/* Sidebar View (Read-only details) */}
-      {isPopupOpen && popupMode === "view" && selectedMaster && (
-        <SidebarPopup
-          title={capitalizeFirstLetter(type)}
-          onClose={() => {
-            setIsPopupOpen(false);
-            setPopupMode(null);
-          }}
-        >
-          {renderMasterDetailsPopup(selectedMaster)}
-        </SidebarPopup>
-      )}
       {/* Delete Confirmation Modal */}
-
       <div>
         {isDeletePopupOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 w-[380px] animate-fadeIn">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-[400px] animate-fadeIn">
               {/* Icon + Title */}
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-red-100 rounded-full">
@@ -510,8 +441,10 @@ const MasterTable = () => {
 
               {/* Message */}
               <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-                Are you sure you want to delete{" "}
-                <span className="font-medium text-gray-800">{type}</span>
+                Are you sure you want to delete Master from{" "}
+                <span className="font-medium text-gray-800">
+                  {capitalizeFirstLetter(type)}
+                </span>
                 ? <br />
                 This action{" "}
                 <span className="text-red-600 font-medium">cannot</span> be

@@ -1,14 +1,9 @@
 // v1.0.0 - Ashok - Adding form submission and modal functionality for interviewer rates
 // v1.0.1 - Ashok - changed header Title based on mode (view/create/edit)
 // v1.0.2 - Ashok - fixed issues in Technology dropdown enabled delete level button
+// v1.0.3 - Ashok - changed to multiple option selection and added basic validations
 import { useState, useEffect, useRef } from "react";
-import {
-  // AiOutlineClose,
-  // AiOutlineExpandAlt,
-  // AiOutlineShrink,
-  AiOutlinePlus,
-  AiOutlineDelete,
-} from "react-icons/ai";
+import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
 import { Minimize, Expand, X, ChevronDown } from "lucide-react";
 // v1.0.0 <--------------------------------------
 import axios from "axios";
@@ -20,119 +15,46 @@ import { useMasterData } from "../../../apiHooks/useMasterData";
 import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
 // v1.0.1 ------------------------------------------------------->
 
+// v1.0.3 <-------------------------------------------------------------------------------
 // v1.0.2 <----------------------------------------------------------------------------
 // v1.0.1 <--------------------------------------------------------------------
-// function SearchableDropdown({ label, options, value, onChange, disabled }) {
-//   const [isOpen, setIsOpen] = useState(false);
-//   const [search, setSearch] = useState("");
-//   const dropdownRef = useRef(null);
-
-//   const filteredOptions = options.filter((opt) =>
-//     opt.TechnologyMasterName.toLowerCase().includes(search.toLowerCase())
-//   );
-
-//   const handleSelect = (val) => {
-//     onChange(val);
-//     setIsOpen(false);
-//     setSearch(""); // clear search after select
-//   };
-
-//   // Close when clicking outside
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setIsOpen(false);
-//       }
-//     };
-
-//     if (isOpen) {
-//       document.addEventListener("mousedown", handleClickOutside);
-//     } else {
-//       document.removeEventListener("mousedown", handleClickOutside);
-//     }
-
-//     return () => {
-//       document.removeEventListener("mousedown", handleClickOutside);
-//     };
-//   }, [isOpen]);
-
-//   return (
-//     <div ref={dropdownRef} className="relative w-full">
-//       {label && (
-//         <label className="block text-sm font-medium text-gray-700 mb-2">
-//           {label} <span className="text-red-500">*</span>
-//         </label>
-//       )}
-
-//       <div
-//         className={`flex items-center justify-between border border-gray-300 rounded-md px-3 py-2 bg-white cursor-pointer ${
-//           disabled ? "bg-gray-100 cursor-not-allowed" : ""
-//         }`}
-//         onClick={() => !disabled && setIsOpen((prev) => !prev)}
-//       >
-//         {/* <span className="text-sm text-gray-700">
-//           {value || "Select Technology"}
-//         </span> */}
-//         <span className="text-sm text-gray-700">
-//           {value || `Select ${label}`}
-//         </span>
-//         <ChevronDown size={16} className="text-gray-500" />
-//       </div>
-
-//       {isOpen && !disabled && (
-//         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-//           {/* Search input */}
-//           <div className="p-2">
-//             <input
-//               type="text"
-//               className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md outline-none"
-//               placeholder="Search..."
-//               value={search}
-//               onChange={(e) => setSearch(e.target.value)}
-//               autoFocus
-//             />
-//           </div>
-
-//           {/* Options */}
-//           <ul>
-//             {filteredOptions.length > 0 ? (
-//               filteredOptions.map((opt) => (
-//                 <li
-//                   key={opt._id}
-//                   className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-//                   onClick={() => handleSelect(opt.TechnologyMasterName)}
-//                 >
-//                   {opt.TechnologyMasterName}
-//                 </li>
-//               ))
-//             ) : (
-//               <li className="px-3 py-2 text-sm text-gray-400">
-//                 No results found
-//               </li>
-//             )}
-//           </ul>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-function SearchableDropdown({ label, options, value, onChange, disabled }) {
+function SearchableDropdown({
+  label,
+  options,
+  value,
+  onChange,
+  disabled,
+  multiple = false,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef(null);
 
-  // const filteredOptions = options.filter((opt) =>
-  //   opt.name.toLowerCase().includes(search.toLowerCase())
-  // );
+  // Normalize value to array if multiple
+  const selectedValues = multiple ? value || [] : value;
+
   const filteredOptions = (options || []).filter(
-    (opt) => opt?.name && opt.name.toLowerCase().includes(search.toLowerCase())
+    (opt) =>
+      opt?.name &&
+      opt.name.toLowerCase().includes(search.toLowerCase()) &&
+      (!multiple || !selectedValues.includes(opt.name)) // hide already selected
   );
 
   const handleSelect = (val) => {
-    onChange(val);
-    setIsOpen(false);
-    setSearch(""); // clear search after select
+    if (multiple) {
+      onChange([...selectedValues, val]);
+      setIsOpen(false);
+    } else {
+      onChange(val);
+      setIsOpen(false);
+    }
+    setSearch("");
+  };
+
+  const handleRemove = (val) => {
+    if (multiple) {
+      onChange(selectedValues.filter((item) => item !== val));
+    }
   };
 
   // Close when clicking outside
@@ -159,6 +81,7 @@ function SearchableDropdown({ label, options, value, onChange, disabled }) {
         </label>
       )}
 
+      {/* Dropdown Input */}
       <div
         className={`flex items-center justify-between border border-gray-300 rounded-md px-3 py-2 bg-white cursor-pointer ${
           disabled ? "bg-gray-100 cursor-not-allowed" : ""
@@ -166,11 +89,16 @@ function SearchableDropdown({ label, options, value, onChange, disabled }) {
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
       >
         <span className="text-sm text-gray-700">
-          {value || `Select ${label}`}
+          {multiple
+            ? selectedValues.length > 0
+              ? `${selectedValues.length} selected`
+              : `Select ${label}`
+            : selectedValues || `Select ${label}`}
         </span>
         <ChevronDown size={16} className="text-gray-500" />
       </div>
 
+      {/* Dropdown List */}
       {isOpen && !disabled && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
           {/* Search input */}
@@ -205,12 +133,33 @@ function SearchableDropdown({ label, options, value, onChange, disabled }) {
           </ul>
         </div>
       )}
+
+      {/* Selected Chips for multiple */}
+      {multiple && selectedValues.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {selectedValues.map((val) => (
+            <div
+              key={val}
+              className="flex items-center gap-1 bg-custom-blue/20 text-custom-blue text-sm px-3 py-1 rounded-full"
+            >
+              <span className="">{val}</span>
+              <button
+                type="button"
+                onClick={() => handleRemove(val)}
+                className="hover:text-red-600"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-
 // v1.0.1 -------------------------------------------------------------------->
 // v1.0.2 --------------------------------------------------------------------------->
+// v1.0.3 ------------------------------------------------------------------------------->
 
 // v1.0.0 <-------------------------------------------------------
 function RateCardModal({ rateCard, onClose, mode = "create" }) {
@@ -218,7 +167,9 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
-    technology: "",
+    // v1.0.3 <------------------------
+    technology: [],
+    // v1.0.3 <------------------------
     levels: [
       {
         level: "Junior",
@@ -250,7 +201,6 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   // v1.0.1 <------------------------------------------------------
   const [currentMode, setCurrentMode] = useState(mode); // local mode state
   const { technologies } = useMasterData();
-  console.log("Technologies Master ================> :", technologies);
   // v1.0.1 ------------------------------------------------------>
 
   const categories = [
@@ -262,13 +212,18 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   ];
 
   const experienceLevels = ["Junior", "Mid-Level", "Senior"];
+  // v1.0.3 <-------------------------------------------------------
   // v1.0.0 <-------------------------------------------------------
   useEffect(() => {
     if (rateCard) {
       setFormData({
         _id: rateCard._id,
         category: rateCard.category,
-        technology: rateCard.technology,
+        technology: Array.isArray(rateCard.technology)
+          ? rateCard.technology
+          : rateCard.technology
+          ? [rateCard.technology]
+          : [],
         levels: rateCard.levels,
         discountMockInterview: rateCard.discountMockInterview,
         defaultCurrency: rateCard.defaultCurrency,
@@ -277,6 +232,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
     }
   }, [rateCard]);
   // v1.0.0 <-------------------------------------------------------
+  // v1.0.3 <-------------------------------------------------------
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -339,19 +295,83 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
     }
   };
 
+  // v1.0.3 <---------------------------------------------------------------
+  function validateRateCard(formData) {
+    const errors = {};
+
+    // Category validation
+    if (!formData.category || formData.category.trim() === "") {
+      errors.category = "Category is required";
+    }
+
+    // Technology validation (must select at least one)
+    if (!formData.technology || formData.technology.length === 0) {
+      errors.technology = "At least one technology is required";
+    }
+
+    // Levels validation
+    if (!formData.levels || formData.levels.length === 0) {
+      errors.levels = "At least one level is required";
+    } else {
+      formData.levels.forEach((level, index) => {
+        if (!level.level || level.level.trim() === "") {
+          errors[`levels.${index}.level`] = "Experience level is required";
+        }
+        // INR validation
+        if (level.rateRange.inr.min < 0 || level.rateRange.inr.max < 0) {
+          errors[`levels.${index}.inr`] = "INR values must be non-negative";
+        }
+        if (level.rateRange.inr.min > level.rateRange.inr.max) {
+          errors[`levels.${index}.inr`] = "INR Min cannot be greater than Max";
+        }
+
+        // USD validation
+        if (level.rateRange.usd.min < 0 || level.rateRange.usd.max < 0) {
+          errors[`levels.${index}.usd`] = "USD values must be non-negative";
+        }
+        if (level.rateRange.usd.min > level.rateRange.usd.max) {
+          errors[`levels.${index}.usd`] = "USD Min cannot be greater than Max";
+        }
+      });
+    }
+
+    // Default Currency
+    if (!formData.defaultCurrency) {
+      errors.defaultCurrency = "Default currency is required";
+    }
+
+    // Discount Validation (if you want to enable this later)
+    if (
+      formData.discountMockInterview !== undefined &&
+      (formData.discountMockInterview < 5 ||
+        formData.discountMockInterview > 30)
+    ) {
+      errors.discountMockInterview = "Discount must be between 5% and 30%";
+    }
+
+    // isActive (just sanity check)
+    if (typeof formData.isActive !== "boolean") {
+      errors.isActive = "Status must be true or false";
+    }
+
+    return errors;
+  }
+  // v1.0.3 --------------------------------------------------------------->
+
   // v1.0.0 <------------------------------------------------------
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   // Handle form submission
-
-  //   console.log("Form submitted:", formData);
-  //   onClose();
-  // };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     console.log("Form data before submission:", formData);
+    // v1.0.3 <------------------------------------------------------------------
+    const errors = validateRateCard(formData);
+    if (Object.keys(errors).length > 0) {
+      // Show first error using toast
+      toast.error(Object.values(errors)[0]);
+      console.log("Validation errors:", errors);
+      return;
+    }
+    // v1.0.3 ------------------------------------------------------------------>
 
     try {
       let response;
@@ -501,6 +521,9 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                   value={formData.technology}
                   onChange={(val) => handleInputChange("technology", val)}
                   disabled={currentMode === "view"}
+                  // v1.0.3 <----------------------------------------
+                  multiple={true}
+                  // v1.0.3 --------------------------------------->
                 />
 
                 {/*  v1.0.0 --------------------------------------------------------------------> */}

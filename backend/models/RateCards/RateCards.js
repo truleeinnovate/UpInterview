@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - changed field from object to Array to take multiple technologies
 const mongoose = require("mongoose");
 const rateCardSchema = new mongoose.Schema(
   {
@@ -6,11 +7,19 @@ const rateCardSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    technology: {
-      type: String, // e.g., "Full-Stack Developer", "Python AI/ML"
-      required: true,
-      index: true,
-    },
+    // v1.0.0 <-----------------------------------------------------------------
+    // technology: {
+    //   type: String, // e.g., "Full-Stack Developer", "Python AI/ML"
+    //   required: true,
+    //   index: true,
+    // },
+    technology: [
+      {
+        type: String, // e.g., "Full-Stack Developer", "Python AI/ML"
+        required: true,
+      },
+    ],
+    // v1.0.0 ----------------------------------------------------------------->
     levels: [
       {
         level: {
