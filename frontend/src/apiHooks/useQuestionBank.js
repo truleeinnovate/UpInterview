@@ -133,7 +133,14 @@ export const useQuestions = (filters = {}) => {
   } = useQuery({
     queryKey: ['suggestedQuestions', filters],
     queryFn: async () => {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/suggested-questions/questions`);
+      const params = {};
+      if (filters?.questionType) {
+        params.questionType = filters.questionType;
+      }
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/suggested-questions/questions`,
+        { params }
+      );
       if (response.data.success) {
         return response.data.questions.map((q) => ({ ...q, isAdded: false }));
       }
@@ -179,14 +186,16 @@ export const useQuestions = (filters = {}) => {
   // ✅ Mutation #1: Save or Update a Question
   const saveOrUpdateQuestionMutation = useMutation({
     mutationFn: async ({ questionData, isEdit, questionId }) => {
-      // Ensure required fields are included
+      // Ensure required fields are included (omit empty suggestedQuestionId to satisfy update Joi)
       const payload = {
         ...questionData,
-        suggestedQuestionId: questionData.suggestedQuestionId || '',
         ownerId: userId || '',  // Add ownerId from current user
         tenantId: tenantId || '',//<-----v1.0.0----
         isEdit: isEdit
       };
+      if (questionData?.suggestedQuestionId) {
+        payload.suggestedQuestionId = questionData.suggestedQuestionId;
+      }
 
       console.log('Payload:', payload);
       console.log('isEdit:', isEdit);
