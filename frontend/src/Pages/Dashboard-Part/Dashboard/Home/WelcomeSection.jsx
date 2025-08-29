@@ -23,7 +23,7 @@ const WelcomeSection = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-3xl mt-7 font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
+        <h2 className="text-3xl mt-7 font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#217989] via-[#2a8ca0] to-[#359fb8]">
           Welcome back, {isLoading ? (
             <span className="inline-block w-32 h-8 bg-gray-200 skeleton-animation rounded"></span>
           ) : (

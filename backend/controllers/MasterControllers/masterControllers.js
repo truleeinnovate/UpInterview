@@ -6,9 +6,9 @@ const { Skills } = require("../../models/MasterSchemas/skills");
 const {
   TechnologyMaster,
 } = require("../../models/MasterSchemas/TechnologyMaster");
-const { HigherQualification } = require("../../models/HigherQualification");
-const { University_CollegeName } = require("../../models/college");
-const { Company } = require("../../models/Company");
+const { HigherQualification } = require("../../models/MasterSchemas/higherqualification");
+const { University_CollegeName } = require("../../models/MasterSchemas/college");
+const { Company } = require("../../models/MasterSchemas/company");
 
 // Map string type → Model
 const getModel = (type) => {

@@ -442,9 +442,9 @@ const { RoleMaster } = require("./models/MasterSchemas/RoleMaster.js");
 const {
   TechnologyMaster,
 } = require("./models/MasterSchemas/TechnologyMaster.js");
-const { HigherQualification } = require("./models/higherqualification.js");
-const { University_CollegeName } = require("./models/college.js");
-const { Company } = require("./models/company.js");
+const { HigherQualification } = require("./models/MasterSchemas/higherqualification.js");
+const { University_CollegeName } = require("./models/MasterSchemas/college.js");
+const { Company } = require("./models/MasterSchemas/company.js");
 
 // Master Data Endpoints
 app.get("/skills", async (req, res) => {
