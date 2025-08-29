@@ -40,6 +40,7 @@ const mongoose = require("mongoose");
     reviewStatus: { type: String }, // NEW FIELD from JSON
     version: { type: Number, default: 1 }, // NEW FIELD from JSON
     isActive: { type: Boolean, default: true },
+    isInterviewQuestionOnly: { type: Boolean, default: true },// NEW FIELD
     createdBy: { type: String },
     modifiedDate: { type: Date },
     modifiedBy: { type: String }

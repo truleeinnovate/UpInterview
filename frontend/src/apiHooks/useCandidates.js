@@ -56,8 +56,13 @@ export const useCandidates = (filters = {}) => {
         : `${config.REACT_APP_API_URL}/candidate`;
 
       const response = await axios[method](url, data);
-      const candidateId = response.data.data._id;
+      console.log("response", response);
+      // const candidateId = response.data.data._id;
+      const candidate = response.data?.data;     // candidate may be undefined
+const candidateId = candidate?._id;         // only defined if changes occurred
+      console.log("candidateId", candidateId);
 
+      if (candidateId) {
       // uploading or updating files profilePic and resume
       // --- Profile Picture ---
       // Delete profile picture if removed
@@ -78,11 +83,26 @@ export const useCandidates = (filters = {}) => {
       else if (resumeFile instanceof File) {
         await uploadFile(resumeFile, "resume", "candidate", candidateId);
       }
+      }
 
       return response.data;
     },
 
     onSuccess: (data, variables) => {
+
+      const candidate = data?.data;
+
+      if (!candidate) {
+        // no changes — close the form safely
+        console.log("No changes detected, closing form.");
+        if (variables.isModal && variables.onClose) {
+          variables.onClose({}); // pass empty object
+        }
+        return;
+      }
+
+
+
       // Optimistically update the cache
       queryClient.setQueryData(["candidates", filters], (oldData) => {
         if (!oldData) return oldData;

@@ -1,8 +1,7 @@
-
 const mongoose = require('mongoose');
 const TenantAssessmentQuestionsSchema = new mongoose.Schema({
     questionNo: String,
-    suggestedQuestionId: { type: mongoose.Schema.Types.ObjectId, ref: 'suggestedQuestions' },
+    suggestedQuestionId: { type: mongoose.Schema.Types.ObjectId, ref: 'AssessmentQuestions' },
     tenantListId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TenantQuestionsListNames' }],
     isCustom: { type: Boolean, default: false },
     questionText: String,

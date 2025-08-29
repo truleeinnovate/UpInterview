@@ -233,9 +233,10 @@ const CustomDropdown = forwardRef(
             //   error ? "border-red-500" : "border-gray-300"
             // }`}
             className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-              border ${error
-                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                : "border-gray-300 focus:ring-red-300"
+              border ${
+                error
+                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                  : "border-gray-300 focus:ring-red-300"
               }
               focus:outline-gray-300
             `}
@@ -557,10 +558,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
@@ -840,7 +841,6 @@ const AddCandidateForm = ({
       tenantId: orgId,
     };
 
-
     try {
       const response = await addOrUpdateCandidate({
         id,
@@ -872,7 +872,7 @@ const AddCandidateForm = ({
           }
 
           switch (mode) {
-            case "Edit":
+            case "Edit" && response?.status === "no_changes":
               navigate(`/candidate`);
               break;
             case "Candidate Edit":
@@ -892,7 +892,19 @@ const AddCandidateForm = ({
       }
     } catch (error) {
       console.error("Error adding candidate:", error);
-      setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
+
+      if (error.response?.data?.errors) {
+        // Backend Joi validation errors
+        setErrors(error.response.data.errors);
+        scrollToFirstError(error.response.data.errors, fieldRefs);
+      } else {
+        // Fallback error
+        setErrors({
+          submit: `Failed to add/update candidate: ${error.message}`,
+        });
+      }
+      // console.error("Error adding candidate:", error);
+      // setErrors({ submit: `Failed to add/update candidate: ${error.message}` });
     } finally {
       // Reset active button regardless of success or failure
       setActiveButton(null);
@@ -1050,11 +1062,11 @@ const AddCandidateForm = ({
                         <p className="text-xs text-gray-500">
                           {selectedResume?.fileSize || selectedResume?.size
                             ? `${(
-                              (selectedResume.size ||
-                                selectedResume.fileSize) /
-                              1024 /
-                              1024
-                            ).toFixed(2)} MB`
+                                (selectedResume.size ||
+                                  selectedResume.fileSize) /
+                                1024 /
+                                1024
+                              ).toFixed(2)} MB`
                             : ""}
                         </p>
                       </div>
@@ -1107,7 +1119,7 @@ const AddCandidateForm = ({
                       <Trash className="w-3 h-3" />
                     </button>
                   )}
-                </div>
+                </div> 
 
                 <p className="mt-2 text-sm font-medium text-gray-700 text-center">
                   Resume
@@ -1163,10 +1175,11 @@ const AddCandidateForm = ({
                         //   errors.LastName && "border-red-500"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.LastName
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
+                      border ${
+                        errors.LastName
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
                       focus:outline-gray-300
                     `}
                         // v1.0.4 --------------------------------------------------------------------------------------------------------------------------->
@@ -1235,17 +1248,20 @@ const AddCandidateForm = ({
                         //   errors.Email && "border-red-500"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.Email
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
+                      border ${
+                        errors.Email
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
                       focus:outline-gray-300
                     `}
                         // v1.0.4 <---------------------------------------------------------------------------------------------------------------------->
                         placeholder="Enter Email Address"
                       />
                       {errors.Email && (
-                        <p className="text-red-500 text-xs pt-1">{errors.Email}</p>
+                        <p className="text-red-500 text-xs pt-1">
+                          {errors.Email}
+                        </p>
                       )}
                     </div>
                     {/* Phone */}
@@ -1283,7 +1299,9 @@ const AddCandidateForm = ({
                             onChange={(e) => {
                               const value = e.target.value.replace(/\D/g, ""); // remove non-digits
                               if (value.length <= 10) {
-                                handleChange({ target: { name: "Phone", value } });
+                                handleChange({
+                                  target: { name: "Phone", value },
+                                });
                               }
                             }}
                             maxLength={10}
@@ -1292,10 +1310,11 @@ const AddCandidateForm = ({
                             //   errors.Phone && "border-red-500"
                             // }`}
                             className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.Phone
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                              }
+                          border ${
+                            errors.Phone
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
                           focus:outline-gray-300
                         `}
                             // v1.0.4 ------------------------------------------------------------------------------------------------------------------------->
@@ -1337,7 +1356,8 @@ const AddCandidateForm = ({
                     {/* <--------v1.0.1----- */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        University/College <span className="text-red-500">*</span>
+                        University/College{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       {!isCustomUniversity ? (
                         <div className="relative" ref={universityDropdownRef}>
@@ -1359,10 +1379,11 @@ const AddCandidateForm = ({
                             //     : "border-gray-300"
                             // }`}
                             className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.UniversityCollege
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                              }
+                          border ${
+                            errors.UniversityCollege
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
                           focus:outline-gray-300
                         `}
                             // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
@@ -1372,7 +1393,9 @@ const AddCandidateForm = ({
                             <ChevronDown
                               className="text-lg"
                               onClick={() =>
-                                setShowDropdownUniversity(!showDropdownUniversity)
+                                setShowDropdownUniversity(
+                                  !showDropdownUniversity
+                                )
                               }
                             />
                           </div>
@@ -1397,17 +1420,19 @@ const AddCandidateForm = ({
                               </div>
                               <div className="max-h-48 overflow-y-auto">
                                 {filteredUniversities?.length > 0 ? (
-                                  filteredUniversities.map((university, index) => (
-                                    <div
-                                      key={university._id || index}
-                                      onClick={() =>
-                                        handleUniversitySelect(university)
-                                      }
-                                      className="cursor-pointer hover:bg-gray-200 p-2"
-                                    >
-                                      {university.University_CollegeName}
-                                    </div>
-                                  ))
+                                  filteredUniversities.map(
+                                    (university, index) => (
+                                      <div
+                                        key={university._id || index}
+                                        onClick={() =>
+                                          handleUniversitySelect(university)
+                                        }
+                                        className="cursor-pointer hover:bg-gray-200 p-2"
+                                      >
+                                        {university.University_CollegeName}
+                                      </div>
+                                    )
+                                  )
                                 ) : (
                                   <div className="p-2 text-gray-500">
                                     No universities found
@@ -1416,7 +1441,9 @@ const AddCandidateForm = ({
                               </div>
                               <div className="border-t border-gray-200">
                                 <div
-                                  onClick={() => handleUniversitySelect("others")}
+                                  onClick={() =>
+                                    handleUniversitySelect("others")
+                                  }
                                   className="cursor-pointer hover:bg-gray-200 p-2"
                                 >
                                   <span className="text-gray-900 font-medium">
@@ -1454,10 +1481,11 @@ const AddCandidateForm = ({
                             //     : "border-gray-300"
                             // }`}
                             className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.UniversityCollege
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                              }
+                          border ${
+                            errors.UniversityCollege
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
                           focus:outline-gray-300
                         `}
                             // v1.0.4 -------------------------------------------------------------------------------------------------------------------->
@@ -1467,7 +1495,10 @@ const AddCandidateForm = ({
                             type="button"
                             onClick={() => {
                               setIsCustomUniversity(false);
-                              setFormData({ ...formData, UniversityCollege: "" });
+                              setFormData({
+                                ...formData,
+                                UniversityCollege: "",
+                              });
                             }}
                             className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
                           >
@@ -1500,14 +1531,14 @@ const AddCandidateForm = ({
                   </p>
 
                   <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-
                     {/* current experience */}
                     <div>
                       <label
                         htmlFor="CurrentExperience"
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Current Experience <span className="text-red-500">*</span>
+                        Current Experience{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         // v1.0.3 <--------------------------------------------------------
@@ -1527,10 +1558,11 @@ const AddCandidateForm = ({
                         //     : "border-gray-300"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.CurrentExperience
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
+                      border ${
+                        errors.CurrentExperience
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
                       focus:outline-gray-300
                     `}
                         // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
@@ -1548,7 +1580,8 @@ const AddCandidateForm = ({
                         htmlFor="CurrentExperience"
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Relevant Experience <span className="text-red-500">*</span>
+                        Relevant Experience{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         // v1.0.3 <--------------------------------------------------------
@@ -1568,10 +1601,11 @@ const AddCandidateForm = ({
                         //     : "border-gray-300"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${errors.RelevantExperience
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
+                      border ${
+                        errors.RelevantExperience
+                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                          : "border-gray-300 focus:ring-red-300"
+                      }
                       focus:outline-gray-300
                     `}
                         // v1.0.4 -------------------------------------------------------------------------------------------------------->
@@ -1617,10 +1651,11 @@ const AddCandidateForm = ({
                           //     : "border-gray-300"
                           // }`}
                           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                        border ${errors.CurrentRole
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                            }
+                        border ${
+                          errors.CurrentRole
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
+                        }
                         focus:outline-gray-300
                       `}
                           // v1.0.4 ---------------------------------------------------------------------------------------------------------->
@@ -1652,7 +1687,9 @@ const AddCandidateForm = ({
                               filteredCurrentRoles.map((role) => (
                                 <div
                                   key={role._id}
-                                  onClick={() => handleRoleSelect(role.RoleName)}
+                                  onClick={() =>
+                                    handleRoleSelect(role.RoleName)
+                                  }
                                   className="cursor-pointer hover:bg-gray-200 p-2"
                                 >
                                   {role.RoleName}
@@ -1673,7 +1710,6 @@ const AddCandidateForm = ({
                       )}
                     </div>
                   </div>
-
                 </div>
                 <div>
                   <SkillsField
@@ -1701,7 +1737,9 @@ const AddCandidateForm = ({
                     onDeleteSkill={(index) => {
                       const entry = entries[index];
                       setAllSelectedSkills(
-                        allSelectedSkills.filter((skill) => skill !== entry.skill)
+                        allSelectedSkills.filter(
+                          (skill) => skill !== entry.skill
+                        )
                       );
                       setEntries(entries.filter((_, i) => i !== index));
                     }}
@@ -1734,8 +1772,9 @@ const AddCandidateForm = ({
                     type="button"
                     onClick={handleClose}
                     disabled={isMutationLoading}
-                    className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
+                    className={`px-4 py-2 text-custom-blue border border-custom-blue rounded-lg transition-colors ${
+                      isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   >
                     Cancel
                   </button>
@@ -1754,7 +1793,8 @@ const AddCandidateForm = ({
                       isLoading={isMutationLoading && activeButton === "add"}
                       loadingText="Adding..."
                     >
-                      <FaPlus className="w-5 h-5 mr-1 sm:hidden" /> Add Candidate
+                      <FaPlus className="w-5 h-5 mr-1 sm:hidden" /> Add
+                      Candidate
                     </LoadingButton>
                   )}
                 </div>

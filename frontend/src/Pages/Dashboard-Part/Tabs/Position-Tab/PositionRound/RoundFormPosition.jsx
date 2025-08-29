@@ -639,11 +639,11 @@ function RoundFormPosition() {
     //   return; // Stop submission if there are errors
     // }
 
-    const { isValid, newErrors } = validateForm();
-    if (!isValid) {
-      scrollToFirstError(newErrors, fieldRefs); // ✅ Scroll to first error
-      return;
-    }
+    // const { isValid, newErrors } = validateForm();
+    // if (!isValid) {
+    //   scrollToFirstError(newErrors, fieldRefs); // ✅ Scroll to first error
+    //   return;
+    // }
 
     // v1.0.0 --------------------------------------------------------------------------------->
     // console.log('errors after validation', errors);
@@ -709,10 +709,13 @@ function RoundFormPosition() {
             questions: formData.interviewQuestionsList || [],
           }),
       instructions: formData.instructions,
-      interviewerViewType:
-        formData.roundTitle === "Assessment"
-          ? ""
-          : formData.interviewerViewType,
+      interviewerType:
+      formData.roundTitle === "Assessment" ? undefined : formData.interviewerType || undefined,
+    
+      // interviewerViewType:
+      //   formData.roundTitle === "Assessment"
+      //     ? ""
+      //     : formData.interviewerViewType,
     };
     // console.log("formData.duration", formData.duration);
 
@@ -729,8 +732,18 @@ function RoundFormPosition() {
 
       navigate(`/position/view-details/${positionId}`);
     } catch (err) {
-      console.log("err ", err);
-      console.error("Error submitting round:", err);
+    
+      if (err.response?.data?.errors) {
+        // Backend returns { errors: { field: "message" } }
+        setErrors(err.response.data.errors);
+        scrollToFirstError(err.response.data.errors, fieldRefs);
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+  
+    
+      // console.log("err ", err);
+      // console.error("Error submitting round:", err);
     }
   };
 

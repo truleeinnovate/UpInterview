@@ -1,8 +1,7 @@
-
 const mongoose = require('mongoose');
 const TenantInterviewQuestionsSchema = new mongoose.Schema({
     questionNo: String,
-    suggestedQuestionId: { type: mongoose.Schema.Types.ObjectId },
+    suggestedQuestionId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewQuestions' },
     tenantListId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TenantQuestionsListNames' }],
     isCustom: { type: Boolean, default: false },
     questionText: String,

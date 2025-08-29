@@ -273,6 +273,7 @@ const MyQuestionsList = ({
   }, [selectedLabel, createdLists, dropdownValue]);
   //----v1.0.4--->
 
+
   const toggleActionSection = (sectionIndex) => {
     setActionViewMoreSection((prev) => (prev === sectionIndex ? null : sectionIndex));
     setDropdownOpen(null);
@@ -686,6 +687,7 @@ const MyQuestionsList = ({
   }, [selectedLabelItems, searchInput]);
 
   const totalItems = filteredSelectedItems.length;
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(totalItems / itemsPerPage)), [totalItems]);
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredSelectedItems.slice(start, start + itemsPerPage);
@@ -697,8 +699,8 @@ const MyQuestionsList = ({
     totalItems === 0
       ? "0/0"
       : startIndex === endIndex
-        ? `${endIndex}/${totalItems}`
-        : `${startIndex}-${endIndex}/${totalItems}`;
+        ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
+        : `${startIndex}-${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`;
 
   // Reset/clamp page on changes
   useEffect(() => {
@@ -865,6 +867,9 @@ const MyQuestionsList = ({
           </div>
           {/*<-----v1.0.4----Serach bar and pagination */}
           <div className="flex items-center gap-3">
+          <div className="flex items-center">
+                <p>{rangeLabel}</p>
+          </div>
             <div className="relative flex items-center rounded-md border">
               <span className="p-2 text-custom-blue">
                 <Search className="w-5 h-5" />
@@ -880,8 +885,10 @@ const MyQuestionsList = ({
 
             <div className="flex items-center gap-3">
               <div className="flex items-center">
-                <p>{rangeLabel}</p>
-              </div>
+              <p>
+                {currentPage}/{totalPages || 1}
+              </p>
+            </div>
               <div className="flex items-center">
                 <button
                   type="button"
@@ -978,48 +985,10 @@ const MyQuestionsList = ({
               {Object.entries(groupedQuestions).map(([listName, items]) => (
                 selectedLabel === listName && (
                   <div key={listName} className="mt-4">
-                    <div
-                      className={`flex justify-between items-center bg-blue-50 p-2 rounded-lg ${isOpen[listName] && items.length > 0 ? "rounded-b-none" : ""
-                        }`}
-                    >
-                      <div className="flex items-baseline gap-3">
-                        <h3 className="font-semibold truncate max-w-xs text-custom-blue ml-1">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</h3>
-                        <span className="bg-white bg-opacity-20 rounded-full px-2.5 py-0.5 text-xs font-medium">
-                          {items.length} {items.length > 1 ? "Questions" : "Question"}
-                        </span>
-                      </div>
-                      {/* <div className="flex items-center">
-                        <div className="relative">
-                          <div className="flex items-center">
-                            {isOpen[listName] && items.length > 0 && (
-                              <button
-                                onClick={() => toggleActionSection(listName)}
-                                className="p-1 rounded-full"
-                              >
-                                <MdMoreVert className="text-xl" />
-                              </button>
-                            )}
-                            {items.length > 0 && (
-                              <button
-                                onClick={() => toggleSection(listName)}
-                                className="p-1 rounded-full ml-2"
-                              >
-                                {isOpen[listName] ? (
-                                  <IoIosArrowUp className="text-2xl" />
-                                ) : (
-                                  <IoIosArrowDown className="text-2xl" />
-                                )}
-                              </button>
-                            )}
-                          </div>
-                         
-                        </div>
-                      </div> */}
-                    </div>
 
                     {isOpen[listName] && items.length > 0 && (
                       <div
-                        className={`p-4  rounded-b-lg border border-t-0 border-gray-300 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-250px)]"
+                        className={`px-2 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-200px)]"
                           } overflow-y-auto`}
                       >
                         {paginatedItems.map((question, index) => (

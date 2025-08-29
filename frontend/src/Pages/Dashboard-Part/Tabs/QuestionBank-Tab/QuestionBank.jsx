@@ -67,6 +67,7 @@ const QuestionBank = ({ assessmentId,
           </button>
         </div>
       {/*<---v1.0.0-----*/}
+      {activeTab === "MyQuestionsList" && (
         <div className="flex items-center gap-2">
         <button
           className="text-md bg-custom-blue text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
@@ -75,6 +76,7 @@ const QuestionBank = ({ assessmentId,
           <Plus /> Add Question
         </button>
         </div>
+       )}
       </div>
       {/*---v1.0.0----->*/}
 
