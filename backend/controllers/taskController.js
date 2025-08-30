@@ -76,7 +76,10 @@ const taskCode = `TSK-${String(nextNumber).padStart(5, '0')}`;
   
     try {
       const newTask = await task.save();
-      res.status(201).json(newTask);
+      res.status(201).json({
+        status: 'Created successfully',
+        newTask});
+      
     } catch (err) {
       res.status(400).json({ message: err.message });
     }
@@ -157,7 +160,10 @@ const updateTask = async (req, res) => {
       }
       //------v1.0.0--->
 
-      res.json(updatedTask);
+      // res.json(updatedTask);
+      res.status(200).json({
+        status: 'Updated successfully',
+        updatedTask});
     } catch (err) {
       res.status(400).json({ message: err.message });
     }

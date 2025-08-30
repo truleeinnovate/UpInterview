@@ -18,6 +18,7 @@ import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { useInterviewTemplates } from "../../../../apiHooks/useInterviewTemplates.js";
 // v1.0.1 <----------------------------------------------------------------------------
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+import { notify } from "../../../../services/toastService.js";
 // v1.0.1 ---------------------------------------------------------------------------->
 
 // Reusable CustomDropdown Component
@@ -90,9 +91,8 @@ const CustomDropdown = ({
           onClick={toggleDropdown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-            error ? "border-red-500" : "border-gray-300"
-          }`}
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? "border-red-500" : "border-gray-300"
+            }`}
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -439,10 +439,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry
       );
       setEntries(updatedEntries);
@@ -502,6 +502,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     if (id) {
       const selectedPosition = positionData.find((pos) => pos._id === id);
       setIsEdit(true);
+      console.log("selectedPosition", selectedPosition);
       const matchingTemplate = templatesData.find(
         (template) =>
           template.templateName === selectedPosition?.selectedTemplete
@@ -606,6 +607,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
 
     setErrors({});
+    console.log("dataToSubmit", dataToSubmit);
 
     let basicdetails = {
       // ...dataToSubmit,
@@ -619,9 +621,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       ...(dataToSubmit.maxexperience && {
         maxexperience: parseInt(dataToSubmit.maxexperience),
       }),
-        // ✅ salary must be string (backend requires it)
-  minSalary: dataToSubmit.minSalary ? String(dataToSubmit.minSalary) : "",
-  maxSalary: dataToSubmit.maxSalary ? String(dataToSubmit.maxSalary) : "",
+      // ✅ salary must be string (backend requires it)
+      minSalary: dataToSubmit.minSalary ? String(dataToSubmit.minSalary) : "",
+      maxSalary: dataToSubmit.maxSalary ? String(dataToSubmit.maxSalary) : "",
       // minexperience: dataToSubmit.minexperience || "",
       // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
@@ -633,10 +635,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       })),
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
-      templateId: dataToSubmit.template?._id,
-        // ✅ fix naming mismatch (backend expects selectedTemplete)
-  // selectedTemplete: dataToSubmit.template?.templateName || null,
-      // rounds: dataToSubmit.rounds || [],
+      // templateId: dataToSubmit.template,
+      // ✅ fix naming mismatch (backend expects selectedTemplete)
+      selectedTemplete: dataToSubmit.template?.templateName || null,
+      rounds: dataToSubmit?.template?.rounds || [],
     };
     console.log("basicdetails", basicdetails);
 
@@ -659,8 +661,17 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         id: id || null,
         data: basicdetails,
       });
+      // Updated Successfully
 
+      console.log("response", response);
       if (response.status === "success") {
+        notify.success("Position added successfully");
+      } else if (response.status === "no_changes" || response.status === "Updated successfully") {
+        notify.success("Position Updated successfully");
+      }
+
+
+      if (response.status === "success" || response.status === "Updated successfully") {
         // Handle navigation
         if (actionType === "BasicDetailsSave") {
           // If it's a modal, call the onClose function with the new position data
@@ -677,7 +688,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
             navigate(returnTo);
           } else {
             // Navigate back to position main page
-            navigate("/position");
+            // navigate("/position");
+            navigate(-1);
           }
         }
         if (actionType === "BasicDetailsSave&AddRounds") {
@@ -698,14 +710,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       }
     } catch (error) {
       // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
-    if (error.response && error.response.status === 400) {
-      const backendErrors = error.response.data.errors || {};
-      console.log("backendErrors", backendErrors);
-      setErrors(backendErrors);
-      scrollToFirstError(backendErrors, fieldRefs);
-    } else {
-      console.error("Error saving position:", error);
-    }
+      if (error.response && error.response.status === 400) {
+        const backendErrors = error.response.data.errors || {};
+        console.log("backendErrors", backendErrors);
+        setErrors(backendErrors);
+        scrollToFirstError(backendErrors, fieldRefs);
+      } else {
+        console.error("Error saving position:", error);
+      }
       // console.error("Error saving position:", error);
     }
   };
@@ -1099,10 +1111,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           //     : "border-gray-300 focus:ring-gray-300"
                           // }`}
                           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                              errors.title
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
+                            border ${errors.title
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
                             }
                             focus:outline-gray-300
                           `}
@@ -1138,10 +1149,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               //     : "border-gray-300"
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.companyname
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
+                                border ${errors.companyname
+                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                  : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1231,10 +1241,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               //     : "border-gray-300"
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.companyname
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
+                                border ${errors.companyname
+                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                  : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1327,8 +1336,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                     // Reset max experience if it's now less than min
                                     maxexperience:
                                       minExp !== "" &&
-                                      formData.maxexperience &&
-                                      minExp > formData.maxexperience
+                                        formData.maxexperience &&
+                                        minExp > formData.maxexperience
                                         ? ""
                                         : formData.maxexperience,
                                   });
@@ -1339,10 +1348,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                 //     : "border-gray-300"
                                 // }`}
                                 className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                  border ${
-                                    errors.minexperience
-                                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                      : "border-gray-300 focus:ring-red-300"
+                                  border ${errors.minexperience
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
                                   }
                                   focus:outline-gray-300
                                 `}
@@ -1408,10 +1416,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                 //     : "border-gray-300"
                                 // }`}
                                 className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                  border ${
-                                    errors.maxexperience
-                                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                      : "border-gray-300 focus:ring-red-300"
+                                  border ${errors.maxexperience
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
                                   }
                                   focus:outline-gray-300
                                 `}
@@ -1459,7 +1466,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                       minSalary !== "" &&
                                       formData.maxSalary &&
                                       parseInt(minSalary) >
-                                        parseInt(formData.maxSalary)
+                                      parseInt(formData.maxSalary)
                                     ) {
                                       setErrors((prev) => ({
                                         ...prev,
@@ -1485,14 +1492,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                           : parseInt(minSalary),
                                     }));
                                   }}
-                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${
-                                    errors.salary
+                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary
                                       ? "border-red-500"
                                       : "border-gray-300"
-                                  }`}
+                                    }`}
 
-                                  // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
-                                  // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                                // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
+                                // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
                                 />
                               </div>
                               {errors.minsalary && (
@@ -1526,7 +1532,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                       maxSalary !== "" &&
                                       formData.minSalary &&
                                       parseInt(maxSalary) <
-                                        parseInt(formData.minSalary)
+                                      parseInt(formData.minSalary)
                                     ) {
                                       setErrors((prev) => ({
                                         ...prev,
@@ -1552,13 +1558,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                           : parseInt(maxSalary),
                                     }));
                                   }}
-                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${
-                                    errors.salary
+                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary
                                       ? "border-red-500"
                                       : "border-gray-300"
-                                  }`}
-                                  // onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
-                                  // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                                    }`}
+                                // onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
+                                // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
                                 />
                               </div>
                               {errors.maxsalary && (
@@ -1613,14 +1618,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           //     : "border-gray-300"
                           // }`}
                           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                              errors.NoofPositions
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
+                            border ${errors.NoofPositions
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
                             }
                             focus:outline-gray-300
                           `}
-                          // className="w-full px-3 py-2 border rounded-md focus:outline-none"
+                        // className="w-full px-3 py-2 border rounded-md focus:outline-none"
                         />
                         {errors.NoofPositions && (
                           <p className="text-red-500 text-xs mt-1 ">
@@ -1654,10 +1658,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               //     : "border-gray-300"
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.Location
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
+                                border ${errors.Location
+                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                  : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1747,10 +1750,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               //     : "border-gray-300"
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.Location
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
+                                border ${errors.Location
+                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                  : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1820,10 +1822,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         //     : "border-gray-300"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.jobDescription
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
+                          border ${errors.jobDescription
+                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                            : "border-gray-300 focus:ring-red-300"
                           }
                           focus:outline-gray-300
                         `}
@@ -2012,7 +2013,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       navigate(returnTo);
                     } else {
                       // Navigate back to position main page
-                      navigate("/position");
+                      // navigate("/position");
+                      navigate(-1);
                     }
                   }}
                 >

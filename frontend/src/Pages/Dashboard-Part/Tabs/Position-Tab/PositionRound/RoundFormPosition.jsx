@@ -18,6 +18,7 @@ import { config } from "../../../../../config.js";
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 // v1.0.0 <------------------------------------------------------------------------
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+import { notify } from "../../../../../services/toastService.js";
 // v1.0.0 ------------------------------------------------------------------------>
 
 function RoundFormPosition() {
@@ -673,8 +674,8 @@ function RoundFormPosition() {
       interviewMode: formData.interviewMode,
       duration: formData.duration,
       // interviewType: formData.interviewType,
-      interviewerType:
-        formData.roundTitle === "Assessment" ? "" : formData.interviewerType,
+      // interviewerType:
+        // formData.roundTitle === "Assessment" ? "" : formData.interviewerType.toLowerCase(),
       sequence: formData.sequence,
       // Only include interviewers for non-assessment rounds
       ...(formData.roundTitle !== "Assessment" && {
@@ -706,6 +707,7 @@ function RoundFormPosition() {
           //   }
           // })) || []
           {
+            assessmentId: null,
             questions: formData.interviewQuestionsList || [],
           }),
       instructions: formData.instructions,
@@ -728,7 +730,14 @@ function RoundFormPosition() {
         : { positionId, round: roundData };
 
       console.log("roundData after roundData", payload);
-      await addRounds(payload);
+      const response  = await addRounds(payload);
+
+         console.log("response", response);
+            if (response.status === "Created Round successfully") {
+              notify.success("Round added successfully");
+            } else if (response.status === "no_changes" || response.status === "Updated Round successfully") {
+              notify.success("Round Updated successfully");
+            }
 
       navigate(`/position/view-details/${positionId}`);
     } catch (err) {

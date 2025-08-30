@@ -162,7 +162,7 @@ export const useSupportTickets = () => {
     },
 
     onSuccess: ({ message }) => {
-      toast.success(message || "Ticket submitted successfully");
+      // toast.success(message || "Ticket submitted successfully");
       queryClient.invalidateQueries({ queryKey: ["supportTickets"] });
     },
 

@@ -485,10 +485,10 @@ const MultiStepForm = () => {
             // comment ed by Ranjith expertiseLevel_ConductingInterviews
           // expertiseLevel_ConductingInterviews:
             // interviewDetailsData.expertiseLevel_ConductingInterviews,
-          hourlyRate: interviewDetailsData.hourlyRate,
+          hourlyRate: Number(interviewDetailsData.hourlyRate),
           interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
           expectedRatePerMockInterview:
-            interviewDetailsData.expectedRatePerMockInterview,
+            Number(interviewDetailsData.expectedRatePerMockInterview),
           noShowPolicy: interviewDetailsData.noShowPolicy,
           bio: interviewDetailsData.bio,
           professionalTitle: interviewDetailsData.professionalTitle,

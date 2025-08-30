@@ -84,7 +84,7 @@ exports.createTicket = async (req, res) => {
     });
     return res.status(201).send({
       message: "Ticket created successfully",
-      success: true,
+      status: 'Ticket created successfully',
       ticket,
     });
   } catch (error) {
@@ -99,15 +99,15 @@ exports.createTicket = async (req, res) => {
 exports.getTicket = async (req, res) => {
   try {
 
-    res.locals.loggedByController = true;
-    //<-----v1.0.1---
-    // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'View') ||
-    await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'View')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing SupportDesk.View permission' });
-    }
+    // res.locals.loggedByController = true;
+    // //<-----v1.0.1---
+    // // Permission: Tasks.Create (or super admin override)
+    // const canCreate =
+    // await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'View') ||
+    // await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'View')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.View permission' });
+    // }
     //-----v1.0.1--->
 
     const tickets = await SupportUser.find().sort({ _id: -1 });
@@ -140,15 +140,15 @@ exports.getTicketBasedonId = async (req, res) => {
         .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
     }
 
-    res.locals.loggedByController = true;
-    //<-----v1.0.1---
-    // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'View') ||
-    await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'View')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing SupportDesk.View permission' });
-    }
+    // res.locals.loggedByController = true;
+    // //<-----v1.0.1---
+    // // Permission: Tasks.Create (or super admin override)
+    // const canCreate =
+    // await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'View') ||
+    // await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'View')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.View permission' });
+    // }
     //-----v1.0.1--->
 
     const ticket = await SupportUser.findById(id);
@@ -218,7 +218,7 @@ exports.updateTicketById = async (req, res) => {
     }
 
     return res.status(200).send({
-      success: true,
+      status: 'Ticket updated successfully',
       message: "Ticket updated successfully",
       ticket,
     });
