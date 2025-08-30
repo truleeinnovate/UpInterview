@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Changed styles to improve UI
-import { useState, useEffect, useRef } from "react";
+// v1.0.1 - Ashok - Changed category options from static to dynamic
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Tab } from "../../../Components/SuperAdminComponents/common/Tab";
 import {
   AiOutlineTable,
@@ -14,11 +15,20 @@ import RatesKanbanView from "../../../Pages/SuperAdmin-Part/InterviewerRates/Rat
 import RateCardModal from "../../../Pages/SuperAdmin-Part/InterviewerRates/RateCardModal";
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock";
 import { Button } from "../../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
+// <-------------------------------------------------------------------------------------
+import { useMasterData } from "../../../apiHooks/useMasterData";
+// ------------------------------------------------------------------------------------->
 
+// v1.0.1 <----------------------------------------------------------------------------------
 // v1.0.0 <--------------------------------------------------------------------
-function CategoryDropdown({ categories, filterCategory, setFilterCategory }) {
+function CategoryDropdown({ technologies, filterCategory, setFilterCategory }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Extract unique categories from technologies
+  const categoryOptions = useMemo(() => {
+    return [...new Set((technologies || []).map((t) => t.Category))];
+  }, [technologies]);
 
   const handleSelect = (value) => {
     setFilterCategory(value);
@@ -72,7 +82,7 @@ function CategoryDropdown({ categories, filterCategory, setFilterCategory }) {
           >
             All Categories
           </div>
-          {categories.map((category) => (
+          {categoryOptions.map((category) => (
             <div
               key={category}
               className={`px-3 py-2 text-sm cursor-pointer hover:bg-teal-50 hover:text-custom-blue ${
@@ -91,11 +101,16 @@ function CategoryDropdown({ categories, filterCategory, setFilterCategory }) {
   );
 }
 // v1.0.0 -------------------------------------------------------------------->
+// v1.0.1 ---------------------------------------------------------------------------------->
 
 function InterviewerRatesPage() {
   useEffect(() => {
     document.title = "Interviewer Rates | Admin Portal";
   }, []);
+
+  // v1.0.1 <----------------------------------------------
+  const { technologies } = useMasterData();
+  // v1.0.1 ---------------------------------------------->
 
   const [activeView, setActiveView] = useState("table");
   const [showRateCardModal, setShowRateCardModal] = useState(false);
@@ -113,26 +128,6 @@ function InterviewerRatesPage() {
     "QA & Testing",
     "Specialized Skills",
   ];
-
-  // const handleCreateRateCard = () => {
-  //   setSelectedRateCard(null);
-  //   setShowRateCardModal(true);
-  // };
-
-  // const handleEditRateCard = (rateCard) => {
-  //   setSelectedRateCard(rateCard);
-  //   setShowRateCardModal(true);
-  // };
-
-  // const handleCloseModal = () => {
-  //   setShowRateCardModal(false);
-  //   setSelectedRateCard(null);
-  // };
-
-  // const handleViewRateCard = (rateCard) => {
-  //   setSelectedRateCard(rateCard);
-  //   setShowRateCardModal(true);
-  // }
 
   const handleCreateRateCard = () => {
     setSelectedRateCard(null);
@@ -180,10 +175,12 @@ function InterviewerRatesPage() {
               ))}
             </select>
           </div> */}
+          {/* v1.0.1 <----------------------------------------------- */}
           <CategoryDropdown
-            categories={categories}
+            technologies={technologies}
             filterCategory={filterCategory}
             setFilterCategory={setFilterCategory}
+            // v1.0.1 <-------------------------------------------------
           />
           {/* <button className="flex items-center p-2 rounded-md bg-gray-300">
             <AiOutlineFilter className="mr-2" />
