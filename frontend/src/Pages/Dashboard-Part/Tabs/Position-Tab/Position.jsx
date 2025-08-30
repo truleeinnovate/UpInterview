@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
 // v1.0.1  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.2  -  Venkatesh   -  added status change functionality
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -14,13 +15,16 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { usePermissions } from "../../../../Context/PermissionsContext";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+import { notify } from "../../../../services/toastService";//<----v1.02-----
 
 const PositionTab = () => {
   // <---------------------- v1.0.0
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
   const { skills } = useMasterData();
-  const { positionData, isLoading } = usePositions();
+  const { positionData, isLoading, addOrUpdatePosition, isMutationLoading } = usePositions();//<----v1.02-----
+  //console.log("pos",positionData);
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");
@@ -44,6 +48,15 @@ const PositionTab = () => {
   const [selectedTech, setSelectedTech] = useState([]);
   const [experience, setExperience] = useState({ min: "", max: "" });
   const filterIconRef = useRef(null);
+  //<----v1.02-----
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const STATUS_OPTIONS = ["draft", "opened", "closed", "hold", "cancelled"];
+
+  // Status change modal state
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusTargetRow, setStatusTargetRow] = useState(null);
+  const [statusValue, setStatusValue] = useState("draft");
+  //----v1.02----->
 
   // Memoize unique locations to prevent recalculation on every render
   const uniqueLocations = useMemo(() => {
@@ -219,6 +232,54 @@ const PositionTab = () => {
     }
   };
 
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "N/A";
+    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  };
+
+  //<----v1.02-----
+  const handleStatusChange = async (row, newStatus) => {
+    if (!effectivePermissions.Positions?.Edit) return;
+    if (!newStatus || row.status === newStatus) return;
+
+    if (["closed", "cancelled"].includes(newStatus)) {
+      const confirmed = window.confirm(
+        `Are you sure you want to mark this position as ${capitalizeFirstLetter(newStatus)}?`
+      );
+      if (!confirmed) return;
+    }
+
+    try {
+      setUpdatingStatusId(row._id);
+      await addOrUpdatePosition({ id: row._id, data: { status: newStatus } });
+      notify.success(`Status updated to ${capitalizeFirstLetter(newStatus)}`);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Failed to update status";
+      notify.error(msg);
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  // Open/close modal and confirm update
+  const openStatusModal = (row) => {
+    setStatusTargetRow(row);
+    setStatusValue(row?.status || "draft");
+    setIsStatusModalOpen(true);
+  };
+
+  const closeStatusModal = () => {
+    setIsStatusModalOpen(false);
+    setStatusTargetRow(null);
+  };
+
+  const confirmStatusUpdate = async () => {
+    if (!statusTargetRow) return;
+    await handleStatusChange(statusTargetRow, statusValue);
+    closeStatusModal();
+  };
+  //----v1.02----->
+
   const tableColumns = [
     {
       key: "positionCode",
@@ -295,7 +356,20 @@ const PositionTab = () => {
         </div>
       ),
     },
-  ];
+      {
+        key: "status",
+        header: "Status",
+        render: (value, row) => (
+          <StatusBadge status={capitalizeFirstLetter(value)} />
+        ),
+      },
+      {
+        key:"createdAt",
+        header:"CreatedAt",
+        render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
+
+      }
+    ];
 
   const tableActions = [
     ...(effectivePermissions.Positions?.View
@@ -312,6 +386,14 @@ const PositionTab = () => {
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
+        //<----v1.02-----
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+        //----v1.02----->
           {
             key: "edit",
             label: "Edit",
@@ -545,6 +627,47 @@ const PositionTab = () => {
           onClose={() => setSelectPositionView(false)}
         />
       )}
+
+      {/*<----v1.02-----*/}
+      {isStatusModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-4">
+            <h3 className="text-sm font-semibold mb-2">Change Status</h3>
+            <div className="mb-4">
+              <label className="block text-xs text-gray-600 mb-1">Select Status</label>
+              <select
+                value={statusValue}
+                onChange={(e) => setStatusValue(e.target.value)}
+                className="w-full text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-custom-blue"
+              >
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {capitalizeFirstLetter(s)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeStatusModal}
+                className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmStatusUpdate}
+                disabled={isMutationLoading || (statusTargetRow && updatingStatusId === statusTargetRow._id)}
+                className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/*----v1.02---->*/}
     </div>
   );
 };

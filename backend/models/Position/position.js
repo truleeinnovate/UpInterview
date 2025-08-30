@@ -62,6 +62,7 @@ const positionSchema = new mongoose.Schema(
     maxSalary: String,
     // EmployementType:String,
     NoofPositions: Number,
+    status: {type:String,enum:["draft","opened","closed","hold","cancelled"], default:"draft"},
     Location: String,
     // workMode:String,
 

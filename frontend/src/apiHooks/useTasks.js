@@ -1,0 +1,118 @@
+//<-------v1.0.0------Venkatesh----tanStack Query added
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { config } from '../config';
+import { usePermissions } from '../Context/PermissionsContext';
+import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+
+// Fetch all tasks for current user (filters applied client-side similar to existing code)
+export const useTasks = (filters = {}) => {
+  const { effectivePermissions, isInitialized } = usePermissions();
+  const hasViewPermission = effectivePermissions?.Tasks?.View;
+
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = decodeJwt(authToken);
+  const ownerId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId; // reserved for future server-side filtering
+  const organization = tokenPayload?.organization; // reserved for future server-side filtering
+
+  return useQuery({
+    queryKey: ['tasks', ownerId, tenantId, organization],
+    queryFn: async () => {
+      const res = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
+      let tasks = Array.isArray(res.data) ? res.data : [];
+      // match existing behavior: client-side filter by ownerId
+      tasks = tasks.filter((t) => t?.ownerId === ownerId);
+
+      // optional client-side filter by status if provided
+      if (Array.isArray(filters.status) && filters.status.length > 0) {
+        tasks = tasks.filter((t) => filters.status.includes(t?.status));
+      }
+
+      return tasks;
+    },
+    enabled: !!ownerId && !!hasViewPermission && (typeof isInitialized === 'boolean' ? isInitialized : true),
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 20,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+};
+
+// Fetch a single task by id
+export const useTaskById = (taskId) => {
+  return useQuery({
+    queryKey: ['task', taskId],
+    queryFn: async () => {
+      if (!taskId) return null;
+      const res = await axios.get(`${config.REACT_APP_API_URL}/tasks/${taskId}`);
+      return res.data;
+    },
+    enabled: !!taskId,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 20,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+};
+
+// Create task
+export const useCreateTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload) => {
+      const res = await axios.post(`${config.REACT_APP_API_URL}/tasks`, payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+    },
+    onError: (error) => {
+      console.error('Failed to create task:', error?.response?.data?.message || error.message);
+    },
+  });
+};
+
+// Update task
+export const useUpdateTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      if (!id) throw new Error('Missing task id');
+      const res = await axios.patch(`${config.REACT_APP_API_URL}/tasks/${id}`, data);
+      return res.data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries(['tasks']);
+      if (variables?.id) {
+        queryClient.invalidateQueries(['task', variables.id]);
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to update task:', error?.response?.data?.message || error.message);
+    },
+  });
+};
+
+// Delete task
+export const useDeleteTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      if (!id) throw new Error('Missing task id');
+      const res = await axios.delete(`${config.REACT_APP_API_URL}/tasks/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+    },
+    onError: (error) => {
+      console.error('Failed to delete task:', error?.response?.data?.message || error.message);
+    },
+  });
+};

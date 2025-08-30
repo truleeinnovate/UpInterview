@@ -5,8 +5,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'; //<---v1.0.2-----
 import Modal from 'react-modal';
 import classNames from 'classnames';
-import { useNavigate } from 'react-router-dom';
-import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
+ 
+import { Minimize, Expand, X } from 'lucide-react';
 import axios from "axios";
 import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
@@ -21,9 +21,11 @@ import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import LoadingButton from "../../../../Components/LoadingButton.jsx";
+import { useCreateTask, useUpdateTask, useTaskById } from "../../../../apiHooks/useTasks.js";
 
 
 import "react-datepicker/dist/react-datepicker.css";
+// eslint-disable-next-line import/first
 import { scrollToFirstError } from '../../../../utils/ScrollToFirstError/scrollToFirstError.js';
 import { notify } from '../../../../services/toastService.js';
 
@@ -42,15 +44,22 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId
   const tenantId = tokenPayload?.tenantId
   const organization = tokenPayload?.organization;
-  const { candidateData, isMutationLoading } = useCandidates();
-  const { positionData } = usePositions();
-  const { assessmentData } = useAssessments();
-  const { interviewData } = useInterviews();
-  const { mockInterviewData } = useMockInterviews();
+
+  const { candidateData } = useCandidates();
+  const {positionData} = usePositions();
+  const { assessmentData} = useAssessments();
+  const {interviewData} = useInterviews();
+  const {mockInterviewData} = useMockInterviews();
+
   //console.log("mockInterviewData:",mockInterviewData)
 
 
   const { usersRes } = useCustomContext();
+
+  // Mutations must be inside the component
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const isSaving = createTaskMutation.isPending || updateTaskMutation.isPending;
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -89,7 +98,7 @@ const TaskForm = ({
     dueDate: "",
     comments: "",
   });
-  const navigate = useNavigate();
+  
   const [selectedPriority, setSelectedPriority] = useState("");
   const priorities = ['High', 'Medium', 'Low', 'Normal'];
 
@@ -361,20 +370,11 @@ const TaskForm = ({
 
       console.log("Submitting task with data:", taskData); // Debug log
 
-      let res
-
       if (taskId) {
-        res = await axios.patch(`${config.REACT_APP_API_URL}/tasks/${taskId}`, taskData);
+        await updateTaskMutation.mutateAsync({ id: taskId, data: taskData });
       } else {
-        res = await axios.post(`${config.REACT_APP_API_URL}/tasks`, taskData);
-      }
-      const response = res.data;
-      console.log("response", response);
+        await createTaskMutation.mutateAsync(taskData);
 
-      if (response.status === 'Created successfully') {
-        notify.success("Task Added successfully");
-      } else if (response.status === 'Updated successfully') {
-        notify.success("Task Updated successfully");
       }
 
 
@@ -396,7 +396,6 @@ const TaskForm = ({
     }
   };
 
-  const today = new Date().toISOString().split("T")[0];
   const [categoriesRelatedTo, setCategoriesRelatedTo] = useState([]);
 
   useEffect(() => {
@@ -412,33 +411,23 @@ const TaskForm = ({
     fetchObjectsData();
   }, []);
 
+  const { data: fetchedTask } = useTaskById(taskId);
+
   useEffect(() => {
-    if (taskId) {
-      // Fetch task data
-      const fetchTaskData = async () => {
-        try {
-          const response = await axios.get(`${config.REACT_APP_API_URL}/tasks/${taskId}`);
-          const taskData = response.data;
 
-          setFormData(taskData);
-          setSelectedPriority(taskData.priority);
-          setSelectedStatus(taskData.status);
-          setSelectedCategoryRelatedTo(taskData.relatedTo.objectName);
-          setSelectedOptionName(taskData.relatedTo.recordName);
-          console.log(taskData);
-        } catch (error) {
-          console.error("Error fetching task data:", error);
-        }
-      };
+    if (taskId && fetchedTask) {
+      setFormData(fetchedTask);
+      setSelectedPriority(fetchedTask.priority);
+      setSelectedStatus(fetchedTask.status);
+      setSelectedCategoryRelatedTo(fetchedTask?.relatedTo?.objectName || "");
+      setSelectedOptionName(fetchedTask?.relatedTo?.recordName || "");
+    } else if (!taskId && initialData) {
 
-      fetchTaskData();
-    } else if (initialData) {
-      // Use initialData if provided
       setFormData(initialData);
       setSelectedPriority(initialData.priority);
       setSelectedStatus(initialData.status);
     }
-  }, [taskId, initialData]);
+  }, [taskId, fetchedTask, initialData]);
 
 
 
@@ -455,304 +444,304 @@ const TaskForm = ({
 
 
   return (
-    <Modal
-      isOpen={true}
-      onRequestClose={onClose}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    >
-      <div className={classNames('h-full', { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-
-            <h2 className="text-2xl font-semibold text-custom-blue">
-              {taskId ? "Update Task" : "Add New Task"}
-
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-              >
-                {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <Expand className="w-5 h-5 text-gray-500" />
-                )}
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+   <Modal
+            isOpen={true}
+            onRequestClose={onClose}
+            className={modalClass}
+            overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+          >
+          <div className={classNames('h-full' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isSaving })}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+   
+                  <h2 className="text-2xl font-semibold text-custom-blue">
+                    {taskId ? "Update Task" : "Add New Task"}
+   
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsFullScreen(!isFullScreen)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+                    >
+                      {isFullScreen ? (
+                        <Minimize className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <Expand className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+                    <button
+                      onClick={onClose}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+   
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 mb-6">
+         
+          <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
+            {/* Title */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Title <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                ref={fieldRefs.title}//<---v1.0.1------
+                value={formData.title}
+                placeholder="Enter Title"
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.title && 'border-red-500'}`}
+              />
+              {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
-          </div>
-
-          <form ref={formRef} className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 mb-6">
-
-              <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
-                {/* Title */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">Title <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    ref={fieldRefs.title}//<---v1.0.1------
-                    value={formData.title}
-                    placeholder="Enter Title"
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.title && 'border-red-500'}`}
-                  />
-                  {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
-                </div>
-                {/* individual assigned to*/}
-                {organization ? (
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">Assigned To <span className="text-red-500">*</span></label>
-                    <div className="relative">
-                      <select
-                        value={formData.assignedToId || ''}
-                        ref={fieldRefs.assignedTo}//<---v1.0.1------
-                        onChange={(e) => {
-                          const selectedUserId = e.target.value;
-                          const selectedUser = usersRes.find(user => user._id === selectedUserId);
-                          setFormData(prev => ({
-                            ...prev,
-                            assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
-                            assignedToId: selectedUserId
-                          }));
-
-                          setErrors((prevErrors) => ({
-                            ...prevErrors,
-                            assignedTo: "",
-                          }));
-                        }}
-                        className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
-                      >
-                        <option value="" hidden>Select User</option>
-                        {usersRes.map((user) => (
-                          <option
-                            className='font-medium text-gray-500 text-sm'
-                            key={user._id}
-                            value={user._id}
-                          >
-                            {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
-                          </option>
-                        ))}
-                      </select>
-                      <MdArrowDropDown
-                        size={20}
-                        className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
-                        onClick={toggleDropdownAssignedTo}
-                      />
-                      {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">Assigned To <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      value={formData.assignedTo}
-                      ref={fieldRefs.assignedTo}//<---v1.0.1------
-                      onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                      className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
-                    />
-                    {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
-                  </div>
-                )}
-
-              </div>
-
-
-
-              <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
-                {/* Priority */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">Priority <span className="text-red-500">*</span></label>
-                  <div className="relative">
-                    <select
-                      value={selectedPriority}
-                      ref={fieldRefs.priority}//<---v1.0.1------
-                      onChange={handlePriorityChange}
-                      className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.priority && 'border-red-500'}`}
-                    >
-                      <option value="" hidden>Select Priority</option>
-                      {Array.isArray(priorities) && priorities.map((priority) => (
-                        <option key={priority} value={priority}>{priority}</option>
-                      ))}
-                    </select>
-                    <MdArrowDropDown
-                      size={20}
-                      className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
-                      onClick={toggleDropdownPriority}
-                    />
-                    {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">Status <span className="text-red-500">*</span></label>
-                  <div className="relative">
-                    <select
-                      value={selectedStatus}
-                      ref={fieldRefs.status}//<---v1.0.1------
-                      onChange={handleStatusChange}
-                      className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.status && 'border-red-500'}`}
-                    >
-                      <option value="" hidden>Select Status</option>
-                      {statuses.map((status) => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                    {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
-                  </div>
-                </div>
-              </div>
-              {/* Related To */}
+            {/* individual assigned to*/}
+            {organization ? (
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">Related To <span className="text-red-500">*</span></label>
-                <div className="flex gap-4">
-                  <div className="relative w-1/2">
-                    <input
-                      type="text"
-                      ref={fieldRefs.relatedToCategory}//<---v1.0.1------
-                      value={selectedCategoryRelatedTo}
-                      onClick={toggleDropdownCategoryRelatedTo}
-                      placeholder="Select Category"
-                      readOnly
-                      className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedTo && 'border-red-500'}`}
-                    />
-                    <MdArrowDropDown
-                      size={20}
-                      className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
-                      onClick={toggleDropdownCategoryRelatedTo}
-                    />
-                    {showDropdownCategoryRelatedTo && (
-                      <div className="absolute top-16 -mt-4 w-full h-64 overflow-y-auto rounded-md bg-white shadow-lg z-50">
-                        {categoriesRelatedTo.map((category) => (
-                          <div
-                            key={category}
-                            className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                            onClick={() =>
-                              handleCategorySelectRelatedTo(category)
-                            }
-                          >
-                            {category}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {errors.relatedToCategory && <p className="text-red-500 text-xs mt-1">{errors.relatedToCategory}</p>}
-                  </div>
-                  <div className="relative w-1/2">
-                    <input
-                      type="text"
-                      value={taskId ? formData.relatedTo.recordName : displayName}
-                      ref={fieldRefs.relatedToOption}//<---v1.0.1------
-                      onClick={() =>
-                        toggleDropdownOptionRelatedTo()
-                      }
-                      readOnly
-                      placeholder="Select option"
-                      className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedToOption && 'border-red-500'}`}
-                    />
-                    <MdArrowDropDown
-                      size={20}
-                      className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
-                      onClick={() =>
-                        toggleDropdownOptionRelatedTo()
-                      }
-                    />
-                    {showDropdownOptionRelatedTo && (
-                      <div className="absolute top-16 -mt-4 w-full h-64 overflow-y-auto rounded-md bg-white shadow-lg z-50">
-                        {getOptionsForSelectedCategory().map((option) => (
-                          <div
-                            key={option.id} // Use the ID as the key
-                            className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                            onClick={() =>
-                              handleOptionSelectRelatedTo(
-                                option.name,
-                                option.id
-                              )
-                            } // Pass both name and id
-                          >
-                            {option.name}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {errors.relatedToOption && <p className="text-red-500 text-xs mt-1">{errors.relatedToOption}</p>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Due Date */}
-              <div className="space-y-1">
-                <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
-                  Due Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  id="scheduledDate"
-                  name="scheduledDate"
-                  //lang="en-US"
-                  //<---v1.0.2-----
-                  ref={fieldRefs.dueDate}//<---v1.0.1------
-                  value={scheduledDate}
+              <label className="block text-sm font-medium text-gray-700">Assigned To <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <select
+                  value={formData.assignedToId || ''}
+                  ref={fieldRefs.assignedTo}//<---v1.0.1------
                   onChange={(e) => {
-                    const val = e.target.value;
-                    const minVal = twoHoursFromNowLocal();
-                    setScheduledDate(val && val < minVal ? minVal : val);
+                    const selectedUserId = e.target.value;
+                    const selectedUser = usersRes.find(user => user._id === selectedUserId);
+                    setFormData(prev => ({
+                      ...prev,
+                      assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
+                      assignedToId: selectedUserId
+                    }));
+ 
                     setErrors((prevErrors) => ({
                       ...prevErrors,
-                      dueDate: "",
+                      assignedTo: "",
                     }));
                   }}
-                  min={twoHoursFromNowLocal()}
-                  //----v1.0.2----->
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-                {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
-              </div>
-
-              {/* Comments */}
-              <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">Comments</label>
-                <textarea
-                  value={formData.comments}
-                  onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-                  placeholder="Add comments"
-                  className={`w-full px-3 py-2 h-40 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.comments && 'border-red-500'}`}
-                  rows="5"
-                />
-              </div>
-
-
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
                 >
-                  Cancel
-                </button>
-                <LoadingButton
-                  onClick={(e) => handleSubmit(e)}
-                  isLoading={isMutationLoading}
-                  loadingText="Creating..."
-                >
-                  {taskId ? 'Update Task' : 'Create Task'}
-                </LoadingButton>
-
+                  <option value="" hidden>Select User</option>
+                  {usersRes.map((user) => (
+                    <option
+                      className='font-medium text-gray-500 text-sm'
+                      key={user._id}
+                      value={user._id}
+                    >
+                      {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
+                    </option>
+                  ))}
+                </select>
+                <MdArrowDropDown
+                    size={20}
+                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
+                    onClick={toggleDropdownAssignedTo}
+                  />
+                {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
               </div>
-              {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
             </div>
-          </form>
-        </div>
-      </div>
+            ) : (
+              <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Assigned To <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={formData.assignedTo}
+                ref={fieldRefs.assignedTo}//<---v1.0.1------
+                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.assignedTo && 'border-red-500'}`}
+              />
+              {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
+            </div>
+            )}
+           
+          </div>  
+ 
+           
+           
+            <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
+            {/* Priority */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Priority <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <select
+                  value={selectedPriority}
+                  ref={fieldRefs.priority}//<---v1.0.1------
+                  onChange={handlePriorityChange}
+                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.priority && 'border-red-500'}`}
+                >
+                  <option value="" hidden>Select Priority</option>
+                  {Array.isArray(priorities) && priorities.map((priority) => (
+                    <option key={priority} value={priority}>{priority}</option>
+                  ))}
+                </select>
+                <MdArrowDropDown
+                    size={20}
+                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
+                    onClick={toggleDropdownPriority}
+                  />
+                {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
+              </div>
+            </div>
+ 
+            {/* Status */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Status <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <select
+                  value={selectedStatus}
+                  ref={fieldRefs.status}//<---v1.0.1------
+                  onChange={handleStatusChange}
+                  className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.status && 'border-red-500'}`}
+                >
+                  <option value="" hidden>Select Status</option>
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+                {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
+              </div>
+            </div>
+            </div>
+            {/* Related To */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Related To <span className="text-red-500">*</span></label>
+              <div className="flex gap-4">
+                <div className="relative w-1/2">
+                  <input
+                    type="text"
+                    ref={fieldRefs.relatedToCategory}//<---v1.0.1------
+                    value={selectedCategoryRelatedTo}
+                    onClick={toggleDropdownCategoryRelatedTo}
+                    placeholder="Select Category"
+                    readOnly
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedTo && 'border-red-500'}`}
+                  />
+                  <MdArrowDropDown
+                    size={20}
+                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
+                    onClick={toggleDropdownCategoryRelatedTo}
+                  />
+                  {showDropdownCategoryRelatedTo && (
+                    <div className="absolute top-16 -mt-4 w-full h-64 overflow-y-auto rounded-md bg-white shadow-lg z-50">
+                      {categoriesRelatedTo.map((category) => (
+                        <div
+                          key={category}
+                          className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                          onClick={() =>
+                            handleCategorySelectRelatedTo(category)
+                          }
+                        >
+                          {category}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {errors.relatedToCategory && <p className="text-red-500 text-xs mt-1">{errors.relatedToCategory}</p>}
+                </div>
+                <div className="relative w-1/2">
+                  <input
+                    type="text"
+                    value={taskId ? formData.relatedTo.recordName : displayName}
+                    ref={fieldRefs.relatedToOption}//<---v1.0.1------
+                    onClick={() =>
+                      toggleDropdownOptionRelatedTo()
+                    }
+                    readOnly
+                    placeholder="Select option"
+                    className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.relatedToOption && 'border-red-500'}`}
+                  />
+                  <MdArrowDropDown
+                    size={20}
+                    className="absolute right-0 top-7 transform -translate-y-1/2 cursor-pointer -mt-2"
+                    onClick={() =>
+                      toggleDropdownOptionRelatedTo()
+                    }
+                  />
+                  {showDropdownOptionRelatedTo && (
+                    <div className="absolute top-16 -mt-4 w-full h-64 overflow-y-auto rounded-md bg-white shadow-lg z-50">
+                      {getOptionsForSelectedCategory().map((option) => (
+                        <div
+                          key={option.id} // Use the ID as the key
+                          className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                          onClick={() =>
+                            handleOptionSelectRelatedTo(
+                              option.name,
+                              option.id
+                            )
+                          } // Pass both name and id
+                        >
+                          {option.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {errors.relatedToOption && <p className="text-red-500 text-xs mt-1">{errors.relatedToOption}</p>}
+                </div>
+              </div>
+            </div>
+ 
+            {/* Due Date */}
+            <div className="space-y-1">
+            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
+             Due Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              id="scheduledDate"
+              name="scheduledDate"
+              //lang="en-US"
+               //<---v1.0.2-----
+              ref={fieldRefs.dueDate}//<---v1.0.1------
+              value={scheduledDate}
+              onChange={(e) => {
+                const val = e.target.value;
+                const minVal = twoHoursFromNowLocal();
+                setScheduledDate(val && val < minVal ? minVal : val);
+                setErrors((prevErrors) => ({
+                  ...prevErrors,
+                  dueDate: "",
+                }));
+              }}
+              min={twoHoursFromNowLocal()}
+              //----v1.0.2----->
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />        
+              {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
+            </div>
+ 
+            {/* Comments */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Comments</label>
+              <textarea
+                value={formData.comments}
+                onChange={(e) => setFormData({...formData, comments: e.target.value})}
+                placeholder="Add comments"
+                className={`w-full px-3 py-2 h-40 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${errors.comments && 'border-red-500'}`}
+                rows="5"
+              />
+            </div>
+ 
+         
+ 
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Cancel
+            </button>
+            <LoadingButton
+              onClick={handleSubmit}
+              isLoading={isSaving}
+              loadingText={taskId ? 'Updating...' : 'Creating...'}
+              >
+                {taskId ? 'Update Task' : 'Create Task'}
+            </LoadingButton>
+           
+          </div>
+          {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+          </div>
+        </form>
+             </div>  
+          </div>
     </Modal>
 
   );
