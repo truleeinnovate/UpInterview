@@ -3,7 +3,7 @@
 // v1.0.2 - Venkatesh -- Prepare a transaction record for wallet history (type: 'hold')
 
 const mongoose = require("mongoose");
-const Interview = require("../models/Interview.js");
+const Interview = require("../models/Interview/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest");
 const { Contacts } = require("../models/Contacts");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
