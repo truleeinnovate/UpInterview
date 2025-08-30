@@ -11,6 +11,7 @@ const roundSchema = new mongoose.Schema(
     instructions: String,
     interviewerGroupName: { type: String },
 
+
     interviewerViewType: { type: String },
     selectedInterviewersType: { type: String },
     interviewers: [
