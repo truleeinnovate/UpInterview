@@ -12,11 +12,11 @@ import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
 import { fetchMasterData } from "../../../../utils/fetchMasterData.js";
 import { validateTaskForm } from "../../../../utils/AppTaskValidation";
-import { useCandidates } from "../../../../apiHooks/useCandidates.js";
-import { usePositions } from "../../../../apiHooks/usePositions.js";
-import { useAssessments } from "../../../../apiHooks/useAssessments.js";
-import { useInterviews } from "../../../../apiHooks/useInterviews.js";
-import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
+import {useCandidates} from "../../../../apiHooks/useCandidates.js";
+import {usePositions} from "../../../../apiHooks/usePositions.js";
+import {useAssessments} from "../../../../apiHooks/useAssessments.js";
+import {useInterviews} from "../../../../apiHooks/useInterviews.js";
+import {useMockInterviews} from "../../../../apiHooks/useMockInterviews.js";
 import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
@@ -27,7 +27,6 @@ import { useCreateTask, useUpdateTask, useTaskById } from "../../../../apiHooks/
 import "react-datepicker/dist/react-datepicker.css";
 // eslint-disable-next-line import/first
 import { scrollToFirstError } from '../../../../utils/ScrollToFirstError/scrollToFirstError.js';
-import { notify } from '../../../../services/toastService.js';
 
 
 
@@ -44,17 +43,15 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId
   const tenantId = tokenPayload?.tenantId
   const organization = tokenPayload?.organization;
-
   const { candidateData } = useCandidates();
   const {positionData} = usePositions();
   const { assessmentData} = useAssessments();
   const {interviewData} = useInterviews();
   const {mockInterviewData} = useMockInterviews();
-
   //console.log("mockInterviewData:",mockInterviewData)
 
 
-  const { usersRes } = useCustomContext();
+  const {usersRes} = useCustomContext();
 
   // Mutations must be inside the component
   const createTaskMutation = useCreateTask();
@@ -67,7 +64,7 @@ const TaskForm = ({
         try {
           const response = await axios.get(`${config.REACT_APP_API_URL}/users/owner/${ownerId}`);
           const ownerData = response.data;
-
+          
           // Prefill form with owner's name
           setFormData(prev => ({
             ...prev,
@@ -79,11 +76,11 @@ const TaskForm = ({
         }
       }
     };
-
+    
     fetchOwnerData();
   }, [organization, ownerId]);
 
-
+   
   const [formData, setFormData] = useState({
     title: "",
     assignedTo: "",
@@ -100,7 +97,7 @@ const TaskForm = ({
   });
   
   const [selectedPriority, setSelectedPriority] = useState("");
-  const priorities = ['High', 'Medium', 'Low', 'Normal'];
+  const priorities = ['High', 'Medium', 'Low','Normal'];
 
   const [selectedStatus, setSelectedStatus] = useState("New");
   const statuses = ["New", "In Progress", "Completed", "No Response"];
@@ -110,7 +107,7 @@ const TaskForm = ({
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null); // Add error state
 
-  //<---v1.0.2--------
+   //<---v1.0.2--------
   // --- Date helpers: local datetime string and min (now + 2 hours)
   const formatForDatetimeLocal = useCallback((date) => {
     const pad = (n) => String(n).padStart(2, "0");
@@ -142,7 +139,7 @@ const TaskForm = ({
     // New task or no valid dueDate
     setScheduledDate((prev) => (!prev || prev < minVal ? minVal : prev));
   }, [taskId, formData.dueDate, twoHoursFromNowLocal, formatForDatetimeLocal]);
-  //----v1.0.2----->
+   //----v1.0.2----->
 
   // State for storing selections
   const [selectedCategoryRelatedTo, setSelectedCategoryRelatedTo] = useState("");
@@ -168,7 +165,7 @@ const TaskForm = ({
     }));
   };
 
-
+ 
 
   const handleStatusChange = (e) => {
     const status = e.target.value;
@@ -297,7 +294,7 @@ const TaskForm = ({
         }));
       case "MockInterviews":
         return (mockInterviewData) ? mockInterviewData.map((mock) => ({
-          name: mock?.rounds?.roundTitle || mock.name || "Unnamed Mock Interview",
+          name: mock?.rounds?.roundTitle|| mock.name || "Unnamed Mock Interview",
           id: mock._id,
         })) : [];
       case "Assessments":
@@ -305,7 +302,7 @@ const TaskForm = ({
           name: assessment.AssessmentTitle || "Unnamed Assessment",
           id: assessment._id,
         }));
-
+      
       default:
         return [];
     }
@@ -316,8 +313,8 @@ const TaskForm = ({
     return option ? option.name : id;
   };
 
-  const displayName = selectedOptionIdRelatedTo
-    ? getNameFromId(selectedOptionIdRelatedTo)
+  const displayName = selectedOptionIdRelatedTo 
+    ? getNameFromId(selectedOptionIdRelatedTo) 
     : "";
 
   //<---v1.0.1------
@@ -332,10 +329,10 @@ const TaskForm = ({
     dueDate: useRef(null),
   }
   //---v1.0.1------>
-
+      
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     // First validate ownerId and tenantId
     if (!ownerId) {
       setError("Missing required user information. Please log in again.");
@@ -355,7 +352,7 @@ const TaskForm = ({
       console.log("Form validation failed:", newErrors);
       return;
     }
-
+    
     try {
       const taskData = {
         ...formData,
@@ -369,27 +366,15 @@ const TaskForm = ({
       };
 
       console.log("Submitting task with data:", taskData); // Debug log
-
       if (taskId) {
         await updateTaskMutation.mutateAsync({ id: taskId, data: taskData });
       } else {
         await createTaskMutation.mutateAsync(taskData);
-
       }
-
-
-
-      if (response.status === 'Created successfully' || response.status === 'Updated successfully') {
-        setTimeout(() => {
-          onTaskAdded();
-          onClose();
-        }, 1500);
-
-
-      }
-
-
-
+      
+      onTaskAdded();
+      onClose();
+      
     } catch (error) {
       console.error("Error saving task:", error);
       setError(error.response?.data?.message || error.message || "Failed to save task");
@@ -414,7 +399,6 @@ const TaskForm = ({
   const { data: fetchedTask } = useTaskById(taskId);
 
   useEffect(() => {
-
     if (taskId && fetchedTask) {
       setFormData(fetchedTask);
       setSelectedPriority(fetchedTask.priority);
@@ -422,29 +406,28 @@ const TaskForm = ({
       setSelectedCategoryRelatedTo(fetchedTask?.relatedTo?.objectName || "");
       setSelectedOptionName(fetchedTask?.relatedTo?.recordName || "");
     } else if (!taskId && initialData) {
-
       setFormData(initialData);
       setSelectedPriority(initialData.priority);
       setSelectedStatus(initialData.status);
     }
   }, [taskId, fetchedTask, initialData]);
 
-
-
-  const modalClass = classNames(
-    'fixed bg-white shadow-2xl border-l border-gray-200',
-    {
-      'overflow-y-auto': !isModalOpen,
-      'overflow-hidden': isModalOpen,
-      'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
-    }
-  );
+  
+  
+    const modalClass = classNames(
+        'fixed bg-white shadow-2xl border-l border-gray-200',
+        {
+          'overflow-y-auto': !isModalOpen,
+          'overflow-hidden': isModalOpen,
+          'inset-0': isFullScreen,
+          'inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+        }
+      );
 
 
 
   return (
-   <Modal
+    <Modal
             isOpen={true}
             onRequestClose={onClose}
             className={modalClass}
@@ -453,10 +436,10 @@ const TaskForm = ({
           <div className={classNames('h-full' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isSaving })}>
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-   
+    
                   <h2 className="text-2xl font-semibold text-custom-blue">
                     {taskId ? "Update Task" : "Add New Task"}
-   
+    
                   </h2>
                   <div className="flex items-center gap-2">
                     <button
@@ -477,10 +460,10 @@ const TaskForm = ({
                     </button>
                   </div>
                 </div>
-   
+    
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 mb-6">
-         
+          
           <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
             {/* Title */}
             <div className="space-y-1">
@@ -511,7 +494,7 @@ const TaskForm = ({
                       assignedTo: selectedUser ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() : '',
                       assignedToId: selectedUserId
                     }));
- 
+
                     setErrors((prevErrors) => ({
                       ...prevErrors,
                       assignedTo: "",
@@ -521,9 +504,9 @@ const TaskForm = ({
                 >
                   <option value="" hidden>Select User</option>
                   {usersRes.map((user) => (
-                    <option
-                      className='font-medium text-gray-500 text-sm'
-                      key={user._id}
+                    <option 
+                      className='font-medium text-gray-500 text-sm' 
+                      key={user._id} 
                       value={user._id}
                     >
                       {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
@@ -551,11 +534,11 @@ const TaskForm = ({
               {errors.assignedTo && <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>}
             </div>
             )}
-           
+            
           </div>  
- 
-           
-           
+
+            
+            
             <div className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-6">
             {/* Priority */}
             <div className="space-y-1">
@@ -580,7 +563,7 @@ const TaskForm = ({
                 {errors.priority && <p className="text-red-500 text-xs mt-1">{errors.priority}</p>}
               </div>
             </div>
- 
+
             {/* Status */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Status <span className="text-red-500">*</span></label>
@@ -677,7 +660,7 @@ const TaskForm = ({
                 </div>
               </div>
             </div>
- 
+
             {/* Due Date */}
             <div className="space-y-1">
             <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
@@ -703,10 +686,10 @@ const TaskForm = ({
               min={twoHoursFromNowLocal()}
               //----v1.0.2----->
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            />        
+            />         
               {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
             </div>
- 
+
             {/* Comments */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Comments</label>
@@ -718,9 +701,9 @@ const TaskForm = ({
                 rows="5"
               />
             </div>
- 
-         
- 
+
+          
+
           <div className="flex justify-end space-x-3 mt-6">
             <button
               onClick={onClose}
@@ -735,15 +718,15 @@ const TaskForm = ({
               >
                 {taskId ? 'Update Task' : 'Create Task'}
             </LoadingButton>
-           
+            
           </div>
-          {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+          {error && <p className="text-red-500 text-xs mt-1">{error}</p>} 
           </div>
         </form>
-             </div>  
+             </div>   
           </div>
     </Modal>
-
+   
   );
 }
 
