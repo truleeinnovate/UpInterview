@@ -11,6 +11,7 @@ function StatusBadge({ status, text }) {
       case "hire":
       case "created":
       case "accepted":
+      case "opened":
         return "badge-success";
       case "pending":
       case "in_progress":
@@ -33,6 +34,7 @@ function StatusBadge({ status, text }) {
       case "error":
       case "cancelled":
       case "close":
+      case "closed":
       case "blacklisted":
         return "badge-error";
       default:

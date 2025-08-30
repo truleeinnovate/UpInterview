@@ -73,6 +73,12 @@ const positionValidationSchema = Joi.object({
     "string.empty": "Location cannot be empty",
   }),
 
+  //add by venkatesh allow updating status; default stays 'draft'
+  status: Joi.string()
+    .valid("draft", "opened", "closed", "hold", "cancelled")
+    .default("draft")
+    .optional(),
+
   skills: Joi.array()
     .min(1)
     .items(

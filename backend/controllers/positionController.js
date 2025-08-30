@@ -444,6 +444,7 @@ const updatePosition = async (req, res) => {
         ? Number(updateFields.NoofPositions)
         : currentPosition.NoofPositions,
       Location: updateFields.Location || currentPosition.Location,
+      status: updateFields.status ?? currentPosition.status,// v1.0.2  -  Venkatesh   -  added status change functionality
       updatedBy: ownerId,
     };
 
