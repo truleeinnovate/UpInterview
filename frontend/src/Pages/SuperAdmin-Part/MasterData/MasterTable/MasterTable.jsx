@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Added toast message for creating, updating and deleting masters
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
 import { Eye, Pencil, Trash2, ArrowLeft, AlertTriangle } from "lucide-react";
@@ -8,11 +9,13 @@ import TableView from "../../../../Components/Shared/Table/TableView";
 import MasterKanban from "../MasterKanban";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { useMediaQuery } from "react-responsive";
-import SidebarPopup from "../../../../Components/SuperAdminComponents/SidebarPopup/SidebarPopup";
 import MasterForm from "../MasterForm";
 import axios from "axios";
 import { config } from "../../../../config";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+// v1.0.0 <------------------------------------------------------------------------
+import toast from "react-hot-toast";
+// v1.0.0 ------------------------------------------------------------------------>
 
 const MasterTable = () => {
   const { type } = useParams();
@@ -56,6 +59,7 @@ const MasterTable = () => {
   }, [type]);
 
   // Create and update
+  // v1.0.0 <-----------------------------------------------------------------
   const handleSaveMaster = async (data) => {
     try {
       if (selectedMaster) {
@@ -72,6 +76,7 @@ const MasterTable = () => {
             item._id === selectedMaster._id ? res.data : item
           )
         );
+        toast.success(`Master updated successfully!`);
       } else {
         // Create new master
         const res = await axios.post(
@@ -82,12 +87,17 @@ const MasterTable = () => {
 
         // Append to state
         setMasterData((prev) => [...prev, res.data]);
+        toast.success(`Master created successfully!`);
       }
 
       // Reset selected master
       setSelectedMaster(null);
     } catch (err) {
       console.error("Error saving master:", err);
+      const message =
+        err.response?.data?.message ||
+        `Failed to save Master. Please try again.`;
+      toast.error(message);
     }
   };
 
@@ -105,13 +115,16 @@ const MasterTable = () => {
         setMasterData((prev) => prev.filter((m) => m._id !== deleteTarget._id));
         setIsDeletePopupOpen(false);
         setDeleteTarget(null);
+        toast.success(`Master deleted successfully!`);
       }
     } catch (err) {
       console.error("Error deleting master:", err);
+      toast.error(`Failed to delete master`);
     } finally {
       setIsLoading(false);
     }
   };
+  // v1.0.0 ----------------------------------------------------------------->
 
   // Responsive View
   useEffect(() => {

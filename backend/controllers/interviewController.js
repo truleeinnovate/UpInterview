@@ -418,7 +418,7 @@
 // v1.0.3  -  Ashok  -  Added new controller to get all interviews
 
 const mongoose = require("mongoose");
-const { Interview } = require("../models/Interview");
+const { Interview } = require("../models/Interview/Interview.js");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 const InterviewTemplate = require("../models/InterviewTemplate.js");
 const { Contacts } = require("../models/Contacts");

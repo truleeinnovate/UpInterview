@@ -1,7 +1,7 @@
 // v1.0.0  -  Ashraf  -  creating interview email controller to send emails when rounds are saved
 
 const CryptoJS = require('crypto-js');
-const { Interview } = require("../../models/Interview");
+const { Interview } = require("../../models/Interview/Interview.js");
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds.js");
 const { Candidate } = require("../../models/Candidate/candidate.js");
 const { Contacts } = require("../../models/Contacts");

@@ -307,7 +307,7 @@ const PositionRoundCard = ({
                           <span>{round?.interviewerGroupName ? " Group" : ""}</span>
                         </>
                       } Interviewers </h4>
-                      {/* <button
+                      <button
                         onClick={() => {
                           setShowInterviewers(!showInterviewers)
 
@@ -316,7 +316,7 @@ const PositionRoundCard = ({
                       >
                         {showInterviewers ? 'Hide' : 'Show'}
                         {showInterviewers ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
-                      </button> */}
+                      </button>
                     </div>
 
 
@@ -381,7 +381,7 @@ const PositionRoundCard = ({
                         )
                         }
 
-                        {externalInterviewers.length === 0 && round?.interviewerType === "External" &&
+                        {externalInterviewers.length === 0 && round?.interviewerType === "external" &&
                           <span className='text-gray-600 text-xs'>No External Interviewers selected</span>
                         }
                       </div>

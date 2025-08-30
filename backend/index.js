@@ -6,6 +6,7 @@
 // v1.0.4  -  Ashok   -  added analytics
 // v1.0.5  -  Ashok   -  Added Rate Cards
 // v1.0.6  -  Ashok   -  Added Master Routes
+// v1.0.7  -  Updated   -  Technology master controller as send all the fields in response
 require("dotenv").config();
 
 const cors = require("cors");
@@ -482,16 +483,16 @@ app.get("/roles", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
+// v1.0.7 <----------------------------------------------------------------------------------
 app.get("/technology", async (req, res) => {
   try {
-    const technology = await TechnologyMaster.find({}, "TechnologyMasterName");
+    const technology = await TechnologyMaster.find({});
     res.json(technology);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-
+// v1.0.7 ---------------------------------------------------------------------------------->
 app.get("/qualification", async (req, res) => {
   try {
     const higherqualifications = await HigherQualification.find(
@@ -538,7 +539,7 @@ const TeamMember = require("./models/TeamMembers.js");
 // <-------------------------------v1.0.2
 const Assessment = require("./models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.2 >
-const { Interview } = require("./models/Interview.js");
+const { Interview } = require("./models/Interview/Interview.js");
 const { MockInterview } = require("./models/mockinterview.js");
 const { Users } = require("./models/Users.js");
 const Role = require("./models/RolesData.js");

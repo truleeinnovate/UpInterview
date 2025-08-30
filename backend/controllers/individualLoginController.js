@@ -6,7 +6,9 @@ const { generateToken } = require('../utils/jwt');
 const Tenant = require("../models/Tenant");
 const RolesPermissionObject = require('../models/RolesPermissionObject');
 const { getAuthCookieOptions } = require('../utils/cookieUtils');
-
+const { validateIndividualSignup } = require('../validations/IndivindualLoginValidation.js');
+// const { validateAvailability } = require('../validations/AvailabilityValidation');
+// validateIndividualSignup
 exports.individualLogin = async (req, res) => {
   try {
     console.log('[individualLogin] Step 1: Started processing individual login request');
@@ -20,6 +22,29 @@ exports.individualLogin = async (req, res) => {
     console.log('[individualLogin] Step 2.5: tenantData:', tenantData);
     console.log('[individualLogin] Step 2.6: isInternalInterviewer:', isInternalInterviewer);
     console.log('[individualLogin] Step 2.7: ownerId:', ownerId);
+
+console.log("validateIndividualSignup",validateIndividualSignup);
+
+  // STEP VALIDATION
+const completionStatus = contactData?.completionStatus || {};
+let currentStep = 0;
+
+if (completionStatus.basicDetails && !completionStatus.additionalDetails || completionStatus.basicDetails && completionStatus.additionalDetails) currentStep = 0;
+else if (completionStatus.additionalDetails && !completionStatus.interviewDetails || completionStatus.additionalDetails && completionStatus.interviewDetails) currentStep = 1;
+else if (completionStatus.interviewDetails && !completionStatus.availabilityDetails || completionStatus.interviewDetails && completionStatus.availabilityDetails) currentStep = 2;
+else if (completionStatus.availabilityDetails) currentStep = 3;
+
+const { error } = validateIndividualSignup(currentStep, contactData);
+console.log("error",error);
+if (error) {
+  return res.status(400).json({
+    success: false,
+    message: "Validation failed",
+    errors: error.details.map((err) => err.message),
+  });
+}
+
+ 
 
     let savedUser, savedContact, savedTenant;
     let updatedUserData = { ...userData };

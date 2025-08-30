@@ -316,6 +316,7 @@ const AddCandidateForm = ({
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  console.log("location", location);
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -850,7 +851,21 @@ const AddCandidateForm = ({
         isProfilePicRemoved,
         isResumeRemoved,
       });
+      // console.log("response", response);
+      
+    //       // Send response
+    // res.status(203).json({
+    //   status: 'Updated successfully',
+    //   message: 'Candidate updated successfully',
+    //   data: updatedCandidate,
+    // });
+    if(response.status === "success"){
       notify.success("Candidate added successfully");
+    }else if(response.status === "no_changes" || response.status === "Updated successfully"){
+      notify.success("Candidate Updated successfully");
+    }
+      
+      // notify.success("Candidate added successfully");
 
       resetFormData();
 
