@@ -1,21 +1,16 @@
 
 //<---------------------- v1.0.0----Venkatesh----in task tab add filter with owner id
 // v1.0.1 - Ashok - commented man.png, woman.png, transgender.png
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Pencil, ChevronUp, ChevronDown, CheckCircle, XCircle, Info, Trash } from 'lucide-react';
-import { ReactComponent as CgInfo } from '../../../../icons/CgInfo.svg';
-import { ReactComponent as MdMoreVert } from '../../../../icons/MdMoreVert.svg';
+import { Eye, Pencil, ChevronUp, ChevronDown } from 'lucide-react';
 
 
-import { useCustomContext } from '../../../../Context/Contextfetch';
 import Header from '../../../../Components/Shared/Header/Header';
 import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
 import TableView from '../../../../Components/Shared/Table/TableView';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
-import Loading from '../../../../Components/Loading';
-import toast from 'react-hot-toast';
+ 
 // v1.0.1 <--------------------------------------------------
 // import maleImage from '../../Images/man.png';
 // import femaleImage from '../../Images/woman.png';
@@ -23,17 +18,12 @@ import toast from 'react-hot-toast';
 // v1.0.1 --------------------------------------------------->
 import TaskForm from './Task_form.jsx';
 import TaskProfileDetails from './TaskProfileDetails.jsx';
-import axios from 'axios';
-import { config } from '../../../../config.js';
 import TaskKanban from './TaskKanban.jsx';
-import Cookies from "js-cookie";
-import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { usePermissions } from "../../../../Context/PermissionsContext";
+import { useTasks } from '../../../../apiHooks/useTasks';
 
 const Task = () => {
   const { effectivePermissions } = usePermissions();
-  const navigate = useNavigate();
-  const location = useLocation();
   const [view, setView] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -44,15 +34,10 @@ const Task = () => {
   });
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [taskData, setTaskData] = useState([]);
+  const { data: taskData = [], isLoading, refetch } = useTasks();
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-  const [actionViewMore, setActionViewMore] = useState(null);
   const [editingTaskId, setEditingTaskId] = useState(null);
-  const [newState, setNewState] = useState(null); // Added state declaration
   const filterIconRef = useRef(null);
 
   // Set view based on screen size
@@ -69,13 +54,6 @@ const Task = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const organization = tokenPayload?.organization;
-  const tenantId = tokenPayload?.tenantId;
-  const currentUserId = tokenPayload?.userId;
-
-
   // Reset filters when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
@@ -84,27 +62,6 @@ const Task = () => {
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
-      // <--------------v1.0.0---------
-      const filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
-      // --------------v1.0.0--------->
-      // if (organization === true) {
-      // //   filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
-      // // } else {
-      //   filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
-      // }
-      
-      setTaskData(filteredTasks);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  }, [currentUserId]);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]); // Run only once on mount
 
   // Filter handling
   const handleStatusToggle = (status) => {
@@ -206,7 +163,7 @@ const Task = () => {
   };
 
   const handleTaskAdded = () => {
-    fetchTasks();
+    refetch();
   };
 
   // Kanban Columns Configuration
@@ -327,7 +284,7 @@ const Task = () => {
                   <TableView
                     data={currentFilteredRows}
                     columns={tableColumns}
-                    loading={loading}
+                    loading={isLoading}
                     actions={tableActions}
                     emptyState="No Tasks Found."
                   />
@@ -348,7 +305,7 @@ const Task = () => {
 
                     }))}
                     //columns={kanbanColumns}
-                    loading={loading}
+                    loading={isLoading}
                     renderActions={renderKanbanActions}
                     emptyState="No Tasks Found."
 

@@ -5,8 +5,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'; //<---v1.0.2-----
 import Modal from 'react-modal';
 import classNames from 'classnames';
-import { useNavigate } from 'react-router-dom';
-import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
+ 
+import { Minimize, Expand, X } from 'lucide-react';
 import axios from "axios";
 import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
@@ -21,9 +21,11 @@ import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import LoadingButton from "../../../../Components/LoadingButton.jsx";
+import { useCreateTask, useUpdateTask, useTaskById } from "../../../../apiHooks/useTasks.js";
 
 
 import "react-datepicker/dist/react-datepicker.css";
+// eslint-disable-next-line import/first
 import { scrollToFirstError } from '../../../../utils/ScrollToFirstError/scrollToFirstError.js';
 
 
@@ -41,7 +43,7 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId
   const tenantId = tokenPayload?.tenantId
   const organization = tokenPayload?.organization;
-  const { candidateData, isMutationLoading } = useCandidates();
+  const { candidateData } = useCandidates();
   const {positionData} = usePositions();
   const { assessmentData} = useAssessments();
   const {interviewData} = useInterviews();
@@ -50,6 +52,11 @@ const TaskForm = ({
 
 
   const {usersRes} = useCustomContext();
+
+  // Mutations must be inside the component
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const isSaving = createTaskMutation.isPending || updateTaskMutation.isPending;
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -88,7 +95,7 @@ const TaskForm = ({
     dueDate: "",
     comments: "",
   });
-  const navigate = useNavigate();
+  
   const [selectedPriority, setSelectedPriority] = useState("");
   const priorities = ['High', 'Medium', 'Low','Normal'];
 
@@ -359,11 +366,10 @@ const TaskForm = ({
       };
 
       console.log("Submitting task with data:", taskData); // Debug log
-
       if (taskId) {
-        await axios.patch(`${config.REACT_APP_API_URL}/tasks/${taskId}`, taskData);
+        await updateTaskMutation.mutateAsync({ id: taskId, data: taskData });
       } else {
-        await axios.post(`${config.REACT_APP_API_URL}/tasks`, taskData);
+        await createTaskMutation.mutateAsync(taskData);
       }
       
       onTaskAdded();
@@ -375,7 +381,6 @@ const TaskForm = ({
     }
   };
 
-  const today = new Date().toISOString().split("T")[0];
   const [categoriesRelatedTo, setCategoriesRelatedTo] = useState([]);
 
   useEffect(() => {
@@ -391,33 +396,21 @@ const TaskForm = ({
     fetchObjectsData();
   }, []);
 
+  const { data: fetchedTask } = useTaskById(taskId);
+
   useEffect(() => {
-    if (taskId) {
-      // Fetch task data
-      const fetchTaskData = async () => {
-        try {
-          const response = await axios.get(`${config.REACT_APP_API_URL}/tasks/${taskId}`);
-          const taskData = response.data;
-          
-          setFormData(taskData);
-          setSelectedPriority(taskData.priority);
-          setSelectedStatus(taskData.status);
-          setSelectedCategoryRelatedTo(taskData.relatedTo.objectName);
-          setSelectedOptionName(taskData.relatedTo.recordName);
-          console.log(taskData);
-        } catch (error) {
-          console.error("Error fetching task data:", error);
-        }
-      };
-      
-      fetchTaskData();
-    } else if (initialData) {
-      // Use initialData if provided
+    if (taskId && fetchedTask) {
+      setFormData(fetchedTask);
+      setSelectedPriority(fetchedTask.priority);
+      setSelectedStatus(fetchedTask.status);
+      setSelectedCategoryRelatedTo(fetchedTask?.relatedTo?.objectName || "");
+      setSelectedOptionName(fetchedTask?.relatedTo?.recordName || "");
+    } else if (!taskId && initialData) {
       setFormData(initialData);
       setSelectedPriority(initialData.priority);
       setSelectedStatus(initialData.status);
     }
-  }, [taskId, initialData]);
+  }, [taskId, fetchedTask, initialData]);
 
   
   
@@ -440,7 +433,7 @@ const TaskForm = ({
             className={modalClass}
             overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
           >
-          <div className={classNames('h-full' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
+          <div className={classNames('h-full' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isSaving })}>
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
     
@@ -720,8 +713,8 @@ const TaskForm = ({
             </button>
             <LoadingButton
               onClick={handleSubmit}
-              isLoading={isMutationLoading}
-              loadingText="Creating..."
+              isLoading={isSaving}
+              loadingText={taskId ? 'Updating...' : 'Creating...'}
               >
                 {taskId ? 'Update Task' : 'Create Task'}
             </LoadingButton>
