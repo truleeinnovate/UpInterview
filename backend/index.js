@@ -538,7 +538,7 @@ const TeamMember = require("./models/TeamMembers.js");
 // <-------------------------------v1.0.2
 const Assessment = require("./models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.2 >
-const { Interview } = require("./models/Interview.js");
+const { Interview } = require("./models/Interview/Interview.js");
 const { MockInterview } = require("./models/mockinterview.js");
 const { Users } = require("./models/Users.js");
 const Role = require("./models/RolesData.js");

@@ -8,7 +8,7 @@ const InterviewQuestions = require('../models/Interview/selectedInterviewQuestio
 const { InterviewRounds } = require('../models/Interview/InterviewRounds.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
 const { Contacts } = require('../models/Contacts.js');
-const { Interview } = require('../models/Interview.js');
+const { Interview } = require('../models/Interview/Interview.js');
 const Tenant = require('../models/Tenant.js');
 
 
