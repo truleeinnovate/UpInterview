@@ -10,7 +10,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
-import { Minimize, Expand, X, Eye } from "lucide-react";
+import { Minimize, Expand, X, Eye, Info, ChevronUp, ChevronDown } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
@@ -18,6 +18,7 @@ import LoadingButton from "../../../../Components/LoadingButton";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { toast, ToastContainer } from "react-toastify";
 import { notify } from "../../../../services/toastService";
+import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 // v1.0.3 <-------------------------------------------------------------------------
 const maxDescriptionLen = 1000;
 const maxSubjectLen = 150;
@@ -75,7 +76,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [attachmentFileError, setAttachmentFileError] = useState("");
   const [isAttachmentFileRemoved, setIsAttachmentRemoved] = useState(false);
-
+const [isOpen, setIsOpen] = useState(false);
 
   // v1.0.2 <-------------------------------------------------------------------------
   useScrollLock(true); // This will lock the outer scrollbar when the form is open
@@ -472,7 +473,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
       <ToastContainer />
       <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50">
         <div
-          className={`fixed inset-y-0 right-0 z-50 bg-white shadow-lg transform transition-all duration-500 ease-in-out ${isFullWidth ? "w-full" : "w-1/2"
+          className={`fixed overflow-y-auto inset-y-0 right-0 z-50 bg-white shadow-lg transform transition-all duration-500 ease-in-out ${isFullWidth ? "w-full" : "w-1/2"
             }`}
         >
           {/* Header */}
@@ -512,6 +513,25 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
               {/* -----v1.0.0----->*/}
             </div>
           </div>
+
+          {/* newly added SeriviceDesk Ticket Guidence By Ranjith */}
+          <div className=" p-4">
+          <InfoGuide
+  title="Support Ticket Guidelines"
+  items={[
+    <><span className="font-medium">Issue Categorization:</span> Select the most appropriate issue type to help us route your ticket efficiently</>,
+    <><span className="font-medium">Clear Subject Line:</span> Provide a concise subject that summarizes your issue (max 150 characters)</>,
+    <><span className="font-medium">Detailed Description:</span> Include specific details about the problem, steps to reproduce, and expected behavior (max 1000 characters)</>,
+    <><span className="font-medium">Attachment Support:</span> Upload relevant screenshots or documents (JPG/PDF only, max 5MB)</>,
+    <><span className="font-medium">Technical Issues:</span> For platform-related problems, include browser version, device type, and error messages</>,
+    <><span className="font-medium">Interview-specific Issues:</span> Mention interview ID, participant names, and time of occurrence for faster resolution</>,
+    <><span className="font-medium">Priority Handling:</span> Critical issues are typically addressed within 2-4 business hours</>,
+    <><span className="font-medium">Ticket Tracking:</span> You'll receive email updates and can track progress in your support desk dashboard</>,
+    <><span className="font-medium">Response Time:</span> Most tickets receive initial response within 24 hours during business days</>,
+    <><span className="font-medium">Follow-up Information:</span> Keep your ticket updated with additional details if the issue evolves</>
+  ]}
+/>
+</div>
 
           {/* Content */}
           <div className="flex flex-col h-[calc(100vh-56px)]">
@@ -630,9 +650,16 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
                   <div>
                     <label
                       htmlFor="file"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block flex items-center  text-sm font-medium text-gray-700 mb-2"
                     >
                       Attachment
+                        {/* ℹ️ Info icon with tooltip */}
+    <div className="relative group pl-4">
+      <Info className="h-4 w-4 text-gray-400  cursor-pointer" />
+      <div className="absolute left-1/2 ml-4   transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10">
+        You can attach relevant screenshots or documents (JPG/PDF only, max 5MB).
+      </div>
+    </div>
                     </label>
                     <div className="flex items-center">
                       <button

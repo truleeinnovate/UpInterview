@@ -448,6 +448,7 @@ function Candidate({
       key: "name",
       header: "Candidate Name",
       render: (value, row) => (
+        console.log("row ",row,value),
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
             {row?.ImageData ? (
@@ -512,7 +513,7 @@ function Candidate({
     {
       key: "Phone",
       header: "Contact",
-      render: (value) => value || "Not Provided",
+      render: (value,row) => row?.CountryCode+ " " + value || "Not Provided",
     },
     {
       key: "HigherQualification",
@@ -922,7 +923,7 @@ function Candidate({
                           candidate?.CurrentExperience ||
                           "N/A",
                         email: candidate?.Email || "N/A",
-                        phone: candidate?.Phone || "N/A",
+                        phone: candidate?.CountryCode + " " + candidate?.Phone || "N/A",
                         industry: candidate?.HigherQualification || "N/A",
                         linkedinUrl: candidate?.CurrentExperience || "N/A",
                         skills: candidate?.skills || [],

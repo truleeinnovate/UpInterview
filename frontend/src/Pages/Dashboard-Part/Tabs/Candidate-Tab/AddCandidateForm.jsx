@@ -152,6 +152,7 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 // };
 
 import { notify } from "../../../../services/toastService";
+import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 const CustomDropdown = forwardRef(
   (
     {
@@ -990,6 +991,23 @@ const AddCandidateForm = ({
                 </button>
               </div>
             </div>
+
+            {/* // newly added guide for CandidateForm component by Ranjith */}
+<InfoGuide
+  title="Candidate Profile Guide"
+  items={[
+    <><span className="font-medium">Complete Profile:</span> Fill all required fields to create a comprehensive candidate profile</>,
+    <><span className="font-medium">Profile Photo:</span> Upload a professional headshot (max 100KB, 200×200 recommended)</>,
+    <><span className="font-medium">Resume Requirements:</span> PDF or Word documents only, maximum 4MB file size</>,
+    <><span className="font-medium">Contact Information:</span> Provide accurate email and phone number for communication</>,
+    <><span className="font-medium">Education Details:</span> Include highest qualification and university/college information</>,
+    <><span className="font-medium">Experience Tracking:</span> Specify both current and relevant experience in years</>,
+    <><span className="font-medium">Skill Assessment:</span> Add relevant skills with proficiency levels (Basic, Medium, Expert)</>,
+    <><span className="font-medium">Current Role:</span> Select the candidate's current job position from available options</>,
+    <><span className="font-medium">Data Validation:</span> All fields are validated in real-time with error highlighting</>,
+    <><span className="font-medium">Flexible Options:</span> Custom university entries available if not found in the list</>
+  ]}
+/>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
               {/* Profile Image Upload */}

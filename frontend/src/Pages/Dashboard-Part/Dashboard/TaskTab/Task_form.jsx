@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'; //<---v
 import Modal from 'react-modal';
 import classNames from 'classnames';
  
-import { Minimize, Expand, X } from 'lucide-react';
+import { Minimize, Expand, X, ChevronUp, ChevronDown, Info } from 'lucide-react';
 import axios from "axios";
 import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
@@ -27,6 +27,7 @@ import { useCreateTask, useUpdateTask, useTaskById } from "../../../../apiHooks/
 import "react-datepicker/dist/react-datepicker.css";
 // eslint-disable-next-line import/first
 import { scrollToFirstError } from '../../../../utils/ScrollToFirstError/scrollToFirstError.js';
+import InfoGuide from '../../Tabs/CommonCode-AllTabs/InfoCards.jsx';
 
 
 
@@ -95,6 +96,7 @@ const TaskForm = ({
     dueDate: "",
     comments: "",
   });
+  const [isOpen, setIsOpen] = useState(false);
   
   const [selectedPriority, setSelectedPriority] = useState("");
   const priorities = ['High', 'Medium', 'Low','Normal'];
@@ -435,7 +437,7 @@ const TaskForm = ({
           >
           <div className={classNames('h-full' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isSaving })}>
               <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-3">
     
                   <h2 className="text-2xl font-semibold text-custom-blue">
                     {taskId ? "Update Task" : "Add New Task"}
@@ -460,6 +462,63 @@ const TaskForm = ({
                     </button>
                   </div>
                 </div>
+
+                {/* added to Task Form Guideliness by Ranjith */}
+             
+
+<InfoGuide
+  title="Task Creation Guidelines"
+  items={[
+    <><span className="font-medium">Clear Task Titles:</span> Use descriptive titles that summarize the task objective</>,
+    <><span className="font-medium">Priority Setting:</span> Assign appropriate priority levels (High, Medium, Low, Normal) based on urgency</>,
+    <><span className="font-medium">Status Tracking:</span> Update task status as it progresses (New → In Progress → Completed)</>,
+    <><span className="font-medium">Responsible Assignment:</span> Clearly assign tasks to specific team members or yourself</>,
+    <><span className="font-medium">Context Linking:</span> Connect tasks to relevant candidates, positions, interviews, or assessments</>,
+    <><span className="font-medium">Realistic Due Dates:</span> Set deadlines with at least 2 hours buffer from current time</>,
+    <><span className="font-medium">Detailed Comments:</span> Provide clear instructions, context, and expected outcomes</>,
+    <><span className="font-medium">Automated Validation:</span> Form validation ensures all required fields are completed</>,
+    <><span className="font-medium">Error Highlighting:</span> Invalid fields are automatically highlighted and scrolled into view</>,
+    <><span className="font-medium">Flexible Editing:</span> Tasks can be updated anytime as priorities or circumstances change</>
+  ]}
+/>
+         
+  {/* <div className="py-4 bg-white z-10 mb-2">
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+      <div className="flex items-start space-x-3 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+        <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-custom-blue">Task Creation Guidelines</h3>
+            {isOpen ? (
+              <ChevronUp className="h-5 w-5 text-custom-blue" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-custom-blue" />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="mt-3 ml-8 space-y-2">
+          <div className="text-sm text-custom-blue space-y-1">
+            <ul className="list-disc list-inside pl-2 space-y-1">
+              <li><span className="font-medium">Clear Task Titles:</span> Use descriptive titles that summarize the task objective</li>
+              <li><span className="font-medium">Priority Setting:</span> Assign appropriate priority levels (High, Medium, Low, Normal) based on urgency</li>
+              <li><span className="font-medium">Status Tracking:</span> Update task status as it progresses (New → In Progress → Completed)</li>
+              <li><span className="font-medium">Responsible Assignment:</span> Clearly assign tasks to specific team members or yourself</li>
+              <li><span className="font-medium">Context Linking:</span> Connect tasks to relevant candidates, positions, interviews, or assessments</li>
+              <li><span className="font-medium">Realistic Due Dates:</span> Set deadlines with at least 2 hours buffer from current time</li>
+              <li><span className="font-medium">Detailed Comments:</span> Provide clear instructions, context, and expected outcomes</li>
+              <li><span className="font-medium">Automated Validation:</span> Form validation ensures all required fields are completed</li>
+              <li><span className="font-medium">Error Highlighting:</span> Invalid fields are automatically highlighted and scrolled into view</li>
+              <li><span className="font-medium">Flexible Editing:</span> Tasks can be updated anytime as priorities or circumstances change</li>
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  </div> */}
+
     
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 mb-6">
