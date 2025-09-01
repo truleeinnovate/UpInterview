@@ -142,7 +142,7 @@ exports.afterSubscribePlan = async (req, res) => {
     };
     const duration = durationMap[selectedBillingCycle] || selectedBillingCycle;
 
-const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
+    const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
 
     const planPrice = `₹${price}`;
 
@@ -236,7 +236,7 @@ exports.afterSubscribeFreePlan = async (req, res) => {
       return res.status(404).json({ success: false, message: "Subscription not found" });
     }
 
-const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
+    const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
 
 
 
@@ -424,7 +424,7 @@ cron.schedule('0 0 * * *', async () => {
         }
 
         const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
-const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
+        const planName = (subscription.subscriptionPlanId?.name || subscription.selectedBillingCycle?.toUpperCase()) + ' Plan';
 
         const billingCycle = subscription.selectedBillingCycle;
         const formattedBillingDate = nextBillingDate.format('MMMM Do, YYYY');
