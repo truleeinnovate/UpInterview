@@ -1,6 +1,7 @@
 
 //<---------------------- v1.0.0----Venkatesh----in task tab add filter with owner id
 // v1.0.1 - Ashok - commented man.png, woman.png, transgender.png
+// v1.0.2 - Venkatesh - added new filters priority, status, due date, created date and assigned to(only shown in organization) 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Pencil, ChevronUp, ChevronDown } from 'lucide-react';
@@ -10,6 +11,11 @@ import Header from '../../../../Components/Shared/Header/Header';
 import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
 import TableView from '../../../../Components/Shared/Table/TableView';
 import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
+//<-------v1.0.2---------
+import Cookies from 'js-cookie';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode.js';
+import { useCustomContext } from '../../../../Context/Contextfetch.js';
+//-------v1.0.2--------->
  
 // v1.0.1 <--------------------------------------------------
 // import maleImage from '../../Images/man.png';
@@ -24,6 +30,12 @@ import { useTasks } from '../../../../apiHooks/useTasks';
 
 const Task = () => {
   const { effectivePermissions } = usePermissions();
+  //<-------v1.0.2---------
+  const { usersRes = [] } = useCustomContext();
+  const authToken = Cookies.get('authToken');
+  const tokenPayload = decodeJwt(authToken);
+  const organization = tokenPayload?.organization;
+  //-------v1.0.2--------->
   const [view, setView] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -31,14 +43,34 @@ const Task = () => {
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
+    //<-------v1.0.2---------
+    priority: [],
+    dueDate: '',
+    assignedToId: '',
+    createdDate: '',
+    //-------v1.0.2--------->
   });
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  //<-------v1.0.2---------
+  const [isPriorityOpen, setIsPriorityOpen] = useState(false);
+  const [isDueDateOpen, setIsDueDateOpen] = useState(false);
+  const [isAssignedOpen, setIsAssignedOpen] = useState(false);
+  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedPriorities, setSelectedPriorities] = useState([]);
+  const [selectedDueDate, setSelectedDueDate] = useState('');
+  const [selectedAssignedUserId, setSelectedAssignedUserId] = useState('');
+  const [selectedCreatedDate, setSelectedCreatedDate] = useState('');
+  const [isAssignedDropdownOpen, setIsAssignedDropdownOpen] = useState(false);
+  const [assignedSearch, setAssignedSearch] = useState('');
   const [selectedTask, setSelectedTask] = useState(null);
   const { data: taskData = [], isLoading, refetch } = useTasks();
+  //console.log("taskData",taskData);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
   const filterIconRef = useRef(null);
+  const assignedDropdownRef = useRef(null);
+  //-------v1.0.2--------->
 
   // Set view based on screen size
   useEffect(() => {
@@ -57,11 +89,35 @@ const Task = () => {
   // Reset filters when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
-      setSelectedStatus(selectedFilters.status);
+      //<-------v1.0.2---------
+      setSelectedStatus(selectedFilters.status || []);
+      setSelectedPriorities(selectedFilters.priority || []);
+      setSelectedDueDate(selectedFilters.dueDate || '');
+      setSelectedAssignedUserId(selectedFilters.assignedToId || '');
+      setSelectedCreatedDate(selectedFilters.createdDate || '');
+      setAssignedSearch('');
       setIsStatusOpen(false);
+      setIsPriorityOpen(false);
+      setIsDueDateOpen(false);
+      setIsAssignedOpen(false);
+      setIsCreatedDateOpen(false);
+      //-------v1.0.2--------->
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
+  //<-------v1.0.2---------
+  // Close assigned dropdown on outside click when filter popup is open
+  useEffect(() => {
+    if (!isFilterPopupOpen) return;
+    const onDocClick = (e) => {
+      if (assignedDropdownRef.current && !assignedDropdownRef.current.contains(e.target)) {
+        setIsAssignedDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [isFilterPopupOpen]);
+  //-------v1.0.2--------->
 
   // Filter handling
   const handleStatusToggle = (status) => {
@@ -71,10 +127,37 @@ const Task = () => {
         : [...prev, status]
     );
   };
+  //<-------v1.0.2---------
+  const handlePriorityToggle = (priority) => {
+    setSelectedPriorities((prev) =>
+      prev.includes(priority)
+        ? prev.filter((p) => p !== priority)
+        : [...prev, priority]
+    );
+  };
+
+  const handleDueDateChange = (value) => {
+    setSelectedDueDate(value);
+  };
+
+  const handleAssignedUserChange = (value) => {
+    setSelectedAssignedUserId(value);
+  };
+
+  const handleCreatedDateChange = (value) => {
+    setSelectedCreatedDate(value);
+  };
+  //-------v1.0.2--------->
 
   const handleClearAll = () => {
-    const clearedFilters = { status: [] };
+    //<-------v1.0.2---------
+    const clearedFilters = { status: [], priority: [], dueDate: '', assignedToId: '', createdDate: '' };
     setSelectedStatus([]);
+    setSelectedPriorities([]);
+    setSelectedDueDate('');
+    setSelectedAssignedUserId('');
+    setSelectedCreatedDate('');
+    //-------v1.0.2--------->
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -82,10 +165,19 @@ const Task = () => {
   };
 
   const handleApplyFilters = () => {
-    const filters = { status: selectedStatus };
+    //<-------v1.0.2---------
+    const filters = {
+      status: selectedStatus,
+      priority: selectedPriorities,
+      dueDate: selectedDueDate,
+      assignedToId: organization ? selectedAssignedUserId : '',
+      createdDate: selectedCreatedDate,
+    };
     setSelectedFilters(filters);
     setCurrentPage(0);
-    setIsFilterActive(filters.status.length > 0);
+    const active = (filters.status?.length > 0) || (filters.priority?.length > 0) || !!filters.dueDate || !!filters.createdDate || (!!filters.assignedToId);
+    setIsFilterActive(active);
+    //-------v1.0.2--------->
     setFilterPopupOpen(false);
   };
 
@@ -105,6 +197,55 @@ const Task = () => {
     ...new Set(taskData?.map((task) => task.status).filter(Boolean)),
   ];
 
+  //<-------v1.0.2---------
+  const priorityOptions = ['High', 'Medium', 'Low', 'Normal'];
+
+  const selectedAssignedUserLabel = React.useMemo(() => {
+    if (!selectedAssignedUserId) return 'Any user';
+    const u = Array.isArray(usersRes) ? usersRes.find((x) => x._id === selectedAssignedUserId) : null;
+    const name = u ? `${u.firstName || ''} ${u.lastName || ''}`.trim() : '';
+    return name || (u?.email || 'Any user');
+  }, [selectedAssignedUserId, usersRes]);
+
+  const filteredAssignedUsers = React.useMemo(() => {
+    if (!Array.isArray(usersRes)) return [];
+    const term = assignedSearch.trim().toLowerCase();
+    if (!term) return usersRes;
+    return usersRes.filter((u) => {
+      const name = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+      const email = (u.email || '').toLowerCase();
+      return name.includes(term) || email.includes(term);
+    });
+  }, [usersRes, assignedSearch]);
+
+  // Date helpers
+  const isSameDay = (d1, d2) => {
+    return (
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
+    );
+  };
+
+  const getStartOfWeek = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+    const start = new Date(d);
+    start.setDate(diff);
+    start.setHours(0, 0, 0, 0);
+    return start;
+  };
+
+  const getEndOfWeek = (date) => {
+    const start = getStartOfWeek(date);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  };
+  //-------v1.0.2--------->
+
   // Filtered data
   const FilteredData = () => {
     if (!Array.isArray(taskData)) return [];
@@ -113,17 +254,58 @@ const Task = () => {
         task.title,
         task.description,
         task.assigned,
-        task._id,
+        task.taskCode,
       ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
-        selectedFilters.status.length === 0 ||
+      //<-------v1.0.2---------  
+      (selectedFilters.status?.length || 0) === 0 ||
         selectedFilters.status.includes(task.status);
+
+      const matchesPriority =
+        (selectedFilters.priority?.length || 0) === 0 ||
+        selectedFilters.priority.includes(task.priority);
+
+      const now = new Date();
+      const dueDate = task?.dueDate ? new Date(task.dueDate) : null;
+      let matchesDueDate = true;
+      if (selectedFilters.dueDate && dueDate instanceof Date && !isNaN(dueDate)) {
+        if (selectedFilters.dueDate === 'overdue') {
+          matchesDueDate = dueDate < now;
+        } else if (selectedFilters.dueDate === 'today') {
+          matchesDueDate = isSameDay(dueDate, now);
+        } else if (selectedFilters.dueDate === 'thisWeek') {
+          const start = getStartOfWeek(now);
+          const end = getEndOfWeek(now);
+          matchesDueDate = dueDate >= start && dueDate <= end;
+        }
+      }
+
+      const matchesAssigned = !selectedFilters.assignedToId || task?.assignedToId === selectedFilters.assignedToId;
+
+      let matchesCreated = true;
+      if (selectedFilters.createdDate) {
+        const createdAt = task?.createdAt ? new Date(task.createdAt) : null;
+        if (createdAt instanceof Date && !isNaN(createdAt)) {
+          const cutoff = new Date();
+          if (selectedFilters.createdDate === 'last7') cutoff.setDate(cutoff.getDate() - 7);
+          if (selectedFilters.createdDate === 'last30') cutoff.setDate(cutoff.getDate() - 30);
+          matchesCreated = createdAt >= cutoff;
+        }
+      }
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      return matchesSearchQuery && matchesStatus;
+      return (
+        matchesSearchQuery &&
+        matchesStatus &&
+        matchesPriority &&
+        matchesDueDate &&
+        matchesAssigned &&
+        matchesCreated
+      );
+      //-------v1.0.2--------->
     });
   };
 
@@ -353,6 +535,221 @@ const Task = () => {
                       </div>
                     )}
                   </div>
+                  
+                  {/*<-------v1.0.2--------- Priority Section */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsPriorityOpen(!isPriorityOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Priority</span>
+                      {isPriorityOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isPriorityOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {priorityOptions.map((p) => (
+                          <label key={p} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedPriorities.includes(p)}
+                              onChange={() => handlePriorityToggle(p)}
+                              className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">{p}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Due Date Section */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsDueDateOpen(!isDueDateOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Due Date</span>
+                      {isDueDateOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isDueDateOpen && (
+                      <div className="mt-1 space-y-2 pl-3">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="dueDatePreset"
+                            value=""
+                            checked={selectedDueDate === ''}
+                            onChange={() => handleDueDateChange('')}
+                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">Any due date</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="dueDatePreset"
+                            value="overdue"
+                            checked={selectedDueDate === 'overdue'}
+                            onChange={() => handleDueDateChange('overdue')}
+                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">Overdue</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="dueDatePreset"
+                            value="today"
+                            checked={selectedDueDate === 'today'}
+                            onChange={() => handleDueDateChange('today')}
+                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">Today</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="dueDatePreset"
+                            value="thisWeek"
+                            checked={selectedDueDate === 'thisWeek'}
+                            onChange={() => handleDueDateChange('thisWeek')}
+                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">This week</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Assigned User Section (org only) */}
+                  {organization && (
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsAssignedOpen(!isAssignedOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Assigned User</span>
+                        {isAssignedOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isAssignedOpen && (
+                        <div className="mt-1 pl-3" ref={assignedDropdownRef}>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              className="w-full px-3 py-2 h-10 border border-gray-300 rounded-md text-left flex items-center justify-between focus:ring-2 focus:border-transparent sm:text-sm"
+                              onClick={() => setIsAssignedDropdownOpen((prev) => !prev)}
+                            >
+                              <span className="truncate">{selectedAssignedUserLabel}</span>
+                              <ChevronDown className="w-4 h-4 text-gray-500" />
+                            </button>
+                            {isAssignedDropdownOpen && (
+                              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                                <div className="p-2 border-b">
+                                  <input
+                                    type="text"
+                                    value={assignedSearch}
+                                    onChange={(e) => setAssignedSearch(e.target.value)}
+                                    placeholder="Search users..."
+                                    className="w-full px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:border-transparent text-sm"
+                                  />
+                                </div>
+                                <ul className="max-h-48 overflow-y-auto py-1">
+                                  <li
+                                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${selectedAssignedUserId === '' ? 'text-custom-blue font-medium' : 'text-gray-700'}`}
+                                    onClick={() => { handleAssignedUserChange(''); setIsAssignedDropdownOpen(false); }}
+                                  >
+                                    Any user
+                                  </li>
+                                  {filteredAssignedUsers.length > 0 ? (
+                                    filteredAssignedUsers.map((user) => {
+                                      const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+                                      const isSelected = selectedAssignedUserId === user._id;
+                                      return (
+                                        <li
+                                          key={user._id}
+                                          className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${isSelected ? 'text-custom-blue font-medium' : 'text-gray-700'}`}
+                                          onClick={() => { handleAssignedUserChange(user._id); setIsAssignedDropdownOpen(false); }}
+                                        >
+                                          {name}
+                                        </li>
+                                      );
+                                    })
+                                  ) : (
+                                    <li className="px-3 py-2 text-sm text-gray-500">No users found</li>
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Created Date Section */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Created Date</span>
+                      {isCreatedDateOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isCreatedDateOpen && (
+                      <div className="mt-1 space-y-2 pl-3">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="createdDatePreset"
+                            value=""
+                            checked={selectedCreatedDate === ''}
+                            onChange={() => handleCreatedDateChange('')}
+                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">Any time</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="createdDatePreset"
+                            value="last7"
+                            checked={selectedCreatedDate === 'last7'}
+                            onChange={() => handleCreatedDateChange('last7')}
+                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">Last 7 days</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="createdDatePreset"
+                            value="last30"
+                            checked={selectedCreatedDate === 'last30'}
+                            onChange={() => handleCreatedDateChange('last30')}
+                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">Last 30 days</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                  {/*-------v1.0.2--------->*/}
                 </div>
               </FilterPopup>
             </div>
