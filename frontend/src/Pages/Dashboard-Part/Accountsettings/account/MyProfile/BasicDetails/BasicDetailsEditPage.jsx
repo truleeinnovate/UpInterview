@@ -34,6 +34,7 @@ import { validateFile } from "../../../../../../utils/FileValidation/FileValidat
 import { uploadFile } from "../../../../../../apiHooks/imageApis.js";
 import { useRolesQuery } from "../../../../../../apiHooks/useRoles.js";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+import { notify } from "../../../../../../services/toastService.js";
 Modal.setAppElement("#root");
 
 const BasicDetailsEditPage = ({
@@ -321,7 +322,7 @@ const BasicDetailsEditPage = ({
     linkedinUrl: useRef(null),
     portfolioUrl: useRef(null),
     image: useRef(null),
-    };
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -458,6 +459,9 @@ const BasicDetailsEditPage = ({
           // isProfileRemoved,
           // contactId: userProfile?.contactId,
         });
+        if (response.status === 200) {
+          notify.success("Updated Basic Details Successfully");
+        }
 
         if (response.status === 200) {
           if (usersId) onSuccess();
@@ -470,17 +474,26 @@ const BasicDetailsEditPage = ({
         }
       }
     } catch (err) {
-      console.error("Error saving changes:", err);
-      setErrors((prev) => ({
-        ...prev,
-        form: "Error saving changes",
-      }));
+      if (err.response && err.response.status === 400) {
+        const backendErrors = err.response.data.errors || {};
+        console.log("backendErrors", backendErrors);
+        setErrors(backendErrors);
+        scrollToFirstError(backendErrors, fieldRefs);
+      } else {
+        console.error("Error saving changes:", err);
+        setErrors(prev => ({ ...prev, form: "Error saving changes" }));
+      }
+      // console.error("Error saving changes:", err);
+      // setErrors((prev) => ({
+      //   ...prev,
+      //   form: "Error saving changes",
+      // }));
     } finally {
       setLoading(false);
     }
   };
 
-  
+
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -726,9 +739,8 @@ const BasicDetailsEditPage = ({
                       handleEmailValidation(formData.email)
                     }
                     disabled={from !== "users"}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                      errors.email ? "border-red-500" : "border-gray-300"
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.email ? "border-red-500" : "border-gray-300"
+                      }`}
                   />
                   {isCheckingEmail && (
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -752,9 +764,8 @@ const BasicDetailsEditPage = ({
                   ref={fieldRefs.firstName}
                   value={formData.firstName || ""}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.firstName ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.firstName ? "border-red-500" : "border-gray-300"
+                    }`}
                 />
                 {errors.firstName && (
                   <p className="text-red-500 text-sm mt-1">
@@ -774,9 +785,8 @@ const BasicDetailsEditPage = ({
                   ref={fieldRefs.lastName}
                   value={formData.lastName || ""}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.lastName ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.lastName ? "border-red-500" : "border-gray-300"
+                    }`}
                 />
                 {errors.lastName && (
                   <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
@@ -819,9 +829,8 @@ const BasicDetailsEditPage = ({
                     handleProfileIdValidation(formData.profileId)
                   }
                   // onBlur={() => handleProfileIdValidation(formData.profileId)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.profileId ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.profileId ? "border-red-500" : "border-gray-300"
+                    }`}
                 />
                 {errors.profileId && (
                   <p className="text-red-500 text-sm mt-1">
@@ -872,9 +881,8 @@ const BasicDetailsEditPage = ({
                     ref={fieldRefs.phone}
                     value={formData.phone || ""}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                      errors.phone ? "border-red-500" : "border-gray-300"
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.phone ? "border-red-500" : "border-gray-300"
+                      }`}
                   />
                 </div>
                 {errors.phone && (
@@ -893,9 +901,8 @@ const BasicDetailsEditPage = ({
                   ref={fieldRefs.linkedinUrl}
                   value={formData.linkedinUrl || ""}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.linkedinUrl ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.linkedinUrl ? "border-red-500" : "border-gray-300"
+                    }`}
                 />
                 {errors.linkedinUrl && (
                   <p className="text-red-500 text-sm mt-1">
@@ -918,13 +925,11 @@ const BasicDetailsEditPage = ({
                     value={selectedCurrentRole}
                     ref={fieldRefs.roleId}
                     onClick={toggleDropdownRole}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                      errors.roleId ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue cursor-pointer ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.roleId ? "border-red-500" : "border-gray-300"
+                      } focus:border-custom-blue cursor-pointer ${isLoading ? "opacity-50" : ""
+                      }`}
                     disabled={from !== "users"}
-                    // disabled={isLoading}
+                  // disabled={isLoading}
                   />
                   <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
                   {showDropdownRole && (

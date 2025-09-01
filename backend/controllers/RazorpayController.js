@@ -1743,7 +1743,7 @@ const handleSubscriptionCharged = async (subscription) => {
         // Update the subscription record
         customerSubscription.status = SUBSCRIPTION_STATUSES.ACTIVE;
         customerSubscription.endDate = newEndDate;
-        customerSubscription.endReason = '';
+        customerSubscription.endReason = null;
         customerSubscription.lastPaymentDate = new Date();
         customerSubscription.lastPaymentId = paymentId;
         customerSubscription.nextBillingDate = newEndDate;
