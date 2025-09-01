@@ -21,7 +21,7 @@ const mongoose = require("mongoose");
     area: { type: String }, // NEW FIELD from JSON
     subTopic: { type: String }, // NEW FIELD from JSON
     technology: [{ type: String }],
-    skill: [{ type: String }],
+    // skill: [{ type: String }],
     tags: [{ type: String }],
     difficultyLevel: { type: String },
     correctAnswer: { type: String },
