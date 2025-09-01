@@ -13,6 +13,7 @@ const Tenant = require('../models/Tenant');
 const helpers = require('./CustomerSubscriptionInvoiceContollers.js');
 const Usage = require('../models/Usage.js');
 const { inflateRaw } = require('zlib');
+const { Contacts } = require('../models/Contacts.js');
 const createInvoice = helpers.createInvoice;
 const createReceipt = helpers.createReceipt;
 const calculateEndDate = helpers.calculateEndDate;
@@ -1158,7 +1159,7 @@ const handleSubscriptionCancelled = async (subscription) => {
         // Update the subscription status
         customerSubscription.status = 'cancelled';
         customerSubscription.endReason = 'cancelled';
-        customerSubscription.endDate = new Date();
+        //customerSubscription.endDate = new Date();
         customerSubscription.autoRenew = false;
         customerSubscription.razorpaySubscriptionId = null;
         customerSubscription.razorpayCustomerId = null;
@@ -1755,29 +1756,63 @@ const handleSubscriptionCharged = async (subscription) => {
 
         const features = subscriptionPlan.features;
         console.log('features:',features);
-        
-        const usage = new Usage({
-                tenantId: customerSubscription.tenantId,
-                usageAttributes: features.map(feature => {
-                    if (feature.name === 'Assessments' || feature.name === 'Internal Interviewers' || feature.name === 'Outsource Interviewers') {
-                        return {
-                            entitled: feature.limit,
-                            type: feature.name
-                        };
-                    }
-                    return null;
-                }).filter(Boolean),
-                fromDate: new Date(),
-                toDate: newEndDate
-            });
-        
-        //console.log('usage:',usage);
+
+        // const usage = new Usage({
+        //     tenantId: customerSubscription.tenantId,
+        //     usageAttributes: features.map(feature => {
+        //         if (feature.name === 'Assessments' || feature.name === 'Internal Interviewers' || feature.name === 'Outsource Interviewers') {
+        //             return {
+        //                 entitled: feature.limit,
+        //                 type: feature.name
+        //             };
+        //         }
+        //         return null;
+        //     }).filter(Boolean),
+        //     fromDate: new Date(),
+        //     toDate: newEndDate
+        // });
+
+        // Build usageAttributes payload (reset utilization for new period)
+        const now = new Date();
+        const usageAttributes = features.map(feature => {
+            if (feature.name === 'Assessments' || feature.name === 'Internal Interviewers' || feature.name === 'Outsource Interviewers') {
+                const limit = Number(feature.limit) || 0;
+                return {
+                    entitled: limit,
+                    type: feature.name,
+                    utilized: 0,
+                    remaining: limit
+                };
+            }
+            return null;
+        }).filter(Boolean);
 
         try {
-            await usage.save();
-            console.log('Usage data saved successfully');
+            // Prefer updating the current active usage document for this tenant (if any)
+            const activeFilter = {
+                tenantId: customerSubscription.tenantId,
+                fromDate: { $lte: now },
+                toDate: { $gte: now }
+            };
+
+            let updatedUsage = await Usage.findOneAndUpdate(
+                activeFilter,
+                { $set: { usageAttributes, fromDate: now, toDate: newEndDate } },
+                { new: true }
+            );
+
+            // If no active period doc, update the latest for the tenant or create a new one
+            if (!updatedUsage) {
+                updatedUsage = await Usage.findOneAndUpdate(
+                    { tenantId: customerSubscription.tenantId },
+                    { $set: { usageAttributes, fromDate: now, toDate: newEndDate }, $setOnInsert: { tenantId: customerSubscription.tenantId } },
+                    { new: true, upsert: true, sort: { toDate: -1 } }
+                );
+            }
+
+            console.log('Usage upserted successfully:', (updatedUsage && updatedUsage._id) ? updatedUsage._id.toString() : 'unknown');
         } catch (error) {
-            console.error('Error saving usage data:', error);
+            console.error('Error upserting usage data:', error);
         }
 
         console.log('Successfully processed subscription payment:', paymentId);
@@ -1886,7 +1921,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
         // If we still don't have a name, try to get user details from the database
         if (!customerName) {
             try {
-                const user = await User.findById(ownerId);
+                const user = await Contacts.findById(ownerId);
                 if (user) {
                     customerName = user.name || user.firstName || user.username || '';
                     customerEmail = customerEmail || user.email || '';
