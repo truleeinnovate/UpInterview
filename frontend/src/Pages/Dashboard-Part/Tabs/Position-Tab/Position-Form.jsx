@@ -8,7 +8,7 @@ import AssessmentDetails from "./AssessmentType";
 import TechnicalType from "./TechnicalType";
 import Cookies from "js-cookie";
 import { validateForm } from "../../../../utils/PositionValidation.js";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock, Info, Search, Users } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
@@ -369,6 +369,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [editingIndex, setEditingIndex] = useState(null);
 
   const [deleteIndex, setDeleteIndex] = useState(null);
+  const [isOpen, setIsOpen] = useState(false)
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
@@ -842,7 +843,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     // const currentRoundNumber = currentStage.startsWith('round') ? parseInt(currentStage.slice(5)) : 0;
 
     return (
-      <div className="flex items-center justify-center mb-4 mt-1 w-full overflow-x-auto py-2">
+      <div className="flex items-center justify-center mb-1 mt-1 w-full overflow-x-auto ">
         <div className="flex items-center min-w-fit px-2">
           {/* Basic Details */}
           {/* <div className="flex items-center">
@@ -1067,6 +1068,63 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           </h2>
           {/* NAVIGATION - PATH */}
           {renderStageIndicator()}
+        </div>
+
+        <div className="px-[13%] sm:px-[5%] md:px-[5%]">
+          <div className=" py-4 bg-white z-10">
+            {/* ------------------------------ v1.0.0 > */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-start space-x-3 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+                <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-custom-blue">Position Creation Guide</h3>
+                    {isOpen ? (
+                      <ChevronUp className="h-5 w-5 text-custom-blue" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-custom-blue" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {isOpen && (
+                <div className="mt-3 ml-8 space-y-2">
+
+                  <div className="text-sm text-custom-blue space-y-1">
+
+
+                    <ul className="list-disc list-inside pl-2 space-y-1">
+                      <li><span className="font-medium">Template Selection (Optional):</span> Choose a pre-defined interview template to standardize your hiring process</li>
+                      <li><span className="font-medium">Template Benefits:</span> Includes predefined rounds, questions, and evaluation criteria for consistency</li>
+                      <li><span className="font-medium">Custom Interview Path:</span> <span className="font-semibold text-blue-700">If you don't select a template, you can build custom interview rounds tailored specifically for this position</span></li>
+                      <li><span className="font-medium">Flexible Approach:</span> Create unique assessment stages that match your exact hiring needs without template constraints</li>
+                      <li><span className="font-medium">Availability:</span> Only active templates with configured rounds are displayed for selection</li>
+                      <li><span className="font-medium">Interview Structure:</span> Selected template determines the interview flow and assessment approach</li>
+                      <li><span className="font-medium">Assessment Types:</span> Templates may include technical interviews, coding challenges, and behavioral evaluations</li>
+                      <li><span className="font-medium">Flexibility:</span> Customize individual rounds after template selection to meet specific role requirements</li>
+                      <li><span className="font-medium">Role-Specific Positions:</span> Create multiple positions for different roles within the same hiring process</li>
+                      <li><span className="font-medium">Template-Free Option:</span> You can proceed without a template and build a custom interview process from scratch</li>
+                    </ul>
+
+                    {/* <div className="flex items-center">
+                              <Users className="h-4 w-4 mr-2" />
+                              <span>Interviews are scheduled based on first acceptance</span>
+                            </div> */}
+                    {/* <ul className="list-disc list-inside pl-2 space-y-1">
+              <li>Select a pre-defined interview template to standardize your hiring process</li>
+              <li>Templates include predefined rounds, questions, and evaluation criteria</li>
+              <li>Only active templates with configured rounds are available for selection</li>
+              <li>The selected template will determine the interview structure and flow</li>
+              <li>Template includes: Technical assessments,Technical Interviews, coding challenges, and behavioral questions</li>
+              <li>Customize rounds after selection if needed</li>
+            </ul> */}
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
 
         <div className="px-[13%] sm:px-[5%] md:px-[5%]">
@@ -1493,8 +1551,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                     }));
                                   }}
                                   className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary
-                                      ? "border-red-500"
-                                      : "border-gray-300"
+                                    ? "border-red-500"
+                                    : "border-gray-300"
                                     }`}
 
                                 // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
@@ -1559,8 +1617,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                     }));
                                   }}
                                   className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary
-                                      ? "border-red-500"
-                                      : "border-gray-300"
+                                    ? "border-red-500"
+                                    : "border-gray-300"
                                     }`}
                                 // onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
                                 // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
@@ -1914,7 +1972,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                     </div>
 
                     {/* template */}
-                    <div className="grid grid-cols-2">
+                    <div className="grid grid-cols-2  items-center">
                       <CustomDropdown
                         label="Select Template"
                         name="template"
@@ -1942,6 +2000,16 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         optionKey="templateName" // Display template name
                         optionValue="_id"
                       />
+                      <div className="relative group mt-4 ml-2">
+                        <Info
+                          size={18}
+                          className="text-gray-400 cursor-pointer"
+                        />
+                        {/* <i className="fas fa-info-circle text-gray-400 cursor-pointer">i</i> */}
+                        <div className="absolute  transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10">
+                          Select a pre-defined interview template that includes rounds, questions
+                        </div>
+                      </div>
                       {/* <label className="block text-sm font-medium text-gray-700 mb-1">
                         Select Template
                       </label>
