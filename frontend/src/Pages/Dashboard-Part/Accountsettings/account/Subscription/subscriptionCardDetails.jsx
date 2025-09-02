@@ -130,6 +130,7 @@ const SubscriptionCardDetails = () => {
     () => location.state?.plan || {},
     [location.state]
   );
+  console.log("planDetails",planDetails);
   const [pricePerMember, setPricePerMember] = useState({
     monthly: 0,
     annually: 0,

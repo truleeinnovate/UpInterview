@@ -32,7 +32,7 @@ const getUsageByTenant = async (req, res) => {
     }
 
     if (!usage) {
-      return res.status(404).json({ message: 'No usage found for tenant' });
+      return res.status(404).json({ message: 'No active usage period' });
     }
 
     // Fetch tenant plan limits and current user count for this tenant
