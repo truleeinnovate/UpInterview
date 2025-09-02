@@ -2,6 +2,7 @@
 // v1.0.1 - Ranjith - added the mode to the postion tab for the inetrview mode
 // v1.0.2 - Ashok - modified some styles
 // v1.0.3 - Ashok - fixed default view and unique key issue
+// v1.0.4 - Ashok - Improved responsiveness
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
@@ -80,31 +81,31 @@ const PositionSlideDetails = () => {
   // }, [id, positionData]);
 
   useEffect(() => {
-  const fetchPosition = async () => {
-    try {
-      console.log('started position');
-      const foundPosition = positionData?.find((pos) => pos._id === id);
-      console.log("Found Position:", foundPosition);
+    const fetchPosition = async () => {
+      try {
+        console.log("started position");
+        const foundPosition = positionData?.find((pos) => pos._id === id);
+        console.log("Found Position:", foundPosition);
 
-      if (foundPosition) {
-        const roundsList = foundPosition.rounds || [];
+        if (foundPosition) {
+          const roundsList = foundPosition.rounds || [];
 
-        setPosition(foundPosition);
-        setRounds(roundsList);
-        setActiveRound(roundsList[0]?._id);
+          setPosition(foundPosition);
+          setRounds(roundsList);
+          setActiveRound(roundsList[0]?._id);
 
-        // If only one round exists, switch to vertical view
-        if (roundsList.length === 1) {
-          setRoundsViewMode("vertical");
+          // If only one round exists, switch to vertical view
+          if (roundsList.length === 1) {
+            setRoundsViewMode("vertical");
+          }
         }
+      } catch (error) {
+        console.error("Error fetching template:", error);
       }
-    } catch (error) {
-      console.error("Error fetching template:", error);
-    }
-  };
+    };
 
-  fetchPosition();
-}, [id, positionData]);
+    fetchPosition();
+  }, [id, positionData]);
 
   // v1.0.3 ---------------------------------------------------------------------->
 
@@ -161,11 +162,12 @@ const PositionSlideDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
+      {/* v1.0.4 <------------------------------------------------------------------------------------------ */}
+      <div className="max-w-7xl mx-auto sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
         {/* <-------------------------v1.0.0  */}
         {/* // <----- v1.0.1 - Ranjith - */}
         {/* Header */}
-        <div className="flex flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8 p-6">
+        <div className="flex flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8 pt-6">
           <button
             onClick={() =>
               mode === "Interview" ? navigate(-1) : navigate("/position")
@@ -185,7 +187,7 @@ const PositionSlideDetails = () => {
 
         {/* Tabs Navigation */}
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -202,6 +204,7 @@ const PositionSlideDetails = () => {
             ))}
           </nav>
         </div>
+        {/* v1.0.4 ------------------------------------------------------------------------------------------> */}
 
         {/* v1.0.0---------------------------> */}
 
@@ -210,8 +213,13 @@ const PositionSlideDetails = () => {
           <div className="flex-1">
             <div className="space-y-6 mt-4">
               <div className="text-center mb-4">
-                <h3 className="text-2xl font-bold text-gray-900">{position?.companyname || ''}</h3>
-                <p className="text-gray-600 mt-1">{position?.title.charAt(0).toUpperCase() + position?.title?.slice(1) || 'position'}</p>
+                <h3 className="sm:text-xl text-2xl font-bold text-gray-900 truncate">
+                  {position?.companyname || ""}
+                </h3>
+                <p className="text-gray-600 mt-1">
+                  {position?.title.charAt(0).toUpperCase() +
+                    position?.title?.slice(1) || "position"}
+                </p>
               </div>
 
               {/* {position.rounds?.length === 0
@@ -236,21 +244,26 @@ const PositionSlideDetails = () => {
                 )} */}
 
               <div className="space-y-4">
+                {/* v1.0.4 <---------------------------------------------------------------- */}
                 <h4 className="font-semibold text-gray-800">Job Details</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
                       <Building2 className="w-4 h-4 text-blue-600" />
                       <span className="text-sm">Company Name</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-800">{position?.companyname}</p>
+                    <p className="text-sm font-medium text-gray-800 truncate">
+                      {position?.companyname}
+                    </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
                       <MapPin className="w-4 h-4 text-red-500" />
                       <span className="text-sm">Location</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-800">{position?.Location || 'Not Disclosed'}</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {position?.Location || "Not Disclosed"}
+                    </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
@@ -281,6 +294,7 @@ const PositionSlideDetails = () => {
                   </div>
                 </div>
               </div>
+              {/* v1.0.4 ----------------------------------------------------------------> */}
 
               <div className="space-y-4 w-full">
                 <h4 className="font-semibold text-gray-800">Job Description</h4>
@@ -296,12 +310,12 @@ const PositionSlideDetails = () => {
                   )}
                 </div>
               </div>
-
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              {/* v1.0.4 <---------------------------------------------------------------------------------- */}
+              <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">
                   Skills
                 </h4>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap sm:gap-4 gap-2">
                   {/* <------v1.0.0 ------ */}
                   {/* v1.0.3 <---------------------------------------------------------- */}
                   {/* {position?.skills ? (
@@ -336,18 +350,39 @@ const PositionSlideDetails = () => {
                   )} */}
                   {position?.skills?.length > 0 ? (
                     position.skills.map((skill, index) => (
+                      // <div
+                      //   key={`skill-${index}`}
+                      //   className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100"
+                      // >
+                      //   <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                      //     {skill.skill}
+                      //   </span>
+                      //   <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                      //     {skill.experience}
+                      //   </span>
+                      //   <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                      //     {skill.expertise}
+                      //   </span>
+                      // </div>
                       <div
                         key={`skill-${index}`}
-                        className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100"
+                        // className="flex gap-2 justify-center w-full px-3 py-3 bg-custom-bg rounded-full border border-blue-100"
+                        className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100"
                       >
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
-                          {skill.skill}
+                          <span className="truncate max-w-full">
+                            {skill.skill}
+                          </span>
                         </span>
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
-                          {skill.experience}
+                          <span className="truncate max-w-full">
+                            {skill.experience}
+                          </span>
                         </span>
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
-                          {skill.expertise}
+                          <span className="truncate max-w-full">
+                            {skill.expertise}
+                          </span>
                         </span>
                       </div>
                     ))
@@ -359,6 +394,7 @@ const PositionSlideDetails = () => {
                   {/* v1.0.0 -------> */}
                 </div>
               </div>
+              {/* v1.0.4 ----------------------------------------------------------------------------------> */}
             </div>
 
             {/* Interviewers summary */}
@@ -390,9 +426,12 @@ const PositionSlideDetails = () => {
             </div>
 
             {/* Interview Rounds Table Header */}
-            <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+            {/* <div className="border-t border-gray-200 px-4 py-5 sm:px-6"> */}
+            {/* v1.0.4 <----------------------------------------------------------------------------- */}
+            <div className="border-t border-gray-200 py-5">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                {/* <h3 className="text-lg leading-6 font-medium text-gray-900"> */}
+                <h3 className="sm:text-md text-lg leading-6 font-medium text-gray-900">
                   Position Rounds
                 </h3>
                 <div className="flex space-x-2">
@@ -400,40 +439,60 @@ const PositionSlideDetails = () => {
                     <>
                       {/* v1.0.2 <---------------------------------------------------------------------------------------------- */}
                       {rounds.length > 1 && (
+                        // <button
+                        //   onClick={toggleViewMode}
+                        //   className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                        // >
+                        //   {roundsViewMode === "vertical" ? (
+                        //     <>
+                        //       <LayoutGrid className="h-4 w-4 mr-1" />
+                        //       Horizontal View
+                        //     </>
+                        //   ) : (
+                        //     <>
+                        //       <LayoutList className="h-4 w-4 mr-1" />
+                        //       Vertical View
+                        //     </>
+                        //   )}
+                        // </button>
                         <button
-                        onClick={toggleViewMode}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                      >
-                        {roundsViewMode === "vertical" ? (
-                          <>
-                            <LayoutGrid className="h-4 w-4 mr-1" />
-                            Horizontal View
-                          </>
-                        ) : (
-                          <>
-                            <LayoutList className="h-4 w-4 mr-1" />
-                            Vertical View
-                          </>
-                        )}
-                      </button>
+                          onClick={toggleViewMode}
+                          className="inline-flex items-center sm:px-2 sm:py-2 px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                        >
+                          {roundsViewMode === "vertical" ? (
+                            <>
+                              <LayoutGrid className="sm:h-5 sm:w-5 h-4 w-4 sm:mr-0 mr-1" />
+                              <span className="sm:hidden inline">
+                                Horizontal View
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <LayoutList className="sm:h-5 sm:w-5 h-4 w-4 sm:mr-0 mr-1" />
+                              <span className="sm:hidden inline">
+                                Vertical View
+                              </span>
+                            </>
+                          )}
+                        </button>
                       )}
                       {/* v1.0.2 ------------------------------------------------------------------------------------------------>  */}
                       <button
                         onClick={handleAddRound}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue focus:outline-none"
+                        className="inline-flex items-center sm:px-2 sm:py-2 px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue focus:outline-none"
                       >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Round
+                        <Plus className="sm:h-5 sm:w-5 h-4 w-4 sm:mr-0 mr-1" />
+                        <span className="sm:hidden inline">Add Round</span>
                       </button>
                     </>
                   )}
                   <Link
                     to={`/position/edit-position/${position?._id}`}
                     state={{ from: location.pathname }}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                    className="inline-flex items-center sm:px-2 sm:py-2 px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                   >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit Position
+                    <Edit className="sm:h-5 sm:w-5 h-4 w-4 sm:mr-0 mr-1" />
+                    <span className="sm:hidden inline">Edit Position</span>
                   </Link>
                 </div>
               </div>
@@ -477,6 +536,7 @@ const PositionSlideDetails = () => {
                 </div>
               )}
             </div>
+            {/* v1.0.4 -----------------------------------------------------------------------------> */}
           </div>
         )}
 
@@ -487,6 +547,7 @@ const PositionSlideDetails = () => {
         )}
       </div>
     </div>
+    // v1.0.4 ---------------------------------------------------------------->
   );
 };
 

@@ -1,92 +1,101 @@
-import React from 'react';
+// v1.0.0 - Ashok - Improved responsiveness
+import React from "react";
 // import PropTypes from 'prop-types';
-import { CheckCircle, Clock, XCircle, Circle, ThumbsDown } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Circle, ThumbsDown } from "lucide-react";
 
-const InterviewProgress = ({ 
-  rounds, 
+const InterviewProgress = ({
+  rounds,
   interviewId,
   currentRoundId,
-  viewMode = 'horizontal',
+  viewMode = "horizontal",
   // onSelectRound
 }) => {
-  
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
-  
+
   const getStatusIcon = (round) => {
     switch (round.status) {
-      case 'Completed':
+      case "Completed":
         return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'Scheduled':
+      case "Scheduled":
         return <Clock className="h-5 w-5 text-blue-500" />;
-      case 'Cancelled':
+      case "Cancelled":
         return <XCircle className="h-5 w-5 text-red-500" />;
-      case 'Rejected':
+      case "Rejected":
         return <ThumbsDown className="h-5 w-5 text-purple-500" />;
-      case 'Pending':
+      case "Pending":
         return <Circle className="h-5 w-5 text-yellow-500" />;
       default:
         return <Circle className="h-5 w-5 text-gray-300" />;
     }
   };
 
-const getStatusColor = (round, isCurrent) => {
-  if (isCurrent) return 'bg-blue-100 border-blue-500';
+  const getStatusColor = (round, isCurrent) => {
+    if (isCurrent) return "bg-blue-100 border-blue-500";
 
-  switch (round.status) {
-    case 'Draft':
-      return 'bg-gray-100 border-gray-400';
-    case 'RequestSent':
-      return 'bg-orange-50 border-orange-200';
-    case 'Scheduled':
-      return 'bg-blue-50 border-blue-200';
-    case 'Rescheduled':
-      return 'bg-blue-100 border-blue-400';
-    case 'Completed':
-      return 'bg-green-50 border-green-200';
-    case 'Cancelled':
-      return 'bg-red-50 border-red-200';
-    case 'Rejected':
-      return 'bg-purple-50 border-purple-200';
-    case 'Selected':
-      return 'bg-teal-50 border-teal-200';
-    case 'InComplete':
-      return 'bg-yellow-50 border-yellow-200';
-    default:
-      return 'bg-gray-50 border-gray-200';
-  }
-};
+    switch (round.status) {
+      case "Draft":
+        return "bg-gray-100 border-gray-400";
+      case "RequestSent":
+        return "bg-orange-50 border-orange-200";
+      case "Scheduled":
+        return "bg-blue-50 border-blue-200";
+      case "Rescheduled":
+        return "bg-blue-100 border-blue-400";
+      case "Completed":
+        return "bg-green-50 border-green-200";
+      case "Cancelled":
+        return "bg-red-50 border-red-200";
+      case "Rejected":
+        return "bg-purple-50 border-purple-200";
+      case "Selected":
+        return "bg-teal-50 border-teal-200";
+      case "InComplete":
+        return "bg-yellow-50 border-yellow-200";
+      default:
+        return "bg-gray-50 border-gray-200";
+    }
+  };
 
   return (
+    // v1.0.0 <----------------------------------------------------------------------
     <div className="w-full overflow-x-auto py-4">
       <div className="flex items-center min-w-max">
         {sortedRounds.map((round, index) => {
           const isCurrent = round._id === currentRoundId;
           const isLast = index === sortedRounds.length - 1;
-          
+
           return (
             <React.Fragment key={round._id}>
-              <button 
+              <button
                 // onClick={() => onSelectRound(round._id)}
-                className={`flex items-center px-3 py-2 rounded-md border ${getStatusColor(round, isCurrent)} transition-colors duration-200 hover:bg-opacity-80`}
+                className={`flex items-center sm:px-1 sm:py-1 px-3 py-2 rounded-md border ${getStatusColor(
+                  round,
+                  isCurrent
+                )} transition-colors duration-200 hover:bg-opacity-80`}
               >
                 <div className="flex items-center">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-gray-200 mr-2">
+                  <span className="flex items-center justify-center text-xs w-6 h-6 rounded-full bg-white border border-gray-200 sm:mr-0 mr-2">
                     {index + 1}
                   </span>
-                  <div className="mr-2">{getStatusIcon(round)}</div>
-                  <span className="text-sm font-medium">{round.roundTitle}</span>
+                  <div className="sm:hidden inline mr-2">
+                    {getStatusIcon(round)}
+                  </div>
+                  <span className="sm:hidden inline text-sm font-medium">
+                    {round.roundTitle}
+                  </span>
                 </div>
               </button>
-              
+
               {!isLast && (
-                <div className="mx-2 h-1 w-8 bg-gray-300"></div>
+                <div className="sm:w-3 sm:h-0.5 sm:mx-0.5 mx-2 h-1 w-8 bg-gray-300"></div>
               )}
             </React.Fragment>
           );
         })}
       </div>
     </div>
+    // v1.0.0 ---------------------------------------------------------------------->
   );
 };
 

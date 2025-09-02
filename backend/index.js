@@ -6,7 +6,8 @@
 // v1.0.4  -  Ashok   -  added analytics
 // v1.0.5  -  Ashok   -  Added Rate Cards
 // v1.0.6  -  Ashok   -  Added Master Routes
-// v1.0.7  -  Updated   -  Technology master controller as send all the fields in response
+// v1.0.7  -  Ashok   -  Technology master controller as send all the fields in response
+// v1.0.8  -  Ashok   -  Added Question bank manager routes
 require("dotenv").config();
 
 const cors = require("cors");
@@ -443,7 +444,9 @@ const { RoleMaster } = require("./models/MasterSchemas/RoleMaster.js");
 const {
   TechnologyMaster,
 } = require("./models/MasterSchemas/TechnologyMaster.js");
-const { HigherQualification } = require("./models/MasterSchemas/higherqualification.js");
+const {
+  HigherQualification,
+} = require("./models/MasterSchemas/higherqualification.js");
 const { University_CollegeName } = require("./models/MasterSchemas/college.js");
 const { Company } = require("./models/MasterSchemas/company.js");
 
@@ -1274,6 +1277,10 @@ app.use("/rate-cards", RateCardRoutes);
 const MasterRoutes = require("./routes/MasterRoutes/masterRoutes.js");
 app.use("/master-data", MasterRoutes);
 // v1.0.6 --------------------------------------------------------------------------->
+// v1.0.7 <---------------------------------------------------------------------------
+const QuestionBankManager = require("./routes/QuestionBankManagerRoutes/QuestionBankManagerRoutes.js");
+app.use("/questions-manager", QuestionBankManager);
+// v1.0.7 --------------------------------------------------------------------------->
 
 //  v1.0.4 <------------------------------------------------------------------------------
 const filterRoutes = require("./routes/AnalyticsRoutes/filterRoutes.js");

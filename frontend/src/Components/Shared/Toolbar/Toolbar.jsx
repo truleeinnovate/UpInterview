@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - changed responsive break point
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Tooltip } from '@mantine/core';
@@ -27,9 +28,9 @@ const Toolbar = ({
   searchPlaceholder = 'Search...',
   filterIconRef
 }) => {
-
-  const isTablet = useMediaQuery({ maxWidth: 640 });
-
+  // v1.0.0 <--------------------------------------------------------
+  const isTablet = useMediaQuery({ maxWidth: 1024 });
+  // v1.0.0 -------------------------------------------------------->
   return (
     <motion.div
       className="flex items-center justify-between flex-wrap lg:flex-nowrap mb-4 gap-4"

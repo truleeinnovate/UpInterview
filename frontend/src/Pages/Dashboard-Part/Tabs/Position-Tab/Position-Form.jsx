@@ -2,6 +2,7 @@
 
 // v1.0.0 - Venkatesh - added custom location
 // v1.0.1 - Ashok - added scroll to error functionality
+// v1.0.2 - Ashok - Improved responsiveness
 
 import { useEffect, useState, useRef } from "react";
 import AssessmentDetails from "./AssessmentType";
@@ -619,9 +620,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       ...(dataToSubmit.maxexperience && {
         maxexperience: parseInt(dataToSubmit.maxexperience),
       }),
-        // ✅ salary must be string (backend requires it)
-  minSalary: dataToSubmit.minSalary ? String(dataToSubmit.minSalary) : "",
-  maxSalary: dataToSubmit.maxSalary ? String(dataToSubmit.maxSalary) : "",
+      // ✅ salary must be string (backend requires it)
+      minSalary: dataToSubmit.minSalary ? String(dataToSubmit.minSalary) : "",
+      maxSalary: dataToSubmit.maxSalary ? String(dataToSubmit.maxSalary) : "",
       // minexperience: dataToSubmit.minexperience || "",
       // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
@@ -634,8 +635,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
       templateId: dataToSubmit.template?._id,
-        // ✅ fix naming mismatch (backend expects selectedTemplete)
-  // selectedTemplete: dataToSubmit.template?.templateName || null,
+      // ✅ fix naming mismatch (backend expects selectedTemplete)
+      // selectedTemplete: dataToSubmit.template?.templateName || null,
       // rounds: dataToSubmit.rounds || [],
     };
     console.log("basicdetails", basicdetails);
@@ -698,14 +699,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       }
     } catch (error) {
       // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
-    if (error.response && error.response.status === 400) {
-      const backendErrors = error.response.data.errors || {};
-      console.log("backendErrors", backendErrors);
-      setErrors(backendErrors);
-      scrollToFirstError(backendErrors, fieldRefs);
-    } else {
-      console.error("Error saving position:", error);
-    }
+      if (error.response && error.response.status === 400) {
+        const backendErrors = error.response.data.errors || {};
+        console.log("backendErrors", backendErrors);
+        setErrors(backendErrors);
+        scrollToFirstError(backendErrors, fieldRefs);
+      } else {
+        console.error("Error saving position:", error);
+      }
       // console.error("Error saving position:", error);
     }
   };
@@ -1279,8 +1280,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Experience <span className="text-red-500">*</span>
                         </label>
-
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* v1.0.2 <----------------------------------------------------------------------------------------- */}
+                        {/* <div className="grid grid-cols-2 gap-4"> */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                          {/* v1.0.2 -----------------------------------------------------------------------------------------> */}
                           {/* Min Experience */}
                           <div>
                             <div className="flex flex-row items-center gap-3">
@@ -1434,14 +1437,18 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           Salary
                           {/* <span className="text-red-500">*</span> */}
                         </label>
-                        <div className="grid grid-cols-2 gap-4">
-                          {/* Min Experience */}
+                        {/* v1.0.2 <----------------------------------------------------------------------------------------------- */}
+                        {/* <div className="grid grid-cols-2 gap-4"> */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                          {/* Min Salary */}
 
+                          {/* <div className="flex flex-row items-center gap-3"> */}
                           <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">
                               Min
                             </label>
-                            <div className="flex-col">
+                            {/* <div className="flex-col"> */}
+                            <div className="flex-col w-full">
                               <div className="relative w-full">
                                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                                   $
@@ -1503,12 +1510,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             </div>
                           </div>
 
-                          {/* Max Experience */}
+                          {/* Max Salary */}
                           <div className="flex flex-row items-center gap-3">
                             <label className="block text-xs text-gray-500 mb-1">
                               Max
                             </label>
-                            <div className="flex-col">
+                            {/* <div className="flex-col"> */}
+                            <div className="flex-col w-full">
                               <div className="relative w-full">
                                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                                   $
@@ -1569,6 +1577,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             </div>
                           </div>
                         </div>
+                        {/* v1.0.2 -----------------------------------------------------------------------------------------------> */}
                       </div>
                     </div>
 
@@ -1913,7 +1922,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                     </div>
 
                     {/* template */}
-                    <div className="grid grid-cols-2">
+                    {/* v1.0.2 <--------------------------------------------------- */}
+                    {/* <div className="grid grid-cols-2"> */}
+                    <div className="grid sm:grid-cols-1 grid-cols-2">
                       <CustomDropdown
                         label="Select Template"
                         name="template"
@@ -1972,7 +1983,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         
                       </div> */}
                     </div>
-
+                    {/* v1.0.2 ---------------------------------------------------> */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Additional Notes
