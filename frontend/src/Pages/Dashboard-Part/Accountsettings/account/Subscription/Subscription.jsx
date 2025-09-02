@@ -117,6 +117,8 @@ const Subscription = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
+  const [showDowngradeConfirmModal, setShowDowngradeConfirmModal] = useState(false);
+  const [selectedPlanForDowngrade, setSelectedPlanForDowngrade] = useState(null);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
 
   // Fetch subscription data
@@ -295,7 +297,7 @@ const Subscription = () => {
         id: "update-toast",
       });
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/update-subscription-plan`,
+        `${process.env.REACT_APP_API_URL}/subscription-update/update-subscription-plan`,
         {
           subscriptionId: subscriptionData._id,
           razorpaySubscriptionId: subscriptionData.razorpaySubscriptionId,
@@ -356,6 +358,8 @@ const Subscription = () => {
               ...plan,
               billingCycle: isAnnual ? "annual" : "monthly",
               user: user,
+              invoiceId: subscriptionData.invoiceId,
+              razorpayPlanIds: subscriptionData.razorpayPlanId,
             },
             isUpgrading: false,
           },
@@ -369,16 +373,45 @@ const Subscription = () => {
           (p) => p.planId === subscriptionData.subscriptionPlanId
         );
         const thisPlanIndex = plans.findIndex((p) => p.planId === plan.planId);
+        const viewingCycle = isAnnual ? "annual" : "monthly";
+        const currentCycle = subscriptionData.selectedBillingCycle;
+        const isSamePlan =
+          subscriptionData.subscriptionPlanId === plan.planId;
+
+        // Treat monthly -> annual on the same plan as an upgrade
+        if ((isSamePlan || !isSamePlan) && currentCycle === "monthly" && viewingCycle === "annual") {
+          setSelectedPlanForUpgrade(plan);
+          setShowUpgradeConfirmModal(true);
+          return;
+        }
+
+        // Treat annual -> monthly on the same plan as a downgrade
+        if ((isSamePlan || !isSamePlan) && currentCycle === "annual" && viewingCycle === "monthly") {
+          setSelectedPlanForDowngrade(plan);
+          setShowDowngradeConfirmModal(true);
+          return;
+        }
 
         if (
           currentPlanIndex !== -1 &&
           thisPlanIndex > currentPlanIndex &&
           subscriptionData.selectedBillingCycle ===
-            (isAnnual ? "annual" : "monthly")
+            viewingCycle
         ) {
           // This is an upgrade
           setSelectedPlanForUpgrade(plan);
           setShowUpgradeConfirmModal(true);
+          return;
+        }
+
+        // This is a downgrade within the same billing cycle (lower tier)
+        if (
+          currentPlanIndex !== -1 &&
+          thisPlanIndex < currentPlanIndex &&
+          subscriptionData.selectedBillingCycle === viewingCycle
+        ) {
+          setSelectedPlanForDowngrade(plan);
+          setShowDowngradeConfirmModal(true);
           return;
         }
       }
@@ -390,6 +423,8 @@ const Subscription = () => {
             ...plan,
             billingCycle: isAnnual ? "annual" : "monthly",
             user: user,
+            invoiceId: subscriptionData.invoiceId,
+            razorpayPlanIds: subscriptionData.razorpayPlanId,
           },
           isUpgrading: false,
         },
@@ -585,6 +620,17 @@ const Subscription = () => {
                 ${(() => {
                   // Check if this is an upgrade button
                   if (subscriptionData.subscriptionPlanId) {
+                    const viewingCycle = isAnnual ? "annual" : "monthly";
+                    const isSamePlan =
+                      subscriptionData.subscriptionPlanId === plan.planId;
+                    // Monthly -> Annual on the same plan should show upgrade animation
+                    if (
+                      (isSamePlan || !isSamePlan) &&
+                      subscriptionData.selectedBillingCycle === "monthly" &&
+                      viewingCycle === "annual"
+                    ) {
+                      return "upgrade-button-animation";
+                    }
                     const currentPlanIndex = plans.findIndex(
                       (p) => p.planId === subscriptionData.subscriptionPlanId
                     );
@@ -595,7 +641,7 @@ const Subscription = () => {
                       currentPlanIndex !== -1 &&
                       thisPlanIndex > currentPlanIndex &&
                       subscriptionData.selectedBillingCycle ===
-                        (isAnnual ? "annual" : "monthly")
+                        viewingCycle
                     ) {
                       return "upgrade-button-animation";
                     }
@@ -646,6 +692,20 @@ const Subscription = () => {
                       (() => {
                         // Determine if this plan is higher or lower than current plan
                         if (subscriptionData.subscriptionPlanId) {
+                          const viewingCycle = isAnnual ? "annual" : "monthly";
+                          const currentCycle =
+                            subscriptionData.selectedBillingCycle;
+                          const isSamePlan =
+                            subscriptionData.subscriptionPlanId ===
+                            plan.planId;
+
+                          // Show Upgrade/Downgrade when switching billing cycle on the same plan
+                          if ((isSamePlan || !isSamePlan) && currentCycle !== viewingCycle) {
+                            return currentCycle === "monthly" && viewingCycle === "annual"
+                              ? "Upgrade"
+                              : "Downgrade";
+                          }
+                          
                           const currentPlanIndex = plans.findIndex(
                             (p) =>
                               p.planId === subscriptionData.subscriptionPlanId
@@ -655,18 +715,18 @@ const Subscription = () => {
                           );
 
                           // Only compare plans when viewing the same billing cycle as the current subscription
-                          if (
-                            subscriptionData.selectedBillingCycle !==
-                            (isAnnual ? "annual" : "monthly")
-                          ) {
-                            return "Choose";
-                          }
+                          // if (
+                          //   subscriptionData.selectedBillingCycle !==
+                          //   (isAnnual ? "annual" : "monthly")
+                          // ) {
+                          //   return "Choose";
+                          // }
 
                           // If current plan index exists and this plan index exists
                           if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
                             return thisPlanIndex > currentPlanIndex
                               ? "Upgrade"
-                              : "Choose";
+                              : "Downgrade";
                           }
                         }
                         return "Choose";
@@ -763,8 +823,7 @@ const Subscription = () => {
               ?
             </p>
             <p className="mb-6 text-sm sm:text-base text-gray-600">
-              Your subscription will be upgraded and you will be charged the
-              difference.
+            Your current subscription will be cancelled automatically and a new subscription will be created with the selected plan and billing cycle with the difference in price.
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -781,6 +840,42 @@ const Subscription = () => {
                 className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
               >
                 Upgrade
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Downgrade Confirmation Modal */}
+      {showDowngradeConfirmModal && selectedPlanForDowngrade && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-xl font-semibold mb-4 text-custom-blue">
+              Downgrade Subscription
+            </h2>
+            <p className="mb-4 text-sm sm:text-base text-gray-600">
+              Are you sure you want to downgrade to{" "}
+              <span className="font-medium">{selectedPlanForDowngrade.name}</span>
+              ?
+            </p>
+            <p className="mb-6 text-sm sm:text-base text-gray-600">
+              Your current subscription will be cancelled automatically and a new subscription will be created with the selected plan and billing cycle with the difference in price.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowDowngradeConfirmModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDowngradeConfirmModal(false);
+                  updateSubscriptionPlan(selectedPlanForDowngrade);
+                }}
+                className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
+              >
+                Downgrade
               </button>
             </div>
           </div>
