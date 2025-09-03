@@ -2,6 +2,7 @@ const { Contacts } = require("../models/Contacts");
 const InterviewAvailability = require("../models/InterviewAvailability");
 const { Users } = require("../models/Users");
 const mongoose = require("mongoose");
+const { contactValidationSchema, contactPatchSchema } = require("../validations/contactValidations");
 
 // Mansoor: for fetching the total contacts to the login pages (Individual-4)
 const getAllContacts = async (req, res) => {
@@ -411,6 +412,28 @@ const getContactsByOwnerId = async (req, res) => {
 
 const updateContactsDetails = async (req, res) => {
   try {
+
+    const { error } = contactPatchSchema.validate(req.body, {
+      abortEarly: false, // show all errors
+    });
+    console.log("error", error);
+
+    if (error) {
+      const errors = {};
+      error.details.forEach((err) => {
+        const field = err.context.key;
+        errors[field] = err.message;
+      });
+
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors,
+      });
+    }
+
+
+
     const contactId = req.params.id;
     const { availability, ...contactData } = req.body;
 

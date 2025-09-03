@@ -27,6 +27,7 @@ import {
 import { validateFile } from "../../../../../../utils/FileValidation/FileValidation";
 import { uploadFile } from "../../../../../../apiHooks/imageApis";
 import Loading from "../../../../../../Components/Loading";
+import { notify } from "../../../../../../services/toastService";
 
 // Skills.svg
 
@@ -253,6 +254,10 @@ const EditAdvacedDetails = ({
       console.log("response cleanFormData", response);
 
       if (response.status === 200) {
+        notify.success("Updated Advanced Details Successfully");
+      }
+
+      if (response.status === 200) {
         // setUserData(prev => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
         handleCloseModal();
@@ -263,7 +268,16 @@ const EditAdvacedDetails = ({
         console.error("Failed to update advanced details:", response.status);
       }
     } catch (error) {
-      console.error("Error updating advanced details:", error);
+      if (error.response && error.response.status === 400) {
+        const backendErrors = error.response.data.errors || {};
+        console.log("backendErrors", backendErrors);
+        setErrors(backendErrors);
+        // scrollToFirstError(backendErrors, fieldRefs);
+      } else {
+        console.error("Error saving changes:", error);
+        setErrors(prev => ({ ...prev, form: "Error saving changes" }));
+      }
+      // console.error("Error updating advanced details:", error);
     } finally {
       setLoading(false);
     }
@@ -274,7 +288,7 @@ const EditAdvacedDetails = ({
   const modalClass = classNames(
     // "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
     "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-  // v1.0.1 ----------------------------------------------------------------->
+    // v1.0.1 ----------------------------------------------------------------->
     {
       "inset-0": isFullScreen,
       "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
@@ -311,25 +325,25 @@ const EditAdvacedDetails = ({
   // Filter dropdown options
   const filteredIndustries = Array.isArray(industries)
     ? industries.filter((industry) =>
-        industry?.IndustryName?.toLowerCase()?.includes(
-          searchTermIndustry.toLowerCase() || ""
-        )
+      industry?.IndustryName?.toLowerCase()?.includes(
+        searchTermIndustry.toLowerCase() || ""
       )
+    )
     : [];
   const filteredLocations = Array.isArray(locations)
     ? locations.filter((location) =>
-        location?.LocationName?.toLowerCase()?.includes(
-          searchTermLocation.toLowerCase() || ""
-        )
+      location?.LocationName?.toLowerCase()?.includes(
+        searchTermLocation.toLowerCase() || ""
       )
+    )
     : [];
 
   const filteredCurrentRoles = Array.isArray(currentRoles)
     ? currentRoles.filter((role) =>
-        role?.RoleName?.toLowerCase()?.includes(
-          searchTermCurrentRole.toLowerCase() || ""
-        )
+      role?.RoleName?.toLowerCase()?.includes(
+        searchTermCurrentRole.toLowerCase() || ""
       )
+    )
     : [];
 
   // Handle input changes for text fields
@@ -525,9 +539,9 @@ const EditAdvacedDetails = ({
                   onChange={handleInputChange}
                   className="w-full  p-1.5 border border-gray-300 rounded-lg focus:ring-2 "
                 />
-                {errors.experience && (
+                {errors.yearsOfExperience && (
                   <p className="text-red-500 text-sm mt-1">
-                    {errors.experience}
+                    {errors.yearsOfExperience}
                   </p>
                 )}
               </div>

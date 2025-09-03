@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  added extend/cancel functionality for individual candidate assessments. show all data when isAssessmentView is true and add status column for assessment view
 // v1.0.2  -  Ashok   -  fixed search by name as can search by full name
 // v1.0.3  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.4  -  Venkatesh   -  added new filter options like created date, relevant experience, role, university
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -47,14 +48,30 @@ function Candidate({
     status: [],
     tech: [],
     experience: { min: "", max: "" },
+    //<-----v1.0.4--------
+    relevantExperience: { min: "", max: "" },
+    roles: [],
+    universities: [],
+    createdDate: "", // '', 'last7', 'last30'
+    //-----v1.0.4-------->
   });
   const [isQualificationOpen, setIsQualificationOpen] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
   const [isExperienceOpen, setIsExperienceOpen] = useState(false);
+  //<-----v1.0.4--------
+  const [isRelevantExperienceOpen, setIsRelevantExperienceOpen] = useState(false);
+  const [isRoleOpen, setIsRoleOpen] = useState(false);
+  const [isUniversityOpen, setIsUniversityOpen] = useState(false);
+  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
-  const [experience, setExperience] = useState({ min: "", max: "" });
-  const { skills, qualifications } = useMasterData();
+  const [experience, setExperience] = useState({ min: "", max: "" }); // Total (CurrentExperience)
+  const [relevantExperience, setRelevantExperience] = useState({ min: "", max: "" });
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [selectedUniversities, setSelectedUniversities] = useState([]);
+  const [createdDatePreset, setCreatedDatePreset] = useState("");
+  const { skills, qualifications, currentRoles, colleges } = useMasterData();
+  //-----v1.0.4-------->
   const { candidateData, isLoading } = useCandidates();
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ maxWidth: 1024 });
@@ -150,9 +167,19 @@ function Candidate({
       setSelectedStatus(selectedFilters.status);
       setSelectedTech(selectedFilters.tech);
       setExperience(selectedFilters.experience);
+      //<-----v1.0.4--------
+      setRelevantExperience(selectedFilters.relevantExperience || { min: "", max: "" });
+      setSelectedRoles(selectedFilters.roles || []);
+      setSelectedUniversities(selectedFilters.universities || []);
+      setCreatedDatePreset(selectedFilters.createdDate || "");
       setIsQualificationOpen(false);
       setIsSkillsOpen(false);
       setIsExperienceOpen(false);
+      setIsRelevantExperienceOpen(false);
+      setIsRoleOpen(false);
+      setIsUniversityOpen(false);
+      setIsCreatedDateOpen(false);
+      //-----v1.0.4-------->
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
@@ -186,6 +213,24 @@ function Candidate({
     );
   };
 
+  //<-----v1.0.4--------
+  const handleRoleToggle = (roleName) => {
+    setSelectedRoles((prev) =>
+      prev.includes(roleName)
+        ? prev.filter((r) => r !== roleName)
+        : [...prev, roleName]
+    );
+  };
+
+  const handleUniversityToggle = (universityName) => {
+    setSelectedUniversities((prev) =>
+      prev.includes(universityName)
+        ? prev.filter((u) => u !== universityName)
+        : [...prev, universityName]
+    );
+  };
+  //-----v1.0.4-------->
+
   const handleExperienceChange = (e, type) => {
     const value = Math.max(0, Math.min(15, Number(e.target.value) || ""));
     setExperience((prev) => ({
@@ -194,15 +239,37 @@ function Candidate({
     }));
   };
 
+  //<-----v1.0.4--------
+  const handleRelevantExperienceChange = (e, type) => {
+    const value = Math.max(0, Math.min(15, Number(e.target.value) || ""));
+    setRelevantExperience((prev) => ({
+      ...prev,
+      [type]: value,
+    }));
+  };
+  //<-----v1.0.4--------
+
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
       tech: [],
       experience: { min: "", max: "" },
+      //<-----v1.0.4--------
+      relevantExperience: { min: "", max: "" },
+      roles: [],
+      universities: [],
+      createdDate: "",
+      //-----v1.0.4-------->
     };
     setSelectedStatus([]);
     setSelectedTech([]);
     setExperience({ min: "", max: "" });
+    //<-----v1.0.4--------
+    setRelevantExperience({ min: "", max: "" });
+    setSelectedRoles([]);
+    setSelectedUniversities([]);
+    setCreatedDatePreset("");
+    //-----v1.0.4-------->
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -219,6 +286,15 @@ function Candidate({
         min: Number(experience.min) || 0,
         max: Number(experience.max) || 15,
       },
+      //<-----v1.0.4--------
+      relevantExperience: {
+        min: Number(relevantExperience.min) || 0,
+        max: Number(relevantExperience.max) || 15,
+      },
+      roles: selectedRoles,
+      universities: selectedUniversities,
+      createdDate: createdDatePreset,
+      //-----v1.0.4-------->
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
@@ -226,7 +302,14 @@ function Candidate({
       filters.status.length > 0 ||
         filters.tech.length > 0 ||
         filters.experience.min ||
-        filters.experience.max
+        //<-----v1.0.4--------
+        filters.experience.max ||
+        filters.roles.length > 0 ||
+        filters.universities.length > 0 ||
+        filters.relevantExperience.min ||
+        filters.relevantExperience.max ||
+        !!filters.createdDate
+        //-----v1.0.4-------->
     );
     setFilterPopupOpen(false);
   };
@@ -266,6 +349,24 @@ function Candidate({
         (!selectedFilters.experience.max ||
           user.CurrentExperience <= selectedFilters.experience.max);
 
+      
+      //<-----v1.0.4--------
+      const matchesRelevantExperience =
+        (!selectedFilters.relevantExperience?.min ||
+          user.RelevantExperience >= selectedFilters.relevantExperience.min) &&
+        (!selectedFilters.relevantExperience?.max ||
+          user.RelevantExperience <= selectedFilters.relevantExperience.max);
+
+      const matchesRole =
+        selectedFilters.roles.length === 0 ||
+        (user.CurrentRole && selectedFilters.roles.includes(user.CurrentRole));
+
+      const matchesUniversity =
+        selectedFilters.universities.length === 0 ||
+        (user.UniversityCollege &&
+          selectedFilters.universities.includes(user.UniversityCollege));
+
+          //-----v1.0.4-------->
       // v1.0.2 <-----------------------------------------------------------------
       // NEW: normalize and check full name (both orders)
       const normalizedQuery = normalizeSpaces(searchQuery);
@@ -285,9 +386,34 @@ function Candidate({
         fullNameNormal.includes(normalizedQuery) ||
         fullNameReverse.includes(normalizedQuery);
 
+      //<-----v1.0.4--------
+        // Created date filter
+      let matchesCreatedDate = true;
+      if (selectedFilters.createdDate === "last7") {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        matchesCreatedDate = user.createdAt
+          ? new Date(user.createdAt) >= sevenDaysAgo
+          : true;
+      } else if (selectedFilters.createdDate === "last30") {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        matchesCreatedDate = user.createdAt
+          ? new Date(user.createdAt) >= thirtyDaysAgo
+          : true;
+      }
+
       // v1.0.2 ------------------------------------------------------------------>
       return (
-        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
+        matchesSearchQuery &&
+        matchesStatus &&
+        matchesTech &&
+        matchesExperience &&
+        matchesRelevantExperience &&
+        matchesRole &&
+        matchesUniversity &&
+        matchesCreatedDate
+        //-----v1.0.4-------->
       );
     });
   };
@@ -322,6 +448,7 @@ function Candidate({
       key: "name",
       header: "Candidate Name",
       render: (value, row) => (
+        console.log("row ",row,value),
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
             {row?.ImageData ? (
@@ -386,7 +513,7 @@ function Candidate({
     {
       key: "Phone",
       header: "Contact",
-      render: (value) => value || "Not Provided",
+      render: (value,row) => row?.CountryCode+ " " + value || "Not Provided",
     },
     {
       key: "HigherQualification",
@@ -419,6 +546,14 @@ function Candidate({
         </div>
       ),
     },
+    //<-----v1.0.4--------
+    {
+      key:"createdAt",
+      header:"CreatedAt",
+      render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
+
+    },
+    //-----v1.0.4-------->
     // <---------------------- v1.0.2
     // Add status column only for assessment view
     ...(isAssessmentView
@@ -788,7 +923,7 @@ function Candidate({
                           candidate?.CurrentExperience ||
                           "N/A",
                         email: candidate?.Email || "N/A",
-                        phone: candidate?.Phone || "N/A",
+                        phone: candidate?.CountryCode + " " + candidate?.Phone || "N/A",
                         industry: candidate?.HigherQualification || "N/A",
                         linkedinUrl: candidate?.CurrentExperience || "N/A",
                         skills: candidate?.skills || [],
@@ -963,6 +1098,203 @@ function Candidate({
                         </div>
                       )}
                     </div>
+                    {/*<-----v1.0.4-------- */}
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() =>
+                          setIsRelevantExperienceOpen(!isRelevantExperienceOpen)
+                        }
+                      >
+                        <span className="font-medium text-gray-700">
+                          Relevant Experience
+                        </span>
+                        {isRelevantExperienceOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isRelevantExperienceOpen && (
+                        <div className="mt-1 space-y-2 pl-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-1">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Min (years)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="15"
+                                placeholder="Min..."
+                                value={relevantExperience.min}
+                                onChange={(e) =>
+                                  handleRelevantExperienceChange(e, "min")
+                                }
+                                className="mt-1 block w-full px-1 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Max (years)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="15"
+                                placeholder="Max..."
+                                value={relevantExperience.max}
+                                onChange={(e) =>
+                                  handleRelevantExperienceChange(e, "max")
+                                }
+                                className="mt-1 block w-full px-1 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsRoleOpen(!isRoleOpen)}
+                      >
+                        <span className="font-medium text-gray-700">
+                          Current Role
+                        </span>
+                        {isRoleOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isRoleOpen && (
+                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                          {currentRoles?.length > 0 ? (
+                            currentRoles.map((role) => (
+                              <label
+                                key={role.RoleName}
+                                className="flex items-center space-x-2"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedRoles.includes(role.RoleName)}
+                                  onChange={() =>
+                                    handleRoleToggle(role.RoleName)
+                                  }
+                                  className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                />
+                                <span className="text-sm">{role.RoleName}</span>
+                              </label>
+                            ))
+                          ) : (
+                            <span className="text-sm text-gray-500">
+                              No roles available
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsUniversityOpen(!isUniversityOpen)}
+                      >
+                        <span className="font-medium text-gray-700">
+                          University/College
+                        </span>
+                        {isUniversityOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isUniversityOpen && (
+                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                          {colleges?.length > 0 ? (
+                            colleges.map((college) => (
+                              <label
+                                key={college.University_CollegeName}
+                                className="flex items-center space-x-2"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedUniversities.includes(
+                                    college.University_CollegeName
+                                  )}
+                                  onChange={() =>
+                                    handleUniversityToggle(
+                                      college.University_CollegeName
+                                    )
+                                  }
+                                  className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                />
+                                <span className="text-sm">
+                                  {college.University_CollegeName}
+                                </span>
+                              </label>
+                            ))
+                          ) : (
+                            <span className="text-sm text-gray-500">
+                              No colleges available
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
+                      >
+                        <span className="font-medium text-gray-700">
+                          Created Date
+                        </span>
+                        {isCreatedDateOpen ? (
+                          <ChevronUp className="text-xl text-gray-700" />
+                        ) : (
+                          <ChevronDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isCreatedDateOpen && (
+                        <div className="mt-1 space-y-1 pl-3">
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="createdDate"
+                              value=""
+                              checked={createdDatePreset === ""}
+                              onChange={() => setCreatedDatePreset("")}
+                              className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">All</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="createdDate"
+                              value="last7"
+                              checked={createdDatePreset === "last7"}
+                              onChange={() => setCreatedDatePreset("last7")}
+                              className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">Last 7 days</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="createdDate"
+                              value="last30"
+                              checked={createdDatePreset === "last30"}
+                              onChange={() => setCreatedDatePreset("last30")}
+                              className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">Last 30 days</span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                    {/*-----v1.0.4-------->*/}
                   </div>
                 </FilterPopup>
               </div>

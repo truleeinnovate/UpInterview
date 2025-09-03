@@ -1,6 +1,9 @@
 // v1.0.0  -  Ashraf  -  removed dynamic permissons state and added effective directly
 // v1.0.1  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
-// v1.0.2  -  Ashok   -  Improved responsiveness
+// v1.0.2  -  Venkatesh   -  added status change functionality
+// v1.0.3  -  Venkatesh   -  added filters functionality for location, tech, company, experience, salary, created within days, updated within days
+// v1.0.4  -  Ashok   -  Improved responsiveness
+
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -15,16 +18,19 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { usePermissions } from "../../../../Context/PermissionsContext";
-// v1.0.2 <------------------------------------------------------
+// v1.0.4 <------------------------------------------------------
 import { useMediaQuery } from "react-responsive";
 // v1.0.2 ------------------------------------------------------>
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+import { notify } from "../../../../services/toastService";//<----v1.02-----
 
 const PositionTab = () => {
   // <---------------------- v1.0.0
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
-  const { skills } = useMasterData();
-  const { positionData, isLoading } = usePositions();
+  const { locations, skills, companies } = useMasterData();//<-----v1.03-----
+  const { positionData, isLoading, addOrUpdatePosition, isMutationLoading } = usePositions();//<----v1.02-----
+  //console.log("pos",positionData);
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("table");
@@ -39,28 +45,58 @@ const PositionTab = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     location: [],
     tech: [],
+    //<-----v1.03-----
+    company: [],
     experience: { min: "", max: "" },
+    salaryMin: "",
+    createdDate: "",
+    //-----v1.03----->
   });
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
   const [isExperienceOpen, setIsExperienceOpen] = useState(false);
+  //<-----v1.03-----
+  const [isCompanyOpen, setIsCompanyOpen] = useState(false);
+  const [isSalaryOpen, setIsSalaryOpen] = useState(false);
+  const [isDatesOpen, setIsDatesOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState([]);
   const [experience, setExperience] = useState({ min: "", max: "" });
+  const [salaryMin, setSalaryMin] = useState("");
+  const [createdDatePreset, setCreatedDatePreset] = useState("");
+  //-----v1.03----->
   const filterIconRef = useRef(null);
-  // v1.0.2 <--------------------------------------------------------
+  // v1.0.4 <--------------------------------------------------------
   const isTablet = useMediaQuery({ maxWidth: 1024 });
-  // v1.0.2 -------------------------------------------------------->
+  // v1.0.4 -------------------------------------------------------->
+  //<----v1.02-----
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const STATUS_OPTIONS = ["draft", "opened", "closed", "hold", "cancelled"];
 
-  // Memoize unique locations to prevent recalculation on every render
+  // Status change modal state
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusTargetRow, setStatusTargetRow] = useState(null);
+  const [statusValue, setStatusValue] = useState("draft");
+  //----v1.02----->
+
+  // Memoize unique locations from master data
   const uniqueLocations = useMemo(() => {
-    if (!Array.isArray(positionData)) return [];
+    //<-----v1.03-----
+    if (!Array.isArray(locations)) return [];
     return [
-      ...new Set(
-        positionData.map((position) => position.Location).filter(Boolean)
-      ),
+      ...new Set(locations.map((loc) => loc?.LocationName).filter(Boolean)),
     ];
-  }, [positionData]);
+  }, [locations]);
+
+  // Memoize unique company names from master data
+  const uniqueCompanyNames = useMemo(() => {
+    if (!Array.isArray(companies)) return [];
+    return [
+      ...new Set(companies.map((c) => c?.CompanyName).filter(Boolean)),
+    ];
+  }, [companies]);
+  //-----v1.03----->
 
   // Memoize filtered data to prevent recalculation on every render
   const FilteredData = useMemo(() => {
@@ -70,6 +106,7 @@ const PositionTab = () => {
         position.title,
         position.companyname,
         position.Location,
+        position.positionCode
       ].filter((field) => field !== null && field !== undefined);
 
       const matchesLocation =
@@ -85,6 +122,34 @@ const PositionTab = () => {
           position.minexperience >= selectedFilters.experience.min) &&
         (!selectedFilters.experience.max ||
           position.maxexperience <= selectedFilters.experience.max);
+
+      //<-----v1.03-----
+      const matchesCompany =
+        (selectedFilters.company?.length || 0) === 0 ||
+        selectedFilters.company.includes(position.companyname);
+
+      const threshold = Number(selectedFilters.salaryMin) || 0;
+      const minSal = parseFloat(position.minSalary) || 0;
+      const maxSal = parseFloat(position.maxSalary) || 0;
+      const matchesSalary = threshold === 0 || maxSal >= threshold || minSal >= threshold;
+
+      // Created date preset filter
+      let matchesCreatedDate = true;
+      if (selectedFilters.createdDate === "last7") {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        matchesCreatedDate = position.createdAt
+          ? new Date(position.createdAt) >= sevenDaysAgo
+          : true;
+      } else if (selectedFilters.createdDate === "last30") {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        matchesCreatedDate = position.createdAt
+          ? new Date(position.createdAt) >= thirtyDaysAgo
+          : true;
+      }
+
+      //-----v1.03----->
       const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -93,7 +158,10 @@ const PositionTab = () => {
         matchesSearchQuery &&
         matchesLocation &&
         matchesTech &&
-        matchesExperience
+        matchesExperience &&
+        matchesCompany &&
+        matchesSalary &&
+        matchesCreatedDate
       );
     });
   }, [positionData, selectedFilters, searchQuery]);
@@ -127,9 +195,21 @@ const PositionTab = () => {
       setSelectedLocation(selectedFilters.location);
       setSelectedTech(selectedFilters.tech);
       setExperience(selectedFilters.experience);
+      //<-----v1.03-----
+      setSelectedCompany(selectedFilters.company || []);
+      setSalaryMin(
+        selectedFilters.salaryMin !== undefined && selectedFilters.salaryMin !== null
+          ? String(selectedFilters.salaryMin)
+          : ""
+      );
+      setCreatedDatePreset(selectedFilters.createdDate || "");
       setIsLocationOpen(false);
       setIsSkillsOpen(false);
       setIsExperienceOpen(false);
+      setIsCompanyOpen(false);
+      setIsSalaryOpen(false);
+      setIsDatesOpen(false);
+      //-----v1.03----->
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
@@ -152,6 +232,16 @@ const PositionTab = () => {
     );
   };
 
+  //<-----v1.03-----
+  const handleCompanyToggle = (company) => {
+    setSelectedCompany((prev) =>
+      prev.includes(company)
+        ? prev.filter((c) => c !== company)
+        : [...prev, company]
+    );
+  };
+  //-----v1.03----->
+
   const handleExperienceChange = (e, type) => {
     const value = Math.max(0, Math.min(15, Number(e.target.value) || ""));
     setExperience((prev) => ({
@@ -164,11 +254,19 @@ const PositionTab = () => {
     const clearedFilters = {
       location: [],
       tech: [],
+      //<-----v1.03-----
+      company: [],
       experience: { min: "", max: "" },
+      salaryMin: "",
+      createdDate: "",
     };
     setSelectedLocation([]);
     setSelectedTech([]);
+    setSelectedCompany([]);
     setExperience({ min: "", max: "" });
+    setSalaryMin("");
+    setCreatedDatePreset("");
+    //-----v1.03----->
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -183,6 +281,11 @@ const PositionTab = () => {
         min: Number(experience.min) || 0,
         max: Number(experience.max) || 15,
       },
+      //<-----v1.03-----
+      company: selectedCompany,
+      salaryMin: Number(salaryMin) || 0,
+      createdDate: createdDatePreset,
+      //-----v1.03----->
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
@@ -190,7 +293,12 @@ const PositionTab = () => {
       filters.location.length > 0 ||
         filters.tech.length > 0 ||
         filters.experience.min ||
-        filters.experience.max
+        //<-----v1.03-----
+        filters.experience.max ||
+        filters.company.length > 0 ||
+        (filters.salaryMin && filters.salaryMin > 0) ||
+        !!filters.createdDate
+        //-----v1.03----->
     );
     setFilterPopupOpen(false);
   };
@@ -236,6 +344,54 @@ const PositionTab = () => {
       navigate(`/position/edit-position/${position._id}`);
     }
   };
+
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "N/A";
+    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  };
+
+  //<----v1.02-----
+  const handleStatusChange = async (row, newStatus) => {
+    if (!effectivePermissions.Positions?.Edit) return;
+    if (!newStatus || row.status === newStatus) return;
+
+    if (["closed", "cancelled"].includes(newStatus)) {
+      const confirmed = window.confirm(
+        `Are you sure you want to mark this position as ${capitalizeFirstLetter(newStatus)}?`
+      );
+      if (!confirmed) return;
+    }
+
+    try {
+      setUpdatingStatusId(row._id);
+      await addOrUpdatePosition({ id: row._id, data: { status: newStatus } });
+      notify.success(`Status updated to ${capitalizeFirstLetter(newStatus)}`);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Failed to update status";
+      notify.error(msg);
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  // Open/close modal and confirm update
+  const openStatusModal = (row) => {
+    setStatusTargetRow(row);
+    setStatusValue(row?.status || "draft");
+    setIsStatusModalOpen(true);
+  };
+
+  const closeStatusModal = () => {
+    setIsStatusModalOpen(false);
+    setStatusTargetRow(null);
+  };
+
+  const confirmStatusUpdate = async () => {
+    if (!statusTargetRow) return;
+    await handleStatusChange(statusTargetRow, statusValue);
+    closeStatusModal();
+  };
+  //----v1.02----->
 
   const tableColumns = [
     {
@@ -309,7 +465,20 @@ const PositionTab = () => {
         </div>
       ),
     },
-  ];
+      {
+        key: "status",
+        header: "Status",
+        render: (value, row) => (
+          <StatusBadge status={capitalizeFirstLetter(value)} />
+        ),
+      },
+      {
+        key:"createdAt",
+        header:"CreatedAt",
+        render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
+
+      }
+    ];
 
   const tableActions = [
     ...(effectivePermissions.Positions?.View
@@ -324,6 +493,14 @@ const PositionTab = () => {
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
+        //<----v1.02-----
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+        //----v1.02----->
           {
             key: "edit",
             label: "Edit",
@@ -412,6 +589,47 @@ const PositionTab = () => {
                 filterIconRef={filterIconRef}
               >
                 <div className="space-y-3">
+                  {/*<-----v1.03-----*/}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsCompanyOpen(!isCompanyOpen)}
+                    >
+                      <span className="font-medium text-gray-700">
+                        Company
+                      </span>
+                      {isCompanyOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isCompanyOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {uniqueCompanyNames.length > 0 ? (
+                          uniqueCompanyNames.map((company) => (
+                            <label
+                              key={company}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedCompany.includes(company)}
+                                onChange={() => handleCompanyToggle(company)}
+                                className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">{company}</span>
+                            </label>
+                          ))
+                        ) : (
+                          <span className="text-sm text-gray-500">
+                            No Companies Available
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {/*-----v1.03----->*/}
+                  </div>
                   <div>
                     <div
                       className="flex justify-between items-center cursor-pointer"
@@ -543,6 +761,95 @@ const PositionTab = () => {
                       </div>
                     )}
                   </div>
+                  {/*<-----v1.03-----*/}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsSalaryOpen(!isSalaryOpen)}
+                    >
+                      <span className="font-medium text-gray-700">
+                        Salary (Min LPA)
+                      </span>
+                      {isSalaryOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isSalaryOpen && (
+                      <div className="mt-1 space-y-2 pl-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Minimum Salary (LPA)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              placeholder="e.g., 10"
+                              value={salaryMin}
+                              onChange={(e) => setSalaryMin(e.target.value)}
+                              className="mt-1 px-2 block w-full rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsDatesOpen(!isDatesOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Created Date</span>
+                      {isDatesOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isDatesOpen && (
+                      <div className="mt-1 space-y-2 pl-3">
+                        <div className="space-y-1">
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="createdDate"
+                              value=""
+                              checked={createdDatePreset === ""}
+                              onChange={() => setCreatedDatePreset("")}
+                              className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">All</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="createdDate"
+                              value="last7"
+                              checked={createdDatePreset === "last7"}
+                              onChange={() => setCreatedDatePreset("last7")}
+                              className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">Last 7 days</span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="createdDate"
+                              value="last30"
+                              checked={createdDatePreset === "last30"}
+                              onChange={() => setCreatedDatePreset("last30")}
+                              className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">Last 30 days</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                    {/*-----v1.03----->*/}
+                  </div>
                 </div>
               </FilterPopup>
             </div>
@@ -555,6 +862,47 @@ const PositionTab = () => {
           onClose={() => setSelectPositionView(false)}
         />
       )}
+
+      {/*<----v1.02-----*/}
+      {isStatusModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-4">
+            <h3 className="text-sm font-semibold mb-2">Change Status</h3>
+            <div className="mb-4">
+              <label className="block text-xs text-gray-600 mb-1">Select Status</label>
+              <select
+                value={statusValue}
+                onChange={(e) => setStatusValue(e.target.value)}
+                className="w-full text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-custom-blue"
+              >
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {capitalizeFirstLetter(s)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeStatusModal}
+                className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmStatusUpdate}
+                disabled={isMutationLoading || (statusTargetRow && updatingStatusId === statusTargetRow._id)}
+                className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/*----v1.02---->*/}
     </div>
   );
 };

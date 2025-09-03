@@ -16,6 +16,7 @@ import { uploadFile } from "../../../apiHooks/imageApis.js";
 import Loading from "../../../Components/Loading.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode.js";
+import { notify } from "../../../services/toastService.js";
 
 const FooterButtons = ({
   onNext,
@@ -485,10 +486,10 @@ const MultiStepForm = () => {
             // comment ed by Ranjith expertiseLevel_ConductingInterviews
           // expertiseLevel_ConductingInterviews:
             // interviewDetailsData.expertiseLevel_ConductingInterviews,
-          hourlyRate: interviewDetailsData.hourlyRate,
+          hourlyRate: Number(interviewDetailsData.hourlyRate),
           interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
           expectedRatePerMockInterview:
-            interviewDetailsData.expectedRatePerMockInterview,
+            Number(interviewDetailsData.expectedRatePerMockInterview),
           noShowPolicy: interviewDetailsData.noShowPolicy,
           bio: interviewDetailsData.bio,
           professionalTitle: interviewDetailsData.professionalTitle,
@@ -566,6 +567,12 @@ const MultiStepForm = () => {
           },
         }
       );
+      console.log("response", response);
+      if( currentStep === 3 ){
+        if(response.data.success === true){
+          notify.success("Individual Signup Successfully");
+        }
+      }
 
       if (response.data.token) {
         await clearAllAuth();

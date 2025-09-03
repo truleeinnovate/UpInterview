@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../CommonCode-AllTabs/ui/button.jsx";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import Loading from "../../../../../Components/Loading.js";
-import { ChevronDown, X, User, Users, Trash2, ChevronUp } from "lucide-react";
+import { ChevronDown, X, User, Users, Trash2, ChevronUp, Info } from "lucide-react";
 import Cookies from "js-cookie";
 import InternalInterviews from "../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
@@ -18,6 +18,8 @@ import { config } from "../../../../../config.js";
 import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 // v1.0.0 <------------------------------------------------------------------------
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+import { notify } from "../../../../../services/toastService.js";
+import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 // v1.0.0 ------------------------------------------------------------------------>
 
 function RoundFormPosition() {
@@ -81,6 +83,7 @@ function RoundFormPosition() {
     useState(false);
   const [filteredAssessments, setFilteredAssessments] = useState([]);
   const [hasFiltered, setHasFiltered] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const clearError = (fieldName) => {
     setErrors((prev) => ({
@@ -639,11 +642,11 @@ function RoundFormPosition() {
     //   return; // Stop submission if there are errors
     // }
 
-    // const { isValid, newErrors } = validateForm();
-    // if (!isValid) {
-    //   scrollToFirstError(newErrors, fieldRefs); // ✅ Scroll to first error
-    //   return;
-    // }
+    const { isValid, newErrors } = validateForm();
+    if (!isValid) {
+      scrollToFirstError(newErrors, fieldRefs); // ✅ Scroll to first error
+      return;
+    }
 
     // v1.0.0 --------------------------------------------------------------------------------->
     // console.log('errors after validation', errors);
@@ -673,8 +676,8 @@ function RoundFormPosition() {
       interviewMode: formData.interviewMode,
       duration: formData.duration,
       // interviewType: formData.interviewType,
-      interviewerType:
-        formData.roundTitle === "Assessment" ? "" : formData.interviewerType,
+      // interviewerType:
+        // formData.roundTitle === "Assessment" ? "" : formData.interviewerType.toLowerCase(),
       sequence: formData.sequence,
       // Only include interviewers for non-assessment rounds
       ...(formData.roundTitle !== "Assessment" && {
@@ -706,6 +709,7 @@ function RoundFormPosition() {
           //   }
           // })) || []
           {
+            assessmentId: null,
             questions: formData.interviewQuestionsList || [],
           }),
       instructions: formData.instructions,
@@ -728,7 +732,14 @@ function RoundFormPosition() {
         : { positionId, round: roundData };
 
       console.log("roundData after roundData", payload);
-      await addRounds(payload);
+      const response  = await addRounds(payload);
+
+         console.log("response", response);
+            if (response.status === "Created Round successfully") {
+              notify.success("Round added successfully");
+            } else if (response.status === "no_changes" || response.status === "Updated Round successfully") {
+              notify.success("Round Updated successfully");
+            }
 
       navigate(`/position/view-details/${positionId}`);
     } catch (err) {
@@ -830,6 +841,25 @@ function RoundFormPosition() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
         <div className="px-4 sm:px-0">
           <Breadcrumb items={breadcrumbItems} />
+
+ {/* newly added guide for postion round by Ranjith */}
+    
+          <InfoGuide
+  title="Support Ticket Guidelines"
+  items={[
+    <><span className="font-medium">Round Types:</span> Choose from predefined round types (Assessment, Technical, Final, HR Interview) or create custom rounds</>,
+    <><span className="font-medium">Assessment Rounds:</span> Select assessment templates with pre-configured questions and scoring</>,
+    <><span className="font-medium">Interview Rounds:</span> Build custom interview rounds with specific questions and evaluation criteria</>,
+    <><span className="font-medium">Interviewer Selection:</span> Choose between internal team members or outsourced interviewers</>,
+    <><span className="font-medium">Question Management:</span> Add questions from your question bank or create new ones on the fly</>,
+    <><span className="font-medium">Custom Instructions:</span> Provide detailed instructions for each round (minimum 50 characters)</>,
+    <><span className="font-medium">Sequence Control:</span> Set the order of rounds in your interview process</>,
+    <><span className="font-medium">Duration Settings:</span> Define time allocation for each interview round (30-120 minutes)</>,
+    <><span className="font-medium">Flexible Configuration:</span> Mix and match different round types to create your ideal interview process</>,
+    <><span className="font-medium">Real-time Validation:</span> Form validation ensures all required fields are completed before submission</>
+  ]}
+/>
+         
 
           <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6">
