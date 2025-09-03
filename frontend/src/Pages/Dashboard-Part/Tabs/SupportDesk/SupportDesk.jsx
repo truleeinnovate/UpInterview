@@ -272,7 +272,7 @@ function SupportDesk() {
       : []),
     {
       key: "createdAt",
-      header: "Created On",
+      header: "Created At",
       render: (value) => formatDate(value),
     },
     ...(impersonatedUser_roleName === "Super_Admin" ||

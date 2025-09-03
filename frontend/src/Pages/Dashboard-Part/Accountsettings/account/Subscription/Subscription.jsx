@@ -2,17 +2,14 @@
 // v1.0.1 - Ashok - fixed z-index issue when popup is open
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 // v1.0.1 <---------------------------------------------
 import { createPortal } from "react-dom";
 // v1.0.1 --------------------------------------------->
 import toast from "react-hot-toast";
-import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import Cookies from "js-cookie";
 import "./subscription-animations.css";
-import { usePositions } from "../../../../../apiHooks/usePositions";
+import { useSubscription } from "../../../../../apiHooks/useSubscription";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 
@@ -96,24 +93,26 @@ const Subscription = () => {
   const { effectivePermissions } = usePermissions();
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
-  const { isMutationLoading } = usePositions();
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
-  const userId = tokenPayload?.userId;
-  const organization = tokenPayload?.organization;
-  const orgId = tokenPayload?.tenantId;
+  const {
+    subscriptionData,
+    plans,
+    isSubscriptionLoading,
+    isPlansLoading,
+    isMutationLoading,
+    updateSubscriptionPlan,
+    cancelSubscription,
+    ownerId,
+    tenantId,
+    organization,
+    userType,
+  } = useSubscription();
   const [isAnnual, setIsAnnual] = useState(false);
-  const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
-  const [user] = useState({
-    userType: organization === true ? "organization" : "individual",
-    tenantId: orgId,
-    ownerId: userId,
-  });
+  const user = { userType, tenantId, ownerId };
   const navigate = useNavigate();
   const toggleBilling = () => setIsAnnual(!isAnnual);
-  const [subscriptionData, setSubscriptionData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const loading = isSubscriptionLoading || isPlansLoading;
+  const isBusy = isMutationLoading;
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
@@ -121,215 +120,33 @@ const Subscription = () => {
   const [selectedPlanForDowngrade, setSelectedPlanForDowngrade] = useState(null);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
 
-  // Fetch subscription data
+  // Sync billing toggle with subscription data
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!userId) {
-          throw new Error("User ID not found");
-        }
-        const Sub_res = await axios.get(
-          `${process.env.REACT_APP_API_URL}/subscriptions/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
-        const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
-        console.log("Subscription data:", Subscription_data);
-
-        if (Subscription_data.subscriptionPlanId) {
-          if (!Subscription_data.paymentMethod) {
-            Subscription_data.paymentMethod = "card";
-          }
-
-          setSubscriptionData(Subscription_data);
-
-          if (Subscription_data.selectedBillingCycle === "annual") {
-            setIsAnnual(true);
-          } else if (Subscription_data.selectedBillingCycle === "monthly") {
-            setIsAnnual(false);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userId) {
-      fetchData();
+    if (subscriptionData?.selectedBillingCycle === "annual") {
+      setIsAnnual(true);
+    } else if (subscriptionData?.selectedBillingCycle === "monthly") {
+      setIsAnnual(false);
     }
-  }, [userId, authToken]);
+  }, [subscriptionData?.selectedBillingCycle]);
 
-  // Fetch subscription plans
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        const response = await axios.get(
-          `${
-            process.env.REACT_APP_API_URL
-          }/all-subscription-plans?t=${new Date().getTime()}`,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
-        const data = response.data;
-
-        const filteredPlans = data.filter(
-          (plan) => plan.subscriptionType === user.userType
-        );
-
-        const formattedPlans = filteredPlans.map((plan) => {
-          const monthlyPricing = plan.pricing.find(
-            (p) => p.billingCycle === "monthly"
-          );
-          const annualPricing = plan.pricing.find(
-            (p) => p.billingCycle === "annual"
-          );
-
-          const calculateDiscountPercentage = (price, discount) =>
-            price && discount ? Math.round((discount / price) * 100) : 0;
-
-          return {
-            name: plan.name,
-            planId: plan._id,
-            monthlyPrice: monthlyPricing?.price || 0,
-            annualPrice: annualPricing?.price || 0,
-            isDefault: plan.name === "Pro",
-            razorpayPlanIds: plan.razorpayPlanIds || {},
-            features: plan.features.map(
-              (feature) => `${feature.name} (${feature.description})`
-            ),
-            monthlyBadge:
-              monthlyPricing?.discountType === "percentage" &&
-              monthlyPricing?.discount > 0
-                ? `Save ${calculateDiscountPercentage(
-                    monthlyPricing.price,
-                    monthlyPricing.discount
-                  )}%`
-                : null,
-            annualBadge:
-              annualPricing?.discountType === "percentage" &&
-              annualPricing?.discount > 0
-                ? `Save ${calculateDiscountPercentage(
-                    annualPricing.price,
-                    annualPricing.discount
-                  )}%`
-                : null,
-            monthlyDiscount:
-              monthlyPricing?.discountType === "percentage" &&
-              monthlyPricing?.discount > 0
-                ? parseInt(monthlyPricing.discount)
-                : null,
-            annualDiscount:
-              annualPricing?.discountType === "percentage" &&
-              annualPricing?.discount > 0
-                ? parseInt(annualPricing?.discount)
-                : null,
-          };
-        });
-        setPlans(formattedPlans);
-      } catch (error) {
-        console.error("Error fetching subscription plans:", error);
-      }
-    };
-
-    fetchPlans();
-  }, [user.userType, location.pathname, authToken]);
+  // Plans are provided by useSubscription hook
 
   const handleCancelSubscription = async () => {
     try {
-      setLoading(true);
       setShowCancelModal(false);
-      toast.loading("Processing your cancellation request...", {
-        id: "cancel-toast",
-      });
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/cancel-subscription`,
-        {
-          subscriptionId: subscriptionData._id,
-          razorpaySubscriptionId: subscriptionData.razorpaySubscriptionId,
-          tenantId: user.tenantId,
-          ownerId: user.ownerId,
-          reason: "user_requested",
-        },
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
-
-      toast.dismiss("cancel-toast");
-
-      if (response.status === 200) {
-        toast.success("Your subscription has been cancelled successfully!");
-        toast.loading("Refreshing subscription data...", {
-          id: "refresh-toast",
-        });
-        setTimeout(() => {
-          toast.dismiss("refresh-toast");
-          window.location.reload();
-        }, 4000);
-        // send email for subscription cancelled
-        // axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/cancelled`, {
-        //   ownerId: user.ownerId,
-        //   tenantId: user.tenantId,
-        // });
-      }
+      await cancelSubscription({ reason: "user_requested" });
     } catch (error) {
       console.error("Error cancelling subscription:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to cancel subscription"
-      );
-    } finally {
-      setLoading(false);
+      toast.error(error?.response?.data?.message || "Failed to cancel subscription");
     }
   };
 
-  const updateSubscriptionPlan = async (plan) => {
+  const handleUpdateSubscriptionPlan = async (plan) => {
     try {
-      setLoading(true);
-      toast.loading("Updating your subscription plan...", {
-        id: "update-toast",
-      });
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/subscription-update/update-subscription-plan`,
-        {
-          subscriptionId: subscriptionData._id,
-          razorpaySubscriptionId: subscriptionData.razorpaySubscriptionId,
-          newPlanId: plan.planId,
-          newBillingCycle: isAnnual ? "annual" : "monthly",
-          tenantId: user.tenantId,
-          ownerId: user.ownerId,
-        },
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
-
-      toast.dismiss("update-toast");
-
-      if (response.status === 200) {
-        toast.success("Your subscription plan has been updated successfully!");
-        toast.loading("Refreshing subscription data...", {
-          id: "refresh-toast",
-        });
-        setTimeout(() => {
-          toast.dismiss("refresh-toast");
-          window.location.reload();
-        }, 4000);
-      }
+      await updateSubscriptionPlan({ planId: plan.planId, billingCycle: isAnnual ? "annual" : "monthly" });
     } catch (error) {
       console.error("Error updating subscription plan:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to update subscription plan"
-      );
-    } finally {
-      setLoading(false);
+      toast.error(error?.response?.data?.message || "Failed to update subscription plan");
     }
   };
 
@@ -714,14 +531,6 @@ const Subscription = () => {
                             (p) => p.planId === plan.planId
                           );
 
-                          // Only compare plans when viewing the same billing cycle as the current subscription
-                          // if (
-                          //   subscriptionData.selectedBillingCycle !==
-                          //   (isAnnual ? "annual" : "monthly")
-                          // ) {
-                          //   return "Choose";
-                          // }
-
                           // If current plan index exists and this plan index exists
                           if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
                             return thisPlanIndex > currentPlanIndex
@@ -740,36 +549,7 @@ const Subscription = () => {
         )}
       </div>
       {/* Cancel Subscription Modal */}
-      {/* v1.0.1 <---------------------------------------------------------------------- */}
-      {/* {showCancelModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-xl font-semibold mb-4 text-custom-blue">Cancel Subscription</h2>
-            <p className="mb-4 text-sm sm:text-base text-gray-600">
-              Are you sure you want to cancel your <span className="font-medium">{subscriptionData?.planName || 'current'} with {subscriptionData?.membershipType || 'monthly'} </span> subscription?
-            </p>
-            <p className="mb-6 text-sm sm:text-base text-gray-600">
-              Your subscription will be cancelled immediately and you will lose access to premium features.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowCancelModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
-                disabled={loading}
-              >
-                Keep Subscription
-              </button>
-              <button
-                onClick={handleCancelSubscription}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-150"
-                disabled={loading}
-              >
-                {loading ? 'Processing...' : 'Cancel Subscription'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
+      
       {showCancelModal &&
         createPortal(
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
@@ -835,7 +615,7 @@ const Subscription = () => {
               <button
                 onClick={() => {
                   setShowUpgradeConfirmModal(false);
-                  updateSubscriptionPlan(selectedPlanForUpgrade);
+                  handleUpdateSubscriptionPlan(selectedPlanForUpgrade);
                 }}
                 className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
               >
@@ -871,7 +651,7 @@ const Subscription = () => {
               <button
                 onClick={() => {
                   setShowDowngradeConfirmModal(false);
-                  updateSubscriptionPlan(selectedPlanForDowngrade);
+                  handleUpdateSubscriptionPlan(selectedPlanForDowngrade);
                 }}
                 className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
               >

@@ -6,36 +6,26 @@ import toast from "react-hot-toast";
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js';
 import Cookies from "js-cookie";
 import LoadingButton from "../../../Components/LoadingButton.jsx";
-import { usePositions } from '../../../apiHooks/usePositions.js';
+import { useSubscription } from '../../../apiHooks/useSubscription.js';
 
 const SubscriptionPlan = () => {
-  const [authToken, setAuthToken] = useState(Cookies.get("authToken") || null);
+  const authToken = Cookies.get("authToken") || null;
   const [tokenPayload, setTokenPayload] = useState({});
-  const [subscriptionData, setSubscriptionData] = useState([]);
+  // subscription data will come from useSubscription()
 
   const navigate = useNavigate();
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
-  const { isMutationLoading } = usePositions();
+  const { plans, subscriptionData, createCustomerSubscription } = useSubscription();
 
   const [isAnnual, setIsAnnual] = useState(false);
-  const [plans, setPlans] = useState([]);
   const [hoveredPlan, setHoveredPlan] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Immediately log when the component mounts
+  // 1. Log lifecycle/auth token changes
   useEffect(() => {
-    console.log("🚀 SubscriptionPlan mounted");
-    console.log("Initial authToken ----", authToken);
-  }, []);
-
-  // 2. Log whenever authToken changes
-  useEffect(() => {
-    if (!authToken) {
-      console.warn("⚠️ No authToken in cookies yet");
-    } else {
-      console.log("✅ Current authToken ----", authToken);
-      console.log("🔎 Decoded Token ----", decodeJwt(authToken));
-    }
+    console.log("🚀 SubscriptionPlan mounted / auth change");
+    console.log("Current authToken ----", authToken);
   }, [authToken]);
 
   // 2. Whenever authToken changes, decode and save payload
@@ -45,7 +35,6 @@ const SubscriptionPlan = () => {
       setTokenPayload({});
     } else {
       const decoded = decodeJwt(authToken);
-      console.log("✅ Current authToken ----", authToken);
       console.log("🔎 Decoded Token ----", decoded);
       setTokenPayload(decoded || {});
     }
@@ -68,111 +57,6 @@ const SubscriptionPlan = () => {
   });
 
   const toggleBilling = () => setIsAnnual(!isAnnual);
-
-  // fetch subscription data
-  useEffect(() => {
-    // if (!authToken) return;  // wait
-    // const decoded = decodeJwt(authToken);
-    // if (!decoded?.userId) return; // still not ready
-
-    const fetchData = async () => {
-      try {
-        const Sub_res = await axios.get(
-          `${config.REACT_APP_API_URL}/subscriptions/${ownerId}`,
-          { headers: { Authorization: `Bearer ${authToken}` } }
-        );
-        const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
-        if (Subscription_data.subscriptionPlanId) {
-          setSubscriptionData(Subscription_data);
-        }
-      } catch (error) {
-        console.error("❌ Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, [authToken, ownerId]);
-
-  // Fetch subscription plans
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/all-subscription-plans?t=${new Date().getTime()}`,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`, // Include token in request headers
-            },
-          }
-        );
-        const data = response.data;
-        console.log("data ----", data);
-
-        const filteredPlans = data.filter(
-          (plan) => plan.subscriptionType === user.userType
-        );
-        console.log("user.userType ----", user.userType);
-        console.log("filteredPlans ----", filteredPlans);
-
-        const formattedPlans = filteredPlans.map((plan) => {
-          const monthlyPricing = plan.pricing.find(
-            (p) => p.billingCycle === "monthly"
-          );
-          const annualPricing = plan.pricing.find(
-            (p) => p.billingCycle === "annual"
-          );
-
-          const calculateDiscountPercentage = (price, discount) =>
-            price && discount ? Math.round((discount / price) * 100) : 0;
-
-          return {
-            name: plan.name,
-            planId: plan._id,
-            monthlyPrice: monthlyPricing?.price || 0,
-            annualPrice: annualPricing?.price || 0,
-            isDefault: plan.name === "Pro",
-            // Add Razorpay plan IDs if available
-            razorpayPlanIds: plan.razorpayPlanIds || {},
-            features: plan.features.map(
-              (feature) => `${feature.name} (${feature.description})`
-            ),
-            monthlyBadge:
-              monthlyPricing?.discountType === "percentage" &&
-                monthlyPricing?.discount > 0
-                ? `Save ${calculateDiscountPercentage(
-                  monthlyPricing.price,
-                  monthlyPricing.discount
-                )}%`
-                : null,
-            annualBadge:
-              annualPricing?.discountType === "percentage" &&
-                annualPricing?.discount > 0
-                ? `Save ${calculateDiscountPercentage(
-                  annualPricing.price,
-                  annualPricing.discount
-                )}%`
-                : null,
-            monthlyDiscount:
-              monthlyPricing?.discountType === "percentage" &&
-                monthlyPricing?.discount > 0
-                ? parseInt(monthlyPricing.discount)
-                : null,
-            annualDiscount:
-              annualPricing?.discountType === "percentage" &&
-                annualPricing?.discount > 0
-                ? parseInt(annualPricing?.discount)
-                : null,
-          };
-        });
-        setPlans(formattedPlans);
-      } catch (error) {
-        console.error("Error fetching subscription plans:", error);
-      }
-    };
-
-    fetchPlans();
-  }, [user.userType, location.pathname, authToken]);
-
 
   const submitPlans = async (plan) => {
 
@@ -201,14 +85,12 @@ const SubscriptionPlan = () => {
     };
     console.log("payload ----", payload);
     try {
-      const subscriptionResponse = await axios.post(
-        `${config.REACT_APP_API_URL}/create-customer-subscription`,
-        payload
-      );
+      setIsSubmitting(true);
+      const subscriptionResponse = await createCustomerSubscription(payload);
 
       console.log(
         "Payment and Subscription submitted successfully",
-        subscriptionResponse.data
+        subscriptionResponse
       );
       console.log(organization, plan.name, "organization");
       if ((organization === "false" || !organization) && plan.name === "Base") {
@@ -218,8 +100,8 @@ const SubscriptionPlan = () => {
         });
 
         axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-          tenantId: tenantId,
-          ownerId: ownerId,
+              tenantId: tenantId,
+              ownerId: ownerId,
         }).catch((err) => console.error('Email error:', err));
 
         // If upgrading, navigate to a specific page; otherwise, go to home
@@ -231,16 +113,18 @@ const SubscriptionPlan = () => {
               ...plan,
               billingCycle: isAnnual ? "annual" : "monthly",
               user,
-              invoiceId: subscriptionResponse?.data?.invoiceId,
+              razorpayPlanIds: subscriptionResponse?.razorpayPlanId,
+              invoiceId: subscriptionResponse?.invoiceId,
             },
             isUpgrading, // Pass the upgrading flag to next page if needed
           },
         });
       }
 
-
     } catch (error) {
       console.error("Error submitting subscription:", error);
+    } finally {
+      setIsSubmitting(false);
     }
 
   };
@@ -333,14 +217,14 @@ const SubscriptionPlan = () => {
               </p>
               <LoadingButton
                 onClick={() => submitPlans(plan)}
-                isLoading={isMutationLoading}
+                isLoading={isSubmitting}
                 loadingText="Processing..."
                 className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
                 ${isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"}
                 ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
               >
-                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
+                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" && subscriptionData.selectedBillingCycle === isAnnual ? "annual" : "monthly"
                   ? "Subscribed"
                   : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
                     ? "Continue to Payment"

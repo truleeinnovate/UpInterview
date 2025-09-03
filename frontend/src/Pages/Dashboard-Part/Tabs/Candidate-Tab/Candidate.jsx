@@ -549,7 +549,7 @@ function Candidate({
     //<-----v1.0.4--------
     {
       key:"createdAt",
-      header:"CreatedAt",
+      header:"Created At",
       render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
 
     },
