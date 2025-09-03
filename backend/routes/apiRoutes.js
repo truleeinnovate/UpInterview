@@ -17,7 +17,7 @@ const Assessment = require("../models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.6 >
 const { Position } = require('../models/Position/position.js');
 const InterviewTemplate = require("../models/InterviewTemplate");
-const { Interview } = require('../models/Interview');
+const { Interview } = require('../models/Interview/Interview.js');
 // v1.0.5 <-----------------------------
 const { MockInterview } = require('../models/MockInterview');
 // v1.0.5-------------------------------->

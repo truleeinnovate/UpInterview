@@ -28,6 +28,7 @@ import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
+import { notify } from "../../../../../../services/toastService";
 // v1.0.1 --------------------------------------------------------------------------------->
 
 const EditInterviewDetails = ({
@@ -265,7 +266,7 @@ const EditInterviewDetails = ({
     setTechpopup(false);
     setErrors((prevErrors) => ({
       ...prevErrors,
-      Technology: "",
+      technologies: "",
     }));
   };
 
@@ -323,7 +324,7 @@ const EditInterviewDetails = ({
     const validationErrors = validateInterviewForm(formData, isReady);
     setErrors(validationErrors);
 
-    console.log("validationErrors", validationErrors);
+    // console.log("validationErrors", validationErrors);
 
     if (!isEmptyObject(validationErrors)) {
       return; // Prevent submission if there are errors
@@ -379,6 +380,11 @@ const EditInterviewDetails = ({
       console.log("response cleanFormData", response);
 
       if (response.status === 200) {
+        notify.success("Updated Interview Details Successfully");
+      }
+
+
+      if (response.status === 200) {
         // setUserData((prev) => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
         handleCloseModal();
@@ -386,16 +392,25 @@ const EditInterviewDetails = ({
         if (usersId) onSuccess();
       }
     } catch (error) {
-      console.error("Error updating interview details:", error);
+      if (error.response && error.response.status === 400) {
+        const backendErrors = error.response.data.errors || {};
+        console.log("backendErrors", backendErrors);
+        setErrors(backendErrors);
+        // scrollToFirstError(backendErrors, fieldRefs);
+      } else {
+        console.error("Error saving changes:", error);
+        setErrors(prev => ({ ...prev, form: "Error saving changes" }));
+      }
+      // console.error("Error updating interview details:", error);
     }
   };
 
   const filteredSkills = Array.isArray(skills)
     ? skills.filter((skill) =>
-        skill?.SkillName?.toLowerCase()?.includes(
-          searchTermSkills.toLowerCase() || ""
-        )
+      skill?.SkillName?.toLowerCase()?.includes(
+        searchTermSkills.toLowerCase() || ""
       )
+    )
     : [];
 
   const handleRemoveSkill = (index) => {
@@ -506,7 +521,7 @@ const EditInterviewDetails = ({
       onRequestClose={handleCloseModal}
       className={modalClass}
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-      // shouldCloseOnOverlayClick={false}
+    // shouldCloseOnOverlayClick={false}
     >
       <div
         className={classNames("h-full flex flex-col", {
@@ -609,9 +624,9 @@ const EditInterviewDetails = ({
                         )}
                       </div>
                     )}
-                    {errors.Technology && (
+                    {errors.technologies && (
                       <p className="text-red-500 text-sm sm:text-xs mt-2">
-                        {errors.Technology}
+                        {errors.technologies}
                       </p>
                     )}
                   </div>
@@ -800,11 +815,10 @@ const EditInterviewDetails = ({
                     max="15"
                     value={formData.PreviousExperienceConductingInterviewsYears}
                     onChange={handleChangeExperienceYears}
-                    className={`block border rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 w-2/5 sm:w-1/2 focus:outline-none ${
-                      errors.InterviewPreviousExperienceYears
+                    className={`block border rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 w-2/5 sm:w-1/2 focus:outline-none ${errors.InterviewPreviousExperienceYears
                         ? "border-red-500"
                         : "border-gray-400"
-                    }`}
+                      }`}
                   />
                   {errors.PreviousExperienceConductingInterviewsYears && (
                     <p className="text-red-500 text-sm sm:text-xs mt-2">
@@ -878,9 +892,8 @@ const EditInterviewDetails = ({
                       placeholder="75"
                       value={formData.hourlyRate || ""}
                       onChange={handleHourlyRateChange}
-                      className={`block border rounded-md bg-white pl-7 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 w-full focus:outline-none ${
-                        errors.hourlyRate ? "border-red-500" : "border-gray-400"
-                      } `}
+                      className={`block border rounded-md bg-white pl-7 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 w-full focus:outline-none ${errors.hourlyRate ? "border-red-500" : "border-gray-400"
+                        } `}
                     />
                   </div>
 
@@ -993,11 +1006,10 @@ const EditInterviewDetails = ({
                       max="500"
                       value={formData?.expectedRatePerMockInterview}
                       onChange={handleChangeforExp}
-                      className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                        errors.expectedRatePerMockInterview
+                      className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.expectedRatePerMockInterview
                           ? "border-red-500"
                           : "border-gray-300"
-                      }`}
+                        }`}
                       placeholder="75"
                     />
                   </div>
@@ -1097,12 +1109,11 @@ const EditInterviewDetails = ({
                   )}
                   {formData.professionalTitle?.length > 0 && (
                     <p
-                      className={`text-xs ${
-                        formData.professionalTitle.length < 50 ||
-                        errors.professionalTitle
+                      className={`text-xs ${formData.professionalTitle.length < 50 ||
+                          errors.professionalTitle
                           ? "text-red-500"
                           : "text-gray-500"
-                      }`}
+                        }`}
                     >
                       {formData.professionalTitle.length}/100
                     </p>
@@ -1153,13 +1164,12 @@ const EditInterviewDetails = ({
                   ></textarea>
                   {bioLength > 0 && (
                     <p
-                      className={`absolute -bottom-6 right-0 text-xs ${
-                        bioLength < 150 || errors.bio
+                      className={`absolute -bottom-6 right-0 text-xs ${bioLength < 150 || errors.bio
                           ? "text-red-500"
                           : bioLength > 450
-                          ? "text-yellow-500"
-                          : "text-gray-500"
-                      }`}
+                            ? "text-yellow-500"
+                            : "text-gray-500"
+                        }`}
                     >
                       {bioLength}/500
                     </p>

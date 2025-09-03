@@ -11,6 +11,7 @@ import { handleMembershipChange } from "../../../utils/PaymentpageValidations.js
 //import { useCustomContext } from "../../../Context/Contextfetch";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../apiHooks/useUsers.js";
+import { useSubscription } from "../../../apiHooks/useSubscription";
 import Loading from '../../../Components/Loading.js';
 // import logo from "../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 
@@ -61,6 +62,7 @@ const CardDetails = () => {
 
 
     const navigate = useNavigate();
+    const { subscriptionData, createSubscription, verifySubscriptionPayment } = useSubscription();
 
     const [totalPaid, setTotalPaid] = useState(0);
 
@@ -72,7 +74,7 @@ const CardDetails = () => {
     });
 
 
-    const { userProfile, isLoading, isError } = useUserProfile(ownerId)
+    const { userProfile} = useUserProfile(ownerId)
     const [userProfileData, setUserProfile] = useState([])
 
     // Fetch user profile data from contacts API
@@ -222,29 +224,24 @@ const CardDetails = () => {
 
             console.log('Sending order to backend:', {
                 amount: amountToCharge,
-                currency: 'USD',
+                currency: 'INR',
                 membershipType: cardDetails.membershipType,
                 planId: orderData.planId,
                 autoRenew: true
             });
 
-            // Always use the subscription endpoint
-            const endpoint = `${process.env.REACT_APP_API_URL}/payment/create-subscription`;
+            // Create Razorpay subscription/order via hook mutation
+            const orderResponse = await createSubscription(orderData);
 
-            console.log('Using subscription payment endpoint:', endpoint);
-
-            // Send request to create order or subscription
-            const orderResponse = await axios.post(endpoint, orderData);
-
-            console.log('Order response:', orderResponse.data);
+            console.log('Order response:', orderResponse);
 
             // Check if this is a subscription or one-time payment
-            if (orderResponse.data.isSubscription) {
-                console.log('Processing subscription response:', orderResponse.data);
+            if (orderResponse.isSubscription) {
+                console.log('Processing subscription response:', orderResponse);
 
                 // Save subscription info for confirmation later
                 localStorage.setItem('pendingSubscription', JSON.stringify({
-                    subscriptionId: orderResponse.data.subscriptionId,
+                    subscriptionId: orderResponse.subscriptionId,
                     planId: planDetails.planId || planDetails._id || '',
                     membershipType: cardDetails.membershipType,
                     ownerId,
@@ -252,7 +249,7 @@ const CardDetails = () => {
                     autoRenew: cardDetails.autoRenew
                 }));
 
-                if (orderResponse.data.orderId) {
+                if (orderResponse.orderId) {
                     try {
                         // First, make sure the Razorpay script is loaded
                         const scriptLoaded = await loadRazorpayScript();
@@ -262,17 +259,17 @@ const CardDetails = () => {
 
                         // Prepare options for Razorpay checkout
                         // Make sure amount is exactly the same as in the order (no modifications)
-                        console.log('Order amount from backend:', orderResponse.data.amount);
+                        console.log('Order amount from backend:', orderResponse.amount);
 
                         const options = {
-                            key: orderResponse.data.razorpayKeyId,
-                            subscription_id: orderResponse.data.subscriptionId,
-                            order_id: orderResponse.data.orderId,
+                            key: orderResponse.razorpayKeyId,
+                            subscription_id: orderResponse.subscriptionId,
+                            order_id: orderResponse.orderId,
                             // Don't include amount here as it's already in the order
                             // amount: orderResponse.data.amount,
                             currency: 'INR',//orderResponse.data.currency || 
                             name: "UpInterview",
-                            description: `${cardDetails.membershipType} Subscription for ${planDetails.name} - ₹${(orderResponse.data.amount / 100).toFixed(2)}`,
+                            description: `${cardDetails.membershipType} Subscription for ${planDetails.name} - ₹${(orderResponse.amount / 100).toFixed(2)}`,
                             // v1.0.0 <--------------------------------------------------------------------------------------------------------------------
                             // image: logo,
                             image: "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp",
@@ -299,16 +296,15 @@ const CardDetails = () => {
                                     // Prepare verification data
                                     const verificationData = {
                                         razorpay_payment_id: response.razorpay_payment_id,
-                                        razorpay_order_id: orderResponse.data.orderId,
+                                        razorpay_order_id: orderResponse.orderId,
                                         razorpay_signature: response.razorpay_signature,
-                                        razorpay_subscription_id: orderResponse.data.subscriptionId,
+                                        razorpay_subscription_id: orderResponse.subscriptionId,
                                         ownerId: cardDetails.ownerId,
                                         tenantId: tenantId,
                                         planId: planDetails.planId,
-                                        planName: planDetails.planName,
                                         membershipType: cardDetails.membershipType,
                                         autoRenew: cardDetails.autoRenew,
-                                        invoiceId: planDetails.invoiceId // Include the invoiceId passed from SubscriptionPlan.jsx
+                                        invoiceId: planDetails.invoiceId || subscriptionData?.invoiceId,
                                     };
 
                                     // Log to verify invoiceId is included
@@ -316,17 +312,14 @@ const CardDetails = () => {
 
                                     console.log('Sending verification data:', verificationData);
 
-                                    // Verify payment with backend
-                                    const verifyResponse = await axios.post(
-                                        `${config.REACT_APP_API_URL}/payment/verify`,
-                                        verificationData
-                                    );
+                                    // Verify payment with backend via hook mutation
+                                    const verifyResponse = await verifySubscriptionPayment(verificationData);
 
-                                    console.log('Payment verification response:', verifyResponse.data);
+                                    console.log('Payment verification response:', verifyResponse);
 
-                                    if (verifyResponse.data.status === 'paid' ||
-                                        verifyResponse.data.status === 'success' ||
-                                        verifyResponse.data.message?.toLowerCase().includes('success')) {
+                                    if (verifyResponse.status === 'paid' ||
+                                        verifyResponse.status === 'success' ||
+                                        verifyResponse.message?.toLowerCase().includes('success')) {
 
                                         toast.success("Payment successfully completed!");
 
@@ -334,7 +327,7 @@ const CardDetails = () => {
                                         navigate('/subscription-success', {
                                             state: {
                                                 paymentId: response.razorpay_payment_id,
-                                                subscriptionId: orderResponse.data.subscriptionId,
+                                                subscriptionId: orderResponse.subscriptionId,
                                                 orderId: response.razorpay_order_id,
                                                 isUpgrading: isUpgrading,
                                                 planName: planDetails.name,
@@ -344,14 +337,13 @@ const CardDetails = () => {
                                         });
 
                                         axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-                                            tenantId: tenantId,
-                                            ownerId: ownerId,
+                                                    tenantId: tenantId,
+                                                    ownerId: ownerId,
                                         }).catch((err) => console.error('Email error:', err));
                                         await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/paid`, {
-                                            ownerId,
-                                            tenantId,
-
-                                            // ccEmail: "shaikmansoor1200@gmail.com",
+                                                ownerId,
+                                                tenantId,
+                                                // ccEmail: "shaikmansoor1200@gmail.com",
                                         });
 
                                     } else {

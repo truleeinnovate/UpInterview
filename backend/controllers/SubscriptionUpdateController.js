@@ -14,272 +14,378 @@ const razorpay = new Razorpay({
 // console.log('Razorpay initialized with key_id:', razorpay.key_id);
 
 /**
- * Controller to update an existing Razorpay subscription to a new plan
+ * Controller to update a subscription plan.
+ * Handles both free (price 0) and paid plans.
+ * - Free plans: skip all Razorpay calls
+ * - Paid plans without existing Razorpay subscription: create pending invoice and instruct frontend to proceed to payment.
+ * - Paid plans with an existing Razorpay subscription: cancel old RP sub, create new RP sub + order, update local records.
  */
 
 const updateSubscriptionPlan = async (req, res) => {
   console.log('Request body:', req.body);
-  const { tenantId, ownerId, userId, razorpaySubscriptionId, newPlanId, membershipType, price, totalAmount, razorpayPlanId } = req.body;
+  const { tenantId, ownerId, subscriptionId, razorpaySubscriptionId, newPlanId, newBillingCycle } = req.body;
 
   console.log('Received request to update subscriptionupadcontroller:', req.body);
-    
-  // Simple validation - essential fields
-  if (!razorpaySubscriptionId) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Missing required parameter: razorpaySubscriptionId' 
-    });
-  }
-  
-  // First use razorpayPlanId from frontend if available
-  let planIdToUse = razorpayPlanId;
-  console.log('Using razorpayPlanId from frontend:', planIdToUse);
-  
-  // If no plan ID was provided by the frontend, look it up in the database
-  if (!planIdToUse) {
-    try {
-      console.log(`Looking up Razorpay plan ID for ${newPlanId} with ${membershipType} billing`);
-      
-      // Find the subscription plan in the database
-      const SubscriptionPlan = require('../models/Subscriptionmodels');
-      const plan = await SubscriptionPlan.findById(newPlanId);
-      
-      if (!plan) {
-        return res.status(404).json({ 
-          success: false, 
-          message: 'Subscription plan not found in database' 
-        });
-      }
-      
-      // Try to get the razorpayPlanId from the plan based on membership type
-      if (plan.razorpayPlanIds && typeof plan.razorpayPlanIds === 'object') {
-        if (membershipType === 'annual' && plan.razorpayPlanIds.annual) {
-          planIdToUse = plan.razorpayPlanIds.annual;
-        } else if (membershipType === 'monthly' && plan.razorpayPlanIds.monthly) {
-          planIdToUse = plan.razorpayPlanIds.monthly;
-        }
-      }
-      
-      console.log(`Found plan ID from database: ${planIdToUse}`);
-      
-      if (!planIdToUse) {
-        return res.status(400).json({ 
-          success: false, 
-          message: `No Razorpay plan ID found for ${membershipType} billing cycle` 
-        });
-      }
-    } catch (error) {
-      console.error('Error finding Razorpay plan ID:', error);
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Error finding Razorpay plan ID', 
-        error: error.message 
-      });
-    }
-  }
-  
-  // Verify the plan ID with Razorpay
-  try {
-    const planDetails = await razorpay.plans.fetch(planIdToUse);
-    console.log('Verified plan details with Razorpay:', {
-      id: planDetails.id,
-      period: planDetails.period
-    });
-  } catch (error) {
-    console.error('Error verifying plan with Razorpay:', error);
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Invalid Razorpay plan ID', 
-      error: error.message 
-    });
-  }
 
   try {
-    // Find the customer subscription
-    const customerSubscription = await CustomerSubscription.findOne({ razorpaySubscriptionId });
-    
+    // 1) Load new plan
+    const plan = await SubscriptionPlan.findById(newPlanId).lean();
+    if (!plan) {
+      return res.status(404).json({ success: false, message: 'Subscription plan not found in database' });
+    }
+
+    // 2) Determine pricing for selected cycle
+    const selectedPricing = Array.isArray(plan.pricing) ? plan.pricing.find(p => p.billingCycle === newBillingCycle) : null;
+    if (!selectedPricing) {
+      return res.status(400).json({ success: false, message: `No pricing configured for billing cycle: ${newBillingCycle}` });
+    }
+    const basePrice = Number(selectedPricing.price) || 0;
+    const discount = Number(selectedPricing.discount) || 0;
+    const discountType = selectedPricing.discountType || null;
+    let finalPrice = basePrice;
+    if (discount > 0) {
+      if (discountType === 'percentage') {
+        finalPrice = Math.max(0, basePrice - (basePrice * discount / 100));
+      } else if (discountType === 'flat') {
+        finalPrice = Math.max(0, basePrice - discount);
+      }
+    }
+
+    // 3) Determine Razorpay plan ID only for paid plans
+    let planIdToUse = null;
+    if (finalPrice > 0 && plan.razorpayPlanIds && typeof plan.razorpayPlanIds === 'object') {
+      if (newBillingCycle === 'annual' && plan.razorpayPlanIds?.annual) {
+        planIdToUse = plan.razorpayPlanIds.annual;
+      } else if (newBillingCycle === 'monthly' && plan.razorpayPlanIds?.monthly) {
+        planIdToUse = plan.razorpayPlanIds.monthly;
+      }
+    }
+
+    // 4) Locate subscription record
+    let customerSubscription = null;
+    if (razorpaySubscriptionId) {
+      customerSubscription = await CustomerSubscription.findOne({ razorpaySubscriptionId });
+    }
+    if (!customerSubscription && subscriptionId) {
+      customerSubscription = await CustomerSubscription.findById(subscriptionId);
+    }
+    if (!customerSubscription && ownerId) {
+      customerSubscription = await CustomerSubscription.findOne({ ownerId }).sort({ _id: -1 });
+    }
     if (!customerSubscription) {
       return res.status(404).json({ success: false, message: 'Subscription not found' });
     }
-    
-    // Find the new plan
-    const newPlan = await SubscriptionPlan.findById(newPlanId);
-    
-    if (!newPlan) {
-      return res.status(404).json({ success: false, message: 'Plan not found' });
-    }
-    
-    console.log('Using Razorpay Plan ID directly from frontend:', razorpayPlanId);
 
-    // Make the Razorpay API call
-    try {
-      console.log(`Making Razorpay API call to update subscription ${razorpaySubscriptionId} with plan ID ${planIdToUse}`);
-      
-      // Get the current subscription details from Razorpay to check its period
-      const currentSubscription = await razorpay.subscriptions.fetch(razorpaySubscriptionId);
-      console.log('Current subscription details:', {
-        id: currentSubscription.id,
-        plan_id: currentSubscription.plan_id,
-        current_period: currentSubscription.period
-      });
-      
-      // Get the new plan details to compare periods
-      const newPlanDetails = await razorpay.plans.fetch(planIdToUse);
-      console.log('New plan details:', {
-        id: newPlanDetails.id,
-        period: newPlanDetails.period
-      });
-      
-      // Check if we're changing between different periods (monthly/yearly)
-      const isDifferentPeriod = currentSubscription.period !== newPlanDetails.period;
-      
-      // Prepare parameters for the update call
-      const updateParams = {
-        plan_id: planIdToUse,
-        schedule_change_at: 'cycle_end'
-      };
-      
-      // If changing between different periods, add the remaining_count parameter
-      if (isDifferentPeriod) {
-        console.log('Changing between different periods, adding remaining_count');
-        // Set remaining_count based on the target membership type
-        if (membershipType === 'annual') {
-          updateParams.remaining_count = 12; // 12 months for annual plan
-          console.log('Setting remaining_count to 1 for annual plan');
-        } else {
-          updateParams.remaining_count = 12; // 1 month for monthly plan
-          console.log('Setting remaining_count to 1 for monthly plan');
+    // 5) Free plan path (price = 0): skip all Razorpay calls
+    if (finalPrice === 0) {
+      // If there is an existing Razorpay subscription, best-effort cancel
+      if (customerSubscription.razorpaySubscriptionId) {
+        try {
+          await razorpay.subscriptions.cancel(customerSubscription.razorpaySubscriptionId);
+          console.log('Cancelled old Razorpay subscription (moving to free):', customerSubscription.razorpaySubscriptionId);
+        } catch (cancelErr) {
+          console.warn('Failed to cancel existing Razorpay subscription while moving to free plan:', cancelErr?.message);
         }
       }
-      
-      console.log('Update parameters:', updateParams);
 
-      // Make the API call with the appropriate parameters
-      const razorpayResponse = await razorpay.subscriptions.update(
-        razorpaySubscriptionId,
-        updateParams
-      );
-      
-      console.log('Razorpay API success - updated subscription:', razorpayResponse.id);
-      
-      // Update subscription in our database with complete information
-      customerSubscription.subscriptionPlanId = newPlanId;
-      customerSubscription.membershipType = membershipType;
-      customerSubscription.selectedBillingCycle = membershipType; // Ensure this is set for webhook processing
-      customerSubscription.price = price;
-      customerSubscription.totalAmount = totalAmount;
-      
-      // Save the razorpayPlanId for reference
-      if (!customerSubscription.metadata) {
-        customerSubscription.metadata = {};
+      // Cancel previous pending invoice if any
+      try {
+        if (customerSubscription.invoiceId) {
+          const oldInvoice = await Invoice.findById(customerSubscription.invoiceId);
+          if (oldInvoice && oldInvoice.status !== 'paid' && oldInvoice.status !== 'cancelled') {
+            oldInvoice.status = 'cancelled';
+            await oldInvoice.save();
+          }
+        }
+      } catch (invErr) {
+        console.warn('Failed to cancel previous invoice (free plan switch):', invErr?.message);
       }
-      customerSubscription.metadata.razorpayPlanId = planIdToUse;
-      customerSubscription.planName = newPlan.planName;
-      // Set the end date based on membership type
-      customerSubscription.endDate = calculateEndDate(membershipType);
-      
-      await customerSubscription.save();
-      console.log('Updated customer subscription with new plan');
-      
-      // Generate invoice code
-        const lastInvoice = await Invoice.findOne({})
-          .sort({ _id: -1 })
-          .select('invoiceCode')
-          .lean();
+
+      // Update local subscription
+      customerSubscription.subscriptionPlanId = newPlanId;
+      customerSubscription.selectedBillingCycle = newBillingCycle;
+      customerSubscription.price = 0;
+      customerSubscription.discount = 0;
+      customerSubscription.totalAmount = 0;
+      customerSubscription.status = 'active';
+      customerSubscription.autoRenew = false;
+      customerSubscription.planName = plan.name;
+      customerSubscription.razorpaySubscriptionId = undefined;
+      customerSubscription.razorpayPaymentId = undefined;
+      customerSubscription.lastPaymentId = undefined;
+      customerSubscription.endDate = calculateEndDate(newBillingCycle);
+
+      // Create zero-value paid invoice for bookkeeping
+      try {
+        const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
         let nextNumber = 1;
         if (lastInvoice && lastInvoice.invoiceCode) {
           const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
-          if (match) {
-            nextNumber = parseInt(match[1], 10) + 1;
-          }
+          if (match) nextNumber = parseInt(match[1], 10) + 1;
         }
         const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
-      // Create invoice with all required fields
+
+        const newInvoice = new Invoice({
+          tenantId: tenantId || customerSubscription.tenantId,
+          ownerId: ownerId || customerSubscription.ownerId,
+          planId: newPlanId,
+          planName: plan.name || 'Free Plan',
+          type: 'subscription',
+          price: 0,
+          discount: 0,
+          totalAmount: 0,
+          amountPaid: 0,
+          outstandingAmount: 0,
+          status: 'paid',
+          startDate: new Date(),
+          endDate: customerSubscription.endDate,
+          lineItems: [{ description: `${newBillingCycle} Plan (Free)`, amount: 0 }],
+          invoiceCode
+        });
+        await newInvoice.save();
+        customerSubscription.invoiceId = newInvoice._id;
+      } catch (freeInvErr) {
+        console.warn('Failed to create invoice for free plan:', freeInvErr?.message);
+      }
+
+      await customerSubscription.save();
+
+      // Update tenant UX limits
+      // try {
+      //   const features = plan?.features || [];
+      //   const tenant = await Tenant.findById(customerSubscription.tenantId);
+      //   if (tenant) {
+      //     const bw = features.find(f => f.name === 'Bandwidth');
+      //     const users = features.find(f => f.name === 'Users');
+      //     tenant.status = 'active';
+      //     if (bw) tenant.usersBandWidth = bw.limit;
+      //     if (users) tenant.totalUsers = users.limit;
+      //     await tenant.save();
+      //   }
+      // } catch (tenantErr) {
+      //   console.warn('Failed to update tenant on free plan switch:', tenantErr?.message);
+      // }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Subscription updated to free plan',
+        requiresPayment: false,
+        invoiceId: customerSubscription.invoiceId || null
+      });
+    }
+
+    // 6) Paid plan path
+    if (!planIdToUse) {
+      return res.status(400).json({ success: false, message: `No Razorpay plan ID found for ${newBillingCycle} billing cycle` });
+    }
+
+    // If no existing Razorpay subscription (e.g., upgrading from free), create a pending invoice and instruct checkout
+    if (!customerSubscription.razorpaySubscriptionId) {
+      let invoiceId = null;
+      try {
+        const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
+        let nextNumber = 1;
+        if (lastInvoice && lastInvoice.invoiceCode) {
+          const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+          if (match) nextNumber = parseInt(match[1], 10) + 1;
+        }
+        const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+
+        const newInvoice = new Invoice({
+          tenantId: tenantId || customerSubscription.tenantId,
+          ownerId: ownerId || customerSubscription.ownerId,
+          planId: newPlanId,
+          planName: plan.name || 'Updated Plan',
+          type: 'subscription',
+          price: basePrice,
+          discount: basePrice - finalPrice,
+          totalAmount: finalPrice,
+          amountPaid: 0,
+          outstandingAmount: finalPrice,
+          status: 'pending',
+          startDate: new Date(),
+          endDate: null,
+          lineItems: [{ description: `${newBillingCycle} Plan`, amount: finalPrice }],
+          invoiceCode
+        });
+        await newInvoice.save();
+        invoiceId = newInvoice._id;
+      } catch (invErr) {
+        console.error('Error creating invoice for paid upgrade (no existing RP sub):', invErr);
+      }
+
+      // Update local subscription stub
+      try {
+        customerSubscription.subscriptionPlanId = newPlanId;
+        customerSubscription.selectedBillingCycle = newBillingCycle;
+        customerSubscription.price = finalPrice;
+        customerSubscription.totalAmount = finalPrice;
+        customerSubscription.status = 'created';
+        customerSubscription.autoRenew = true;
+        customerSubscription.planName = plan.name;
+        customerSubscription.endDate = calculateEndDate(newBillingCycle);
+        if (invoiceId) customerSubscription.invoiceId = invoiceId;
+        if (!customerSubscription.metadata) customerSubscription.metadata = {};
+        customerSubscription.metadata.razorpayPlanId = planIdToUse;
+        await customerSubscription.save();
+      } catch (saveErr) {
+        console.error('Error updating local subscription for paid upgrade (no RP sub):', saveErr);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Proceed to payment to activate the new plan',
+        requiresPayment: true,
+        invoiceId,
+        planId: planIdToUse,
+        razorpayKeyId: razorpay.key_id
+      });
+    }
+
+    // Existing Razorpay subscription: verify plan, cancel old, create new, create order
+    try {
+      const planDetails = await razorpay.plans.fetch(planIdToUse);
+      console.log('Verified plan details with Razorpay:', { id: planDetails.id, period: planDetails.period });
+    } catch (error) {
+      console.error('Error verifying plan with Razorpay:', error);
+      return res.status(400).json({ success: false, message: 'Invalid Razorpay plan ID', error: error.message });
+    }
+
+    const existingRpCustomerId = customerSubscription.razorpayCustomerId;
+    const oldInvoiceId = customerSubscription.invoiceId;
+
+    try {
+      await razorpay.subscriptions.cancel(customerSubscription.razorpaySubscriptionId);
+      console.log('Cancelled old Razorpay subscription (immediate):', customerSubscription.razorpaySubscriptionId);
+    } catch (cancelErr) {
+      console.error('Error cancelling old Razorpay subscription:', cancelErr);
+      return res.status(400).json({ success: false, message: 'Failed to cancel existing Razorpay subscription' });
+    }
+
+    try {
+      if (oldInvoiceId) {
+        const oldInvoice = await Invoice.findById(oldInvoiceId);
+        if (oldInvoice) {
+          oldInvoice.status = 'cancelled';
+          await oldInvoice.save();
+        }
+      }
+    } catch (cancelInvErr) {
+      console.error('Error marking previous invoice cancelled:', cancelInvErr);
+    }
+
+    let newRpSubscription;
+    try {
+      newRpSubscription = await razorpay.subscriptions.create({
+        plan_id: planIdToUse,
+        customer_id: existingRpCustomerId,
+        total_count: newBillingCycle === 'monthly' ? 12 : 12,
+        quantity: 1,
+        notes: { ownerId, tenantId: tenantId || '', planId: newPlanId || '', membershipType: newBillingCycle }
+      });
+      console.log('Created new Razorpay subscription for upgrade:', newRpSubscription.id);
+    } catch (createErr) {
+      console.error('Error creating new Razorpay subscription:', createErr);
+      return res.status(500).json({ success: false, message: 'Failed to create new Razorpay subscription' });
+    }
+
+    const orderAmount = Math.round(finalPrice * 100); // in paise
+    let order;
+    try {
+      order = await razorpay.orders.create({
+        amount: orderAmount,
+        currency: 'INR',
+        receipt: `receipt_${Date.now()}`,
+        notes: { subscriptionId: newRpSubscription.id, ownerId, tenantId: tenantId || '', planId: newPlanId || '', membershipType: newBillingCycle }
+      });
+      console.log('Created Razorpay order for new subscription authorization:', order.id);
+    } catch (orderErr) {
+      console.error('Error creating Razorpay order for authorization:', orderErr);
+      return res.status(500).json({ success: false, message: 'Failed to create Razorpay order for authorization' });
+    }
+
+    try {
+      customerSubscription.razorpaySubscriptionId = newRpSubscription.id;
+      customerSubscription.razorpayCustomerId = existingRpCustomerId || customerSubscription.razorpayCustomerId;
+      customerSubscription.subscriptionPlanId = newPlanId;
+      customerSubscription.selectedBillingCycle = newBillingCycle;
+      customerSubscription.price = finalPrice;
+      customerSubscription.totalAmount = finalPrice;
+      customerSubscription.status = 'created';
+      customerSubscription.autoRenew = true;
+      customerSubscription.planName = plan.name;
+      customerSubscription.endDate = calculateEndDate(newBillingCycle);
+      if (!customerSubscription.metadata) customerSubscription.metadata = {};
+      customerSubscription.metadata.razorpayPlanId = planIdToUse;
+      await customerSubscription.save();
+      console.log('Updated local subscription with new Razorpay subscription ID');
+    } catch (saveSubErr) {
+      console.error('Error updating local subscription after upgrade:', saveSubErr);
+    }
+
+    try {
+      const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
+      let nextNumber = 1;
+      if (lastInvoice && lastInvoice.invoiceCode) {
+        const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+        if (match) nextNumber = parseInt(match[1], 10) + 1;
+      }
+      const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+
       const newInvoice = new Invoice({
         tenantId: tenantId,
         ownerId: ownerId,
-        customerSubscriptionId: customerSubscription._id,
-        planName: newPlan.planName || 'Updated Plan',
-        membershipType: membershipType,
-        price: price,
-        type: 'subscription',  // Required field
-        totalAmount: totalAmount,  // Required field
+        planId: newPlanId,
+        planName: plan.name || 'Updated Plan',
+        type: 'subscription',
+        price: basePrice,
+        discount: basePrice - finalPrice,
+        totalAmount: finalPrice,
         status: 'pending',
         startDate: new Date(),
         endDate: customerSubscription.endDate,
-        lineItems: { description: `${membershipType} Plan Update`, amount: price },
-        invoiceCode:invoiceCode,
-        outstandingAmount: price
+        lineItems: [{ description: `${newBillingCycle} Plan Upgrade`, amount: finalPrice }],
+        invoiceCode: invoiceCode,
+        outstandingAmount: finalPrice
       });
-      
-      // Save invoice with error handling
-      try {
-        await newInvoice.save();
-        console.log('Created new invoice:', newInvoice._id);
-        
-        // Update subscription with invoice reference
-        customerSubscription.invoiceId = newInvoice._id;
-        await customerSubscription.save();
-        console.log('Updated subscription with invoice ID');
-        
-        
-        // Update the tenant record
-        const subscriptionPlan = await SubscriptionPlan.findById(customerSubscription.subscriptionPlanId);
-        
-        const features = subscriptionPlan.features;
-
-        if (res.status === 200 || res.status === 201){
-          const tenant = await Tenant.findById(customerSubscription.tenantId);
-          if(tenant){
-            tenant.status = 'active';
-            tenant.usersBandWidth = features.find(feature => feature.name === 'Bandwidth').limit;
-            tenant.totalUsers = features.find(feature => feature.name === 'Users').limit;
-            await tenant.save();
-        }
-      }
-
-        
-        // Success response
-        return res.status(200).json({
-          success: true,
-          message: 'Subscription plan updated successfully',
-          subscriptionId: razorpaySubscriptionId,
-          planId: planIdToUse
-        });
-        
-      } catch (invoiceError) {
-        console.error('Error creating invoice:', invoiceError);
-        return res.status(400).json({
-          success: false,
-          message: 'Error creating invoice for subscription update',
-          error: invoiceError.message
-        });
-      }
-    } catch (error) {
-      // Detailed Razorpay API error handling
-      console.error('Razorpay API error:', error);
-      // Extract useful error information from Razorpay
-      let errorMessage = 'Failed to update subscription';
-      if (error.error && error.error.description) {
-        errorMessage = error.error.description;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      return res.status(400).json({
-        success: false,
-        message: errorMessage,
-        error: error.message || 'Unknown error'
-      });
+      await newInvoice.save();
+      customerSubscription.invoiceId = newInvoice._id;
+      await customerSubscription.save();
+      console.log('Created invoice and linked to subscription');
+    } catch (invErr) {
+      console.error('Error creating invoice for upgraded subscription:', invErr);
     }
-  } catch (razorpayError) {
-    console.error('Error updating Razorpay subscription:', razorpayError);
-    return res.status(400).json({
-      success: false,
-      message: 'Error updating subscription in Razorpay',
-      error: razorpayError.message
+
+    // Update tenant limits for UX (bandwidth/users)
+    // try {
+    //   const features = plan?.features || [];
+    //   const tenant = await Tenant.findById(customerSubscription.tenantId);
+    //   if (tenant) {
+    //     const bw = features.find(f => f.name === 'Bandwidth');
+    //     const users = features.find(f => f.name === 'Users');
+    //     tenant.status = 'active';
+    //     if (bw) tenant.usersBandWidth = bw.limit;
+    //     if (users) tenant.totalUsers = users.limit;
+    //     await tenant.save();
+    //   }
+    // } catch (tenantErr) {
+    //   console.error('Error updating tenant post-upgrade:', tenantErr);
+    // }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Subscription upgraded successfully. Authorize the new plan payment.',
+      subscriptionId: customerSubscription.razorpaySubscriptionId,
+      planId: planIdToUse,
+      authLink: '#',
+      orderId: order.id,
+      razorpayKeyId: razorpay.key_id
     });
+  } catch (err) {
+    console.error('Error updating subscription:', err);
+    return res.status(500).json({ success: false, message: 'Failed to update subscription' });
   }
 };
+
 
 module.exports = { updateSubscriptionPlan };

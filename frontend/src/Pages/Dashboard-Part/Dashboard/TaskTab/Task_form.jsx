@@ -5,8 +5,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'; //<---v1.0.2-----
 import Modal from 'react-modal';
 import classNames from 'classnames';
-import { useNavigate } from 'react-router-dom';
-import { Minimize, Expand, ChevronDown, X } from 'lucide-react';
+ 
+import { Minimize, Expand, X, ChevronUp, ChevronDown, Info } from 'lucide-react';
 import axios from "axios";
 import { MdArrowDropDown } from "react-icons/md";
 import { config } from "../../../../config.js";
@@ -21,10 +21,13 @@ import { useCustomContext } from '../../../../Context/Contextfetch.js';
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import LoadingButton from "../../../../Components/LoadingButton.jsx";
+import { useCreateTask, useUpdateTask, useTaskById } from "../../../../apiHooks/useTasks.js";
 
 
 import "react-datepicker/dist/react-datepicker.css";
+// eslint-disable-next-line import/first
 import { scrollToFirstError } from '../../../../utils/ScrollToFirstError/scrollToFirstError.js';
+import InfoGuide from '../../Tabs/CommonCode-AllTabs/InfoCards.jsx';
 
 
 
@@ -41,7 +44,7 @@ const TaskForm = ({
   const ownerId = tokenPayload?.userId
   const tenantId = tokenPayload?.tenantId
   const organization = tokenPayload?.organization;
-  const { candidateData, isMutationLoading } = useCandidates();
+  const { candidateData } = useCandidates();
   const {positionData} = usePositions();
   const { assessmentData} = useAssessments();
   const {interviewData} = useInterviews();
@@ -50,6 +53,11 @@ const TaskForm = ({
 
 
   const {usersRes} = useCustomContext();
+
+  // Mutations must be inside the component
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const isSaving = createTaskMutation.isPending || updateTaskMutation.isPending;
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -88,7 +96,8 @@ const TaskForm = ({
     dueDate: "",
     comments: "",
   });
-  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  
   const [selectedPriority, setSelectedPriority] = useState("");
   const priorities = ['High', 'Medium', 'Low','Normal'];
 
@@ -359,11 +368,10 @@ const TaskForm = ({
       };
 
       console.log("Submitting task with data:", taskData); // Debug log
-
       if (taskId) {
-        await axios.patch(`${config.REACT_APP_API_URL}/tasks/${taskId}`, taskData);
+        await updateTaskMutation.mutateAsync({ id: taskId, data: taskData });
       } else {
-        await axios.post(`${config.REACT_APP_API_URL}/tasks`, taskData);
+        await createTaskMutation.mutateAsync(taskData);
       }
       
       onTaskAdded();
@@ -375,7 +383,6 @@ const TaskForm = ({
     }
   };
 
-  const today = new Date().toISOString().split("T")[0];
   const [categoriesRelatedTo, setCategoriesRelatedTo] = useState([]);
 
   useEffect(() => {
@@ -391,33 +398,21 @@ const TaskForm = ({
     fetchObjectsData();
   }, []);
 
+  const { data: fetchedTask } = useTaskById(taskId);
+
   useEffect(() => {
-    if (taskId) {
-      // Fetch task data
-      const fetchTaskData = async () => {
-        try {
-          const response = await axios.get(`${config.REACT_APP_API_URL}/tasks/${taskId}`);
-          const taskData = response.data;
-          
-          setFormData(taskData);
-          setSelectedPriority(taskData.priority);
-          setSelectedStatus(taskData.status);
-          setSelectedCategoryRelatedTo(taskData.relatedTo.objectName);
-          setSelectedOptionName(taskData.relatedTo.recordName);
-          console.log(taskData);
-        } catch (error) {
-          console.error("Error fetching task data:", error);
-        }
-      };
-      
-      fetchTaskData();
-    } else if (initialData) {
-      // Use initialData if provided
+    if (taskId && fetchedTask) {
+      setFormData(fetchedTask);
+      setSelectedPriority(fetchedTask.priority);
+      setSelectedStatus(fetchedTask.status);
+      setSelectedCategoryRelatedTo(fetchedTask?.relatedTo?.objectName || "");
+      setSelectedOptionName(fetchedTask?.relatedTo?.recordName || "");
+    } else if (!taskId && initialData) {
       setFormData(initialData);
       setSelectedPriority(initialData.priority);
       setSelectedStatus(initialData.status);
     }
-  }, [taskId, initialData]);
+  }, [taskId, fetchedTask, initialData]);
 
   
   
@@ -440,9 +435,9 @@ const TaskForm = ({
             className={modalClass}
             overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
           >
-          <div className={classNames('h-full' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isMutationLoading })}>
+          <div className={classNames('h-full' , { 'max-w-6xl mx-auto px-6': isFullScreen }, { 'opacity-50': isSaving })}>
               <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-3">
     
                   <h2 className="text-2xl font-semibold text-custom-blue">
                     {taskId ? "Update Task" : "Add New Task"}
@@ -467,6 +462,63 @@ const TaskForm = ({
                     </button>
                   </div>
                 </div>
+
+                {/* added to Task Form Guideliness by Ranjith */}
+             
+
+<InfoGuide
+  title="Task Creation Guidelines"
+  items={[
+    <><span className="font-medium">Clear Task Titles:</span> Use descriptive titles that summarize the task objective</>,
+    <><span className="font-medium">Priority Setting:</span> Assign appropriate priority levels (High, Medium, Low, Normal) based on urgency</>,
+    <><span className="font-medium">Status Tracking:</span> Update task status as it progresses (New → In Progress → Completed)</>,
+    <><span className="font-medium">Responsible Assignment:</span> Clearly assign tasks to specific team members or yourself</>,
+    <><span className="font-medium">Context Linking:</span> Connect tasks to relevant candidates, positions, interviews, or assessments</>,
+    <><span className="font-medium">Realistic Due Dates:</span> Set deadlines with at least 2 hours buffer from current time</>,
+    <><span className="font-medium">Detailed Comments:</span> Provide clear instructions, context, and expected outcomes</>,
+    <><span className="font-medium">Automated Validation:</span> Form validation ensures all required fields are completed</>,
+    <><span className="font-medium">Error Highlighting:</span> Invalid fields are automatically highlighted and scrolled into view</>,
+    <><span className="font-medium">Flexible Editing:</span> Tasks can be updated anytime as priorities or circumstances change</>
+  ]}
+/>
+         
+  {/* <div className="py-4 bg-white z-10 mb-2">
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+      <div className="flex items-start space-x-3 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+        <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-custom-blue">Task Creation Guidelines</h3>
+            {isOpen ? (
+              <ChevronUp className="h-5 w-5 text-custom-blue" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-custom-blue" />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="mt-3 ml-8 space-y-2">
+          <div className="text-sm text-custom-blue space-y-1">
+            <ul className="list-disc list-inside pl-2 space-y-1">
+              <li><span className="font-medium">Clear Task Titles:</span> Use descriptive titles that summarize the task objective</li>
+              <li><span className="font-medium">Priority Setting:</span> Assign appropriate priority levels (High, Medium, Low, Normal) based on urgency</li>
+              <li><span className="font-medium">Status Tracking:</span> Update task status as it progresses (New → In Progress → Completed)</li>
+              <li><span className="font-medium">Responsible Assignment:</span> Clearly assign tasks to specific team members or yourself</li>
+              <li><span className="font-medium">Context Linking:</span> Connect tasks to relevant candidates, positions, interviews, or assessments</li>
+              <li><span className="font-medium">Realistic Due Dates:</span> Set deadlines with at least 2 hours buffer from current time</li>
+              <li><span className="font-medium">Detailed Comments:</span> Provide clear instructions, context, and expected outcomes</li>
+              <li><span className="font-medium">Automated Validation:</span> Form validation ensures all required fields are completed</li>
+              <li><span className="font-medium">Error Highlighting:</span> Invalid fields are automatically highlighted and scrolled into view</li>
+              <li><span className="font-medium">Flexible Editing:</span> Tasks can be updated anytime as priorities or circumstances change</li>
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  </div> */}
+
     
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 mb-6">
@@ -720,8 +772,8 @@ const TaskForm = ({
             </button>
             <LoadingButton
               onClick={handleSubmit}
-              isLoading={isMutationLoading}
-              loadingText="Creating..."
+              isLoading={isSaving}
+              loadingText={taskId ? 'Updating...' : 'Creating...'}
               >
                 {taskId ? 'Update Task' : 'Create Task'}
             </LoadingButton>

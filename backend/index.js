@@ -6,7 +6,8 @@
 // v1.0.4  -  Ashok   -  added analytics
 // v1.0.5  -  Ashok   -  Added Rate Cards
 // v1.0.6  -  Ashok   -  Added Master Routes
-// v1.0,7  -  Mansoor  -  added cors new link of frontend
+// v1.0.7  -  Ashok   -  Technology master controller as send all the fields in response
+// v1.0.8  -  Ashok   -  Added Question bank manager routes
 require("dotenv").config();
 
 const cors = require("cors");
@@ -435,9 +436,11 @@ const { RoleMaster } = require("./models/MasterSchemas/RoleMaster.js");
 const {
   TechnologyMaster,
 } = require("./models/MasterSchemas/TechnologyMaster.js");
-const { HigherQualification } = require("./models/higherqualification.js");
-const { University_CollegeName } = require("./models/college.js");
-const { Company } = require("./models/company.js");
+const {
+  HigherQualification,
+} = require("./models/MasterSchemas/higherqualification.js");
+const { University_CollegeName } = require("./models/MasterSchemas/college.js");
+const { Company } = require("./models/MasterSchemas/company.js");
 
 // Master Data Endpoints
 app.get("/skills", async (req, res) => {
@@ -475,16 +478,16 @@ app.get("/roles", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
+// v1.0.7 <----------------------------------------------------------------------------------
 app.get("/technology", async (req, res) => {
   try {
-    const technology = await TechnologyMaster.find({}, "TechnologyMasterName");
+    const technology = await TechnologyMaster.find({});
     res.json(technology);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-
+// v1.0.7 ---------------------------------------------------------------------------------->
 app.get("/qualification", async (req, res) => {
   try {
     const higherqualifications = await HigherQualification.find(
@@ -531,7 +534,7 @@ const TeamMember = require("./models/TeamMembers.js");
 // <-------------------------------v1.0.2
 const Assessment = require("./models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.2 >
-const { Interview } = require("./models/Interview.js");
+const { Interview } = require("./models/Interview/Interview.js");
 const { MockInterview } = require("./models/mockinterview.js");
 const { Users } = require("./models/Users.js");
 const Role = require("./models/RolesData.js");
@@ -1266,6 +1269,10 @@ app.use("/rate-cards", RateCardRoutes);
 const MasterRoutes = require("./routes/MasterRoutes/masterRoutes.js");
 app.use("/master-data", MasterRoutes);
 // v1.0.6 --------------------------------------------------------------------------->
+// v1.0.7 <---------------------------------------------------------------------------
+const QuestionBankManager = require("./routes/QuestionBankManagerRoutes/QuestionBankManagerRoutes.js");
+app.use("/questions-manager", QuestionBankManager);
+// v1.0.7 --------------------------------------------------------------------------->
 
 //  v1.0.4 <------------------------------------------------------------------------------
 const filterRoutes = require("./routes/AnalyticsRoutes/filterRoutes.js");

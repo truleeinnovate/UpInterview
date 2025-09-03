@@ -31,11 +31,14 @@ export const usePushNotifications = (ownerId) => {
     retry: 1,
     queryFn: async () => {
       const response = await axios.get(`${config.REACT_APP_API_URL}/push-notifications/${ownerId}`);
+    console.log("push notifications", response);
+    
       const sorted = Array.isArray(response.data)
         ? response.data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
         : [];
       return sorted;
     },
+    
   });
 
   /* -------------------------- Mark single as read --------------------------- */

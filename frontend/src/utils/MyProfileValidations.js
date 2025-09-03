@@ -83,9 +83,9 @@ export const validateAdvancedForm = (formData) => {
   
     // Experience validation
     if (!formData.experience?.trim()) {
-      errors.experience = "Years of Experience is required";
+      errors.yearsOfExperience = "Years of Experience is required";
     } else if (!/^\d+$/.test(formData.experience.trim())) {
-      errors.experience = "Please enter a valid number";
+      errors.yearsOfExperience = "Please enter a valid number";
     }
   
     // Location validation
@@ -252,7 +252,7 @@ export const validateInterviewForm = (formData, isReady) => {
 
   // Technology validation - checks if at least one technology is selected
   if (!formData.Technology || formData.Technology.length === 0) {
-    errors.Technology = "At least one technology is required";
+    errors.technologies = "At least one technology is required";
   }
 
   // Skills validation - checks if at least one skill is selected

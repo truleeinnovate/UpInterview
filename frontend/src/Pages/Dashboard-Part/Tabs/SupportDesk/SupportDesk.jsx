@@ -2,6 +2,7 @@
 //<---------------------- v1.0.0----Venkatesh----in header add padding at top
 // v1.0.1 - Ashraf - Added subject field
 // v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.3 - Venkatesh --- added new filters issue types,priority and created date
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Plus } from "lucide-react";
@@ -40,10 +41,18 @@ function SupportDesk() {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage] = useState(10);
-  const [selectedFilters, setSelectedFilters] = useState({ status: [] });
+  const [selectedFilters, setSelectedFilters] = useState({ status: [], issueTypes: [], priorities: [], createdDate: "" });//<-------v1.0.3--------
   const [viewMode, setViewMode] = useState("table");
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
+  //<-------v1.0.3--------
+  const [isIssueTypeOpen, setIsIssueTypeOpen] = useState(false);
+  const [selectedIssueTypes, setSelectedIssueTypes] = useState([]);
+  const [isPriorityOpen, setIsPriorityOpen] = useState(false);
+  const [selectedPriorities, setSelectedPriorities] = useState([]);
+  const [isCreatedOpen, setIsCreatedOpen] = useState(false);
+  const [createdDate, setCreatedDate] = useState(""); // '', 'last7', 'last30'
+  //-------v1.0.3-------->
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
 
@@ -68,19 +77,33 @@ function SupportDesk() {
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
-    setIsFilterActive(filters.status.length > 0);
+    //<-------v1.0.3--------
+    const active =
+      ((filters.status?.length) || 0) > 0 ||
+      ((filters.issueTypes?.length) || 0) > 0 ||
+      ((filters.priorities?.length) || 0) > 0 ||
+      (!!filters.createdDate && filters.createdDate !== "");
+    setIsFilterActive(active);
+    //-------v1.0.3-------->
     setIsFilterPopupOpen(false);
     setCurrentPage(0);
   };
 
   const handleClearFilters = () => {
-    setSelectedFilters({ status: [] });
+    setSelectedFilters({ status: [], issueTypes: [], priorities: [], createdDate: "" });//<-------v1.0.3--------
     setIsFilterActive(false);
     setIsFilterPopupOpen(false);
     setCurrentPage(0);
     // Rest filter popup UI state
     setIsStatusOpen(false);
     setSelectedStatus([]);
+    setIsIssueTypeOpen(false);
+    setSelectedIssueTypes([]);
+    setIsPriorityOpen(false);
+    setSelectedPriorities([]);
+    setIsCreatedOpen(false);
+    setCreatedDate("");
+    //-------v1.0.3-------->
   };
 
   const handleFilterIconClick = () => {
@@ -92,19 +115,49 @@ function SupportDesk() {
   const FilteredData = () => {
     if (!Array.isArray(tickets)) return [];
     return tickets.filter((ticket) => {
-      const ticketId = ticket._id?.slice(-5, -1)?.toLowerCase() || "";
+      const ticketId = ticket.ticketCode?.toLowerCase() || "";
       const contact = ticket.contact?.toLowerCase() || "";
       const matchesSearchQuery =
         !searchQuery ||
         ticketId.includes(searchQuery.toLowerCase()) ||
         contact.includes(searchQuery.toLowerCase()) ||
-        ticket.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase());
+        ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase());
+        //ticket.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus =
-        selectedFilters.status.length === 0 ||
+      //<-------v1.0.3--------  
+      (selectedFilters.status?.length || 0) === 0 ||
         selectedFilters.status.includes(ticket.status);
 
-      return matchesSearchQuery && matchesStatus;
+      const matchesIssueType =
+        (selectedFilters.issueTypes?.length || 0) === 0 ||
+        selectedFilters.issueTypes.includes(ticket.issueType);
+
+      const matchesPriority =
+        (selectedFilters.priorities?.length || 0) === 0 ||
+        selectedFilters.priorities.includes(ticket.priority);
+
+      const matchesCreatedDate = (() => {
+        const preset = selectedFilters.createdDate;
+        if (!preset) return true; // Any time
+        const createdAt = ticket.createdAt ? parseISO(ticket.createdAt) : null;
+        if (!createdAt || !isValid(createdAt)) return false;
+        const now = new Date();
+        const days = preset === "last7" ? 7 : preset === "last30" ? 30 : null;
+        if (!days) return true;
+        const cutoff = new Date(now);
+        cutoff.setDate(now.getDate() - days);
+        return createdAt >= cutoff;
+      })();
+
+      return (
+        matchesSearchQuery &&
+        matchesStatus &&
+        matchesIssueType &&
+        matchesPriority &&
+        matchesCreatedDate
+      );
+      //-------v1.0.3-------->
     });
   };
 
@@ -219,7 +272,7 @@ function SupportDesk() {
       : []),
     {
       key: "createdAt",
-      header: "Created On",
+      header: "Created At",
       render: (value) => formatDate(value),
     },
     ...(impersonatedUser_roleName === "Super_Admin" ||
@@ -284,6 +337,23 @@ function SupportDesk() {
   ];
 
   const statusOptions = ["New", "Assigned", "Inprogress", "Resolved", "Close"];
+  //<-------v1.0.3-------- 
+  const issueTypeOptions = ["Payment Issue",
+    "Technical Issue",
+    "Account Issue",
+    "Interview Feedback Issue",
+    "Scheduling Problem",
+    "Video/Audio Issue",
+    "Assessment Issue",
+    "Candidate Not Available",
+    "Interviewer Not Available",
+    "Reschedule Request",
+    "Technical Issue",
+    "Internet Connectivity (Candidate)",
+    "Internet Connectivity (Interviewer)",
+    "Audio/Video Problem",
+    "Platform Issue"]
+  const priorityOptions = ["High", "Medium", "Low"];
 
   const handleStatusToggle = (option) => {
     setSelectedStatus((prev) =>
@@ -293,8 +363,30 @@ function SupportDesk() {
     );
   };
 
+  const handleIssueTypeToggle = (option) => {
+    setSelectedIssueTypes((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
+    );
+  };
+
+  const handlePriorityToggle = (option) => {
+    setSelectedPriorities((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
+    );
+  };
+
   const handleApplyFilters = () => {
-    handleFilterChange({ status: selectedStatus });
+    handleFilterChange({
+      status: selectedStatus,
+      issueTypes: selectedIssueTypes,
+      priorities: selectedPriorities,
+      createdDate: createdDate,
+    });
+    //-------v1.0.3-------->
   };
 
   return (
@@ -394,6 +486,116 @@ function SupportDesk() {
                     </div>
                   )}
                 </div>
+                {/*<-------v1.0.3-------- */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsIssueTypeOpen(!isIssueTypeOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Issue Type</span>
+                    {isIssueTypeOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isIssueTypeOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {issueTypeOptions.map((option) => (
+                        <label key={option} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedIssueTypes.includes(option)}
+                            onChange={() => handleIssueTypeToggle(option)}
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {impersonatedUser_roleName === "Super_Admin" && (<div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsPriorityOpen(!isPriorityOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Priority</span>
+                    {isPriorityOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isPriorityOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {priorityOptions.map((option) => (
+                        <label key={option} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedPriorities.includes(option)}
+                            onChange={() => handlePriorityToggle(option)}
+                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>)}
+
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsCreatedOpen(!isCreatedOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Created Date</span>
+                    {isCreatedOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isCreatedOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="createdDate"
+                          value=""
+                          checked={createdDate === ""}
+                          onChange={() => setCreatedDate("")}
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Any time</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="createdDate"
+                          value="last7"
+                          checked={createdDate === "last7"}
+                          onChange={() => setCreatedDate("last7")}
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Last 7 days</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="createdDate"
+                          value="last30"
+                          checked={createdDate === "last30"}
+                          onChange={() => setCreatedDate("last30")}
+                          className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Last 30 days</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              {/*-------v1.0.3--------> */}
               </div>
             </FilterPopup>
           </motion.div>

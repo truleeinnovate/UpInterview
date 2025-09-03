@@ -6,11 +6,11 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Cookies from "js-cookie";
 import axios from "axios";
 import { handleMembershipChange } from "../../../../../utils/PaymentpageValidations.js";
 //import { useCustomContext } from "../../../Context/Contextfetch";
-import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { useSubscription } from "../../../../../apiHooks/useSubscription";
+
 import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
 
 // import logo from "../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
@@ -100,11 +100,8 @@ const loadRazorpayScript = () => {
 const SubscriptionCardDetails = () => {
   console.log("card details");
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
+  const { subscriptionData, ownerId, tenantId, userType, createSubscription, verifySubscriptionPayment } = useSubscription();
 
-  const tenantId = tokenPayload?.tenantId;
-  const ownerId = tokenPayload?.userId;
 
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
@@ -130,12 +127,13 @@ const SubscriptionCardDetails = () => {
     () => location.state?.plan || {},
     [location.state]
   );
+  console.log("planDetails",planDetails);
   const [pricePerMember, setPricePerMember] = useState({
     monthly: 0,
     annually: 0,
   });
 
-  const { userProfile, isLoading, isError } = useUserProfile(ownerId);
+  const { userProfile} = useUserProfile(ownerId);
   const [userProfileData, setUserProfile] = useState([]);
 
   // Fetch user profile data from contacts API
@@ -185,7 +183,7 @@ const SubscriptionCardDetails = () => {
         membershipType: defaultMembershipType,
         tenantId: tenantId || "",
         ownerId: ownerId || "",
-        userType: planDetails.user?.userType || "",
+        userType: userType || planDetails.user?.userType || "",
       }));
 
       // Calculate the initial total using the same logic as updateTotalPaid
@@ -193,7 +191,7 @@ const SubscriptionCardDetails = () => {
       const discount =
         defaultMembershipType === "annual"
           ? parseFloat(planDetails.annualDiscount) || 0
-          : parseFloat(planDetails.monthDiscount) || 0;
+          : parseFloat(planDetails.monthDiscount ?? planDetails.monthlyDiscount) || 0;
 
       const initialTotal = Math.max(0, price - discount);
       console.log("Initial total calculation:", {
@@ -204,7 +202,7 @@ const SubscriptionCardDetails = () => {
 
       setTotalPaid(initialTotal.toFixed(2));
     }
-  }, [ownerId, planDetails, tenantId]);
+  }, [ownerId, planDetails, tenantId, userType]);
 
   // Validate details before submitting to payment processor
   const validateCardDetailsBeforeSubmit = () => {
@@ -299,25 +297,20 @@ const SubscriptionCardDetails = () => {
         autoRenew: true,
       });
 
-      // Always use the subscription endpoint
-      const endpoint = `${process.env.REACT_APP_API_URL}/payment/create-subscription`;
+      // Create Razorpay subscription/order via hook mutation
+      const orderResponse = await createSubscription(orderData);
 
-      console.log("Using subscription payment endpoint:", endpoint);
-
-      // Send request to create order or subscription
-      const orderResponse = await axios.post(endpoint, orderData);
-
-      console.log("Order response:", orderResponse.data);
+      console.log("Order response:", orderResponse);
 
       // Check if this is a subscription or one-time payment
-      if (orderResponse.data.isSubscription) {
-        console.log("Processing subscription response:", orderResponse.data);
+      if (orderResponse.isSubscription) {
+        console.log("Processing subscription response:", orderResponse);
 
         // Save subscription info for confirmation later
         localStorage.setItem(
           "pendingSubscription",
           JSON.stringify({
-            subscriptionId: orderResponse.data.subscriptionId,
+            subscriptionId: orderResponse.subscriptionId,
             planId: planDetails.planId || planDetails._id || "",
             membershipType: cardDetails.membershipType,
             ownerId,
@@ -326,7 +319,7 @@ const SubscriptionCardDetails = () => {
           })
         );
 
-        if (orderResponse.data.orderId) {
+        if (orderResponse.orderId) {
           try {
             // First, make sure the Razorpay script is loaded
             const scriptLoaded = await loadRazorpayScript();
@@ -338,19 +331,19 @@ const SubscriptionCardDetails = () => {
             // Make sure amount is exactly the same as in the order (no modifications)
             console.log(
               "Order amount from backend:",
-              orderResponse.data.amount
+              orderResponse.amount
             );
             const options = {
-              key: orderResponse.data.razorpayKeyId,
-              subscription_id: orderResponse.data.subscriptionId,
-              order_id: orderResponse.data.orderId,
+              key: orderResponse.razorpayKeyId,
+              subscription_id: orderResponse.subscriptionId,
+              order_id: orderResponse.orderId,
               // Don't include amount here as it's already in the order
               // amount: orderResponse.data.amount,
               currency: "INR", //orderResponse.data.currency ||
               name: "UpInterview",
               description: `${cardDetails.membershipType} Subscription for ${
                 planDetails.name
-              } - ₹${(orderResponse.data.amount / 100).toFixed(2)}`,
+              } - ₹${(orderResponse.amount / 100).toFixed(2)}`,
               // v1.0.1 <----------------------------------------------------------------------------------------
               // image: logo,
               image:
@@ -378,15 +371,15 @@ const SubscriptionCardDetails = () => {
                   // Prepare verification data
                   const verificationData = {
                     razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_order_id: orderResponse.data.orderId,
+                    razorpay_order_id: orderResponse.orderId,
                     razorpay_signature: response.razorpay_signature,
-                    razorpay_subscription_id: orderResponse.data.subscriptionId,
+                    razorpay_subscription_id: orderResponse.subscriptionId,
                     ownerId: cardDetails.ownerId,
                     tenantId: tenantId,
                     planId: planDetails.planId,
                     membershipType: cardDetails.membershipType,
                     autoRenew: cardDetails.autoRenew,
-                    invoiceId: planDetails.invoiceId, // Include the invoiceId passed from SubscriptionPlan.jsx
+                    invoiceId: planDetails.invoiceId || subscriptionData?.invoiceId, // Include the invoiceId passed from SubscriptionPlan.jsx or fallback from subscription
                   };
 
                   // Log to verify invoiceId is included
@@ -397,21 +390,18 @@ const SubscriptionCardDetails = () => {
 
                   console.log("Sending verification data:", verificationData);
 
-                  // Verify payment with backend
-                  const verifyResponse = await axios.post(
-                    `${process.env.REACT_APP_API_URL}/payment/verify`,
-                    verificationData
-                  );
+                  // Verify payment with backend via hook mutation
+                  const verifyResponse = await verifySubscriptionPayment(verificationData);
 
                   console.log(
                     "Payment verification response:",
-                    verifyResponse.data
+                    verifyResponse
                   );
 
                   if (
-                    verifyResponse.data.status === "paid" ||
-                    verifyResponse.data.status === "success" ||
-                    verifyResponse.data.message
+                    verifyResponse.status === "paid" ||
+                    verifyResponse.status === "success" ||
+                    verifyResponse.message
                       ?.toLowerCase()
                       .includes("success")
                   ) {
@@ -421,7 +411,7 @@ const SubscriptionCardDetails = () => {
                     navigate("/subscription-success", {
                       state: {
                         paymentId: response.razorpay_payment_id,
-                        subscriptionId: orderResponse.data.subscriptionId,
+                        subscriptionId: orderResponse.subscriptionId,
                         orderId: response.razorpay_order_id,
                         isUpgrading: isUpgrading,
                         planName: planDetails.name,
@@ -521,7 +511,7 @@ const SubscriptionCardDetails = () => {
         >
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold mb-2">
-              Upgrade to a Basic Membership
+              {`Upgrade to a ${planDetails.name} ${cardDetails.membershipType === 'monthly' ? 'Monthly' : 'Annual'} Membership`}
             </h2>
             <XCircle
               onClick={() => navigate("/account-settings/subscription")}
@@ -562,7 +552,7 @@ const SubscriptionCardDetails = () => {
                   <span className="text-blue-600">
                     Your payment is protected with industry-standard encryption
                   </span>
-                </div>
+              </div>
 
                 <div className="mt-3 flex justify-center">
                   <img

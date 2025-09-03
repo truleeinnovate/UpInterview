@@ -1,25 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, CheckCircle, AlertCircle, ChevronRight, Filter } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Filter } from 'lucide-react';
 import { format, isToday, isTomorrow, isThisWeek, parseISO, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { config } from '../../../../config';
-import Cookies from 'js-cookie';
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
+import { useTasks } from '../../../../apiHooks/useTasks';
 
 const TaskList = () => {
-  const [taskData, setTaskData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { data: taskData = [], isLoading} = useTasks();
+  
   const [selectedTimeFilter, setSelectedTimeFilter] = useState('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('all');
   const navigate = useNavigate();
 
-   const authToken = Cookies.get("authToken");
-    const tokenPayload = decodeJwt(authToken);
-    const organization = tokenPayload?.organization;
-    const tenantId = tokenPayload?.tenantId;
-    const currentUserId = tokenPayload?.userId;
 
   // Custom function to check if a date is in the next week
   const isNextWeek = (date) => {
@@ -29,28 +21,7 @@ const TaskList = () => {
     return date >= nextWeekStart && date <= nextWeekEnd;
   };
 
-  // Fetch tasks from API
-  useEffect(() => {
-    const fetchTasks = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`${config.REACT_APP_API_URL}/tasks`);
-        let filteredTasks = response.data;
-      if (organization === true) {
-        filteredTasks = response.data.filter(task => task.tenantId === tenantId && task.ownerId === currentUserId);
-      } else {
-        filteredTasks = response.data.filter(task => task.ownerId === currentUserId);
-      }
-      
-      setTaskData(filteredTasks);
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTasks();
-  }, [currentUserId, organization, tenantId]);
+  
 
   // Filter tasks based on time and status criteria
   const filterTasks = () => {
@@ -117,7 +88,7 @@ const TaskList = () => {
       </div>
 
       <div className="space-y-3 overflow-y-auto max-h-[400px] pr-2">
-        {loading ? (
+        {isLoading ? (
           <div className="py-8 flex justify-center items-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
           </div>

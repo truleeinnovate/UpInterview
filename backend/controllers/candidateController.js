@@ -159,8 +159,8 @@ const updateCandidatePatchCall = async (req, res) => {
     };
 
     // Send response
-    res.status(201).json({
-      status: 'success',
+    res.status(203).json({
+      status: 'Updated successfully',
       message: 'Candidate updated successfully',
       data: updatedCandidate,
     });

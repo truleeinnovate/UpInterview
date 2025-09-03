@@ -2,6 +2,8 @@
 // v1.0.1 - Ashok - changed header Title based on mode (view/create/edit)
 // v1.0.2 - Ashok - fixed issues in Technology dropdown enabled delete level button
 // v1.0.3 - Ashok - changed to multiple option selection and added basic validations
+// v1.0.3 - Ashok - changed static data of Category and Technology / Role to dynamic data
+// v1.0.3 - Ashok - changed dropdowns data from static to dynamic and disabled buttons based on mode
 import { useState, useEffect, useRef } from "react";
 import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
 import { Minimize, Expand, X, ChevronDown } from "lucide-react";
@@ -143,13 +145,26 @@ function SearchableDropdown({
               className="flex items-center gap-1 bg-custom-blue/20 text-custom-blue text-sm px-3 py-1 rounded-full"
             >
               <span className="">{val}</span>
-              <button
+              {/* v1.0.4 <----------------------------------------- */}
+              {/* <button
                 type="button"
                 onClick={() => handleRemove(val)}
                 className="hover:text-red-600"
+                disabled={disabled}
+              >
+                <X size={14} />
+              </button> */}
+              <button
+                type="button"
+                onClick={() => handleRemove(val)}
+                className={`hover:text-red-600 ${
+                  disabled ? "cursor-not-allowed opacity-50" : ""
+                }`}
+                disabled={disabled}
               >
                 <X size={14} />
               </button>
+              {/* v1.0.4 -----------------------------------------> */}
             </div>
           ))}
         </div>
@@ -203,13 +218,13 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   const { technologies } = useMasterData();
   // v1.0.1 ------------------------------------------------------>
 
-  const categories = [
-    "Software Development",
-    "Data & AI",
-    "DevOps & Cloud",
-    "QA & Testing",
-    "Specialized Skills",
-  ];
+  // const categories = [
+  //   "Software Development",
+  //   "Data & AI",
+  //   "DevOps & Cloud",
+  //   "QA & Testing",
+  //   "Specialized Skills",
+  // ];
 
   const experienceLevels = ["Junior", "Mid-Level", "Senior"];
   // v1.0.3 <-------------------------------------------------------
@@ -234,11 +249,19 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   // v1.0.0 <-------------------------------------------------------
   // v1.0.3 <-------------------------------------------------------
 
+  // const handleInputChange = (field, value) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [field]: value,
+  //   }));
+  // };
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => {
+      if (field === "category") {
+        return { ...prev, category: value, technology: [] }; // reset techs
+      }
+      return { ...prev, [field]: value };
+    });
   };
 
   const handleLevelChange = (levelIndex, field, value) => {
@@ -403,6 +426,17 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   };
 
   // v1.0.0 ------------------------------------------------------>
+  // v1.0.4 <----------------------------------------------------------------------
+  // Filtered technologies based on selected category
+  const filteredTechnologies = (technologies || []).filter(
+    (t) => t.Category === formData.category
+  );
+
+  // Get unique categories from technologies
+  const filteredCategories = [
+    ...new Set((technologies || []).map((t) => t.Category)),
+  ];
+  // v1.0.4 ---------------------------------------------------------------------->
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
@@ -485,7 +519,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
               {/* v1.0.1 <------------------------------------------------------------------------------ */}
               <div className="flex flex-col">
                 {/*  v1.0.0 <------------------------------------------------------------------ */}
-                <SearchableDropdown
+                {/*  v1.0.4 <------------------------------------------------------------------ */}
+                {/* <SearchableDropdown
                   label="Category"
                   options={categories.map((c) => ({
                     _id: c,
@@ -494,8 +529,16 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                   value={formData.category}
                   onChange={(val) => handleInputChange("category", val)}
                   disabled={currentMode === "view"}
+                /> */}
+                <SearchableDropdown
+                  label="Category"
+                  options={filteredCategories.map((c) => ({ _id: c, name: c }))}
+                  value={formData.category}
+                  onChange={(val) => handleInputChange("category", val)}
+                  disabled={currentMode === "view"}
                 />
 
+                {/*  v1.0.4 --------------------------------------------------------------------> */}
                 {/*  v1.0.0 --------------------------------------------------------------------> */}
               </div>
               {/* v1.0.1 <------------------------------------------------------------------------------ */}
@@ -505,6 +548,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
               {/* v1.0.1 <-------------------------------------------------------------------------- */}
               <div className="flex flex-col">
                 {/*  v1.0.0 <------------------------------------------------------------------ */}
+                {/*  v1.0.4 <------------------------------------------------------------------ */}
                 {/* <SearchableDropdown
                   label="Technology / Role"
                   options={technologies || []}
@@ -512,7 +556,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                   onChange={(val) => handleInputChange("technology", val)}
                   disabled={currentMode === "view"}
                 /> */}
-                <SearchableDropdown
+                {/* <SearchableDropdown
                   label="Technology / Role"
                   options={(technologies || []).map((t) => ({
                     _id: t._id,
@@ -524,8 +568,20 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                   // v1.0.3 <----------------------------------------
                   multiple={true}
                   // v1.0.3 --------------------------------------->
+                /> */}
+                <SearchableDropdown
+                  label="Technology / Role"
+                  options={filteredTechnologies.map((t) => ({
+                    _id: t._id,
+                    name: t.TechnologyMasterName, // 👈 correct mapping
+                  }))}
+                  value={formData.technology}
+                  onChange={(val) => handleInputChange("technology", val)}
+                  disabled={currentMode === "view"}
+                  multiple={true}
                 />
 
+                {/*  v1.0.4 --------------------------------------------------------------------> */}
                 {/*  v1.0.0 --------------------------------------------------------------------> */}
               </div>
             </div>
@@ -674,7 +730,24 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                     </div>
                     {/* v1.0.0 <------------------------------------------------------------------------- */}
                     {/* v1.0.2 <------------------------------------------------------------------------- */}
-                    {formData.levels.length > 1 && (
+                    {/* v1.0.4 <------------------------------------------------------------------------- */}
+                    {/* {formData.levels.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeLevel(levelIndex)}
+                        // v1.0.4 <--------------------------------------------------------------------------
+                        className={`${
+                          mode === "view"
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "ml-4 p-2 text-red-600 hover:text-red-900 rounded-full hover:bg-red-50"
+                        }`}
+                        // v1.0.4 <-------------------------------------------------------------------------->
+                        disabled={mode === "view"}
+                      >
+                        <AiOutlineDelete size={16} />
+                      </button>
+                    )} */}
+                    {formData.levels.length > 1 && currentMode !== "view" && (
                       <button
                         type="button"
                         onClick={() => removeLevel(levelIndex)}
@@ -683,8 +756,10 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                         <AiOutlineDelete size={16} />
                       </button>
                     )}
+
                     {/* v1.0.0 <------------------------------------------------------------------------- */}
                     {/* v1.0.2 <------------------------------------------------------------------------- */}
+                    {/* v1.0.4 <------------------------------------------------------------------------- */}
                   </div>
 
                   <div

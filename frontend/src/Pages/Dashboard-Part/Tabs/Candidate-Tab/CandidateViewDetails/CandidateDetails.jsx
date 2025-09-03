@@ -2,6 +2,7 @@
 //v1.0.1 ------ Ranjith---- added some fullscreen mode ato this ui
 // v1.0.2  - Ashok - fixed form scroll and transition issues
 // v1.0.3  - Ashok - removed form left border and outline
+// v1.0.4  - Ashok - Improved responsiveness and added common popup in the place of modal
 import Modal from "react-modal";
 import {
   Phone,
@@ -30,6 +31,9 @@ import classNames from "classnames";
 // v1.0.2 <------------------------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.2 ------------------------------------------------------------------------->
+// v1.0.4 <-------------------------------------------------------------------------
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+// v1.0.4 ------------------------------------------------------------------------->
 Modal.setAppElement("#root");
 
 const CandidateDetails = ({ mode, candidateId }) => {
@@ -45,27 +49,6 @@ const CandidateDetails = ({ mode, candidateId }) => {
 
   const location = useLocation();
   const id = candidateId || params?.id;
-
-  //< ----------------------v1.0.1 Ranjith added for ui adjustement for responsive proeprly
-  const modalClass = classNames(
-    // v1.0.2 <--------------------------------------------------------------------
-    // "fixed bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden transition-all duration-300",
-    // {
-    //   "inset-0 w-full h-full": isFullScreen,
-    //   "inset-y-0 right-0 w-full sm:w-full md:w-full 2xl:w-1/2 lg:w-1/2 xl:w-1/2":
-    //     !isFullScreen,
-    // }
-    // v1.0.3 <------------------------------------------------------------
-    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-    // v1.0.3 ------------------------------------------------------------>
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-    // v1.0.2 --------------------------------------------------------------------->
-  );
-
-  //   ------->
 
   useEffect(() => {
     let isMounted = true; // flag to track component mount status
@@ -90,76 +73,24 @@ const CandidateDetails = ({ mode, candidateId }) => {
     };
   }, [id, candidateData]);
 
+  // v1.0.4 <-----------------------------------------------------------------
   // With this:
-  const getFromPath = () => {
-    // if (mode === "Assessment") {
-    //   // If coming from assessment, go back to assessment details
-    //   return `/assessment-details/${location.state?.assessmentId}`;
-    // }
-    if (mode === "Assessment") return -1;
-    if (mode === "Interview") return null;
-    // Default to candidate list or use the stored from path
-    return location.state?.from || "/candidate";
-  };
+  // const getFromPath = () => {
+  //   // if (mode === "Assessment") {
+  //   //   // If coming from assessment, go back to assessment details
+  //   //   return `/assessment-details/${location.state?.assessmentId}`;
+  //   // }
+  //   if (mode === "Assessment") return -1;
+  //   if (mode === "Interview") return null;
+  //   // Default to candidate list or use the stored from path
+  //   return location.state?.from || "/candidate";
+  // };
 
-  const fromPath = getFromPath();
+  // const fromPath = getFromPath();
 
   // if (!candidate || loading) return <Loading />
-
   const content = (
-    <div
-      className={classNames("h-full", {
-        "max-w-6xl mx-auto px-6": isFullScreen,
-      })}
-      // className="h-full flex flex-col"
-    >
-      <div className="sticky top-0 bg-white p-4 flex justify-between items-center z-10">
-        <h2 className="text-2xl font-semibold text-custom-blue">Candidate</h2>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate(`/candidate/edit/${candidate._id}`)}
-            className=" hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <FaEdit className="w-5 h-5 text-gray-500 hover:text-custom-blue" />
-          </button>
-          {/* {!isFullScreen && ( */}
-          <button
-            onClick={() => setIsFullScreen(!isFullScreen)}
-            title={isFullScreen ? "Minimize" : "Expand"}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-          >
-            {isFullScreen ? (
-              <Minimize className="w-5 h-5 text-gray-500" />
-            ) : (
-              <Expand className="w-5 h-5 text-gray-500" />
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              // sessionStorage.setItem('candidateData', JSON.stringify(candidate));
-              window.open(`/candidate/full-screen/${candidate._id}`, "_blank");
-            }}
-            className=" hover:bg-gray-100 rounded-lg transition-colors"
-            title="Open in Fullscreen"
-          >
-            <ExternalLink className="w-5 h-5 text-gray-500 hover:text-custom-blue" />
-          </button>
-          {/* )} */}
-
-          <button
-            // v1.0.0 <--------------------------------------------------------
-            // onClick={() => navigate(fromPath)}
-            onClick={() => navigate(-1)} // Added by Ashok
-            // v1.0.0 -------------------------------------------------------->
-            className=" hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-      </div>
-
+    <div>
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-center items-center gap-4 mb-4">
@@ -172,12 +103,16 @@ const CandidateDetails = ({ mode, candidateId }) => {
                   onError={(e) => {
                     e.target.src = "/default-profile.png";
                   }}
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                  className="sm:w-20 sm:h-20 w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                // v1.0.4 <-----------------------------------------------------------------------------------------------------------------------------------
+                // <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
+                <div className="sm:w-20 sm:h-20 w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white sm:text-2xl text-3xl font-semibold shadow-lg">
                   {candidate?.LastName?.charAt(0).toUpperCase() || "?"}
                 </div>
+                // v1.0.4 ----------------------------------------------------------------------------------------------------------------------------------->
+                //
               )}
               {/* <span className={`absolute -bottom-2 right-0 px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
                 candidate?.Status === 'active' ? 'bg-green-100 text-green-800' :
@@ -188,8 +123,11 @@ const CandidateDetails = ({ mode, candidateId }) => {
 
               </span> */}
             </div>
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-gray-900">
+            {/* v1.0.4 <-------------------------------------------------------- */}
+            {/* <div className="text-center"> */}
+            <div>
+              {/* <h3 className="text-2xl font-bold text-gray-900"> */}
+              <h3 className="sm:text-xl text-2xl font-bold text-gray-900">
                 {candidate?.FirstName
                   ? candidate.FirstName.charAt(0).toUpperCase() +
                     candidate.FirstName.slice(1)
@@ -200,10 +138,11 @@ const CandidateDetails = ({ mode, candidateId }) => {
                   : ""}
               </h3>
 
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 mt-1 sm:text-sm text-lg">
                 {candidate.CurrentRole || "position"}
               </p>
             </div>
+            {/* v1.0.4 --------------------------------------------------------> */}
           </div>
 
           <div className="space-y-2">
@@ -276,10 +215,11 @@ const CandidateDetails = ({ mode, candidateId }) => {
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <Mail className="w-5 h-5 text-gray-500" />
                       </div>
-
-                      <span className="text-gray-700 md:truncate md:max-w-[180px] lg:truncate lg:max-w-[180px]">
+                      {/* v1.0.4 <------------------------------------------------------------------------------- */}
+                      <span className="text-gray-700 sm:truncate md:truncate md:max-w-[180px] lg:truncate lg:max-w-[180px]">
                         {candidate?.Email || "N/A"}
                       </span>
+                      {/* v1.0.4 <-------------------------------------------------------------------------------> */}
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
@@ -415,37 +355,36 @@ const CandidateDetails = ({ mode, candidateId }) => {
                 </div>
               </div>
             </div>
-
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <h4 className="text-lg font-semibold text-gray-800 mb-4">
                 Skills
               </h4>
-              <div className="flex flex-wrap gap-2">
+              {/* v1.0.4 <---------------------------------------------------------------------------------------------------- */}
+              <div className="flex flex-wrap gap-3">
                 {candidate?.skills ? (
                   candidate.skills.map((skill, index) => (
                     <>
                       {/* <------v1.0.0 ------*/}
-                      <div className="flex gap-2 justify-center w-full px-3 py-3 space-x-2 bg-custom-bg rounded-full border border-blue-100">
-                        <span
-                          key={index}
-                          className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
-                        >
-                          {skill.skill}
+                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100">
+                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                          <span className="truncate max-w-full">
+                            {skill.skill}
+                          </span>
                         </span>
-                        <span
-                          key={index}
-                          className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
-                        >
-                          {skill.experience}
+                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                          <span className="truncate max-w-full">
+                            {skill.experience}
+                          </span>
                         </span>
-                        <span
-                          key={index}
-                          className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200"
-                        >
-                          {skill.expertise}
+                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
+                          <span className="truncate max-w-full">
+                            {skill.expertise}
+                          </span>
                         </span>
                       </div>
+
                       {/* v1.0.0 ------->*/}
+                      {/* v1.0.4 ----------------------------------------------------------------------------------------------------> */}
                     </>
                   ))
                 ) : (
@@ -481,32 +420,20 @@ const CandidateDetails = ({ mode, candidateId }) => {
     </div>
   );
 
-  // if (isFullScreen) {
-  //   return (
-  //     <div className="min-h-screen bg-white">
-  //       {content}
-  //     </div>
-  //   );
-  // }
-
   return (
-    // <div
-    //   className={`fixed inset-y-0 right-0 ${
-    //     isFullScreen ? "w-full " : "w-1/2"
-    //   } bg-white shadow-2xl border-l border-gray-200 z-50 overflow-hidden`}
-    // >
-    //< ----------------------v1.0.1 Ranjith added for ui adjustement for responsive proeprly
-
-    <Modal
-      isOpen={true}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    >
-      {content}
-    </Modal>
-    //  ----------Ranjith >
-    // </div>
+    <>
+      <SidebarPopup
+        title="Candidate"
+        onClose={() => navigate(-1)}
+        id={candidate._id}
+        showEdit
+        showExternal
+      >
+        {content}
+      </SidebarPopup>
+    </>
   );
 };
+// v1.0.4 ----------------------------------------------------------------->
 
 export default CandidateDetails;
