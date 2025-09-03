@@ -963,6 +963,24 @@ const AddCandidateForm = ({
         title={id ? "Update Candidate" : "Add New Candidate"}
         onClose={handleClose}
       >
+
+                    {/* // newly added guide for CandidateForm component by Ranjith */}
+<InfoGuide
+  title="Candidate Profile Guidelines"
+  items={[
+    <><span className="font-medium">Complete Profile:</span> Fill all required fields to create a comprehensive candidate profile</>,
+    <><span className="font-medium">Profile Photo:</span> Upload a professional headshot (max 100KB, 200×200 recommended)</>,
+    <><span className="font-medium">Resume Requirements:</span> PDF or Word documents only, maximum 4MB file size</>,
+    <><span className="font-medium">Contact Information:</span> Provide accurate email and phone number for communication</>,
+    <><span className="font-medium">Education Details:</span> Include highest qualification and university/college information</>,
+    <><span className="font-medium">Experience Tracking:</span> Specify both current and relevant experience in years</>,
+    <><span className="font-medium">Skill Assessment:</span> Add relevant skills with proficiency levels (Basic, Medium, Expert)</>,
+    <><span className="font-medium">Current Role:</span> Select the candidate's current job position from available options</>,
+    <><span className="font-medium">Data Validation:</span> All fields are validated in real-time with error highlighting</>,
+    <><span className="font-medium">Flexible Options:</span> Custom university entries available if not found in the list</>
+  ]}
+/>
+
         {/* v1.0.7 <--------------------------------------------------------------------- */}
         {/* <div className="p-4" ref={formRef}> */}
         <div className="sm:p-0 p-4" ref={formRef}>
@@ -971,8 +989,8 @@ const AddCandidateForm = ({
           {/* v1.0.2 ------------------------------------------------------------------> */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
             {/* Profile Image Upload */}
-            <div className="flex flex-col items-center">
-              <div
+            <div className="flex flex-col items-center"> 
+              {/* <div
                 onClick={() => imageInputRef.current?.click()}
                 className="relative group cursor-pointer"
               >
@@ -998,7 +1016,7 @@ const AddCandidateForm = ({
                     </>
                   )}
 
-                </button>
+               
                 <button
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1007,23 +1025,7 @@ const AddCandidateForm = ({
                 </button>
               </div>
             </div>
-
-            {/* // newly added guide for CandidateForm component by Ranjith */}
-<InfoGuide
-  title="Candidate Profile Guidelines"
-  items={[
-    <><span className="font-medium">Complete Profile:</span> Fill all required fields to create a comprehensive candidate profile</>,
-    <><span className="font-medium">Profile Photo:</span> Upload a professional headshot (max 100KB, 200×200 recommended)</>,
-    <><span className="font-medium">Resume Requirements:</span> PDF or Word documents only, maximum 4MB file size</>,
-    <><span className="font-medium">Contact Information:</span> Provide accurate email and phone number for communication</>,
-    <><span className="font-medium">Education Details:</span> Include highest qualification and university/college information</>,
-    <><span className="font-medium">Experience Tracking:</span> Specify both current and relevant experience in years</>,
-    <><span className="font-medium">Skill Assessment:</span> Add relevant skills with proficiency levels (Basic, Medium, Expert)</>,
-    <><span className="font-medium">Current Role:</span> Select the candidate's current job position from available options</>,
-    <><span className="font-medium">Data Validation:</span> All fields are validated in real-time with error highlighting</>,
-    <><span className="font-medium">Flexible Options:</span> Custom university entries available if not found in the list</>
-  ]}
-/>
+           
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
               {/* Profile Image Upload */}
@@ -1080,7 +1082,7 @@ const AddCandidateForm = ({
                     <Trash className="w-3 h-3" />
                   </button>
                 )}
-              </div>
+              
               <p className="mt-2 text-sm font-medium text-gray-700">
                 Profile Photo
               </p>
@@ -1090,6 +1092,7 @@ const AddCandidateForm = ({
               <p className="text-xs text-red-500 font-medium text-center mt-1">
                 {fileError}
               </p>
+            </div>
             </div>
 
             {/* Resume Upload */}
@@ -1182,6 +1185,7 @@ const AddCandidateForm = ({
               </p>
             </div>
           </div>
+           {/* </div> */}
 
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-6">
