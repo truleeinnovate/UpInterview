@@ -459,7 +459,7 @@ const PositionTab = () => {
       },
       {
         key:"createdAt",
-        header:"CreatedAt",
+        header:"Created At",
         render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
 
       }
