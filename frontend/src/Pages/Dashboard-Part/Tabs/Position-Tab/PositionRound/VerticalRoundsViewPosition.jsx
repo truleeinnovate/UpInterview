@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - modified as first round should open by default
 // v1.0.1 - Ashok - fixed unique key error
+// v1.0.2 - Ashok - Improved responsiveness
 
 import React, { useState, useEffect } from "react";
 // import PropTypes from 'prop-types';

@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Improved responsiveness
 import { motion } from 'framer-motion';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -181,7 +182,9 @@ const PositionKanban = ({ positions, loading, onView, onEdit, effectivePermissio
                       </div>
                       <div className="flex items-center gap-1.5 text-gray-600">
                         <MapPin className="w-4 h-4 text-red-500" />
-                        <span>{position?.Location || 'Not disclosed'}</span>
+                        {/* v1.0.0 <---------------------------------------------------------------- */}
+                        <span className="truncate">{position?.Location || 'Not disclosed'}</span>
+                        {/* v1.0.0 ----------------------------------------------------------------> */}
                       </div>
                     </div>
                   </div>

@@ -8,7 +8,7 @@ const { encrypt } = require('../../utils/generateOtp')
 // <-------------------------------v1.0.2 
 const ScheduleAssessment = require('../../models/Assessment/assessmentsSchema.js');
 // ------------------------------v1.0.2 >
-const { Candidate } = require("../../models/Candidate/candidate.js");
+const { Candidate } = require("../../models/candidate.js");
 const CryptoJS = require("crypto-js");
 const crypto = require("crypto");
 const emailTemplateModel = require("../../models/EmailTemplatemodel");

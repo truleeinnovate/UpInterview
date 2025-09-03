@@ -6,7 +6,8 @@
 // v1.0.4  -  Ashok   -  added analytics
 // v1.0.5  -  Ashok   -  Added Rate Cards
 // v1.0.6  -  Ashok   -  Added Master Routes
-// v1.0.7  -  Updated   -  Technology master controller as send all the fields in response
+// v1.0.7  -  Ashok   -  Technology master controller as send all the fields in response
+// v1.0.8  -  Ashok   -  Added Question bank manager routes
 require("dotenv").config();
 
 const cors = require("cors");
@@ -27,61 +28,73 @@ app.use(cookieParser());
 // console.log('config.REACT_APP_REDIRECT_URI', config.REACT_APP_REDIRECT_URI);
 // console.log('config.REACT_APP_API_URL_FRONTEND', config.REACT_APP_API_URL_FRONTEND);
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // console.log('Origin:', origin);
-    const allowedOrigins = [
-      "https://app.upinterview.io",
-      /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/,
-      "http://localhost:3000",
-      "http://localhost:5000",
-    ];
+// CORS configuration
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5000",
+  "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
+  "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net"
+];
 
-    if (!origin) return callback(null, true);
+// CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log('Incoming request from origin:', origin);
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-*');
+    res.setHeader('Access-Control-Expose-Headers', 'x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token');
+  }
 
-    // Check if the origin is allowed
-    if (
-      allowedOrigins.some((allowed) =>
-        typeof allowed === "string" ? allowed === origin : allowed.test(origin)
-      )
-    ) {
-      // console.log('Origin allowed:', origin);
-      return callback(null, true);
-    }
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request for:', req.path);
+    return res.status(200).end();
+  }
 
-    console.warn("CORS: Origin not allowed:", origin);
-    return callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true, // Important: Allow credentials (cookies, authorization headers)
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Cookie",
-    "Accept",
-    "x-user-id",
-    "x-tenant-id",
-    "x-impersonation-userid",
-    "x-permissions",
-    "x-forwarded-proto",
-    "x-forwarded-host",
-    "x-forwarded-port",
-  ],
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  optionsSuccessStatus: 200,
-  exposedHeaders: [
-    "x-user-id",
-    "x-tenant-id",
-    "x-impersonation-userid",
-    "x-permissions",
-    // 'set-cookie',
-    "x-new-token",
-  ],
+  next();
+});
+
+// Add OPTIONS handlers for main routes
+const handleOptions = (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.status(200).end();
 };
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// Add specific OPTIONS handlers for your routes
+app.options('/Organization/Login', handleOptions);
+app.options('/users', handleOptions);
+app.options('/contacts', handleOptions);
+app.options('/outsourceInterviewers', handleOptions);
+app.options('/interviewRounds', handleOptions);
+app.options('/get-tickets', handleOptions);
+
+// API Routes
+const apiRoutes = require("./routes/apiRoutes");
+const linkedinAuthRoutes = require("./routes/linkedinAuthRoute.js");
+const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
+const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
+const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
+const organizationRoutes = require("./routes/organizationLoginRoutes.js");
+const Cardrouter = require("./routes/Carddetailsroutes.js");
+const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
+const usersRoutes = require("./routes/usersRoutes.js");
+// Add import for agoraRoomRoute
+const agoraRoomRoute = require("./routes/agoraRoomRoute.js");
+const feedbackRoute = require("./routes/feedbackRoute.js");
+const usageRoutes = require("./routes/usageRoutes.js");
+
+// CORS is now handled by our custom middleware above
 // <---------------------- v1.0.3
+
+// Standard middleware
+app.use(bodyParser.json());
 
 // Enhanced MongoDB connection with Azure-specific configurations
 const mongooseOptions = {
@@ -193,11 +206,9 @@ setInterval(() => {
 
 // Middleware to capture raw body for webhook endpoints
 const rawBodyParser = require("body-parser").raw({ type: "*/*" });
+// Raw body parser for webhook endpoints
 app.use((req, res, next) => {
-  if (
-    req.originalUrl === "/payment/webhook" ||
-    req.path === "/payment/webhook"
-  ) {
+  if (req.originalUrl === "/payment/webhook" || req.path === "/payment/webhook") {
     rawBodyParser(req, res, (err) => {
       if (err) return next(err);
       req.rawBody = req.body.toString();
@@ -207,9 +218,6 @@ app.use((req, res, next) => {
     next();
   }
 });
-
-// Standard middleware
-app.use(bodyParser.json());
 
 // Enhanced health check endpoints for monitoring
 
@@ -401,21 +409,6 @@ const conditionalPermissionMiddleware = (req, res, next) => {
 
 app.use(conditionalPermissionMiddleware);
 
-// API Routes
-const apiRoutes = require("./routes/apiRoutes");
-const linkedinAuthRoutes = require("./routes/linkedinAuthRoute.js");
-const individualLoginRoutes = require("./routes/individualLoginRoutes.js");
-const SubscriptionRouter = require("./routes/SubscriptionRoutes.js");
-const CustomerSubscriptionRouter = require("./routes/CustomerSubscriptionRoutes.js");
-const organizationRoutes = require("./routes/organizationLoginRoutes.js");
-const Cardrouter = require("./routes/Carddetailsroutes.js");
-const EmailRouter = require("./routes/EmailsRoutes/emailsRoute.js");
-const usersRoutes = require("./routes/usersRoutes.js");
-// Add import for agoraRoomRoute
-const agoraRoomRoute = require("./routes/agoraRoomRoute.js");
-const feedbackRoute = require("./routes/feedbackRoute.js");
-const usageRoutes = require("./routes/usageRoutes.js");
-
 app.use("/api/agora", agoraRoomRoute);
 // ------------------------------v1.0.3 >
 // Apply database connection middleware to all API routes except health check
@@ -443,7 +436,9 @@ const { RoleMaster } = require("./models/MasterSchemas/RoleMaster.js");
 const {
   TechnologyMaster,
 } = require("./models/MasterSchemas/TechnologyMaster.js");
-const { HigherQualification } = require("./models/MasterSchemas/higherqualification.js");
+const {
+  HigherQualification,
+} = require("./models/MasterSchemas/higherqualification.js");
 const { University_CollegeName } = require("./models/MasterSchemas/college.js");
 const { Company } = require("./models/MasterSchemas/company.js");
 
@@ -533,7 +528,7 @@ app.use((err, req, res, next) => {
 });
 
 // this is common code for datautils
-const { Candidate } = require("./models/Candidate/candidate.js");
+const { Candidate } = require("./models/candidate.js");
 const { Position } = require("./models/Position/position.js");
 const TeamMember = require("./models/TeamMembers.js");
 // <-------------------------------v1.0.2
@@ -1274,6 +1269,10 @@ app.use("/rate-cards", RateCardRoutes);
 const MasterRoutes = require("./routes/MasterRoutes/masterRoutes.js");
 app.use("/master-data", MasterRoutes);
 // v1.0.6 --------------------------------------------------------------------------->
+// v1.0.7 <---------------------------------------------------------------------------
+const QuestionBankManager = require("./routes/QuestionBankManagerRoutes/QuestionBankManagerRoutes.js");
+app.use("/questions-manager", QuestionBankManager);
+// v1.0.7 --------------------------------------------------------------------------->
 
 //  v1.0.4 <------------------------------------------------------------------------------
 const filterRoutes = require("./routes/AnalyticsRoutes/filterRoutes.js");

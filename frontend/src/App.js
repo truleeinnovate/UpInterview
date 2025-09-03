@@ -12,6 +12,7 @@
 // v1.0.7 - Ashok - Added InterviewerRates and Interviewers pages in super Admin
 // v1.0.8 - Ashok - Changed file name Interviewers to Interviews in super Admin
 // v1.0.9 - Ashok - Added Master Data page at super admin
+// v2.0.0 - Ashok - Added Question Bank Manager page in super admin
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -42,7 +43,7 @@ import Loading from "./Components/Loading.js";
 import UserDataLoader from "./Components/UserDataLoader.jsx";
 import {
   preloadPermissions,
-  hasValidCachedPermissions,  
+  hasValidCachedPermissions,
 } from "./utils/permissionPreloader";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 // import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
@@ -458,6 +459,11 @@ const MasterData = lazy(() =>
 const MasterTable = lazy(() =>
   import("./Pages/SuperAdmin-Part/MasterData/MasterTable/MasterTable.jsx")
 );
+// v2.0.0 <------------------------------------------------------------------
+const QuestionBankManager = lazy(() =>
+  import("./Pages/SuperAdmin-Part/QuestionBankManager/QuestionBankManager.jsx")
+);
+// v2.0.0 <------------------------------------------------------------------
 // v1.0.7 ------------------------------------------------------------------------------->
 // v1.0.8 ------------------------------------------------------------------------------->
 // v1.0.9 ------------------------------------------------------------------------------->
@@ -1297,6 +1303,9 @@ const MainAppRoutes = ({
               <Route path="/interviews" element={<Interviewers />} />
               <Route path="/master-data" element={<MasterData />} />
               <Route path="/master-data/:type" element={<MasterTable />} />
+              {/* v2.0.0 <------------------------------------------------- */}
+              <Route path="/question-bank-manager" element={<QuestionBankManager />} />
+              {/* v2.0.0 -------------------------------------------------> */}
               {/* v1.0.7 ---------------------------------------------------------------> */}
               {/* v1.0.8 ---------------------------------------------------------------------> */}
               {/* v1.0.9 ---------------------------------------------------------------------> */}

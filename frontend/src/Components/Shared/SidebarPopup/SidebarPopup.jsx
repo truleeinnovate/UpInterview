@@ -1,0 +1,104 @@
+// v1.0.0 - Ashok - Improved responsiveness
+import { useState } from "react";
+import { Minimize, Expand, X, ExternalLink } from "lucide-react";
+import { FaEdit } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
+function SidebarPopup({
+  title,
+  children,
+  onClose,
+  id, // needed for edit
+  showEdit = false,
+  showExternal = false,
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
+
+  const toggleExpand = () => setIsExpanded(!isExpanded);
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Content */}
+      {/* v1.0.0 <----------------------------------------------------------------------------- */}
+      <div
+        className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col ${
+          isExpanded
+            ? "w-full"
+            // : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
+            : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
+        }`}
+      // v1.0.0 ----------------------------------------------------------------------------->
+      >
+        <div className="sticky top-0 bg-white px-4 py-6 z-10">
+          <div className="flex justify-between items-center px-2">
+            <h2 className="sm:text-xl text-2xl font-semibold text-custom-blue">
+              {title}
+            </h2>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              {showEdit && id && (
+                <button
+                  onClick={() => navigate(`/candidate/edit/${id}`)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Edit"
+                >
+                  <FaEdit className="w-5 h-5 text-gray-500 hover:text-gray-600 rounded-lg hover:bg-gray-100" />
+                </button>
+              )}
+
+              {/* Expand/Minimize (always visible) */}
+              <button
+                onClick={toggleExpand}
+                // v1.0.0 <-----------------------------------------------------------------------------
+                // className="sm:hidden md:block p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="sm:hidden md:hidden lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                // v1.0.0 ----------------------------------------------------------------------------->
+                title={isExpanded ? "Minimize" : "Expand"}
+              >
+                {isExpanded ? (
+                  <Minimize className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Expand className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+
+              {showExternal && id && (
+                <button
+                  onClick={() =>
+                    window.open(`/candidate/full-screen/${id}`, "_blank")
+                  }
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Open in Fullscreen"
+                >
+                  <ExternalLink className="w-5 h-5 text-gray-500 hover:text-gray-600 rounded-lg hover:bg-gray-100" />
+                </button>
+              )}
+
+              {/* Close (always visible) */}
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-500 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Popup content */}
+        <div className="flex-grow overflow-y-auto p-4 sm:p-6">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+export default SidebarPopup;

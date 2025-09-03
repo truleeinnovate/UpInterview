@@ -2,6 +2,8 @@
 // v1.0.1  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.2  -  Venkatesh   -  added status change functionality
 // v1.0.3  -  Venkatesh   -  added filters functionality for location, tech, company, experience, salary, created within days, updated within days
+// v1.0.4  -  Ashok   -  Improved responsiveness
+
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -16,6 +18,9 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { usePermissions } from "../../../../Context/PermissionsContext";
+// v1.0.4 <------------------------------------------------------
+import { useMediaQuery } from "react-responsive";
+// v1.0.2 ------------------------------------------------------>
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 import { notify } from "../../../../services/toastService";//<----v1.02-----
 
@@ -62,6 +67,9 @@ const PositionTab = () => {
   const [createdDatePreset, setCreatedDatePreset] = useState("");
   //-----v1.03----->
   const filterIconRef = useRef(null);
+  // v1.0.4 <--------------------------------------------------------
+  const isTablet = useMediaQuery({ maxWidth: 1024 });
+  // v1.0.4 -------------------------------------------------------->
   //<----v1.02-----
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const STATUS_OPTIONS = ["draft", "opened", "closed", "hold", "cancelled"];
@@ -158,18 +166,29 @@ const PositionTab = () => {
     });
   }, [positionData, selectedFilters, searchQuery]);
 
+  // v1.0.2 <------------------------------------------------------
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     if (window.innerWidth < 1024) {
+  //       setView("kanban");
+  //     } else {
+  //       setView("table");
+  //     }
+  //   };
+  //   handleResize();
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
+
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setView("kanban");
-      } else {
-        setView("table");
-      }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    // Only run on isTablet change
+    if (isTablet) {
+      setView("kanban");
+    } else {
+      setView("table");
+    }
+  }, [isTablet]);
+  // v1.0.2 ------------------------------------------------------>
 
   useEffect(() => {
     if (isFilterPopupOpen) {
@@ -394,9 +413,7 @@ const PositionTab = () => {
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
             <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-
-              {row.title ? row.title.charAt(0).toUpperCase() : '?'}
-
+              {row.title ? row.title.charAt(0).toUpperCase() : "?"}
             </div>
           </div>
           <div className="ml-3">
@@ -404,9 +421,7 @@ const PositionTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-
-              {row.title.charAt(0).toUpperCase() + row.title.slice(1) || 'N/A'}
-
+              {row.title.charAt(0).toUpperCase() + row.title.slice(1) || "N/A"}
             </div>
           </div>
         </div>
@@ -459,7 +474,7 @@ const PositionTab = () => {
       },
       {
         key:"createdAt",
-        header:"CreatedAt",
+        header:"Created At",
         render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
 
       }
@@ -468,15 +483,13 @@ const PositionTab = () => {
   const tableActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-
-        {
-          key: 'view',
-          label: 'View Details',
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (row) => handleView(row),
-        },
-      ]
-
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (row) => handleView(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
@@ -663,9 +676,7 @@ const PositionTab = () => {
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsSkillsOpen(!isSkillsOpen)}
                     >
-                      <span className="font-medium text-gray-700">
-                        Skills
-                      </span>
+                      <span className="font-medium text-gray-700">Skills</span>
                       {isSkillsOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (

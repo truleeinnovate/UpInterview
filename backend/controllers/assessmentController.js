@@ -9,7 +9,7 @@ const { CandidateAssessment } = require("../models/Assessment/candidateAssessmen
 
 const mongoose = require("mongoose");
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema.js"); 
-const { Candidate } = require("../models/Candidate/candidate.js");
+const { Candidate } = require("../models/candidate.js");
 const Notification = require("../models/notification");
 const { encrypt } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");

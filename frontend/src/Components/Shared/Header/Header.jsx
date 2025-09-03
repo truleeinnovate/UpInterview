@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
@@ -11,7 +13,10 @@ const Header = ({ title, onAddClick, addButtonText = 'Add New', canCreate }) => 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <h1 className="text-2xl font-semibold text-custom-blue">
+      {/* v1.0.0 <------------------------------------------------------------------------ */}
+      {/* <h1 className="text-2xl font-semibold text-custom-blue"> */}
+      <h1 className="sm:text-xl md:text-xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-semibold text-custom-blue">
+      {/* v1.0.0 ------------------------------------------------------------------------> */}
         {title}
       </h1>
       {canCreate && (
