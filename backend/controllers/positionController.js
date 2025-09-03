@@ -401,8 +401,8 @@ const updatePosition = async (req, res) => {
 
   const positionId = req.params.id;
   const { tenantId, ownerId, ...updateFields } = req.body;
+  console.log("updateFields", updateFields);
 
-//  Ranjith changes
   // Validate incoming PATCH data
   const { error } = positionPatchValidationSchema.validate(req.body, { abortEarly: false });
   if (error) {
@@ -412,18 +412,11 @@ const updatePosition = async (req, res) => {
     });
     return res.status(400).json({ status: "error", errors });
   }
-// venkatesh changes
-  res.locals.loggedByController = true;
-  //console.log("effectivePermissions",res.locals?.effectivePermissions)
-  //<-----v1.0.1---
-  // Permission: Tasks.Create (or super admin override)
-  const canCreate =
-  await hasPermission(res.locals?.effectivePermissions?.Positions, 'Edit')
- //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Edit')
+
+  const canCreate = await hasPermission(res.locals?.effectivePermissions?.Positions, 'Edit')
   if (!canCreate) {
     return res.status(403).json({ message: 'Forbidden: missing Positions.Edit permission' });
   }
-  //-----v1.0.1--->
 
   try {
     const currentPosition = await Position.findById(positionId).lean();
@@ -442,7 +435,7 @@ const updatePosition = async (req, res) => {
       maxexperience:
         updateFields.maxexperience || currentPosition.maxexperience,
       selectedTemplete:
-        updateFields.template?.templateName ?? currentPosition.selectedTemplete,
+        updateFields?.selectedTemplete ?? currentPosition.selectedTemplete,
       skills: updateFields.skills || currentPosition.skills,
       additionalNotes:
         updateFields.additionalNotes || currentPosition.additionalNotes,
@@ -454,13 +447,16 @@ const updatePosition = async (req, res) => {
         ? Number(updateFields.NoofPositions)
         : currentPosition.NoofPositions,
       Location: updateFields.Location || currentPosition.Location,
-      status: updateFields.status ?? currentPosition.status,// v1.0.2  -  Venkatesh   -  added status change functionality
+      status: updateFields.status ?? currentPosition.status,
       updatedBy: ownerId,
     };
 
-    // Handle rounds update only if template is provided and has rounds
-    if (updateFields.template?.rounds) {
-      positionData.rounds = updateFields.template.rounds.map((round) => ({
+    // CHANGED: Check if template name has changed before updating rounds
+    const isTemplateChanged = updateFields?.selectedTemplete !== currentPosition.selectedTemplete;
+    
+    // Handle rounds update only if template is provided, has rounds, AND template name has changed
+    if (updateFields?.rounds && isTemplateChanged) {
+      positionData.rounds = updateFields.rounds.map((round) => ({
         roundTitle: round.roundTitle || "",
         interviewMode: round.interviewMode || "",
         interviewerType: round.interviewerType || "",
@@ -478,7 +474,7 @@ const updatePosition = async (req, res) => {
           : [],
       }));
     } else {
-      // Keep existing rounds if no template rounds provided
+      // Keep existing rounds if template name hasn't changed
       positionData.rounds = currentPosition.rounds;
     }
 
@@ -486,6 +482,14 @@ const updatePosition = async (req, res) => {
     const changes = Object.entries(positionData)
       .filter(([key, newValue]) => {
         const oldValue = currentPosition[key];
+        
+        // Special handling for ObjectId vs string comparison
+        if (['ownerId', 'tenantId', 'updatedBy', 'assessmentId'].includes(key)) {
+          const oldIdString = oldValue?.toString();
+          const newIdString = newValue?.toString();
+          return oldIdString !== newIdString;
+        }
+        
         if (Array.isArray(oldValue) && Array.isArray(newValue)) {
           const normalizeArray = (array) =>
             array
@@ -496,6 +500,8 @@ const updatePosition = async (req, res) => {
             JSON.stringify(normalizeArray(newValue))
           );
         }
+        
+        // For other fields, use strict equality
         return oldValue !== newValue;
       })
       .map(([key, newValue]) => ({
@@ -504,11 +510,21 @@ const updatePosition = async (req, res) => {
         newValue,
       }));
 
+    // If no changes detected, return early without setting any log/feed data
     if (changes.length === 0) {
+      console.log("✅ No actual changes detected");
       return res.status(200).json({
         status: "no_changes",
         message: "No changes detected, position details remain the same",
+        data: currentPosition
       });
+    }
+
+    console.log("📊 Actual changes detected:", changes.length);
+    console.log("Changes:", changes);
+
+    for (const change of changes) {
+     console.log("Change: Data", change);
     }
 
     const updatedPosition = await Position.findByIdAndUpdate(
@@ -521,6 +537,8 @@ const updatePosition = async (req, res) => {
       return res.status(404).json({ message: "Position not found." });
     }
 
+    await updatedPosition.save()
+    // Only set feedData and logData when there are actual changes
     res.locals.feedData = {
       tenantId,
       feedType: "update",
@@ -532,7 +550,7 @@ const updatePosition = async (req, res) => {
       parentId: positionId,
       parentObject: "Position",
       metadata: req.body,
-      severity: res.statusCode >= 500 ? "high" : "low",
+      severity: "low",
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
         message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
@@ -550,15 +568,17 @@ const updatePosition = async (req, res) => {
       responseBody: updatedPosition,
     };
 
-    res.status(201).json({
+    res.status(200).json({
       status: "Updated successfully",
       message: "Position updated successfully",
       data: updatedPosition,
     });
   } catch (error) {
+    console.error("❌ Error updating position:", error);
+    
     res.locals.logData = {
-      tenantId,
-      ownerId,
+      tenantId: req.body?.tenantId,
+      ownerId: req.body?.ownerId,
       processName: "Update Position",
       requestBody: req.body,
       message: error.message,
@@ -567,10 +587,24 @@ const updatePosition = async (req, res) => {
 
     res.status(500).json({
       status: "error",
-      message: error.message,
+      message: "Internal server error",
     });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // v1.0.0 <-----------------------------------------------------------------------------------
 // const saveInterviewRoundPosition = async (req, res) => {
@@ -848,9 +882,16 @@ const updatePosition = async (req, res) => {
 // };
 
 const saveInterviewRoundPosition = async (req, res) => {
+
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Position Round";
+
+
   try {
     const { positionId, round, roundId } = req.body;
 
+    console.log("round round",round);
+    
     //res.locals.loggedByController = true;
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
@@ -926,7 +967,7 @@ const saveInterviewRoundPosition = async (req, res) => {
       const newSequence = round.sequence || position.rounds.length + 1;
       const newIndex = Math.max(newSequence - 1, 0);
 
-      console.log("newIndex", round);
+      // console.log("newIndex", round);
 
       const newRound = {
         ...round,
@@ -943,6 +984,45 @@ const saveInterviewRoundPosition = async (req, res) => {
 
       await position.save();
 
+  
+
+        // Get the latest saved position to access the round with _id
+    const updatedPosition = await Position.findById(positionId);
+    const savedRound = updatedPosition.rounds.find(
+      r => r.sequence === newSequence && 
+           r.roundTitle === newRound.roundTitle
+    );
+
+    console.log("round.savedRound", savedRound);
+    console.log("round.ownerId", req.body.round.ownerId);
+
+          // Feed and log data
+    res.locals.feedData = {
+      tenantId: req.body.round.tenantId,
+      feedType: "info",
+      action: {
+        name: "position_round_created",
+        description: `Position Round was created`,
+      },
+      ownerId: req.body.round.ownerId,
+      parentId: savedRound._id,
+      parentObject: "Position Round",
+      metadata: req.body,
+      severity: res.statusCode >= 500 ? "high" : "low",
+      message: `Position Round was created successfully`,
+    };
+
+    res.locals.logData = {
+      tenantId: req.body.round.tenantId,
+      ownerId: req.body.round.ownerId,
+      processName: "Create Position Round",
+      requestBody: req.body,
+      status: "success",
+      message: "Position Round created successfully",
+      responseBody: newRound,
+    };
+
+
       return res.status(201).json({
         status: "Created Round successfully",
         message: "Interview round created successfully.",
@@ -958,6 +1038,17 @@ const saveInterviewRoundPosition = async (req, res) => {
     }
   } catch (error) {
     console.error("Error saving interview round:", error);
+    
+     // Error logging
+     res.locals.logData = {
+      tenantId: req.body.round.tenantId,
+      ownerId: req.body.round.ownerId,
+      processName: "Create Position Round",
+      requestBody: req.body,
+      message: error.message,
+      status: "error",
+    };
+    
     return res.status(500).json({ message: "Internal server error." });
   }
 };
@@ -1235,19 +1326,25 @@ const saveInterviewRoundPosition = async (req, res) => {
 
 // ======================= PATCH Handler =======================
 
+
+
 const updateInterviewRound = async (req, res) => {
+  // Set up logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = 'Update Interview Round';
+
   try {
     console.log("=== PATCH /positions/:positionId/rounds/:roundId called ===");
     console.log("Request received at:", new Date().toISOString());
 
     // Log request parameters
     const { positionId: rawPositionId, roundId: rawRoundId } = req.params;
+    const { tenantId, ownerId, round: updates } = req.body;
+    
     console.log("📍 Request Parameters:");
     console.log("  - positionId:", rawPositionId);
     console.log("  - roundId:", rawRoundId);
 
-    // Log request body
-    const { round: updates } = req.body;
     console.log("📥 Incoming Updates from Request Body:");
     console.log("  - updates object:", JSON.stringify(updates, null, 2));
 
@@ -1342,27 +1439,55 @@ const updateInterviewRound = async (req, res) => {
     console.log("🔄 Applying updates to round...");
     console.log("📊 Current round state before updates:", JSON.stringify(round.toObject(), null, 2));
     
+    // Track changes for logging and feed
+    const changes = [];
+    
     Object.keys(updates).forEach((key) => {
       console.log(`   Processing field: ${key}`);
+      
+      const oldValue = round[key];
+      let newValue = updates[key];
       
       if (key === "assessmentId") {
         if (updates.assessmentId) {
           console.log(`   ↳ Setting assessmentId to ObjectId: ${updates.assessmentId}`);
-          round[key] = new mongoose.Types.ObjectId(updates.assessmentId);
+          newValue = new mongoose.Types.ObjectId(updates.assessmentId);
+          round[key] = newValue;
         } else {
           console.log(`   ↳ Clearing assessmentId`);
+          newValue = null;
           round[key] = null;
         }
       } else if (key === "interviewers" && Array.isArray(updates.interviewers)) {
         console.log(`   ↳ Setting interviewers array with ${updates.interviewers.length} items`);
-        round[key] = updates.interviewers.map((id) => new mongoose.Types.ObjectId(id));
+        newValue = updates.interviewers.map((id) => new mongoose.Types.ObjectId(id));
+        round[key] = newValue;
       } else {
         console.log(`   ↳ Setting ${key} from '${round[key]}' to '${updates[key]}'`);
-        round[key] = updates[key];
+        round[key] = newValue;
+      }
+      
+      // Track changes for logging and feed
+      if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+        changes.push({
+          fieldName: key,
+          oldValue: oldValue,
+          newValue: newValue
+        });
       }
     });
 
     console.log("📊 Round state after updates:", JSON.stringify(round.toObject(), null, 2));
+
+    // If no changes detected, return early WITHOUT setting feed/log data
+    if (changes.length === 0) {
+      console.log("✅ No changes detected, returning without feed/log data");
+      return res.status(200).json({
+        status: 'no_changes',
+        message: 'No changes detected, round details remain the same',
+        data: round,
+      });
+    }
 
     // ---------- Reorder Rounds if Sequence Changed ----------
     if (updates.sequence !== undefined && updates.sequence !== round.sequence) {
@@ -1385,6 +1510,40 @@ const updateInterviewRound = async (req, res) => {
     console.log("✅ Round updated successfully:", round._id);
     console.log("📊 Final round data:", JSON.stringify(round.toObject(), null, 2));
 
+    console.log("📋 Changes detected:", changes.length);
+    console.log("Changes:", changes);
+
+    // ONLY set feedData and logData when there are actual changes
+    res.locals.feedData = {
+      tenantId: req.body.tenantId,
+      feedType: 'update',
+      action: {
+        name: 'Position_round_updated',
+        description: `Position round was updated`,
+      },
+      ownerId: req.body.ownerId,
+      parentId: rawPositionId,
+      parentObject: 'Position',
+      metadata: req.body,
+      severity: 'low',
+      fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
+        fieldName,
+        message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
+      })),
+      history: changes,
+    };
+
+    res.locals.logData = {
+      tenantId: req.body.tenantId,
+      ownerId: req.body.ownerId,
+      processName: 'Update Position Round',
+      requestBody: req.body,
+      status: 'success',
+      message: 'Position Round updated successfully',
+      responseBody: round,
+      changes: changes,
+    };
+
     return res.status(200).json({
       status: "Updated Round successfully",
       message: "Round updated successfully.",
@@ -1395,9 +1554,196 @@ const updateInterviewRound = async (req, res) => {
     console.error("❌ Error updating interview round:", err);
     console.error("📋 Error details:", err.message);
     console.error("🔍 Error stack:", err.stack);
+    
+    // Error logging - only set logData for actual errors
+    res.locals.logData = {
+      tenantId: req.body?.tenantId,
+      ownerId: req.body?.ownerId,
+      processName: "Update Position Round",
+      requestBody: req.body,
+      message: err.message,
+      status: "error",
+    };
+
     return res.status(500).json({ message: "Internal server error." });
   }
 };
+
+
+
+
+
+
+
+
+
+
+// const updateInterviewRound = async (req, res) => {
+//   try {
+//     console.log("=== PATCH /positions/:positionId/rounds/:roundId called ===");
+//     console.log("Request received at:", new Date().toISOString());
+
+//     // Log request parameters
+//     const { positionId: rawPositionId, roundId: rawRoundId } = req.params;
+//     console.log("📍 Request Parameters:");
+//     console.log("  - positionId:", rawPositionId);
+//     console.log("  - roundId:", rawRoundId);
+
+//     // Log request body
+//     const { round: updates } = req.body;
+//     console.log("📥 Incoming Updates from Request Body:");
+//     console.log("  - updates object:", JSON.stringify(updates, null, 2));
+
+//     // ---------- Validate ObjectId ----------
+//     console.log("🔍 Validating ObjectIds...");
+//     if (!mongoose.Types.ObjectId.isValid(rawPositionId)) {
+//       console.log("❌ Invalid Position ID:", rawPositionId);
+//       return res.status(400).json({ message: "Invalid Position ID" });
+//     }
+
+//     if (!mongoose.Types.ObjectId.isValid(rawRoundId)) {
+//       console.log("❌ Invalid Round ID:", rawRoundId);
+//       return res.status(400).json({ message: "Invalid Round ID" });
+//     }
+//     console.log("✅ ObjectIds validated successfully");
+
+//     // ---------- Fetch Position ----------
+//     console.log("📋 Fetching position from database...");
+//     const position = await Position.findById(rawPositionId);
+//     if (!position) {
+//       console.log("❌ Position not found:", rawPositionId);
+//       return res.status(404).json({ message: "Position not found." });
+//     }
+//     console.log("✅ Position found:", position._id);
+
+//     // ---------- Fetch Round ----------
+//     console.log("📋 Fetching round from position...");
+//     const round = position.rounds.id(rawRoundId);
+//     if (!round) {
+//       console.log("❌ Round not found:", rawRoundId);
+//       return res.status(404).json({ message: "Round not found." });
+//     }
+//     console.log("✅ Round found:", round._id);
+//     console.log("📊 Current round data:", JSON.stringify(round.toObject(), null, 2));
+
+//     // ---------- Handle assessment rounds ----------
+//     console.log("🔍 Checking for assessment round updates...");
+//     if (updates.assessmentId) {
+//       console.log("🎯 Assessment round detected - clearing interviewer fields");
+//       console.log("📝 Before clearing - interviewerType:", round.interviewerType);
+      
+//       updates.interviewerType = '';
+//       updates.interviewerGroupName = '';
+//       updates.interviewerViewType = '';
+//       updates.selectedInterviewersType = '';
+//       updates.interviewers = [];
+      
+//       console.log("📝 After clearing - interviewerType:", updates.interviewerType);
+      
+//       if (updates.roundTitle && updates.roundTitle.toLowerCase() !== "assessment") {
+//         console.log("🔄 Non-assessment round detected - resetting assessmentId");
+//         updates.assessmentId = null;
+//       }
+//     }
+
+//     // ---------- Handle interviewer type transitions ----------
+//     console.log("🔍 Checking for interviewer type transitions...");
+//     if (!updates.assessmentId) {
+//       if (updates.interviewerType && updates.interviewerType !== round.interviewerType) {
+//         console.log(`🔄 Changing interviewerType from '${round.interviewerType}' to '${updates.interviewerType}'`);
+        
+//         if (updates.interviewerType === 'Internal') {
+//           console.log("🏢 Internal interviewer type - clearing selectedInterviewersType");
+//           updates.selectedInterviewersType = '';
+//         } else if (updates.interviewerType === 'External') {
+//           console.log("🌐 External interviewer type - clearing group and interviewers");
+//           updates.interviewerGroupName = '';
+//           updates.interviewers = [];
+//         }
+//       } else {
+//         console.log("✅ No interviewer type change detected");
+//       }
+//     }
+
+//     // ---------- Validate Updates ----------
+//     console.log("🔍 Validating update data...");
+//     const roundObjectForValidation = { ...updates };
+//     console.log("📋 Data being validated:", JSON.stringify(roundObjectForValidation, null, 2));
+
+//     const { error } = validateRoundPatchData.validate(roundObjectForValidation, { abortEarly: false });
+//     if (error) {
+//       const errors = {};
+//       error.details.forEach((err) => {
+//         errors[err.path.join(".")] = err.message;
+//       });
+//       console.log("❌ Validation errors:", errors);
+//       return res.status(400).json({ status: "error", errors });
+//     }
+//     console.log("✅ Validation passed");
+
+//     // ---------- Apply Updates ----------
+//     console.log("🔄 Applying updates to round...");
+//     console.log("📊 Current round state before updates:", JSON.stringify(round.toObject(), null, 2));
+    
+//     Object.keys(updates).forEach((key) => {
+//       console.log(`   Processing field: ${key}`);
+      
+//       if (key === "assessmentId") {
+//         if (updates.assessmentId) {
+//           console.log(`   ↳ Setting assessmentId to ObjectId: ${updates.assessmentId}`);
+//           round[key] = new mongoose.Types.ObjectId(updates.assessmentId);
+//         } else {
+//           console.log(`   ↳ Clearing assessmentId`);
+//           round[key] = null;
+//         }
+//       } else if (key === "interviewers" && Array.isArray(updates.interviewers)) {
+//         console.log(`   ↳ Setting interviewers array with ${updates.interviewers.length} items`);
+//         round[key] = updates.interviewers.map((id) => new mongoose.Types.ObjectId(id));
+//       } else {
+//         console.log(`   ↳ Setting ${key} from '${round[key]}' to '${updates[key]}'`);
+//         round[key] = updates[key];
+//       }
+//     });
+
+//     console.log("📊 Round state after updates:", JSON.stringify(round.toObject(), null, 2));
+
+//     // ---------- Reorder Rounds if Sequence Changed ----------
+//     if (updates.sequence !== undefined && updates.sequence !== round.sequence) {
+//       console.log(`🔄 Reordering rounds - moving to sequence ${updates.sequence}`);
+//       console.log(`   Current sequence: ${round.sequence}`);
+      
+//       position.rounds = position.rounds.filter((r) => !r._id.equals(rawRoundId));
+//       const desiredIndex = Math.max(updates.sequence - 1, 0);
+//       position.rounds.splice(desiredIndex, 0, round);
+      
+//       position.rounds.forEach((r, idx) => {
+//         console.log(`   Setting round ${r._id} sequence from ${r.sequence} to ${idx + 1}`);
+//         r.sequence = idx + 1;
+//       });
+//     }
+
+//     // ---------- Save Position ----------
+//     console.log("💾 Saving position to database...");
+//     await position.save();
+//     console.log("✅ Round updated successfully:", round._id);
+//     console.log("📊 Final round data:", JSON.stringify(round.toObject(), null, 2));
+
+//     return res.status(200).json({
+//       status: "Updated Round successfully",
+//       message: "Round updated successfully.",
+//       data: round,
+//     });
+
+//   } catch (err) {
+//     console.error("❌ Error updating interview round:", err);
+//     console.error("📋 Error details:", err.message);
+//     console.error("🔍 Error stack:", err.stack);
+//     return res.status(500).json({ message: "Internal server error." });
+//   }
+// };
+
+
+
 
 // const updateInterviewRound = async (req, res) => {
 //   //res.locals.loggedByController = true;
@@ -1569,6 +1915,8 @@ const updateInterviewRound = async (req, res) => {
 
 
     // v1.0.0 ----------------------------------------------------------------------------------->
+    
+    
     const deleteRound = async (req, res) => {
       const { roundId } = req.params;
 
@@ -1586,15 +1934,92 @@ const updateInterviewRound = async (req, res) => {
           return res.status(404).json({ message: "Round not found" });
         }
 
+        // if (roundIndex === -1) {
+        //   console.log("❌ Round not found in position:", roundId);
+          
+        //   res.locals.logData = {
+        //     processName: 'Delete Interview Round',
+        //     requestBody: req.body,
+        //     status: 'error',
+        //     message: 'Round not found in position',
+        //   };
+          
+        //   return res.status(404).json({ message: "Round not found" });
+        // }
+    
+        // // Store the round data BEFORE splicing for logging
+        // const deletedRound = position.rounds[roundIndex];
+        // console.log("🗑️ Round to be deleted:", JSON.stringify(deletedRound.toObject(), null, 2));
+    
+        // // Generate feed data BEFORE removing the round
+        // res.locals.feedData = {
+        //   tenantId: position.tenantId,
+        //   feedType: 'delete',
+        //   action: {
+        //     name: 'interview_round_deleted',
+        //     description: `Interview round was deleted`,
+        //   },
+        //   ownerId: position.ownerId,
+        //   parentId: position._id,
+        //   parentObject: 'Position',
+        //   metadata: req.body,
+        //   severity: 'medium',
+        //   fieldMessage: [{
+        //     fieldName: 'round',
+        //     message: `Round '${deletedRound.roundTitle}' (sequence: ${deletedRound.sequence}) was deleted`,
+        //   }],
+        //   history: [{
+        //     fieldName: 'deletedRound',
+        //     oldValue: deletedRound.toObject(),
+        //     newValue: null
+        //   }],
+        // };
+    
+        // // Update log data for successful operation
+        // res.locals.logData = {
+        //   tenantId: position.tenantId,
+        //   ownerId: position.ownerId,
+        //   processName: 'Delete Interview Round',
+        //   requestBody: req.body,
+        //   status: 'success',
+        //   message: 'Round deleted successfully',
+        //   responseBody: { 
+        //     deletedRoundId: roundId, 
+        //     roundTitle: deletedRound.roundTitle,
+        //     sequence: deletedRound.sequence 
+        //   },
+        //   changes: [{
+        //     action: 'delete',
+        //     roundId: roundId,
+        //     roundTitle: deletedRound.roundTitle,
+        //     sequence: deletedRound.sequence
+        //   }],
+        // };
+
         // Remove the round from the array
+        
+        
         position.rounds.splice(roundIndex, 1);
 
         // Save the updated position
         await position.save();
 
+   
+
         res.status(200).json({ message: "Round deleted successfully" });
       } catch (error) {
         console.error("Error deleting round:", error);
+
+ // Error logging
+ res.locals.logData = {
+  tenantId: req.body.tenantId,
+  ownerId: req.body.ownerId,
+  processName: "Update Ticket",
+  requestBody: req.body,
+  message: error.message,
+  status: "error",
+};
+
         res.status(500).json({ message: "Error deleting round" });
       }
     };

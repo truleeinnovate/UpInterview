@@ -856,21 +856,19 @@ const AddCandidateForm = ({
         isResumeRemoved,
       });
       // console.log("response", response);
-
-      //       // Send response
-      // res.status(203).json({
-      //   status: 'Updated successfully',
-      //   message: 'Candidate updated successfully',
-      //   data: updatedCandidate,
-      // });
-      if (response.status === "success") {
-        notify.success("Candidate added successfully");
-      } else if (
-        response.status === "no_changes" ||
-        response.status === "Updated successfully"
-      ) {
-        notify.success("Candidate Updated successfully");
-      }
+      
+    //       // Send response
+    // res.status(203).json({
+    //   status: 'Updated successfully',
+    //   message: 'Candidate updated successfully',
+    //   data: updatedCandidate,
+    // });
+    if(response.status === "success" ){
+      notify.success("Candidate added successfully");
+    }else if(response.status === "no_changes" || response.status === "Updated successfully" ){
+      notify.success("Candidate Updated successfully");
+    }
+      
 
       // notify.success("Candidate added successfully");
 
@@ -903,18 +901,21 @@ const AddCandidateForm = ({
             default:
               navigate("/candidate");
           }
-        }, 500); // Delay navigation to ensure loading state is visible
+        }, 1000); // Delay navigation to ensure loading state is visible
       } else {
         // For "Add Candidate" button, also close modal if in modal mode
         if (isModal && onClose) {
           setTimeout(() => {
             onClose(response.data);
-          }, 500);
+          }, 1000);
         }
       }
     } catch (error) {
       console.error("Error adding candidate:", error);
 
+       // Show error toast
+    notify.error(error.response?.data?.message || error.message || "Failed to save candidate");
+    
       if (error.response?.data?.errors) {
         // Backend Joi validation errors
         setErrors(error.response.data.errors);
@@ -996,8 +997,66 @@ const AddCandidateForm = ({
                       <p className="text-xs text-gray-400">Upload Photo</p>
                     </>
                   )}
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                    {/* Icon placeholder */}
+
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* // newly added guide for CandidateForm component by Ranjith */}
+<InfoGuide
+  title="Candidate Profile Guidelines"
+  items={[
+    <><span className="font-medium">Complete Profile:</span> Fill all required fields to create a comprehensive candidate profile</>,
+    <><span className="font-medium">Profile Photo:</span> Upload a professional headshot (max 100KB, 200×200 recommended)</>,
+    <><span className="font-medium">Resume Requirements:</span> PDF or Word documents only, maximum 4MB file size</>,
+    <><span className="font-medium">Contact Information:</span> Provide accurate email and phone number for communication</>,
+    <><span className="font-medium">Education Details:</span> Include highest qualification and university/college information</>,
+    <><span className="font-medium">Experience Tracking:</span> Specify both current and relevant experience in years</>,
+    <><span className="font-medium">Skill Assessment:</span> Add relevant skills with proficiency levels (Basic, Medium, Expert)</>,
+    <><span className="font-medium">Current Role:</span> Select the candidate's current job position from available options</>,
+    <><span className="font-medium">Data Validation:</span> All fields are validated in real-time with error highlighting</>,
+    <><span className="font-medium">Flexible Options:</span> Custom university entries available if not found in the list</>
+  ]}
+/>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
+              {/* Profile Image Upload */}
+              <div className="flex flex-col items-center">
+                <div
+                  onClick={() => imageInputRef.current?.click()}
+                  className="relative group cursor-pointer"
+                >
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Candidate"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : selectedImage?.path ? (
+                      <img
+                        src={selectedImage?.path}
+                        className="w-full h-full object-cover rounded-lg"
+                        alt={selectedImage.FirstName || "Candidate"}
+                        onError={(e) => {
+                          e.target.src = "/default-profile.png";
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <p className="text-xs text-gray-400">Upload Photo</p>
+                      </>
+                    )}
+                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
+                      {/* Icon placeholder */}
+                    </div>
+
                   </div>
                 </div>
                 <input

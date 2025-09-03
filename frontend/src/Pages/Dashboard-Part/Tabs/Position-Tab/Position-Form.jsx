@@ -588,7 +588,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionData, id, companies]);
+  }, [positionData, id, companies,templatesData]);
 
   const handleSubmit = async (
     e,
@@ -694,17 +694,19 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       console.log("response", response);
       if (response.status === "success") {
         notify.success("Position added successfully");
+
       } else if (
         response.status === "no_changes" ||
         response.status === "Updated successfully"
       ) {
         notify.success("Position Updated successfully");
+      } else {
+        // Handle cases where the API returns a non-success status
+        throw new Error(response.message || "Failed to save position");
       }
 
-      if (
-        response.status === "success" ||
-        response.status === "Updated successfully"
-      ) {
+
+      if (response.status === "success" || response.status === "Updated successfully" || response.status === "no_changes") {
         // Handle navigation
         if (actionType === "BasicDetailsSave") {
           // If it's a modal, call the onClose function with the new position data
@@ -743,6 +745,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       }
     } catch (error) {
       // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
+
+      // Show error toast
+    notify.error(error.response?.data?.message || error.message || "Failed to save position");
+    
       if (error.response && error.response.status === 400) {
         const backendErrors = error.response.data.errors || {};
         console.log("backendErrors", backendErrors);

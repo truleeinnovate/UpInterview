@@ -163,6 +163,7 @@ const [isOpen, setIsOpen] = useState(false);
     if (editMode && initialTicketData) {
       setFormState((prev) => ({
         ...prev,
+        ticketId: initialTicketData?._id,
         description: initialTicketData.description || "",
         subject: initialTicketData.subject || "",
         selectedIssue: initialTicketData.issueType || "",
@@ -315,6 +316,8 @@ const [isOpen, setIsOpen] = useState(false);
 
   console.log("FeedbackIssueType---", FeedbackIssueType);
 
+  console.log("types of ", typeof initialTicketData?._id);
+
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -323,15 +326,32 @@ const [isOpen, setIsOpen] = useState(false);
       if (!validateForm()) return;
 
       const formData = createFormData();
+      console.log("formData--- formData", formData);
 
       try {
-        console.log("formData---", formData);
+    
+        console.log("data: formDa editMode ticketId attachmentFile isAttachmentFileRemoved,",
+          {
+            data: formData,
+            editMode,
+            ticketId: initialTicketData?._id,
+            attachmentFile,
+            isAttachmentFileRemoved,
+            tenantId,
+            ownerId,
+          }
+        );
+      
+        
+        
         const response = await submitTicket({
           data: formData,
           editMode,
           ticketId: initialTicketData?._id,
           attachmentFile,
           isAttachmentFileRemoved,
+          tenantId,
+          ownerId,
         });
 
 
@@ -348,13 +368,16 @@ const [isOpen, setIsOpen] = useState(false);
         //  console.log("response", response);
         if (response.status === "Ticket created successfully") {
           notify.success("Ticket Created successfully");
-        } else if (response.status === "Ticket updated successfully") {
+        } else if (response.status === "Ticket updated successfully" || response.status === "no_changes") {
           notify.success("Ticket Updated successfully");
+        }else {
+          // Handle cases where the API returns a non-success status
+          throw new Error(response.message || "Failed to save ticket");
         }
 
         if (
           response.status === "Ticket created successfully" ||
-          response.status === "Ticket updated successfully"
+          response.status === "Ticket updated successfully" || response.status === "no_changes"
         ) {
           setTimeout(() => {
             if (onClose) {
@@ -394,6 +417,13 @@ const [isOpen, setIsOpen] = useState(false);
         // ----------------------->
         // navigate("/support-desk");
       } catch (error) {
+
+        console.error("Error submitting ticket:", error);
+      
+      // Show error toast
+      notify.error(error.response?.data?.message || error.message || "Failed to save ticket");
+
+
         // Error is already handled in mutation's onError
         notify.error(error?.response?.data?.message || error.message)
       }

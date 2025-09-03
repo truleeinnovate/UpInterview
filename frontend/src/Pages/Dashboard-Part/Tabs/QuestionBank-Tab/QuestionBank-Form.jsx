@@ -49,6 +49,7 @@ import LoadingButton from "../../../../Components/LoadingButton";
 // 1.0.4 <--------------------------------------------------------------
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { notify } from "../../../../services/toastService.js";
+import InfoGuide from "../CommonCode-AllTabs/InfoCards.jsx";
 // 1.0.4 -------------------------------------------------------------->
 
 const optionLabels = Array.from({ length: 26 }, (_, i) =>
@@ -1024,6 +1025,25 @@ const QuestionBankForm = ({
                 </div>
                 {/* </div> */}
               </div>
+
+              <InfoGuide
+  title="Question Creation Guidelines"
+  items={[
+    <><span className="font-medium">Question Types:</span> Choose from multiple question formats including MCQ, text responses, programming challenges, and boolean questions</>,
+    <><span className="font-medium">Skill Tagging:</span> Tag questions with relevant skills for better organization and searchability</>,
+    <><span className="font-medium">Difficulty Levels:</span> Set appropriate difficulty (Easy, Medium, Hard) to match candidate experience levels</>,
+    <><span className="font-medium">Experience Range:</span> Define minimum and maximum experience requirements for optimal question targeting</>,
+    <><span className="font-medium">Auto Assessment:</span> Enable automated grading for text-based answers with exact or contains matching</>,
+    <><span className="font-medium">Character Limits:</span> Set appropriate character limits for different question types (Single line: 500 chars, Paragraph: 2000 chars)</>,
+    <><span className="font-medium">Hint System:</span> Provide helpful hints without giving away the answer (max 300 characters)</>,
+    <><span className="font-medium">Organization:</span> Assign questions to specific lists for better categorization and management</>,
+    <><span className="font-medium">Validation:</span> Real-time validation ensures all required fields are completed before submission</>,
+    <><span className="font-medium">Save Options:</span> Save individual questions or use 'Save & Next' for efficient bulk question creation</>
+  ]}
+/>
+
+
+
               {/* Content */}
               {/* <div className="fixed   top-16 bottom-16  overflow-auto text-sm w-full"> */}
               {/* <div className=" border-2 border-[red] top-16 h-full  overflow-auto text-sm w-full"> */}
