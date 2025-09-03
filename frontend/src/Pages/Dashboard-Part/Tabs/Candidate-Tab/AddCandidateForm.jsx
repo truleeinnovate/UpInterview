@@ -9,6 +9,7 @@
 // v1.0.5 - Ashok - Fixed style issues
 /* eslint-disable react/prop-types */
 // v1.0.6 - Ashok - Improved responsiveness and added sidebarPopup common code to popup to modal
+// v1.0.7 - Ashok - Fixed issues in responsiveness
 import { useState, useRef, useEffect, forwardRef } from "react";
 import Modal from "react-modal";
 import classNames from "classnames";
@@ -822,7 +823,7 @@ const AddCandidateForm = ({
     }
 
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    
+
     const data = {
       FirstName: formData.FirstName,
       LastName: formData.LastName,
@@ -855,19 +856,22 @@ const AddCandidateForm = ({
         isResumeRemoved,
       });
       // console.log("response", response);
-      
-    //       // Send response
-    // res.status(203).json({
-    //   status: 'Updated successfully',
-    //   message: 'Candidate updated successfully',
-    //   data: updatedCandidate,
-    // });
-    if(response.status === "success"){
-      notify.success("Candidate added successfully");
-    }else if(response.status === "no_changes" || response.status === "Updated successfully"){
-      notify.success("Candidate Updated successfully");
-    }
-      
+
+      //       // Send response
+      // res.status(203).json({
+      //   status: 'Updated successfully',
+      //   message: 'Candidate updated successfully',
+      //   data: updatedCandidate,
+      // });
+      if (response.status === "success") {
+        notify.success("Candidate added successfully");
+      } else if (
+        response.status === "no_changes" ||
+        response.status === "Updated successfully"
+      ) {
+        notify.success("Candidate Updated successfully");
+      }
+
       // notify.success("Candidate added successfully");
 
       resetFormData();
@@ -958,7 +962,10 @@ const AddCandidateForm = ({
         title={id ? "Update Candidate" : "Add New Candidate"}
         onClose={handleClose}
       >
-        <div className="p-4" ref={formRef}>
+        {/* v1.0.7 <--------------------------------------------------------------------- */}
+        {/* <div className="p-4" ref={formRef}> */}
+        <div className="sm:p-0 p-4" ref={formRef}>
+          {/* v1.0.7 ---------------------------------------------------------------------> */}
           {/* v1.0.4 ----------------------------------------------------------------------------------> */}
           {/* v1.0.2 ------------------------------------------------------------------> */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
@@ -1120,7 +1127,10 @@ const AddCandidateForm = ({
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-4">
-                <h4 className="text-lg font-semibold text-gray-800">
+                {/* v1.0.7 <------------------------------------------------------ */}
+                {/* <h4 className="text-lg font-semibold text-gray-800"> */}
+                <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
+                  {/* v1.0.7 ------------------------------------------------------> */}
                   Personal Details
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
@@ -1209,7 +1219,10 @@ const AddCandidateForm = ({
                     disableSearch={true}
                   />
                 </div>
-                <p className="text-lg font-semibold col-span-2">
+                {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
+                {/* <p className="text-lg font-semibold col-span-2"> */}
+                <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
                   Contact Details
                 </p>
 
@@ -1315,7 +1328,10 @@ const AddCandidateForm = ({
                   </div>
                 </div>
 
-                <p className="text-lg font-semibold col-span-2">
+                {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
+                {/* <p className="text-lg font-semibold col-span-2"> */}
+                <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                {/* v1.0.7 --------------------------------------------------------------------------------------> */}
                   Education Details
                 </p>
 
@@ -1505,7 +1521,10 @@ const AddCandidateForm = ({
                   </div>
                 </div>
                 {/* --------v1.0.1----->*/}
-                <p className="text-lg font-semibold col-span-2">
+                {/* v1.0.7 <----------------------------------------------------------------------------------- */}
+                {/* <p className="text-lg font-semibold col-span-2"> */}
+                <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                {/* v1.0.7 -----------------------------------------------------------------------------------> */}
                   Experience Details
                 </p>
 

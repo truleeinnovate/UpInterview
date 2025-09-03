@@ -1,11 +1,20 @@
 // v1.0.0 - Ashok - Added scroll to first error
+// v1.0.1 - Ashok - Improved responsiveness and disabled outer scrollbar
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../CommonCode-AllTabs/ui/button.jsx";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import Loading from "../../../../../Components/Loading.js";
-import { ChevronDown, X, User, Users, Trash2, ChevronUp, Info } from "lucide-react";
+import {
+  ChevronDown,
+  X,
+  User,
+  Users,
+  Trash2,
+  ChevronUp,
+  Info,
+} from "lucide-react";
 import Cookies from "js-cookie";
 import InternalInterviews from "../../Interview-New/pages/Internal-Or-Outsource/InternalInterviewers.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
@@ -21,6 +30,9 @@ import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scro
 import { notify } from "../../../../../services/toastService.js";
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 // v1.0.0 ------------------------------------------------------------------------>
+// v1.0.1 <------------------------------------------------------------------------
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+// v1.0.1 ------------------------------------------------------------------------>
 
 function RoundFormPosition() {
   const { userProfile } = useCustomContext();
@@ -53,6 +65,10 @@ function RoundFormPosition() {
   const [error, setError] = useState(null);
   const [isInternalInterviews, setInternalInterviews] = useState(false);
   const navigate = useNavigate();
+
+  // v1.0.1 <-----------------------------------------------------
+  useScrollLock(isInternalInterviews);
+  // v1.0.1 ----------------------------------------------------->
 
   const [formData, setFormData] = useState({
     assessmentTemplate: { assessmentId: "", assessmentName: "" },
@@ -677,7 +693,7 @@ function RoundFormPosition() {
       duration: formData.duration,
       // interviewType: formData.interviewType,
       // interviewerType:
-        // formData.roundTitle === "Assessment" ? "" : formData.interviewerType.toLowerCase(),
+      // formData.roundTitle === "Assessment" ? "" : formData.interviewerType.toLowerCase(),
       sequence: formData.sequence,
       // Only include interviewers for non-assessment rounds
       ...(formData.roundTitle !== "Assessment" && {
@@ -714,8 +730,10 @@ function RoundFormPosition() {
           }),
       instructions: formData.instructions,
       interviewerType:
-      formData.roundTitle === "Assessment" ? undefined : formData.interviewerType || undefined,
-    
+        formData.roundTitle === "Assessment"
+          ? undefined
+          : formData.interviewerType || undefined,
+
       // interviewerViewType:
       //   formData.roundTitle === "Assessment"
       //     ? ""
@@ -732,18 +750,20 @@ function RoundFormPosition() {
         : { positionId, round: roundData };
 
       console.log("roundData after roundData", payload);
-      const response  = await addRounds(payload);
+      const response = await addRounds(payload);
 
-         console.log("response", response);
-            if (response.status === "Created Round successfully") {
-              notify.success("Round added successfully");
-            } else if (response.status === "no_changes" || response.status === "Updated Round successfully") {
-              notify.success("Round Updated successfully");
-            }
+      console.log("response", response);
+      if (response.status === "Created Round successfully") {
+        notify.success("Round added successfully");
+      } else if (
+        response.status === "no_changes" ||
+        response.status === "Updated Round successfully"
+      ) {
+        notify.success("Round Updated successfully");
+      }
 
       navigate(`/position/view-details/${positionId}`);
     } catch (err) {
-    
       if (err.response?.data?.errors) {
         // Backend returns { errors: { field: "message" } }
         setErrors(err.response.data.errors);
@@ -751,8 +771,7 @@ function RoundFormPosition() {
       } else {
         alert("Something went wrong. Please try again.");
       }
-  
-    
+
       // console.log("err ", err);
       // console.error("Error submitting round:", err);
     }
@@ -840,30 +859,71 @@ function RoundFormPosition() {
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
         <div className="px-4 sm:px-0">
-          <Breadcrumb items={breadcrumbItems} />
+          {/* v1.0.1 <------------------------------------------------------ */}
+          <div className="sm:mb-0 mb-4">
+            <Breadcrumb items={breadcrumbItems} />
+          </div>
+          {/* v1.0.1 ------------------------------------------------------> */}
+          {/* newly added guide for postion round by Ranjith */}
 
- {/* newly added guide for postion round by Ranjith */}
-    
           <InfoGuide
-  title="Support Ticket Guidelines"
-  items={[
-    <><span className="font-medium">Round Types:</span> Choose from predefined round types (Assessment, Technical, Final, HR Interview) or create custom rounds</>,
-    <><span className="font-medium">Assessment Rounds:</span> Select assessment templates with pre-configured questions and scoring</>,
-    <><span className="font-medium">Interview Rounds:</span> Build custom interview rounds with specific questions and evaluation criteria</>,
-    <><span className="font-medium">Interviewer Selection:</span> Choose between internal team members or outsourced interviewers</>,
-    <><span className="font-medium">Question Management:</span> Add questions from your question bank or create new ones on the fly</>,
-    <><span className="font-medium">Custom Instructions:</span> Provide detailed instructions for each round (minimum 50 characters)</>,
-    <><span className="font-medium">Sequence Control:</span> Set the order of rounds in your interview process</>,
-    <><span className="font-medium">Duration Settings:</span> Define time allocation for each interview round (30-120 minutes)</>,
-    <><span className="font-medium">Flexible Configuration:</span> Mix and match different round types to create your ideal interview process</>,
-    <><span className="font-medium">Real-time Validation:</span> Form validation ensures all required fields are completed before submission</>
-  ]}
-/>
-         
+            className="mt-4"
+            title="Support Ticket Guidelines"
+            items={[
+              <>
+                <span className="font-medium">Round Types:</span> Choose from
+                predefined round types (Assessment, Technical, Final, HR
+                Interview) or create custom rounds
+              </>,
+              <>
+                <span className="font-medium">Assessment Rounds:</span> Select
+                assessment templates with pre-configured questions and scoring
+              </>,
+              <>
+                <span className="font-medium">Interview Rounds:</span> Build
+                custom interview rounds with specific questions and evaluation
+                criteria
+              </>,
+              <>
+                <span className="font-medium">Interviewer Selection:</span>{" "}
+                Choose between internal team members or outsourced interviewers
+              </>,
+              <>
+                <span className="font-medium">Question Management:</span> Add
+                questions from your question bank or create new ones on the fly
+              </>,
+              <>
+                <span className="font-medium">Custom Instructions:</span>{" "}
+                Provide detailed instructions for each round (minimum 50
+                characters)
+              </>,
+              <>
+                <span className="font-medium">Sequence Control:</span> Set the
+                order of rounds in your interview process
+              </>,
+              <>
+                <span className="font-medium">Duration Settings:</span> Define
+                time allocation for each interview round (30-120 minutes)
+              </>,
+              <>
+                <span className="font-medium">Flexible Configuration:</span> Mix
+                and match different round types to create your ideal interview
+                process
+              </>,
+              <>
+                <span className="font-medium">Real-time Validation:</span> Form
+                validation ensures all required fields are completed before
+                submission
+              </>,
+            ]}
+          />
 
           <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
+              {/* v1.0.1 <---------------------------------------------------------------- */}
+              {/* <h3 className="text-lg leading-6 font-medium text-gray-900"> */}
+              <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg leading-6 font-medium text-gray-900">
+                {/* v1.0.1 ----------------------------------------------------------------> */}
                 {title}
               </h3>
 
@@ -1481,8 +1541,14 @@ function RoundFormPosition() {
                                     : ""
                                 }
                               >
-                                <User className="h-4 w-4 mr-1 text-custom-blue" />
-                                Select Internal
+                                {/* v1.0.1 <------------------------------------------------ */}
+                                <User className="h-4 w-4 sm:m-0 mr-1 text-custom-blue" />
+                                <span>
+                                  <span className="sm:hidden inline">
+                                    Select Internal
+                                  </span>
+                                </span>
+                                {/* v1.0.1 ------------------------------------------------> */}
                               </Button>
                             )}
 
@@ -1507,8 +1573,14 @@ function RoundFormPosition() {
                                   : ""
                               }
                             >
-                              <User className="h-4 w-4 mr-1 text-orange-600" />
-                              Select Outsourced
+                              {/* v1.0.1 <---------------------------------------------------- */}
+                              <User className="h-4 w-4 sm:m-0 mr-1 text-orange-600" />
+                              <span>
+                                <span className="sm:hidden inline">
+                                  Select Outsourced
+                                </span>
+                              </span>
+                              {/* v1.0.1 ----------------------------------------------------> */}
                             </Button>
                           </div>
                         </div>

@@ -6,6 +6,7 @@
   popup is open
 */
 // v1.0.2 - Ashok - Improved responsiveness
+// v1.0.3 - Ashok - Fixed issues in responsiveness
 
 import React, { useEffect, useState } from "react";
 // import PropTypes from 'prop-types';
@@ -226,11 +227,13 @@ const PositionRoundCard = ({
 
   return (
     <>
+      {/* v1.0.3 <--------------------------------------------------------------- */}
       <div
         className={`bg-white rounded-lg ${
           !hideHeader && "shadow-md"
-        } overflow-hidden ${isActive ? "ring-2 ring-custom-blue" : ""}`}
+        } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
       >
+      {/* v1.0.3 <---------------------------------------------------------------> */}
         <div className="p-2">
           {/* Tabs */}
           {hasFeedback && (

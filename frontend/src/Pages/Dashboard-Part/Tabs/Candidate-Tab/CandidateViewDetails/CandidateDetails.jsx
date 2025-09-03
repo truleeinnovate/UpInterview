@@ -3,6 +3,8 @@
 // v1.0.2  - Ashok - fixed form scroll and transition issues
 // v1.0.3  - Ashok - removed form left border and outline
 // v1.0.4  - Ashok - Improved responsiveness and added common popup in the place of modal
+// v1.0.5  - Ashok - Fixed issues regarding responsiveness
+
 import Modal from "react-modal";
 import {
   Phone,
@@ -92,7 +94,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
   const content = (
     <div>
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
+        {/* v1.0.5 <--------------------------------------------- */}
+        {/* <div className="p-6"> */}
+        <div className="sm:p-0 p-6">
+          {/* v1.0.5 ---------------------------------------------> */}
           <div className="flex justify-center items-center gap-4 mb-4">
             <div className="relative">
               {candidate?.ImageData ? (
@@ -103,14 +108,20 @@ const CandidateDetails = ({ mode, candidateId }) => {
                   onError={(e) => {
                     e.target.src = "/default-profile.png";
                   }}
-                  className="sm:w-20 sm:h-20 w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                  // v1.0.5 <--------------------------------------------------------------------------------------------
+                  // className="sm:w-20 sm:h-20 w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                  className="sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-24 xl:h-24 2xl:w-24 2xl:h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                  // v1.0.5 -------------------------------------------------------------------------------------------->
                 />
               ) : (
                 // v1.0.4 <-----------------------------------------------------------------------------------------------------------------------------------
                 // <div className="w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white text-3xl font-semibold shadow-lg">
-                <div className="sm:w-20 sm:h-20 w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white sm:text-2xl text-3xl font-semibold shadow-lg">
+                // v1.0.5 <-----------------------------------------------------------------------------------------------------------------------------------
+                // <div className="sm:w-20 sm:h-20 w-24 h-24 rounded-full bg-custom-blue flex items-center justify-center text-white sm:text-2xl text-3xl font-semibold shadow-lg">
+                <div className="sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-24 xl:h-24 2xl:w-24 2xl:h-24 rounded-full bg-custom-blue flex items-center justify-center text-white sm:text-2xl text-3xl font-semibold shadow-lg">
                   {candidate?.LastName?.charAt(0).toUpperCase() || "?"}
                 </div>
+                // v1.0.5 ----------------------------------------------------------------------------------------------------------------------------------->
                 // v1.0.4 ----------------------------------------------------------------------------------------------------------------------------------->
                 //
               )}
@@ -127,7 +138,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
             {/* <div className="text-center"> */}
             <div>
               {/* <h3 className="text-2xl font-bold text-gray-900"> */}
-              <h3 className="sm:text-xl text-2xl font-bold text-gray-900">
+              {/* v1.0.5 <--------------------------------------------------------------------- */}
+              {/* <h3 className="sm:text-xl text-2xl font-bold text-gray-900"> */}
+              <h3 className="sm:text-sm md:text-md lg:text-2xl xl:text-2xl 2xl:text-2xl sm:font-semibold font-bold text-gray-900">
+                {/* v1.0.5 ---------------------------------------------------------------------> */}
                 {candidate?.FirstName
                   ? candidate.FirstName.charAt(0).toUpperCase() +
                     candidate.FirstName.slice(1)
@@ -148,7 +162,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                {/* v1.0.5 <---------------------------------------------------------------- */}
+                {/* <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4"> */}
+                <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
+                {/* v1.0.5 ----------------------------------------------------------------> */}
                   Personal Details
                 </h4>
                 <div className="space-y-4">
@@ -206,7 +223,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
 
             <div className="grid grid-cols-1 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                {/* v1.0.5 <-------------------------------------------------------- */}
+                {/* <h4 className="text-lg font-semibold text-gray-800 mb-4"> */}
+                <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
+                {/* v1.0.5 --------------------------------------------------------> */}
                   Contact Information
                 </h4>
                 <div className="space-y-4">
@@ -233,7 +253,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                {/* v1.0.5 <----------------------------------------------------- */}
+                {/* <h4 className="text-lg font-semibold text-gray-800 mb-4"> */}
+                <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
+                {/* v1.0.5 -----------------------------------------------------> */}
                   Professional Details
                 </h4>
                 <div className="space-y-4">
@@ -356,7 +379,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
               </div>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">
+              {/* v1.0.5 <--------------------------------------------------------- */}
+              {/* <h4 className="text-lg font-semibold text-gray-800 mb-4"> */}
+              <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
+              {/* v1.0.5 ---------------------------------------------------------> */}
                 Skills
               </h4>
               {/* v1.0.4 <---------------------------------------------------------------------------------------------------- */}

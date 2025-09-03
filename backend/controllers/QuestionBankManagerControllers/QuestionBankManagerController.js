@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - changed minExperience, maxExperience to minexperience, maxexperience
 const fs = require("fs"); // for reading uploaded files
 const Papa = require("papaparse"); // for parsing CSV
 const {
@@ -13,7 +14,6 @@ const getModel = (type) => {
   if (type === "assessment") return AssessmentQuestion;
   throw new Error("Invalid question type");
 };
-
 
 const createQuestions = async (req, res) => {
   try {
@@ -53,9 +53,14 @@ const createQuestions = async (req, res) => {
       try {
         if (str.startsWith("[") && str.endsWith("]")) {
           const parsed = JSON.parse(str);
-          return Array.isArray(parsed) && parsed.length > 0 ? parsed : undefined;
+          return Array.isArray(parsed) && parsed.length > 0
+            ? parsed
+            : undefined;
         }
-        const splitArray = str.split(",").map(s => s.trim()).filter(s => s.length > 0);
+        const splitArray = str
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
         return splitArray.length > 0 ? splitArray : undefined;
       } catch {
         return undefined;
@@ -88,14 +93,16 @@ const createQuestions = async (req, res) => {
         difficultyLevel: cleanString(row.difficultyLevel),
         hints: safeParseList(row.hints),
         explanation: cleanString(row.explanation),
-        minExperience: safeParseNumber(row.minExperience),
-        maxExperience: safeParseNumber(row.maxExperience),
+        // v1.0.0 <---------------------------------------------
+        minexperience: safeParseNumber(row.minexperience),
+        maxexperience: safeParseNumber(row.maxexperience),
+        // v1.0.0 --------------------------------------------->
         solutions: safeParseList(row.solutions),
-        relatedQuestions: safeParseList(row.relatedQuestions)
+        relatedQuestions: safeParseList(row.relatedQuestions),
       };
 
       // Remove keys with undefined values to avoid empty field insert
-      Object.keys(doc).forEach(key => {
+      Object.keys(doc).forEach((key) => {
         if (doc[key] === undefined) {
           delete doc[key];
         }
@@ -125,14 +132,13 @@ const createQuestions = async (req, res) => {
       invalid: invalidRows,
       totalAttempted: rawData.length,
       totalInserted: insertResult.length,
-      totalInvalid: invalidRows.length
+      totalInvalid: invalidRows.length,
     });
   } catch (error) {
     console.error("Error in createQuestions:", error);
     res.status(500).json({ error: error.message });
   }
 };
-
 
 const getQuestions = async (req, res) => {
   try {

@@ -1,3 +1,4 @@
+// v1.0.0 - Ashok - Improved responsiveness
 import { useState } from "react";
 import { Minimize, Expand, X, ExternalLink } from "lucide-react";
 import { FaEdit } from "react-icons/fa";
@@ -25,12 +26,15 @@ function SidebarPopup({
       />
 
       {/* Content */}
+      {/* v1.0.0 <----------------------------------------------------------------------------- */}
       <div
         className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col ${
           isExpanded
             ? "w-full"
+            // : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
             : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
         }`}
+      // v1.0.0 ----------------------------------------------------------------------------->
       >
         <div className="sticky top-0 bg-white px-4 py-6 z-10">
           <div className="flex justify-between items-center px-2">
@@ -53,7 +57,10 @@ function SidebarPopup({
               {/* Expand/Minimize (always visible) */}
               <button
                 onClick={toggleExpand}
-                className="sm:hidden md:block p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                // v1.0.0 <-----------------------------------------------------------------------------
+                // className="sm:hidden md:block p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="sm:hidden md:hidden lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                // v1.0.0 ----------------------------------------------------------------------------->
                 title={isExpanded ? "Minimize" : "Expand"}
               >
                 {isExpanded ? (
