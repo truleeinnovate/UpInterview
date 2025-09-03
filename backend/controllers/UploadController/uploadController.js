@@ -1,6 +1,6 @@
 // v1.0.0 - Ashok - change in delete file
 const cloudinary = require("../../utils/cloudinary");
-const { Candidate } = require("../../models/Candidate/candidate.js");
+const { Candidate } = require("../../models/candidate.js");
 const { Contacts } = require("../../models/Contacts");
 const Tenant = require("../../models/Tenant");
 const SupportUser = require("../../models/SupportUser");

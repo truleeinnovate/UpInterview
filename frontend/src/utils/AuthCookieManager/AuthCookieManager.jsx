@@ -678,6 +678,7 @@ class AuthCookieManager {
       throw error;
     }
   }
+  
   // static loginAsUser(authToken, userData) {
   //   try {
 
