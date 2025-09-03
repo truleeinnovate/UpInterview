@@ -5,6 +5,144 @@ const CandidatePosition = require('../models/CandidatePosition.js');
 const { validateCandidateData, candidateUpdateSchema } = require('../validations/candidateValidation.js');
 const { hasPermission } = require("../middleware/permissionMiddleware");
 
+
+
+ 
+// Add a new Candidate
+const addCandidatePostCall = async (req, res) => {
+
+  // Mark that logging will be handled by the controller
+  res.locals.loggedByController = true;
+  res.locals.processName = 'Create Candidate';
+
+  let newCandidate = null;
+
+  try {
+
+     // Joi validation
+     const { isValid, errors } = validateCandidateData(req.body);
+     console.log("isValid", isValid);
+     console.log("errors", errors);
+     if (!isValid) {
+       return res.status(400).json({
+         status: "error",
+         message: "Validation failed",
+         errors,
+       });
+     }
+
+
+    const {
+      FirstName,
+      LastName,
+      Email,
+      Phone,
+      CountryCode,
+      Date_Of_Birth,
+      Gender,
+      HigherQualification,
+      UniversityCollege,
+      CurrentExperience,
+      CurrentRole,
+      RelevantExperience,
+      skills,
+      PositionId,
+      ownerId,
+      tenantId,
+    } = req.body;
+
+    if (!ownerId) {
+      return res.status(400).json({ error: "OwnerId field is required" });
+    }
+
+    //res.locals.loggedByController = true;
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    const canCreate =
+    await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
+   //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
+    if (!canCreate) {
+      return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
+    }
+    //-----v1.0.1--->
+
+    newCandidate = new Candidate({
+      FirstName,
+      LastName,
+      Email,
+      Phone,
+      CountryCode,
+      Date_Of_Birth,
+      Gender,
+      HigherQualification,
+      UniversityCollege,
+      CurrentExperience,
+      CurrentRole,
+      RelevantExperience,
+      skills,
+      PositionId,
+      ownerId,
+      tenantId,
+      createdBy: ownerId,
+    });
+
+    await newCandidate.save();
+
+    // Generate feed
+    res.locals.feedData = {
+      tenantId,
+      feedType: 'info',
+      action: {
+        name: 'candidate_created',
+        description: `Candidate was created successfully`,
+      },
+      ownerId,
+      parentId: newCandidate._id,
+      parentObject: 'Candidate',
+      metadata: req.body,
+      severity: res.statusCode >= 500 ? 'high' : 'low',
+      message: `Candidate was created successfully`,
+    };
+
+    // Generate logs
+    res.locals.logData = {
+      tenantId,
+      ownerId,
+      processName: 'Create Candidate',
+      requestBody: req.body,
+      message: 'Candidate created successfully',
+      status: 'success',
+      responseBody: newCandidate,
+    };
+
+    // Send response
+    res.status(201).json({
+      status: 'success',
+      message: 'Candidate created successfully',
+      data: newCandidate,
+    });
+  } catch (error) {
+
+    // Generate logs for the error
+    res.locals.logData = {
+      tenantId: req.body.tenantId,
+      ownerId: req.body.ownerId,
+      processName: 'Create Candidate',
+      requestBody: req.body,
+      message: error.message,
+      status: 'error',
+    };
+
+    // Send error response
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to create candidate. Please try again later.',
+      data: { error: error.message },
+    });
+  }
+};
+
 // patch call 
 const updateCandidatePatchCall = async (req, res) => {
 
@@ -177,142 +315,6 @@ const updateCandidatePatchCall = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: error.message,
-    });
-  }
-};
-
- 
-// Add a new Candidate
-const addCandidatePostCall = async (req, res) => {
-
-  // Mark that logging will be handled by the controller
-  res.locals.loggedByController = true;
-  res.locals.processName = 'Create Candidate';
-
-  let newCandidate = null;
-
-  try {
-
-     // Joi validation
-     const { isValid, errors } = validateCandidateData(req.body);
-     console.log("isValid", isValid);
-     console.log("errors", errors);
-     if (!isValid) {
-       return res.status(400).json({
-         status: "error",
-         message: "Validation failed",
-         errors,
-       });
-     }
-
-
-    const {
-      FirstName,
-      LastName,
-      Email,
-      Phone,
-      CountryCode,
-      Date_Of_Birth,
-      Gender,
-      HigherQualification,
-      UniversityCollege,
-      CurrentExperience,
-      CurrentRole,
-      RelevantExperience,
-      skills,
-      PositionId,
-      ownerId,
-      tenantId,
-    } = req.body;
-
-    if (!ownerId) {
-      return res.status(400).json({ error: "OwnerId field is required" });
-    }
-
-    //res.locals.loggedByController = true;
-    //console.log("effectivePermissions",res.locals?.effectivePermissions)
-    //<-----v1.0.1---
-    // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
-   //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
-    }
-    //-----v1.0.1--->
-
-    newCandidate = new Candidate({
-      FirstName,
-      LastName,
-      Email,
-      Phone,
-      CountryCode,
-      Date_Of_Birth,
-      Gender,
-      HigherQualification,
-      UniversityCollege,
-      CurrentExperience,
-      CurrentRole,
-      RelevantExperience,
-      skills,
-      PositionId,
-      ownerId,
-      tenantId,
-      createdBy: ownerId,
-    });
-
-    await newCandidate.save();
-
-    // Generate feed
-    res.locals.feedData = {
-      tenantId,
-      feedType: 'info',
-      action: {
-        name: 'candidate_created',
-        description: `Candidate was created successfully`,
-      },
-      ownerId,
-      parentId: newCandidate._id,
-      parentObject: 'Candidate',
-      metadata: req.body,
-      severity: res.statusCode >= 500 ? 'high' : 'low',
-      message: `Candidate was created successfully`,
-    };
-
-    // Generate logs
-    res.locals.logData = {
-      tenantId,
-      ownerId,
-      processName: 'Create Candidate',
-      requestBody: req.body,
-      message: 'Candidate created successfully',
-      status: 'success',
-      responseBody: newCandidate,
-    };
-
-    // Send response
-    res.status(201).json({
-      status: 'success',
-      message: 'Candidate created successfully',
-      data: newCandidate,
-    });
-  } catch (error) {
-
-    // Generate logs for the error
-    res.locals.logData = {
-      tenantId: req.body.tenantId,
-      ownerId: req.body.ownerId,
-      processName: 'Create Candidate',
-      requestBody: req.body,
-      message: error.message,
-      status: 'error',
-    };
-
-    // Send error response
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to create candidate. Please try again later.',
-      data: { error: error.message },
     });
   }
 };

@@ -860,9 +860,9 @@ const AddCandidateForm = ({
     //   message: 'Candidate updated successfully',
     //   data: updatedCandidate,
     // });
-    if(response.status === "success"){
+    if(response.status === "success" ){
       notify.success("Candidate added successfully");
-    }else if(response.status === "no_changes" || response.status === "Updated successfully"){
+    }else if(response.status === "no_changes" || response.status === "Updated successfully" ){
       notify.success("Candidate Updated successfully");
     }
       
@@ -897,18 +897,21 @@ const AddCandidateForm = ({
             default:
               navigate("/candidate");
           }
-        }, 500); // Delay navigation to ensure loading state is visible
+        }, 1000); // Delay navigation to ensure loading state is visible
       } else {
         // For "Add Candidate" button, also close modal if in modal mode
         if (isModal && onClose) {
           setTimeout(() => {
             onClose(response.data);
-          }, 500);
+          }, 1000);
         }
       }
     } catch (error) {
       console.error("Error adding candidate:", error);
 
+       // Show error toast
+    notify.error(error.response?.data?.message || error.message || "Failed to save candidate");
+    
       if (error.response?.data?.errors) {
         // Backend Joi validation errors
         setErrors(error.response.data.errors);
@@ -994,7 +997,7 @@ const AddCandidateForm = ({
 
             {/* // newly added guide for CandidateForm component by Ranjith */}
 <InfoGuide
-  title="Candidate Profile Guide"
+  title="Candidate Profile Guidelines"
   items={[
     <><span className="font-medium">Complete Profile:</span> Fill all required fields to create a comprehensive candidate profile</>,
     <><span className="font-medium">Profile Photo:</span> Upload a professional headshot (max 100KB, 200×200 recommended)</>,

@@ -278,7 +278,7 @@ const validateRoundPatchData = Joi.object({
       }).unknown(true)
     )
     .optional(),
-});
+}).unknown(true);
 
 
 

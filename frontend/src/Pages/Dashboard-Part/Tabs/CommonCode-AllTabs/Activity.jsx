@@ -96,7 +96,7 @@ function Activity({ parentId }) {
       case "info":
         if (
           action.name === "candidate_created" ||
-          action.name === "position_created"
+          action.name === "position_created" 
         ) {
           return <AiOutlineUserAdd className="text-blue-500" size={24} />;
         }
@@ -247,6 +247,33 @@ function Activity({ parentId }) {
     const { metadata, action, fieldMessage } = feed;
 
     switch (action.name) {
+      case "Position_round_updated":
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Object.entries(metadata)
+                .filter(
+                  ([key]) =>
+                    ![
+                      "tenantId",
+                      "ownerId",
+                      "CreatedBy",
+                      "LastModifiedById",
+                    ].includes(key)
+                )
+                .slice(0, 4)
+                .map(([key, value]) => (
+                  <div key={key} className="flex items-center space-x-2">
+                    {getFieldIcon(key)}
+                    <span className="text-gray-600 capitalize">
+                      {formatValue(key, value)}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        );
+
       case "candidate_created":
       case "position_created":
         return (
@@ -279,7 +306,7 @@ function Activity({ parentId }) {
         );
 
       case "candidate_updated":
-      case "position_updated":
+      case "position_updated" :
         return (
           <div className="space-y-3">
             {fieldMessage && fieldMessage?.length > 0 ? (

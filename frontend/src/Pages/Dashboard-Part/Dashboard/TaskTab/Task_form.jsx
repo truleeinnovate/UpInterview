@@ -28,6 +28,7 @@ import "react-datepicker/dist/react-datepicker.css";
 // eslint-disable-next-line import/first
 import { scrollToFirstError } from '../../../../utils/ScrollToFirstError/scrollToFirstError.js';
 import InfoGuide from '../../Tabs/CommonCode-AllTabs/InfoCards.jsx';
+import { notify } from '../../../../services/toastService.js';
 
 
 
@@ -367,18 +368,36 @@ const TaskForm = ({
         assignedToId: formData.assignedToId
       };
 
+      let res 
+
       console.log("Submitting task with data:", taskData); // Debug log
       if (taskId) {
-        await updateTaskMutation.mutateAsync({ id: taskId, data: taskData });
+        res = await updateTaskMutation.mutateAsync({ id: taskId, data: taskData });
       } else {
-        await createTaskMutation.mutateAsync(taskData);
+        res = await createTaskMutation.mutateAsync(taskData);
+      }
+      console.log("Task saved successfully:", res);
+
+      if (res.status === "Created successfully" || res.status === "Updated successfully") {
+      
+      if (res?.status === "Created successfully"){
+        notify.success("Task created successfully");
+      }else if(res?.status === "Updated successfully"){
+        notify.success("Task updated successfully");
+      }else{
+        notify.error("Failed to save task");
       }
       
       onTaskAdded();
       onClose();
+    }
       
     } catch (error) {
       console.error("Error saving task:", error);
+    
+      // Show error toast
+    notify.error(error.response?.data?.message || error.message || "Failed to save task");
+    
       setError(error.response?.data?.message || error.message || "Failed to save task");
     }
   };

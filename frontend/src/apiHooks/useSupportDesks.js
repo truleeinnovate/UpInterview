@@ -140,14 +140,25 @@ export const useSupportTickets = () => {
       ticketId,
       attachmentFile,
       isAttachmentFileRemoved,
+      
     }) => {
+
+        // Prepare the payload with tenantId and ownerId
+const payload = {
+  ...data,
+  tenantId: data.tenantId || tenantId, // Use provided tenantId or fallback to token tenantId
+  ownerId: data.ownerId || userId,     // Use provided ownerId or fallback to token userId
+};
+
+
+
       const url = editMode
         ? `${config.REACT_APP_API_URL}/update-ticket/${ticketId}`
         : `${config.REACT_APP_API_URL}/create-ticket`;
 
       const method = editMode ? "patch" : "post";
 
-      const res = await axios[method](url, data, {
+      const res = await axios[method](url, payload, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 

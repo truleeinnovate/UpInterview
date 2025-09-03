@@ -15,6 +15,8 @@ const { hasPermission } = require("../middleware/permissionMiddleware");
 
 
 exports.createTicket = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Ticket";
   try {
     console.log("Received ticket creation request body:", req.body);
     const {
@@ -82,6 +84,35 @@ exports.createTicket = async (req, res) => {
       createdByUserId,
       ticketCode,
     });
+
+     // Feed and log data
+     res.locals.feedData = {
+      tenantId: req.body.tenantId,
+      feedType: "info",
+      action: {
+        name: "ticket_created",
+        description: `Ticket was created`,
+      },
+      ownerId: req.body.ownerId,
+      parentId: ticket._id,
+      parentObject: "Ticket",
+      metadata: req.body,
+      severity: res.statusCode >= 500 ? "high" : "low",
+      message: `Ticket was created successfully`,
+    };
+
+    res.locals.logData = {
+      tenantId: req.body.tenantId,
+      ownerId: req.body.ownerId,
+      processName: "Create Ticket",
+      requestBody: req.body,
+      status: "success",
+      message: "Ticket created successfully",
+      responseBody: ticket,
+    };
+
+
+
     return res.status(201).send({
       message: "Ticket created successfully",
       status: 'Ticket created successfully',
@@ -89,6 +120,17 @@ exports.createTicket = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating ticket:", error);
+
+    res.locals.logData = {
+      tenantId: req.body.tenantId,
+      ownerId: req.body.ownerId,
+      processName: "Ticket Position",
+      requestBody: req.body,
+      message: error.message,
+      status: "error",
+    };
+
+
     return res.status(500).json({
       message: "Failed to create ticket",
       errors: { general: error.message },
@@ -169,47 +211,266 @@ exports.getTicketBasedonId = async (req, res) => {
   }
 };
 
+// exports.updateTicketById = async (req, res) => {
+//   res.locals.loggedByController = true;
+//   res.locals.processName = "Update Ticket";
+
+//   try {
+//     const { id } = req.params;
+//     // v1.0.0 <----------------------------------------------------
+//     const { issueType, description, subject, assignedTo, assignedToId } = req.body;
+//     // v1.0.0 --------------------------------------------->
+//    //<----v1.0.1----
+
+//     // id = new mongoose.Types.ObjectId(id);
+
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res
+//         .status(400)
+//         .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
+//     }
+//     const { errors, isValid } = validateUpdateSupportTicket(req.body);
+//     if (!isValid) {
+//       return res.status(400).json({ message: "Validation failed", errors });
+//     }
+//     //----v1.0.1---->
+
+//     res.locals.loggedByController = true;
+//     //console.log("effectivePermissions",res.locals?.effectivePermissions)
+//     //<-----v1.0.1---
+//     // Permission: Tasks.Create (or super admin override)
+//     const canCreate =
+//       await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
+//       await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Edit')
+//     if (!canCreate) {
+//       return res.status(403).json({ message: 'Forbidden: missing SupportDesk.Edit permission' });
+//     }
+//     //-----v1.0.1--->
+
+//     // const ticket = await SupportUser.findByIdAndUpdate(
+//     //   id,
+//     //   {
+//     //     issueType,
+//     //     description,
+//     //     // v1.0.0 <----------------------------------------------------
+//     //     subject,
+//     //     // v1.0.0 --------------------------------------------->
+//     //     assignedTo,
+//     //     assignedToId,
+//     //   },
+//     //   { new: true, runValidators: true }
+//     // );
+
+//     // if (!ticket) {
+//     //   return res.status(404).json({ message: "Ticket not found" });
+//     // }
+
+//      // Fetch current ticket first to compare values
+//      const currentTicket = await SupportUser.findById(id).lean();
+//      if (!currentTicket) {
+//        return res.status(404).json({ message: "Ticket not found" });
+//      }
+ 
+//      // Prepare update data
+//      const updateData = {
+//        issueType: issueType || currentTicket.issueType,
+//        description: description || currentTicket.description,
+//        subject: subject || currentTicket.subject,
+//        assignedTo: assignedTo || currentTicket.assignedTo,
+//        assignedToId: assignedToId || currentTicket.assignedToId,
+//      };
+ 
+//      // Compare current values with updateFields to identify changes
+//      const changes = Object.entries(updateData)
+//        .filter(([key, newValue]) => {
+//          const oldValue = currentTicket[key];
+         
+//          // Handle different data types appropriately
+//          if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+//            return JSON.stringify(oldValue) !== JSON.stringify(newValue);
+//          }
+         
+//          // Handle object comparison
+//          if (typeof oldValue === 'object' && typeof newValue === 'object' && oldValue !== null && newValue !== null) {
+//            return JSON.stringify(oldValue) !== JSON.stringify(newValue);
+//          }
+         
+//          // Handle primitive values
+//          return oldValue !== newValue;
+//        })
+//        .map(([key, newValue]) => ({
+//          fieldName: key,
+//          oldValue: currentTicket[key],
+//          newValue,
+//        }));
+//        console.log("changes", changes);
+//        console.log("changes length",changes.length);
+//        console.log("changes length",currentTicket);
+       
+ 
+//      // Check if there are no changes
+//      if (changes.length === 0) {
+//        return res.status(200).json({
+//          status: "no_changes",
+//          message: "No changes detected, ticket details remain the same",
+//          data:currentTicket
+//        });
+//      }
+ 
+//      // Update the ticket
+//      const ticket = await SupportUser.findByIdAndUpdate(
+//        id,
+//        updateData,
+//        { new: true, runValidators: true }
+//      );
+ 
+//      if (!ticket) {
+//        return res.status(404).json({ message: "Ticket not found" });
+//      }
+//      console.log("changes", changes);
+ 
+//      // Prepare feed and log data with change history
+//      res.locals.feedData = {
+//        tenantId: currentTicket.tenantId,
+//        feedType: "update",
+//        action: {
+//          name: "ticket_updated",
+//          description: `Support ticket was updated`,
+//        },
+//        ownerId: currentTicket.ownerId,
+//        parentId: ticket._id,
+//        parentObject: "SupportTicket",
+//        metadata: req.body,
+//        severity: res.statusCode >= 500 ? "high" : "low",
+//        fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
+//          fieldName,
+//          message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
+//        })),
+//        history: changes,
+//      };
+ 
+//      res.locals.logData = {
+//        tenantId: currentTicket.tenantId,
+//        ownerId: currentTicket.ownerId,
+//        processName: "Update Ticket",
+//        requestBody: req.body,
+//        status: "success",
+//        message: "Ticket updated successfully",
+//        responseBody: ticket,
+//        changes: changes, // Include changes in log data
+//      };
+ 
+
+//     return res.status(200).send({
+//       status: 'Ticket updated successfully',
+//       message: "Ticket updated successfully",
+//       ticket,
+//       changes,
+//     });
+//   } catch (error) {
+//     console.log(error);
+      
+//     // Error logging
+//       res.locals.logData = {
+//         tenantId: req.body.tenantId,
+//         ownerId: req.body.ownerId,
+//         processName: "Update Ticket",
+//         requestBody: req.body,
+//         message: error.message,
+//         status: "error",
+//       };
+
+//     return res.status(500).json({
+//       message: "Failed to update ticket",
+//       errors: { general: error.message },
+//     });
+//   }
+// };
+
+// Update ticket status
+
 exports.updateTicketById = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Ticket";
+
   try {
     const { id } = req.params;
-    // v1.0.0 <----------------------------------------------------
-    const { issueType, description, subject, assignedTo, assignedToId } = req.body;
-    // v1.0.0 --------------------------------------------->
-   //<----v1.0.1----
+    const {ownerId,tenantId, issueType, description, subject, assignedTo, assignedToId } = req.body;
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
         .status(400)
         .json({ message: "Validation failed", errors: { id: "Invalid ticket id" } });
     }
+    
     const { errors, isValid } = validateUpdateSupportTicket(req.body);
     if (!isValid) {
       return res.status(400).json({ message: "Validation failed", errors });
     }
-    //----v1.0.1---->
 
-    res.locals.loggedByController = true;
-    //console.log("effectivePermissions",res.locals?.effectivePermissions)
-    //<-----v1.0.1---
-    // Permission: Tasks.Create (or super admin override)
+    // console.log("logData", logo);
+    console.log("ownerId",ownerId);
+    console.log("tenantId",tenantId);
+
     const canCreate =
       await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
       await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Edit')
     if (!canCreate) {
       return res.status(403).json({ message: 'Forbidden: missing SupportDesk.Edit permission' });
     }
-    //-----v1.0.1--->
+
+    const currentTicket = await SupportUser.findById(id).lean();
+    if (!currentTicket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    const updateData = {
+      issueType: issueType || currentTicket.issueType,
+      description: description || currentTicket.description,
+      subject: subject || currentTicket.subject,
+      assignedTo: assignedTo || currentTicket.assignedTo,
+      assignedToId: assignedToId || currentTicket.assignedToId,
+    };
+
+    const changes = Object.entries(updateData)
+      .filter(([key, newValue]) => {
+        const oldValue = currentTicket[key];
+        
+        if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+          return JSON.stringify(oldValue) !== JSON.stringify(newValue);
+        }
+        
+        if (typeof oldValue === 'object' && typeof newValue === 'object' && oldValue !== null && newValue !== null) {
+          return JSON.stringify(oldValue) !== JSON.stringify(newValue);
+        }
+        
+        return oldValue !== newValue;
+      })
+      .map(([key, newValue]) => ({
+        fieldName: key,
+        oldValue: currentTicket[key],
+        newValue,
+      }));
+      console.log("changes", changes);
+      console.log("changes length", changes.length);
+      
+
+    // FIX: Return the current ticket data when no changes are made
+    if (changes.length === 0) {
+      return res.status(200).json({
+        status: "no_changes",
+        message: "No changes detected, ticket details remain the same",
+        data: currentTicket, // Include the ticket data
+        ticket: currentTicket // Add this line to ensure frontend has access to ticket object
+      });
+    }
+    console.log("changes", changes);
+    console.log("changes length", changes.length);
+    
 
     const ticket = await SupportUser.findByIdAndUpdate(
       id,
-      {
-        issueType,
-        description,
-        // v1.0.0 <----------------------------------------------------
-        subject,
-        // v1.0.0 --------------------------------------------->
-        assignedTo,
-        assignedToId,
-      },
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -217,13 +478,57 @@ exports.updateTicketById = async (req, res) => {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
+     res.locals.feedData = {
+      tenantId: tenantId,
+      feedType: "update",
+      action: {
+        name: "ticket_updated",
+        description: `Support ticket was updated`,
+      },
+      ownerId: ownerId,
+      parentId: ticket._id,
+      parentObject: "SupportTicket",
+      metadata: req.body,
+      severity: res.statusCode >= 500 ? "high" : "low",
+      fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
+        fieldName,
+        message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
+      })),
+      history: changes,
+    };
+    console.log("feedData", r);
+
+    res.locals.logData = {
+      tenantId: tenantId,
+      ownerId: ownerId,
+      processName: "Update Ticket",
+      requestBody: req.body,
+      status: "success",
+      message: "Ticket updated successfully",
+      responseBody: ticket,
+      changes: changes,
+    };
+    
+    
+
     return res.status(200).send({
       status: 'Ticket updated successfully',
       message: "Ticket updated successfully",
-      ticket,
+      ticket, // Ensure this is always returned
+      changes,
     });
   } catch (error) {
     console.log(error);
+      
+    res.locals.logData = {
+      tenantId: req.body.tenantId,
+      ownerId: req.body.ownerId,
+      processName: "Update Ticket",
+      requestBody: req.body,
+      message: error.message,
+      status: "error",
+    };
+
     return res.status(500).json({
       message: "Failed to update ticket",
       errors: { general: error.message },
@@ -231,7 +536,7 @@ exports.updateTicketById = async (req, res) => {
   }
 };
 
-// Update ticket status
+
 exports.updateSupportTicket = async (req, res) => {
   try {
     const { id } = req.params;

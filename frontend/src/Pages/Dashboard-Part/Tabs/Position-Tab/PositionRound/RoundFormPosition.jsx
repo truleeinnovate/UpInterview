@@ -715,6 +715,7 @@ function RoundFormPosition() {
       instructions: formData.instructions,
       interviewerType:
       formData.roundTitle === "Assessment" ? undefined : formData.interviewerType || undefined,
+     
     
       // interviewerViewType:
       //   formData.roundTitle === "Assessment"
@@ -722,14 +723,15 @@ function RoundFormPosition() {
       //     : formData.interviewerViewType,
     };
     // console.log("formData.duration", formData.duration);
+  
 
     console.log("round data", roundData);
 
     try {
       // Include roundId only if editing
       const payload = isEditing
-        ? { positionId, round: roundData, roundId }
-        : { positionId, round: roundData };
+        ? { positionId, round: roundData,  tenantId, ownerId, roundId }
+        : { positionId, round: roundData,tenantId, ownerId,  };
 
       console.log("roundData after roundData", payload);
       const response  = await addRounds(payload);
@@ -739,10 +741,16 @@ function RoundFormPosition() {
               notify.success("Round added successfully");
             } else if (response.status === "no_changes" || response.status === "Updated Round successfully") {
               notify.success("Round Updated successfully");
+            }else {
+              // Handle cases where the API returns a non-success status
+              throw new Error(response.message || "Failed to save round");
             }
 
       navigate(`/position/view-details/${positionId}`);
     } catch (err) {
+      console.log("err", err);
+        // Show error toast
+    notify.error(err.response?.data?.message || err.message || "Failed to save round");
     
       if (err.response?.data?.errors) {
         // Backend returns { errors: { field: "message" } }
