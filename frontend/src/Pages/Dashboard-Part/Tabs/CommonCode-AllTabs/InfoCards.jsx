@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Removed bg white
+
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 
@@ -8,7 +10,10 @@ const InfoGuide = ({ title, items, isOpen: controlledIsOpen, onToggle }) => {
 
   return (
     // <div className="px-[13%] sm:px-[5%] md:px-[5%]">
-      <div className="py-2 bg-white z-10">
+    // v1.0.0 <----------------------------------------------
+      // <div className="py-2 bg-white z-10">
+    // v1.0.0 ---------------------------------------------->
+      <div className="py-2 z-10">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <div className="flex items-start space-x-3 cursor-pointer" onClick={toggle}>
             <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />

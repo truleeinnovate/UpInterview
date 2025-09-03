@@ -3,13 +3,21 @@
 // v1.0.0 - Venkatesh - added custom location
 // v1.0.1 - Ashok - added scroll to error functionality
 // v1.0.2 - Ashok - Improved responsiveness
+// v1.0.3 - Ashok - Fixed issues at responsiveness
 
 import { useEffect, useState, useRef } from "react";
 import AssessmentDetails from "./AssessmentType";
 import TechnicalType from "./TechnicalType";
 import Cookies from "js-cookie";
 import { validateForm } from "../../../../utils/PositionValidation.js";
-import { ChevronDown, ChevronUp, Clock, Info, Search, Users } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Info,
+  Search,
+  Users,
+} from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput.jsx";
@@ -37,6 +45,9 @@ const CustomDropdown = ({
   disableSearch = false,
   hideLabel = false,
   disabledError = false,
+  // v1.0.3 <--------------------
+  hideInfo = false,
+  // v1.0.3 -------------------->
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -77,12 +88,25 @@ const CustomDropdown = ({
   return (
     <div ref={dropdownRef}>
       {!hideLabel && (
-        <label
-          htmlFor={name}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          {label} {disabledError && <span className="text-red-500">*</span>}
-        </label>
+        <div className="flex items-start mb-2">
+          <label
+            htmlFor={name}
+            // v1.0.3 <-------------------------------------------------------------------
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {label}{" "}
+            {disabledError && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          <div className="relative group ml-6">
+            <Info size={18} className="text-gray-400 cursor-pointer" />
+            {/* <i className="fas fa-info-circle text-gray-400 cursor-pointer">i</i> */}
+            <div className="absolute  transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10">
+              Select a pre-defined interview template that includes rounds,
+              questions
+            </div>
+          </div>
+        </div>
+        // v1.0.3 -------------------------------------------------------------------->
       )}
       <div className="relative">
         <input
@@ -93,8 +117,9 @@ const CustomDropdown = ({
           onClick={toggleDropdown}
           placeholder={placeholder}
           autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${error ? "border-red-500" : "border-gray-300"
-            }`}
+          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+            error ? "border-red-500" : "border-gray-300"
+          }`}
           readOnly
         />
         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
@@ -371,7 +396,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [editingIndex, setEditingIndex] = useState(null);
 
   const [deleteIndex, setDeleteIndex] = useState(null);
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
@@ -442,10 +467,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
@@ -669,12 +694,17 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       console.log("response", response);
       if (response.status === "success") {
         notify.success("Position added successfully");
-      } else if (response.status === "no_changes" || response.status === "Updated successfully") {
+      } else if (
+        response.status === "no_changes" ||
+        response.status === "Updated successfully"
+      ) {
         notify.success("Position Updated successfully");
       }
 
-
-      if (response.status === "success" || response.status === "Updated successfully") {
+      if (
+        response.status === "success" ||
+        response.status === "Updated successfully"
+      ) {
         // Handle navigation
         if (actionType === "BasicDetailsSave") {
           // If it's a modal, call the onClose function with the new position data
@@ -1072,27 +1102,70 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           {renderStageIndicator()}
         </div>
 
-
         {/* // Inside your PositionForm component */}
-        <div className="px-[13%] sm:px-[5%] md:px-[5%]">
-        <InfoGuide
-          title="Position Creation Guidelines"
-          items={[
-            <><span className="font-medium">Template Selection (Optional):</span> Choose a pre-defined interview template to standardize your hiring process</>,
-            <><span className="font-medium">Template Benefits:</span> Includes predefined rounds, questions, and evaluation criteria for consistency</>,
-            <><span className="font-medium">Custom Interview Path:</span> <span className="font-semibold text-blue-700">If you don't select a template, you can build custom interview rounds tailored specifically for this position</span></>,
-            <><span className="font-medium">Flexible Approach:</span> Create unique assessment stages that match your exact hiring needs without template constraints</>,
-            <><span className="font-medium">Availability:</span> Only active templates with configured rounds are displayed for selection</>,
-            <><span className="font-medium">Interview Structure:</span> Selected template determines the interview flow and assessment approach</>,
-            <><span className="font-medium">Assessment Types:</span> Templates may include technical interviews, coding challenges, and behavioral evaluations</>,
-            <><span className="font-medium">Flexibility:</span> Customize individual rounds after template selection to meet specific role requirements</>,
-            <><span className="font-medium">Role-Specific Positions:</span> Create multiple positions for different roles within the same hiring process</>,
-            <><span className="font-medium">Template-Free Option:</span> You can proceed without a template and build a custom interview process from scratch</>
-          ]}
-        />
+        {/* v1.0.3 <----------------------------------------------------------------------------------------- */}
+        {/* <div className="px-[13%] sm:px-[5%] md:px-[5%]"> */}
+        <div className="px-[13%] sm:px-[5%] md:px-[5%] mb-4">
+          {/* v1.0.3 -----------------------------------------------------------------------------------------> */}
+          <InfoGuide
+            title="Position Creation Guidelines"
+            items={[
+              <>
+                <span className="font-medium">
+                  Template Selection (Optional):
+                </span>{" "}
+                Choose a pre-defined interview template to standardize your
+                hiring process
+              </>,
+              <>
+                <span className="font-medium">Template Benefits:</span> Includes
+                predefined rounds, questions, and evaluation criteria for
+                consistency
+              </>,
+              <>
+                <span className="font-medium">Custom Interview Path:</span>{" "}
+                <span className="font-semibold text-blue-700">
+                  If you don't select a template, you can build custom interview
+                  rounds tailored specifically for this position
+                </span>
+              </>,
+              <>
+                <span className="font-medium">Flexible Approach:</span> Create
+                unique assessment stages that match your exact hiring needs
+                without template constraints
+              </>,
+              <>
+                <span className="font-medium">Availability:</span> Only active
+                templates with configured rounds are displayed for selection
+              </>,
+              <>
+                <span className="font-medium">Interview Structure:</span>{" "}
+                Selected template determines the interview flow and assessment
+                approach
+              </>,
+              <>
+                <span className="font-medium">Assessment Types:</span> Templates
+                may include technical interviews, coding challenges, and
+                behavioral evaluations
+              </>,
+              <>
+                <span className="font-medium">Flexibility:</span> Customize
+                individual rounds after template selection to meet specific role
+                requirements
+              </>,
+              <>
+                <span className="font-medium">Role-Specific Positions:</span>{" "}
+                Create multiple positions for different roles within the same
+                hiring process
+              </>,
+              <>
+                <span className="font-medium">Template-Free Option:</span> You
+                can proceed without a template and build a custom interview
+                process from scratch
+              </>,
+            ]}
+          />
         </div>
-
-     
 
         <div className="px-[13%] sm:px-[5%] md:px-[5%]">
           {showAssessment ? (
@@ -1136,9 +1209,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           //     : "border-gray-300 focus:ring-gray-300"
                           // }`}
                           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${errors.title
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
+                            border ${
+                              errors.title
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
                             }
                             focus:outline-gray-300
                           `}
@@ -1174,9 +1248,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               //     : "border-gray-300"
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${errors.companyname
-                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                  : "border-gray-300 focus:ring-red-300"
+                                border ${
+                                  errors.companyname
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1266,9 +1341,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               //     : "border-gray-300"
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${errors.companyname
-                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                  : "border-gray-300 focus:ring-red-300"
+                                border ${
+                                  errors.companyname
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1363,8 +1439,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                     // Reset max experience if it's now less than min
                                     maxexperience:
                                       minExp !== "" &&
-                                        formData.maxexperience &&
-                                        minExp > formData.maxexperience
+                                      formData.maxexperience &&
+                                      minExp > formData.maxexperience
                                         ? ""
                                         : formData.maxexperience,
                                   });
@@ -1375,9 +1451,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                 //     : "border-gray-300"
                                 // }`}
                                 className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                  border ${errors.minexperience
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
+                                  border ${
+                                    errors.minexperience
+                                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                      : "border-gray-300 focus:ring-red-300"
                                   }
                                   focus:outline-gray-300
                                 `}
@@ -1443,9 +1520,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                 //     : "border-gray-300"
                                 // }`}
                                 className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                  border ${errors.maxexperience
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
+                                  border ${
+                                    errors.maxexperience
+                                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                      : "border-gray-300 focus:ring-red-300"
                                   }
                                   focus:outline-gray-300
                                 `}
@@ -1497,7 +1575,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                       minSalary !== "" &&
                                       formData.maxSalary &&
                                       parseInt(minSalary) >
-                                      parseInt(formData.maxSalary)
+                                        parseInt(formData.maxSalary)
                                     ) {
                                       setErrors((prev) => ({
                                         ...prev,
@@ -1523,13 +1601,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                           : parseInt(minSalary),
                                     }));
                                   }}
-                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                                    }`}
+                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${
+                                    errors.salary
+                                      ? "border-red-500"
+                                      : "border-gray-300"
+                                  }`}
 
-                                // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
-                                // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                                  // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
+                                  // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
                                 />
                               </div>
                               {errors.minsalary && (
@@ -1564,7 +1643,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                       maxSalary !== "" &&
                                       formData.minSalary &&
                                       parseInt(maxSalary) <
-                                      parseInt(formData.minSalary)
+                                        parseInt(formData.minSalary)
                                     ) {
                                       setErrors((prev) => ({
                                         ...prev,
@@ -1590,12 +1669,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                                           : parseInt(maxSalary),
                                     }));
                                   }}
-                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${errors.salary
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                                    }`}
-                                // onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
-                                // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
+                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${
+                                    errors.salary
+                                      ? "border-red-500"
+                                      : "border-gray-300"
+                                  }`}
+                                  // onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
+                                  // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
                                 />
                               </div>
                               {errors.maxsalary && (
@@ -1651,13 +1731,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           //     : "border-gray-300"
                           // }`}
                           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${errors.NoofPositions
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
+                            border ${
+                              errors.NoofPositions
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
                             }
                             focus:outline-gray-300
                           `}
-                        // className="w-full px-3 py-2 border rounded-md focus:outline-none"
+                          // className="w-full px-3 py-2 border rounded-md focus:outline-none"
                         />
                         {errors.NoofPositions && (
                           <p className="text-red-500 text-xs mt-1 ">
@@ -1691,9 +1772,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               //     : "border-gray-300"
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${errors.Location
-                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                  : "border-gray-300 focus:ring-red-300"
+                                border ${
+                                  errors.Location
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1783,9 +1865,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               //     : "border-gray-300"
                               // }`}
                               className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${errors.Location
-                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                  : "border-gray-300 focus:ring-red-300"
+                                border ${
+                                  errors.Location
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
                                 }
                                 focus:outline-gray-300
                               `}
@@ -1855,9 +1938,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         //     : "border-gray-300"
                         // }`}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.jobDescription
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
+                          border ${
+                            errors.jobDescription
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
                           }
                           focus:outline-gray-300
                         `}
@@ -1976,17 +2060,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         // optionValue="templateName"
                         optionKey="templateName" // Display template name
                         optionValue="_id"
+                        // v1.0.3 <---------------------------
+                        hideInfo={true}
+                        // v1.0.3 --------------------------->
                       />
-                      <div className="relative group mt-4 ml-2">
-                        <Info
-                          size={18}
-                          className="text-gray-400 cursor-pointer"
-                        />
-                        {/* <i className="fas fa-info-circle text-gray-400 cursor-pointer">i</i> */}
-                        <div className="absolute  transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10">
-                          Select a pre-defined interview template that includes rounds, questions
-                        </div>
-                      </div>
                       {/* <label className="block text-sm font-medium text-gray-700 mb-1">
                         Select Template
                       </label>
