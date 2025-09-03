@@ -379,6 +379,11 @@ const CombinedNavbar = () => {
           label: "Master Data",
           // permissionKey: "MasterData.ViewTab",
         },
+        {
+          path: "/question-bank-manager",
+          label: "Question Bank",
+          // permissionKey: "MasterData.ViewTab",
+        },
         // v1.0.6 --------------------------------------------------------->
         // v1.0.7 ----------------------------------------------------------------------->
         // v1.0.9 ----------------------------------------------------------------------->
