@@ -29,7 +29,7 @@ app.use(cookieParser());
 // console.log('config.REACT_APP_API_URL_FRONTEND', config.REACT_APP_API_URL_FRONTEND);
 
 // CORS configuration
-const allowedOrigins = [
+const allowedOrigins = [ 
   "http://localhost:3000",
   "http://localhost:5000",
   "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
@@ -39,24 +39,25 @@ const allowedOrigins = [
 // CORS middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  console.log('Incoming request from origin:', origin);
-  
+  console.log('Request Method:', req.method, 'Path:', req.path, 'Origin:', origin);
+
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions');
     res.setHeader('Access-Control-Expose-Headers', 'x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token');
   }
 
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS request for:', req.path);
+    console.log('Responding to OPTIONS request with headers:', res.getHeaders());
     return res.status(200).end();
   }
 
   next();
 });
+
+
 
 // Add OPTIONS handlers for main routes
 const handleOptions = (req, res) => {
@@ -98,8 +99,6 @@ app.use(bodyParser.json());
 
 // Enhanced MongoDB connection with Azure-specific configurations
 const mongooseOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 60000, // 60 seconds - increased for Azure
   socketTimeoutMS: 90000, // 90 seconds - increased for Azure
   connectTimeoutMS: 60000, // 60 seconds - increased for Azure
@@ -108,16 +107,12 @@ const mongooseOptions = {
   maxIdleTimeMS: 60000, // 60 seconds
   retryWrites: false, // Disabled for compatibility with older MongoDB versions
   w: 1, // Changed from 'majority' to 1 for better compatibility
-  // Azure-specific optimizations
   bufferCommands: false, // Disable mongoose buffering
-  // Connection retry settings
-  retryReads: true,
-  // Heartbeat settings
-  heartbeatFrequencyMS: 10000,
-  // Write concern settings
+  retryReads: true, // Connection retry settings
+  heartbeatFrequencyMS: 10000, // Heartbeat settings
   writeConcern: {
-    w: 1, // Changed from 'majority' to 1
-    j: false, // Changed to false for better compatibility
+    w: 1,
+    j: false, 
     wtimeout: 30000,
   },
 };
@@ -126,16 +121,11 @@ const mongooseOptions = {
 const connectWithRetry = async (retries = 5, delay = 5000) => {
   for (let i = 0; i < retries; i++) {
     try {
-      // console.log(`🔄 Attempting MongoDB connection (attempt ${i + 1}/${retries})...`);
       await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
       console.log("✅ MongoDB connected successfully");
-      // console.log('MongoDB URI:', process.env.MONGODB_URI ? 'CONFIGURED' : 'NOT CONFIGURED');
       return;
     } catch (err) {
-      console.error(
-        `❌ MongoDB connection attempt ${i + 1} failed:`,
-        err.message
-      );
+      console.error(`❌ MongoDB connection attempt ${i + 1} failed:`, err.message);
       if (i === retries - 1) {
         console.error("❌ All MongoDB connection attempts failed");
         console.error(
@@ -144,7 +134,6 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
         );
         process.exit(1);
       }
-      // console.log(`⏳ Retrying in ${delay / 1000} seconds...`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
@@ -165,11 +154,11 @@ mongoose.connection.on("error", (err) => {
 });
 
 mongoose.connection.on("disconnected", () => {
-  // console.log('⚠️ MongoDB disconnected - attempting to reconnect...');
+  console.warn("⚠️ MongoDB disconnected - attempting to reconnect...");
 });
 
 mongoose.connection.on("reconnected", () => {
-  // console.log('✅ MongoDB reconnected successfully');
+  console.log("✅ MongoDB reconnected successfully");
 });
 
 // mongoose.connection.on('connected', async () => {
