@@ -76,7 +76,7 @@
 
 
 
-name: Build and deploy Node.js app to Azure Web App - frontend-001
+name: Build and deploy Node.js app to Azure Web App - dev-frontend-upinterview
 
 on:
   push:
@@ -137,7 +137,7 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'frontend-001'
+          app-name: 'dev-frontend-upinterview'
           slot-name: 'production'
           package: ./frontend/release.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_966DA1C22A49499B908D9CB6E42773D0 }}

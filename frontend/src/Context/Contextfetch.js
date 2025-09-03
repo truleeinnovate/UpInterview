@@ -206,7 +206,10 @@ const CustomProvider = ({ children }) => {
   // Fetch users data
   const fetchUsersData = async () => {
     try {
-      const response = await axios.get(`${config.REACT_APP_API_URL}/users`);
+      console.log('config.REACT_APP_API_URL', config.REACT_APP_API_URL);
+      const response = await axios.get(`${config.REACT_APP_API_URL}/users`, {
+        withCredentials: true
+      });
       setUsersData(response.data);
     } catch (error) {
       console.error("Error fetching users data:", error);

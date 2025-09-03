@@ -424,7 +424,7 @@ const InterviewTemplate = require("../models/InterviewTemplate.js");
 const { Contacts } = require("../models/Contacts");
 const { Users } = require("../models/Users");
 // v1.0.2 <-----------------------------------------
-const { Candidate } = require("../models/Candidate/candidate.js");
+const { Candidate } = require("../models/candidate.js");
 const { encrypt, generateOTP } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");
 const interviewQuestions = require("../models/Interview/selectedInterviewQuestion.js");

@@ -1,9 +1,10 @@
 //<-----v1.0.1---Venkatesh------add permission
 const mongoose = require('mongoose');
-const { Candidate } = require('../models/Candidate/candidate.js');
+// const { Candidate } = require('../models/Candidate/candidate.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
 const { validateCandidateData, candidateUpdateSchema } = require('../validations/candidateValidation.js');
 const { hasPermission } = require("../middleware/permissionMiddleware");
+const { Candidate } = require('../models/candidate.js');
 
 // patch call 
 const updateCandidatePatchCall = async (req, res) => {

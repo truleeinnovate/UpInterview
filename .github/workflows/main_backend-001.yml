@@ -66,7 +66,7 @@
 #           clean: true
 
 
-name: Build and deploy Node.js app to Azure Web App - backend-001
+name: Build and deploy Node.js app to Azure Web App - dev-backend-upinterview
 
 on:
   push:
@@ -128,7 +128,7 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'backend-001'
+          app-name: 'dev-backend-upinterview'
           slot-name: 'Production'
           package: release.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1538A423DB434915BF49499792B1E04C }}

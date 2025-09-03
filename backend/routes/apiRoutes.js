@@ -11,7 +11,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const { Candidate } = require('../models/Candidate/candidate.js');
+const { Candidate } = require('../models/candidate.js');
 // <-------------------------------v1.0.6
 const Assessment = require("../models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.6 >
