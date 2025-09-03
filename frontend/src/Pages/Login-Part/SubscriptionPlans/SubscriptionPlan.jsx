@@ -224,7 +224,7 @@ const SubscriptionPlan = () => {
                 ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
               >
-                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
+                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" && subscriptionData.selectedBillingCycle === isAnnual ? "annual" : "monthly"
                   ? "Subscribed"
                   : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
                     ? "Continue to Payment"

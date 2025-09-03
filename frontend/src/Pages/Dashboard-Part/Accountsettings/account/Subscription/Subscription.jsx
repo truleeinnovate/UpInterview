@@ -531,14 +531,6 @@ const Subscription = () => {
                             (p) => p.planId === plan.planId
                           );
 
-                          // Only compare plans when viewing the same billing cycle as the current subscription
-                          // if (
-                          //   subscriptionData.selectedBillingCycle !==
-                          //   (isAnnual ? "annual" : "monthly")
-                          // ) {
-                          //   return "Choose";
-                          // }
-
                           // If current plan index exists and this plan index exists
                           if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
                             return thisPlanIndex > currentPlanIndex
@@ -557,36 +549,7 @@ const Subscription = () => {
         )}
       </div>
       {/* Cancel Subscription Modal */}
-      {/* v1.0.1 <---------------------------------------------------------------------- */}
-      {/* {showCancelModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-xl font-semibold mb-4 text-custom-blue">Cancel Subscription</h2>
-            <p className="mb-4 text-sm sm:text-base text-gray-600">
-              Are you sure you want to cancel your <span className="font-medium">{subscriptionData?.planName || 'current'} with {subscriptionData?.membershipType || 'monthly'} </span> subscription?
-            </p>
-            <p className="mb-6 text-sm sm:text-base text-gray-600">
-              Your subscription will be cancelled immediately and you will lose access to premium features.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowCancelModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
-                disabled={isBusy}
-              >
-                Keep Subscription
-              </button>
-              <button
-                onClick={handleCancelSubscription}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-150"
-                disabled={isBusy}
-              >
-                {isBusy ? 'Processing...' : 'Cancel Subscription'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
+      
       {showCancelModal &&
         createPortal(
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
