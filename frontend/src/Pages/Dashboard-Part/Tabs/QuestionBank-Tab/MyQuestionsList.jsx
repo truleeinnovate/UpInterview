@@ -19,6 +19,70 @@ import Cookies from "js-cookie";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 
+
+// Safely render solutions which can be string | object | array of objects
+const renderSolutions = (solutions) => {
+  if (!solutions) return "N/A";
+  if (typeof solutions === "string") return solutions;
+
+  // If it's an array of solution objects
+  if (Array.isArray(solutions)) {
+    return (
+      <div className="space-y-2">
+        {solutions.map((sol, idx) => (
+          <div key={idx} className="border border-gray-200 rounded-md p-2">
+            {sol?.language && (
+              <div className="text-xs text-gray-600 mb-1">
+                <span className="font-medium">Language:</span> {sol.language}
+              </div>
+            )}
+            {sol?.approach && (
+              <div className="text-xs text-gray-700 mb-1">
+                <span className="font-medium">Approach:</span> {sol.approach}
+              </div>
+            )}
+            {sol?.code && (
+              <pre className="bg-gray-50 p-2 rounded-md overflow-x-auto text-xs text-gray-800">
+                <code>{sol.code}</code>
+              </pre>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // If it's a single solution object
+  if (typeof solutions === "object") {
+    const sol = solutions;
+    return (
+      <div className="border border-gray-200 rounded-md p-2">
+        {sol?.language && (
+          <div className="text-xs text-gray-600 mb-1">
+            <span className="font-medium">Language:</span> {sol.language}
+          </div>
+        )}
+        {sol?.approach && (
+          <div className="text-xs text-gray-700 mb-1">
+            <span className="font-medium">Approach:</span> {sol.approach}
+          </div>
+        )}
+        {sol?.code && (
+          <pre className="bg-gray-50 p-2 rounded-md overflow-x-auto text-xs text-gray-800">
+            <code>{sol.code}</code>
+          </pre>
+        )}
+      </div>
+    );
+  }
+
+  try {
+    return String(solutions);
+  } catch {
+    return "N/A";
+  }
+};
+
 const removeQuestionFromChild = (questionId, myQuestionsList) => {
   if (!myQuestionsList || typeof myQuestionsList !== "object") return myQuestionsList;
   return Object.keys(myQuestionsList).reduce((acc, key) => {
@@ -86,7 +150,7 @@ const MyQuestionsList = ({
   const [filtrationData, setFiltrationData] = useState([
     {
       id: 1,
-      filterType: "QuestionType",
+      filterType: "Question From",
       isOpen: false,
       options: [
         { type: "system", isChecked: false },
@@ -109,11 +173,101 @@ const MyQuestionsList = ({
   const [tempFiltrationData, setTempFiltrationData] = useState(filtrationData);
   const [selectedQuestionTypeFilterItems, setSelectedQuestionTypeFilterItems] = useState([]);
   const [selectedDifficultyLevelFilterItems, setSelectedDifficultyLevelFilterItems] = useState([]);
+  const [selectedTechnologyFilterItems, setSelectedTechnologyFilterItems] = useState([]);
+  const [selectedQTypeFilterItems, setSelectedQTypeFilterItems] = useState([]);
 
   // Sync tempFiltrationData when filtrationData changes
   useEffect(() => {
     setTempFiltrationData(filtrationData);
   }, [filtrationData]);
+
+  // When switching to Assignment Questions view, ensure any previously selected
+  // 'Interview Questions' question type filter is cleared to avoid stale filters
+  useEffect(() => {
+    const isAssignment = String(dropdownValue || "").toLowerCase().includes("assignment");
+    if (!isAssignment) return;
+    setSelectedQTypeFilterItems((prev) => prev.filter((v) => v !== "interview questions"));
+  }, [dropdownValue]);
+
+  // Build dynamic filters (Technology, Question Type) from loaded data and keep selections
+  useEffect(() => {
+    if (!myQuestionsList || typeof myQuestionsList !== "object") return;
+
+    const allQuestions = Object.values(myQuestionsList).flat();
+
+    const uniqueTechnologies = Array.from(
+      new Set(
+        allQuestions
+          .flatMap((q) =>
+            Array.isArray(q?.technology)
+              ? q.technology
+              : typeof q?.technology === "string"
+              ? [q.technology]
+              : []
+          )
+          .filter(Boolean)
+          .map((t) => String(t).trim())
+      )
+    );
+
+    const uniqueQTypes = Array.from(
+      new Set(
+        allQuestions
+          .map((q) => q?.questionType)
+          .filter(Boolean)
+          .map((t) => String(t).trim())
+      )
+    );
+
+    setFiltrationData((prev) => {
+      const findChecked = (section, val) => {
+        if (!section || !Array.isArray(section.options)) return false;
+        const found = section.options.find((o) => (o.value || o.type || o.level) === val);
+        return found ? !!found.isChecked : false;
+        };
+
+      const techSection = prev.find((s) => s.filterType === "Technology");
+      const qTypeSection = prev.find((s) => s.filterType === "Question Type");
+
+      const techOptions = uniqueTechnologies.map((t) => ({
+        value: t,
+        isChecked: findChecked(techSection, t),
+      }));
+      // When viewing Assignment Questions, hide any 'Interview Questions' value from the Question Type options
+      const filteredQTypes = uniqueQTypes.filter((t) => {
+        const name = String(t || "").toLowerCase();
+        if (String(dropdownValue || "").toLowerCase().includes("assignment")) {
+          return name !== "interview questions";
+        }
+        return true;
+      });
+      const qTypeOptions = filteredQTypes.map((t) => ({
+        value: t,
+        isChecked: findChecked(qTypeSection, t),
+      }));
+
+      let nextId = prev.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+      let updated = prev.map((s) => {
+        if (s.filterType === "Technology") return { ...s, options: techOptions };
+        if (s.filterType === "Question Type") return { ...s, options: qTypeOptions };
+        return s;
+      });
+
+      if (!techSection) {
+        updated = [
+          ...updated,
+          { id: nextId++, filterType: "Technology", isOpen: false, options: techOptions },
+        ];
+      }
+      if (!qTypeSection) {
+        updated = [
+          ...updated,
+          { id: nextId++, filterType: "Question Type", isOpen: false, options: qTypeOptions },
+        ];
+      }
+      return updated;
+    });
+  }, [myQuestionsList, dropdownValue]);
 
   // Derive filtered questions using useMemo
   const filteredMyQuestionsList = useMemo(() => {
@@ -129,11 +283,29 @@ const MyQuestionsList = ({
         const matchesQuestionType =
           !selectedQuestionTypeFilterItems.length ||
           selectedQuestionTypeFilterItems.includes(questionType);
-        return matchesDifficulty && matchesQuestionType;
+        const qTypeKind = (question?.questionType || "").toLowerCase();
+        const matchesQType =
+          !selectedQTypeFilterItems.length || selectedQTypeFilterItems.includes(qTypeKind);
+        const techs = Array.isArray(question?.technology)
+          ? question.technology
+          : typeof question?.technology === "string"
+          ? [question.technology]
+          : [];
+        const techsLower = techs.map((t) => String(t || "").toLowerCase());
+        const matchesTechnology =
+          !selectedTechnologyFilterItems.length ||
+          selectedTechnologyFilterItems.some((sel) => techsLower.includes(sel));
+        return matchesDifficulty && matchesQuestionType && matchesQType && matchesTechnology;
       });
       return acc;
     }, {});
-  }, [myQuestionsList, selectedDifficultyLevelFilterItems, selectedQuestionTypeFilterItems]);
+  }, [
+    myQuestionsList,
+    selectedDifficultyLevelFilterItems,
+    selectedQuestionTypeFilterItems,
+    selectedTechnologyFilterItems,
+    selectedQTypeFilterItems,
+  ]);
 
   // Initialize loading and isOpen once we have data.
   // NOTE: The previous implementation updated `isOpen` on every render because
@@ -568,17 +740,13 @@ const MyQuestionsList = ({
                   <input
                     checked={option.isChecked}
                     className="w-4 cursor-pointer"
-                    value={
-                      filter.filterType === "QuestionType"
-                        ? option.type.toLowerCase()
-                        : option.level.toLowerCase()
-                    }
-                    id={`${filter.filterType}-${option.type || option.level}`}
+                    value={(option.type || option.level || option.value).toLowerCase()}
+                    id={`${filter.filterType}-${option.type || option.level || option.value}`}
                     type="checkbox"
                     onChange={() => onChangeCheckbox(filter.id, index)}
                   />
-                  <label htmlFor={`${filter.filterType}-${option.type || option.level}`}>
-                    {option.type || option.level}
+                  <label htmlFor={`${filter.filterType}-${option.type || option.level || option.value}`}>
+                    {option.type || option.level || option.value}
                   </label>
                 </li>
               ))}
@@ -591,16 +759,26 @@ const MyQuestionsList = ({
 
   const handleApplyFilters = () => {
     setFiltrationData(tempFiltrationData);
-    const questionTypeItems = tempFiltrationData
-      .find((f) => f.filterType === "QuestionType")
-      .options.filter((o) => o.isChecked)
-      .map((o) => o.type.toLowerCase());
-    const difficultyItems = tempFiltrationData
-      .find((f) => f.filterType === "Difficulty Level")
-      .options.filter((o) => o.isChecked)
+    const questionTypeItems = (tempFiltrationData
+      .find((f) => f.filterType === "QuestionType")?.options ?? [])
+      .filter((o) => o.isChecked)
+      .map((o) => (o.type || o.value)?.toLowerCase());
+    const difficultyItems = (tempFiltrationData
+      .find((f) => f.filterType === "Difficulty Level")?.options ?? [])
+      .filter((o) => o.isChecked)
       .map((o) => o.level.toLowerCase());
+    const technologyItems = (tempFiltrationData
+      .find((f) => f.filterType === "Technology")?.options ?? [])
+      .filter((o) => o.isChecked)
+      .map((o) => (o.value || o.type || o.level)?.toLowerCase());
+    const qTypeItems = (tempFiltrationData
+      .find((f) => f.filterType === "Question Type")?.options ?? [])
+      .filter((o) => o.isChecked)
+      .map((o) => (o.value || o.type || o.level)?.toLowerCase());
     setSelectedQuestionTypeFilterItems(questionTypeItems);
     setSelectedDifficultyLevelFilterItems(difficultyItems);
+    setSelectedTechnologyFilterItems(technologyItems);
+    setSelectedQTypeFilterItems(qTypeItems);
     setIsPopupOpen(false);
   };
 
@@ -613,6 +791,8 @@ const MyQuestionsList = ({
     setFiltrationData(clearedFiltrationData);
     setSelectedQuestionTypeFilterItems([]);
     setSelectedDifficultyLevelFilterItems([]);
+    setSelectedTechnologyFilterItems([]);
+    setSelectedQTypeFilterItems([]);
     setIsPopupOpen(false);
   };
 
@@ -705,7 +885,15 @@ const MyQuestionsList = ({
   // Reset/clamp page on changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedLabel, searchInput, selectedQuestionTypeFilterItems, selectedDifficultyLevelFilterItems, dropdownValue]);
+  }, [
+    selectedLabel,
+    searchInput,
+    selectedQuestionTypeFilterItems,
+    selectedDifficultyLevelFilterItems,
+    selectedTechnologyFilterItems,
+    selectedQTypeFilterItems,
+    dropdownValue,
+  ]);
 
   useEffect(() => {
     const tp = Math.max(1, Math.ceil(totalItems / itemsPerPage));
@@ -1098,12 +1286,19 @@ const MyQuestionsList = ({
                                 <span className="font-medium text-gray-700">Answer: </span>
                                 <span className="text-gray-600">
                                   {question.questionType === "MCQ" && question.options
-                                    ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer))}) `
+                                    ? String.fromCharCode(97 + question.options.indexOf(question.correctAnswer))
                                     : ""}
-                                  {question.correctAnswer}
+                              {question.isCustom ? question.correctAnswer : renderSolutions(question.solutions)}
                                 </span>
                               </p>
-                            </div>
+                              <p className="font-medium pt-2">
+                             Tags:{" "}
+                            <span className="text-sm text-gray-600">
+                             {Array.isArray(question.tags) ? question.tags.join(", ") : String(question.tags || "")}
+                            </span>
+                           </p>
+                         </div>
+                            
                           </div>
                         ))}
                       </div>
