@@ -117,6 +117,7 @@ jobs:
           cp -r backend/utils deploy/backend/
           cp -r backend/constants deploy/backend/
           cp -r backend/data deploy/backend/
+          cp -r backend/validations deploy/backend/
           
           # Copy node_modules (already installed with production deps)
           cp -r backend/node_modules deploy/backend/
@@ -131,5 +132,5 @@ jobs:
           app-name: 'dev-backend-upinterview'
           slot-name: 'Production'
           package: release.zip
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1538A423DB434915BF49499792B1E04C }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_BACKEND }}
           clean: true
