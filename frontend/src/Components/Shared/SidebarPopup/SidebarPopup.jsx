@@ -1,8 +1,12 @@
 // v1.0.0 - Ashok - Improved responsiveness
+/* v1.0.1 - Ashok - Added setIsFullscreen using this for some popup's alignments are aligned
+                    added createPortal it avoids z-index issues at any level
+*/
 import { useState } from "react";
 import { Minimize, Expand, X, ExternalLink } from "lucide-react";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 
 function SidebarPopup({
   title,
@@ -11,13 +15,26 @@ function SidebarPopup({
   id, // needed for edit
   showEdit = false,
   showExternal = false,
+  setIsFullscreen, // v1.0.1 <--------------------------->
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
 
-  const toggleExpand = () => setIsExpanded(!isExpanded);
+  // v1.0.1 <-----------------------------------------------------------------------------------------
+  // const toggleExpand = () => setIsExpanded(!isExpanded);
+  // setIsFullscreen(isExpanded); // v1.0.1
 
-  return (
+  const toggleExpand = () => {
+    setIsExpanded((prev) => {
+      const newValue = !prev;
+      if (setIsFullscreen) {
+        setIsFullscreen(newValue); // call only if provided
+      }
+      return newValue;
+    });
+  };
+
+  const popupContent = (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div
@@ -31,10 +48,10 @@ function SidebarPopup({
         className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col ${
           isExpanded
             ? "w-full"
-            // : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
-            : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
+            : // : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
+              "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
         }`}
-      // v1.0.0 ----------------------------------------------------------------------------->
+        // v1.0.0 ----------------------------------------------------------------------------->
       >
         <div className="sticky top-0 bg-white px-4 py-6 z-10">
           <div className="flex justify-between items-center px-2">
@@ -99,6 +116,9 @@ function SidebarPopup({
       </div>
     </div>
   );
+
+  return createPortal(popupContent, document.body);
+  // v1.0.1 ----------------------------------------------------------------------------------------->
 }
 
 export default SidebarPopup;

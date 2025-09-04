@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - disabled outer scrollbar using custom hook
 // v1.0.1 - Venkatesh - ticket code and status in align center
 // v1.0.2 - Ashraf - Added subject field
+// v1.0.3 - Ashok  - Improved responsiveness and used common code for popup
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
@@ -16,6 +17,7 @@ import {
   // FaCalendarAlt,
   FaTag,
   FaFileAlt,
+  FaEdit,
 } from "react-icons/fa";
 import { Minimize, Expand, X, Eye } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
@@ -23,6 +25,9 @@ import { format, parseISO, isValid } from "date-fns";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 // v1.0.0 ------------------------------------------------------------------------->
+// v1.0.3 <--------------------------------------------------------------------------
+import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+// v1.0.3 -------------------------------------------------------------------------->
 //import SupportForm from "./SupportForm";
 
 //const validReopenStatus = ["resolved", "cancel"];
@@ -32,7 +37,7 @@ const SupportViewPage = () => {
   const location = useLocation();
   const ticketData = location.state?.ticketData;
   console.log("lastModifiedBy:", ticketData.updatedByUserId);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  // const [isFullScreen, setIsFullScreen] = useState(false);
   //const [openForm, setOpenForm] = useState(false);
 
   console.log("ticketData", ticketData);
@@ -41,9 +46,9 @@ const SupportViewPage = () => {
     document.title = "Support Ticket Details";
   }, []);
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
-  };
+  // const toggleFullScreen = () => {
+  //   setIsFullScreen(!isFullScreen);
+  // };
 
   // v1.0.0 <-------------------------------------------------------------------------
   useScrollLock(true);
@@ -65,11 +70,10 @@ const SupportViewPage = () => {
   //   navigate('/support-desk');
   //   return null;
   // }
+  // v1.0.3 <----------------------------------------------------------------------------------
   const content = (
-    <div
-      className={`${isFullScreen ? "min-h-screen" : "h-full"} flex flex-col`}
-    >
-      <div className="p-6">
+    <div>
+      {/* <div className="p-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <h2 className="text-2xl font-semibold text-custom-blue">
@@ -77,13 +81,13 @@ const SupportViewPage = () => {
             </h2>
           </div>
           <div className="flex items-center space-x-2">
-            {/* <button
+            <button
               onClick={() => { navigate(`/support-desk/edit-ticket/${ticketData._id}`, { state: { ticketData: ticketData } }) }}
               className="p-2 hover:text-custom-blue rounded-full transition-colors"
               title="Edit Ticket"
             >
               <FaEdit className="w-5 h-5" />
-            </button> */}
+            </button>
 
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
@@ -103,29 +107,35 @@ const SupportViewPage = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* <-------v1.0.1--------------Ticket Code and Status */}
-      <div className="p-6">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          
-            <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
-              <FaTicketAlt className="w-8 h-8" />
-            </div>
-            <div className="items-center text-center mb-4">
-          <h3 className="text-2xl font-bold text-gray-900">
-            {ticketData?.ticketCode}
-          </h3>
-          <StatusBadge status={ticketData?.status} text={ticketData?.status ? ticketData?.status.charAt(0).toUpperCase() + ticketData?.status.slice(1) : "Not Provided"}/>{/*common status code add by Venkatesh*/}
-          {/*-------v1.0.1-------------->*/}
+      <div className="sm:px-0 p-6">
+        <div className="flex items-center justify-center gap-6 mb-6">
+          <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
+            <FaTicketAlt className="w-8 h-8" />
+          </div>
+          <div className="flex flex-col items-start mb-4 gap-2">
+            <h3 className="sm:text-xl text-2xl font-bold text-gray-900">
+              {ticketData?.ticketCode}
+            </h3>
+            <StatusBadge
+              status={ticketData?.status}
+              text={
+                ticketData?.status
+                  ? ticketData?.status.charAt(0).toUpperCase() +
+                    ticketData?.status.slice(1)
+                  : "Not Provided"
+              }
+            />
+            {/*common status code add by Venkatesh*/}
+            {/*-------v1.0.1-------------->*/}
+          </div>
         </div>
-        </div>
-
-        
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
           <div className="flex justify-between items-center mb-4">
-            <h4 className="text-lg font-semibold text-gray-800">
+            <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
               Ticket Information
             </h4>
             {/* {reopenStatus && (
@@ -145,9 +155,7 @@ const SupportViewPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Subject</p>
-                <p className="text-gray-700">
-                  {ticketData?.subject || "N/A"}
-                </p>
+                <p className="text-gray-700">{ticketData?.subject || "N/A"}</p>
               </div>
             </div>
             {/* v1.0.2 - Ashraf - Added subject field */}
@@ -190,7 +198,7 @@ const SupportViewPage = () => {
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">
+          <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
             Description
           </h4>
           <div className="flex items-start gap-3">
@@ -207,7 +215,7 @@ const SupportViewPage = () => {
 
         {ticketData.resolution && (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
-            <h4 className="text-lg font-semibold text-gray-800 mb-4">
+            <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
               Resolution
             </h4>
             <div className="flex items-start gap-3">
@@ -225,7 +233,7 @@ const SupportViewPage = () => {
 
         {ticketData?.attachment && (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h4 className="text-lg font-semibold text-gray-800 mb-4">
+            <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
               Attachments
             </h4>
             <div className="flex items-center gap-3">
@@ -256,7 +264,7 @@ const SupportViewPage = () => {
         )}
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-4">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">
+          <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
             System Information
           </h4>
           <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
@@ -293,10 +301,12 @@ const SupportViewPage = () => {
       </div>
     </div>
   );
+  // v1.0.3 <---------------------------------------------------------------------------------->
 
   return (
     <>
-      <div
+      {/* v1.0.3 <-------------------------------------------------------------------------------- */}
+      {/* <div
         className={`${
           isFullScreen
             ? "fixed inset-0"
@@ -318,13 +328,17 @@ const SupportViewPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* {openForm && (
         <SupportForm
           getTickets={() => {}}
         />
       )} */}
+      <SidebarPopup title="Support Ticket Details" onClose={() => navigate(-1)}>
+        {content}
+      </SidebarPopup>
+      {/* v1.0.3 <--------------------------------------------------------------------------------> */}
     </>
   );
 };
