@@ -44,6 +44,7 @@ const MyQuestionsList1 = forwardRef(
     } = useQuestions();
     console.log("selectedListId ---", selectedListId);
     console.log("notEditmode ---", notEditmode);
+    console.log("created ---", createdLists);
 
     const [selectedListIds, setSelectedListIds] = useState(notEditmode ? [selectedListId] : []);
     console.log("selectedListIds ---", selectedListIds);
@@ -363,7 +364,7 @@ const MyQuestionsList1 = forwardRef(
                   No lists found. Create a new list to get started.
                 </div>
               ) : (
-                createdLists.map((list) => (
+                createdLists.filter((list) => list.type === isInterviewType).map((list) => (
                   <label
                     key={list._id}
                     className="flex items-center gap-2 py-1 text-sm hover:bg-gray-50 rounded px-2"

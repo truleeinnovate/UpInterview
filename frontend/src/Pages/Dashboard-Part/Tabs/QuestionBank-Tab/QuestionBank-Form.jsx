@@ -107,20 +107,32 @@ const QuestionBankForm = ({
   ]);
 
   const [dropdownValue, setDropdownValue] = useState(isInterviewType ? "Interview Questions" : "Assignment Questions");
+  const autoSelectInitializedRef = useRef(false);
 
   useEffect(() => {
+    if (autoSelectInitializedRef.current) return;
     if (!isEdit && selectedLabelId && createdLists?.length > 0 && selectedListId.length === 0) {//<--v1.0.8-----
       // Find the matching label in createdLists
       const matchedLabel = createdLists.find(
         (list) => list._id === selectedLabelId
       );
       console.log("matchedLabel", matchedLabel);
+      // Only auto-apply the selection if it matches the current Ass/Int type
       if (matchedLabel) {
-        setSelectedListId([matchedLabel._id]); // Set the ID for form submission
-        setSelectedLabels([matchedLabel.label]); // Set the label name for display
+        const typeVal = matchedLabel.type;
+        const isInterviewList = typeof typeVal === "boolean"
+          ? typeVal
+          : String(typeVal).toLowerCase().includes("interview");
+        const currentIsInterview = dropdownValue === "Interview Questions";
+        if (isInterviewList === currentIsInterview) {
+          setSelectedListId([matchedLabel._id]); // Set the ID for form submission
+          setSelectedLabels([matchedLabel.label]); // Set the label name for display
+        }
       }
+      // Mark initialization complete so further type switches won't re-auto-select
+      autoSelectInitializedRef.current = true;
     }
-  }, [isEdit, selectedLabelId, createdLists, selectedListId.length]);//<--v1.0.8-----
+  }, [isEdit, selectedLabelId, createdLists, selectedListId.length, dropdownValue]);//<--v1.0.8----->
 
   const questionTypeOptions = [
     ...((isInterviewType && dropdownValue !== "Assignment Questions") ? ["Interview Questions"] : []),//<----v1.0.7------
@@ -175,6 +187,7 @@ const QuestionBankForm = ({
   const [showDropdownBooleanAnswer, setShowDropdownBooleanAnswer] =
     useState(false);
   const [showDropdownAssInt, setShowDropdownAssInt] = useState(false);//<---v1.0.9-----
+  const [ignoreDefaultSelectedLabel, setIgnoreDefaultSelectedLabel] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -373,12 +386,25 @@ const QuestionBankForm = ({
     setIsSubmitting(true);
 
    //<--v1.0.8-----
+    // Determine effective list IDs to submit based on current Ass/Int selection and whether
+    // the user has switched types (ignoreDefaultSelectedLabel).
+    const shouldConsiderDefault = !isEdit && selectedLabelId && !ignoreDefaultSelectedLabel;
+    let effectiveListIds = selectedListId;
+    if (shouldConsiderDefault) {
+      const matchedLabel = (createdLists || []).find((l) => l._id === selectedLabelId);
+      const typeVal = matchedLabel?.type;
+      const isInterviewList = typeof typeVal === "boolean"
+        ? typeVal
+        : String(typeVal ?? "").toLowerCase().includes("interview");
+      const currentIsInterview = dropdownValue === "Interview Questions";
+      if (matchedLabel && isInterviewList === currentIsInterview) {
+        effectiveListIds = [selectedLabelId, ...selectedListId];
+      }
+    }
+
     const updatedFormData = {
       ...formData,
-      tenantListId:
-        !isEdit && selectedLabelId
-          ? [selectedLabelId, ...selectedListId]
-          : selectedListId,
+      tenantListId: effectiveListIds,
     };
     //--v1.0.8----->
     const newErrors = validateQuestionBankData(
@@ -459,9 +485,7 @@ const QuestionBankForm = ({
       // sanitize and de-duplicate list ids to satisfy backend Joi (array of ObjectId strings)
       tenantListId: Array.from(
         new Set(
-          ((!isEdit && selectedLabelId
-            ? [selectedLabelId, ...selectedListId]
-            : selectedListId) || [])
+          ((effectiveListIds || []))
             .filter((id) => typeof id === "string" && id.trim().length > 0)
         )
       ),
@@ -785,6 +809,19 @@ const QuestionBankForm = ({
   const handleAssIntSelect = (value) => {
     setDropdownValue(value);
     setShowDropdownAssInt(false);
+    // Clear selected question lists when switching between Interview/Assignment
+    setSelectedListId([]);
+    setSelectedLabels([]);
+    if (listRef.current && typeof listRef.current.clearSelection === "function") {
+      listRef.current.clearSelection();
+    }
+    // Clear any list-related validation error
+    setErrors((prev) => {
+      const { tenantListId, ...rest } = prev || {};
+      return rest;
+    });
+    // Prevent re-inserting the default selectedLabelId on submit after user switched type
+    setIgnoreDefaultSelectedLabel(true);
   };
   //---v1.0.9----->
 
@@ -1184,7 +1221,7 @@ const QuestionBankForm = ({
                         notEditmode={!isEdit}
                         selectedListId={selectedLabelId}
                         onErrorClear={handleErrorClear}
-                        isInterviewType={isInterviewType}
+                        isInterviewType={dropdownValue === "Interview Questions"}
                       />
                       {/* v1.0.4 -----------------------------------------------------------> */}
                     </div>

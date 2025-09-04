@@ -83,6 +83,7 @@ const getQuestions = async (req, res) => {
       questionNo: doc.questionOrderId,
       questionText: doc.questionText,
       questionType: doc.questionType,
+      category: Array.isArray(doc.category) ? doc.category : doc.category ? [doc.category].flat() : [],
       technology: Array.isArray(doc.technology) ? doc.technology : doc.technology ? [doc.technology].flat() : [],
       skill: Array.isArray(doc.skill) ? doc.skill : doc.skill ? [doc.skill].flat() : [],
       tags: doc.tags ? [doc.tags].flat() : [],
