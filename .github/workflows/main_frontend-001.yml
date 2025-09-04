@@ -140,5 +140,5 @@ jobs:
           app-name: 'dev-frontend-upinterview'
           slot-name: 'production'
           package: ./frontend/release.zip
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_966DA1C22A49499B908D9CB6E42773D0 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_FRONTEND }}
           clean: true
