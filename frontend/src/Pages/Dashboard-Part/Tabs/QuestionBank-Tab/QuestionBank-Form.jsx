@@ -11,9 +11,11 @@
 // v1.0.5 - ASHOK  - fixed style issues at MCQ's input fields
 // v1.0.6 - ASHOK  - Removed border left and set outline as none and improved scroll to first error logic
 
-// v1.0.7 - Venkatesh - if myquestionlist type is interview then hidden interview questions in question bank form 
-// v1.0.8 - Venkatesh - validation updated 
+// v1.0.7 - Venkatesh - if myquestionlist type is interview then hidden interview questions in question bank form
+// v1.0.8 - Venkatesh - validation updated
 // v1.0.9 - Venkatesh - added isInterviewType to formData
+// v2.0.0 - Ashok - Improved responsiveness and added common code to popup
+
 import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -51,6 +53,9 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 import { notify } from "../../../../services/toastService.js";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards.jsx";
 // 1.0.4 -------------------------------------------------------------->
+// v2.0.0 <----------------------------------------------------------------------
+import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+// v2.0.0 ---------------------------------------------------------------------->
 
 const optionLabels = Array.from({ length: 26 }, (_, i) =>
   String.fromCharCode(65 + i)
@@ -69,7 +74,7 @@ const QuestionBankForm = ({
   updateQuestionsInAddedSectionFromQuestionBank,
   question = {},
   selectedLabelId,
-  isInterviewType = false,//<----v1.0.7------
+  isInterviewType = false, //<----v1.0.7------
 }) => {
   const formRef = useRef(null);
 
@@ -106,12 +111,20 @@ const QuestionBankForm = ({
     selectedLabelId,
   ]);
 
-  const [dropdownValue, setDropdownValue] = useState(isInterviewType ? "Interview Questions" : "Assignment Questions");
+  const [dropdownValue, setDropdownValue] = useState(
+    isInterviewType ? "Interview Questions" : "Assignment Questions"
+  );
   const autoSelectInitializedRef = useRef(false);
 
   useEffect(() => {
     if (autoSelectInitializedRef.current) return;
-    if (!isEdit && selectedLabelId && createdLists?.length > 0 && selectedListId.length === 0) {//<--v1.0.8-----
+    if (
+      !isEdit &&
+      selectedLabelId &&
+      createdLists?.length > 0 &&
+      selectedListId.length === 0
+    ) {
+      //<--v1.0.8-----
       // Find the matching label in createdLists
       const matchedLabel = createdLists.find(
         (list) => list._id === selectedLabelId
@@ -120,9 +133,10 @@ const QuestionBankForm = ({
       // Only auto-apply the selection if it matches the current Ass/Int type
       if (matchedLabel) {
         const typeVal = matchedLabel.type;
-        const isInterviewList = typeof typeVal === "boolean"
-          ? typeVal
-          : String(typeVal).toLowerCase().includes("interview");
+        const isInterviewList =
+          typeof typeVal === "boolean"
+            ? typeVal
+            : String(typeVal).toLowerCase().includes("interview");
         const currentIsInterview = dropdownValue === "Interview Questions";
         if (isInterviewList === currentIsInterview) {
           setSelectedListId([matchedLabel._id]); // Set the ID for form submission
@@ -132,10 +146,18 @@ const QuestionBankForm = ({
       // Mark initialization complete so further type switches won't re-auto-select
       autoSelectInitializedRef.current = true;
     }
-  }, [isEdit, selectedLabelId, createdLists, selectedListId.length, dropdownValue]);//<--v1.0.8----->
+  }, [
+    isEdit,
+    selectedLabelId,
+    createdLists,
+    selectedListId.length,
+    dropdownValue,
+  ]); //<--v1.0.8----->
 
   const questionTypeOptions = [
-    ...((isInterviewType && dropdownValue !== "Assignment Questions") ? ["Interview Questions"] : []),//<----v1.0.7------
+    ...(isInterviewType && dropdownValue !== "Assignment Questions"
+      ? ["Interview Questions"]
+      : []), //<----v1.0.7------
     "MCQ",
     "Short Text(Single line)",
     "Long Text(Paragraph)",
@@ -147,7 +169,10 @@ const QuestionBankForm = ({
   const [questionNumber, setQuestionNumber] = useState(1);
   const [formData, setFormData] = useState({
     questionText: "",
-    questionType: (isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "",//<----v1.0.7------
+    questionType:
+      isInterviewType && dropdownValue !== "Assignment Questions"
+        ? "Interview Questions"
+        : "", //<----v1.0.7------
     skill: "",
     difficultyLevel: "",
     correctAnswer: "",
@@ -172,7 +197,10 @@ const QuestionBankForm = ({
   const [showDropdownDifficultyLevel, setShowDropdownDifficultyLevel] =
     useState(false);
   const [selectedQuestionType, setSelectedQuestionType] = useState(
-    ((isInterviewType && dropdownValue !== "Assignment Questions") || type === "Feedback") ? "Interview Questions" : ""//<----v1.0.7------
+    (isInterviewType && dropdownValue !== "Assignment Questions") ||
+      type === "Feedback"
+      ? "Interview Questions"
+      : "" //<----v1.0.7------
   );
   const [showDropdownQuestionType, setShowDropdownQuestionType] =
     useState(false);
@@ -186,8 +214,9 @@ const QuestionBankForm = ({
   const [selectedBooleanAnswer, setSelectedBooleanAnswer] = useState("");
   const [showDropdownBooleanAnswer, setShowDropdownBooleanAnswer] =
     useState(false);
-  const [showDropdownAssInt, setShowDropdownAssInt] = useState(false);//<---v1.0.9-----
-  const [ignoreDefaultSelectedLabel, setIgnoreDefaultSelectedLabel] = useState(false);
+  const [showDropdownAssInt, setShowDropdownAssInt] = useState(false); //<---v1.0.9-----
+  const [ignoreDefaultSelectedLabel, setIgnoreDefaultSelectedLabel] =
+    useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -263,7 +292,11 @@ const QuestionBankForm = ({
         minexperience: question.minexperience || "",
         maxexperience: question.maxexperience || "",
       });
-      setDropdownValue(question.isInterviewQuestionType ?  "Interview Questions" : "Assignment Questions");
+      setDropdownValue(
+        question.isInterviewQuestionType
+          ? "Interview Questions"
+          : "Assignment Questions"
+      );
       setHintContent(question.hints || "");
       setSelectedSkill(question.skill || "");
       setSelectedQuestionType(question.questionType || "");
@@ -311,10 +344,24 @@ const QuestionBankForm = ({
   // Auto-set and lock question type when invoked for Interview lists (Add flow)
   useEffect(() => {
     if (isInterviewType && !isEdit) {
-      setSelectedQuestionType((isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "");
-      setFormData((prev) => ({ ...prev, questionType: (isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "" }));
+      setSelectedQuestionType(
+        isInterviewType && dropdownValue !== "Assignment Questions"
+          ? "Interview Questions"
+          : ""
+      );
+      setFormData((prev) => ({
+        ...prev,
+        questionType:
+          isInterviewType && dropdownValue !== "Assignment Questions"
+            ? "Interview Questions"
+            : "",
+      }));
       setShowMcqFields(false);
-      setErrors((prev) => ({ ...prev, questionType: (isInterviewType && dropdownValue !== "Assignment Questions") && "" }));
+      setErrors((prev) => ({
+        ...prev,
+        questionType:
+          isInterviewType && dropdownValue !== "Assignment Questions" && "",
+      }));
     }
   }, [isInterviewType, isEdit, dropdownValue]);
   //----v1.0.7------>
@@ -322,7 +369,10 @@ const QuestionBankForm = ({
   const clearFormFields = () => {
     setFormData({
       questionText: "",
-      questionType: (isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "",//<----v1.0.7------
+      questionType:
+        isInterviewType && dropdownValue !== "Assignment Questions"
+          ? "Interview Questions"
+          : "", //<----v1.0.7------
       skill: "",
       difficultyLevel: "",
       score: "",
@@ -335,7 +385,11 @@ const QuestionBankForm = ({
     });
 
     setSelectedSkill("");
-    setSelectedQuestionType((isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "");//<----v1.0.7------
+    setSelectedQuestionType(
+      isInterviewType && dropdownValue !== "Assignment Questions"
+        ? "Interview Questions"
+        : ""
+    ); //<----v1.0.7------
     setSelectedDifficultyLevel("");
     setAutoAssessment("");
     setHintContent("");
@@ -362,20 +416,27 @@ const QuestionBankForm = ({
   // Extract and normalize backend validation errors for display and field mapping
   const extractValidationErrors = (axiosError) => {
     const data = axiosError?.response?.data || {};
-    const rootMessage = data?.message || axiosError?.message || 'Request failed';
+    const rootMessage =
+      data?.message || axiosError?.message || "Request failed";
     const rawErrors = data?.errors || data?.error?.errors || {};
 
     // Normalize error messages to simple strings per field
-    const fieldErrors = Object.entries(rawErrors).reduce((acc, [field, val]) => {
-      let msg = '';
-      if (typeof val === 'string') msg = val;
-      else if (val && typeof val === 'object' && 'message' in val) msg = val.message;
-      else msg = String(val ?? 'Invalid value');
-      acc[field] = msg;
-      return acc;
-    }, {});
+    const fieldErrors = Object.entries(rawErrors).reduce(
+      (acc, [field, val]) => {
+        let msg = "";
+        if (typeof val === "string") msg = val;
+        else if (val && typeof val === "object" && "message" in val)
+          msg = val.message;
+        else msg = String(val ?? "Invalid value");
+        acc[field] = msg;
+        return acc;
+      },
+      {}
+    );
 
-    const detailedMessages = Object.entries(fieldErrors).map(([k, v]) => `${k}: ${v}`);
+    const detailedMessages = Object.entries(fieldErrors).map(
+      ([k, v]) => `${k}: ${v}`
+    );
     return { message: rootMessage, fieldErrors, detailedMessages };
   };
 
@@ -385,17 +446,23 @@ const QuestionBankForm = ({
     if (saveOrUpdateQuestionLoading || isSubmitting) return; // Prevent multiple clicks
     setIsSubmitting(true);
 
-   //<--v1.0.8-----
+    //<--v1.0.8-----
     // Determine effective list IDs to submit based on current Ass/Int selection and whether
     // the user has switched types (ignoreDefaultSelectedLabel).
-    const shouldConsiderDefault = !isEdit && selectedLabelId && !ignoreDefaultSelectedLabel;
+    const shouldConsiderDefault =
+      !isEdit && selectedLabelId && !ignoreDefaultSelectedLabel;
     let effectiveListIds = selectedListId;
     if (shouldConsiderDefault) {
-      const matchedLabel = (createdLists || []).find((l) => l._id === selectedLabelId);
+      const matchedLabel = (createdLists || []).find(
+        (l) => l._id === selectedLabelId
+      );
       const typeVal = matchedLabel?.type;
-      const isInterviewList = typeof typeVal === "boolean"
-        ? typeVal
-        : String(typeVal ?? "").toLowerCase().includes("interview");
+      const isInterviewList =
+        typeof typeVal === "boolean"
+          ? typeVal
+          : String(typeVal ?? "")
+              .toLowerCase()
+              .includes("interview");
       const currentIsInterview = dropdownValue === "Interview Questions";
       if (matchedLabel && isInterviewList === currentIsInterview) {
         effectiveListIds = [selectedLabelId, ...selectedListId];
@@ -411,7 +478,10 @@ const QuestionBankForm = ({
       updatedFormData,
       mcqOptions,
       type,
-      { skipQuestionType: isInterviewType && dropdownValue !== "Assignment Questions" }//<----v1.0.7------
+      {
+        skipQuestionType:
+          isInterviewType && dropdownValue !== "Assignment Questions",
+      } //<----v1.0.7------
     );
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -485,8 +555,9 @@ const QuestionBankForm = ({
       // sanitize and de-duplicate list ids to satisfy backend Joi (array of ObjectId strings)
       tenantListId: Array.from(
         new Set(
-          ((effectiveListIds || []))
-            .filter((id) => typeof id === "string" && id.trim().length > 0)
+          (effectiveListIds || []).filter(
+            (id) => typeof id === "string" && id.trim().length > 0
+          )
         )
       ),
       //---v1.0.8----->
@@ -499,12 +570,12 @@ const QuestionBankForm = ({
       updatedBy: userId,
       ownerId: userId,
       // v1.0.7 - include flag so backend can route to correct schema
-      isInterviewType: Boolean(dropdownValue === "Interview Questions"),//<---v1.0.9-----
+      isInterviewType: Boolean(dropdownValue === "Interview Questions"), //<---v1.0.9-----
     };
 
     // Ensure we don't carry over an empty options array from formData by default
     // Options should only be attached when MCQ has at least one non-empty option
-    if (Object.prototype.hasOwnProperty.call(questionData, 'options')) {
+    if (Object.prototype.hasOwnProperty.call(questionData, "options")) {
       delete questionData.options;
     }
 
@@ -655,7 +726,8 @@ const QuestionBankForm = ({
       console.error("Error creating/updating question:", error);
 
       // Parse backend validation errors and show them in toast
-      const { message, fieldErrors, detailedMessages } = extractValidationErrors(error);
+      const { message, fieldErrors, detailedMessages } =
+        extractValidationErrors(error);
 
       // Merge server-side field errors into local error state for inline display
       if (fieldErrors && Object.keys(fieldErrors).length > 0) {
@@ -664,17 +736,23 @@ const QuestionBankForm = ({
         try {
           scrollToFirstError(fieldErrors, fieldRefs);
         } catch (e) {
-          console.warn('scrollToFirstError failed:', e);
+          console.warn("scrollToFirstError failed:", e);
         }
       }
 
       // Build a concise multi-line toast message with up to 5 details
       const maxDetails = 5;
-      const detailsPreview = (detailedMessages || []).slice(0, maxDetails).join('\n- ');
-      const extraCount = (detailedMessages || []).length - Math.min((detailedMessages || []).length, maxDetails);
+      const detailsPreview = (detailedMessages || [])
+        .slice(0, maxDetails)
+        .join("\n- ");
+      const extraCount =
+        (detailedMessages || []).length -
+        Math.min((detailedMessages || []).length, maxDetails);
       const composed = detailsPreview
-        ? `${message}\n- ${detailsPreview}${extraCount > 0 ? `\n(+${extraCount} more)` : ''}`
-        : message || 'Failed to save or update question';
+        ? `${message}\n- ${detailsPreview}${
+            extraCount > 0 ? `\n(+${extraCount} more)` : ""
+          }`
+        : message || "Failed to save or update question";
 
       toast.error(composed, { duration: 6000 });
     } finally {
@@ -772,7 +850,7 @@ const QuestionBankForm = ({
       setShowDropdownMaxExperience(false);
     if (currentDropdown !== "showDropdownBooleanAnswer")
       setShowDropdownBooleanAnswer(false);
-    if (currentDropdown !== "showDropdownAssInt") setShowDropdownAssInt(false);//<---v1.0.9-----
+    if (currentDropdown !== "showDropdownAssInt") setShowDropdownAssInt(false); //<---v1.0.9-----
   };
   //---------v1.0.3--------->
 
@@ -812,7 +890,10 @@ const QuestionBankForm = ({
     // Clear selected question lists when switching between Interview/Assignment
     setSelectedListId([]);
     setSelectedLabels([]);
-    if (listRef.current && typeof listRef.current.clearSelection === "function") {
+    if (
+      listRef.current &&
+      typeof listRef.current.clearSelection === "function"
+    ) {
       listRef.current.clearSelection();
     }
     // Clear any list-related validation error
@@ -970,29 +1051,32 @@ const QuestionBankForm = ({
     setFormData((prev) => ({ ...prev, correctAnswer: value }));
     setErrors((prevErrors) => ({ ...prevErrors, correctAnswer: "" }));
   };
+// v2.0.0 <-----------------------------------------------------------------------------------------
+  // const modalClass = classNames(
+  //   // v1.0.6 <----------------------------------------------------------
+  //   // "fixed bg-white shadow-2xl border-l border-gray-200",
+  //   "fixed bg-white shadow-2xl outline-none",
+  //   // v1.0.6 ---------------------------------------------------------->
+  //   {
+  //     "overflow-y-auto": !isModalOpen,
+  //     "overflow-hidden": isModalOpen,
+  //     "inset-0": isFullScreen,
+  //     " top-0 bottom-0  md:w-1/2   h-screen inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2":
+  //       !isFullScreen,
+  //   }
+  // );
+// v2.0.0 <----------------------------------------------------------------------------------------->
 
-  const modalClass = classNames(
-    // v1.0.6 <----------------------------------------------------------
-    // "fixed bg-white shadow-2xl border-l border-gray-200",
-    "fixed bg-white shadow-2xl outline-none",
-    // v1.0.6 ---------------------------------------------------------->
-    {
-      "overflow-y-auto": !isModalOpen,
-      "overflow-hidden": isModalOpen,
-      "inset-0": isFullScreen,
-      " top-0 bottom-0  md:w-1/2   h-screen inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2":
-        !isFullScreen,
-    }
-  );
-
+// v2.0.0 <-----------------------------------------------------------------------------------------
   return (
     <>
-      <Modal
+      <SidebarPopup title="Add Question" onClose={onClose}>
+        {/* <Modal
         isOpen={true}
         className={modalClass}
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[1000]"
-      >
-        <div
+      > */}
+        {/* <div
           className={`h-full ${classNames("overflow-y-auto", {
             "px-6": isFullScreen,
             "mx-auto": true, // Always center the content
@@ -1004,18 +1088,18 @@ const QuestionBankForm = ({
           }}
           // className={`${classNames('h-full',
           //   { ' max-w-6xl mx-auto px-6': isFullScreen })} `}
-        >
-          {/* <div className={" fixed inset-0 bg-black bg-opacity-15 z-50  h-full flex flex-col justify-center"}> */}
-          {/* <div className={`flex flex-col justify-center items-center bg-white shadow-lg transition-transform duration-5000 transform 
+        > */}
+        {/* <div className={" fixed inset-0 bg-black bg-opacity-15 z-50  h-full flex flex-col justify-center"}> */}
+        {/* <div className={`flex flex-col justify-center items-center bg-white shadow-lg transition-transform duration-5000 transform 
               ${section === "Popup" &&  `right-0 h-full top-0 ${questionBankPopupVisibility ? "w-1/2 right-0 fixed" : "w-full"}`}
               ${section === "interviewerSection" || section==="assessment" ? "w-1/2  fixed h-[95%] flex flex-col justify-between right-9 " : 'fixed right-0 top-0 bottom-0 w-1/2'}
             `}
             > */}
-          <div ref={formRef}>
-            <div className="p-6 flex-1 overflow-y-auto">
-              {/* Header */}
-              <div className="flex justify-between items-center mb-6">
-                {/* <div className="flex  justify-between sm:justify-start items-center text-custom-blue p-4  w-full  "> */}
+        <div ref={formRef} className="sm:pb-20 pb-12">
+          <div className="sm:p-0 p-6 flex-1">
+            {/* Header */}
+            {/* <div className="flex justify-between items-center mb-6">
+                <div className="flex  justify-between sm:justify-start items-center text-custom-blue p-4  w-full  ">
                 <button
                   onClick={onClose}
                   className="focus:outline-none md:hidden lg:hidden xl:hidden 2xl:hidden sm:w-8"
@@ -1060,64 +1144,105 @@ const QuestionBankForm = ({
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                {/* </div> */}
-              </div>
+                </div>
+              </div> */}
 
+            <div className="mb-4">
               <InfoGuide
-  title="Question Creation Guidelines"
-  items={[
-    <><span className="font-medium">Question Types:</span> Choose from multiple question formats including MCQ, text responses, programming challenges, and boolean questions</>,
-    <><span className="font-medium">Skill Tagging:</span> Tag questions with relevant skills for better organization and searchability</>,
-    <><span className="font-medium">Difficulty Levels:</span> Set appropriate difficulty (Easy, Medium, Hard) to match candidate experience levels</>,
-    <><span className="font-medium">Experience Range:</span> Define minimum and maximum experience requirements for optimal question targeting</>,
-    <><span className="font-medium">Auto Assessment:</span> Enable automated grading for text-based answers with exact or contains matching</>,
-    <><span className="font-medium">Character Limits:</span> Set appropriate character limits for different question types (Single line: 500 chars, Paragraph: 2000 chars)</>,
-    <><span className="font-medium">Hint System:</span> Provide helpful hints without giving away the answer (max 300 characters)</>,
-    <><span className="font-medium">Organization:</span> Assign questions to specific lists for better categorization and management</>,
-    <><span className="font-medium">Validation:</span> Real-time validation ensures all required fields are completed before submission</>,
-    <><span className="font-medium">Save Options:</span> Save individual questions or use 'Save & Next' for efficient bulk question creation</>
-  ]}
-/>
+                title="Question Creation Guidelines"
+                items={[
+                  <>
+                    <span className="font-medium">Question Types:</span> Choose
+                    from multiple question formats including MCQ, text
+                    responses, programming challenges, and boolean questions
+                  </>,
+                  <>
+                    <span className="font-medium">Skill Tagging:</span> Tag
+                    questions with relevant skills for better organization and
+                    searchability
+                  </>,
+                  <>
+                    <span className="font-medium">Difficulty Levels:</span> Set
+                    appropriate difficulty (Easy, Medium, Hard) to match
+                    candidate experience levels
+                  </>,
+                  <>
+                    <span className="font-medium">Experience Range:</span>{" "}
+                    Define minimum and maximum experience requirements for
+                    optimal question targeting
+                  </>,
+                  <>
+                    <span className="font-medium">Auto Assessment:</span> Enable
+                    automated grading for text-based answers with exact or
+                    contains matching
+                  </>,
+                  <>
+                    <span className="font-medium">Character Limits:</span> Set
+                    appropriate character limits for different question types
+                    (Single line: 500 chars, Paragraph: 2000 chars)
+                  </>,
+                  <>
+                    <span className="font-medium">Hint System:</span> Provide
+                    helpful hints without giving away the answer (max 300
+                    characters)
+                  </>,
+                  <>
+                    <span className="font-medium">Organization:</span> Assign
+                    questions to specific lists for better categorization and
+                    management
+                  </>,
+                  <>
+                    <span className="font-medium">Validation:</span> Real-time
+                    validation ensures all required fields are completed before
+                    submission
+                  </>,
+                  <>
+                    <span className="font-medium">Save Options:</span> Save
+                    individual questions or use 'Save & Next' for efficient bulk
+                    question creation
+                  </>,
+                ]}
+              />
+            </div>
 
+            {/* Content */}
+            {/* <div className="fixed   top-16 bottom-16  overflow-auto text-sm w-full"> */}
+            {/* <div className=" border-2 border-[red] top-16 h-full  overflow-auto text-sm w-full"> */}
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {/* <div> */}
+              <div className=" mb-6">
+                <div className="font-semibold text-xl mb-4">
+                  Basic Information:
+                </div>
 
-
-              {/* Content */}
-              {/* <div className="fixed   top-16 bottom-16  overflow-auto text-sm w-full"> */}
-              {/* <div className=" border-2 border-[red] top-16 h-full  overflow-auto text-sm w-full"> */}
-              <form className="space-y-6" onSubmit={handleSubmit}>
-                {/* <div> */}
-                <div className=" mb-6">
-                  <div className="font-semibold text-xl mb-4">
-                    Basic Information:
+                {/*<---v1.0.9----- Ass/Int Questions (custom dropdown, no search) */}
+                <div className="flex flex-col gap-1 mb-4">
+                  <div>
+                    <label
+                      htmlFor="isInterviewQuestion"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Ass/Int Questions
+                    </label>
                   </div>
-                  
-                  {/*<---v1.0.9----- Ass/Int Questions (custom dropdown, no search) */}
-                  <div className="flex flex-col gap-1 mb-4">
-                    <div>
-                      <label
-                        htmlFor="isInterviewQuestion"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Ass/Int Questions
-                      </label>
-                    </div>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm border border-gray-300 focus:ring-red-300 focus:outline-gray-300 cursor-pointer`}
-                        value={dropdownValue}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm border border-gray-300 focus:ring-red-300 focus:outline-gray-300 cursor-pointer`}
+                      value={dropdownValue}
+                      onClick={toggleDropdownAssInt}
+                      readOnly
+                    />
+                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                      <MdArrowDropDown
+                        className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1"
                         onClick={toggleDropdownAssInt}
-                        readOnly
                       />
-                      <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <MdArrowDropDown
-                          className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1"
-                          onClick={toggleDropdownAssInt}
-                        />
-                      </div>
-                      {showDropdownAssInt && (
-                        <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg max-h-40 overflow-y-auto text-sm">
-                          {["Interview Questions", "Assignment Questions"].map((opt) => (
+                    </div>
+                    {showDropdownAssInt && (
+                      <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg max-h-40 overflow-y-auto text-sm">
+                        {["Interview Questions", "Assignment Questions"].map(
+                          (opt) => (
                             <div
                               key={opt}
                               className="py-2 px-4 cursor-pointer hover:bg-gray-100"
@@ -1125,14 +1250,16 @@ const QuestionBankForm = ({
                             >
                               {opt}
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>{/*---v1.0.9----->*/}
+                          )
+                        )}
+                      </div>
+                    )}
                   </div>
+                  {/*---v1.0.9----->*/}
+                </div>
 
-                  {/* Question Type Selection */}
-                  { (dropdownValue === "Assignment Questions") && (//<----v1.0.7------
+                {/* Question Type Selection */}
+                {dropdownValue === "Assignment Questions" && ( //<----v1.0.7------
                   <div className="flex flex-col gap-1 mb-4">
                     <div>
                       <label
@@ -1201,53 +1328,53 @@ const QuestionBankForm = ({
                     </div>
                     {/* </div> */}
                   </div>
-                //----v1.0.7------>
-                  )}
+                  //----v1.0.7------>
+                )}
 
-                  {/* My Question List */}
-                  {type === "feedback" ? null : (
-                    <div className="mb-4">
-                      {/* v1.0.4 <---------------------------------------------------------- */}
-                      <MyQuestionList
+                {/* My Question List */}
+                {type === "feedback" ? null : (
+                  <div className="mb-4">
+                    {/* v1.0.4 <---------------------------------------------------------- */}
+                    <MyQuestionList
                       // v1.0.6 <-----------------------------------------
-                        questionListRef={fieldRefs.questionListRef}
-                        ref={listRef}
+                      questionListRef={fieldRefs.questionListRef}
+                      ref={listRef}
                       // v1.0.6 ----------------------------------------->
-                        fromform={true}
-                        onSelectList={handleListSelection}
-                        // ref={listRef}
-                        error={errors.tenantListId}
-                        defaultTenantList={selectedLabels}
-                        notEditmode={!isEdit}
-                        selectedListId={selectedLabelId}
-                        onErrorClear={handleErrorClear}
-                        isInterviewType={dropdownValue === "Interview Questions"}
-                      />
-                      {/* v1.0.4 -----------------------------------------------------------> */}
-                    </div>
-                  )}
-                  {/* Skill/Technology */}
+                      fromform={true}
+                      onSelectList={handleListSelection}
+                      // ref={listRef}
+                      error={errors.tenantListId}
+                      defaultTenantList={selectedLabels}
+                      notEditmode={!isEdit}
+                      selectedListId={selectedLabelId}
+                      onErrorClear={handleErrorClear}
+                      isInterviewType={dropdownValue === "Interview Questions"}
+                    />
+                    {/* v1.0.4 -----------------------------------------------------------> */}
+                  </div>
+                )}
+                {/* Skill/Technology */}
 
-                  <div className="flex flex-col gap-1 mb-4">
-                    <label
-                      htmlFor="skills"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      {/* Skill/Technology  */}
-                      Select Skills
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <div className=" relative" ref={skillsPopupRef}>
-                      {/* v1.0.4 <----------------------------------------------------------------------- */}
-                      <input
-                        ref={fieldRefs.skill}
-                        placeholder="Select Skills"
-                        // className={`block w-full pl-5 pr-3 py-2 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm cursor-pointer ${
-                        //   errors.skill
-                        //     ? "border-red-500"
-                        //     : "border-gray-300 focus:border-black"
-                        // }`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                <div className="flex flex-col gap-1 mb-4">
+                  <label
+                    htmlFor="skills"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    {/* Skill/Technology  */}
+                    Select Skills
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div className=" relative" ref={skillsPopupRef}>
+                    {/* v1.0.4 <----------------------------------------------------------------------- */}
+                    <input
+                      ref={fieldRefs.skill}
+                      placeholder="Select Skills"
+                      // className={`block w-full pl-5 pr-3 py-2 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm cursor-pointer ${
+                      //   errors.skill
+                      //     ? "border-red-500"
+                      //     : "border-gray-300 focus:border-black"
+                      // }`}
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                           border ${
                             errors.skill
                               ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1255,156 +1382,156 @@ const QuestionBankForm = ({
                           }
                           focus:outline-gray-300
                         `}
+                      onClick={toggleSkillsPopup}
+                      readOnly
+                    />
+                    {/* v1.0.4 -----------------------------------------------------------------------> */}
+                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                      <MdArrowDropDown
+                        className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1"
                         onClick={toggleSkillsPopup}
-                        readOnly
                       />
-                      {/* v1.0.4 -----------------------------------------------------------------------> */}
-                      <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <MdArrowDropDown
-                          className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1"
-                          onClick={toggleSkillsPopup}
-                        />
-                      </div>
-                      {showSkillsPopup && (
-                        <div className="absolute bg-white shadow rounded border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-sm">
-                          <div className="">
-                            <div className="flex items-center border rounded px-2 py-1 m-2">
-                              <Search className="absolute ml-1 text-gray-500" />
-                              <input
-                                type="text"
-                                placeholder="Search Skills"
-                                value={searchTermSkills}
-                                onChange={(e) =>
-                                  setSearchTermSkills(e.target.value)
-                                }
-                                className="pl-8 focus:border-black focus:outline-none w-full"
-                              />
-                            </div>
+                    </div>
+                    {showSkillsPopup && (
+                      <div className="absolute bg-white shadow rounded border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-sm">
+                        <div className="">
+                          <div className="flex items-center border rounded px-2 py-1 m-2">
+                            <Search className="absolute ml-1 text-gray-500" />
+                            <input
+                              type="text"
+                              placeholder="Search Skills"
+                              value={searchTermSkills}
+                              onChange={(e) =>
+                                setSearchTermSkills(e.target.value)
+                              }
+                              className="pl-8 focus:border-black focus:outline-none w-full"
+                            />
                           </div>
-                          {skills.filter((skill) =>
-                            skill.SkillName.toLowerCase().includes(
-                              searchTermSkills.toLowerCase()
-                            )
-                          ).length > 0 ? (
-                            skills
-                              .filter((skill) =>
-                                skill.SkillName.toLowerCase().includes(
-                                  searchTermSkills.toLowerCase()
-                                )
+                        </div>
+                        {skills.filter((skill) =>
+                          skill.SkillName.toLowerCase().includes(
+                            searchTermSkills.toLowerCase()
+                          )
+                        ).length > 0 ? (
+                          skills
+                            .filter((skill) =>
+                              skill.SkillName.toLowerCase().includes(
+                                searchTermSkills.toLowerCase()
                               )
-                              .map((skill) => (
-                                <div
-                                  key={skill._id}
-                                  onClick={() =>
-                                    handleSelectSkill(skill.SkillName)
-                                  }
-                                  className="cursor-pointer hover:bg-gray-200 p-2"
-                                >
-                                  {skill.SkillName}
-                                </div>
-                              ))
-                          ) : (
-                            <div className="p-2 text-gray-500">
-                              No skills found
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {errors.skill && (
-                        <p className="text-red-500 text-sm ">{errors.skill}</p>
-                      )}
-                    </div>
-
-                    {/* Display Selected Skills */}
-                    <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 mt-1">
-                      {Array.isArray(selectedSkill) &&
-                      selectedSkill.length === 0 ? (
-                        <p className="text-sm text-gray-500 text-center">
-                          No Skills Selected
-                        </p>
-                      ) : (
-                        <div>
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center">
-                              <BadgeCheck className="h-4 w-4 text-gray-500 mr-2" />
-                              <span className="text-sm text-gray-700">
-                                {selectedSkill.length} Skill
-                                {selectedSkill.length !== 1 ? "s" : ""} Selected
-                              </span>
-                            </div>
-                            {selectedSkill.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={clearSkills}
-                                className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                            )
+                            .map((skill) => (
+                              <div
+                                key={skill._id}
+                                onClick={() =>
+                                  handleSelectSkill(skill.SkillName)
+                                }
+                                className="cursor-pointer hover:bg-gray-200 p-2"
                               >
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Clear All
-                              </button>
-                            )}
+                                {skill.SkillName}
+                              </div>
+                            ))
+                        ) : (
+                          <div className="p-2 text-gray-500">
+                            No skills found
                           </div>
+                        )}
+                      </div>
+                    )}
 
-                          {/* Selected Skills */}
-                          <div className="flex flex-wrap gap-2">
-                            {Array.isArray(selectedSkill) &&
-                              selectedSkill.map((skillName, index) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
-                                  style={{
-                                    minWidth: "150px",
-                                    maxWidth: "250px",
-                                  }}
-                                >
-                                  <div className="flex-1 overflow-hidden">
-                                    <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
-                                      {skillName}
-                                    </span>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveSkill(index)}
-                                    className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 ml-2"
-                                    title="Remove skill"
-                                  >
-                                    <X className="h-4 w-4 text-red-400" />
-                                  </button>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    {errors.skill && (
+                      <p className="text-red-500 text-sm ">{errors.skill}</p>
+                    )}
                   </div>
 
-                  {/* Question */}
-                  <div className="flex flex-col gap-1 mb-4 mt-4">
-                    <div>
-                      <label
-                        htmlFor="question"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Question <span className="text-red-500">*</span>
-                      </label>
-                    </div>
-                    <div className="flex-grow">
-                      {/* v1.0.4 <----------------------------------------------------------------- */}
-                      <textarea
-                        ref={fieldRefs.questionText}
-                        placeholder="Enter Question"
-                        rows={1}
-                        name="questionText"
-                        id="questionText"
-                        value={formData.questionText}
-                        onChange={handleChange}
-                        maxLength={1000}
-                        // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
-                        //   errors.questionText
-                        //     ? "border-red-500"
-                        //     : "border-gray-300 focus:border-black"
-                        // }`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                  {/* Display Selected Skills */}
+                  <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 mt-1">
+                    {Array.isArray(selectedSkill) &&
+                    selectedSkill.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center">
+                        No Skills Selected
+                      </p>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <BadgeCheck className="h-4 w-4 text-gray-500 mr-2" />
+                            <span className="text-sm text-gray-700">
+                              {selectedSkill.length} Skill
+                              {selectedSkill.length !== 1 ? "s" : ""} Selected
+                            </span>
+                          </div>
+                          {selectedSkill.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={clearSkills}
+                              className="text-sm text-red-600 hover:text-red-800 flex items-center"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Clear All
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Selected Skills */}
+                        <div className="flex flex-wrap gap-2">
+                          {Array.isArray(selectedSkill) &&
+                            selectedSkill.map((skillName, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
+                                style={{
+                                  minWidth: "150px",
+                                  maxWidth: "250px",
+                                }}
+                              >
+                                <div className="flex-1 overflow-hidden">
+                                  <span className="ml-2 text-sm text-blue-800 truncate whitespace-nowrap">
+                                    {skillName}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveSkill(index)}
+                                  className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 ml-2"
+                                  title="Remove skill"
+                                >
+                                  <X className="h-4 w-4 text-red-400" />
+                                </button>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Question */}
+                <div className="flex flex-col gap-1 mb-4 mt-4">
+                  <div>
+                    <label
+                      htmlFor="question"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Question <span className="text-red-500">*</span>
+                    </label>
+                  </div>
+                  <div className="flex-grow">
+                    {/* v1.0.4 <----------------------------------------------------------------- */}
+                    <textarea
+                      ref={fieldRefs.questionText}
+                      placeholder="Enter Question"
+                      rows={1}
+                      name="questionText"
+                      id="questionText"
+                      value={formData.questionText}
+                      onChange={handleChange}
+                      maxLength={1000}
+                      // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
+                      //   errors.questionText
+                      //     ? "border-red-500"
+                      //     : "border-gray-300 focus:border-black"
+                      // }`}
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                           border ${
                             errors.questionText
                               ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1412,71 +1539,73 @@ const QuestionBankForm = ({
                           }
                           focus:outline-gray-300
                         `}
-                        // v1.0.4 <----------------------------------------------------------------->
-                      ></textarea>
-                      {/* Question Character Counter */}
-                      <div className="flex justify-between items-center text-sm text-gray-500 mt-1">
-                        {errors.questionText ? (
-                          <p className="text-red-500 text-sm ">
-                            {errors.questionText}
-                          </p>
-                        ) : (
-                          <div></div>
-                        )}
-                        {formData.questionText.length}/1000 characters
-                      </div>
+                      // v1.0.4 <----------------------------------------------------------------->
+                    ></textarea>
+                    {/* Question Character Counter */}
+                    <div className="flex justify-between items-center text-sm text-gray-500 mt-1">
+                      {errors.questionText ? (
+                        <p className="text-red-500 text-sm ">
+                          {errors.questionText}
+                        </p>
+                      ) : (
+                        <div></div>
+                      )}
+                      {formData.questionText.length}/1000 characters
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="">
-                  <div className="font-semibold text-xl mb-8 mt-4">
-                    Answer Information:
-                  </div>
-                  {/* MCQ Options */}
-                  {showMcqFields && (
-                    <div>
-                      <div className="flex justify-between items-center gap-2 w-full mb-5">
-                        <label className="block mb-2 text-sm mt-1 font-medium text-gray-900 ">
-                          Options <span className="text-red-500">*</span>
-                        </label>
-                        {/* v1.0.5 <---------------------------------------------------------------- */}
-                        <button type="button" className="flex items-center gap-2 bg-custom-blue text-white px-3 py-1 rounded-md"
-                          onClick={addOption}
+              <div className="">
+                <div className="font-semibold text-xl mb-8 mt-4">
+                  Answer Information:
+                </div>
+                {/* MCQ Options */}
+                {showMcqFields && (
+                  <div>
+                    <div className="flex justify-between items-center gap-2 w-full mb-5">
+                      <label className="block mb-2 text-sm mt-1 font-medium text-gray-900 ">
+                        Options <span className="text-red-500">*</span>
+                      </label>
+                      {/* v1.0.5 <---------------------------------------------------------------- */}
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 bg-custom-blue text-white px-3 py-1 rounded-md"
+                        onClick={addOption}
+                      >
+                        <Plus className="w-4 h-4 fill-white cursor-pointer" />
+                        Add
+                      </button>
+                      {/* v1.0.5 ----------------------------------------------------------------> */}
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                      {mcqOptions.map((option, index) => (
+                        <div
+                          key={index}
+                          className="flex gap-5 items-center relative mb-4"
                         >
-                          <Plus className="w-4 h-4 fill-white cursor-pointer" />
-                          Add
-                        </button>
-                        {/* v1.0.5 ----------------------------------------------------------------> */}
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        {mcqOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="flex gap-5 items-center relative mb-4"
-                          >
-                            <div>
-                              <label
-                                htmlFor={`option${index}`}
-                                className="block text-sm font-medium leading-6 text-gray-500"
-                              ></label>
-                            </div>
-                            {/* v1.0.5 <--------------------------------------------------------- */}
-                            <div className="flex-grow flex justify-center relative mb-5">
-                              {/* <span className="absolute left-0 pl-1 pt-2 text-gray-500"> */}
-                              <span className="absolute left-0 pl-2 pt-3 text-gray-500">
-                                {optionLabels[index]}.
-                              </span>
-                              <div className="flex flex-col w-full">
-                                {/* v1.0.4 <-------------------------------------------------------------- */}
-                                <input
-                                  ref={fieldRefs.options}
-                                  id={`option${index}`}
-                                  name={`option${index}`}
-                                  autoComplete="off"
-                                  maxLength={250}
-                                  // className={`border  px-3 py-2  sm:text-sm rounded-md border-gray-300   text-gray-500 focus:border-black focus:outline-none w-full pl-8`}
-                                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 pl-7 sm:text-sm
+                          <div>
+                            <label
+                              htmlFor={`option${index}`}
+                              className="block text-sm font-medium leading-6 text-gray-500"
+                            ></label>
+                          </div>
+                          {/* v1.0.5 <--------------------------------------------------------- */}
+                          <div className="flex-grow flex justify-center relative mb-5">
+                            {/* <span className="absolute left-0 pl-1 pt-2 text-gray-500"> */}
+                            <span className="absolute left-0 pl-2 pt-3 text-gray-500">
+                              {optionLabels[index]}.
+                            </span>
+                            <div className="flex flex-col w-full">
+                              {/* v1.0.4 <-------------------------------------------------------------- */}
+                              <input
+                                ref={fieldRefs.options}
+                                id={`option${index}`}
+                                name={`option${index}`}
+                                autoComplete="off"
+                                maxLength={250}
+                                // className={`border  px-3 py-2  sm:text-sm rounded-md border-gray-300   text-gray-500 focus:border-black focus:outline-none w-full pl-8`}
+                                className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 pl-7 sm:text-sm
                                     border ${
                                       errors.options
                                         ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1484,105 +1613,105 @@ const QuestionBankForm = ({
                                     }
                                     focus:outline-gray-300
                                   `}
-                                  // v1.0.4 ------------------------------------------------------------->
-                                  onChange={(e) => handleOptionChange(index, e)}
-                                  value={option.option}
-                                  readOnly={option.isSaved && !option.isEditing}
-                                  placeholder={`Please add option`}
-                                />
-                                {/* v1.0.5 <--------------------------------------------------------- */}
-                                {/* MCQ Option Character Counter */}
-                                <div className="text-right text-xs text-gray-400 mt-1">
-                                  {option.option.length}/250 characters
-                                </div>
+                                // v1.0.4 ------------------------------------------------------------->
+                                onChange={(e) => handleOptionChange(index, e)}
+                                value={option.option}
+                                readOnly={option.isSaved && !option.isEditing}
+                                placeholder={`Please add option`}
+                              />
+                              {/* v1.0.5 <--------------------------------------------------------- */}
+                              {/* MCQ Option Character Counter */}
+                              <div className="text-right text-xs text-gray-400 mt-1">
+                                {option.option.length}/250 characters
                               </div>
-                              {!option.isSaved || option.isEditing ? (
-                                <div className="flex gap-2 ml-2">
-                                  <button
-                                    type="button"
-                                    className="  p-1  bg-white"
-                                    onClick={() => handleSaveOption(index)}
-                                  >
-                                    <VscSave className="fill-custom-blue" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className={`p-1  bg-white ${
-                                      mcqOptions.length <= 2
-                                        ? "cursor-not-allowed opacity-50"
-                                        : ""
-                                    }`}
-                                    disabled={mcqOptions.length <= 2}
-                                    onClick={() => handleCancelOption(index)}
-                                  >
-                                    <MdOutlineCancel className="fill-red-400" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="flex gap-2 ml-2">
-                                  <button
-                                    type="button"
-                                    className=" mt-2  p-1 bg-white"
-                                    onClick={() => handleEditOption(index)}
-                                  >
-                                    <FaRegEdit />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className={` mt-2 p-1 bg-white ${
-                                      mcqOptions.length <= 2
-                                        ? "cursor-not-allowed opacity-50"
-                                        : ""
-                                    }`}
-                                    onClick={() => handleDeleteOption(index)}
-                                    disabled={mcqOptions.length <= 2}
-                                  >
-                                    <FaTrash />
-                                  </button>
-                                </div>
-                              )}
                             </div>
+                            {!option.isSaved || option.isEditing ? (
+                              <div className="flex gap-2 ml-2">
+                                <button
+                                  type="button"
+                                  className="  p-1  bg-white"
+                                  onClick={() => handleSaveOption(index)}
+                                >
+                                  <VscSave className="fill-custom-blue" />
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`p-1  bg-white ${
+                                    mcqOptions.length <= 2
+                                      ? "cursor-not-allowed opacity-50"
+                                      : ""
+                                  }`}
+                                  disabled={mcqOptions.length <= 2}
+                                  onClick={() => handleCancelOption(index)}
+                                >
+                                  <MdOutlineCancel className="fill-red-400" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2 ml-2">
+                                <button
+                                  type="button"
+                                  className=" mt-2  p-1 bg-white"
+                                  onClick={() => handleEditOption(index)}
+                                >
+                                  <FaRegEdit />
+                                </button>
+                                <button
+                                  type="button"
+                                  className={` mt-2 p-1 bg-white ${
+                                    mcqOptions.length <= 2
+                                      ? "cursor-not-allowed opacity-50"
+                                      : ""
+                                  }`}
+                                  onClick={() => handleDeleteOption(index)}
+                                  disabled={mcqOptions.length <= 2}
+                                >
+                                  <FaTrash />
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        ))}
-                        {errors.options && (
-                          <p className="text-red-500 text-sm mt-1 ml-[164px]">
-                            {errors.options}
-                          </p>
-                        )}
-                      </form>
-                    </div>
-                  )}
-                  {/* Answer */}
-                  <div className="flex flex-col gap-2 mb-2 mt-2">
-                    <div>
-                      <label
-                        htmlFor="Answer"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Answer <span className="text-red-500">*</span>
-                      </label>
-                    </div>
-                    <div className="flex-grow">
-                      {selectedQuestionType === "Boolean" ? (
-                        <div className="relative">
-                          {/* v1.0.4 <----------------------------------------------------------------------- */}
-                          <input
-                            ref={fieldRefs.correctAnswer}
-                            type="text"
-                            placeholder="Select True or False"
-                            name="correctAnswer"
-                            id="correctAnswer"
-                            value={
-                              selectedBooleanAnswer || formData.correctAnswer
-                            }
-                            onClick={toggleDropdownBooleanAnswer}
-                            readOnly
-                            // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 cursor-pointer ${
-                            //   errors.correctAnswer
-                            //     ? "border-red-500"
-                            //     : "border-gray-300 focus:border-black"
-                            // }`}
-                            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        </div>
+                      ))}
+                      {errors.options && (
+                        <p className="text-red-500 text-sm mt-1 ml-[164px]">
+                          {errors.options}
+                        </p>
+                      )}
+                    </form>
+                  </div>
+                )}
+                {/* Answer */}
+                <div className="flex flex-col gap-2 mb-2 mt-2">
+                  <div>
+                    <label
+                      htmlFor="Answer"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Answer <span className="text-red-500">*</span>
+                    </label>
+                  </div>
+                  <div className="flex-grow">
+                    {selectedQuestionType === "Boolean" ? (
+                      <div className="relative">
+                        {/* v1.0.4 <----------------------------------------------------------------------- */}
+                        <input
+                          ref={fieldRefs.correctAnswer}
+                          type="text"
+                          placeholder="Select True or False"
+                          name="correctAnswer"
+                          id="correctAnswer"
+                          value={
+                            selectedBooleanAnswer || formData.correctAnswer
+                          }
+                          onClick={toggleDropdownBooleanAnswer}
+                          readOnly
+                          // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 cursor-pointer ${
+                          //   errors.correctAnswer
+                          //     ? "border-red-500"
+                          //     : "border-gray-300 focus:border-black"
+                          // }`}
+                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                               border ${
                                 errors.correctAnswer
                                   ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1590,80 +1719,46 @@ const QuestionBankForm = ({
                               }
                               focus:outline-gray-300
                             `}
-                          />
-                          {/* v1.0.4 -----------------------------------------------------------------------> */}
-                          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            <MdArrowDropDown
-                              className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1"
-                              onClick={toggleDropdownBooleanAnswer}
-                            />
-                          </div>
-                          {showDropdownBooleanAnswer && (
-                            <div className="absolute z-50 mt-1 mb-5 w-full rounded-md border border-gray-300 bg-white shadow-lg">
-                              <div
-                                className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                onClick={() =>
-                                  handleBooleanAnswerSelect("True")
-                                }
-                              >
-                                True
-                              </div>
-                              <div
-                                className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                onClick={() =>
-                                  handleBooleanAnswerSelect("False")
-                                }
-                              >
-                                False
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : selectedQuestionType === "Number" ? (
-                        <input
-                          ref={fieldRefs.correctAnswer}
-                          type="number"
-                          placeholder="Enter Number"
-                          name="correctAnswer"
-                          id="correctAnswer"
-                          value={formData.correctAnswer}
-                          onChange={handleChange}
-                          // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
-                          //   errors.correctAnswer
-                          //     ? "border-red-500"
-                          //     : "border-gray-300 focus:border-black"
-                          // }`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                              errors.correctAnswer
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
                         />
-                      ) : (
-                        <textarea
-                          ref={fieldRefs.correctAnswer}
-                          rows={5}
-                          placeholder="Enter Answer"
-                          name="correctAnswer"
-                          id="correctAnswer"
-                          value={formData.correctAnswer}
-                          onChange={handleChange}
-                          maxLength={
-                            selectedQuestionType ===
-                              "Short Text(Single line)" ||
-                            selectedQuestionType === "Long Text(Paragraph)"
-                              ? charLimits.max
-                              : 1000
-                          }
-                          // className={` w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 p-2 ${
-                          //   errors.correctAnswer
-                          //     ? "border-red-500"
-                          //     : "border-gray-300 focus:border-black"
-                          // }`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                        {/* v1.0.4 -----------------------------------------------------------------------> */}
+                        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                          <MdArrowDropDown
+                            className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1"
+                            onClick={toggleDropdownBooleanAnswer}
+                          />
+                        </div>
+                        {showDropdownBooleanAnswer && (
+                          <div className="absolute z-50 mt-1 mb-5 w-full rounded-md border border-gray-300 bg-white shadow-lg">
+                            <div
+                              className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleBooleanAnswerSelect("True")}
+                            >
+                              True
+                            </div>
+                            <div
+                              className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleBooleanAnswerSelect("False")}
+                            >
+                              False
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : selectedQuestionType === "Number" ? (
+                      <input
+                        ref={fieldRefs.correctAnswer}
+                        type="number"
+                        placeholder="Enter Number"
+                        name="correctAnswer"
+                        id="correctAnswer"
+                        value={formData.correctAnswer}
+                        onChange={handleChange}
+                        // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
+                        //   errors.correctAnswer
+                        //     ? "border-red-500"
+                        //     : "border-gray-300 focus:border-black"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                             border ${
                               errors.correctAnswer
                                 ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1671,177 +1766,205 @@ const QuestionBankForm = ({
                             }
                             focus:outline-gray-300
                           `}
-                        ></textarea>
+                      />
+                    ) : (
+                      <textarea
+                        ref={fieldRefs.correctAnswer}
+                        rows={5}
+                        placeholder="Enter Answer"
+                        name="correctAnswer"
+                        id="correctAnswer"
+                        value={formData.correctAnswer}
+                        onChange={handleChange}
+                        maxLength={
+                          selectedQuestionType === "Short Text(Single line)" ||
+                          selectedQuestionType === "Long Text(Paragraph)"
+                            ? charLimits.max
+                            : 1000
+                        }
+                        // className={` w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 p-2 ${
+                        //   errors.correctAnswer
+                        //     ? "border-red-500"
+                        //     : "border-gray-300 focus:border-black"
+                        // }`}
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                            border ${
+                              errors.correctAnswer
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
+                            }
+                            focus:outline-gray-300
+                          `}
+                      ></textarea>
+                    )}
+                    {/* Character Counter */}
+                    <div className="flex justify-between items-center text-sm mt-1">
+                      {errors.correctAnswer ? (
+                        <p className="text-red-500 text-sm">
+                          {errors.correctAnswer}
+                        </p>
+                      ) : (
+                        <div></div>
                       )}
-                      {/* Character Counter */}
-                      <div className="flex justify-between items-center text-sm mt-1">
-                        {errors.correctAnswer ? (
-                          <p className="text-red-500 text-sm">
-                            {errors.correctAnswer}
-                          </p>
-                        ) : (
-                          <div></div>
-                        )}
-                        <div className="text-gray-500">
-                          {formData.correctAnswer.length}/{charLimits.max}{" "}
-                          characters
-                        </div>
+                      <div className="text-gray-500">
+                        {formData.correctAnswer.length}/{charLimits.max}{" "}
+                        characters
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Character Limits */}
-                  {(selectedQuestionType === "Short Text(Single line)" ||
-                    selectedQuestionType === "Long Text(Paragraph)") && (
-                    <div className="flex gap-5 mb-4">
-                      <div className="mb-4">
-                        <label
-                          htmlFor="CharactersLimit"
-                          className={`block mb-2 text-sm font-medium w-36 ${
-                            selectedQuestionType === "Short Text(Single line)"
-                              ? "text-gray-400"
-                              : ""
-                          }`}
-                        >
-                          Characters Limit
-                        </label>
-                      </div>
-                      <div className="flex-grow flex items-center">
-                        <span
-                          className={`-mt-5 ${
-                            selectedQuestionType ===
-                              "Short Text(Single line)" ||
-                            selectedQuestionType === "Long Text(Paragraph)"
-                              ? "text-gray-400"
-                              : ""
-                          }`}
-                        >
-                          Min
-                        </span>
-                        <input
-                          type="number"
-                          min="1"
-                          placeholder="Min"
-                          value={charLimits.min}
-                          readOnly
-                          className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2 text-gray-400`}
-                        />
-                        <span
-                          className={`-mt-5 ${
-                            selectedQuestionType === "Short Text(Single line)"
-                              ? "text-gray-400"
-                              : ""
-                          }`}
-                        >
-                          Max
-                        </span>
-                        <input
-                          type="number"
-                          min="1"
-                          placeholder="Max"
-                          max={
-                            selectedQuestionType === "Short Text(Single line)"
-                              ? "500"
-                              : "2000"
-                          }
-                          step="1"
-                          value={charLimits.max}
-                          onChange={(e) => {
-                            const maxLimit =
-                              selectedQuestionType === "Short Text(Single line)"
-                                ? 500
-                                : 2000;
-                            setCharLimits((prev) => ({
-                              ...prev,
-                              max: Math.min(
-                                maxLimit,
-                                Math.max(1, e.target.value)
-                              ),
-                            }));
-                          }}
-                          className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2`}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Hint */}
-                  <div className="flex flex-col gap-1 mb-4">
-                    <div>
+                {/* Character Limits */}
+                {(selectedQuestionType === "Short Text(Single line)" ||
+                  selectedQuestionType === "Long Text(Paragraph)") && (
+                  <div className="flex gap-5 mb-4">
+                    <div className="mb-4">
                       <label
-                        htmlFor="Hint"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        htmlFor="CharactersLimit"
+                        className={`block mb-2 text-sm font-medium w-36 ${
+                          selectedQuestionType === "Short Text(Single line)"
+                            ? "text-gray-400"
+                            : ""
+                        }`}
                       >
-                        Hint
+                        Characters Limit
                       </label>
                     </div>
-                    <div className="flex-grow relative">
-                      <textarea
-                        name="Hint"
-                        id="Hint"
-                        placeholder="Enter Hint"
-                        rows={1}
-                        maxLength={hintCharLimit}
-                        value={hintContent}
-                        onChange={(e) => handleHintChange(e.target.value)}
-                        className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 "
-                        style={{
-                          overflowY: "hidden",
-                          resize: "vertical",
-                        }}
-                        onInput={(e) => {
-                          e.target.style.height = "auto";
-                          e.target.style.height = e.target.scrollHeight + "px";
-                        }}
+                    <div className="flex-grow flex items-center">
+                      <span
+                        className={`-mt-5 ${
+                          selectedQuestionType === "Short Text(Single line)" ||
+                          selectedQuestionType === "Long Text(Paragraph)"
+                            ? "text-gray-400"
+                            : ""
+                        }`}
+                      >
+                        Min
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Min"
+                        value={charLimits.min}
+                        readOnly
+                        className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2 text-gray-400`}
                       />
-                      {hintContent.length >= hintCharLimit * 0.75 && (
-                        <div className="text-right -mt-3 pt-2 text-gray-500 text-xs">
-                          {hintContent.length}/{hintCharLimit}
-                        </div>
-                      )}
+                      <span
+                        className={`-mt-5 ${
+                          selectedQuestionType === "Short Text(Single line)"
+                            ? "text-gray-400"
+                            : ""
+                        }`}
+                      >
+                        Max
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Max"
+                        max={
+                          selectedQuestionType === "Short Text(Single line)"
+                            ? "500"
+                            : "2000"
+                        }
+                        step="1"
+                        value={charLimits.max}
+                        onChange={(e) => {
+                          const maxLimit =
+                            selectedQuestionType === "Short Text(Single line)"
+                              ? 500
+                              : 2000;
+                          setCharLimits((prev) => ({
+                            ...prev,
+                            max: Math.min(
+                              maxLimit,
+                              Math.max(1, e.target.value)
+                            ),
+                          }));
+                        }}
+                        className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2`}
+                      />
                     </div>
                   </div>
-                </div>
-                <div className="font-semibold text-xl mb-8 mt-4">
-                  Evaluation Criteria:
-                </div>
-                {/* experience */}
-                <div>
+                )}
+
+                {/* Hint */}
+                <div className="flex flex-col gap-1 mb-4">
                   <div>
                     <label
-                      htmlFor="experience"
+                      htmlFor="Hint"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Experience <span className="text-red-500">*</span>
+                      Hint
                     </label>
+                  </div>
+                  <div className="flex-grow relative">
+                    <textarea
+                      name="Hint"
+                      id="Hint"
+                      placeholder="Enter Hint"
+                      rows={1}
+                      maxLength={hintCharLimit}
+                      value={hintContent}
+                      onChange={(e) => handleHintChange(e.target.value)}
+                      className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 "
+                      style={{
+                        overflowY: "hidden",
+                        resize: "vertical",
+                      }}
+                      onInput={(e) => {
+                        e.target.style.height = "auto";
+                        e.target.style.height = e.target.scrollHeight + "px";
+                      }}
+                    />
+                    {hintContent.length >= hintCharLimit * 0.75 && (
+                      <div className="text-right -mt-3 pt-2 text-gray-500 text-xs">
+                        {hintContent.length}/{hintCharLimit}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="font-semibold text-xl mb-8 mt-4">
+                Evaluation Criteria:
+              </div>
+              {/* experience */}
+              <div>
+                <div>
+                  <label
+                    htmlFor="experience"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Experience <span className="text-red-500">*</span>
+                  </label>
 
-                    <div className="grid w-full mt-4 grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
-                      {/* <div className="flex items-center justify-center w-full gap-5"> */}
-                      {/* Min Experience */}
-                      <div>
-                        {/* <div className="w-5"> */}
-                        <div className="flex flex-row items-center gap-3">
-                          <label
-                            htmlFor="minexperience"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Min
-                          </label>
-                          {/* </div> */}
-                          <div className="relative flex-grow">
-                            <div className="relative">
-                              {/* v1.0.4 <---------------------------------------------------------- */}
-                              <input
-                                ref={fieldRefs.minexperience}
-                                type="text"
-                                placeholder="Min Experience"
-                                id="minexperience"
-                                // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${
-                                //   errors.minexperience
-                                //     ? "border-red-500"
-                                //     : "border-gray-300 focus:border-black"
-                                // }`}
-                                className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                  <div className="grid w-full mt-4 grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
+                    {/* <div className="flex items-center justify-center w-full gap-5"> */}
+                    {/* Min Experience */}
+                    <div>
+                      {/* <div className="w-5"> */}
+                      <div className="flex flex-row items-center gap-3">
+                        <label
+                          htmlFor="minexperience"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Min
+                        </label>
+                        {/* </div> */}
+                        <div className="relative flex-grow">
+                          <div className="relative">
+                            {/* v1.0.4 <---------------------------------------------------------- */}
+                            <input
+                              ref={fieldRefs.minexperience}
+                              type="text"
+                              placeholder="Min Experience"
+                              id="minexperience"
+                              // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${
+                              //   errors.minexperience
+                              //     ? "border-red-500"
+                              //     : "border-gray-300 focus:border-black"
+                              // }`}
+                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                                   border ${
                                     errors.minexperience
                                       ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1849,63 +1972,78 @@ const QuestionBankForm = ({
                                   }
                                   focus:outline-gray-300
                                 `}
-                                value={selectedMinExperience}
-                                onClick={toggleDropdownMinExperience}
-                                readOnly
-                              />
-                              {/* v1.0.4 ----------------------------------------------------------> */}
-                            </div>
-
-                            {showDropdownMinExperience && (
-                              <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg">
-                                {minExperienceOptions.map((option) => (
-                                  <div
-                                    key={option.value}
-                                    className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                    onClick={() =>
-                                      handleMinExperienceSelect(option.value)
-                                    }
-                                  >
-                                    {option.label}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                              value={selectedMinExperience}
+                              onClick={toggleDropdownMinExperience}
+                              readOnly
+                            />
+                            {/* v1.0.4 ----------------------------------------------------------> */}
                           </div>
-                        </div>
-                        {errors.minexperience && (
-                          // <----v1.0.0-----
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.minexperience}
-                          </p>
-                          // ------v1.0.0----->
-                        )}
-                      </div>
 
-                      {/* Max Experience */}
-                      <div>
-                        <div className="flex flex-row items-center gap-3">
-                          <label
-                            htmlFor="maxexperience"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Max
-                          </label>
-                          {/* </div> */}
-                          <div className="relative flex-grow">
-                            <div className="relative">
-                              {/* v1.0.4 <------------------------------------------------------ */}
-                              <input
-                                ref={fieldRefs.maxexperience}
-                                type="text"
-                                placeholder="Max Experience"
-                                id="maxexperience"
-                                // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${
-                                //   errors.maxexperience
-                                //     ? "border-red-500"
-                                //     : "border-gray-300 focus:border-black"
-                                // }`}
-                                className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          {/* {showDropdownMinExperience && (
+                            <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg">
+                              {minExperienceOptions.map((option) => (
+                                <div
+                                  key={option.value}
+                                  className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                                  onClick={() =>
+                                    handleMinExperienceSelect(option.value)
+                                  }
+                                >
+                                  {option.label}
+                                </div>
+                              ))}
+                            </div>
+                          )} */}
+                          {showDropdownMinExperience && (
+                            <div className="absolute z-50 mt-1 mb-5 w-full max-h-52 overflow-y-auto rounded-md bg-white shadow-lg">
+                              {minExperienceOptions.map((option) => (
+                                <div
+                                  key={option.value}
+                                  className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                                  onClick={() =>
+                                    handleMinExperienceSelect(option.value)
+                                  }
+                                >
+                                  {option.label}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {errors.minexperience && (
+                        // <----v1.0.0-----
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.minexperience}
+                        </p>
+                        // ------v1.0.0----->
+                      )}
+                    </div>
+
+                    {/* Max Experience */}
+                    <div>
+                      <div className="flex flex-row items-center gap-3">
+                        <label
+                          htmlFor="maxexperience"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Max
+                        </label>
+                        {/* </div> */}
+                        <div className="relative flex-grow">
+                          <div className="relative">
+                            {/* v1.0.4 <------------------------------------------------------ */}
+                            <input
+                              ref={fieldRefs.maxexperience}
+                              type="text"
+                              placeholder="Max Experience"
+                              id="maxexperience"
+                              // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${
+                              //   errors.maxexperience
+                              //     ? "border-red-500"
+                              //     : "border-gray-300 focus:border-black"
+                              // }`}
+                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                                   border ${
                                     errors.maxexperience
                                       ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1913,74 +2051,96 @@ const QuestionBankForm = ({
                                   }
                                   focus:outline-gray-300
                                 `}
-                                value={selectedMaxExperience}
-                                onClick={toggleDropdownMaxExperience}
-                                readOnly
-                              />
-                              {/* v1.0.4 --------------------------------------------------------> */}
-                            </div>
-                            {showDropdownMaxExperience && (
-                              <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg">
-                                {maxExperienceOptions.map((option) => (
-                                  <div
-                                    key={option.value}
-                                    className={`py-2 px-4 cursor-pointer hover:bg-gray-100 ${
-                                      parseInt(option.value) <=
-                                      parseInt(selectedMinExperience)
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
-                                    }`}
-                                    onClick={() =>
-                                      handleMaxExperienceSelect(option.value)
-                                    }
-                                    disabled={
-                                      parseInt(option.value) <=
-                                      parseInt(selectedMinExperience)
-                                    } // Disable invalid options
-                                  >
-                                    {option.label}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                              value={selectedMaxExperience}
+                              onClick={toggleDropdownMaxExperience}
+                              readOnly
+                            />
+                            {/* v1.0.4 --------------------------------------------------------> */}
                           </div>
+                          {/* {showDropdownMaxExperience && (
+                            <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg">
+                              {maxExperienceOptions.map((option) => (
+                                <div
+                                  key={option.value}
+                                  className={`py-2 px-4 cursor-pointer hover:bg-gray-100 ${
+                                    parseInt(option.value) <=
+                                    parseInt(selectedMinExperience)
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
+                                  }`}
+                                  onClick={() =>
+                                    handleMaxExperienceSelect(option.value)
+                                  }
+                                  disabled={
+                                    parseInt(option.value) <=
+                                    parseInt(selectedMinExperience)
+                                  } // Disable invalid options
+                                >
+                                  {option.label}
+                                </div>
+                              ))}
+                            </div>
+                          )} */}
+                          {showDropdownMaxExperience && (
+                            <div className="absolute z-50 mt-1 mb-5 w-full max-h-52 overflow-y-auto rounded-md bg-white shadow-lg">
+                              {maxExperienceOptions.map((option) => (
+                                <div
+                                  key={option.value}
+                                  className={`py-2 px-4 cursor-pointer hover:bg-gray-100 ${
+                                    parseInt(option.value) <=
+                                    parseInt(selectedMinExperience)
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
+                                  }`}
+                                  onClick={() =>
+                                    parseInt(option.value) >
+                                      parseInt(selectedMinExperience) &&
+                                    handleMaxExperienceSelect(option.value)
+                                  }
+                                >
+                                  {option.label}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        {errors.maxexperience && (
-                          // <-----v1.0.0 -----
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.maxexperience}
-                          </p>
-                          // ------v1.0.0 ----->
-                        )}
                       </div>
+                      {errors.maxexperience && (
+                        // <-----v1.0.0 -----
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.maxexperience}
+                        </p>
+                        // ------v1.0.0 ----->
+                      )}
                     </div>
-                    {/* </div> */}
                   </div>
+                  {/* </div> */}
                 </div>
-                {/* Difficulty Level */}
-                <div className="flex flex-col gap-5 mb-3">
-                  <div>
-                    <label
-                      htmlFor="DifficultyLevel"
-                      className="block text-sm font-medium text-gray-700 "
-                    >
-                      Difficulty Level <span className="text-red-500">*</span>
-                    </label>
-                  </div>
-                  <div className="relative flex-grow">
-                    <div className="relative">
-                      {/* v1.0.4 <-------------------------------------------------------------------------- */}
-                      <input
-                        ref={fieldRefs.difficultyLevel}
-                        type="text"
-                        placeholder="Select Difficulty Level"
-                        name="DifficultyLevel"
-                        // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${
-                        //   errors.difficultyLevel
-                        //     ? "border-red-500"
-                        //     : "border-gray-300 focus:border-black"
-                        // }`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+              </div>
+              {/* Difficulty Level */}
+              <div className="flex flex-col gap-5 mb-3">
+                <div>
+                  <label
+                    htmlFor="DifficultyLevel"
+                    className="block text-sm font-medium text-gray-700 "
+                  >
+                    Difficulty Level <span className="text-red-500">*</span>
+                  </label>
+                </div>
+                <div className="relative flex-grow">
+                  <div className="relative">
+                    {/* v1.0.4 <-------------------------------------------------------------------------- */}
+                    <input
+                      ref={fieldRefs.difficultyLevel}
+                      type="text"
+                      placeholder="Select Difficulty Level"
+                      name="DifficultyLevel"
+                      // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300  ${
+                      //   errors.difficultyLevel
+                      //     ? "border-red-500"
+                      //     : "border-gray-300 focus:border-black"
+                      // }`}
+                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                         border ${
                           errors.difficultyLevel
                             ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -1988,190 +2148,189 @@ const QuestionBankForm = ({
                         }
                         focus:outline-gray-300
                       `}
-                        value={selectedDifficultyLevel}
-                        onClick={toggleDropdownDifficultyLevel}
-                        readOnly
+                      value={selectedDifficultyLevel}
+                      onClick={toggleDropdownDifficultyLevel}
+                      readOnly
+                    />
+                    {/* v1.0.4 --------------------------------------------------------------------------> */}
+                    {errors.difficultyLevel && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.difficultyLevel}
+                      </p>
+                    )}
+                  </div>
+                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                    <MdArrowDropDown className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1" />
+                  </div>
+                  {/* Dropdown */}
+                  {showDropdownDifficultyLevel && (
+                    <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg">
+                      {difficultyLevels.map((difficultyLevel) => (
+                        <div
+                          key={difficultyLevel}
+                          className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                          onClick={() =>
+                            handleDifficultyLevelSelect(difficultyLevel)
+                          }
+                        >
+                          {difficultyLevel}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Score */}
+              {/* //shashank - [13/01/2025] */}
+              {type === "assessment" && (
+                <div className="flex gap-5 mb-4">
+                  <div className="flex flex-col w-full">
+                    <div>
+                      <label
+                        htmlFor="Score"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Score <span className="text-red-500">*</span>
+                      </label>
+                    </div>
+                    <div className="flex-grow">
+                      <input
+                        type="number"
+                        name="score"
+                        value={formData.score}
+                        onChange={handleChange}
+                        id="Score"
+                        min="1"
+                        max="20"
+                        autoComplete="given-name"
+                        className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
+                          errors.score
+                            ? "border-red-500"
+                            : "border-gray-300 focus:border-black"
+                        }`}
                       />
-                      {/* v1.0.4 --------------------------------------------------------------------------> */}
-                      {errors.difficultyLevel && (
+                      {errors.score && (
                         <p className="text-red-500 text-sm mt-1">
-                          {errors.difficultyLevel}
+                          {errors.score}
                         </p>
                       )}
                     </div>
-                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <MdArrowDropDown className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1" />
-                    </div>
-                    {/* Dropdown */}
-                    {showDropdownDifficultyLevel && (
-                      <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg">
-                        {difficultyLevels.map((difficultyLevel) => (
-                          <div
-                            key={difficultyLevel}
-                            className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                            onClick={() =>
-                              handleDifficultyLevelSelect(difficultyLevel)
-                            }
-                          >
-                            {difficultyLevel}
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
-
-                {/* Score */}
-                {/* //shashank - [13/01/2025] */}
-                {type === "assessment" && (
-                  <div className="flex gap-5 mb-4">
-                    <div className="flex flex-col w-full">
-                      <div>
-                        <label
-                          htmlFor="Score"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Score <span className="text-red-500">*</span>
-                        </label>
-                      </div>
-                      <div className="flex-grow">
-                        <input
-                          type="number"
-                          name="score"
-                          value={formData.score}
-                          onChange={handleChange}
-                          id="Score"
-                          min="1"
-                          max="20"
-                          autoComplete="given-name"
-                          className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
-                            errors.score
-                              ? "border-red-500"
-                              : "border-gray-300 focus:border-black"
-                          }`}
-                        />
-                        {errors.score && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.score}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+              )}
+              {/* Automation Options */}
+              {(selectedQuestionType === "Short Text(Single line)" ||
+                selectedQuestionType === "Long Text(Paragraph)") && (
+                <div>
+                  <p className="font-semibold text-lg mb-5">
+                    Automation Options:
+                  </p>
+                  <div className="flex items-center mb-4">
+                    <label
+                      htmlFor="autoAssessment"
+                      className="text-sm font-medium text-gray-900"
+                    >
+                      Auto Assessment
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="autoAssessment"
+                      checked={autoAssessment}
+                      onChange={() => setAutoAssessment(!autoAssessment)}
+                      className="ml-14 w-4 h-4"
+                    />
                   </div>
-                )}
-                {/* Automation Options */}
-                {(selectedQuestionType === "Short Text(Single line)" ||
-                  selectedQuestionType === "Long Text(Paragraph)") && (
-                  <div>
-                    <p className="font-semibold text-lg mb-5">
-                      Automation Options:
-                    </p>
-                    <div className="flex items-center mb-4">
-                      <label
-                        htmlFor="autoAssessment"
-                        className="text-sm font-medium text-gray-900"
-                      >
-                        Auto Assessment
+                  {autoAssessment && (
+                    <div className="flex items-center mb-10">
+                      <label className="text-sm font-medium text-gray-900 mr-4">
+                        Answer Matching <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="checkbox"
-                        id="autoAssessment"
-                        checked={autoAssessment}
-                        onChange={() => setAutoAssessment(!autoAssessment)}
-                        className="ml-14 w-4 h-4"
-                      />
-                    </div>
-                    {autoAssessment && (
-                      <div className="flex items-center mb-10">
-                        <label className="text-sm font-medium text-gray-900 mr-4">
-                          Answer Matching{" "}
-                          <span className="text-red-500">*</span>
+
+                      <div className="flex items-center ml-10">
+                        <input
+                          type="radio"
+                          id="exact"
+                          name="answerMatching"
+                          value="Exact"
+                          checked={answerMatching === "Exact"}
+                          onChange={() => setAnswerMatching("Exact")}
+                          className="mr-1"
+                        />
+                        <label htmlFor="exact" className="text-sm">
+                          Exact
                         </label>
-
-                        <div className="flex items-center ml-10">
-                          <input
-                            type="radio"
-                            id="exact"
-                            name="answerMatching"
-                            value="Exact"
-                            checked={answerMatching === "Exact"}
-                            onChange={() => setAnswerMatching("Exact")}
-                            className="mr-1"
-                          />
-                          <label htmlFor="exact" className="text-sm">
-                            Exact
-                          </label>
-                        </div>
-                        <div className="flex items-center ml-10">
-                          <input
-                            type="radio"
-                            id="contains"
-                            name="answerMatching"
-                            value="Contains"
-                            checked={answerMatching === "Contains"}
-                            onChange={() => setAnswerMatching("Contains")}
-                            className="mr-1"
-                          />
-                          <label htmlFor="contains" className="text-sm">
-                            Contains
-                          </label>
-                        </div>
                       </div>
-                    )}
-                  </div>
-                )}
+                      <div className="flex items-center ml-10">
+                        <input
+                          type="radio"
+                          id="contains"
+                          name="answerMatching"
+                          value="Contains"
+                          checked={answerMatching === "Contains"}
+                          onChange={() => setAnswerMatching("Contains")}
+                          className="mr-1"
+                        />
+                        <label htmlFor="contains" className="text-sm">
+                          Contains
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {/* </div> */}
-                {/* Footer */}
-                <div className=" flex justify-end gap-4 ">
-                  {/* <button
+              {/* </div> */}
+              {/* Footer */}
+              <div className=" flex justify-end gap-4">
+                {/* <button
                   type="submit"
                   onClick={(e) => handleSubmit(e, false)}
                   className="footer-button bg-custom-blue text-white px-3 py-2 rounded-md"
                 >
                   Save
                 </button> */}
-                  {/* v1.0.2-----Prevent double-click----> */}
+                {/* v1.0.2-----Prevent double-click----> */}
+                <LoadingButton
+                  onClick={(e) => handleSubmit(e, false)}
+                  loadingText={isEdit ? "Updating..." : "Saving..."}
+                  isLoading={saveOrUpdateQuestionLoading || isSubmitting}
+                  disabled={saveOrUpdateQuestionLoading || isSubmitting}
+                >
+                  {isEdit ? "Update" : "Save"}
+                </LoadingButton>
+                {type !== "feedback" && !isEdit && (
+                  // <button
+                  //   type="submit"
+                  //   onClick={(e) => handleSubmit(e, true)}
+                  //   className="footer-button "
+                  // >
+                  //   Save & Next
+                  // </button>
+
                   <LoadingButton
-                    onClick={(e) => handleSubmit(e, false)}
-                    loadingText={isEdit ? "Updating..." : "Saving..."}
+                    onClick={(e) => handleSubmit(e, true)}
+                    loadingText="Saving..."
                     isLoading={saveOrUpdateQuestionLoading || isSubmitting}
                     disabled={saveOrUpdateQuestionLoading || isSubmitting}
                   >
-                    {isEdit ? "Update" : "Save"}
+                    Save & Next
                   </LoadingButton>
-                  {type !== 'feedback' && (
-                  !isEdit && (
-                    // <button
-                    //   type="submit"
-                    //   onClick={(e) => handleSubmit(e, true)}
-                    //   className="footer-button "
-                    // >
-                    //   Save & Next
-                    // </button>
-
-                    <LoadingButton
-                      onClick={(e) => handleSubmit(e, true)}
-                      loadingText="Saving..."
-                      isLoading={saveOrUpdateQuestionLoading || isSubmitting}
-                      disabled={saveOrUpdateQuestionLoading || isSubmitting}
-                    >
-                      Save & Next
-                    </LoadingButton>
-                  )
                 )}
-                  {/* v1.0.2-----Prevent double-click----> */}
-                </div>
-              </form>
-              {/* </div> */}
-            </div>
+                {/* v1.0.2-----Prevent double-click----> */}
+              </div>
+            </form>
+            {/* </div> */}
           </div>
         </div>
         {/* </div> */}
         {/* </div> */}
-      </Modal>
+        {/* </div> */}
+        {/* </Modal> */}
+      </SidebarPopup>
     </>
   );
+// v2.0.0 ----------------------------------------------------------------------------------------->
 };
 
 export default QuestionBankForm;
