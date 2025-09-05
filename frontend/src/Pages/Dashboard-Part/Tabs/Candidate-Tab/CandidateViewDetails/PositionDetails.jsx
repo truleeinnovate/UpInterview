@@ -31,7 +31,7 @@ const PositionDetails = ({ position, onClose }) => {
           {/* v1.0.0 ---------------------------------------------------------------------------------------------> */}
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-xl font-bold text-custom-blue">
+              <h3 className="text-xl font-bold text-custom-blue sm:text-lg">
                 {position?.positionInfo?.title || "N/A"}
               </h3>
               <p className="text-gray-600">

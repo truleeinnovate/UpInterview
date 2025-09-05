@@ -250,7 +250,7 @@ function Activity({ parentId }) {
       case "Position_round_updated":
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
@@ -278,7 +278,7 @@ function Activity({ parentId }) {
       case "position_created":
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
@@ -513,7 +513,7 @@ function Activity({ parentId }) {
                 <div
                   key={feed?._id}
                   className={`
-                    relative pl-8 sm:pl-16 pr-8 sm:pr-4 py-4 rounded-lg border 
+                    relative pl-8 sm:pl-2 pr-8 sm:pr-2 py-4 rounded-lg border 
                     transition-all duration-200 overflow-hidden
                     ${styles.container} ${styles.border} ${styles.hover}
                   `}
@@ -526,7 +526,7 @@ function Activity({ parentId }) {
                           {getFeedIcon(feed.feedType, feed?.action)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className={`font-medium ${styles.text} truncate`}>
+                          <h4 className={`font-medium ${styles.text}`}>
                             {feed?.action?.description}
                           </h4>
                           <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
