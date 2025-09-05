@@ -977,10 +977,11 @@ const SuggestedQuestionsComponent = ({
                     className="border border-gray-200 rounded-lg h-full shadow-sm hover:shadow-md transition-shadow text-sm"
                   >
                     <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                      <h2 className="font-medium w-[85%] text-gray-800">
-                        {(currentPage - 1) * itemsPerPage + 1 + index}.{" "}
-                        {item.questionText}
-                      </h2>
+                      <div className="w-[85%]">
+                      <div className="flex items-center justify-center rounded-md bg-custom-blue/80 px-3 py-1 text-white text-sm transition-colors w-24">
+                        <p className="font-medium">{item.category}</p>
+                      </div>
+                      </div>
                       <div
                         className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${
                           type === "interviewerSection" ||
@@ -1106,18 +1107,40 @@ const SuggestedQuestionsComponent = ({
                         </div>
                       )}
                     </div>
-                    <div className="px-4 py-2">
-                      <div className="text-gray-600 mb-2">
-                        <span className="font-medium">Answer: </span>
-                        {renderSolutions(item.solutions)}
-                      </div>
-                      <p className="font-medium">
-                        Tags:{" "}
-                        <span className="text-gray-600">
-                          {Array.isArray(item.tags) ? item.tags.join(", ") : String(item.tags || "")}
-                        </span>
-                      </p>
+                    <div className="p-4 border-b">
+                    <div className="flex items-start w-full pt-2 gap-2">
+                      <span className="font-semibold">{(currentPage - 1) * itemsPerPage + index + 1}.</span>
+                      <p className="text-gray-700 break-words w-full">{item.questionText}</p>
                     </div>
+                    {item.questionType === "MCQ" && item.options && (
+                      <div className="mb-2 ml-12 mt-2">
+                        <ul className="list-none">
+                          {(() => {
+                            const isAnyOptionLong = item.options.some((option) => option.length > 55);
+                              return item.options.map((option, idx) => (
+                                <li key={idx} className={`${isAnyOptionLong ? "block w-full" : "inline-block w-1/2"} mb-2`}>
+                                  <span className="text-gray-700">{option}</span>
+                                </li>
+                              ));
+                            })()}
+                        </ul>
+                      </div>
+                    )}
+                   </div>
+                   <div className="p-4">
+                    <p className="text-sm break-words whitespace-pre-wrap">
+                        <span className="font-medium text-gray-700">Answer: </span>
+                          <span className="text-gray-600">
+                              {item.questionType === "Programming" ?  renderSolutions(item.solutions) : item.correctAnswer}
+                          </span>
+                    </p>
+                    <p className="font-medium pt-2">
+                        Tags:{" "}
+                      <span className="text-sm text-gray-600">
+                        {Array.isArray(item.tags) ? item.tags.join(", ") : String(item.tags || "")}
+                      </span>
+                     </p>
+                  </div>
                   </div>
                 ))
               ) : (

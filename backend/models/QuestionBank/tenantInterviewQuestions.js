@@ -6,6 +6,7 @@ const TenantInterviewQuestionsSchema = new mongoose.Schema({
     isCustom: { type: Boolean, default: false },
     questionText: String,
     questionType: String,
+    category: { type: String }, // NEW FIELD from JSON
     technology: [String],
     skill: [String],
     tags: [String],

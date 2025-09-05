@@ -7,6 +7,7 @@ export const validateQuestionBankData = (formData, mcqOptions, section, options 
     const requiredFields = {
         questionText: "Question is required",
         tenantListId: "Question List is required",
+        category: "Category is required",
         ...(skipQuestionType ? {} : { questionType: "Question Type is required" }),//-----v1.0.0----->
         skill: "Skill is required",
         difficultyLevel: "Difficulty Level is required",
