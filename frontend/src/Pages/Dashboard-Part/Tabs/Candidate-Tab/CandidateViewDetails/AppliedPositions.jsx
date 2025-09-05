@@ -8,10 +8,10 @@ const AppliedPositions = ({ positions, onViewDetails }) => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-bold   text-custom-blue">
+        <h3 className="text-2xl font-bold text-custom-blue sm:text-lg">
           Applied Positions
         </h3>
-        <button className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20">
+        <button className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20 sm:text-sm">
           Add Position
         </button>
       </div>
@@ -109,7 +109,7 @@ const AppliedPositions = ({ positions, onViewDetails }) => {
           ))}
         </div>
       ) : (
-        <p className="text-center text-lg font-semibold">
+        <p className="text-center text-lg font-semibold sm:text-sm">
           No positions are Applied yet
         </p>
       )}
