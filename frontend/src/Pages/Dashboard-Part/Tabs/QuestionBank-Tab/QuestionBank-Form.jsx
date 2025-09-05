@@ -55,6 +55,7 @@ import InfoGuide from "../CommonCode-AllTabs/InfoCards.jsx";
 // 1.0.4 -------------------------------------------------------------->
 // v2.0.0 <----------------------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+import { useMasterData } from "../../../../apiHooks/useMasterData.js";
 // v2.0.0 ---------------------------------------------------------------------->
 
 const optionLabels = Array.from({ length: 26 }, (_, i) =>
@@ -836,15 +837,15 @@ const QuestionBankForm = ({
     };
   }, []);
   const [skills, setSkills] = useState([]);
-  const [category, setCategory] = useState([]);
+  const {category}= useMasterData()
   useEffect(() => {
     const fetchData = async () => {
       try {
         const skillsData = await fetchMasterData("skills");
         setSkills(skillsData);
         //console.log("Skills Data:", skillsData);
-        const categoryData = await fetchMasterData("category");
-        setCategory(categoryData);
+        // const categoryData = await fetchMasterData("category");
+        // setCategory(categoryData);
         //console.log("categoryData",categoryData)
       } catch (error) {
         console.error("Error fetching master data:", error);

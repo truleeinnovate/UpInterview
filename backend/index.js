@@ -914,6 +914,10 @@ app.use("/interviewTemplates", interviewTemplateRoutes);
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes);
 
+// Start background cron jobs (Task due reminders)
+// Ensures pushNotificationTaskController registers its cron schedule on server start
+require("./controllers/PushNotificationControllers/pushNotificationTaskController");
+
 // in contextfetch for fetchUserProfile
 app.get("/auth/users/:id", async (req, res) => {
   try {

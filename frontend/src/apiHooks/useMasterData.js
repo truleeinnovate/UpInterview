@@ -13,6 +13,7 @@ export const useMasterData = () => {
       qualifications: [],
       colleges: [],
       companies: [],
+      category: [],
     },
     isLoading: isMasterDataLoading,
     isError: isMasterDataError,
@@ -31,6 +32,7 @@ export const useMasterData = () => {
           qualificationsRes,
           collegesRes,
           companiesRes,
+          categoryRes,
         ] = await Promise.all([
           axios.get(`${config.REACT_APP_API_URL}/locations`),
           axios.get(`${config.REACT_APP_API_URL}/industries`),
@@ -40,6 +42,7 @@ export const useMasterData = () => {
           axios.get(`${config.REACT_APP_API_URL}/qualification`),
           axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
           axios.get(`${config.REACT_APP_API_URL}/company`),
+          axios.get(`${config.REACT_APP_API_URL}/master-data/category`),
         ]);
 
         return {
@@ -51,6 +54,7 @@ export const useMasterData = () => {
           qualifications: qualificationsRes.data,
           colleges: collegesRes.data,
           companies: companiesRes.data,
+          category: categoryRes.data,
         };
       } catch (error) {
         console.error('Error fetching master data:', error);
@@ -77,5 +81,6 @@ export const useMasterData = () => {
     qualifications: masterData.qualifications,
     colleges: masterData.colleges,
     companies: masterData.companies,
+    category: masterData.category,
   };
 };
