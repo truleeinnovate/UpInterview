@@ -50,6 +50,9 @@ function validateCreateTenantQuestion(payload = {}) {
           then: Joi.optional(),
           otherwise: Joi.required().messages({ 'any.required': 'Question Type is required' }),
         }),
+      category: Joi.string().trim().min(1).required().messages({
+        'string.empty': 'Category is required',
+      }),
       skill: Joi.array().items(Joi.string().trim().min(1)).min(1).required().messages({
         'array.min': 'Skill is required',
       }),
@@ -109,6 +112,7 @@ function validateUpdateTenantQuestion(payload = {}) {
   const schema = Joi.object({
     questionText: Joi.string().trim().min(1),
     questionType: Joi.string().valid(...questionTypes),
+    category: Joi.string().trim().min(1),
     skill: Joi.array().items(Joi.string().trim().min(1)).min(1),
     difficultyLevel: Joi.string().valid('Easy', 'Medium', 'Hard'),
     minexperience: Joi.number().integer().min(0),

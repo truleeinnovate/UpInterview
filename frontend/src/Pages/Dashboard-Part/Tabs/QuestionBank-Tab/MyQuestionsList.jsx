@@ -175,6 +175,7 @@ const MyQuestionsList = ({
   const [selectedDifficultyLevelFilterItems, setSelectedDifficultyLevelFilterItems] = useState([]);
   const [selectedTechnologyFilterItems, setSelectedTechnologyFilterItems] = useState([]);
   const [selectedQTypeFilterItems, setSelectedQTypeFilterItems] = useState([]);
+  const [selectedCategoryFilterItems, setSelectedCategoryFilterItems] = useState([]);
 
   // Sync tempFiltrationData when filtrationData changes
   useEffect(() => {
@@ -194,6 +195,15 @@ const MyQuestionsList = ({
     if (!myQuestionsList || typeof myQuestionsList !== "object") return;
 
     const allQuestions = Object.values(myQuestionsList).flat();
+
+    const uniqueCategories = Array.from(
+      new Set(
+        allQuestions
+          .map((q) => q?.category)
+          .filter(Boolean)
+          .map((c) => String(c).trim())
+      )
+    );
 
     const uniqueTechnologies = Array.from(
       new Set(
@@ -228,6 +238,7 @@ const MyQuestionsList = ({
 
       const techSection = prev.find((s) => s.filterType === "Technology");
       const qTypeSection = prev.find((s) => s.filterType === "Question Type");
+      const categorySection = prev.find((s) => s.filterType === "Category");
 
       const techOptions = uniqueTechnologies.map((t) => ({
         value: t,
@@ -245,11 +256,16 @@ const MyQuestionsList = ({
         value: t,
         isChecked: findChecked(qTypeSection, t),
       }));
+      const categoryOptions = uniqueCategories.map((c) => ({
+        value: c,
+        isChecked: findChecked(categorySection, c),
+      }));
 
       let nextId = prev.reduce((max, s) => Math.max(max, s.id), 0) + 1;
       let updated = prev.map((s) => {
         if (s.filterType === "Technology") return { ...s, options: techOptions };
         if (s.filterType === "Question Type") return { ...s, options: qTypeOptions };
+        if (s.filterType === "Category") return { ...s, options: categoryOptions };
         return s;
       });
 
@@ -263,6 +279,12 @@ const MyQuestionsList = ({
         updated = [
           ...updated,
           { id: nextId++, filterType: "Question Type", isOpen: false, options: qTypeOptions },
+        ];
+      }
+      if (!categorySection) {
+        updated = [
+          ...updated,
+          { id: nextId++, filterType: "Category", isOpen: false, options: categoryOptions },
         ];
       }
       return updated;
@@ -295,7 +317,17 @@ const MyQuestionsList = ({
         const matchesTechnology =
           !selectedTechnologyFilterItems.length ||
           selectedTechnologyFilterItems.some((sel) => techsLower.includes(sel));
-        return matchesDifficulty && matchesQuestionType && matchesQType && matchesTechnology;
+        const categoryLower = question?.category ? String(question.category).toLowerCase() : "";
+        const matchesCategory =
+          !selectedCategoryFilterItems.length ||
+          (categoryLower && selectedCategoryFilterItems.includes(categoryLower));
+        return (
+          matchesDifficulty &&
+          matchesQuestionType &&
+          matchesQType &&
+          matchesTechnology &&
+          matchesCategory
+        );
       });
       return acc;
     }, {});
@@ -305,6 +337,7 @@ const MyQuestionsList = ({
     selectedQuestionTypeFilterItems,
     selectedTechnologyFilterItems,
     selectedQTypeFilterItems,
+    selectedCategoryFilterItems,
   ]);
 
   // Initialize loading and isOpen once we have data.
@@ -760,7 +793,7 @@ const MyQuestionsList = ({
   const handleApplyFilters = () => {
     setFiltrationData(tempFiltrationData);
     const questionTypeItems = (tempFiltrationData
-      .find((f) => f.filterType === "QuestionType")?.options ?? [])
+      .find((f) => f.filterType === "Question From")?.options ?? [])
       .filter((o) => o.isChecked)
       .map((o) => (o.type || o.value)?.toLowerCase());
     const difficultyItems = (tempFiltrationData
@@ -775,10 +808,15 @@ const MyQuestionsList = ({
       .find((f) => f.filterType === "Question Type")?.options ?? [])
       .filter((o) => o.isChecked)
       .map((o) => (o.value || o.type || o.level)?.toLowerCase());
+    const categoryItems = (tempFiltrationData
+      .find((f) => f.filterType === "Category")?.options ?? [])
+      .filter((o) => o.isChecked)
+      .map((o) => (o.value || o.type || o.level)?.toLowerCase());
     setSelectedQuestionTypeFilterItems(questionTypeItems);
     setSelectedDifficultyLevelFilterItems(difficultyItems);
     setSelectedTechnologyFilterItems(technologyItems);
     setSelectedQTypeFilterItems(qTypeItems);
+    setSelectedCategoryFilterItems(categoryItems);
     setIsPopupOpen(false);
   };
 
@@ -793,6 +831,7 @@ const MyQuestionsList = ({
     setSelectedDifficultyLevelFilterItems([]);
     setSelectedTechnologyFilterItems([]);
     setSelectedQTypeFilterItems([]);
+    setSelectedCategoryFilterItems([]);
     setIsPopupOpen(false);
   };
 
@@ -892,6 +931,7 @@ const MyQuestionsList = ({
     selectedDifficultyLevelFilterItems,
     selectedTechnologyFilterItems,
     selectedQTypeFilterItems,
+    selectedCategoryFilterItems,
     dropdownValue,
   ]);
 
@@ -1186,9 +1226,8 @@ const MyQuestionsList = ({
                           >
                             <div className="flex flex-col p-4 border-b border-gray-300">
                             <div className="flex justify-between items-center w-full">
-                              <div className="flex items-start w-3/4">
-                                <span className="font-semibold w-8">{(currentPage - 1) * itemsPerPage + index + 1}.</span>
-                                <p className="text-gray-700">{question.questionText}</p>
+                              <div className="rounded-md bg-custom-blue/80 px-3 py-1 text-white text-sm transition-colors">
+                                <p className="font-medium">{question.category}</p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span
@@ -1265,6 +1304,10 @@ const MyQuestionsList = ({
                                 )}
                               </div>
                             </div>
+                            <div className="flex items-start w-full pt-2">
+                                <span className="font-semibold w-8">{(currentPage - 1) * itemsPerPage + index + 1}.</span>
+                                <p className="text-gray-700 break-words">{question.questionText}</p>
+                            </div>
                               {question.questionType === "MCQ" && question.options && (
                               <div className="mb-2 ml-12 mt-2">
                                 <ul className="list-none">
@@ -1272,7 +1315,7 @@ const MyQuestionsList = ({
                                     const isAnyOptionLong = question.options.some((option) => option.length > 55);
                                     return question.options.map((option, idx) => (
                                       <li key={idx} className={`${isAnyOptionLong ? "block w-full" : "inline-block w-1/2"} mb-2`}>
-                                        <span className="mr-2 text-gray-500">{String.fromCharCode(97 + idx)})</span>
+                                        {question.isCustom && <span className="mr-2 text-gray-500">{String.fromCharCode(97 + idx)})</span>}
                                         <span className="text-gray-700">{option}</span>
                                       </li>
                                     ));
@@ -1285,10 +1328,10 @@ const MyQuestionsList = ({
                               <p className="text-sm break-words whitespace-pre-wrap pt-2">
                                 <span className="font-medium text-gray-700">Answer: </span>
                                 <span className="text-gray-600">
-                                  {question.questionType === "MCQ" && question.options
-                                    ? String.fromCharCode(97 + question.options.indexOf(question.correctAnswer))
+                                  {question.isCustom && question.questionType === "MCQ" && question.options
+                                    ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer)) +") "}`
                                     : ""}
-                              {question.isCustom ? question.correctAnswer : renderSolutions(question.solutions)}
+                              {question.questionType === "Programming" ?  renderSolutions(question.solutions) : question.correctAnswer}
                                 </span>
                               </p>
                               <p className="font-medium pt-2">

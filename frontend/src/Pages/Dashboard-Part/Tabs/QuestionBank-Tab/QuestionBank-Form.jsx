@@ -86,6 +86,7 @@ const QuestionBankForm = ({
     options: useRef(null),
     difficultyLevel: useRef(null),
     skill: useRef(null),
+    category: useRef(null),
     question: useRef(null),
   };
   // v1.0.4 -------------------------------------------------------------------->
@@ -149,6 +150,7 @@ const QuestionBankForm = ({
     questionText: "",
     questionType: (isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "",//<----v1.0.7------
     skill: "",
+    category: "",
     difficultyLevel: "",
     correctAnswer: "",
     options: [],
@@ -174,6 +176,7 @@ const QuestionBankForm = ({
   const [selectedQuestionType, setSelectedQuestionType] = useState(
     ((isInterviewType && dropdownValue !== "Assignment Questions") || type === "Feedback") ? "Interview Questions" : ""//<----v1.0.7------
   );
+  const [selectedCategory, setSelectedCategory] = useState([]);
   const [showDropdownQuestionType, setShowDropdownQuestionType] =
     useState(false);
   const [showMcqFields, setShowMcqFields] = useState(false);
@@ -187,6 +190,7 @@ const QuestionBankForm = ({
   const [showDropdownBooleanAnswer, setShowDropdownBooleanAnswer] =
     useState(false);
   const [showDropdownAssInt, setShowDropdownAssInt] = useState(false);//<---v1.0.9-----
+  const [showDropdownCategory, setShowDropdownCategory] = useState(false);
   const [ignoreDefaultSelectedLabel, setIgnoreDefaultSelectedLabel] = useState(false);
 
   const handleChange = (e) => {
@@ -253,6 +257,7 @@ const QuestionBankForm = ({
         questionText: question.questionText || "",
         questionType: question.questionType || "",
         skill: question.skill || [],
+        category: question.category || [],
         difficultyLevel: question.difficultyLevel || "",
         // score: question.score || "",
         tags: question.tags || [],
@@ -266,6 +271,7 @@ const QuestionBankForm = ({
       setDropdownValue(question.isInterviewQuestionType ?  "Interview Questions" : "Assignment Questions");
       setHintContent(question.hints || "");
       setSelectedSkill(question.skill || "");
+      setSelectedCategory(question.category || "");
       setSelectedQuestionType(question.questionType || "");
       setSelectedDifficultyLevel(question.difficultyLevel || "");
       setMcqOptions(
@@ -324,6 +330,7 @@ const QuestionBankForm = ({
       questionText: "",
       questionType: (isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "",//<----v1.0.7------
       skill: "",
+      category: "",
       difficultyLevel: "",
       score: "",
       correctAnswer: "",
@@ -335,6 +342,7 @@ const QuestionBankForm = ({
     });
 
     setSelectedSkill("");
+    setSelectedCategory("");
     setSelectedQuestionType((isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "");//<----v1.0.7------
     setSelectedDifficultyLevel("");
     setAutoAssessment("");
@@ -493,6 +501,7 @@ const QuestionBankForm = ({
       difficultyLevel: selectedDifficultyLevel,
       questionType: selectedQuestionType,
       skill: selectedSkill,
+      category: selectedCategory,
       tags: selectedSkill,
       hints: hintContent || null,
       createdBy: userId,
@@ -575,6 +584,7 @@ const QuestionBankForm = ({
             options: formData.options,
             correctAnswer: formData.correctAnswer,
             questionType: formData.questionType,
+            category: formData.category,
             score: Number(formData.score),
             isInterviewQuestionType: dropdownValue === "Interview Questions",
           },
@@ -697,6 +707,8 @@ const QuestionBankForm = ({
   const [searchTermSkills, setSearchTermSkills] = useState("");
   const skillsPopupRef = useRef(null);
 
+
+
   const toggleSkillsPopup = () => {
     closeOtherDropdowns("showDropdownSkillPopup");
     setShowSkillsPopup((prev) => !prev);
@@ -720,15 +732,20 @@ const QuestionBankForm = ({
 
     setShowSkillsPopup(false);
   };
+
+
+
   const handleRemoveSkill = (index) => {
     const updatedSkills = [...selectedSkill];
     updatedSkills.splice(index, 1);
     setSelectedSkill(updatedSkills);
   };
 
+
   const clearSkills = () => {
     setSelectedSkill([]);
   };
+
 
   // Close popup on outside click
   useEffect(() => {
@@ -746,11 +763,16 @@ const QuestionBankForm = ({
     };
   }, []);
   const [skills, setSkills] = useState([]);
+  const [category, setCategory] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const skillsData = await fetchMasterData("skills");
         setSkills(skillsData);
+        //console.log("Skills Data:", skillsData);
+        const categoryData = await fetchMasterData("category");
+        setCategory(categoryData);
+        //console.log("categoryData",categoryData)
       } catch (error) {
         console.error("Error fetching master data:", error);
       }
@@ -773,6 +795,7 @@ const QuestionBankForm = ({
     if (currentDropdown !== "showDropdownBooleanAnswer")
       setShowDropdownBooleanAnswer(false);
     if (currentDropdown !== "showDropdownAssInt") setShowDropdownAssInt(false);//<---v1.0.9-----
+    if (currentDropdown !== "showDropdownCategory") setShowDropdownCategory(false);
   };
   //---------v1.0.3--------->
 
@@ -804,6 +827,23 @@ const QuestionBankForm = ({
   const toggleDropdownAssInt = () => {
     closeOtherDropdowns("showDropdownAssInt");
     setShowDropdownAssInt(!showDropdownAssInt);
+  };
+  const toggleDropdownCategory = () => {
+    closeOtherDropdowns("showDropdownCategory");
+    setShowDropdownCategory(!showDropdownCategory);
+  };
+
+  const handleCategorySelect = (value) => {
+    setSelectedCategory(value);
+    setShowDropdownCategory(false);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      category: value,
+    }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      category: "",
+    }));
   };
 
   const handleAssIntSelect = (value) => {
@@ -1129,6 +1169,58 @@ const QuestionBankForm = ({
                         </div>
                       )}
                     </div>{/*---v1.0.9----->*/}
+                  </div>
+
+                  {/*Category*/}
+                  <div className="flex flex-col gap-1 mb-4">
+                    <div>
+                      <label
+                        htmlFor="category"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Category <span className="text-red-500">*</span>
+                      </label>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        ref={fieldRefs.category}
+                        placeholder="Select Category"
+                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                          border ${
+                            errors.category
+                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                              : "border-gray-300 focus:ring-red-300"
+                          }
+                          focus:outline-gray-300
+                        `}
+                        value={selectedCategory}
+                        onClick={toggleDropdownCategory}
+                        readOnly
+                      />
+                      <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                        <MdArrowDropDown
+                          className="absolute top-3 text-gray-500 text-lg mt-1 cursor-pointer right-1"
+                          onClick={toggleDropdownCategory}
+                        />
+                      </div>
+                      {showDropdownCategory && (
+                        <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg max-h-40 overflow-y-auto text-sm">
+                          {category.map((opt) => (
+                            <div
+                              key={opt._id}
+                              className="py-2 px-4 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleCategorySelect(opt.CategoryName)}
+                            >
+                              {opt.CategoryName}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {errors.category && (
+                        <p className="text-red-500 text-sm ">{errors.category}</p>
+                      )}{/*---v1.0.9----->*/}
                   </div>
 
                   {/* Question Type Selection */}
@@ -1646,7 +1738,7 @@ const QuestionBankForm = ({
                         <textarea
                           ref={fieldRefs.correctAnswer}
                           rows={5}
-                          placeholder="Enter Answer"
+                          placeholder={selectedQuestionType === "MCQ" ? "Enter Correct Answer not like this A) Answer" : "Enter Answer"}
                           name="correctAnswer"
                           id="correctAnswer"
                           value={formData.correctAnswer}

@@ -5,6 +5,7 @@ const TenantAssessmentQuestionsSchema = new mongoose.Schema({
     tenantListId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TenantQuestionsListNames' }],
     isCustom: { type: Boolean, default: false },
     questionText: String,
+    category: { type: String }, // NEW FIELD from JSON
     questionType: String,
     technology: [String],
     skill: [String],
