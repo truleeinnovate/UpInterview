@@ -3,6 +3,8 @@
 // v1.0.1 - Ashraf - Added subject field
 // v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.3 - Venkatesh --- added new filters issue types,priority and created date
+// v1.0.4 - Ashok - Improved responsiveness
+
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Plus } from "lucide-react";
@@ -22,16 +24,25 @@ import { useSupportTickets } from "../../../../apiHooks/useSupportDesks";
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
-
+// v1.0.4 <-----------------------------------------------------------
+import { useMediaQuery } from "react-responsive";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
+// v1.0.4 ----------------------------------------------------------->
 
 function SupportDesk() {
-
   const { checkPermission, isInitialized } = usePermissionCheck();
-  const { effectivePermissions, superAdminPermissions, impersonatedUser_roleName, effectivePermissions_RoleName } = usePermissions();
-  console.log("impersonatedUser_roleName",impersonatedUser_roleName)
+  const {
+    effectivePermissions,
+    superAdminPermissions,
+    impersonatedUser_roleName,
+    effectivePermissions_RoleName,
+  } = usePermissions();
+  console.log("impersonatedUser_roleName", impersonatedUser_roleName);
   const { tickets, isLoading } = useSupportTickets();
   const impersonationToken = Cookies.get("impersonationToken");
-  const impersonationPayload = impersonationToken ? decodeJwt(impersonationToken) : null;
+  const impersonationPayload = impersonationToken
+    ? decodeJwt(impersonationToken)
+    : null;
   const { userRole } = useCustomContext();
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -41,7 +52,12 @@ function SupportDesk() {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage] = useState(10);
-  const [selectedFilters, setSelectedFilters] = useState({ status: [], issueTypes: [], priorities: [], createdDate: "" });//<-------v1.0.3--------
+  const [selectedFilters, setSelectedFilters] = useState({
+    status: [],
+    issueTypes: [],
+    priorities: [],
+    createdDate: "",
+  }); //<-------v1.0.3--------
   const [viewMode, setViewMode] = useState("table");
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
@@ -56,14 +72,29 @@ function SupportDesk() {
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
 
+  // v1.0.4 <-----------------------------------------------------------
+  const isTablet = useMediaQuery({ maxWidth: 1024 });
+
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
+  //   };
+  //   handleResize();
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
+
+  useScrollLock(viewMode === "kanban"); // when view is kanban disable outer scrollbar
+
   useEffect(() => {
-    const handleResize = () => {
-      setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    // Only run on isTablet change
+    if (isTablet) {
+      setViewMode("kanban");
+    } else {
+      setViewMode("table");
+    }
+  }, [isTablet]);
+  // v1.0.4 ----------------------------------------------------------->
 
   // Permission check after all hooks
   if (!isInitialized || !checkPermission("SupportDesk")) {
@@ -79,9 +110,9 @@ function SupportDesk() {
     setSelectedFilters(filters);
     //<-------v1.0.3--------
     const active =
-      ((filters.status?.length) || 0) > 0 ||
-      ((filters.issueTypes?.length) || 0) > 0 ||
-      ((filters.priorities?.length) || 0) > 0 ||
+      (filters.status?.length || 0) > 0 ||
+      (filters.issueTypes?.length || 0) > 0 ||
+      (filters.priorities?.length || 0) > 0 ||
       (!!filters.createdDate && filters.createdDate !== "");
     setIsFilterActive(active);
     //-------v1.0.3-------->
@@ -90,7 +121,12 @@ function SupportDesk() {
   };
 
   const handleClearFilters = () => {
-    setSelectedFilters({ status: [], issueTypes: [], priorities: [], createdDate: "" });//<-------v1.0.3--------
+    setSelectedFilters({
+      status: [],
+      issueTypes: [],
+      priorities: [],
+      createdDate: "",
+    }); //<-------v1.0.3--------
     setIsFilterActive(false);
     setIsFilterPopupOpen(false);
     setCurrentPage(0);
@@ -122,11 +158,11 @@ function SupportDesk() {
         ticketId.includes(searchQuery.toLowerCase()) ||
         contact.includes(searchQuery.toLowerCase()) ||
         ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase());
-        //ticket.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase());
+      //ticket.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus =
-      //<-------v1.0.3--------  
-      (selectedFilters.status?.length || 0) === 0 ||
+        //<-------v1.0.3--------
+        (selectedFilters.status?.length || 0) === 0 ||
         selectedFilters.status.includes(ticket.status);
 
       const matchesIssueType =
@@ -187,7 +223,6 @@ function SupportDesk() {
     return isValid(date) ? format(date, "dd MMM yyyy") : "N/A";
   };
 
-
   // const hasActionAccess = (ticket) => {
   //   if (impersonatedUser_roleName === "Super_Admin") {
   //     return true;
@@ -209,7 +244,9 @@ function SupportDesk() {
           className="text-sm font-medium text-custom-blue cursor-pointer"
           onClick={() => {
             const path =
-              effectivePermissions_RoleName === "Admin" || effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual"
+              effectivePermissions_RoleName === "Admin" ||
+              effectivePermissions_RoleName === "Individual_Freelancer" ||
+              effectivePermissions_RoleName === "Individual"
                 ? `/support-desk/${row?._id}`
                 : row.assignedToId ===
                     impersonationPayload.impersonatedUserId &&
@@ -231,14 +268,14 @@ function SupportDesk() {
       render: (value) =>
         value?.charAt(0).toUpperCase() + value.slice(1) || "N/A",
     },
-// v1.0.1 ---------------------------------------------------------------------------->
-    
+    // v1.0.1 ---------------------------------------------------------------------------->
+
     {
       key: "subject",
       header: "Subject",
       render: (value) => value || "N/A",
     },
-// v1.0.1 ---------------------------------------------------------------------------->
+    // v1.0.1 ---------------------------------------------------------------------------->
     {
       key: "issueType",
       header: "Issue Type",
@@ -248,8 +285,14 @@ function SupportDesk() {
       key: "status",
       header: "Status",
       render: (value) => (
-        <StatusBadge status={value} text={value ? value.charAt(0).toUpperCase() + value.slice(1) : "Not Provided"}/>
-        
+        <StatusBadge
+          status={value}
+          text={
+            value
+              ? value.charAt(0).toUpperCase() + value.slice(1)
+              : "Not Provided"
+          }
+        />
       ),
     },
     ...(impersonatedUser_roleName === "Super_Admin" ||
@@ -308,7 +351,9 @@ function SupportDesk() {
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         const path =
-          effectivePermissions_RoleName === "Admin" || effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual"
+          effectivePermissions_RoleName === "Admin" ||
+          effectivePermissions_RoleName === "Individual_Freelancer" ||
+          effectivePermissions_RoleName === "Individual"
             ? `/support-desk/${row._id}`
             : row.assignedToId === impersonationPayload.impersonatedUserId &&
               impersonatedUser_roleName === "Support_Team"
@@ -320,7 +365,9 @@ function SupportDesk() {
       },
       //disabled: (row) => !hasActionAccess(row),
     },
-    ...(effectivePermissions_RoleName === "Admin" || effectivePermissions_RoleName === "Individual_Freelancer" || effectivePermissions_RoleName === "Individual"
+    ...(effectivePermissions_RoleName === "Admin" ||
+    effectivePermissions_RoleName === "Individual_Freelancer" ||
+    effectivePermissions_RoleName === "Individual"
       ? [
           {
             key: "edit",
@@ -337,8 +384,9 @@ function SupportDesk() {
   ];
 
   const statusOptions = ["New", "Assigned", "Inprogress", "Resolved", "Close"];
-  //<-------v1.0.3-------- 
-  const issueTypeOptions = ["Payment Issue",
+  //<-------v1.0.3--------
+  const issueTypeOptions = [
+    "Payment Issue",
     "Technical Issue",
     "Account Issue",
     "Interview Feedback Issue",
@@ -352,7 +400,8 @@ function SupportDesk() {
     "Internet Connectivity (Candidate)",
     "Internet Connectivity (Interviewer)",
     "Audio/Video Problem",
-    "Platform Issue"]
+    "Platform Issue",
+  ];
   const priorityOptions = ["High", "Medium", "Low"];
 
   const handleStatusToggle = (option) => {
@@ -393,7 +442,9 @@ function SupportDesk() {
     <div className="bg-background h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-12 left-0 right-0 bg-background">
         {/*<-------v1.0.0------- */}
-        <main className="px-6 pt-6">
+        {/* v1.0.4 <----------------------------------------------------- */}
+        <main className="px-6 sm:pt-4 md:pt-6 lg:pt-6 xl:pt-6 2xl:pt-6">
+          {/* v1.0.4 -----------------------------------------------------> */}
           {/*-------v1.0.0-------> */}
           <div className="sm:px-0">
             <Header
@@ -422,7 +473,10 @@ function SupportDesk() {
           </div>
         </main>
       </div>
-      <main className="fixed top-48 left-0 right-0 bg-background">
+      {/* v1.0.4 <------------------------------------------------------------------------------ */}
+      {/* <main className="fixed top-48 left-0 right-0 bg-background"> */}
+      <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {/* v1.0.4 ------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "table" ? (
@@ -440,7 +494,9 @@ function SupportDesk() {
                 tickets={tickets}
                 effectivePermissions_RoleName={effectivePermissions_RoleName}
                 impersonatedUser_roleName={impersonatedUser_roleName}
-                impersonationPayloadID={impersonationPayload?.impersonatedUserId}
+                impersonationPayloadID={
+                  impersonationPayload?.impersonatedUserId
+                }
                 loading={isLoading}
                 currentUserId={currentUserId}
               />
@@ -492,7 +548,9 @@ function SupportDesk() {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsIssueTypeOpen(!isIssueTypeOpen)}
                   >
-                    <span className="font-medium text-gray-700">Issue Type</span>
+                    <span className="font-medium text-gray-700">
+                      Issue Type
+                    </span>
                     {isIssueTypeOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -502,7 +560,10 @@ function SupportDesk() {
                   {isIssueTypeOpen && (
                     <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
                       {issueTypeOptions.map((option) => (
-                        <label key={option} className="flex items-center space-x-2">
+                        <label
+                          key={option}
+                          className="flex items-center space-x-2"
+                        >
                           <input
                             type="checkbox"
                             checked={selectedIssueTypes.includes(option)}
@@ -516,41 +577,50 @@ function SupportDesk() {
                   )}
                 </div>
 
-                {impersonatedUser_roleName === "Super_Admin" && (<div>
-                  <div
-                    className="flex justify-between items-center cursor-pointer"
-                    onClick={() => setIsPriorityOpen(!isPriorityOpen)}
-                  >
-                    <span className="font-medium text-gray-700">Priority</span>
-                    {isPriorityOpen ? (
-                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
-                    ) : (
-                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                {impersonatedUser_roleName === "Super_Admin" && (
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsPriorityOpen(!isPriorityOpen)}
+                    >
+                      <span className="font-medium text-gray-700">
+                        Priority
+                      </span>
+                      {isPriorityOpen ? (
+                        <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                      ) : (
+                        <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isPriorityOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {priorityOptions.map((option) => (
+                          <label
+                            key={option}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedPriorities.includes(option)}
+                              onChange={() => handlePriorityToggle(option)}
+                              className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">{option}</span>
+                          </label>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  {isPriorityOpen && (
-                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                      {priorityOptions.map((option) => (
-                        <label key={option} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedPriorities.includes(option)}
-                            onChange={() => handlePriorityToggle(option)}
-                            className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>)}
+                )}
 
                 <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsCreatedOpen(!isCreatedOpen)}
                   >
-                    <span className="font-medium text-gray-700">Created Date</span>
+                    <span className="font-medium text-gray-700">
+                      Created Date
+                    </span>
                     {isCreatedOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -595,7 +665,7 @@ function SupportDesk() {
                     </div>
                   )}
                 </div>
-              {/*-------v1.0.3--------> */}
+                {/*-------v1.0.3--------> */}
               </div>
             </FilterPopup>
           </motion.div>
