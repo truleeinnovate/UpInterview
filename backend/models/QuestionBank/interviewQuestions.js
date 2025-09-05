@@ -30,10 +30,10 @@ const mongoose = require("mongoose");
     explanation: { type: String }, // NEW FIELD from JSON
     minexperience: { type: Number },
     maxexperience: { type: Number },
-    // charLimits: {
-    //   min: { type: Number },
-    //   max: { type: Number }
-    // },
+    charLimits: {
+      min: { type: Number },
+      max: { type: Number }
+    },
     solutions: [solutionSchema], // NEW FIELD from JSON
     relatedQuestions: [{ type: String }], // NEW FIELD from JSON
     attachments: [{ type: String }], // NEW FIELD from JSON
