@@ -1161,7 +1161,13 @@ const MyQuestionsList = ({
         </div>
 
         <div className={`${type === "interviewerSection" || type === "assessment" || activeTab === "MyQuestionsList" ? "" : ""}`}>
-          {selectedLabel && groupedQuestions[selectedLabel]?.length === 0 ? (
+          {isLoading ? (
+            <>
+              <SkeletonLoader />
+            </>
+          ) : (
+          <>
+          {(selectedLabel && groupedQuestions[selectedLabel]?.length === 0) ? (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
               <div className="text-center max-w-md">
                 <svg
@@ -1203,12 +1209,8 @@ const MyQuestionsList = ({
                 <p className="text-gray-400">Please select a label from the dropdown to view questions</p>
               </div>
             </div>
-          ) : null}
-          {isLoading ? (
-            <>
-              <SkeletonLoader />
-            </>
-          ) : (!selectedLabel || groupedQuestions[selectedLabel]?.length > 0) && (
+          ) : 
+          (!selectedLabel || groupedQuestions[selectedLabel]?.length > 0) ? (
             <>
               {Object.entries(groupedQuestions).map(([listName, items]) => (
                 selectedLabel === listName && (
@@ -1350,6 +1352,8 @@ const MyQuestionsList = ({
                 )
               ))}
             </>
+          ) : null}
+          </>
           )}
         </div>
         <FilterPopup

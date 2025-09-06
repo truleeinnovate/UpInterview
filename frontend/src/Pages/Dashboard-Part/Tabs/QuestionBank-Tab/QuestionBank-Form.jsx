@@ -1329,7 +1329,7 @@ const QuestionBankForm = ({
                       </div>
                       {showDropdownCategory && (
                         <div className="absolute z-50 mt-1 mb-5 w-full rounded-md bg-white shadow-lg max-h-40 overflow-y-auto text-sm">
-                          {category.map((opt) => (
+                          {category.filter((opt) => opt.isActive === true).map((opt) => (
                             <div
                               key={opt._id}
                               className="py-2 px-4 cursor-pointer hover:bg-gray-100"
