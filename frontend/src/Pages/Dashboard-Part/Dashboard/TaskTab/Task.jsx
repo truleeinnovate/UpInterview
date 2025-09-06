@@ -1,43 +1,45 @@
-
 //<---------------------- v1.0.0----Venkatesh----in task tab add filter with owner id
 // v1.0.1 - Ashok - commented man.png, woman.png, transgender.png
-// v1.0.2 - Venkatesh - added new filters priority, status, due date, created date and assigned to(only shown in organization) 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, Pencil, ChevronUp, ChevronDown } from 'lucide-react';
+// v1.0.2 - Venkatesh - added new filters priority, status, due date, created date and assigned to(only shown in organization)
+// v1.0.3 - Ashok - Improved responsiveness and modified clickable id
+import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { Eye, Pencil, ChevronUp, ChevronDown } from "lucide-react";
 
-
-import Header from '../../../../Components/Shared/Header/Header';
-import Toolbar from '../../../../Components/Shared/Toolbar/Toolbar';
-import TableView from '../../../../Components/Shared/Table/TableView';
-import { FilterPopup } from '../../../../Components/Shared/FilterPopup/FilterPopup';
+import Header from "../../../../Components/Shared/Header/Header";
+import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
+import TableView from "../../../../Components/Shared/Table/TableView";
+import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 //<-------v1.0.2---------
-import Cookies from 'js-cookie';
-import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode.js';
-import { useCustomContext } from '../../../../Context/Contextfetch.js';
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
+import { useCustomContext } from "../../../../Context/Contextfetch.js";
 //-------v1.0.2--------->
- 
+
 // v1.0.1 <--------------------------------------------------
 // import maleImage from '../../Images/man.png';
 // import femaleImage from '../../Images/woman.png';
 // import genderlessImage from '../../Images/transgender.png';
 // v1.0.1 --------------------------------------------------->
-import TaskForm from './Task_form.jsx';
-import TaskProfileDetails from './TaskProfileDetails.jsx';
-import TaskKanban from './TaskKanban.jsx';
+import TaskForm from "./Task_form.jsx";
+import TaskProfileDetails from "./TaskProfileDetails.jsx";
+import TaskKanban from "./TaskKanban.jsx";
 import { usePermissions } from "../../../../Context/PermissionsContext";
-import { useTasks } from '../../../../apiHooks/useTasks';
+import { useTasks } from "../../../../apiHooks/useTasks";
+// v1.0.3 <---------------------------------------------------------
+import { useMediaQuery } from "react-responsive";
+// v1.0.3 --------------------------------------------------------->
 
 const Task = () => {
   const { effectivePermissions } = usePermissions();
   //<-------v1.0.2---------
   const { usersRes = [] } = useCustomContext();
-  const authToken = Cookies.get('authToken');
+  const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const organization = tokenPayload?.organization;
   //-------v1.0.2--------->
-  const [view, setView] = useState('table');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [view, setView] = useState("table");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -45,9 +47,9 @@ const Task = () => {
     status: [],
     //<-------v1.0.2---------
     priority: [],
-    dueDate: '',
-    assignedToId: '',
-    createdDate: '',
+    dueDate: "",
+    assignedToId: "",
+    createdDate: "",
     //-------v1.0.2--------->
   });
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -58,11 +60,11 @@ const Task = () => {
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedPriorities, setSelectedPriorities] = useState([]);
-  const [selectedDueDate, setSelectedDueDate] = useState('');
-  const [selectedAssignedUserId, setSelectedAssignedUserId] = useState('');
-  const [selectedCreatedDate, setSelectedCreatedDate] = useState('');
+  const [selectedDueDate, setSelectedDueDate] = useState("");
+  const [selectedAssignedUserId, setSelectedAssignedUserId] = useState("");
+  const [selectedCreatedDate, setSelectedCreatedDate] = useState("");
   const [isAssignedDropdownOpen, setIsAssignedDropdownOpen] = useState(false);
-  const [assignedSearch, setAssignedSearch] = useState('');
+  const [assignedSearch, setAssignedSearch] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
   const { data: taskData = [], isLoading, refetch } = useTasks();
   //console.log("taskData",taskData);
@@ -72,19 +74,32 @@ const Task = () => {
   const assignedDropdownRef = useRef(null);
   //-------v1.0.2--------->
 
+  // v1.0.3 <---------------------------------------------------------
+  const isTablet = useMediaQuery({ maxWidth: 1024 });
   // Set view based on screen size
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     if (window.innerWidth < 1024) {
+  //       setView("kanban");
+  //     } else {
+  //       setView("table");
+  //     }
+  //   };
+  //   handleResize();
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
+
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setView('kanban');
-      } else {
-        setView('table');
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    // Only run on isTablet change
+    if (isTablet) {
+      setView("kanban");
+    } else {
+      setView("table");
+    }
+  }, [isTablet]);
+
+  // v1.0.3 --------------------------------------------------------->
 
   // Reset filters when popup opens
   useEffect(() => {
@@ -92,10 +107,10 @@ const Task = () => {
       //<-------v1.0.2---------
       setSelectedStatus(selectedFilters.status || []);
       setSelectedPriorities(selectedFilters.priority || []);
-      setSelectedDueDate(selectedFilters.dueDate || '');
-      setSelectedAssignedUserId(selectedFilters.assignedToId || '');
-      setSelectedCreatedDate(selectedFilters.createdDate || '');
-      setAssignedSearch('');
+      setSelectedDueDate(selectedFilters.dueDate || "");
+      setSelectedAssignedUserId(selectedFilters.assignedToId || "");
+      setSelectedCreatedDate(selectedFilters.createdDate || "");
+      setAssignedSearch("");
       setIsStatusOpen(false);
       setIsPriorityOpen(false);
       setIsDueDateOpen(false);
@@ -110,12 +125,15 @@ const Task = () => {
   useEffect(() => {
     if (!isFilterPopupOpen) return;
     const onDocClick = (e) => {
-      if (assignedDropdownRef.current && !assignedDropdownRef.current.contains(e.target)) {
+      if (
+        assignedDropdownRef.current &&
+        !assignedDropdownRef.current.contains(e.target)
+      ) {
         setIsAssignedDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
   }, [isFilterPopupOpen]);
   //-------v1.0.2--------->
 
@@ -151,12 +169,18 @@ const Task = () => {
 
   const handleClearAll = () => {
     //<-------v1.0.2---------
-    const clearedFilters = { status: [], priority: [], dueDate: '', assignedToId: '', createdDate: '' };
+    const clearedFilters = {
+      status: [],
+      priority: [],
+      dueDate: "",
+      assignedToId: "",
+      createdDate: "",
+    };
     setSelectedStatus([]);
     setSelectedPriorities([]);
-    setSelectedDueDate('');
-    setSelectedAssignedUserId('');
-    setSelectedCreatedDate('');
+    setSelectedDueDate("");
+    setSelectedAssignedUserId("");
+    setSelectedCreatedDate("");
     //-------v1.0.2--------->
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
@@ -170,12 +194,17 @@ const Task = () => {
       status: selectedStatus,
       priority: selectedPriorities,
       dueDate: selectedDueDate,
-      assignedToId: organization ? selectedAssignedUserId : '',
+      assignedToId: organization ? selectedAssignedUserId : "",
       createdDate: selectedCreatedDate,
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
-    const active = (filters.status?.length > 0) || (filters.priority?.length > 0) || !!filters.dueDate || !!filters.createdDate || (!!filters.assignedToId);
+    const active =
+      filters.status?.length > 0 ||
+      filters.priority?.length > 0 ||
+      !!filters.dueDate ||
+      !!filters.createdDate ||
+      !!filters.assignedToId;
     setIsFilterActive(active);
     //-------v1.0.2--------->
     setFilterPopupOpen(false);
@@ -198,13 +227,15 @@ const Task = () => {
   ];
 
   //<-------v1.0.2---------
-  const priorityOptions = ['High', 'Medium', 'Low', 'Normal'];
+  const priorityOptions = ["High", "Medium", "Low", "Normal"];
 
   const selectedAssignedUserLabel = React.useMemo(() => {
-    if (!selectedAssignedUserId) return 'Any user';
-    const u = Array.isArray(usersRes) ? usersRes.find((x) => x._id === selectedAssignedUserId) : null;
-    const name = u ? `${u.firstName || ''} ${u.lastName || ''}`.trim() : '';
-    return name || (u?.email || 'Any user');
+    if (!selectedAssignedUserId) return "Any user";
+    const u = Array.isArray(usersRes)
+      ? usersRes.find((x) => x._id === selectedAssignedUserId)
+      : null;
+    const name = u ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "";
+    return name || u?.email || "Any user";
   }, [selectedAssignedUserId, usersRes]);
 
   const filteredAssignedUsers = React.useMemo(() => {
@@ -212,8 +243,8 @@ const Task = () => {
     const term = assignedSearch.trim().toLowerCase();
     if (!term) return usersRes;
     return usersRes.filter((u) => {
-      const name = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
-      const email = (u.email || '').toLowerCase();
+      const name = `${u.firstName || ""} ${u.lastName || ""}`.toLowerCase();
+      const email = (u.email || "").toLowerCase();
       return name.includes(term) || email.includes(term);
     });
   }, [usersRes, assignedSearch]);
@@ -258,8 +289,8 @@ const Task = () => {
       ].filter((field) => field !== null && field !== undefined);
 
       const matchesStatus =
-      //<-------v1.0.2---------  
-      (selectedFilters.status?.length || 0) === 0 ||
+        //<-------v1.0.2---------
+        (selectedFilters.status?.length || 0) === 0 ||
         selectedFilters.status.includes(task.status);
 
       const matchesPriority =
@@ -269,27 +300,35 @@ const Task = () => {
       const now = new Date();
       const dueDate = task?.dueDate ? new Date(task.dueDate) : null;
       let matchesDueDate = true;
-      if (selectedFilters.dueDate && dueDate instanceof Date && !isNaN(dueDate)) {
-        if (selectedFilters.dueDate === 'overdue') {
+      if (
+        selectedFilters.dueDate &&
+        dueDate instanceof Date &&
+        !isNaN(dueDate)
+      ) {
+        if (selectedFilters.dueDate === "overdue") {
           matchesDueDate = dueDate < now;
-        } else if (selectedFilters.dueDate === 'today') {
+        } else if (selectedFilters.dueDate === "today") {
           matchesDueDate = isSameDay(dueDate, now);
-        } else if (selectedFilters.dueDate === 'thisWeek') {
+        } else if (selectedFilters.dueDate === "thisWeek") {
           const start = getStartOfWeek(now);
           const end = getEndOfWeek(now);
           matchesDueDate = dueDate >= start && dueDate <= end;
         }
       }
 
-      const matchesAssigned = !selectedFilters.assignedToId || task?.assignedToId === selectedFilters.assignedToId;
+      const matchesAssigned =
+        !selectedFilters.assignedToId ||
+        task?.assignedToId === selectedFilters.assignedToId;
 
       let matchesCreated = true;
       if (selectedFilters.createdDate) {
         const createdAt = task?.createdAt ? new Date(task.createdAt) : null;
         if (createdAt instanceof Date && !isNaN(createdAt)) {
           const cutoff = new Date();
-          if (selectedFilters.createdDate === 'last7') cutoff.setDate(cutoff.getDate() - 7);
-          if (selectedFilters.createdDate === 'last30') cutoff.setDate(cutoff.getDate() - 30);
+          if (selectedFilters.createdDate === "last7")
+            cutoff.setDate(cutoff.getDate() - 7);
+          if (selectedFilters.createdDate === "last30")
+            cutoff.setDate(cutoff.getDate() - 30);
           matchesCreated = createdAt >= cutoff;
         }
       }
@@ -336,7 +375,7 @@ const Task = () => {
   };
 
   const handleAddTaskClick = () => {
-    setEditingTaskId(null); 
+    setEditingTaskId(null);
     setIsTaskFormOpen(true);
   };
 
@@ -356,9 +395,7 @@ const Task = () => {
   // Render actions for Kanban cards
   const renderKanbanActions = (task) => (
     <div className="flex space-x-2">
-      <button 
-        onClick={() => handleTaskClick(task)}
-      >
+      <button onClick={() => handleTaskClick(task)}>
         <Eye className="w-4 h-4 text-custom-blue" />
       </button>
       <button onClick={() => handleEditTask(task._id)}>
@@ -369,19 +406,28 @@ const Task = () => {
 
   // Table Columns Configuration
   const tableColumns = [
+    // v1.0.3 <-------------------------------------------------
     {
-      key: 'taskCode',
-      header: 'Task ID',
-      render: (value) => value ? value : 'not available',
+      key: "taskCode",
+      header: "Task ID",
+      render: (value, row) => (
+        <span
+          className="text-custom-blue text-sm font-medium cursor-pointer"
+          onClick={() => handleTaskClick(row)}
+        >
+          {value ? value : "not available"}
+        </span>
+      ),
     },
+    // v1.0.3 ------------------------------------------------->
     {
-      key: 'title',
-      header: 'Title',
+      key: "title",
+      header: "Title",
       render: (value, row) => (
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
             <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-              {value ? value.charAt(0).toUpperCase() : 'N/A'}
+              {value ? value.charAt(0).toUpperCase() : "N/A"}
             </div>
           </div>
           <div className="ml-3">
@@ -389,32 +435,42 @@ const Task = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleTaskClick(row)}
             >
-              {value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Untitled Task'}
+              {value
+                ? value.charAt(0).toUpperCase() + value.slice(1)
+                : "Untitled Task"}
             </div>
           </div>
         </div>
       ),
     },
-    { key: 'relatedTo', header: 'Related To', render: (value) => value?.objectName || 'N/A' },
-    { key: 'priority', header: 'Priority', render: (value) => value || 'N/A' },
-    { key: 'status', header: 'Status', render: (value) => value || 'N/A' },
-    { key: 'dueDate', header: 'Due Date', render: (value) => new Date(value).toLocaleDateString() || 'N/A' },
+    {
+      key: "relatedTo",
+      header: "Related To",
+      render: (value) => value?.objectName || "N/A",
+    },
+    { key: "priority", header: "Priority", render: (value) => value || "N/A" },
+    { key: "status", header: "Status", render: (value) => value || "N/A" },
+    {
+      key: "dueDate",
+      header: "Due Date",
+      render: (value) => new Date(value).toLocaleDateString() || "N/A",
+    },
   ];
 
   // Table Actions Configuration
   const tableActions = [
     {
-      key: 'view',
-      label: 'View Details',
+      key: "view",
+      label: "View Details",
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => handleTaskClick(row),
     },
     {
-      key: 'edit',
-      label: 'Edit',
+      key: "edit",
+      label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => handleEditTask(row._id),
-    }
+    },
   ];
 
   const handleEditTask = (taskId) => {
@@ -459,302 +515,337 @@ const Task = () => {
         </div>
       </div>
       <div className="fixed top-48 xl:top-50 lg:top-50 right-0 left-0 bg-background">
-          <motion.div className="bg-white">
-            <div className="relative w-full">
-              {view === 'table' ? (
-                <div className="w-full">
-                  <TableView
-                    data={currentFilteredRows}
-                    columns={tableColumns}
-                    loading={isLoading}
-                    actions={tableActions}
-                    emptyState="No Tasks Found."
-                  />
-                </div>
-              ) : (
-              
-                <div className="w-full">
-                  <TaskKanban
-                    data={currentFilteredRows.map(task => ({
-                      ...task,
-                      id: task.id,
-                      title: task.title.charAt(0).toUpperCase() + task.title.slice(1),
-                      Email: task.assignedTo.charAt(0).toUpperCase() + task.assignedTo.slice(1) || 'None',
-                      Phone: task.relatedTo?.objectName || 'N/A',
-                      HigherQualification: task.priority || 'N/A',
-                      UniversityCollege: task.status || 'N/A',
-                      interviews: new Date(task.dueDate).toLocaleString()
-
-                    }))}
-                    //columns={kanbanColumns}
-                    loading={isLoading}
-                    renderActions={renderKanbanActions}
-                    emptyState="No Tasks Found."
-
-                  />
-                </div>
-              )}
-              <FilterPopup
-                isOpen={isFilterPopupOpen}
-                onClose={() => setFilterPopupOpen(false)}
-                onApply={handleApplyFilters}
-                onClearAll={handleClearAll}
-                filterIconRef={filterIconRef}
-              >
-                <div className="space-y-3">
-                  {/* Status Section */}
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsStatusOpen(!isStatusOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Status</span>
-                      {isStatusOpen ? (
-                        <ChevronUp className="text-xl text-gray-700" />
-                      ) : (
-                        <ChevronDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isStatusOpen && (
-                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {uniqueStatuses.length > 0 ? (
-                          uniqueStatuses.map((status) => (
-                            <label key={status} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={selectedStatus.includes(status)}
-                                onChange={() => handleStatusToggle(status)}
-                                className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
-                              />
-                              <span className="text-sm">{status}</span>
-                            </label>
-                          ))
-                        ) : (
-                          <span className="text-sm text-gray-500">No Statuses available</span>
-                        )}
-                      </div>
+        <motion.div className="bg-white">
+          <div className="relative w-full">
+            {view === "table" ? (
+              <div className="w-full">
+                <TableView
+                  data={currentFilteredRows}
+                  columns={tableColumns}
+                  loading={isLoading}
+                  actions={tableActions}
+                  emptyState="No Tasks Found."
+                />
+              </div>
+            ) : (
+              <div className="w-full">
+                <TaskKanban
+                  data={currentFilteredRows.map((task) => ({
+                    ...task,
+                    id: task.id,
+                    title:
+                      task.title.charAt(0).toUpperCase() + task.title.slice(1),
+                    Email:
+                      task.assignedTo.charAt(0).toUpperCase() +
+                        task.assignedTo.slice(1) || "None",
+                    Phone: task.relatedTo?.objectName || "N/A",
+                    HigherQualification: task.priority || "N/A",
+                    UniversityCollege: task.status || "N/A",
+                    interviews: new Date(task.dueDate).toLocaleString(),
+                  }))}
+                  //columns={kanbanColumns}
+                  loading={isLoading}
+                  renderActions={renderKanbanActions}
+                  emptyState="No Tasks Found."
+                />
+              </div>
+            )}
+            <FilterPopup
+              isOpen={isFilterPopupOpen}
+              onClose={() => setFilterPopupOpen(false)}
+              onApply={handleApplyFilters}
+              onClearAll={handleClearAll}
+              filterIconRef={filterIconRef}
+            >
+              <div className="space-y-3">
+                {/* Status Section */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsStatusOpen(!isStatusOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Status</span>
+                    {isStatusOpen ? (
+                      <ChevronUp className="text-xl text-gray-700" />
+                    ) : (
+                      <ChevronDown className="text-xl text-gray-700" />
                     )}
                   </div>
-                  
-                  {/*<-------v1.0.2--------- Priority Section */}
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsPriorityOpen(!isPriorityOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Priority</span>
-                      {isPriorityOpen ? (
-                        <ChevronUp className="text-xl text-gray-700" />
-                      ) : (
-                        <ChevronDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isPriorityOpen && (
-                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {priorityOptions.map((p) => (
-                          <label key={p} className="flex items-center space-x-2">
+                  {isStatusOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {uniqueStatuses.length > 0 ? (
+                        uniqueStatuses.map((status) => (
+                          <label
+                            key={status}
+                            className="flex items-center space-x-2"
+                          >
                             <input
                               type="checkbox"
-                              checked={selectedPriorities.includes(p)}
-                              onChange={() => handlePriorityToggle(p)}
+                              checked={selectedStatus.includes(status)}
+                              onChange={() => handleStatusToggle(status)}
                               className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
                             />
-                            <span className="text-sm">{p}</span>
+                            <span className="text-sm">{status}</span>
                           </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Due Date Section */}
-                  <div>
-                    <div
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsDueDateOpen(!isDueDateOpen)}
-                    >
-                      <span className="font-medium text-gray-700">Due Date</span>
-                      {isDueDateOpen ? (
-                        <ChevronUp className="text-xl text-gray-700" />
+                        ))
                       ) : (
-                        <ChevronDown className="text-xl text-gray-700" />
-                      )}
-                    </div>
-                    {isDueDateOpen && (
-                      <div className="mt-1 space-y-2 pl-3">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            name="dueDatePreset"
-                            value=""
-                            checked={selectedDueDate === ''}
-                            onChange={() => handleDueDateChange('')}
-                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">Any due date</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            name="dueDatePreset"
-                            value="overdue"
-                            checked={selectedDueDate === 'overdue'}
-                            onChange={() => handleDueDateChange('overdue')}
-                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">Overdue</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            name="dueDatePreset"
-                            value="today"
-                            checked={selectedDueDate === 'today'}
-                            onChange={() => handleDueDateChange('today')}
-                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">Today</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            name="dueDatePreset"
-                            value="thisWeek"
-                            checked={selectedDueDate === 'thisWeek'}
-                            onChange={() => handleDueDateChange('thisWeek')}
-                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">This week</span>
-                        </label>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Assigned User Section (org only) */}
-                  {organization && (
-                    <div>
-                      <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => setIsAssignedOpen(!isAssignedOpen)}
-                      >
-                        <span className="font-medium text-gray-700">Assigned User</span>
-                        {isAssignedOpen ? (
-                          <ChevronUp className="text-xl text-gray-700" />
-                        ) : (
-                          <ChevronDown className="text-xl text-gray-700" />
-                        )}
-                      </div>
-                      {isAssignedOpen && (
-                        <div className="mt-1 pl-3" ref={assignedDropdownRef}>
-                          <div className="relative">
-                            <button
-                              type="button"
-                              className="w-full px-3 py-2 h-10 border border-gray-300 rounded-md text-left flex items-center justify-between focus:ring-2 focus:border-transparent sm:text-sm"
-                              onClick={() => setIsAssignedDropdownOpen((prev) => !prev)}
-                            >
-                              <span className="truncate">{selectedAssignedUserLabel}</span>
-                              <ChevronDown className="w-4 h-4 text-gray-500" />
-                            </button>
-                            {isAssignedDropdownOpen && (
-                              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                                <div className="p-2 border-b">
-                                  <input
-                                    type="text"
-                                    value={assignedSearch}
-                                    onChange={(e) => setAssignedSearch(e.target.value)}
-                                    placeholder="Search users..."
-                                    className="w-full px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                                  />
-                                </div>
-                                <ul className="max-h-48 overflow-y-auto py-1">
-                                  <li
-                                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${selectedAssignedUserId === '' ? 'text-custom-blue font-medium' : 'text-gray-700'}`}
-                                    onClick={() => { handleAssignedUserChange(''); setIsAssignedDropdownOpen(false); }}
-                                  >
-                                    Any user
-                                  </li>
-                                  {filteredAssignedUsers.length > 0 ? (
-                                    filteredAssignedUsers.map((user) => {
-                                      const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
-                                      const isSelected = selectedAssignedUserId === user._id;
-                                      return (
-                                        <li
-                                          key={user._id}
-                                          className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${isSelected ? 'text-custom-blue font-medium' : 'text-gray-700'}`}
-                                          onClick={() => { handleAssignedUserChange(user._id); setIsAssignedDropdownOpen(false); }}
-                                        >
-                                          {name}
-                                        </li>
-                                      );
-                                    })
-                                  ) : (
-                                    <li className="px-3 py-2 text-sm text-gray-500">No users found</li>
-                                  )}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        <span className="text-sm text-gray-500">
+                          No Statuses available
+                        </span>
                       )}
                     </div>
                   )}
+                </div>
 
-                  {/* Created Date Section */}
+                {/*<-------v1.0.2--------- Priority Section */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsPriorityOpen(!isPriorityOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Priority</span>
+                    {isPriorityOpen ? (
+                      <ChevronUp className="text-xl text-gray-700" />
+                    ) : (
+                      <ChevronDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isPriorityOpen && (
+                    <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                      {priorityOptions.map((p) => (
+                        <label key={p} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedPriorities.includes(p)}
+                            onChange={() => handlePriorityToggle(p)}
+                            className="h-4 w-4 rounded text-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{p}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Due Date Section */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsDueDateOpen(!isDueDateOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Due Date</span>
+                    {isDueDateOpen ? (
+                      <ChevronUp className="text-xl text-gray-700" />
+                    ) : (
+                      <ChevronDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isDueDateOpen && (
+                    <div className="mt-1 space-y-2 pl-3">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="dueDatePreset"
+                          value=""
+                          checked={selectedDueDate === ""}
+                          onChange={() => handleDueDateChange("")}
+                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Any due date</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="dueDatePreset"
+                          value="overdue"
+                          checked={selectedDueDate === "overdue"}
+                          onChange={() => handleDueDateChange("overdue")}
+                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Overdue</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="dueDatePreset"
+                          value="today"
+                          checked={selectedDueDate === "today"}
+                          onChange={() => handleDueDateChange("today")}
+                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Today</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="dueDatePreset"
+                          value="thisWeek"
+                          checked={selectedDueDate === "thisWeek"}
+                          onChange={() => handleDueDateChange("thisWeek")}
+                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">This week</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* Assigned User Section (org only) */}
+                {organization && (
                   <div>
                     <div
                       className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
+                      onClick={() => setIsAssignedOpen(!isAssignedOpen)}
                     >
-                      <span className="font-medium text-gray-700">Created Date</span>
-                      {isCreatedDateOpen ? (
+                      <span className="font-medium text-gray-700">
+                        Assigned User
+                      </span>
+                      {isAssignedOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
                         <ChevronDown className="text-xl text-gray-700" />
                       )}
                     </div>
-                    {isCreatedDateOpen && (
-                      <div className="mt-1 space-y-2 pl-3">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            name="createdDatePreset"
-                            value=""
-                            checked={selectedCreatedDate === ''}
-                            onChange={() => handleCreatedDateChange('')}
-                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">Any time</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            name="createdDatePreset"
-                            value="last7"
-                            checked={selectedCreatedDate === 'last7'}
-                            onChange={() => handleCreatedDateChange('last7')}
-                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">Last 7 days</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            name="createdDatePreset"
-                            value="last30"
-                            checked={selectedCreatedDate === 'last30'}
-                            onChange={() => handleCreatedDateChange('last30')}
-                            className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">Last 30 days</span>
-                        </label>
+                    {isAssignedOpen && (
+                      <div className="mt-1 pl-3" ref={assignedDropdownRef}>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="w-full px-3 py-2 h-10 border border-gray-300 rounded-md text-left flex items-center justify-between focus:ring-2 focus:border-transparent sm:text-sm"
+                            onClick={() =>
+                              setIsAssignedDropdownOpen((prev) => !prev)
+                            }
+                          >
+                            <span className="truncate">
+                              {selectedAssignedUserLabel}
+                            </span>
+                            <ChevronDown className="w-4 h-4 text-gray-500" />
+                          </button>
+                          {isAssignedDropdownOpen && (
+                            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                              <div className="p-2 border-b">
+                                <input
+                                  type="text"
+                                  value={assignedSearch}
+                                  onChange={(e) =>
+                                    setAssignedSearch(e.target.value)
+                                  }
+                                  placeholder="Search users..."
+                                  className="w-full px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:border-transparent text-sm"
+                                />
+                              </div>
+                              <ul className="max-h-48 overflow-y-auto py-1">
+                                <li
+                                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${
+                                    selectedAssignedUserId === ""
+                                      ? "text-custom-blue font-medium"
+                                      : "text-gray-700"
+                                  }`}
+                                  onClick={() => {
+                                    handleAssignedUserChange("");
+                                    setIsAssignedDropdownOpen(false);
+                                  }}
+                                >
+                                  Any user
+                                </li>
+                                {filteredAssignedUsers.length > 0 ? (
+                                  filteredAssignedUsers.map((user) => {
+                                    const name =
+                                      `${user.firstName || ""} ${
+                                        user.lastName || ""
+                                      }`.trim() || user.email;
+                                    const isSelected =
+                                      selectedAssignedUserId === user._id;
+                                    return (
+                                      <li
+                                        key={user._id}
+                                        className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${
+                                          isSelected
+                                            ? "text-custom-blue font-medium"
+                                            : "text-gray-700"
+                                        }`}
+                                        onClick={() => {
+                                          handleAssignedUserChange(user._id);
+                                          setIsAssignedDropdownOpen(false);
+                                        }}
+                                      >
+                                        {name}
+                                      </li>
+                                    );
+                                  })
+                                ) : (
+                                  <li className="px-3 py-2 text-sm text-gray-500">
+                                    No users found
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
-                  {/*-------v1.0.2--------->*/}
+                )}
+
+                {/* Created Date Section */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
+                  >
+                    <span className="font-medium text-gray-700">
+                      Created Date
+                    </span>
+                    {isCreatedDateOpen ? (
+                      <ChevronUp className="text-xl text-gray-700" />
+                    ) : (
+                      <ChevronDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isCreatedDateOpen && (
+                    <div className="mt-1 space-y-2 pl-3">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="createdDatePreset"
+                          value=""
+                          checked={selectedCreatedDate === ""}
+                          onChange={() => handleCreatedDateChange("")}
+                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Any time</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="createdDatePreset"
+                          value="last7"
+                          checked={selectedCreatedDate === "last7"}
+                          onChange={() => handleCreatedDateChange("last7")}
+                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Last 7 days</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="createdDatePreset"
+                          value="last30"
+                          checked={selectedCreatedDate === "last30"}
+                          onChange={() => handleCreatedDateChange("last30")}
+                          className="h-4 w-4 text-custom-blue focus:ring-custom-blue"
+                        />
+                        <span className="text-sm">Last 30 days</span>
+                      </label>
+                    </div>
+                  )}
                 </div>
-              </FilterPopup>
-            </div>
-          </motion.div>
-        </div>
+                {/*-------v1.0.2--------->*/}
+              </div>
+            </FilterPopup>
+          </div>
+        </motion.div>
+      </div>
 
       {/* Task Form as a sidebar */}
       {isTaskFormOpen && (
@@ -772,10 +863,7 @@ const Task = () => {
 
       {/* Task Details */}
       {selectedTask && (
-        <TaskProfileDetails
-          task={selectedTask}
-          onClosetask={handleCloseTask}
-        />
+        <TaskProfileDetails task={selectedTask} onClosetask={handleCloseTask} />
       )}
     </div>
   );

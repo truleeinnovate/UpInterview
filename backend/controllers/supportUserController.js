@@ -1,6 +1,6 @@
 // v1.0.0 - Ashraf - Added subject field
 //<----v1.0.1----Venkatesh----add validation
-
+const supportNotif = require('./PushNotificationControllers/pushNotificationSupportUserController');
 const SupportUser = require("../models/SupportUser");
 //<----v1.0.1----
 const mongoose = require("mongoose");
@@ -84,6 +84,8 @@ exports.createTicket = async (req, res) => {
       createdByUserId,
       ticketCode,
     });
+
+    await supportNotif.notifyOnTicketCreated(ticket);
 
      // Feed and log data
      res.locals.feedData = {
@@ -571,6 +573,7 @@ exports.updateSupportTicket = async (req, res) => {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
+    const prevStatus = ticket.status;
     // Update ticket fields
     ticket.status = status;
     ticket.updatedByUserId = updatedByUserId;
@@ -588,6 +591,12 @@ exports.updateSupportTicket = async (req, res) => {
     });
 
     const updatedTicket = await ticket.save();
+    await supportNotif.notifyOnStatusChange({
+      prevStatus,
+      nextStatus: updatedTicket.status,
+      ticket: updatedTicket,
+    });
+    
     return res.status(200).json(updatedTicket);
   } catch (error) {
     console.error("Error updating ticket:", error);

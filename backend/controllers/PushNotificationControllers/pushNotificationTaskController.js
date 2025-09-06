@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const mongoose = require('mongoose');
 const moment = require('moment');
-const Task = require('../../models/Task'); // Adjust path as per your structure
+const Task = require('../../models/task'); // Fix case-sensitive path on Linux/CI
 const { Users } = require('../../models/Users'); // Adjust path as per your structure
 const PushNotification = require('../../models/PushNotifications');
 //const { sendEmail } = require('../../utils/sendEmail'); // Adjust path as per your structure
@@ -11,16 +11,16 @@ const PushNotification = require('../../models/PushNotifications');
 // console.log('pushNotificationEmailController.js LOADED at', new Date().toISOString(), ' - If you see this, the file is being executed.');
 
 // Function to manually test the task reminder logic
-function testTaskReminder() {
-  console.log('Manually testing task reminder logic at', new Date().toISOString());
+// function testTaskReminder() {
+//   console.log('Manually testing task reminder logic at', new Date().toISOString());
 
-  runTaskReminderJob();
-}
+//   runTaskReminderJob();
+// }
 
 // The actual cron job logic extracted for reuse
 const runTaskReminderJob = async () => {
 
-  // console.log('Running automated task email reminder job at', new Date().toISOString());
+  //console.log('Running automated task email reminder job at', new Date().toISOString());
 
 
   try {
@@ -28,7 +28,7 @@ const runTaskReminderJob = async () => {
     const now = moment();
     const dueIn24Hours = moment(now).add(24, 'hours');
 
-    // console.log(`Checking tasks due between ${now.toISOString()} and ${dueIn24Hours.toISOString()}`);
+    //console.log(`Checking tasks due between ${now.toISOString()} and ${dueIn24Hours.toISOString()}`);
 
     const tasks = await Task.find({
       dueDate: {
@@ -38,7 +38,7 @@ const runTaskReminderJob = async () => {
     });
 
     if (tasks.length === 0) {
-      // console.log('No tasks due in the next 24 hours.');
+      console.log('No tasks due in the next 24 hours.');
       return;
     }
 
@@ -101,7 +101,7 @@ const runTaskReminderJob = async () => {
     for (const task of tasks) {
       if (!task.ownerId) {
 
-        // console.warn(`Task ${task._id} has no ownerId.`);
+        //console.warn(`Task ${task._id} has no ownerId.`);
 
         continue;
       }
@@ -109,7 +109,7 @@ const runTaskReminderJob = async () => {
       const userId = task.ownerId.toString();
       if (!mongoose.Types.ObjectId.isValid(task.ownerId)) {
 
-        console.warn(`Invalid user ObjectId ${userId} for task ${task._id}`);
+        //console.warn(`Invalid user ObjectId ${userId} for task ${task._id}`);
 
         continue;
       }
@@ -144,7 +144,7 @@ const runTaskReminderJob = async () => {
           tenantId: task.tenantId ? task.tenantId.toString() : '',
           title: 'Task Due Reminder',
           message: `Your task "${task.title}" is due on ${formattedDueDate}.`,
-          type: 'email',
+          type: 'system',
           category: 'task_reminder',
           unread: true
         });
@@ -156,7 +156,7 @@ const runTaskReminderJob = async () => {
       }
     }
 
-    // console.log('Automated task email reminder job completed successfully.');
+    //console.log('Automated task email reminder job completed successfully.');
 
   } catch (error) {
     console.error('Automated Task Email Reminder Job Error:', error);

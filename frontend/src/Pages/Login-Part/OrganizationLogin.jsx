@@ -819,7 +819,7 @@ const OrganizationLogin = () => {
                         console.error("Error processing returnUrl:", error);
                       }
                     }
-                    return "Welcome Back! 🏢";
+                    return "Welcome Back!";
                   })()}
                 </h2>
                 <p className="text-gray-600 mb-4">
@@ -840,11 +840,6 @@ const OrganizationLogin = () => {
                     return "Sign in to your organization dashboard";
                   })()}
                 </p>
-                <div className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></div>
-                  Dashboard ready
-                </div>
-
                 {/* Return URL indicator */}
                 {(() => {
                   const query = new URLSearchParams(location.search);
@@ -896,7 +891,7 @@ const OrganizationLogin = () => {
                         console.error("Error processing returnUrl:", error);
                       }
                     }
-                    return "🚀 Dashboard Access:";
+                    return "Dashboard Access:";
                   })()}
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-700">

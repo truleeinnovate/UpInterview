@@ -82,7 +82,7 @@ const RoundDetailsModal = ({ round, interview, isOpen, onClose }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden"
               >
                 {isFullScreen ? (
                   <Minimize className="w-5 h-5 text-gray-500" />
@@ -328,11 +328,11 @@ const InterviewRounds = ({
   return (
     <div className="space-y-6 ">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-bold text-custom-blue">
+        <h3 className="text-2xl font-bold text-custom-blue sm:text-lg">
           Interview Process
         </h3>
         <button
-          className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20"
+          className="px-4 py-2 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20 sm:text-sm"
           onClick={() =>
             navigate("/interviews/new", {
               state: { candidateId, from360: true },

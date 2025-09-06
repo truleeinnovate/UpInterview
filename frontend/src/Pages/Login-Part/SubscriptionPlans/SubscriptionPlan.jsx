@@ -17,6 +17,8 @@ const SubscriptionPlan = () => {
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
   const { plans, subscriptionData, createCustomerSubscription } = useSubscription();
+  //console.log("plans ----", plans);
+  //console.log("subscriptionData ----", subscriptionData);
 
   const [isAnnual, setIsAnnual] = useState(false);
   const [hoveredPlan, setHoveredPlan] = useState(null);
@@ -224,7 +226,7 @@ const SubscriptionPlan = () => {
                 ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
               >
-                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" && subscriptionData.selectedBillingCycle === isAnnual ? "annual" : "monthly"
+                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
                   ? "Subscribed"
                   : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
                     ? "Continue to Payment"

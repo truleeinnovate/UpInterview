@@ -30,7 +30,7 @@ const Timeline = ({ events, onViewInterview }) => {
 
   return (
     <div className="space-y-8">
-      <h3 className="text-2xl font-bold  text-custom-blue">
+      <h3 className="text-2xl font-bold text-custom-blue sm:text-lg">
         Timeline
       </h3>
       

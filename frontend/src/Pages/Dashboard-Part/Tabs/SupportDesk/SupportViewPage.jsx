@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - disabled outer scrollbar using custom hook
 // v1.0.1 - Venkatesh - ticket code and status in align center
 // v1.0.2 - Ashraf - Added subject field
-
+ 
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -27,9 +27,9 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import Activity from "../CommonCode-AllTabs/Activity";
 // v1.0.0 ------------------------------------------------------------------------->
 //import SupportForm from "./SupportForm";
-
+ 
 //const validReopenStatus = ["resolved", "cancel"];
-
+ 
 const SupportViewPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,33 +38,33 @@ const SupportViewPage = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   //const [openForm, setOpenForm] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
-
+ 
   console.log("ticketData", ticketData);
-
+ 
   useEffect(() => {
     document.title = "Support Ticket Details";
   }, []);
-
+ 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
   };
-
+ 
   // v1.0.0 <-------------------------------------------------------------------------
   useScrollLock(true);
   // v1.0.0 ------------------------------------------------------------------------->
-
+ 
   const formatDate = useCallback((dateString) => {
     if (!dateString) return "N/A";
     const date = parseISO(dateString);
     return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
   }, []);
-
+ 
   // const reopenStatus = validReopenStatus.includes(ticketData?.status?.toLowerCase());
-
+ 
   // const toggleForm = useCallback(() => {
   //   setOpenForm(prev => !prev);
   // }, []);
-
+ 
   // if (!ticketData) {
   //   navigate('/support-desk');
   //   return null;
@@ -73,7 +73,7 @@ const SupportViewPage = () => {
     <div
       className={`${isFullScreen ? "min-h-screen" : "h-full"} flex flex-col`}
     >
-
+ 
           <div className="p-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
@@ -81,9 +81,9 @@ const SupportViewPage = () => {
               Support Ticket Details
             </h2>
           </div>
-        
-        
-
+       
+       
+ 
         <div className="flex items-center space-x-2">
             {/* <button
               onClick={() => { navigate(`/support-desk/edit-ticket/${ticketData._id}`, { state: { ticketData: ticketData } }) }}
@@ -92,7 +92,7 @@ const SupportViewPage = () => {
             >
               <FaEdit className="w-5 h-5" />
             </button> */}
-
+ 
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
@@ -112,7 +112,7 @@ const SupportViewPage = () => {
           </div>
           </div>
       </div>
-
+ 
         {/* Subtabs Navigation */}
         <div className="flex items-center ">
         <div className="flex border-b border-gray-200 ">
@@ -139,18 +139,18 @@ const SupportViewPage = () => {
             Activity
           </button>
         </div>
-
+ 
        
         </div>
-
-  
+ 
+ 
         {/* <-------v1.0.1--------------Ticket Code and Status */}
  {/* Tab Content */}
- {activeTab === "details" ? 
-    
+ {activeTab === "details" ?
+   
       <div className="p-6">
         <div className="flex items-center justify-center gap-2 mb-4">
-          
+         
             <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
               <FaTicketAlt className="w-8 h-8" />
             </div>
@@ -162,9 +162,9 @@ const SupportViewPage = () => {
           {/*-------v1.0.1-------------->*/}
         </div>
         </div>
-
-        
-
+ 
+       
+ 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-lg font-semibold text-gray-800">
@@ -230,7 +230,7 @@ const SupportViewPage = () => {
             </div>
           </div>
         </div>
-
+ 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
           <h4 className="text-lg font-semibold text-gray-800 mb-4">
             Description
@@ -246,7 +246,7 @@ const SupportViewPage = () => {
             </div>
           </div>
         </div>
-
+ 
         {ticketData.resolution && (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
             <h4 className="text-lg font-semibold text-gray-800 mb-4">
@@ -264,7 +264,7 @@ const SupportViewPage = () => {
             </div>
           </div>
         )}
-
+ 
         {ticketData?.attachment && (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <h4 className="text-lg font-semibold text-gray-800 mb-4">
@@ -274,13 +274,13 @@ const SupportViewPage = () => {
               <div className="p-2 bg-custom-bg rounded-lg">
                 <FaFileAlt className="w-5 h-5 text-gray-500" />
               </div>
-
+ 
               <div className="flex-1">
                 <p className="text-gray-700">
                   {ticketData?.attachment?.filename}
                 </p>
               </div>
-
+ 
               {ticketData?.attachment?.path && (
                 <button
                   type="button"
@@ -296,7 +296,7 @@ const SupportViewPage = () => {
             </div>
           </div>
         )}
-
+ 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-4">
           <h4 className="text-lg font-semibold text-gray-800 mb-4">
             System Information
@@ -332,19 +332,19 @@ const SupportViewPage = () => {
             </div>
           </div>
         </div>
-
-
-      </div> 
-
-: <div className="p-4"> 
+ 
+ 
+      </div>
+ 
+: <div className="p-4">
 <Activity parentId={ticketData?._id}/>
 </div>
 }
-
-
+ 
+ 
     </div>
   );
-
+ 
   return (
     <>
       <div
@@ -370,7 +370,7 @@ const SupportViewPage = () => {
           </div>
         </div>
       </div>
-
+ 
       {/* {openForm && (
         <SupportForm
           getTickets={() => {}}
@@ -379,5 +379,5 @@ const SupportViewPage = () => {
     </>
   );
 };
-
+ 
 export default SupportViewPage;

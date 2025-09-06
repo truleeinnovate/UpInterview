@@ -299,7 +299,7 @@ Feedback: ${round.feedback || "N/A"}
                       {round.feedback}
                     </p>  */}
 
-                  <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2  lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                  <div className="mt-10 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
                     <div>
                       <h6 className="text-sm font-medium text-gray-700 mb-2">
                         Strengths

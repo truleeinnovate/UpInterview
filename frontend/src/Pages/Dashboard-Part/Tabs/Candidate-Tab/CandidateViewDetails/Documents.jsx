@@ -24,10 +24,10 @@ const Documents = ({ documents }) => {
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <h3 className="text-2xl font-bold  text-custom-blue">
+        <h3 className="text-2xl font-bold text-custom-blue sm:text-lg">
           Documents
         </h3>
-        <button className="w-full sm:w-auto px-6 py-3 bg-custom-blue  text-white rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+        <button className="w-full sm:px-1 sm:py-2 px-6 py-3 bg-custom-blue text-white rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 sm:text-sm">
           <UploadCloud className="w-5 h-5" />
           <span>Upload Document</span>
         </button>
