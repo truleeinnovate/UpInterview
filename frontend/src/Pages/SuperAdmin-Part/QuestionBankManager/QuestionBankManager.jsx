@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Added another number 100 for display questions per page
+
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Header from "../../../Components/Shared/Header/Header";
 import InterviewQuestions from "./InterviewQuestions";
@@ -435,7 +437,7 @@ const QuestionBankManager = () => {
             }}
             className="px-3 py-2 border rounded-lg text-sm w-56"
           />
-
+          {/* v1.0.0 <----------------------------------------------------------- */}
           <CustomDropdown
             value={perPage}
             onChange={(val) => {
@@ -446,8 +448,10 @@ const QuestionBankManager = () => {
               { value: 10, label: "10 / page" },
               { value: 20, label: "20 / page" },
               { value: 50, label: "50 / page" },
+              { value: 100, label: "100 / page" },
             ]}
           />
+          {/* v1.0.0 -----------------------------------------------------------> */}
 
           <div className="flex items-center gap-2">
             <button
