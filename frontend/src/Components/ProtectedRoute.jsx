@@ -19,6 +19,7 @@ import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
 
 // ---------------------- v1.0.1 >
 import Loading from './Loading';
+import { config } from '../config';
 
 const ProtectedRoute = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
@@ -186,9 +187,9 @@ const ProtectedRoute = ({ children }) => {
     // Only check for subdomain redirect if we have organization data and it's a regular user (not super admin)
     // <---------------------- v1.0.1
     if (currentAuthToken && currentTokenPayload?.organization === true && organization?.subdomain) {
-      targetDomain = `${organization.subdomain}.app.upinterview.io`;
+      targetDomain = `${organization.subdomain}.${config.REACT_APP_API_URL_FRONTEND}`;
     } else {
-      targetDomain = 'app.upinterview.io';
+      targetDomain = `${config.REACT_APP_API_URL_FRONTEND}`;
     }
     // ---------------------- v1.0.1 >
 
@@ -196,7 +197,7 @@ const ProtectedRoute = ({ children }) => {
     const isLocalhost = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
 
     // Skip subdomain redirect if we're already on a subdomain and the organization data might not be loaded yet
-    const isOnSubdomain = currentDomain.includes('.app.upinterview.io') && currentDomain !== 'app.upinterview.io';
+    const isOnSubdomain = currentDomain.includes(`${config.REACT_APP_API_URL_FRONTEND}`) && currentDomain !== `${config.REACT_APP_API_URL_FRONTEND}`;
     const shouldSkipRedirect = isOnSubdomain && !organization?.subdomain;
 
     if (!isLocalhost && !currentDomain.includes(targetDomain) && !shouldSkipRedirect) {

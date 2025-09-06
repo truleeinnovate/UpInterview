@@ -14,7 +14,7 @@ const DomainManagement = () => {
   const [subdomain, setSubdomain] = useState('')
   const [isChecking, setIsChecking] = useState(false)
   const [availability, setAvailability] = useState(null)
-  const baseDomain = 'app.upinterview.io'
+  const baseDomain = `${config.REACT_APP_API_URL_FRONTEND}`
   const [activeDomain, setActiveDomain] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [newSubdomain, setNewSubdomain] = useState('')

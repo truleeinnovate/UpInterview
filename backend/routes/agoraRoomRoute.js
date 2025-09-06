@@ -171,7 +171,7 @@ router.post('/create-video-room', async (req, res) => {
 
     // Get base URL for generating full links
     // const baseUrl = 'https://109f21d910b05cbb564f-shikhars-projects-762a1929.vercel.app'; // Your frontend URL
-    const baseUrl = 'https://app.upinterview.io' || /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/;
+    const baseUrl = `https://${config.REACT_APP_API_URL_FRONTEND}` || /^https:\/\/[a-z0-9-]+\.app\.upinterview\.io$/;
 
     // Prepare response with proper host and attendee links
     const response = {

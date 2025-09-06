@@ -286,7 +286,7 @@ const OrganizationLogin = () => {
       // Handle subdomain redirection
       if (subdomain && subdomainStatus === "active") {
         const currentDomain = window.location.hostname;
-        const targetDomain = `${subdomain}.app.upinterview.io`;
+        const targetDomain = `${subdomain}.${config.REACT_APP_API_URL_FRONTEND}`;
 
         if (!currentDomain.includes(subdomain)) {
           const protocol = window.location.protocol;

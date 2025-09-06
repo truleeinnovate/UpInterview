@@ -7,7 +7,7 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, Pencil, ChevronUp, ChevronDown } from "lucide-react";
+import { Eye, Pencil, ChevronUp, ChevronDown, Trash } from "lucide-react";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
@@ -506,6 +506,16 @@ const PositionTab = () => {
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-green-600" />,
             onClick: (row) => handleEdit(row),
+          },
+        ]
+      : []),
+      ...(effectivePermissions.Positions?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (row) => navigate(`delete/${row._id}`),
           },
         ]
       : []),
