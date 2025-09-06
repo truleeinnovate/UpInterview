@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Modal from "react-modal";
-import classNames from "classnames";
-import { Minimize, Expand, X } from "lucide-react";
-import { useCandidates } from "../../../../apiHooks/useCandidates.js";
+import Modal from 'react-modal';
+import classNames from 'classnames';
+import { Minimize, Expand, X, Clock, FileText } from 'lucide-react';
+import {useCandidates} from "../../../../apiHooks/useCandidates.js";
+import Activity from "../../Tabs/CommonCode-AllTabs/Activity.jsx";
 // v1.0.0 <---------------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 // v1.0.0 --------------------------------------------------------------->
+
 
 const TaskProfileDetails = ({ task, onClosetask }) => {
   const { isMutationLoading } = useCandidates();
@@ -16,6 +18,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
   const navigate = useNavigate();
   const [showMainContent] = useState(true);
   const [isModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("details"); // State for active tab
 
   useEffect(() => {
     document.title = "Task Profile Details";
@@ -77,10 +80,39 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-              </div> */}
 
-          {showMainContent && (
-            <div className="flex-1 overflow-y-auto">
+
+                     {/* Tab Navigation */}
+            <div className="flex border-b border-gray-200 mb-6">
+              <button
+                className={`py-3 px-6 font-medium flex items-center gap-2 ${
+                  activeTab === "details"
+                    ? "text-custom-blue border-b-2 border-custom-blue"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("details")}
+              >
+                <FileText className="w-4 h-4" />
+                Details
+              </button>
+              <button
+                className={`py-3 px-6 font-medium flex items-center gap-2 ${
+                  activeTab === "activity"
+                    ? "text-custom-blue border-b-2 border-custom-blue"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("activity")}
+              >
+                <Clock className="w-4 h-4" />
+                Activity
+              </button>
+            </div>
+
+            {/* Tab Content */}
+ {activeTab === "details" ? 
+<>
+{showMainContent && (
+            <div className="flex-1 overflow-y-auto p-6">
               {/* Profile Image Section - Placeholder for tasks */}
               <div className="flex items-center justify-center mb-4">
                 <div className="relative">
@@ -280,7 +312,13 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
                 </div>
               )}
             </div>
-          )}
+          )} 
+          </>
+
+          : <div className="m-2"> 
+          <Activity parentId={task?._id}/>
+          </div>
+          }
         </div>
         {/* </div> */}
         {/* </Modal> */}

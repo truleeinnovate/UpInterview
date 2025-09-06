@@ -133,6 +133,13 @@ const TaskForm = ({
     const mm = pad(date.getMinutes());
     return `${y}-${m}-${d}T${hh}:${mm}`;
   }, []);
+
+  const formatForISOString = useCallback((dateString) => {
+    // Convert datetime-local string to ISO string with timezone
+    const date = new Date(dateString);
+    return date.toISOString();
+  }, []);
+
   const twoHoursFromNowLocal = useCallback(() => {
     const d = new Date();
     d.setHours(d.getHours() + 2);
@@ -387,11 +394,12 @@ const TaskForm = ({
     }
 
     try {
+      const dueDateISO = formatForISOString(scheduledDate);
       const taskData = {
         ...formData,
         ownerId,
         tenantId,
-        dueDate: scheduledDate,
+        dueDate: dueDateISO,
         priority: selectedPriority,
         status: selectedStatus,
         assignedTo: formData.assignedTo,
@@ -411,17 +419,16 @@ const TaskForm = ({
       }
       console.log("Task saved successfully:", res);
 
-      if (
-        res.status === "Created successfully" ||
-        res.status === "Updated successfully"
-      ) {
-        if (res?.status === "Created successfully") {
-          notify.success("Task created successfully");
-        } else if (res?.status === "Updated successfully") {
-          notify.success("Task updated successfully");
-        } else {
-          notify.error("Failed to save task");
-        }
+      if (res.status === "Created successfully" || res.status === "Task updated successfully" || res.status === "no_changes") {
+      
+      if (res?.status === "Created successfully"){
+        notify.success("Task created successfully");
+      }else if(res?.status === "Task updated successfully" || res?.status === "no_changes"){
+        notify.success("Task updated successfully");
+      }else{
+        notify.error("Failed to save task");
+
+
 
         onTaskAdded();
         onClose();

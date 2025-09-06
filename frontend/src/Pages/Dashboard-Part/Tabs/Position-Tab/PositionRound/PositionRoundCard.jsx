@@ -23,6 +23,10 @@ import {
   // Users,
   User,
   ExternalLink,
+  
+  X,
+  Expand,
+  Minimize,
 } from "lucide-react";
 // import { FaChevronUp, FaSearch } from 'react-icons/fa';
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
@@ -37,6 +41,8 @@ import { config } from "../../../../../config";
 import { useAssessments } from "../../../../../apiHooks/useAssessments";
 import { usePositions } from "../../../../../apiHooks/usePositions";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
+import { IoArrowBack } from "react-icons/io5";
+import Activity from "../../CommonCode-AllTabs/Activity";
 
 const PositionRoundCard = ({
   round,
@@ -80,8 +86,23 @@ const PositionRoundCard = ({
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [loadingQuestions] = useState(false);
+  const [isFullWidth, setIsFullWidth] = useState(false);
+
+    // NEW STATE FOR ACTIVITY PANEL
+    const [showActivityPanel, setShowActivityPanel] = useState(false);
 
   const interview = interviewData;
+
+
+    // NEW FUNCTION TO TOGGLE ACTIVITY PANEL
+    const toggleActivityPanel = () => {
+      setShowActivityPanel(!showActivityPanel);
+    };
+
+    const toggleFullWidth = () => {
+      setIsFullWidth(!isFullWidth);
+    };
+
 
   // useEffect(() => {
   //   fetchQuestionsForAssessment(round.assessmentId)
@@ -223,7 +244,7 @@ const PositionRoundCard = ({
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
 
-  // console.log("internalInterviewers", internalInterviewers, round);
+  console.log("interviewData", interview);
 
   return (
     <>
@@ -711,6 +732,16 @@ const PositionRoundCard = ({
         {/* {isRoundActive && ( */}
         {/* v1.0.2 <------------------------------------------------------------ */}
         <div className="mt-4 mb-4 flex justify-end space-x-3">
+        <Button
+              onClick={toggleActivityPanel}
+              variant="outline"
+              size="sm"
+              className="flex items-center"
+            >
+              <Clock className="h-4 w-4 mr-1" />
+              <span>Activity</span>
+            </Button>
+
           {canEdit && (
             <Button
               onClick={onEdit}
@@ -785,6 +816,61 @@ const PositionRoundCard = ({
         </div>
       )}
       {/* v1.0.2 -------------------------------------------------------------------------> */}
+
+         {/* BACKDROP WHEN ACTIVITY PANEL IS OPEN */}
+         {showActivityPanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50">
+               <div
+                 className={`fixed overflow-y-auto inset-y-0 right-0 z-50 bg-white shadow-lg transform transition-all duration-500 ease-in-out ${isFullWidth ? "w-full" : "w-1/2"
+                   }`}
+               >
+                 {/* Header */}
+                 <div>
+                   <div className="flex justify-between items-center p-4">
+                     <button
+                       // onClick={() => navigate("/support-desk")}
+                       onClick={toggleActivityPanel}
+                       className="focus:outline-none md:hidden lg:hidden xl:hidden 2xl:hidden sm:w-8"
+                     >
+                       <IoArrowBack className="text-2xl" />
+                     </button>
+                     <h2 className="text-2xl font-semibold text-custom-blue">
+                     Activity
+                     </h2>
+                     {/* <------v1.0.0-----*/}
+                     <div className="flex items-center gap-2">
+                       <button
+                         onClick={toggleFullWidth}
+                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
+                         title={isFullWidth ? "Exit Full Screen" : "Full Screen"}
+                       >
+                         {isFullWidth ? (
+                           <Minimize className="w-5 h-5 text-gray-500" />
+                         ) : (
+                           <Expand className="w-5 h-5 text-gray-500" />
+                         )}
+                       </button>
+                       <button
+                        onClick={toggleActivityPanel}
+                    
+                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                       >
+                         <X className="w-4 h-4" />
+                       </button>
+                     </div>
+                   
+                   </div>
+                   <div className=" p-4">
+                   <Activity parentId={round?._id } parentId2={interview?._id } mode="round" />
+                   </div>
+                 </div>
+                 </div>
+                 
+                 </div>
+       
+    
+      )}
+
     </>
   );
 };

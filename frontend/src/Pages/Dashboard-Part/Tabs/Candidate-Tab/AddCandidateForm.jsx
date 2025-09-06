@@ -989,8 +989,8 @@ const AddCandidateForm = ({
           {/* v1.0.2 ------------------------------------------------------------------> */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
             {/* Profile Image Upload */}
-            <div className="flex flex-col items-center"> 
-              {/* <div
+            <div className="flex flex-col items-center">
+              <div
                 onClick={() => imageInputRef.current?.click()}
                 className="relative group cursor-pointer"
               >
@@ -1015,50 +1015,8 @@ const AddCandidateForm = ({
                       <p className="text-xs text-gray-400">Upload Photo</p>
                     </>
                   )}
-
-               
-                <button
-                  onClick={handleClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-           
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
-              {/* Profile Image Upload */}
-              <div className="flex flex-col items-center">
-                <div
-                  onClick={() => imageInputRef.current?.click()}
-                  className="relative group cursor-pointer"
-                >
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Candidate"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : selectedImage?.path ? (
-                      <img
-                        src={selectedImage?.path}
-                        className="w-full h-full object-cover rounded-lg"
-                        alt={selectedImage.FirstName || "Candidate"}
-                        onError={(e) => {
-                          e.target.src = "/default-profile.png";
-                        }}
-                      />
-                    ) : (
-                      <>
-                        <p className="text-xs text-gray-400">Upload Photo</p>
-                      </>
-                    )}
-                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                      {/* Icon placeholder */}
-                    </div>
-
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
+                    {/* Icon placeholder */}
                   </div>
                 </div>
                 <input
@@ -1082,7 +1040,7 @@ const AddCandidateForm = ({
                     <Trash className="w-3 h-3" />
                   </button>
                 )}
-              
+              </div>
               <p className="mt-2 text-sm font-medium text-gray-700">
                 Profile Photo
               </p>
@@ -1093,8 +1051,7 @@ const AddCandidateForm = ({
                 {fileError}
               </p>
             </div>
-            </div>
-
+ 
             {/* Resume Upload */}
             <div className="flex flex-col items-center">
               <div
@@ -1132,7 +1089,7 @@ const AddCandidateForm = ({
                     </>
                   )}
                 </div>
-
+ 
                 {/* 👁 Preview Icon */}
                 {(selectedResume?.path || selectedResume?.url) && (
                   <button
@@ -1150,7 +1107,7 @@ const AddCandidateForm = ({
                     <Eye className="w-3 h-3" />
                   </button>
                 )}
-
+ 
                 <input
                   ref={resumeInputRef}
                   type="file"
@@ -1158,7 +1115,7 @@ const AddCandidateForm = ({
                   className="hidden"
                   onChange={handleResumeChange}
                 />
-
+ 
                 {selectedResume && (
                   <button
                     title="Remove Resume"
@@ -1173,7 +1130,7 @@ const AddCandidateForm = ({
                   </button>
                 )}
               </div>
-
+ 
               <p className="mt-2 text-sm font-medium text-gray-700 text-center">
                 Resume
               </p>

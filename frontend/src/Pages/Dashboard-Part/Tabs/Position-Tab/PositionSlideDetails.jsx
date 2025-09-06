@@ -515,7 +515,7 @@ const PositionSlideDetails = () => {
                   ) : (
                     <VerticalRoundsViewPosition
                       rounds={rounds}
-                      interviewData={null}
+                      interviewData={position}
                       canEditRound={canEditRound}
                       onEditRound={handleEditRound}
                     />
