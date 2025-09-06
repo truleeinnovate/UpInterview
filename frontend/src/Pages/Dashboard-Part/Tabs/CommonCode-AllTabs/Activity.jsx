@@ -357,7 +357,6 @@ function Activity({ parentId, parentId2, mode }) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {Object.entries(metadata.round || metadata.rounds)
-
                 .filter(
                   ([key]) =>
                     ![
@@ -425,7 +424,7 @@ function Activity({ parentId, parentId2, mode }) {
 
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
@@ -709,39 +708,49 @@ function Activity({ parentId, parentId2, mode }) {
               Loading feeds...
             </div>
           ) : // v1.0.1 ---------------------------------------------------------------------->
-
-          error ? (
-            <div className="text-center py-8 text-red-500">{error}</div>
-          ) : filteredFeeds.length > 0 ? (
-            filteredFeeds?.map((feed) => {
-              const styles = getFeedTypeStyle(feed?.feedType);
-              return (
-                <div
-                  key={feed?._id}
-                  className={`
-                    relative pl-8 sm:pl-2 pr-8 sm:pr-2 py-4 rounded-lg border 
+            error ? (
+              <div className="text-center py-8 text-red-500">{error}</div>
+            ) : filteredFeeds.length > 0 ? (
+              filteredFeeds?.map((feed) => {
+                const styles = getFeedTypeStyle(feed?.feedType);
+                return (
+                  <div
+                    key={feed?._id}
+                    className={`
+                    relative pl-8 sm:pl-16 pr-8 sm:pr-4 py-4 rounded-lg border 
                     transition-all duration-200 overflow-hidden
                     ${styles.container} ${styles.border} ${styles.hover}
                   `}
-                >
-                  {/* v1.0.0 <------------------------------------------------------------------------ */}
-                  <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-white rounded-full p-2 shadow-sm">
-                          {getFeedIcon(feed.feedType, feed?.action)}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className={`font-medium ${styles.text}`}>
-                            {feed?.action?.description}
-                          </h4>
-                          <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <AiOutlineUser className="mr-1 flex-shrink-0" />
-                              <span className="truncate">
-                                {feed?.metadata?.changedBy || "System"}
-                              </span>
-
+                  >
+                    {/* v1.0.0 <------------------------------------------------------------------------ */}
+                    <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-white rounded-full p-2 shadow-sm">
+                            {getFeedIcon(feed.feedType, feed?.action)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className={`font-medium ${styles.text} truncate`}>
+                              {feed.parentObject === "Position" && mode === "round"
+                                && feed?.action?.name === "position_created"
+                                ? "Position Round Was Created" : feed.parentObject === "Position"
+                                  && mode === "round"
+                                  && feed?.action?.name === "position_updated"
+                                  ? "Position Round Was Updated" : feed?.action?.description}
+                            </h4>
+                            <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
+                              <div className="flex items-center">
+                                <AiOutlineUser className="mr-1 flex-shrink-0" />
+                                <span className="truncate">
+                                  {feed?.metadata?.changedBy || "System"}
+                                </span>
+                              </div>
+                              <span className="hidden sm:inline">•</span>
+                              <time className="flex-shrink-0">
+                                {formatDate(
+                                  feed?.metadata?.changedAt || feed?.createdAt
+                                )}
+                              </time>
                             </div>
                           </div>
                         </div>
