@@ -395,7 +395,7 @@ const updateTask = async (req, res) => {
     };
 
     res.status(200).json({
-      status: 'success',
+      status: 'Task updated successfully',
       message: 'Task updated successfully',
       data: updatedTask,
       changes: changes

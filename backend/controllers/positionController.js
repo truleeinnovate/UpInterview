@@ -346,7 +346,7 @@ const createPosition = async (req, res) => {
     // console.log("✅ Position saved to DB:", newPosition);
 
     // Feed and log data
-    res.locals.feedData = {
+   let feedData = res.locals.feedData = {
       tenantId: req.body.tenantId,
       feedType: "info",
       action: {
@@ -360,6 +360,10 @@ const createPosition = async (req, res) => {
       severity: res.statusCode >= 500 ? "high" : "low",
       message: `Position was created successfully`,
     };
+
+    console.log("feedData",feedData);
+
+    
 
     res.locals.logData = {
       tenantId: req.body.tenantId,
@@ -538,6 +542,14 @@ const updatePosition = async (req, res) => {
     }
 
     await updatedPosition.save()
+
+
+        // NEW: Generate proper field messages with formatted values
+        const fieldMessages = changes.map(({ fieldName, formattedOldValue, formattedNewValue }) => ({
+          fieldName,
+          message: `${fieldName} updated from '${formattedOldValue}' to '${formattedNewValue}'`
+        }));
+
     // Only set feedData and logData when there are actual changes
     res.locals.feedData = {
       tenantId,
@@ -550,7 +562,8 @@ const updatePosition = async (req, res) => {
       parentId: positionId,
       parentObject: "Position",
       metadata: req.body,
-      severity: "low",
+      severity: res.statusCode >= 500 ? 'high' : 'low',
+      // fieldMessage: fieldMessages,
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
         message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
@@ -994,17 +1007,17 @@ const saveInterviewRoundPosition = async (req, res) => {
     );
 
     console.log("round.savedRound", savedRound);
-    console.log("round.ownerId", req.body.round.ownerId);
+    console.log("round.ownerId", req.body.ownerId);
 
           // Feed and log data
     res.locals.feedData = {
-      tenantId: req.body.round.tenantId,
+      tenantId: req.body.tenantId,
       feedType: "info",
       action: {
         name: "position_round_created",
         description: `Position Round was created`,
       },
-      ownerId: req.body.round.ownerId,
+      ownerId: req.body.ownerId,
       parentId: savedRound._id,
       parentObject: "Position Round",
       metadata: req.body,
@@ -1013,8 +1026,8 @@ const saveInterviewRoundPosition = async (req, res) => {
     };
 
     res.locals.logData = {
-      tenantId: req.body.round.tenantId,
-      ownerId: req.body.round.ownerId,
+      tenantId: req.body.tenantId,
+      ownerId: req.body.ownerId,
       processName: "Create Position Round",
       requestBody: req.body,
       status: "success",
@@ -1041,8 +1054,8 @@ const saveInterviewRoundPosition = async (req, res) => {
     
      // Error logging
      res.locals.logData = {
-      tenantId: req.body.round.tenantId,
-      ownerId: req.body.round.ownerId,
+      tenantId: req.body.tenantId,
+      ownerId: req.body.ownerId,
       processName: "Create Position Round",
       requestBody: req.body,
       message: error.message,
@@ -1522,7 +1535,7 @@ const updateInterviewRound = async (req, res) => {
         description: `Position round was updated`,
       },
       ownerId: req.body.ownerId,
-      parentId: rawPositionId,
+      parentId: rawRoundId,
       parentObject: 'Position',
       metadata: req.body,
       severity: 'low',

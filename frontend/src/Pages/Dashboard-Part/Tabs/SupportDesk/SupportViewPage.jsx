@@ -16,12 +16,15 @@ import {
   // FaCalendarAlt,
   FaTag,
   FaFileAlt,
+  FaHistory,
+  FaInfoCircle,
 } from "react-icons/fa";
 import { Minimize, Expand, X, Eye } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+import Activity from "../CommonCode-AllTabs/Activity";
 // v1.0.0 ------------------------------------------------------------------------->
 //import SupportForm from "./SupportForm";
 
@@ -34,6 +37,7 @@ const SupportViewPage = () => {
   console.log("lastModifiedBy:", ticketData.updatedByUserId);
   const [isFullScreen, setIsFullScreen] = useState(false);
   //const [openForm, setOpenForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
   console.log("ticketData", ticketData);
 
@@ -69,14 +73,18 @@ const SupportViewPage = () => {
     <div
       className={`${isFullScreen ? "min-h-screen" : "h-full"} flex flex-col`}
     >
-      <div className="p-6">
+
+          <div className="p-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <h2 className="text-2xl font-semibold text-custom-blue">
               Support Ticket Details
             </h2>
           </div>
-          <div className="flex items-center space-x-2">
+        
+        
+
+        <div className="flex items-center space-x-2">
             {/* <button
               onClick={() => { navigate(`/support-desk/edit-ticket/${ticketData._id}`, { state: { ticketData: ticketData } }) }}
               className="p-2 hover:text-custom-blue rounded-full transition-colors"
@@ -102,17 +110,51 @@ const SupportViewPage = () => {
               <X className="w-4 h-4" />
             </button>
           </div>
-        </div>
+          </div>
       </div>
 
-      {/* <-------v1.0.1--------------Ticket Code and Status */}
+        {/* Subtabs Navigation */}
+        <div className="flex items-center ">
+        <div className="flex border-b border-gray-200 ">
+          <button
+            className={`py-3 px-4 font-medium flex items-center gap-2 ${
+              activeTab === "details"
+                ? "text-custom-blue border-b-2 border-custom-blue"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("details")}
+          >
+            <FaInfoCircle className="w-4 h-4" />
+            Details
+          </button>
+          <button
+            className={`py-3 px-4 font-medium flex items-center gap-2 ${
+              activeTab === "activity"
+                ? "text-custom-blue border-b-2 border-custom-blue"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("activity")}
+          >
+            <FaHistory className="w-4 h-4" />
+            Activity
+          </button>
+        </div>
+
+       
+        </div>
+
+  
+        {/* <-------v1.0.1--------------Ticket Code and Status */}
+ {/* Tab Content */}
+ {activeTab === "details" ? 
+    
       <div className="p-6">
         <div className="flex items-center justify-center gap-2 mb-4">
           
             <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
               <FaTicketAlt className="w-8 h-8" />
             </div>
-            <div className="items-center text-center mb-4">
+            <div className="items-center text-center">
           <h3 className="text-2xl font-bold text-gray-900">
             {ticketData?.ticketCode}
           </h3>
@@ -290,7 +332,16 @@ const SupportViewPage = () => {
             </div>
           </div>
         </div>
-      </div>
+
+
+      </div> 
+
+: <div className="p-4"> 
+<Activity parentId={ticketData?._id}/>
+</div>
+}
+
+
     </div>
   );
 

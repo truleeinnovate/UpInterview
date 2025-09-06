@@ -185,83 +185,251 @@ exports.newQuestion = async (req, res) => {
 // Helper function to validate ObjectIds
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+// exports.updateQuestion = async (req, res) => {
+//   try {
+//     res.locals.loggedByController = true;
+//     res.locals.processName = 'Update question';
+
+//     const questionId = req.params.id;
+//     const { tenantId, ownerId, tenantListId, ...updateFields } = req.body;
+//     console.log('updateFields:', updateFields);
+
+//     //<----v1.0.1----
+//     // Validate id param
+//     if (!isValidObjectId(questionId)) {
+//       return res.status(400).json({ message: 'Validation failed', errors: { id: 'Invalid question id' } });
+//     }
+
+//     // Joi validation for update
+//     {
+//       const { errors, isValid } = validateUpdateTenantQuestion(req.body);
+//       if (!isValid) {
+//         return res.status(400).json({ message: 'Validation failed', errors });
+//       }
+//     }
+//     //----v1.0.1---->
+//         res.locals.loggedByController = true;
+//         //console.log("effectivePermissions",res.locals?.effectivePermissions)
+//         //<-----v1.0.1---
+//         // Permission: Tasks.Create (or super admin override)
+//         const canCreate =
+//         await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
+//         //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
+//         if (!canCreate) {
+//           return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
+//         }
+//         //-----v1.0.1--->
+
+//     // Remove invalid id
+//     if (!updateFields.suggestedQuestionId) delete updateFields.suggestedQuestionId;
+
+//     //<---v1.0.0---
+//     // Try to find the question across models (assessment, interview, legacy)
+//     let Model = null;
+//     let question = await TenantAssessmentQuestions.findById(questionId);
+//     if (question) Model = TenantAssessmentQuestions;
+//     if (!question) {
+//       question = await TenantInterviewQuestions.findById(questionId);
+//       if (question) Model = TenantInterviewQuestions;
+//     }
+//     // if (!question) {
+//     //   question = await TenantQuestions.findById(questionId);
+//     //   if (question) Model = TenantQuestions;
+//     // }
+
+//     if (!question) return res.status(404).json({ message: 'Question not found' });
+
+    
+//     //<---v1.0.0---
+//     // Handle list updates if provided
+//     let uniqueListIds = null;
+//     if (Array.isArray(tenantListId)) {
+//       uniqueListIds = [...new Set(tenantListId)].map(id => new mongoose.Types.ObjectId(id));
+//       question.tenantListId = uniqueListIds;
+//     }
+//     //---v1.0.0--->
+//     // apply any other fields being edited
+//     Object.assign(question, updateFields);
+//     // Ensure identifiers are set when provided (important for individual accounts)
+//     if (tenantId) question.tenantId = tenantId;
+//     if (ownerId) question.ownerId = ownerId;
+
+    
+//     //<---v1.0.0---
+//     const changes = [];
+//     if (uniqueListIds) {
+//       changes.push({
+//         fieldName: 'tenantListId',
+//         oldValue: question.tenantListId?.map(String),
+//         newValue: uniqueListIds.map(String)
+//       });//---v1.0.0--->
+//     }
+//     console.log("changes", changes);
+//     console.log("changes.length",changes.length);
+    
+
+//     await question.save();
+
+//     res.locals.feedData = {
+//       tenantId,
+//       feedType: 'update',
+//       action: {
+//         name: 'question_updated',
+//         description: `Question was updated`,
+//       },
+//       ownerId,
+//       parentId: question._id,
+//       parentObject: 'TenantQuestion',
+//       metadata: req.body,
+//       severity: res.statusCode >= 500 ? 'high' : 'low',
+//       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
+//         fieldName,
+//         message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
+//       })),
+//       history: changes,
+//     };
+
+//     res.locals.logData = {
+//       tenantId,
+//       ownerId,
+//       processName: 'Update question',
+//       requestBody: req.body,
+//       message: 'Question updated successfully',
+//       status: 'success',
+//       responseBody: question,
+//     };
+    
+//     res.status(200).json({
+//       status: 'success',
+//       message: 'Question updated successfully',
+//       data: question
+//     });
+//   } catch (error) {
+//     const { tenantId, ownerId } = req.body;
+//     res.locals.logData = {
+//       tenantId,
+//       ownerId,
+//       processName: 'Update question',
+//       requestBody: req.body,
+//       message: error.message,
+//       status: 'error',
+//     };
+//     res.status(500).json({ status: 'error', message: error.message });
+//   }
+// };
+
+
 exports.updateQuestion = async (req, res) => {
   try {
     res.locals.loggedByController = true;
     res.locals.processName = 'Update question';
 
     const questionId = req.params.id;
-    const { tenantId, ownerId, tenantListId, ...updateFields } = req.body;
-    console.log('updateFields:', updateFields);
+    let { tenantId, ownerId, tenantListId, isInterviewType, isEdit, ...updateFields } = req.body;
 
-    //<----v1.0.1----
-    // Validate id param
-    if (!isValidObjectId(questionId)) {
-      return res.status(400).json({ message: 'Validation failed', errors: { id: 'Invalid question id' } });
+    console.log('[DEBUG] Incoming request body:', req.body);
+
+    // Map UI field -> DB field
+    if (typeof isInterviewType !== 'undefined') {
+      updateFields.isInterviewQuestionType = isInterviewType;
     }
 
-    // Joi validation for update
+    // Drop UI-only fields
+    // isEdit is only for FE toggling, never persisted
+    delete updateFields.isEdit;
+
+    // Validate id param
+    if (!isValidObjectId(questionId)) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: { id: 'Invalid question id' }
+      });
+    }
+
+    // Joi validation
     {
       const { errors, isValid } = validateUpdateTenantQuestion(req.body);
       if (!isValid) {
         return res.status(400).json({ message: 'Validation failed', errors });
       }
     }
-    //----v1.0.1---->
-        res.locals.loggedByController = true;
-        //console.log("effectivePermissions",res.locals?.effectivePermissions)
-        //<-----v1.0.1---
-        // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
-        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
-        }
-        //-----v1.0.1--->
 
-    // Remove invalid id
-    if (!updateFields.suggestedQuestionId) delete updateFields.suggestedQuestionId;
+    // Permission check
+    const canEdit = await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit');
+    if (!canEdit) {
+      return res.status(403).json({
+        message: 'Forbidden: missing QuestionBank.Edit permission'
+      });
+    }
 
-    //<---v1.0.0---
-    // Try to find the question across models (assessment, interview, legacy)
-    let Model = null;
+    // Find the question
     let question = await TenantAssessmentQuestions.findById(questionId);
-    if (question) Model = TenantAssessmentQuestions;
     if (!question) {
       question = await TenantInterviewQuestions.findById(questionId);
-      if (question) Model = TenantInterviewQuestions;
     }
-    // if (!question) {
-    //   question = await TenantQuestions.findById(questionId);
-    //   if (question) Model = TenantQuestions;
-    // }
-
-    if (!question) return res.status(404).json({ message: 'Question not found' });
-
-    
-    //<---v1.0.0---
-    // Handle list updates if provided
-    let uniqueListIds = null;
-    if (Array.isArray(tenantListId)) {
-      uniqueListIds = [...new Set(tenantListId)].map(id => new mongoose.Types.ObjectId(id));
-      question.tenantListId = uniqueListIds;
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
     }
-    //---v1.0.0--->
-    // apply any other fields being edited
-    Object.assign(question, updateFields);
-    // Ensure identifiers are set when provided (important for individual accounts)
-    if (tenantId) question.tenantId = tenantId;
-    if (ownerId) question.ownerId = ownerId;
 
-    //<---v1.0.0---
+    const original = question.toObject();
     const changes = [];
-    if (uniqueListIds) {
+
+    // Handle tenantListId
+    if (Array.isArray(tenantListId)) {
+      const uniqueListIds = [...new Set(tenantListId)].map(id => new mongoose.Types.ObjectId(id));
+      const oldIds = (original.tenantListId || []).map(String);
+      const newIds = uniqueListIds.map(String);
+
+      if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
+        changes.push({
+          fieldName: 'tenantListId',
+          oldValue: oldIds,
+          newValue: newIds
+        });
+        question.tenantListId = uniqueListIds;
+      }
+    }
+
+    // Check each update field
+    for (const key of Object.keys(updateFields)) {
+      if (String(original[key] ?? '') !== String(updateFields[key] ?? '')) {
+        changes.push({
+          fieldName: key,
+          oldValue: original[key],
+          newValue: updateFields[key],
+        });
+        question[key] = updateFields[key];
+      }
+    }
+
+    // Explicit tenantId/ownerId
+    if (tenantId && String(original.tenantId ?? '') !== String(tenantId)) {
       changes.push({
-        fieldName: 'tenantListId',
-        oldValue: question.tenantListId?.map(String),
-        newValue: uniqueListIds.map(String)
-      });//---v1.0.0--->
+        fieldName: 'tenantId',
+        oldValue: original.tenantId,
+        newValue: tenantId
+      });
+      question.tenantId = tenantId;
+    }
+    if (ownerId && String(original.ownerId ?? '') !== String(ownerId)) {
+      changes.push({
+        fieldName: 'ownerId',
+        oldValue: original.ownerId,
+        newValue: ownerId
+      });
+      question.ownerId = ownerId;
+    }
+
+    console.log('[DEBUG] Final changes array:', changes);
+
+    // 🚨 If no changes, exit early
+    if (changes.length === 0) {
+      console.log('[DEBUG] No changes detected, skipping feedData/logData');
+      return res.status(200).json({
+        status: 'success',
+        message: 'No changes detected',
+        data: question
+      });
     }
 
     await question.save();
@@ -269,10 +437,7 @@ exports.updateQuestion = async (req, res) => {
     res.locals.feedData = {
       tenantId,
       feedType: 'update',
-      action: {
-        name: 'question_updated',
-        description: `Question was updated`,
-      },
+      action: { name: 'question_updated', description: `Question was updated` },
       ownerId,
       parentId: question._id,
       parentObject: 'TenantQuestion',
@@ -294,12 +459,13 @@ exports.updateQuestion = async (req, res) => {
       status: 'success',
       responseBody: question,
     };
-    
+
     res.status(200).json({
       status: 'success',
       message: 'Question updated successfully',
       data: question
     });
+
   } catch (error) {
     const { tenantId, ownerId } = req.body;
     res.locals.logData = {
@@ -313,6 +479,9 @@ exports.updateQuestion = async (req, res) => {
     res.status(500).json({ status: 'error', message: error.message });
   }
 };
+
+
+
 
 exports.getQuestionBySuggestedId = async (req, res) => {
   const suggestedQuestionId = req.params.suggestedQuestionId;

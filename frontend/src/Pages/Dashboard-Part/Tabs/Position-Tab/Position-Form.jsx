@@ -625,6 +625,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         entries,
         dataToSubmit.rounds
       );
+      console.log("formIsValid", formIsValid);
+      console.log("newErrors", newErrors);
       if (!formIsValid) {
         setErrors(newErrors);
         // v1.0.1 <------------------------------------------------------
@@ -745,7 +747,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       }
     } catch (error) {
       // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
-
+console.log("error", error);
       // Show error toast
     notify.error(error.response?.data?.message || error.message || "Failed to save position");
     
