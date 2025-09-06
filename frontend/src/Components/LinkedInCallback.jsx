@@ -211,7 +211,7 @@ const LinkedInCallback = () => {
           const currentDomain = window.location.hostname;
           const validDomains = [
             currentDomain,
-            '.app.upinterview.io',
+            `${config.REACT_APP_API_URL_FRONTEND}`,
             ...(process.env.NODE_ENV === 'development' ? ['localhost'] : [])
           ];
           

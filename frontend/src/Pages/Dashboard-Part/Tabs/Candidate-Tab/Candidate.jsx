@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, CircleUser, Pencil, Mail, Rotate3d } from "lucide-react";
+import { Eye, CircleUser, Pencil, Mail, Rotate3d, Trash } from "lucide-react";
 import { useCustomContext } from "../../../../Context/Contextfetch";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -686,6 +686,16 @@ function Candidate({
                   label: "Edit",
                   icon: <Pencil className="w-4 h-4 text-green-600" />,
                   onClick: (row) => navigate(`edit/${row._id}`),
+                },
+              ]
+            : []),
+            ...(effectivePermissions.Candidates?.Delete
+            ? [
+                {
+                  key: "delete",
+                  label: "Delete",
+                  icon: <Trash className="w-4 h-4 text-red-600" />,
+                  onClick: (row) => navigate(`delete/${row._id}`),
                 },
               ]
             : []),
