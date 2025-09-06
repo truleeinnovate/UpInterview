@@ -433,6 +433,7 @@ const TaskForm = ({
         onTaskAdded();
         onClose();
       }
+    }
     } catch (error) {
       console.error("Error saving task:", error);
 
