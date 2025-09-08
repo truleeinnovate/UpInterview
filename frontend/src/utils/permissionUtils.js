@@ -5,7 +5,7 @@ import { usePermissions } from '../Context/PermissionsContext';
  * This hook provides cached permission checking to prevent unnecessary re-renders
  * and better UX during loading states
  */
-export const usePermissionCheck = () => {
+export const usePermissionCheck = () => { 
     const { hasPermission, isInitialized, loading, effectivePermissions, superAdminPermissions } = usePermissions();
 
     const checkPermission = (objectName, permissionType = "ViewTab") => {
