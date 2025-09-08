@@ -94,8 +94,8 @@ const Home = () => {
           {/* Main Content Area */}
           {/* <---------v1.0.0 */}
           <div className="flex-1 space-y-6 lg:space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 lg:gap-6">
-              {/* v1.0.0 -----------> */}
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 lg:gap-6">
+          
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -136,18 +136,18 @@ const Home = () => {
                   color="green"
                 />
               </motion.div>
-            </div>
+            </div> */}
             {/* v1.0.1 -----------> */}
-             {freelancer && !isOrganization && <InterviewRequests />}
+             {/* {freelancer && !isOrganization && <InterviewRequests />} */}
             {/* v1.0.1 -----------> */}
-
+{/* 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <AnalyticsChart data={stats.chartData} setPeriod={setPeriod} period={period} />
-            </motion.div>
+            </motion.div> */}
 
             <FeedbackList />
             <NotificationSection />
@@ -163,11 +163,11 @@ const Home = () => {
           // v1.0.0 ----------->
           >
             <TaskList />
-            <InterviewerSchedule />
+            {/* <InterviewerSchedule /> */}
 
-            {isOrganization && <DashboardOutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />}
+            {/* {isOrganization && <DashboardOutsourceInterviewers setShowOutsourcePopup={setShowOutsourcePopup} />}
 
-            {isOrganization && <DashboardInternalInterviewers setInternalInterviews={setInternalInterviews} />}
+            {isOrganization && <DashboardInternalInterviewers setInternalInterviews={setInternalInterviews} />} */}
 
           </motion.div>
         </div>
