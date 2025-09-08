@@ -667,7 +667,7 @@
       }
   
       // Update organization with new subdomain
-      const fullDomain = `${subdomain}.${baseDomain || "app.upinterview.io"}`;
+      const fullDomain = `${subdomain}.${baseDomain}`;
       const updatedOrganization = await Tenant.findByIdAndUpdate(
         organizationId,
         {

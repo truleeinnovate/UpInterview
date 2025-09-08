@@ -4,7 +4,6 @@ module.exports = {
   // // offline linked in redirect uri
   // // REACT_APP_REDIRECT_URI: process.env.REACT_APP_REDIRECT_URI,
   // // online linked in redirect uri
-  // REACT_APP_REDIRECT_URI: "https://app.upinterview.io/callback",
   // REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND || "http://localhost:3000"
   // LinkedIn OAuth configuration
   REACT_APP_CLIENT_ID: process.env.REACT_APP_CLIENT_ID,
