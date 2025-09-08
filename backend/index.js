@@ -37,6 +37,7 @@ const allowedOrigins = [
 //   `https://${config.REACT_APP_API_URL_FRONTEND}`,
   "http://localhost:3000",
   "http://localhost:5000",
+  /^https:\/\/[a-z0-9-]+\.dev\.upinterview\.io$/,
   // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
   // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
   "https://dev.upinterview.io",
