@@ -498,7 +498,7 @@ exports.updateTicketById = async (req, res) => {
       })),
       history: changes,
     };
-    console.log("feedData", r);
+    // console.log("feedData", r);
 
     res.locals.logData = {
       tenantId: tenantId,

@@ -399,7 +399,8 @@ const TaskForm = ({
         ...formData,
         ownerId,
         tenantId,
-        dueDate: dueDateISO,
+        dueDate: scheduledDate ? formatForISOString(scheduledDate) : formData.dueDate,
+        // dueDate: dueDateISO,
         priority: selectedPriority,
         status: selectedStatus,
         assignedTo: formData.assignedTo,
@@ -427,12 +428,13 @@ const TaskForm = ({
         notify.success("Task updated successfully");
       }else{
         notify.error("Failed to save task");
-
-
-
+      
+      }
+      setInterval(() => {
         onTaskAdded();
         onClose();
-      }
+      }, 1000);
+   
     }
     } catch (error) {
       console.error("Error saving task:", error);

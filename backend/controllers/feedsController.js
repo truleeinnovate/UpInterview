@@ -3,7 +3,7 @@ const Feeds = require('../models/Feeds.js');
 exports.createFeed = async (feedDetails) => { 
     try {
         // Validate required fields
-        const requiredFields = ['tenantId', 'feedType', 'action', 'ownerId', 'parentId', 'parentObject'];
+        const requiredFields = [ 'feedType', 'action', 'ownerId', 'parentId', 'parentObject'];
         const missingFields = requiredFields.filter(field => !feedDetails[field]);
         if (missingFields.length > 0) {
             console.error('Missing required fields:', missingFields);

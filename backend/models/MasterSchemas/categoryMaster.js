@@ -5,7 +5,7 @@ const CategoryMasterSchema = new mongoose.Schema({
     isActive: { type: Boolean, default: true }
 }, {
     timestamps: true,
-    collection: 'CategoryMaster'
+    collection: 'CategoryMaster'  
 });
 
 const CategoryMaster = mongoose.model('CategoryMaster', CategoryMasterSchema);

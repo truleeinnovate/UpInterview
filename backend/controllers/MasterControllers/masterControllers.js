@@ -60,14 +60,70 @@ const createMaster = async (req, res) => {
     const Model = getModel(type);
 
     let result;
-
+console.log("body",req.body)
     if (Array.isArray(req.body)) {
       // Bulk insert (CSV upload)
       result = await Model.insertMany(req.body, { ordered: false });
+
+        // Feed data for bulk creation
+        res.locals.feedData = {
+          tenantId: req.body[0]?.tenantId || null,
+          feedType: 'bulk_create',
+          action: {
+            name: 'master_bulk_created',
+            description: `${result.length} ${type} records created via bulk upload`,
+          },
+          ownerId: req.body[0]?.ownerId || null,
+          parentId: null,
+          parentObject: 'MasterData',
+          metadata: {
+            type: type,
+            count: result.length,
+            isBulk: true
+          },
+          severity: res.statusCode >= 500 ? 'high' : 'low',
+          fieldMessage: [{
+            fieldName: 'bulk_upload',
+            message: `Bulk upload of ${result.length} ${type} records completed successfully`
+          }],
+          history: [{
+            fieldName: 'bulk_creation',
+            oldValue: null,
+            newValue: `${result.length} ${type} records created`
+          }]
+        };
+
+
     } else {
       // Single insert
       const newDoc = new Model(req.body);
       result = await newDoc.save();
+      console.log("result",result);
+
+       // Feed data for single creation
+      let r = res.locals.feedData = {
+        tenantId: req.body?.tenantId || null,
+        feedType: 'info',
+        action: {
+          name: `${type}_created`,
+          description: `${type} was created`,
+        },
+        ownerId: req.body?.ownerId || null,
+        parentId: result._id,
+        parentObject: 'MasterData',
+        metadata:req.body,
+        severity: res.statusCode >= 500 ? 'high' : 'low',
+        message: `${type} was created successfully`,
+        // history: [{
+        //   fieldName: 'creation',
+        //   oldValue: null,
+        //   newValue: result
+        // }]
+      };
+      console.log("result",r);
+      
+
+
     }
 
     res.status(201).json(result);
