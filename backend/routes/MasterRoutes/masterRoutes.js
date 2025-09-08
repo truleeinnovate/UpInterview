@@ -9,7 +9,10 @@ const {
   deleteMaster,
 } = require("../../controllers/MasterControllers/masterControllers");
 
-router.post("/:type", createMaster);
+const loggingService = require('../../middleware/loggingService.js');
+
+
+router.post("/:type",loggingService.FeedsMiddleware, createMaster);
 router.get("/:type", getMasters);
 router.get("/:type/:id", getMasterById);
 router.put("/:type/:id", updateMaster);

@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - Added toast message for creating, updating and deleting masters
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
-import { Eye, Pencil, Trash2, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Eye, Pencil, Trash2, ArrowLeft, AlertTriangle, Edit2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -15,6 +15,8 @@ import { config } from "../../../../config";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.0 <------------------------------------------------------------------------
 import toast from "react-hot-toast";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import Cookies from "js-cookie";
 // v1.0.0 ------------------------------------------------------------------------>
 
 const MasterTable = () => {
@@ -36,6 +38,17 @@ const MasterTable = () => {
   const [popupMode, setPopupMode] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  
+     const authToken = Cookies.get("authToken");
+      const impersonationToken = Cookies.get("impersonationToken");
+   
+      const impersonatedTokenPayload = decodeJwt(impersonationToken);
+    const  ownerId = impersonatedTokenPayload?.impersonatedUserId;
+    // const tenantId = tokenPayload?.tenantId;
+
+    // console.log("ownerId",ownerId);
+    // console.log("impersonatedTokenPayload",impersonatedTokenPayload);
+    // console.log("impersonationToken",impersonationToken);
 
   // Used to disable outer scrollbar
   useScrollLock(isPopupOpen || isDeletePopupOpen);
@@ -57,6 +70,8 @@ const MasterTable = () => {
     };
     fetchData();
   }, [type]);
+ 
+  
 
   // Create and update
   // v1.0.0 <-----------------------------------------------------------------
@@ -81,7 +96,12 @@ const MasterTable = () => {
         // Create new master
         const res = await axios.post(
           `${config.REACT_APP_API_URL}/master-data/${type}`,
-          data
+          {
+            // data,
+           ...data,
+           ownerId,
+   
+          }
         );
         console.log("Created master:", res.data);
 
@@ -243,6 +263,16 @@ const MasterTable = () => {
   ];
 
   const tableActions = [
+    {
+      key: "view",
+      label: "View",
+      icon: <Edit2 className="w-4 h-4 text-green-600" />,
+      onClick: (item) => {
+        setSelectedMaster(item);
+        setPopupMode("edit");
+        setIsPopupOpen(true);
+      },
+    },
     {
       key: "edit",
       label: "Edit",

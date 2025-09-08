@@ -435,6 +435,7 @@ function Activity({ parentId, parentId2, mode }) {
                       "ownerId",
                       "CreatedBy",
                       "LastModifiedById",
+                      "updatedBy"
                     ].includes(key)
                 )
                 .slice(0, 4)
@@ -478,7 +479,8 @@ function Activity({ parentId, parentId2, mode }) {
         return (
           <div className="space-y-3">
             {fieldMessage && fieldMessage?.length > 0 ? (
-              fieldMessage.map(({ fieldName, message }, index) => (
+              fieldMessage.filter(({ fieldName }) => !["round", "rounds", "updatedBy", "createdBy"].includes(fieldName))
+              .map(({ fieldName, message }, index) => (
                 // Only render if fieldName is NOT "round" AND NOT "rounds"
                 fieldName !== "round" && fieldName !== "rounds" && (
                   <div key={index} className="space-y-2">
