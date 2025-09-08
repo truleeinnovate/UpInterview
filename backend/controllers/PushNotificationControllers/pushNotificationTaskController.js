@@ -135,7 +135,7 @@ const runTaskReminderJob = async () => {
         ownerId: user._id.toString(),
         category: 'task_reminder',
         // Rough match to ensure this task's reminder isn't duplicated
-        message: `Your task "${task.title}" is due on ${formattedDueDate}.`
+        message: `Your task "${task.title}" is due on ${formattedDueDate} status: ${task.status}.`
       });
 
       if (!existingNotification) {
@@ -143,7 +143,7 @@ const runTaskReminderJob = async () => {
           ownerId: user._id.toString(),
           tenantId: task.tenantId ? task.tenantId.toString() : '',
           title: 'Task Due Reminder',
-          message: `Your task "${task.title}" is due on ${formattedDueDate}.`,
+          message: `Your task "${task.title}" is due on ${formattedDueDate} status: ${task.status}.`,
           type: 'system',
           category: 'task_reminder',
           unread: true

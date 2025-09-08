@@ -10,13 +10,9 @@
 /* eslint-disable react/prop-types */
 // v1.0.6 - Ashok - Improved responsiveness and added sidebarPopup common code to popup to modal
 // v1.0.7 - Ashok - Fixed issues in responsiveness
-import { useState, useRef, useEffect, forwardRef } from "react";
-import Modal from "react-modal";
-import classNames from "classnames";
+import React, { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
-import { Search } from "lucide-react";
 import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
-import CustomDatePicker from "../../../../utils/CustomDatePicker";
 import {
   validateCandidateForm,
   getErrorMessage,
@@ -24,13 +20,26 @@ import {
 } from "../../../../utils/CandidateValidation";
 import Cookies from "js-cookie";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Minimize, Expand, ChevronDown, X, Trash, Eye } from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
 import LoadingButton from "../../../../Components/LoadingButton";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import { validateFile } from "../../../../utils/FileValidation/FileValidation";
+// Field components
+import ProfilePhotoUpload from "../../../../Components/FormFields/ProfilePhotoUpload";
+import ResumeUpload from "../../../../Components/FormFields/ResumeUpload";
+import FirstNameField from "../../../../Components/FormFields/FirstNameField";
+import LastNameField from "../../../../Components/FormFields/LastNameField";
+import DateOfBirthField from "../../../../Components/FormFields/DateOfBirthField";
+import GenderField from "../../../../Components/FormFields/GenderField";
+import EmailField from "../../../../Components/FormFields/EmailField";
+import PhoneField from "../../../../Components/FormFields/PhoneField";
+import HigherQualificationField from "../../../../Components/FormFields/HigherQualificationField";
+import UniversityCollegeField from "../../../../Components/FormFields/UniversityCollegeField";
+import CurrentExperienceField from "../../../../Components/FormFields/CurrentExperienceField";
+import RelevantExperienceField from "../../../../Components/FormFields/RelevantExperienceField";
+import CurrentRoleField from "../../../../Components/FormFields/CurrentRoleField";
 // v1.0.2 <---------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.2 --------------------------------------------------------------------->
@@ -38,255 +47,11 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError";
 // v1.0.3 ----------------------------------------------------------------------------------->
 
-// v1.0.3 <-----------------------------------------------------------------
-// Reusable CustomDropdown Component
-// const CustomDropdown = ({
-//   label,
-//   name,
-//   value,
-//   options,
-//   onChange,
-//   error,
-//   placeholder,
-//   optionKey, // For objects, e.g., 'QualificationName' or 'University_CollegeName'
-//   optionValue, // For objects, e.g., 'QualificationName' or number for simple arrays
-//   disableSearch = false,
-//   hideLabel = false,
-// }) => {
-//   const [showDropdown, setShowDropdown] = useState(false);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const dropdownRef = useRef(null);
-
-//   const toggleDropdown = () => {
-//     setShowDropdown(!showDropdown);
-//   };
-
-//   const handleSelect = (option) => {
-//     const selectedValue = optionValue ? option[optionValue] : option;
-//     onChange({ target: { name, value: selectedValue } });
-//     setShowDropdown(false);
-//     setSearchTerm("");
-//   };
-
-//   const filteredOptions = options?.filter((option) => {
-//     const displayValue = optionKey ? option[optionKey] : option;
-//     return displayValue
-//       .toString()
-//       .toLowerCase()
-//       .includes(searchTerm.toLowerCase());
-//   });
-
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setShowDropdown(false);
-//       }
-//     };
-
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => {
-//       document.removeEventListener("mousedown", handleClickOutside);
-//     };
-//   }, []);
-
-//   return (
-//     <div ref={dropdownRef}>
-//       {!hideLabel && (
-//         <label
-//           htmlFor={name}
-//           className="block text-sm font-medium text-gray-700 mb-1"
-//         >
-//           {label} <span className="text-red-500">*</span>
-//         </label>
-//       )}
-//       <div className="relative">
-//         <input
-//           name={name}
-//           type="text"
-//           id={name}
-//           value={value}
-//           onClick={toggleDropdown}
-//           placeholder={placeholder}
-//           autoComplete="off"
-//           className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-//             error ? "border-red-500" : "border-gray-300"
-//           }`}
-//           readOnly
-//         />
-//         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-//           <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
-//         </div>
-//         {showDropdown && (
-//           <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-//             {!disableSearch && (
-//               <div className="border-b">
-//                 <div className="flex items-center border rounded px-2 py-1 m-2">
-//                   <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-//                   <input
-//                     type="text"
-//                     placeholder={`Search ${label}`}
-//                     value={searchTerm}
-//                     onChange={(e) => setSearchTerm(e.target.value)}
-//                     className="pl-8 focus:border-black focus:outline-none w-full"
-//                   />
-//                 </div>
-//               </div>
-//             )}
-//             {filteredOptions?.length > 0 ? (
-//               filteredOptions.map((option, index) => (
-//                 <div
-//                   key={option._id || index}
-//                   onClick={() => handleSelect(option)}
-//                   className="cursor-pointer hover:bg-gray-200 p-2"
-//                 >
-//                   {optionKey ? option[optionKey] : option}
-//                 </div>
-//               ))
-//             ) : (
-//               <div className="p-2 text-gray-500">No options found</div>
-//             )}
-//           </div>
-//         )}
-//       </div>
-//       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
-//     </div>
-//   );
-// };
 
 import { notify } from "../../../../services/toastService";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards";
-const CustomDropdown = forwardRef(
-  (
-    {
-      label,
-      name,
-      value,
-      options,
-      onChange,
-      error,
-      placeholder,
-      optionKey,
-      optionValue,
-      disableSearch = false,
-      hideLabel = false,
-    },
-    ref
-  ) => {
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const dropdownRef = useRef(null);
 
-    const toggleDropdown = () => {
-      setShowDropdown(!showDropdown);
-    };
-
-    const handleSelect = (option) => {
-      const selectedValue = optionValue ? option[optionValue] : option;
-      onChange({ target: { name, value: selectedValue } });
-      setShowDropdown(false);
-      setSearchTerm("");
-    };
-
-    const filteredOptions = options?.filter((option) => {
-      const displayValue = optionKey ? option[optionKey] : option;
-      return displayValue
-        .toString()
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-    });
-
-    useEffect(() => {
-      const handleClickOutside = (event) => {
-        if (
-          dropdownRef.current &&
-          !dropdownRef.current.contains(event.target)
-        ) {
-          setShowDropdown(false);
-        }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    return (
-      <div>
-        {/* 👈 This is where the scroll will target */}
-        {!hideLabel && (
-          <label
-            htmlFor={name}
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            {label} <span className="text-red-500">*</span>
-          </label>
-        )}
-        <div className="relative" ref={dropdownRef}>
-          <input
-            ref={ref}
-            name={name}
-            type="text"
-            id={name}
-            value={value}
-            onClick={toggleDropdown}
-            placeholder={placeholder}
-            autoComplete="off"
-            // v1.0.4 <-------------------------------------------------------------------------------------------------------------------
-            // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-            //   error ? "border-red-500" : "border-gray-300"
-            // }`}
-            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-              border ${
-                error
-                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                  : "border-gray-300 focus:ring-red-300"
-              }
-              focus:outline-gray-300
-            `}
-            // v1.0.4 ------------------------------------------------------------------------------------------------------------------->
-            readOnly
-          />
-          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-            <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
-          </div>
-          {showDropdown && (
-            <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-              {!disableSearch && (
-                <div className="border-b">
-                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder={`Search ${label}`}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8 focus:border-black focus:outline-none w-full"
-                    />
-                  </div>
-                </div>
-              )}
-              {filteredOptions?.length > 0 ? (
-                filteredOptions.map((option, index) => (
-                  <div
-                    key={option._id || index}
-                    onClick={() => handleSelect(option)}
-                    className="cursor-pointer hover:bg-gray-200 p-2"
-                  >
-                    {optionKey ? option[optionKey] : option}
-                  </div>
-                ))
-              ) : (
-                <div className="p-2 text-gray-500">No options found</div>
-              )}
-            </div>
-          )}
-        </div>
-        {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
-      </div>
-    );
-  }
-);
 // v1.0.3 ----------------------------------------------------------------->
 
 // Main AddCandidateForm Component
@@ -324,14 +89,13 @@ const AddCandidateForm = ({
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
-  const currentRoleDropdownRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedResume, setSelectedResume] = useState(null);
-  const [file, setFile] = useState(null);
+  
   const [selectedImage, setSelectedImage] = useState(null);
   // const [imageFile, setImageFile] = useState(null);
   // const [resumeFile, setResumeFile] = useState(null);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  
   const [entries, setEntries] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -346,55 +110,16 @@ const AddCandidateForm = ({
   const expertiseOptions = ["Basic", "Medium", "Expert"];
   // const [filePreview, setFilePreview] = useState(null);
   // const [isImageUploaded, setIsImageUploaded] = useState(false);
-  const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
-  const [searchTermCurrentRole, setSearchTermCurrentRole] = useState("");
+  
   //<----v1.0.1 - University dropdown state---
-  const [showDropdownUniversity, setShowDropdownUniversity] = useState(false);
   const [isCustomUniversity, setIsCustomUniversity] = useState(false);
-  const [universitySearchTerm, setUniversitySearchTerm] = useState("");
-  const universityDropdownRef = useRef(null);
+  
 
-  const handleUniversitySelect = (university) => {
-    if (university === "others") {
-      setIsCustomUniversity(true);
-      setFormData((prev) => ({ ...prev, UniversityCollege: "" }));
-    } else {
-      setIsCustomUniversity(false);
-      setFormData((prev) => ({
-        ...prev,
-        UniversityCollege: university.University_CollegeName,
-      }));
-    }
-    setShowDropdownUniversity(false);
-    setUniversitySearchTerm("");
-    if (errors.UniversityCollege) {
-      setErrors((prevErrors) => ({ ...prevErrors, UniversityCollege: "" }));
-    }
-  };
+  
 
-  // Handle click outside university dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        universityDropdownRef.current &&
-        !universityDropdownRef.current.contains(event.target)
-      ) {
-        setShowDropdownUniversity(false);
-        setUniversitySearchTerm("");
-      }
-    };
+  
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const filteredUniversities = colleges?.filter((college) =>
-    college.University_CollegeName?.toString()
-      .toLowerCase()
-      .includes(universitySearchTerm.toLowerCase())
-  );
+  
   //----v1.0.1--->
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
@@ -512,44 +237,7 @@ const AddCandidateForm = ({
     }
   }, [id, candidateData]);
 
-  const toggleCurrentRole = () => {
-    setShowDropdownCurrentRole(!showDropdownCurrentRole);
-  };
-
-  const handleRoleSelect = (role) => {
-    // setFormData((prev) => ({ ...prev, CurrentRole: role }));
-    // setShowDropdownCurrentRole(false);
-    setSearchTermCurrentRole(""); // Clear the search term
-    // setErrors((prev) => ({ ...prev, currentRole: '' }));
-
-    setFormData((prev) => ({ ...prev, CurrentRole: role }));
-
-    // Clear error if any
-    setErrors((prev) => ({ ...prev, CurrentRole: "" }));
-
-    // Optionally close the dropdown
-    setShowDropdownCurrentRole(false);
-  };
-
-  const filteredCurrentRoles = currentRoles?.filter((role) =>
-    role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
-  );
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        currentRoleDropdownRef.current &&
-        !currentRoleDropdownRef.current.contains(event.target)
-      ) {
-        setShowDropdownCurrentRole(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
@@ -656,7 +344,6 @@ const AddCandidateForm = ({
       }
 
       setFileError("");
-      setFile(file);
       setSelectedImage(file);
       // setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
@@ -795,7 +482,7 @@ const AddCandidateForm = ({
       case "Candidate Edit":
         navigate(`/candidate/${id}`);
         break;
-      default: // Create mode
+      default:
         navigate("/candidate");
     }
   };
@@ -822,7 +509,7 @@ const AddCandidateForm = ({
       return;
     }
 
-    const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
+    
 
     const data = {
       FirstName: formData.FirstName,
@@ -856,19 +543,17 @@ const AddCandidateForm = ({
         isResumeRemoved,
       });
       // console.log("response", response);
-      
-    //       // Send response
-    // res.status(203).json({
-    //   status: 'Updated successfully',
-    //   message: 'Candidate updated successfully',
-    //   data: updatedCandidate,
-    // });
-    if(response.status === "success" ){
-      notify.success("Candidate added successfully");
-    }else if(response.status === "no_changes" || response.status === "Updated successfully" ){
-      notify.success("Candidate Updated successfully");
-    }
-      
+      // Send response
+      // res.status(203).json({
+      //   status: 'Updated successfully',
+      //   message: 'Candidate updated successfully',
+      //   data: updatedCandidate,
+      // });
+      if (response.status === "success") {
+        notify.success("Candidate added successfully");
+      } else if (response.status === "no_changes" || response.status === "Updated successfully") {
+        notify.success("Candidate Updated successfully");
+      }
 
       // notify.success("Candidate added successfully");
 
@@ -913,9 +598,9 @@ const AddCandidateForm = ({
     } catch (error) {
       console.error("Error adding candidate:", error);
 
-       // Show error toast
-    notify.error(error.response?.data?.message || error.message || "Failed to save candidate");
-    
+      // Show error toast
+      notify.error(error.response?.data?.message || error.message || "Failed to save candidate");
+
       if (error.response?.data?.errors) {
         // Backend Joi validation errors
         setErrors(error.response.data.errors);
@@ -943,17 +628,28 @@ const AddCandidateForm = ({
     // v1.0.2 ---------------------------------------------------------------------------->
   };
 
-  // v1.0.3 <-------------------------------------------------------------------
-  const modalClass = classNames(
-    "fixed bg-white shadow-2xl outline-none",
-    // v1.0.3 ----------------------------------------------------------------->
-    {
-      "overflow-y-auto": !isModalOpen,
-      "overflow-hidden": isModalOpen,
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
+  
+
+  // Using shared DropdownSelect styles from CommonCode-AllTabs/DropdownSelect
+
+  // Using shared CollegeMenuList from CommonCode-AllTabs/DropdownSelect
+
+  // Mapped options for react-select
+  const genderOptionsRS = genderOptions.map((g) => ({ value: g, label: g }));
+  const countryCodeOptionsRS = countryCodes; // already in { value, label }
+  const qualificationOptionsRS =
+    qualifications?.map((q) => ({
+      value: q.QualificationName,
+      label: q.QualificationName,
+    })) || [];
+  const collegeOptionsRS = (
+    colleges?.map((c) => ({
+      value: c.University_CollegeName,
+      label: c.University_CollegeName,
+    })) || []
+  ).concat([{ value: "__other__", label: "+ Others" }]);
+  const roleOptionsRS =
+    currentRoles?.map((r) => ({ value: r.RoleName, label: r.RoleName })) || [];
 
   return (
     <>
@@ -963,23 +659,22 @@ const AddCandidateForm = ({
         title={id ? "Update Candidate" : "Add New Candidate"}
         onClose={handleClose}
       >
-
-                    {/* // newly added guide for CandidateForm component by Ranjith */}
-<InfoGuide
-  title="Candidate Profile Guidelines"
-  items={[
-    <><span className="font-medium">Complete Profile:</span> Fill all required fields to create a comprehensive candidate profile</>,
-    <><span className="font-medium">Profile Photo:</span> Upload a professional headshot (max 100KB, 200×200 recommended)</>,
-    <><span className="font-medium">Resume Requirements:</span> PDF or Word documents only, maximum 4MB file size</>,
-    <><span className="font-medium">Contact Information:</span> Provide accurate email and phone number for communication</>,
-    <><span className="font-medium">Education Details:</span> Include highest qualification and university/college information</>,
-    <><span className="font-medium">Experience Tracking:</span> Specify both current and relevant experience in years</>,
-    <><span className="font-medium">Skill Assessment:</span> Add relevant skills with proficiency levels (Basic, Medium, Expert)</>,
-    <><span className="font-medium">Current Role:</span> Select the candidate's current job position from available options</>,
-    <><span className="font-medium">Data Validation:</span> All fields are validated in real-time with error highlighting</>,
-    <><span className="font-medium">Flexible Options:</span> Custom university entries available if not found in the list</>
-  ]}
-/>
+        {/* // newly added guide for CandidateForm component by Ranjith */}
+        <InfoGuide
+          title="Candidate Profile Guidelines"
+          items={[
+            <><span className="font-medium">Complete Profile:</span> Fill all required fields to create a comprehensive candidate profile</>,
+            <><span className="font-medium">Profile Photo:</span> Upload a professional headshot (max 100KB, 200×200 recommended)</>,
+            <><span className="font-medium">Resume Requirements:</span> PDF or Word documents only, maximum 4MB file size</>,
+            <><span className="font-medium">Contact Information:</span> Provide accurate email and phone number for communication</>,
+            <><span className="font-medium">Education Details:</span> Include highest qualification and university/college information</>,
+            <><span className="font-medium">Experience Tracking:</span> Specify both current and relevant experience in years</>,
+            <><span className="font-medium">Skill Assessment:</span> Add relevant skills with proficiency levels (Basic, Medium, Expert)</>,
+            <><span className="font-medium">Current Role:</span> Select the candidate's current job position from available options</>,
+            <><span className="font-medium">Data Validation:</span> All fields are validated in real-time with error highlighting</>,
+            <><span className="font-medium">Flexible Options:</span> Custom university entries available if not found in the list</>
+          ]}
+        />
 
         {/* v1.0.7 <--------------------------------------------------------------------- */}
         {/* <div className="p-4" ref={formRef}> */}
@@ -989,160 +684,27 @@ const AddCandidateForm = ({
           {/* v1.0.2 ------------------------------------------------------------------> */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
             {/* Profile Image Upload */}
-            <div className="flex flex-col items-center">
-              <div
-                onClick={() => imageInputRef.current?.click()}
-                className="relative group cursor-pointer"
-              >
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-lg">
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="Candidate"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : selectedImage?.path ? (
-                    <img
-                      src={selectedImage?.path}
-                      className="w-full h-full object-cover rounded-lg"
-                      alt={selectedImage.FirstName || "Candidate"}
-                      onError={(e) => {
-                        e.target.src = "/default-profile.png";
-                      }}
-                    />
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-400">Upload Photo</p>
-                    </>
-                  )}
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                    {/* Icon placeholder */}
-                  </div>
-                </div>
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-                {imagePreview && (
-                  <button
-                    title="Remove Image"
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImage();
-                    }}
-                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                  >
-                    {/* Icon placeholder */}
-                    <Trash className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-              <p className="mt-2 text-sm font-medium text-gray-700">
-                Profile Photo
-              </p>
-              <p className="text-xs text-gray-500 text-center">
-                Maximum file size: 100KB, (200×200 recommended).
-              </p>
-              <p className="text-xs text-red-500 font-medium text-center mt-1">
-                {fileError}
-              </p>
-            </div>
- 
+            <ProfilePhotoUpload
+              imageInputRef={imageInputRef}
+              imagePreview={imagePreview}
+              selectedImage={selectedImage}
+              fileError={fileError}
+              onImageChange={handleImageChange}
+              onRemoveImage={removeImage}
+              label="Profile Photo"
+            />
+
             {/* Resume Upload */}
-            <div className="flex flex-col items-center">
-              <div
-                onClick={() => resumeInputRef.current?.click()}
-                className="relative group cursor-pointer w-full max-w-sm"
-              >
-                <div className="h-32 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center transition-all duration-200 hover:border-blue-400 hover:shadow-lg px-4 text-center">
-                  {selectedResume ? (
-                    <div className="text-center">
-                      <p className="text-sm text-gray-700 font-medium truncate max-w-[180px]">
-                        {selectedResume.name}
-                      </p>
-                      {/* <p className="text-xs text-gray-500">
-                          {selectedResume?.size &&
-                            `${(selectedResume.size / 1024 / 1024).toFixed(
-                              2
-                            )} MB`}
-                        </p> */}
-                      <p className="text-xs text-gray-500">
-                        {selectedResume?.fileSize || selectedResume?.size
-                          ? `${(
-                              (selectedResume.size || selectedResume.fileSize) /
-                              1024 /
-                              1024
-                            ).toFixed(2)} MB`
-                          : ""}
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-400">Upload Resume</p>
-                      <p className="text-xs text-gray-400">
-                        PDF or Word document
-                      </p>
-                    </>
-                  )}
-                </div>
- 
-                {/* 👁 Preview Icon */}
-                {(selectedResume?.path || selectedResume?.url) && (
-                  <button
-                    type="button"
-                    title="Preview Resume"
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevents opening upload dialog
-                      window.open(
-                        selectedResume.path || selectedResume.url,
-                        "_blank"
-                      );
-                    }}
-                    className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1.5 hover:bg-opacity-70 transition"
-                  >
-                    <Eye className="w-3 h-3" />
-                  </button>
-                )}
- 
-                <input
-                  ref={resumeInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  className="hidden"
-                  onChange={handleResumeChange}
-                />
- 
-                {selectedResume && (
-                  <button
-                    title="Remove Resume"
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevents opening upload dialog
-                      removeResume();
-                    }}
-                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                  >
-                    <Trash className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
- 
-              <p className="mt-2 text-sm font-medium text-gray-700 text-center">
-                Resume
-              </p>
-              <p className="text-xs text-gray-500 text-center">
-                Maximum file size: 4MB
-              </p>
-              <p className="text-xs text-red-500 font-medium text-center">
-                {resumeError}
-              </p>
-            </div>
+            <ResumeUpload
+              resumeInputRef={resumeInputRef}
+              selectedResume={selectedResume}
+              resumeError={resumeError}
+              onResumeChange={handleResumeChange}
+              onRemoveResume={removeResume}
+              label="Resume"
+            />
           </div>
-           {/* </div> */}
+          {/* </div> */}
 
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-6">
@@ -1154,576 +716,145 @@ const AddCandidateForm = ({
                   Personal Details
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  {/* First Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name
-                    </label>
-                    <input
-                      type="text"
-                      // v1.0.3 <--------------------------------------------------------
-                      ref={fieldRefs.FirstName}
-                      // v1.0.3 --------------------------------------------------------->
-                      name="FirstName"
-                      value={formData.FirstName}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300"
-                      placeholder="Enter First Name"
-                    />
-                  </div>
-                  {/* Last Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      // v1.0.3 <--------------------------------------------------------
-                      ref={fieldRefs.LastName}
-                      // v1.0.3 --------------------------------------------------------->
-                      type="text"
-                      name="LastName"
-                      value={formData.LastName}
-                      onChange={handleChange}
-                      // v1.0.4 <---------------------------------------------------------------------------------------------------------------------------
-                      // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
-                      //   errors.LastName && "border-red-500"
-                      // }`}
-                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.LastName
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                      // v1.0.4 --------------------------------------------------------------------------------------------------------------------------->
-                      placeholder="Enter Last Name"
-                    />
-                    {errors.LastName && (
-                      <p className="text-red-500 text-xs pt-1">
-                        {errors.LastName}
-                      </p>
-                    )}
-                  </div>
+                  <FirstNameField
+                    value={formData.FirstName}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.FirstName}
+                    label="First Name"
+                    required={false}
+                  />
+                  <LastNameField
+                    value={formData.LastName}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.LastName}
+                    error={errors.LastName}
+                    label="Last Name"
+                    required
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  {/* Date of Birth */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Date of Birth
-                    </label>
-                    <CustomDatePicker
-                      selectedDate={
-                        formData.Date_Of_Birth
-                          ? new Date(formData.Date_Of_Birth)
-                          : null
-                      }
-                      onChange={handleDateChange}
-                      placeholder="Select Date of Birth"
-                    />
-                  </div>
-                  {/* Gender */}
-
-                  <CustomDropdown
-                    // v1.0.3 <--------------------------------------------------------
-                    ref={fieldRefs.Gender}
-                    // v1.0.3 --------------------------------------------------------->
-                    label="Gender"
-                    name="Gender"
+                  <DateOfBirthField
+                    selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
+                    onChange={handleDateChange}
+                    label="Date of Birth"
+                    required={false}
+                  />
+                  <GenderField
                     value={formData.Gender}
-                    options={genderOptions}
+                    options={genderOptionsRS}
                     onChange={handleChange}
                     error={errors.Gender}
-                    placeholder="Select Gender"
-                    disableSearch={true}
+                    containerRef={fieldRefs.Gender}
+                    label="Gender"
+                    required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
                 {/* <p className="text-lg font-semibold col-span-2"> */}
                 <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-                {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
+                  {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
                   Contact Details
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  {/* Email */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      // v1.0.3 <--------------------------------------------------------
-                      ref={fieldRefs.Email}
-                      // v1.0.3 --------------------------------------------------------->
-                      type="email"
-                      name="Email"
-                      value={formData.Email}
-                      onChange={handleChange}
-                      // v1.0.4 <----------------------------------------------------------------------------------------------------------------------
-                      // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-gray-300 sm:text-sm ${
-                      //   errors.Email && "border-red-500"
-                      // }`}
-                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.Email
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                      // v1.0.4 <---------------------------------------------------------------------------------------------------------------------->
-                      placeholder="Enter Email Address"
-                    />
-                    {errors.Email && (
-                      <p className="text-red-500 text-xs pt-1">
-                        {errors.Email}
-                      </p>
-                    )}
-                  </div>
-                  {/* Phone */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex  gap-2">
-                      <div className="w-20">
-                        <CustomDropdown
-                          // v1.0.3 <--------------------------------------------------------
-                          ref={fieldRefs.CountryCode}
-                          // v1.0.3 --------------------------------------------------------->
-                          hideLabel
-                          name="CountryCode"
-                          value={formData.CountryCode}
-                          options={countryCodes}
-                          onChange={handleChange}
-                          placeholder="+91"
-                          error={errors.CountryCode}
-                          optionKey="label"
-                          optionValue="value"
-                          selectedValue={+91}
-                          disableSearch={true}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <input
-                          // v1.0.3 <--------------------------------------------------------
-                          ref={fieldRefs.Phone}
-                          // v1.0.3 --------------------------------------------------------->
-                          type="text"
-                          name="Phone"
-                          value={formData.Phone}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, ""); // remove non-digits
-                            if (value.length <= 10) {
-                              handleChange({
-                                target: { name: "Phone", value },
-                              });
-                            }
-                          }}
-                          maxLength={10}
-                          // v1.0.4 <-------------------------------------------------------------------------------------------------------------------------
-                          // className={`w-full px-3 py-2 h-10 border border-gray-300 rounded-md focus:ring-2 focus:border-transparent sm:text-sm ${
-                          //   errors.Phone && "border-red-500"
-                          // }`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.Phone
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                          // v1.0.4 ------------------------------------------------------------------------------------------------------------------------->
-                          placeholder="Enter Phone Number"
-                        />
-
-                        {errors.Phone && (
-                          <p className="text-red-500 text-xs pt-1">
-                            {errors.Phone}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <EmailField
+                    value={formData.Email}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.Email}
+                    error={errors.Email}
+                    label="Email"
+                    required
+                  />
+                  <PhoneField
+                    countryCodeOptions={countryCodeOptionsRS}
+                    countryCodeValue={formData.CountryCode}
+                    onCountryCodeChange={handleChange}
+                    countryCodeError={errors.CountryCode}
+                    countryCodeRef={fieldRefs.CountryCode}
+                    phoneValue={formData.Phone}
+                    onPhoneChange={handleChange}
+                    phoneError={errors.Phone}
+                    phoneRef={fieldRefs.Phone}
+                    label="Phone"
+                    required
+                  />
                 </div>
 
                 {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
                 {/* <p className="text-lg font-semibold col-span-2"> */}
                 <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-                {/* v1.0.7 --------------------------------------------------------------------------------------> */}
+                  {/* v1.0.7 --------------------------------------------------------------------------------------> */}
                   Education Details
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  {/* higher qualification */}
-                  <CustomDropdown
-                    // v1.0.3 <--------------------------------------------------------
-                    ref={fieldRefs.HigherQualification}
-                    // v1.0.3 --------------------------------------------------------->
-                    label="Higher Qualification"
-                    name="HigherQualification"
+                  <HigherQualificationField
                     value={formData.HigherQualification}
-                    options={qualifications}
+                    options={qualificationOptionsRS}
                     onChange={handleChange}
                     error={errors.HigherQualification}
-                    placeholder="Select Higher Qualification"
-                    optionKey="QualificationName"
-                    optionValue="QualificationName"
+                    containerRef={fieldRefs.HigherQualification}
+                    label="Higher Qualification"
+                    required
                   />
-
-                  {/* University/College */}
-                  {/* <--------v1.0.1----- */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      University/College <span className="text-red-500">*</span>
-                    </label>
-                    {!isCustomUniversity ? (
-                      <div className="relative" ref={universityDropdownRef}>
-                        <input
-                          // v1.0.3 <--------------------------------------------------------
-                          ref={fieldRefs.UniversityCollege}
-                          // v1.0.3 --------------------------------------------------------->
-                          type="text"
-                          value={formData.UniversityCollege}
-                          onClick={() =>
-                            setShowDropdownUniversity(!showDropdownUniversity)
-                          }
-                          placeholder="Select a University/College"
-                          autoComplete="off"
-                          // v1.0.4 <-----------------------------------------------------------------------------------------------------------------
-                          // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                          //   errors.UniversityCollege
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // }`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.UniversityCollege
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                          // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
-                          readOnly
-                        />
-                        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                          <ChevronDown
-                            className="text-lg"
-                            onClick={() =>
-                              setShowDropdownUniversity(!showDropdownUniversity)
-                            }
-                          />
-                        </div>
-                        {showDropdownUniversity && (
-                          <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
-                            <div className="border-b">
-                              <div className="flex items-center border rounded px-2 py-1 m-2">
-                                <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                                <input
-                                  // v1.0.3 <--------------------------------------------------------
-                                  ref={fieldRefs.UniversityCollegeSearch}
-                                  // v1.0.3 --------------------------------------------------------->
-                                  type="text"
-                                  placeholder="Search University/College"
-                                  value={universitySearchTerm}
-                                  onChange={(e) =>
-                                    setUniversitySearchTerm(e.target.value)
-                                  }
-                                  className="pl-8 focus:border-black focus:outline-none w-full"
-                                />
-                              </div>
-                            </div>
-                            <div className="max-h-48 overflow-y-auto">
-                              {filteredUniversities?.length > 0 ? (
-                                filteredUniversities.map(
-                                  (university, index) => (
-                                    <div
-                                      key={university._id || index}
-                                      onClick={() =>
-                                        handleUniversitySelect(university)
-                                      }
-                                      className="cursor-pointer hover:bg-gray-200 p-2"
-                                    >
-                                      {university.University_CollegeName}
-                                    </div>
-                                  )
-                                )
-                              ) : (
-                                <div className="p-2 text-gray-500">
-                                  No universities found
-                                </div>
-                              )}
-                            </div>
-                            <div className="border-t border-gray-200">
-                              <div
-                                onClick={() => handleUniversitySelect("others")}
-                                className="cursor-pointer hover:bg-gray-200 p-2"
-                              >
-                                <span className="text-gray-900 font-medium">
-                                  + Others
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <input
-                          // v1.0.3 <--------------------------------------------------------
-                          ref={fieldRefs.UniversityCollege}
-                          // v1.0.3 --------------------------------------------------------->
-                          type="text"
-                          value={formData.UniversityCollege}
-                          onChange={(e) => {
-                            setFormData({
-                              ...formData,
-                              UniversityCollege: e.target.value,
-                            });
-                            if (errors.UniversityCollege) {
-                              setErrors((prevErrors) => ({
-                                ...prevErrors,
-                                UniversityCollege: "",
-                              }));
-                            }
-                          }}
-                          // v1.0.4 <--------------------------------------------------------------------------------------------------------------------
-                          // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                          //   errors.UniversityCollege
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // }`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.UniversityCollege
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                          // v1.0.4 -------------------------------------------------------------------------------------------------------------------->
-                          placeholder="Enter custom university/college name"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsCustomUniversity(false);
-                            setFormData({
-                              ...formData,
-                              UniversityCollege: "",
-                            });
-                          }}
-                          className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                    {errors.UniversityCollege && (
-                      <p className="text-red-500 text-xs pt-1">
-                        {errors.UniversityCollege}
-                      </p>
-                    )}
-                  </div>
+                  <UniversityCollegeField
+                    value={formData.UniversityCollege}
+                    options={collegeOptionsRS}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      setFormData((prev) => ({ ...prev, UniversityCollege: value }));
+                      if (errors.UniversityCollege) {
+                        setErrors((prevErrors) => ({ ...prevErrors, UniversityCollege: "" }));
+                      }
+                    }}
+                    error={errors.UniversityCollege}
+                    isCustomUniversity={isCustomUniversity}
+                    setIsCustomUniversity={setIsCustomUniversity}
+                    containerRef={fieldRefs.UniversityCollege}
+                    label="University/College"
+                    required
+                  />
                 </div>
                 {/* --------v1.0.1----->*/}
                 {/* v1.0.7 <----------------------------------------------------------------------------------- */}
                 {/* <p className="text-lg font-semibold col-span-2"> */}
                 <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-                {/* v1.0.7 -----------------------------------------------------------------------------------> */}
+                  {/* v1.0.7 -----------------------------------------------------------------------------------> */}
                   Experience Details
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  {/* current experience */}
-                  <div>
-                    <label
-                      htmlFor="CurrentExperience"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Current Experience <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      // v1.0.3 <--------------------------------------------------------
-                      ref={fieldRefs.CurrentExperience}
-                      // v1.0.3 --------------------------------------------------------->
-                      type="number"
-                      name="CurrentExperience"
-                      id="CurrentExperience"
-                      min="1"
-                      max="15"
-                      value={formData.CurrentExperience}
-                      onChange={handleChange}
-                      // v1.0.4 <-----------------------------------------------------------------------------------------------------------------
-                      // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                      //   errors.CurrentExperience
-                      //     ? "border-red-500"
-                      //     : "border-gray-300"
-                      // }`}
-                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.CurrentExperience
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                      // v1.0.4 ----------------------------------------------------------------------------------------------------------------->
-                      placeholder="Enter Current Experience"
-                    />
-                    {errors.CurrentExperience && (
-                      <p className="text-red-500 text-xs pt-1">
-                        {errors.CurrentExperience}
-                      </p>
-                    )}
-                  </div>
-                  {/* Relevant Experience */}
-                  <div>
-                    <label
-                      htmlFor="CurrentExperience"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Relevant Experience{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      // v1.0.3 <--------------------------------------------------------
-                      ref={fieldRefs.RelevantExperience}
-                      // v1.0.3 --------------------------------------------------------->
-                      type="number"
-                      name="RelevantExperience"
-                      id="RelevantExperience"
-                      min="1"
-                      max="15"
-                      value={formData.RelevantExperience}
-                      onChange={handleChange}
-                      // v1.0.4 <--------------------------------------------------------------------------------------------------------
-                      // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                      //   errors.RelevantExperience
-                      //     ? "border-red-500"
-                      //     : "border-gray-300"
-                      // }`}
-                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.RelevantExperience
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                      // v1.0.4 -------------------------------------------------------------------------------------------------------->
-                      placeholder="Enter Relevant Experience"
-                    />
-                    {errors.RelevantExperience && (
-                      <p className="text-red-500 text-xs pt-1">
-                        {errors.RelevantExperience}
-                      </p>
-                    )}
-                  </div>
+                  <CurrentExperienceField
+                    value={formData.CurrentExperience}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.CurrentExperience}
+                    error={errors.CurrentExperience}
+                    label="Current Experience"
+                    required
+                  />
+                  <RelevantExperienceField
+                    value={formData.RelevantExperience}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.RelevantExperience}
+                    error={errors.RelevantExperience}
+                    label="Relevant Experience"
+                    required
+                  />
                 </div>
 
                 {/* Current Role */}
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <div ref={currentRoleDropdownRef}>
-                    {/* v1.0.5 <-------------------------------------------------------- */}
-                    <label
-                      htmlFor="CurrentRole"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Current Role <span className="text-red-500">*</span>
-                    </label>
-                    {/* v1.0.5 --------------------------------------------------------> */}
-                    <div className="relative">
-                      <input
-                        // v1.0.3 <--------------------------------------------------------
-                        ref={fieldRefs.CurrentRole}
-                        // v1.0.3 --------------------------------------------------------->
-                        name="CurrentRole"
-                        type="text"
-                        id="CurrentRole"
-                        value={formData.CurrentRole}
-                        onClick={toggleCurrentRole}
-                        onChange={handleChange}
-                        placeholder="Select Current Role"
-                        autoComplete="off"
-                        // v1.0.4 <----------------------------------------------------------------------------------------------------------
-                        // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-md shadow-sm focus:ring-2 sm:text-sm ${
-                        //   errors.CurrentRole
-                        //     ? "border-red-500"
-                        //     : "border-gray-300"
-                        // }`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                        border ${
-                          errors.CurrentRole
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                        }
-                        focus:outline-gray-300
-                      `}
-                        // v1.0.4 ---------------------------------------------------------------------------------------------------------->
-                        readOnly
-                      />
-                      <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                        <ChevronDown
-                          className="text-lg w-5 h-5"
-                          onClick={toggleCurrentRole}
-                        />
-                      </div>
-                      {showDropdownCurrentRole && (
-                        <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-                          <div className="border-b">
-                            <div className="flex items-center border rounded px-2 py-1 m-2">
-                              <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                              <input
-                                type="text"
-                                placeholder="Search Current Role"
-                                value={searchTermCurrentRole}
-                                onChange={(e) =>
-                                  setSearchTermCurrentRole(e.target.value)
-                                }
-                                className="pl-8 focus:border-black focus:outline-none w-full"
-                              />
-                            </div>
-                          </div>
-                          {filteredCurrentRoles?.length > 0 ? (
-                            filteredCurrentRoles.map((role) => (
-                              <div
-                                key={role._id}
-                                onClick={() => handleRoleSelect(role.RoleName)}
-                                className="cursor-pointer hover:bg-gray-200 p-2"
-                              >
-                                {role.RoleName}
-                              </div>
-                            ))
-                          ) : (
-                            <div className="p-2 text-gray-500">
-                              No roles found
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {errors.CurrentRole && (
-                      <p className="text-red-500 text-xs pt-1">
-                        {errors.CurrentRole}
-                      </p>
-                    )}
-                  </div>
+                  <CurrentRoleField
+                    value={formData.CurrentRole}
+                    options={roleOptionsRS}
+                    onChange={handleChange}
+                    error={errors.CurrentRole}
+                    containerRef={fieldRefs.CurrentRole}
+                    label="Current Role"
+                    required
+                  />
                 </div>
               </div>
               <div>
