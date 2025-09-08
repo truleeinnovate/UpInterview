@@ -157,7 +157,7 @@ const LinkedInCallback = () => {
         if (!code) {
           throw new Error('No authorization code received from LinkedIn');
         }
-    
+    console.log('window.location.origin + /callback', window.location.origin + '/callback')
         const response = await axios.post(
           `${config.REACT_APP_API_URL}/linkedin/check-user`,
           { code, redirectUri: window.location.origin + '/callback' },
