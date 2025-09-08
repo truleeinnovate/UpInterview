@@ -33,8 +33,14 @@ const config = require("./config.js");
 console.log('from index config.REACT_APP_API_URL_FRONTEND', config.REACT_APP_API_URL_FRONTEND);
 
 // CORS configuration
-const allowedOrigins = [
-  `https://${config.REACT_APP_API_URL_FRONTEND}`,
+const allowedOrigins = [ 
+//   `https://${config.REACT_APP_API_URL_FRONTEND}`,
+  "http://localhost:3000",
+  "http://localhost:5000",
+  // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
+  // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
+  "https://dev.upinterview.io",
+  "https://app.upinterview.io"
 ];
 
 // const allowedOrigins = [
