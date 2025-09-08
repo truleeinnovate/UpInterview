@@ -32,8 +32,8 @@ app.use(cookieParser());
 const allowedOrigins = [ 
   "http://localhost:3000",
   "http://localhost:5000",
-  "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
-  "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
+  // "https://dev-frontend-upinterview-cncwcxeuccg8ggas.canadacentral-01.azurewebsites.net",
+  // "https://dev-backend-upinterview-gxcbasdvfqdje6bz.canadacentral-01.azurewebsites.net",
   "https://dev.upinterview.io",
   "https://app.upinterview.io"
 ];
