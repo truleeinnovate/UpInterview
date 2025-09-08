@@ -43,7 +43,7 @@
           .status(400)
           .json({ message: "User and Contact data are required" });
       }
-  
+
       const {
         firstName,
         lastName,
