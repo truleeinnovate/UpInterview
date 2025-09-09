@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import { useState, useEffect } from "react";
 import {
   DocumentTextIcon,
@@ -411,6 +413,7 @@ export function DocumentsSection({ documents, onUpdate }) {
           <p className="text-sm text-gray-500 mt-2">PDF, DOC, DOCX up to 5MB</p>
         </div>
       )} */}
+      {/* v1.0.0 <-------------------------------------------------------------- */}
       {documents?.[type] ? (
         <div className="border rounded-lg p-4 bg-gray-50">
           {deletingType === type ? (
@@ -422,32 +425,32 @@ export function DocumentsSection({ documents, onUpdate }) {
               Uploading...
             </p>
           ) : (
-            <div className="flex items-center justify-between">
+            <div className="flex sm:flex-col sm:items-start items-center sm:justify-start justify-between">
               <div className="flex items-center space-x-3">
                 <DocumentTextIcon className="h-8 w-8 text-custom-blue" />
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="sm:text-xs font-medium text-gray-900">
                     {documents[type].filename}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="sm:text-xs text-sm text-gray-500">
                     {documents[type].fileSize} • Uploaded{" "}
                     {new Date(documents[type].uploadDate).toLocaleDateString()}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 sm:mt-2">
                 <button
                   onClick={() => window.open(documents[type].path, "_blank")}
                   className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-200"
                   title="View Document"
                 >
-                  <EyeIcon className="h-5 w-5" />
+                  <EyeIcon className="sm:h-4 sm:w-4 h-5 w-5" />
                 </button>
                 <label
                   className="p-2 text-custom-blue hover:text-custom-blue/80 rounded-lg hover:bg-blue-50 cursor-pointer"
                   title="Replace Document"
                 >
-                  <ArrowUpTrayIcon className="h-5 w-5" />
+                  <ArrowUpTrayIcon className="sm:h-4 sm:w-4 h-5 w-5" />
                   <input
                     type="file"
                     className="hidden"
@@ -460,7 +463,7 @@ export function DocumentsSection({ documents, onUpdate }) {
                   className="p-2 text-red-600 hover:text-red-800 rounded-lg hover:bg-red-50"
                   title="Remove Document"
                 >
-                  <TrashIcon className="h-5 w-5" />
+                  <TrashIcon className="sm:h-4 sm:w-4 h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -484,10 +487,10 @@ export function DocumentsSection({ documents, onUpdate }) {
             </p>
           ) : (
             <>
-              <ArrowUpTrayIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <ArrowUpTrayIcon className="mx-auto sm:h-8 sm:w-8 h-12 w-12 text-gray-400" />
               <div className="mt-4">
                 <label className="cursor-pointer">
-                  <span className="text-custom-blue hover:text-custom-blue/80 font-medium">
+                  <span className="sm:text-sm text-custom-blue hover:text-custom-blue/80 font-medium">
                     Click to upload
                   </span>
                   <span className="text-gray-600"> or drag and drop</span>
@@ -506,6 +509,7 @@ export function DocumentsSection({ documents, onUpdate }) {
           )}
         </div>
       )}
+      {/* v1.0.0 --------------------------------------------------------------> */}
 
       {/* Error display based on type */}
       {type === "resume" && resumeError && (
@@ -649,9 +653,11 @@ export function DocumentsSection({ documents, onUpdate }) {
   );
 
   return (
-    <div className="space-y-8">
+    // v1.0.0 <--------------------------------
+    <div className="sm:mx-2 space-y-8">
+    {/* v1.0.0 <-------------------------------- */}
       <div className="flex items-center mt-6">
-        <div className="text-md text-gray-600 italic">
+        <div className="sm:text-sm text-md text-gray-600 italic">
           Keep your documents up to date for better interview opportunities
         </div>
       </div>

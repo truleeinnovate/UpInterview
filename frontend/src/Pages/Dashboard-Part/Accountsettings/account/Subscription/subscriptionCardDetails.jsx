@@ -100,8 +100,14 @@ const loadRazorpayScript = () => {
 const SubscriptionCardDetails = () => {
   console.log("card details");
 
-  const { subscriptionData, ownerId, tenantId, userType, createSubscription, verifySubscriptionPayment } = useSubscription();
-
+  const {
+    subscriptionData,
+    ownerId,
+    tenantId,
+    userType,
+    createSubscription,
+    verifySubscriptionPayment,
+  } = useSubscription();
 
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
@@ -127,13 +133,13 @@ const SubscriptionCardDetails = () => {
     () => location.state?.plan || {},
     [location.state]
   );
-  console.log("planDetails",planDetails);
+  console.log("planDetails", planDetails);
   const [pricePerMember, setPricePerMember] = useState({
     monthly: 0,
     annually: 0,
   });
 
-  const { userProfile} = useUserProfile(ownerId);
+  const { userProfile } = useUserProfile(ownerId);
   const [userProfileData, setUserProfile] = useState([]);
 
   // Fetch user profile data from contacts API
@@ -191,7 +197,9 @@ const SubscriptionCardDetails = () => {
       const discount =
         defaultMembershipType === "annual"
           ? parseFloat(planDetails.annualDiscount) || 0
-          : parseFloat(planDetails.monthDiscount ?? planDetails.monthlyDiscount) || 0;
+          : parseFloat(
+              planDetails.monthDiscount ?? planDetails.monthlyDiscount
+            ) || 0;
 
       const initialTotal = Math.max(0, price - discount);
       console.log("Initial total calculation:", {
@@ -329,10 +337,7 @@ const SubscriptionCardDetails = () => {
 
             // Prepare options for Razorpay checkout
             // Make sure amount is exactly the same as in the order (no modifications)
-            console.log(
-              "Order amount from backend:",
-              orderResponse.amount
-            );
+            console.log("Order amount from backend:", orderResponse.amount);
             const options = {
               key: orderResponse.razorpayKeyId,
               subscription_id: orderResponse.subscriptionId,
@@ -379,7 +384,8 @@ const SubscriptionCardDetails = () => {
                     planId: planDetails.planId,
                     membershipType: cardDetails.membershipType,
                     autoRenew: cardDetails.autoRenew,
-                    invoiceId: planDetails.invoiceId || subscriptionData?.invoiceId, // Include the invoiceId passed from SubscriptionPlan.jsx or fallback from subscription
+                    invoiceId:
+                      planDetails.invoiceId || subscriptionData?.invoiceId, // Include the invoiceId passed from SubscriptionPlan.jsx or fallback from subscription
                   };
 
                   // Log to verify invoiceId is included
@@ -391,19 +397,16 @@ const SubscriptionCardDetails = () => {
                   console.log("Sending verification data:", verificationData);
 
                   // Verify payment with backend via hook mutation
-                  const verifyResponse = await verifySubscriptionPayment(verificationData);
-
-                  console.log(
-                    "Payment verification response:",
-                    verifyResponse
+                  const verifyResponse = await verifySubscriptionPayment(
+                    verificationData
                   );
+
+                  console.log("Payment verification response:", verifyResponse);
 
                   if (
                     verifyResponse.status === "paid" ||
                     verifyResponse.status === "success" ||
-                    verifyResponse.message
-                      ?.toLowerCase()
-                      .includes("success")
+                    verifyResponse.message?.toLowerCase().includes("success")
                   ) {
                     toast.success("Payment successfully completed!");
 
@@ -505,25 +508,29 @@ const SubscriptionCardDetails = () => {
       {processing ? (
         <SubscriptionCardDetailsSkeleton />
       ) : (
+        // v1.0.2 <---------------------------------------------------------------------------------------------------
         <form
-          className="w-[70%] sm:w-[90%] md:w-[70%] flex flex-col mb-4 justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md"
+          className="relative w-[70%] sm:w-[90%] sm:h-[90%] md:h-[90%] md:w-[70%] flex flex-col mb-4 sm:justify-normal md:justify-normal lg:justify-normal justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md sm:overflow-y-auto md:overflow-y-auto"
           onSubmit={handleSubmit}
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold mb-2">
-              {`Upgrade to a ${planDetails.name} ${cardDetails.membershipType === 'monthly' ? 'Monthly' : 'Annual'} Membership`}
+            <h2 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl font-semibold mb-2">
+              {`Upgrade to a ${planDetails.name} ${
+                cardDetails.membershipType === "monthly" ? "Monthly" : "Annual"
+              } Membership`}
             </h2>
-            <XCircle
-              onClick={() => navigate("/account-settings/subscription")}
-              className="h-7 w-7"
-            />
+            <button
+            className="absolute sm:top-2 sm:right-2 top-4 right-6"
+            onClick={() => navigate("/account-settings/subscription")}>
+              <XCircle className="h-7 w-7" />
+            </button>
           </div>
           <p className="text-gray-500  text-md mb-2">
             Get all access and an extra 20% off when you subscribe annually
           </p>
 
-          <div className="w-full flex gap-6">
-            <div className="w-9/12 md:w-7/12  sm:w-6/12">
+          <div className="w-full flex sm:flex-col md:flex-col gap-6">
+            <div className="w-9/12 sm:w-full md:w-full">
               <div className="bg-blue-50 p-4 mb-4 rounded-lg border border-blue-200">
                 <h3 className="text-lg font-medium text-blue-800 mb-2">
                   Secure Payment
@@ -552,7 +559,7 @@ const SubscriptionCardDetails = () => {
                   <span className="text-blue-600">
                     Your payment is protected with industry-standard encryption
                   </span>
-              </div>
+                </div>
 
                 <div className="mt-3 flex justify-center">
                   <img
@@ -591,7 +598,7 @@ const SubscriptionCardDetails = () => {
               </div>
             </div>
 
-            <div className="w-1/2">
+            <div className="sm:w-full md:w-full w-1/2">
               {/* Membership Type */}
               <label className="block mb-1  text-lg font-medium text-gray-500">
                 Membership Type
@@ -755,6 +762,7 @@ const SubscriptionCardDetails = () => {
             </div>
           </div>
         </form>
+        // v1.0.2 --------------------------------------------------------------------------------------------------->
       )}
       {/* v1.0.0 <-------------------------------------------------------------------------------------- */}
     </div>,

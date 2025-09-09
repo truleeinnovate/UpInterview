@@ -2,6 +2,8 @@
 
 /* eslint-disable react-hooks/exhaustive-deps */
 //<----v1.0.0---Venkatesh---add loading skelton view and api loading issues solved
+// v1.0.2 - Ashok - Improved responsiveness
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -152,8 +154,10 @@ const Usage = () => {
   const assessmentsUtilized = Number(assessmentAttr?.utilized || 0);
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Usage Analytics</h2>
+    <div className="sm:mx-2 sm:mt-8 space-y-6">
+      {/* v1.0.2 <------------------------------------------------------- */}
+      <h2 className="sm:text-xl text-2xl font-bold">Usage Analytics</h2>
+      {/* v1.0.2 ------------------------------------------------------- */}
 
       {/* Usage Period */}
       {/* v1.0.0 <------------------------------------------------------------------------- */}

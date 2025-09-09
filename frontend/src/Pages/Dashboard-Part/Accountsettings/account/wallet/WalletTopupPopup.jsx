@@ -1,6 +1,8 @@
 //<----v1.0.0-----Venkatesh-----backend via TanStack Query added
 // v1.0.1 - Ashok - Removed border left and set outline as none
 // v1.0.2 - Ashok - Changed logo url from local to cloud storage url
+// v1.0.3 - Ashok - Ashok - Improved responsiveness and added common code to popup
+
 import { useState, useEffect } from "react";
 import Modal from "react-modal";
 import classNames from "classnames";
@@ -20,6 +22,9 @@ import {
   useVerifyWalletPayment,
   useCreateWalletOrder,
 } from "../../../../../apiHooks/useWallet.js";
+// v1.0.3 <------------------------------------------------------------------
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+// v1.0.3 ------------------------------------------------------------------>
 
 export function WalletTopupPopup({ onClose, onTopup }) {
   const navigate = useNavigate();
@@ -32,7 +37,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
   const tokenPayload = decodeJwt(authToken);
 
   const tenantId = tokenPayload?.tenantId;
-  console.log("tenantId", tenantId)
+  console.log("tenantId", tenantId);
   const ownerId = tokenPayload?.userId;
   //<----v1.0.0-----
   const verifyWalletPayment = useVerifyWalletPayment();
@@ -111,7 +116,8 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         name: "UpInterview",
         // v1.0.2 <--------------------------------------------------------------------------------
         // image: logo,
-        image: "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp",
+        image:
+          "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp",
         // v1.0.2 --------------------------------------------------------------------------------->
         description: "Wallet Top-up",
         order_id: orderId,
@@ -206,145 +212,104 @@ export function WalletTopupPopup({ onClose, onTopup }) {
     navigate("/account-settings/wallet");
   };
 
-  const modalClass = classNames(
-    // v1.0.1 <---------------------------------------------------
-    "fixed bg-white shadow-2xl outline-none",
-    // v1.0.1 --------------------------------------------------->
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
 
   return (
-    <Modal
-      isOpen={true}
-      onRequestClose={() => navigate(-1)}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    >
-      <div
-        className={classNames("flex flex-col h-full", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
-        })}
-      >
-        <div className="px-4 pt-4 sm:p-6 flex justify-between items-center bg-white z-50">
-          <h2 className="text-2xl font-semibold text-custom-blue">
-            Wallet Top-up
-          </h2>
-          <div className="flex items-center space-x-2">
+    // v1.0.3 <-----------------------------------------------------
+    <SidebarPopup title="Wallet Top-up" onClose={onClose}>
+      <div className="p-4 sm:p-0 flex-grow overflow-y-auto space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Amount
+            </label>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {predefinedAmounts.map((presetAmount) => (
+                <button
+                  key={presetAmount}
+                  type="button"
+                  onClick={() => setAmount(presetAmount.toString())}
+                  className={`p-4 text-center border rounded-lg hover:border-custom-blue ${
+                    amount === presetAmount.toString()
+                      ? "border-custom-blue bg-blue-50"
+                      : "border-gray-200"
+                  }`}
+                >
+                  ${presetAmount.toLocaleString()}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Custom Amount
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  $
+                </span>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full pl-8 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
+                  placeholder="Enter amount"
+                  min="1"
+                  step="0.01"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Payment Method
+            </label>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <div className="flex items-center">
+                <div className="h-4 w-4 text-custom-blue bg-custom-blue rounded-full"></div>
+                <span className="ml-3">Credit Card</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                Top up your wallet securely using your credit card
+              </p>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                {error}
+              </div>
+            )}
+            <div className="mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Amount</span>
+                <span className="font-medium">
+                  ${parseFloat(amount || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Processing Fee</span>
+                <span className="font-medium">$0.00</span>
+              </div>
+              <div className="flex justify-between text-base font-medium mt-2 pt-2 border-t">
+                <span>Total</span>
+                <span>${parseFloat(amount || 0).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end items-center">
             <button
-              onClick={() => setIsFullScreen(!isFullScreen)}
-              className="p-2 text-gray-600 hover:text-gray-800"
+              type="submit"
+              disabled={!amount || isProcessing}
+              className="w-32 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isFullScreen ? (
-                <ArrowsPointingInIcon className="h-5 w-5" />
-              ) : (
-                <ArrowsPointingOutIcon className="h-5 w-5" />
-              )}
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-600 hover:text-gray-800"
-            >
-              <XMarkIcon className="h-5 w-5" />
+              {isProcessing ? "Processing..." : "Top Up Now"}
             </button>
           </div>
-        </div>
-        <div className="p-4 sm:p-6 flex-grow overflow-y-auto space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Amount
-              </label>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                {predefinedAmounts.map((presetAmount) => (
-                  <button
-                    key={presetAmount}
-                    type="button"
-                    onClick={() => setAmount(presetAmount.toString())}
-                    className={`p-4 text-center border rounded-lg hover:border-custom-blue ${
-                      amount === presetAmount.toString()
-                        ? "border-custom-blue bg-blue-50"
-                        : "border-gray-200"
-                    }`}
-                  >
-                    ${presetAmount.toLocaleString()}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Custom Amount
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full pl-8 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
-                    placeholder="Enter amount"
-                    min="1"
-                    step="0.01"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Payment Method
-              </label>
-              <div className="p-4 border rounded-lg bg-gray-50">
-                <div className="flex items-center">
-                  <div className="h-4 w-4 text-custom-blue bg-custom-blue rounded-full"></div>
-                  <span className="ml-3">Credit Card</span>
-                </div>
-                <p className="mt-2 text-sm text-gray-500">
-                  Top up your wallet securely using your credit card
-                </p>
-              </div>
-            </div>
-
-            <div className="border-t pt-4">
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
-                  {error}
-                </div>
-              )}
-              <div className="mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Amount</span>
-                  <span className="font-medium">
-                    ${parseFloat(amount || 0).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Processing Fee</span>
-                  <span className="font-medium">$0.00</span>
-                </div>
-                <div className="flex justify-between text-base font-medium mt-2 pt-2 border-t">
-                  <span>Total</span>
-                  <span>${parseFloat(amount || 0).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end items-center">
-              <button
-                type="submit"
-                disabled={!amount || isProcessing}
-                className="w-32 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? "Processing..." : "Top Up Now"}
-              </button>
-            </div>
-          </form>
-        </div>
+        </form>
       </div>
-    </Modal>
+    </SidebarPopup>
+    // v1.0.3 ----------------------------------------------------->
   );
 }

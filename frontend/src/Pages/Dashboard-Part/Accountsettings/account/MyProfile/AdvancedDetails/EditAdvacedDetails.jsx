@@ -1,5 +1,6 @@
 //v1.0.0 removed coverLetterdescription feild by Ranjith
 // v1.0.1 - Ashok - Removed border left and set outline as none
+// v1.0.2 - Ashok - Improved responsiveness and Added common code to popup
 
 import React, { useEffect, useRef, useState } from "react";
 import { Expand, Minimize, Search, X, ChevronDown } from "lucide-react";
@@ -28,7 +29,7 @@ import { validateFile } from "../../../../../../utils/FileValidation/FileValidat
 import { uploadFile } from "../../../../../../apiHooks/imageApis";
 import Loading from "../../../../../../Components/Loading";
 import { notify } from "../../../../../../services/toastService";
-
+import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 // Skills.svg
 
 Modal.setAppElement("#root");
@@ -275,7 +276,7 @@ const EditAdvacedDetails = ({
         // scrollToFirstError(backendErrors, fieldRefs);
       } else {
         console.error("Error saving changes:", error);
-        setErrors(prev => ({ ...prev, form: "Error saving changes" }));
+        setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
       }
       // console.error("Error updating advanced details:", error);
     } finally {
@@ -284,7 +285,7 @@ const EditAdvacedDetails = ({
   };
 
   // console.log('skills from context:', skills);
-  // v1.0.1 <----------------------------------------------------------------- 
+  // v1.0.1 <-----------------------------------------------------------------
   const modalClass = classNames(
     // "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
     "fixed bg-white shadow-2xl overflow-y-auto outline-none",
@@ -325,25 +326,25 @@ const EditAdvacedDetails = ({
   // Filter dropdown options
   const filteredIndustries = Array.isArray(industries)
     ? industries.filter((industry) =>
-      industry?.IndustryName?.toLowerCase()?.includes(
-        searchTermIndustry.toLowerCase() || ""
+        industry?.IndustryName?.toLowerCase()?.includes(
+          searchTermIndustry.toLowerCase() || ""
+        )
       )
-    )
     : [];
   const filteredLocations = Array.isArray(locations)
     ? locations.filter((location) =>
-      location?.LocationName?.toLowerCase()?.includes(
-        searchTermLocation.toLowerCase() || ""
+        location?.LocationName?.toLowerCase()?.includes(
+          searchTermLocation.toLowerCase() || ""
+        )
       )
-    )
     : [];
 
   const filteredCurrentRoles = Array.isArray(currentRoles)
     ? currentRoles.filter((role) =>
-      role?.RoleName?.toLowerCase()?.includes(
-        searchTermCurrentRole.toLowerCase() || ""
+        role?.RoleName?.toLowerCase()?.includes(
+          searchTermCurrentRole.toLowerCase() || ""
+        )
       )
-    )
     : [];
 
   // Handle input changes for text fields
@@ -354,266 +355,223 @@ const EditAdvacedDetails = ({
   // };
 
   return (
-    <Modal
-      isOpen={true}
-      onRequestClose={handleCloseModal}
-      // onRequestClose={() => navigate('/account-settings/my-profile/advanced')}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    >
-      <div
-        className={classNames("h-full", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
-        })}
-      >
-        {loading && (
-          // <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-          //   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
-          // </div>
-          <Loading message="Loading..." />
-        )}
-        <div className="p-6  ">
-          <div className="flex justify-between items-center mb-6 ">
-            <h2 className="text-2xl font-bold text-custom-blue">
-              Edit Advanced Details
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <Expand className="w-5 h-5 text-gray-500" />
-                )}
-              </button>
-              <button
-                onClick={handleCloseModal}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-          </div>
+    // v1.0.1 <----------------------------------------------------------------
+    <SidebarPopup title="Edit Advanced Details" onClose={handleCloseModal}>
+      {loading && <Loading message="Loading..." />}
+      <div className="sm:p-0 p-6">
+        <form className="space-y-6">
+          <div className=" grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Current Role <span className="text-red-500">*</span>
+              </label>
 
-          <form className="space-y-6">
-            <div className=" grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Role <span className="text-red-500">*</span>
-                </label>
-
-                <div className="relative">
-                  <input
-                    name="currentRole"
-                    type="text"
-                    id="CurrentRole"
-                    value={formData.currentRole}
+              <div className="relative">
+                <input
+                  name="currentRole"
+                  type="text"
+                  id="CurrentRole"
+                  value={formData.currentRole}
+                  onClick={toggleCurrentRole}
+                  placeholder="Senior Software Engineer"
+                  autoComplete="off"
+                  className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
+                  readOnly
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                  <ChevronDown
+                    className="text-lg"
                     onClick={toggleCurrentRole}
-                    placeholder="Senior Software Engineer"
-                    autoComplete="off"
-                    className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
-                    readOnly
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                    <ChevronDown
-                      className="text-lg"
-                      onClick={toggleCurrentRole}
-                    />
-                  </div>
-                  {showDropdownCurrentRole && (
-                    <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-                      <div className="border-b">
-                        <div className="flex items-center border rounded px-2 py-1 m-2">
-                          <Search className="absolute ml-1 text-gray-500" />
-                          <input
-                            type="text"
-                            placeholder="Search Current Role"
-                            value={searchTermCurrentRole}
-                            onChange={(e) =>
-                              setSearchTermCurrentRole(e.target.value)
-                            }
-                            className="pl-8 focus:border-black focus:outline-none w-full"
-                          />
-                        </div>
-                      </div>
-                      {filteredCurrentRoles.length > 0 ? (
-                        filteredCurrentRoles.map((role) => (
-                          <div
-                            key={role._id}
-                            onClick={() => handleRoleSelect(role)}
-                            className="cursor-pointer hover:bg-gray-200 p-2"
-                          >
-                            {role?.RoleName}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-2 text-gray-500">No roles found</div>
-                      )}
-                    </div>
-                  )}
                 </div>
-                {errors.currentRole && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.currentRole}
-                  </p>
+                {showDropdownCurrentRole && (
+                  <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
+                    <div className="border-b">
+                      <div className="flex items-center border rounded px-2 py-1 m-2">
+                        <Search className="absolute ml-1 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Search Current Role"
+                          value={searchTermCurrentRole}
+                          onChange={(e) =>
+                            setSearchTermCurrentRole(e.target.value)
+                          }
+                          className="pl-8 focus:border-black focus:outline-none w-full"
+                        />
+                      </div>
+                    </div>
+                    {filteredCurrentRoles.length > 0 ? (
+                      filteredCurrentRoles.map((role) => (
+                        <div
+                          key={role._id}
+                          onClick={() => handleRoleSelect(role)}
+                          className="cursor-pointer hover:bg-gray-200 p-2"
+                        >
+                          {role?.RoleName}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-2 text-gray-500">No roles found</div>
+                    )}
+                  </div>
                 )}
               </div>
+              {errors.currentRole && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.currentRole}
+                </p>
+              )}
+            </div>
 
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Industry <span className="text-red-500">*</span>
-                </label>
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Industry <span className="text-red-500">*</span>
+              </label>
 
-                <div className="relative">
-                  <input
-                    name="industry"
-                    type="text"
-                    id="Industry"
-                    value={formData.industry}
-                    placeholder="Information Technology"
-                    autoComplete="off"
+              <div className="relative">
+                <input
+                  name="industry"
+                  type="text"
+                  id="Industry"
+                  value={formData.industry}
+                  placeholder="Information Technology"
+                  autoComplete="off"
+                  onClick={() => setShowDropdownIndustry(!showDropdownIndustry)}
+                  className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
+                  readOnly
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                  <ChevronDown
+                    className="text-lg"
                     onClick={() =>
                       setShowDropdownIndustry(!showDropdownIndustry)
                     }
-                    className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
-                    readOnly
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                    <ChevronDown
-                      className="text-lg"
-                      onClick={() =>
-                        setShowDropdownIndustry(!showDropdownIndustry)
-                      }
-                    />
-                  </div>
-                  {showDropdownIndustry && (
-                    <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                      <div className="border-b">
-                        <div className="flex items-center border rounded px-2 py-1 m-2">
-                          <Search className="absolute ml-1 text-gray-500" />
-                          <input
-                            type="text"
-                            placeholder="Search Industry"
-                            value={searchTermIndustry}
-                            onChange={(e) =>
-                              setSearchTermIndustry(e.target.value)
-                            }
-                            className="pl-8 focus:border-black focus:outline-none w-full"
-                          />
-                        </div>
-                      </div>
-                      {filteredIndustries.length > 0 ? (
-                        filteredIndustries.map((industry) => (
-                          <div
-                            key={industry._id}
-                            onClick={() => handleIndustrySelect(industry)}
-                            className="cursor-pointer hover:bg-gray-200 p-2"
-                          >
-                            {industry.IndustryName}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-2 text-gray-500">
-                          No industries found
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-                {errors.industry && (
-                  <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
+                {showDropdownIndustry && (
+                  <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                    <div className="border-b">
+                      <div className="flex items-center border rounded px-2 py-1 m-2">
+                        <Search className="absolute ml-1 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Search Industry"
+                          value={searchTermIndustry}
+                          onChange={(e) =>
+                            setSearchTermIndustry(e.target.value)
+                          }
+                          className="pl-8 focus:border-black focus:outline-none w-full"
+                        />
+                      </div>
+                    </div>
+                    {filteredIndustries.length > 0 ? (
+                      filteredIndustries.map((industry) => (
+                        <div
+                          key={industry._id}
+                          onClick={() => handleIndustrySelect(industry)}
+                          className="cursor-pointer hover:bg-gray-200 p-2"
+                        >
+                          {industry.IndustryName}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-2 text-gray-500">
+                        No industries found
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
+              {errors.industry && (
+                <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
+              )}
+            </div>
 
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Years of Experience <span className="text-red-500">*</span>
-                </label>
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Years of Experience <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="experience"
+                placeholder="Years of Experience"
+                value={formData.experience}
+                onChange={handleInputChange}
+                className="w-full  p-1.5 border border-gray-300 rounded-lg focus:ring-2 "
+              />
+              {errors.yearsOfExperience && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.yearsOfExperience}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Location <span className="text-red-500">*</span>
+              </label>
+
+              <div className="relative">
                 <input
+                  name="location"
                   type="text"
-                  name="experience"
-                  placeholder="Years of Experience"
-                  value={formData.experience}
-                  onChange={handleInputChange}
-                  className="w-full  p-1.5 border border-gray-300 rounded-lg focus:ring-2 "
+                  id="Location"
+                  value={formData.location}
+                  placeholder="Delhi, India"
+                  autoComplete="off"
+                  onClick={() => setShowDropdownLocation(!showDropdownLocation)}
+                  className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
+                  readOnly
                 />
-                {errors.yearsOfExperience && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.yearsOfExperience}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Location <span className="text-red-500">*</span>
-                </label>
-
-                <div className="relative">
-                  <input
-                    name="location"
-                    type="text"
-                    id="Location"
-                    value={formData.location}
-                    placeholder="Delhi, India"
-                    autoComplete="off"
+                <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                  <ChevronDown
+                    className="text-lg"
                     onClick={() =>
                       setShowDropdownLocation(!showDropdownLocation)
                     }
-                    className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
-                    readOnly
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                    <ChevronDown
-                      className="text-lg"
-                      onClick={() =>
-                        setShowDropdownLocation(!showDropdownLocation)
-                      }
-                    />
-                  </div>
-                  {showDropdownLocation && (
-                    <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
-                      <div className="border-b">
-                        <div className="flex items-center border rounded px-2 py-1 m-2">
-                          <Search className="absolute ml-1 text-gray-500" />
-                          <input
-                            type="text"
-                            placeholder="Search Location"
-                            value={searchTermLocation}
-                            onChange={(e) =>
-                              setSearchTermLocation(e.target.value)
-                            }
-                            className="pl-8 focus:border-black focus:outline-none w-full"
-                          />
-                        </div>
-                      </div>
-                      {filteredLocations.length > 0 ? (
-                        filteredLocations.map((location) => (
-                          <div
-                            key={location?._id}
-                            onClick={() => handleLocationSelect(location)}
-                            className="cursor-pointer hover:bg-gray-200 p-2"
-                          >
-                            {location?.LocationName || ""}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-2 text-gray-500">
-                          No locations found
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-                {errors.location && (
-                  <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+                {showDropdownLocation && (
+                  <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
+                    <div className="border-b">
+                      <div className="flex items-center border rounded px-2 py-1 m-2">
+                        <Search className="absolute ml-1 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Search Location"
+                          value={searchTermLocation}
+                          onChange={(e) =>
+                            setSearchTermLocation(e.target.value)
+                          }
+                          className="pl-8 focus:border-black focus:outline-none w-full"
+                        />
+                      </div>
+                    </div>
+                    {filteredLocations.length > 0 ? (
+                      filteredLocations.map((location) => (
+                        <div
+                          key={location?._id}
+                          onClick={() => handleLocationSelect(location)}
+                          className="cursor-pointer hover:bg-gray-200 p-2"
+                        >
+                          {location?.LocationName || ""}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-2 text-gray-500">
+                        No locations found
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
+              {errors.location && (
+                <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+              )}
+            </div>
 
-              {/* Resume Upload */}
-              {/* <div className="flex flex-col">
+            {/* Resume Upload */}
+            {/* <div className="flex flex-col">
                 <label
                   htmlFor="resume"
                   className="block text-sm font-medium text-gray-900 mb-1"
@@ -660,8 +618,8 @@ const EditAdvacedDetails = ({
                 <span className="text-sm text-red-500 mt-1">{resumeError}</span>
               </div> */}
 
-              {/* Cover Letter Upload */}
-              {/* <div className="flex flex-col">
+            {/* Cover Letter Upload */}
+            {/* <div className="flex flex-col">
                 <label
                   htmlFor="coverLetter"
                   className="block text-sm font-medium text-gray-900 mb-1"
@@ -709,9 +667,9 @@ const EditAdvacedDetails = ({
                   {coverLetterError}
                 </span>
               </div> */}
-            </div>
+          </div>
 
-            {/* <div className="mt-6">
+          {/* <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Cover Letter Description{" "}
               </label>
@@ -734,29 +692,29 @@ const EditAdvacedDetails = ({
               </p>
             </div> */}
 
-            <div className="flex justify-end space-x-3 mr-2 ">
-              <button
-                type="button"
-                onClick={
-                  handleCloseModal
-                  // () => navigate('/account-settings/my-profile/advanced')
-                }
-                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                onClick={handleSave}
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg "
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="flex justify-end space-x-3 mr-2 ">
+            <button
+              type="button"
+              onClick={
+                handleCloseModal
+                // () => navigate('/account-settings/my-profile/advanced')
+              }
+              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              onClick={handleSave}
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg "
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
-    </Modal>
+    </SidebarPopup>
+    // v1.0.1 ---------------------------------------------------------------->
   );
 };
 
