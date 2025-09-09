@@ -96,12 +96,12 @@ exports.newQuestion = async (req, res) => {
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Create')
-        //await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Create')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Create permission' });
-        }
+        // const canCreate =
+        // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Create')
+        // //await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Create')
+        // if (!canCreate) {
+        //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Create permission' });
+        // }
         //-----v1.0.1--->
 
     let questionData;
@@ -355,12 +355,12 @@ exports.updateQuestion = async (req, res) => {
     }
 
     // Permission check
-    const canEdit = await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit');
-    if (!canEdit) {
-      return res.status(403).json({
-        message: 'Forbidden: missing QuestionBank.Edit permission'
-      });
-    }
+    // const canEdit = await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit');
+    // if (!canEdit) {
+    //   return res.status(403).json({
+    //     message: 'Forbidden: missing QuestionBank.Edit permission'
+    //   });
+    // }
 
     // Find the question
     let question = await TenantAssessmentQuestions.findById(questionId);
@@ -512,12 +512,12 @@ exports.getQuestionBySuggestedId = async (req, res) => {
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
-        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
-        }
+        // const canCreate =
+        // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
+        // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
+        // if (!canCreate) {
+        //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
+        // }
         //-----v1.0.1--->
 
   try {

@@ -55,21 +55,26 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   console.log('Request Method:', req.method, 'Path:', req.path, 'Origin:', origin);
 
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions');
-    res.setHeader('Access-Control-Expose-Headers', 'x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token');
+  const isAllowed = allowedOrigins.some(o =>
+    typeof o === "string" ? o === origin : o.test(origin)
+  );
+
+  if (isAllowed) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-permissions");
+    res.setHeader("Access-Control-Expose-Headers", "x-user-id, x-tenant-id, x-impersonation-userid, x-permissions, x-new-token");
   }
 
-  if (req.method === 'OPTIONS') {
-    console.log('Responding to OPTIONS request with headers:', res.getHeaders());
+  if (req.method === "OPTIONS") {
+    console.log("Responding to OPTIONS request with headers:", res.getHeaders());
     return res.status(200).end();
   }
 
   next();
 });
+
 
 // Add OPTIONS handlers for main routes
 const handleOptions = (req, res) => {

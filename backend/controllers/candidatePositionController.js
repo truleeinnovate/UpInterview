@@ -7,12 +7,12 @@ const getAllCandidatePositions = async (req, res) => {
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
-       //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
-        }
+    //     const canCreate =
+    //     await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
+    //    //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
+    //     if (!canCreate) {
+    //       return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
+    //     }
         //-----v1.0.1--->
 
         const candidatePositions = await CandidatePosition.find()
@@ -32,12 +32,12 @@ const createCandidatePosition = async (req, res) => {
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
-       //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
-        }
+    //     const canCreate =
+    //     await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
+    //    //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
+    //     if (!canCreate) {
+    //       return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
+    //     }
         //-----v1.0.1--->
 
         const candidatePosition = new CandidatePosition(req.body);

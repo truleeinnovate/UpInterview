@@ -163,10 +163,10 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
     //   hasEffectivePermissions: !!effectivePermissions
     // });
 
-    if (!effectivePermissions) {
-      // console.log('[5] No effective permissions found - returning 403');
-      return res.status(403).json({ error: 'Forbidden: No permissions available' });
-    }
+    // if (!effectivePermissions) {
+    //   // console.log('[5] No effective permissions found - returning 403');
+    //   return res.status(403).json({ error: 'Forbidden: No permissions available' });
+    // }
 
     const modelMapping = getModelMapping(effectivePermissions);
     // console.log('[6] Model mapping for request:', Object.keys(modelMapping));

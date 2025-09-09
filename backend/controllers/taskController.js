@@ -12,11 +12,11 @@ const getTasks = async (req, res) => {
     res.locals.loggedByController = true;
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-      await hasPermission(res.locals?.effectivePermissions?.Tasks, 'View')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing Tasks.View permission' });
-    }
+    // const canCreate =
+    //   await hasPermission(res.locals?.effectivePermissions?.Tasks, 'View')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing Tasks.View permission' });
+    // }
     //-----v1.0.1--->
 
     const tasks = await Task.find().sort({ _id: -1 }).lean();
@@ -231,10 +231,10 @@ const updateTask = async (req, res) => {
   const { tenantId, ownerId, ...updates } = req.body;
 
   // Permission: Tasks.Edit
-  const canEdit = await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Edit');
-  if (!canEdit) {
-    return res.status(403).json({ message: 'Forbidden: missing Tasks.Edit permission' });
-  }
+  // const canEdit = await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Edit');
+  // if (!canEdit) {
+  //   return res.status(403).json({ message: 'Forbidden: missing Tasks.Edit permission' });
+  // }
 
   // Validation - check if updates contain valid fields
   const { errors, isValid } = validateUpdateTask(updates);

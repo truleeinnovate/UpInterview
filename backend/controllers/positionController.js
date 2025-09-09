@@ -257,12 +257,12 @@ const createPosition = async (req, res) => {
   //console.log("effectivePermissions",res.locals?.effectivePermissions)
   //<-----v1.0.1---
   // Permission: Tasks.Create (or super admin override)
-  const canCreate =
-  await hasPermission(res.locals?.effectivePermissions?.Positions, 'Create')
- //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Create')
-  if (!canCreate) {
-    return res.status(403).json({ message: 'Forbidden: missing Positions.Create permission' });
-  }
+//   const canCreate =
+//   await hasPermission(res.locals?.effectivePermissions?.Positions, 'Create')
+//  //await hasPermission(res.locals?.superAdminPermissions?.Positions, 'Create')
+//   if (!canCreate) {
+//     return res.status(403).json({ message: 'Forbidden: missing Positions.Create permission' });
+//   }
   //-----v1.0.1--->
 
   try {
@@ -417,10 +417,10 @@ const updatePosition = async (req, res) => {
     return res.status(400).json({ status: "error", errors });
   }
 
-  const canCreate = await hasPermission(res.locals?.effectivePermissions?.Positions, 'Edit')
-  if (!canCreate) {
-    return res.status(403).json({ message: 'Forbidden: missing Positions.Edit permission' });
-  }
+  // const canCreate = await hasPermission(res.locals?.effectivePermissions?.Positions, 'Edit')
+  // if (!canCreate) {
+  //   return res.status(403).json({ message: 'Forbidden: missing Positions.Edit permission' });
+  // }
 
   try {
     const currentPosition = await Position.findById(positionId).lean();
