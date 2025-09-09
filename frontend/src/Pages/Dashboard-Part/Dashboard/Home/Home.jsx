@@ -149,7 +149,7 @@ const Home = () => {
               <AnalyticsChart data={stats.chartData} setPeriod={setPeriod} period={period} />
             </motion.div> */}
 
-            <FeedbackList />
+            {/* <FeedbackList /> */}
             <NotificationSection />
           </div>
 
