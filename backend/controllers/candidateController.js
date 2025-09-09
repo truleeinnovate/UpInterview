@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // const { Candidate } = require('../models/Candidate/candidate.js');
 const CandidatePosition = require('../models/CandidatePosition.js');
 const { validateCandidateData, candidateUpdateSchema } = require('../validations/candidateValidation.js');
-const { hasPermission } = require("../middleware/permissionMiddleware");
+// const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Candidate } = require('../models/candidate.js');
 
 
@@ -60,12 +60,12 @@ const addCandidatePostCall = async (req, res) => {
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
-   //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
-    }
+  //   const canCreate =
+  //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Create')
+  //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Create')
+  //   if (!canCreate) {
+  //     return res.status(403).json({ message: 'Forbidden: missing Candidates.Create permission' });
+  //   }
     //-----v1.0.1--->
 
     newCandidate = new Candidate({
@@ -181,12 +181,12 @@ const updateCandidatePatchCall = async (req, res) => {
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Edit')
-        //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Edit')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing Candidates.Edit permission' });
-        }
+        // const canCreate =
+        // await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Edit')
+        // //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'Edit')
+        // if (!canCreate) {
+        //   return res.status(403).json({ message: 'Forbidden: missing Candidates.Edit permission' });
+        // }
         //-----v1.0.1--->
 
     // feeds related data
@@ -334,12 +334,12 @@ const getCandidates = async (req, res) => {
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
-   //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
-    }
+  //   const canCreate =
+  //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
+  //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
+  //   if (!canCreate) {
+  //     return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
+  //   }
     //-----v1.0.1--->
 
     const candidates = await Candidate.find(query);
@@ -369,12 +369,12 @@ const getCandidateById = async (req, res) => {
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
-   //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
-    }
+  //   const canCreate =
+  //   await hasPermission(res.locals?.effectivePermissions?.Candidates, 'View')
+  //  //await hasPermission(res.locals?.superAdminPermissions?.Candidates, 'View')
+  //   if (!canCreate) {
+  //     return res.status(403).json({ message: 'Forbidden: missing Candidates.View permission' });
+  //   }
     //-----v1.0.1--->
 
     const candidate = await Candidate.findById(id);

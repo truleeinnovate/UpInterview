@@ -17,12 +17,12 @@ const getList = async (req, res) => {
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
-        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
-        }
+        // const canCreate =
+        // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
+        // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
+        // if (!canCreate) {
+        //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
+        // }
         //-----v1.0.1--->
 
   try {
@@ -60,12 +60,12 @@ const createList = async (req, res) => {
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Create')
-        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Create')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Create permission' });
-        }
+        // const canCreate =
+        // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Create')
+        // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Create')
+        // if (!canCreate) {
+        //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Create permission' });
+        // }
         //-----v1.0.1--->
     const newList = await QuestionbankFavList.create({
       label,
@@ -149,12 +149,12 @@ const updateList = async (req, res) => {
         //console.log("effectivePermissions",res.locals?.effectivePermissions)
         //<-----v1.0.1---
         // Permission: Tasks.Create (or super admin override)
-        const canCreate =
-        await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
-        //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
-        if (!canCreate) {
-          return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
-        }
+        // const canCreate =
+        // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
+        // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
+        // if (!canCreate) {
+        //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
+        // }
         //-----v1.0.1--->
     // feeds related data
     const currentlist = await QuestionbankFavList.findById(listId).lean();

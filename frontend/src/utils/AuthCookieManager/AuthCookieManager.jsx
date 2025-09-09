@@ -734,9 +734,9 @@ class AuthCookieManager {
         localStorage.removeItem('permissions_effective');
         localStorage.removeItem('app_permissions_timestamp');
         if (effectivePermissions_RoleName === 'Individual' || effectivePermissions_RoleName === 'Individual_Freelancer') {
-          window.location.href = process.env.NODE_ENV === 'production' ? `${config.REACT_APP_API_URL_FRONTEND}/individual-login` : "http://localhost:3000/individual-login";
+          window.location.href = `${config.REACT_APP_API_URL_FRONTEND}/individual-login`;
         } else {
-          window.location.href = process.env.NODE_ENV === 'production' ? `${config.REACT_APP_API_URL_FRONTEND}/organization-login` : "http://localhost:3000/organization-login";
+          window.location.href = `${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
         }
       } else if (authToken && impersonationToken) {
         AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
@@ -745,7 +745,7 @@ class AuthCookieManager {
         localStorage.removeItem(USER_TYPE_KEY);
         navigate("/admin-dashboard");
       } else {
-        window.location.href = process.env.NODE_ENV === 'production' ? `${config.REACT_APP_API_URL_FRONTEND}/organization-login` : "http://localhost:3000/organization-login";
+        window.location.href = `${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
       }
 
       setTimeout(async () => {
@@ -776,7 +776,7 @@ class AuthCookieManager {
       if (setLoading) {
         setLoading(false);
       }
-      window.location.href = process.env.NODE_ENV === 'production' ? `${config.REACT_APP_API_URL_FRONTEND}/organization-login` : "http://localhost:3000/organization-login";
+      window.location.href = `${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
     }
   }
   // ---------------------- v1.0.2 >
@@ -815,15 +815,11 @@ class AuthCookieManager {
         localStorage.removeItem(USER_TYPE_KEY);
       }
 
-      const loginUrl = process.env.NODE_ENV === 'production'
-        ? `${config.REACT_APP_API_URL_FRONTEND}/organization-login`
-        : "http://localhost:3000/organization-login";
+      const loginUrl = `${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
       window.location.href = loginUrl;
     } catch (error) {
       console.error('❌ Error handling token expiration:', error);
-      window.location.href = process.env.NODE_ENV === 'production'
-        ? `${config.REACT_APP_API_URL_FRONTEND}/organization-login`
-        : "http://localhost:3000/organization-login";
+      window.location.href = `${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
     }
   }
 
