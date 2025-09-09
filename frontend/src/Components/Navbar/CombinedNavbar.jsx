@@ -384,6 +384,11 @@ const CombinedNavbar = () => {
           label: "Question Bank",
           // permissionKey: "MasterData.ViewTab",
         },
+        {
+          path: "/sub-plans",
+          label: "Subscription Plans",
+          // permissionKey: "MasterData.ViewTab",
+        },
         // v1.0.6 --------------------------------------------------------->
         // v1.0.7 ----------------------------------------------------------------------->
         // v1.0.9 ----------------------------------------------------------------------->

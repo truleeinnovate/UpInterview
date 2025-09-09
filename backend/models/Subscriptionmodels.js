@@ -21,6 +21,10 @@ const SubscriptionPlanSchema = new mongoose.Schema({
         }
     ],
     maxUsers: { type: Number, default: 1 },
+    razorpayPlanIds:{
+        monthly:{type:String},
+        annual:{type:String}
+    },
     trialPeriod: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
     isCustomizable: { type: Boolean, default: false },

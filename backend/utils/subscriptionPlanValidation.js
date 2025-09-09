@@ -2,6 +2,7 @@ const Joi = require('joi');
 
 const validateSubscriptionPlan = (data) => {
     const schema = Joi.object({
+        planId: Joi.string().required(),
         name: Joi.string().required(),
         description: Joi.string().optional(),
         pricing: Joi.array().items(
@@ -20,6 +21,10 @@ const validateSubscriptionPlan = (data) => {
                 description: Joi.string().optional()
             })
         ),
+        razorpayPlanIds: Joi.object({
+            monthly: Joi.string().allow(''),
+            annual: Joi.string().allow('')
+        }).optional(),
         maxUsers: Joi.number().min(1).optional(),
         subscriptionType: Joi.string().required(),
         trialPeriod: Joi.number().min(0).optional(),
