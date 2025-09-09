@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - Removed form border left and set outline none
+// v1.0.1 - Ashok - Improved responsiveness and added common code to popup
+
 import React, { useEffect, useState, useRef } from "react";
 import { Expand, Minimize, X, ChevronDown, Camera, Trash } from "lucide-react";
 
@@ -35,6 +37,9 @@ import { uploadFile } from "../../../../../../apiHooks/imageApis.js";
 import { useRolesQuery } from "../../../../../../apiHooks/useRoles.js";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { notify } from "../../../../../../services/toastService.js";
+// v1.0.1 <----------------------------------------------------------------------------------------
+import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+// v1.0.1 ---------------------------------------------------------------------------------------->
 Modal.setAppElement("#root");
 
 const BasicDetailsEditPage = ({
@@ -326,7 +331,9 @@ const BasicDetailsEditPage = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    //setLoading(true);
+    // v1.0.1 <--------------------------
+    setLoading(true);
+    // v1.0.1 -------------------------->
     //   if (formData.profileId !== originalProfileId) {
     //   const profileIdError = await validateProfileId(formData.profileId, checkProfileIdExists);
     //  console.log("profileIdError",profileIdError);
@@ -481,7 +488,7 @@ const BasicDetailsEditPage = ({
         scrollToFirstError(backendErrors, fieldRefs);
       } else {
         console.error("Error saving changes:", err);
-        setErrors(prev => ({ ...prev, form: "Error saving changes" }));
+        setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
       }
       // console.error("Error saving changes:", err);
       // setErrors((prev) => ({
@@ -492,8 +499,6 @@ const BasicDetailsEditPage = ({
       setLoading(false);
     }
   };
-
-
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -605,405 +610,367 @@ const BasicDetailsEditPage = ({
   //   }
   // };
 
-  const modalClass = classNames(
-    // "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
-    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
-
+  // v1.0.1 <------------------------------------------------------------------------------
   return (
-    <Modal
-      isOpen={true}
-      onRequestClose={handleCloseModal}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    >
-      <div
-        className={classNames("h-full", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
-        })}
-      >
-        {loading && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
-          </div>
-        )}
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-custom-blue">
-              Edit Basic Details
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+    <SidebarPopup title=" Edit Basic Details" onClose={handleCloseModal}>
+      {loading && (
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
+        </div>
+      )}
+      <div className="sm:p-0 p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {errors.form && (
+            <p className="text-red-500 text-sm mb-4">{errors.form}</p>
+          )}
+
+          <div className="flex flex-col justify-center items-center mb-4">
+            <div className="relative">
+              <div
+                className="relative group sm:w-[120px] sm:h-[120px] w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
+                onClick={() => !isLoading && fileInputRef.current?.click()}
               >
-                {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                  disabled={isLoading}
+                />
+
+                {filePreview ? (
+                  <img
+                    src={filePreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover rounded-full"
+                  />
                 ) : (
-                  <Expand className="w-5 h-5 text-gray-500" />
+                  <div className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 pointer-events-none">
+                    <Camera className="sm:text-2xl text-4xl text-gray-400" />
+                    <span className="text-sm text-gray-500 mt-2">
+                      Upload Photo
+                    </span>
+                  </div>
                 )}
-              </button>
-              <button
-                onClick={handleCloseModal}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
+                  {/* Icon placeholder */}
+                </div>
+              </div>
+
+              {/* Delete button outside the circle */}
+              {filePreview && (
+                <button
+                  title="Remove Image"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering file input
+                    handleDeleteImage();
+                  }}
+                  className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                  disabled={isLoading}
+                >
+                  {/* Icon placeholder */}
+                  <Trash className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <div className="mt-2 text-center">
+              <p className="text-xs text-gray-500 text-center mb-1">
+                File must be less than 100KB (200 x 200 recommended)
+              </p>
+              <p className="text-red-500 text-sm mb-4 font-medium text-center">
+                {fileError}
+              </p>
             </div>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {errors.form && (
-              <p className="text-red-500 text-sm mb-4">{errors.form}</p>
-            )}
-
-            <div className="flex flex-col justify-center items-center mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email <span className="text-red-500">*</span>
+              </label>
               <div className="relative">
-                <div
-                  className="relative group w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
-                  onClick={() => !isLoading && fileInputRef.current?.click()}
-                >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                    disabled={isLoading}
-                  />
-
-                  {filePreview ? (
-                    <img
-                      src={filePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 pointer-events-none">
-                      <Camera className="text-4xl text-gray-400" />
-                      <span className="text-sm text-gray-500 mt-2">
-                        Upload Photo
-                      </span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                    {/* Icon placeholder */}
-                  </div>
-                </div>
-
-                {/* Delete button outside the circle */}
-                {filePreview && (
-                  <button
-                    title="Remove Image"
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering file input
-                      handleDeleteImage();
-                    }}
-                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                    disabled={isLoading}
-                  >
-                    {/* Icon placeholder */}
-                    <Trash className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-              <div className="mt-2 text-center">
-                <p className="text-xs text-gray-500 text-center mb-1">
-                  File must be less than 100KB (200 x 200 recommended)
-                </p>
-                <p className="text-red-500 text-sm mb-4 font-medium text-center">
-                  {fileError}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    ref={fieldRefs.email}
-                    value={formData.email || ""}
-                    onChange={handleInputChange}
-                    onBlur={() =>
-                      formData.email !== originalEmail &&
-                      handleEmailValidation(formData.email)
-                    }
-                    disabled={from !== "users"}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.email ? "border-red-500" : "border-gray-300"
-                      }`}
-                  />
-                  {isCheckingEmail && (
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                    </div>
-                  )}
-                </div>
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name <span className="text-red-500">*</span>
-                </label>
                 <input
-                  type="text"
-                  name="firstName"
-                  placeholder="First Name"
-                  ref={fieldRefs.firstName}
-                  value={formData.firstName || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.firstName ? "border-red-500" : "border-gray-300"
-                    }`}
-                />
-                {errors.firstName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.firstName}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder="Last Name"
-                  ref={fieldRefs.lastName}
-                  value={formData.lastName || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.lastName ? "border-red-500" : "border-gray-300"
-                    }`}
-                />
-                {errors.lastName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date Of Birth
-                </label>
-                <DatePicker
-                  selected={startDate}
-                  onChange={handleDateChange}
-                  dateFormat="dd-MM-yyyy"
-                  placeholderText="Select Date of Birth"
-                  maxDate={new Date()}
-                  showYearDropdown
-                  showMonthDropdown
-                  dropdownMode="select"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
-                  wrapperClassName="w-full"
-                  customInput={<input readOnly />}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Profile ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="profileId"
-                  placeholder="Profile ID"
-                  ref={fieldRefs.profileId}
-                  // disabled={from === 'users'}
-                  value={formData.profileId || ""}
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  ref={fieldRefs.email}
+                  value={formData.email || ""}
                   onChange={handleInputChange}
                   onBlur={() =>
-                    formData.profileId !== originalProfileId &&
-                    handleProfileIdValidation(formData.profileId)
+                    formData.email !== originalEmail &&
+                    handleEmailValidation(formData.email)
                   }
-                  // onBlur={() => handleProfileIdValidation(formData.profileId)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.profileId ? "border-red-500" : "border-gray-300"
-                    }`}
+                  disabled={from !== "users"}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                    errors.email ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                {errors.profileId && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.profileId}
-                  </p>
+                {isCheckingEmail && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                  </div>
                 )}
               </div>
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gender
-                </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="firstName"
+                placeholder="First Name"
+                ref={fieldRefs.firstName}
+                value={formData.firstName || ""}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                  errors.firstName ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors.firstName && (
+                <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Last Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Last Name"
+                ref={fieldRefs.lastName}
+                value={formData.lastName || ""}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                  errors.lastName ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors.lastName && (
+                <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date Of Birth
+              </label>
+              <DatePicker
+                selected={startDate}
+                onChange={handleDateChange}
+                dateFormat="dd-MM-yyyy"
+                placeholderText="Select Date of Birth"
+                maxDate={new Date()}
+                showYearDropdown
+                showMonthDropdown
+                dropdownMode="select"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
+                wrapperClassName="w-full"
+                customInput={<input readOnly />}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Profile ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="profileId"
+                placeholder="Profile ID"
+                ref={fieldRefs.profileId}
+                // disabled={from === 'users'}
+                value={formData.profileId || ""}
+                onChange={handleInputChange}
+                onBlur={() =>
+                  formData.profileId !== originalProfileId &&
+                  handleProfileIdValidation(formData.profileId)
+                }
+                // onBlur={() => handleProfileIdValidation(formData.profileId)}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                  errors.profileId ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors.profileId && (
+                <p className="text-red-500 text-sm mt-1">{errors.profileId}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gender
+              </label>
+              <select
+                name="gender"
+                value={formData.gender || ""}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-2">
                 <select
-                  name="gender"
-                  value={formData.gender || ""}
+                  name="countryCode"
+                  placeholder="Country Code"
+                  value={formData.countryCode || "+91"}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
+                  className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
                 >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
+                  <option value="+91">+91</option>
+                  <option value="+1">+1</option>
+                  <option value="+44">+44</option>
+                  <option value="+61">+61</option>
+                  <option value="+971">+971</option>
+                  <option value="+60">+60</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <select
-                    name="countryCode"
-                    placeholder="Country Code"
-                    value={formData.countryCode || "+91"}
-                    onChange={handleInputChange}
-                    className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
-                  >
-                    <option value="+91">+91</option>
-                    <option value="+1">+1</option>
-                    <option value="+44">+44</option>
-                    <option value="+61">+61</option>
-                    <option value="+971">+971</option>
-                    <option value="+60">+60</option>
-                  </select>
-                  <input
-                    type="text"
-                    name="phone"
-                    placeholder="Phone"
-                    ref={fieldRefs.phone}
-                    value={formData.phone || ""}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.phone ? "border-red-500" : "border-gray-300"
-                      }`}
-                  />
-                </div>
-                {errors.phone && (
-                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  LinkedIn <span className="text-red-500">*</span>
-                </label>
                 <input
                   type="text"
-                  name="linkedinUrl"
-                  placeholder="LinkedIn URL"
-                  ref={fieldRefs.linkedinUrl}
-                  value={formData.linkedinUrl || ""}
+                  name="phone"
+                  placeholder="Phone"
+                  ref={fieldRefs.phone}
+                  value={formData.phone || ""}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${errors.linkedinUrl ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                    errors.phone ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                {errors.linkedinUrl && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.linkedinUrl}
-                  </p>
-                )}
               </div>
+              {errors.phone && (
+                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+              )}
+            </div>
 
-              <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Role <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    readOnly
-                    value={selectedCurrentRole}
-                    ref={fieldRefs.roleId}
-                    onClick={toggleDropdownRole}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${errors.roleId ? "border-red-500" : "border-gray-300"
-                      } focus:border-custom-blue cursor-pointer ${isLoading ? "opacity-50" : ""
-                      }`}
-                    disabled={from !== "users"}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                LinkedIn <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="linkedinUrl"
+                placeholder="LinkedIn URL"
+                ref={fieldRefs.linkedinUrl}
+                value={formData.linkedinUrl || ""}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
+                  errors.linkedinUrl ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors.linkedinUrl && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.linkedinUrl}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Role <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  readOnly
+                  value={selectedCurrentRole}
+                  ref={fieldRefs.roleId}
+                  onClick={toggleDropdownRole}
+                  className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
+                    errors.roleId ? "border-red-500" : "border-gray-300"
+                  } focus:border-custom-blue cursor-pointer ${
+                    isLoading ? "opacity-50" : ""
+                  }`}
+                  disabled={from !== "users"}
                   // disabled={isLoading}
-                  />
-                  <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
-                  {showDropdownRole && (
-                    <div className="absolute z-50 text-sm mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-                      <div className="p-2 border-b">
-                        <input
-                          type="text"
-                          placeholder="Search roles..."
-                          value={searchTermRole}
-                          onChange={(e) => setSearchTermRole(e.target.value)}
-                          className="w-full px-2 py-1 border rounded"
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <div className="max-h-60 overflow-y-auto">
-                        {filteredCurrentRoles.map((role) => (
-                          <div
-                            key={role._id}
-                            onClick={() => handleRoleSelect(role)}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                          >
-                            {role.label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {errors.roleId && (
-                  <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Portfolio URL
-                </label>
-                <input
-                  type="text"
-                  name="portfolioUrl"
-                  placeholder="Portfolio URL"
-                  ref={fieldRefs.portfolioUrl}
-                  value={formData.portfolioUrl || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
                 />
-                {errors.portfolioUrl && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.portfolioUrl}
-                  </p>
+                <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
+                {showDropdownRole && (
+                  <div className="absolute z-50 text-sm mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                    <div className="p-2 border-b">
+                      <input
+                        type="text"
+                        placeholder="Search roles..."
+                        value={searchTermRole}
+                        onChange={(e) => setSearchTermRole(e.target.value)}
+                        className="w-full px-2 py-1 border rounded"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {filteredCurrentRoles.map((role) => (
+                        <div
+                          key={role._id}
+                          onClick={() => handleRoleSelect(role)}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        >
+                          {role.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
+              {errors.roleId && (
+                <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>
+              )}
             </div>
 
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="px-4 py-2 text-custom-blue border rounded-lg border-custom-blue"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg"
-              >
-                Save Changes
-              </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Portfolio URL
+              </label>
+              <input
+                type="text"
+                name="portfolioUrl"
+                placeholder="Portfolio URL"
+                ref={fieldRefs.portfolioUrl}
+                value={formData.portfolioUrl || ""}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
+              />
+              {errors.portfolioUrl && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.portfolioUrl}
+                </p>
+              )}
             </div>
-          </form>
-        </div>
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-4 py-2 text-custom-blue border rounded-lg border-custom-blue"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
-    </Modal>
+    </SidebarPopup>
   );
+  // v1.0.1 ------------------------------------------------------------------------------->
 };
 
 export default BasicDetailsEditPage;

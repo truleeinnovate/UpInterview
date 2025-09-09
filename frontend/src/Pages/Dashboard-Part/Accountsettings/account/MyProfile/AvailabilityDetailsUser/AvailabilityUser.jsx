@@ -1,17 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { Clock, Globe, MapPin } from 'lucide-react';
+// v1.0.0 - Ashok - Improved responsiveness
+
+import React, { useEffect, useState } from "react";
+import { Clock, Globe, MapPin } from "lucide-react";
 import Cookies from "js-cookie";
 import "react-datepicker/dist/react-datepicker.css";
-import { useNavigate } from 'react-router-dom';
-import { decodeJwt } from '../../../../../../utils/AuthCookieManager/jwtDecode';
-import { useUserProfile } from '../../../../../../apiHooks/useUsers';
-import { useInterviewAvailability } from '../../../../../../apiHooks/useInterviewAvailability';
+import { useNavigate } from "react-router-dom";
+import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
+import { useUserProfile } from "../../../../../../apiHooks/useUsers";
+import { useInterviewAvailability } from "../../../../../../apiHooks/useInterviewAvailability";
 
-const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen, onEditClick }) => {
+const AvailabilityUser = ({
+  mode,
+  usersId,
+  setAvailabilityEditOpen,
+  isFullScreen,
+  onEditClick,
+}) => {
   // const { usersRes } = useCustomContext();
   const navigate = useNavigate();
-  const [contactData, setContactData] = useState({})
-  const [selectedTimezone, setSelectedTimezone] = useState('');
+  const [contactData, setContactData] = useState({});
+  const [selectedTimezone, setSelectedTimezone] = useState("");
   const [selectedOption, setSelectedOption] = useState(null);
   const [times, setTimes] = useState({
     Sun: [{ startTime: null, endTime: null }],
@@ -20,7 +28,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
     Wed: [{ startTime: null, endTime: null }],
     Thu: [{ startTime: null, endTime: null }],
     Fri: [{ startTime: null, endTime: null }],
-    Sat: [{ startTime: null, endTime: null }]
+    Sat: [{ startTime: null, endTime: null }],
   });
 
   const authToken = Cookies.get("authToken");
@@ -30,8 +38,12 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
 
   const ownerId = usersId || userId;
 
-  const { userProfile } = useUserProfile(ownerId)
-  const { availability, loading: isAvailabilityLoading, error: availabilityError } = useInterviewAvailability(userProfile?.contactId || userProfile?._id);
+  const { userProfile } = useUserProfile(ownerId);
+  const {
+    availability,
+    loading: isAvailabilityLoading,
+    error: availabilityError,
+  } = useInterviewAvailability(userProfile?.contactId || userProfile?._id);
   console.log("availability", availability);
 
   useEffect(() => {
@@ -45,7 +57,6 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
     //   : usersRes.find(user => user?._id === userId);
 
     // console.log("contactId", userProfile);
-
 
     if (!userProfile || !userProfile._id) return;
     if (userProfile) {
@@ -65,17 +76,17 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
       Wed: [{ startTime: null, endTime: null }],
       Thu: [{ startTime: null, endTime: null }],
       Fri: [{ startTime: null, endTime: null }],
-      Sat: [{ startTime: null, endTime: null }]
+      Sat: [{ startTime: null, endTime: null }],
     };
 
     // If we have availability data, update the times state
     if (availability.availability && availability.availability.length > 0) {
       // console.log('Processing availability data:', availability.availability); // Add this line
-      availability.availability.forEach(dayData => {
+      availability.availability.forEach((dayData) => {
         if (dayData.day && dayData.timeSlots && transformedTimes[dayData.day]) {
-          transformedTimes[dayData.day] = dayData.timeSlots.map(slot => ({
+          transformedTimes[dayData.day] = dayData.timeSlots.map((slot) => ({
             startTime: slot.startTime || null,
-            endTime: slot.endTime || null
+            endTime: slot.endTime || null,
           }));
         }
       });
@@ -85,28 +96,34 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
     setTimes(transformedTimes);
   }, [availability]);
 
-
   const fetchData = () => {
     if (!contactData) return;
 
-    setSelectedTimezone(typeof contactData?.timeZone === 'object' ? contactData?.timeZone.label : contactData?.timeZone);
+    setSelectedTimezone(
+      typeof contactData?.timeZone === "object"
+        ? contactData?.timeZone.label
+        : contactData?.timeZone
+    );
     setSelectedOption(contactData?.preferredDuration || null);
 
     if (contactData?.availability && contactData?.availability.length > 0) {
       const updatedTimes = {
-        Sun: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Mon: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Tue: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Wed: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Thu: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Fri: [{ startTime: 'unavailable', endTime: 'unavailable' }],
-        Sat: [{ startTime: 'unavailable', endTime: 'unavailable' }],
+        Sun: [{ startTime: "unavailable", endTime: "unavailable" }],
+        Mon: [{ startTime: "unavailable", endTime: "unavailable" }],
+        Tue: [{ startTime: "unavailable", endTime: "unavailable" }],
+        Wed: [{ startTime: "unavailable", endTime: "unavailable" }],
+        Thu: [{ startTime: "unavailable", endTime: "unavailable" }],
+        Fri: [{ startTime: "unavailable", endTime: "unavailable" }],
+        Sat: [{ startTime: "unavailable", endTime: "unavailable" }],
       };
 
       // const days = contactData?.availability || [];
       const days = contactData?.availability?.[0]?.availability || [];
-      days?.forEach(day => {
-        if (day?.timeSlots.length > 0 && day?.timeSlots[0].startTime !== 'unavailable') {
+      days?.forEach((day) => {
+        if (
+          day?.timeSlots.length > 0 &&
+          day?.timeSlots[0].startTime !== "unavailable"
+        ) {
           updatedTimes[day.day] = day.timeSlots;
         }
       });
@@ -138,14 +155,14 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
 
   // Format time for display
   const formatTime = (hour) => {
-    return `${hour % 12 || 12}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
+    return `${hour % 12 || 12}:00 ${hour >= 12 ? "PM" : "AM"}`;
   };
-
-
 
   // Check if a time slot is available
   const isAvailable = (date, hour) => {
-    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+    const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+      date.getDay()
+    ];
     const dayAvailability = times[dayOfWeek];
 
     // console.log('times:', JSON.parse(JSON.stringify(times)));
@@ -153,24 +170,28 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
     // console.log('dayAvailability:', dayAvailability);
 
     // If no availability data or first slot is explicitly unavailable
-    if (!dayAvailability || !dayAvailability[0] || !dayAvailability[0].startTime) {
+    if (
+      !dayAvailability ||
+      !dayAvailability[0] ||
+      !dayAvailability[0].startTime
+    ) {
       return false;
     }
 
-    return dayAvailability.some(slot => {
+    return dayAvailability.some((slot) => {
       // Skip if slot is invalid or has null/undefined times
       if (!slot || !slot.startTime || !slot.endTime) {
         return false;
       }
 
       // Handle 'unavailable' case
-      if (slot.startTime === 'unavailable' || slot.endTime === 'unavailable') {
+      if (slot.startTime === "unavailable" || slot.endTime === "unavailable") {
         return false;
       }
 
       try {
-        const [startHour, startMin] = slot.startTime.split(':').map(Number);
-        const [endHour, endMin] = slot.endTime.split(':').map(Number);
+        const [startHour, startMin] = slot.startTime.split(":").map(Number);
+        const [endHour, endMin] = slot.endTime.split(":").map(Number);
 
         const slotStart = startHour * 60 + (startMin || 0);
         const slotEnd = endHour * 60 + (endMin || 0);
@@ -181,24 +202,31 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
         // Check if any part of the slot overlaps with this hour
         return slotStart < currentHourEnd && slotEnd > currentHourStart;
       } catch (error) {
-        console.error('Error processing time slot:', error, slot);
+        console.error("Error processing time slot:", error, slot);
         return false;
       }
     });
   };
 
-
-
-
-
   return (
-    <div className="space-y-6">
-      <div className={`flex  items-center  ${mode === 'users' ? 'justify-end mt-4 mr-6' : "justify-between mt-4"}`}>
-        <h3 className={`text-lg font-medium ${mode === 'users' ? 'hidden' : ""}`}>Availability</h3>
+    // * v1.0.0 <------------------------------------------------------------------------------------------------------
+    <div className="sm:mx-2 space-y-6">
+      {/* <div className={`flex  items-center  ${mode === 'users' ? 'justify-end mr-6' : "justify-between mt-4"}`}> */}
+      <div
+        className={`flex items-center ${
+          mode === "users" ? "justify-end mr-6" : "justify-between mt-6"
+        }`}
+      >
+    {/* v1.0.0 ------------------------------------------------------------------------------------------------------> */}
+        <h3
+          className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}
+        >
+          Availability
+        </h3>
 
         <button
           onClick={() => {
-            if (mode === 'users') {
+            if (mode === "users") {
               // Pass availability data to the parent component
               if (onEditClick) {
                 onEditClick({
@@ -206,33 +234,44 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
                   userProfile: userProfile,
                   times: times,
                   selectedTimezone: selectedTimezone,
-                  selectedOption: selectedOption
+                  selectedOption: selectedOption,
                 });
               }
               setAvailabilityEditOpen(true);
             } else {
               // Pass availability data through navigation state
-              navigate(`/account-settings/my-profile/availability-edit/${contactData?._id}`, {
-                state: {
-                  availabilityData: availability,
-                  userProfile: userProfile,
-                  times: times,
-                  selectedTimezone: selectedTimezone,
-                  selectedOption: selectedOption
+              navigate(
+                `/account-settings/my-profile/availability-edit/${contactData?._id}`,
+                {
+                  state: {
+                    availabilityData: availability,
+                    userProfile: userProfile,
+                    times: times,
+                    selectedTimezone: selectedTimezone,
+                    selectedOption: selectedOption,
+                  },
                 }
-              });
+              );
             }
           }}
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
         >
           Edit
         </button>
-
       </div>
 
-      <div className={`mx-5 grid gap-6 ${isFullScreen === false ? 'grid-cols-1' : 'grid-cols-2'}`}>
-
-        <div className='flex flex-col justify-between items-center mb-6'>
+      {/* <div
+        className={`mx-5 grid gap-6 ${
+          isFullScreen === false ? "grid-cols-1" : "grid-cols-2"
+        }`}
+      > */}
+      {/* v1.0.0 <----------------------------------------------------------------------------------- */}
+      <div
+        className={`grid gap-6 ${
+          isFullScreen === false ? "sm:grid-cols-1" : "sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+        }`}
+      >
+        <div className="flex flex-col justify-between items-center sm:mb-0 mb-6">
           <div className="overflow-x-auto w-full">
             <div className="w-full">
               <div className="grid grid-cols-8 gap-1">
@@ -248,15 +287,18 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
                     className="h-12 flex flex-col items-center justify-center text-center"
                   >
                     <div className="text-sm font-medium text-gray-900">
-                      {new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date)}
+                      {new Intl.DateTimeFormat("en-US", {
+                        weekday: "short",
+                      }).format(date)}
                     </div>
-
                   </div>
                 ))}
 
                 {/* Time slots */}
-                {timeSlots.map(hour => {
-                  const isHourAvailable = weekDates.some(date => isAvailable(date, hour));
+                {timeSlots.map((hour) => {
+                  const isHourAvailable = weekDates.some((date) =>
+                    isAvailable(date, hour)
+                  );
                   if (!isHourAvailable) return null; // ❌ Skip if this hour is not available at all
 
                   return (
@@ -272,10 +314,11 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
                         return (
                           <div
                             key={`${hour}-${dateIndex}`}
-                            className={`h-12 border border-gray-100 rounded-md ${available
-                              ? 'bg-green-50 hover:bg-green-100 cursor-pointer'
-                              : 'bg-gray-50'
-                              }`}
+                            className={`h-12 border border-gray-100 rounded-md ${
+                              available
+                                ? "bg-green-50 hover:bg-green-100 cursor-pointer"
+                                : "bg-gray-50"
+                            }`}
                           >
                             {available && (
                               <div className="h-full flex items-center justify-center">
@@ -288,7 +331,6 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
                     </React.Fragment>
                   );
                 })}
-
               </div>
             </div>
           </div>
@@ -304,7 +346,7 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
           </div>
         </div>
 
-        <div className='flex flex-col gap-6 mb-6'>
+        <div className="flex flex-col gap-6 mb-6">
           {/* Enhanced Timezone Card */}
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center space-x-3 mb-4">
@@ -353,12 +395,10 @@ const AvailabilityUser = ({ mode, usersId, setAvailabilityEditOpen, isFullScreen
             </div>
           </div>
         </div>
-
       </div>
-
-
+      {/* v1.0.0 -----------------------------------------------------------------------------------> */}
     </div>
-  )
-}
+  );
+};
 
-export default AvailabilityUser
+export default AvailabilityUser;

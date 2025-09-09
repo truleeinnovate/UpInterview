@@ -1,6 +1,8 @@
 // v1.0.0 - Ashok - Disabled outer scrollbar when popup is open for better user experience
 // v1.0.1 - Ashok - Removed border left and set outline as none for better UI
 // v1.0.2 - commented man.png, woman.png, transgender.png
+// v1.0.3 - Ashok - Improved responsiveness and added common code to popup
+
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -27,6 +29,9 @@ import Modal from "react-modal";
 // v1.0.0 <-------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.0 ------------------------------------------------------------------->
+// v1.0.3 <----------------------------------------------------------------------
+import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+// v1.0.3 ---------------------------------------------------------------------->
 
 const UserInvoiceDetails = () => {
   const navigate = useNavigate();
@@ -69,126 +74,87 @@ const UserInvoiceDetails = () => {
     return null;
   }
 
-  const modalClass = classNames(
-    // v1.0.1 <-----------------------------------------------------
-    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-    // v1.0.1 ----------------------------------------------------->
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
-
+  // v1.0.3 <---------------------------------------------------------------------
   return (
-    <Modal
-      isOpen={true}
-      onRequestClose={() => navigate("/account-settings/billing-details")}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    >
-      <div
-        className={classNames("h-full", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
-        })}
-      >
-        <div>
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center space-x-4">
-                <h2 className="text-2xl font-bold text-custom-blue">
-                  Invoice Details
-                </h2>
+    <SidebarPopup title="Invoice Details" onClose={() => navigate(-1)}>
+      <div className="sm:p-0 p-6">
+        <div className="text-left">
+          {" "}
+          {/* Added text-left here */}
+          <div className="mb-4">
+            <h3 className="text-2xl font-bold text-gray-900">
+              {invoiceData.lastName || ""}
+            </h3>
+          </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4 space-y-6">
+            <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
+              {" "}
+              {/* Added gap-4 */}
+              <div className="flex flex-col items-start">
+                {" "}
+                {/* Changed from items-center to items-start */}
+                <span className="text-gray-700">Payment Id</span>
+                <p className="text-black font-medium">
+                  {invoiceData?.paymentId || ""}
+                </p>
               </div>
-              <div className="flex items-center space-x-2">
-                {!isFullScreen && (
-                  <button
-                    onClick={() => navigate(-1)}
-                    className="text-gray-500 hover:text-custom-blue rounded-full p-2"
-                  >
-                    <X className="text-2xl" />
-                  </button>
-                )}
+              <div className="flex flex-col items-start">
+                {" "}
+                {/* Changed from items-center to items-start */}
+                <span className="text-gray-700">Invoice Id</span>
+                <p className="text-black font-medium">
+                  {invoiceData?.invoiceNumber || ""}
+                </p>
               </div>
             </div>
 
-            <div className="text-left">
+            <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
               {" "}
-              {/* Added text-left here */}
-              <div className="mb-4">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {invoiceData.lastName || ""}
-                </h3>
+              {/* Added gap-4 */}
+              <div className="flex flex-col items-start">
+                {" "}
+                {/* Changed from items-center to items-start */}
+                <span className="text-gray-700">Payment Service</span>
+                <p className="text-black font-medium">
+                  {invoiceData?.type || ""}
+                </p>
               </div>
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4 space-y-6">
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                  {" "}
-                  {/* Added gap-4 */}
-                  <div className="flex flex-col items-start">
-                    {" "}
-                    {/* Changed from items-center to items-start */}
-                    <span className="text-gray-700">Payment Id</span>
-                    <p className="text-black font-medium">
-                      {invoiceData?.paymentId || ""}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-start">
-                    {" "}
-                    {/* Changed from items-center to items-start */}
-                    <span className="text-gray-700">Invoice Id</span>
-                    <p className="text-black font-medium">
-                      {invoiceData?.invoiceNumber || ""}
-                    </p>
-                  </div>
-                </div>
+              <div className="flex flex-col items-start">
+                {" "}
+                {/* Changed from items-center to items-start */}
+                <span className="text-gray-700">Plan Name</span>
+                <p className="text-black font-medium">
+                  {invoiceData?.plan || ""}
+                </p>
+              </div>
+            </div>
 
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                  {" "}
-                  {/* Added gap-4 */}
-                  <div className="flex flex-col items-start">
-                    {" "}
-                    {/* Changed from items-center to items-start */}
-                    <span className="text-gray-700">Payment Service</span>
-                    <p className="text-black font-medium">
-                      {invoiceData?.type || ""}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-start">
-                    {" "}
-                    {/* Changed from items-center to items-start */}
-                    <span className="text-gray-700">Plan Name</span>
-                    <p className="text-black font-medium">
-                      {invoiceData?.plan || ""}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                  {" "}
-                  {/* Added gap-4 */}
-                  <div className="flex flex-col items-start">
-                    {" "}
-                    {/* Changed from items-center to items-start */}
-                    <span className="text-gray-700">Status</span>
-                    <p className="text-black font-medium">
-                      {invoiceData?.status || ""}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-start">
-                    {" "}
-                    {/* Changed from items-center to items-start */}
-                    <span className="text-gray-700">Total Amount</span>
-                    <p className="text-black font-medium">
-                      $ {invoiceData?.amount?.paid || 0}
-                    </p>
-                  </div>
-                </div>
+            <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
+              {" "}
+              {/* Added gap-4 */}
+              <div className="flex flex-col items-start">
+                {" "}
+                {/* Changed from items-center to items-start */}
+                <span className="text-gray-700">Status</span>
+                <p className="text-black font-medium">
+                  {invoiceData?.status || ""}
+                </p>
+              </div>
+              <div className="flex flex-col items-start">
+                {" "}
+                {/* Changed from items-center to items-start */}
+                <span className="text-gray-700">Total Amount</span>
+                <p className="text-black font-medium">
+                  $ {invoiceData?.amount?.paid || 0}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </Modal>
+    </SidebarPopup>
   );
+  // v1.0.3 --------------------------------------------------------------------->
 };
 
 export default UserInvoiceDetails;

@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - Removed border left and set outline as none
 // v1.0.1 - Ashok - Changed Maximize and Minimize icons to follow consistent design
+// v1.0.2 - Ashok - Improved responsiveness and added common code to popup
+
 import { useEffect, useRef, useState } from "react";
 
 import { Maximize, Minimize, Search, X, ChevronDown } from "lucide-react";
@@ -30,6 +32,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { notify } from "../../../../../../services/toastService";
 // v1.0.1 --------------------------------------------------------------------------------->
+// v1.0.2 <-----------------------------------------------------------------------------------
+import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+// v1.0.2 ----------------------------------------------------------------------------------->
 
 const EditInterviewDetails = ({
   from,
@@ -383,7 +388,6 @@ const EditInterviewDetails = ({
         notify.success("Updated Interview Details Successfully");
       }
 
-
       if (response.status === 200) {
         // setUserData((prev) => ({ ...prev, ...cleanFormData }));
         // setIsBasicModalOpen(false);
@@ -399,7 +403,7 @@ const EditInterviewDetails = ({
         // scrollToFirstError(backendErrors, fieldRefs);
       } else {
         console.error("Error saving changes:", error);
-        setErrors(prev => ({ ...prev, form: "Error saving changes" }));
+        setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
       }
       // console.error("Error updating interview details:", error);
     }
@@ -407,10 +411,10 @@ const EditInterviewDetails = ({
 
   const filteredSkills = Array.isArray(skills)
     ? skills.filter((skill) =>
-      skill?.SkillName?.toLowerCase()?.includes(
-        searchTermSkills.toLowerCase() || ""
+        skill?.SkillName?.toLowerCase()?.includes(
+          searchTermSkills.toLowerCase() || ""
+        )
       )
-    )
     : [];
 
   const handleRemoveSkill = (index) => {
@@ -427,25 +431,6 @@ const EditInterviewDetails = ({
       setErrors((prev) => ({ ...prev, skills: "" }));
     }
   };
-
-  // const modalClass = classNames(
-  //   'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
-  //   {
-  //     'inset-0': isFullScreen,
-  //     'inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
-  //   }
-  // );
-  // v1.0.0 <--------------------------------------------------------------------
-  const modalClass = classNames(
-    // 'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
-    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-    // v1.0.0 <--------------------------------------------------------------------
-
-    {
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
 
   const handleInterviewFormatChange = (event) => {
     const { value, checked } = event.target;
@@ -516,696 +501,658 @@ const EditInterviewDetails = ({
   };
 
   return (
-    <Modal
-      isOpen={true}
-      onRequestClose={handleCloseModal}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    // shouldCloseOnOverlayClick={false}
-    >
-      <div
-        className={classNames("h-full flex flex-col", {
-          "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8": isFullScreen, // Centered with max-width in full-screen
-          "p-4": !isFullScreen, // Padding for half-screen
-        })}
-      >
-        <div>
-          <div className="flex justify-between items-center mb-6 space-y-4">
-            <h2 className="text-2xl font-bold text-custom-blue">
-              Edit Interview Details
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {/* v1.0.1 <--------------------------------------------------- */}
-                {isFullScreen ? (
-                  // <Minimize className="w-5 h-5 text-gray-500" />
-                  <ArrowsPointingInIcon className="w-5 h-5" />
-                ) : (
-                  // <Maximize className="w-5 h-5 text-gray-500" />
-                  <ArrowsPointingOutIcon className="w-5 h-5" />
-                )}
-                {/* v1.0.1 ----------------------------------------------------> */}
-              </button>
-              <button
-                onClick={handleCloseModal}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-          </div>
+    // v1.0.2 <-----------------------------------------------------------------
+    <SidebarPopup title="Edit Interview Details" onClose={handleCloseModal}>
+      <div className="sm:p-0 p-6">
+        <form className="space-y-6 pb-2">
+          <div className="grid grid-cols-1  gap-4">
+            {/* technology */}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Your Comfortable Technologies{" "}
+                <span className="text-red-500">*</span>
+              </label>
 
-          <form className="space-y-6 pb-2">
-            <div className="grid grid-cols-1  gap-4">
-              {/* technology */}
-              <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Your Comfortable Technologies{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-
-                <div className="space-y-2">
-                  <div className="relative" ref={popupRef}>
-                    <input
-                      placeholder="Select Multiple Technologies"
-                      readOnly // Prevent typing
+              <div className="space-y-2">
+                <div className="relative" ref={popupRef}>
+                  <input
+                    placeholder="Select Multiple Technologies"
+                    readOnly // Prevent typing
+                    onClick={() => setTechpopup((prev) => !prev)}
+                    className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 `}
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                    <ChevronDown
+                      className="text-lg"
                       onClick={() => setTechpopup((prev) => !prev)}
-                      className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 `}
                     />
-                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <ChevronDown
-                        className="text-lg"
-                        onClick={() => setTechpopup((prev) => !prev)}
-                      />
-                    </div>
-                    {showTechPopup && (
-                      <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                        <div className="border-b">
-                          <div className="flex items-center border rounded px-2 py-1 m-2">
-                            <Search className="absolute ml-1 text-gray-500" />
-                            <input
-                              type="text"
-                              placeholder="Search Technology"
-                              value={searchTermTechnology}
-                              onChange={(e) =>
-                                setSearchTermTechnology(e.target.value)
-                              }
-                              className="pl-8 focus:border-black focus:outline-none w-full"
-                            />
-                          </div>
-                        </div>
-                        {services.filter((service) =>
-                          service.TechnologyMasterName.toLowerCase().includes(
-                            searchTermTechnology.toLowerCase()
-                          )
-                        ).length > 0 ? (
-                          services
-                            .filter((service) =>
-                              service.TechnologyMasterName.toLowerCase().includes(
-                                searchTermTechnology.toLowerCase()
-                              )
-                            )
-                            .map((service) => (
-                              <div
-                                key={service._id}
-                                onClick={() => handleSelectCandidate(service)}
-                                className="cursor-pointer hover:bg-gray-200 p-2"
-                              >
-                                {service.TechnologyMasterName}
-                              </div>
-                            ))
-                        ) : (
-                          <div className="p-2 text-gray-500">
-                            No technologies found
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {errors.technologies && (
-                      <p className="text-red-500 text-sm sm:text-xs mt-2">
-                        {errors.technologies}
-                      </p>
-                    )}
                   </div>
+                  {showTechPopup && (
+                    <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                      <div className="border-b">
+                        <div className="flex items-center border rounded px-2 py-1 m-2">
+                          <Search className="absolute ml-1 text-gray-500" />
+                          <input
+                            type="text"
+                            placeholder="Search Technology"
+                            value={searchTermTechnology}
+                            onChange={(e) =>
+                              setSearchTermTechnology(e.target.value)
+                            }
+                            className="pl-8 focus:border-black focus:outline-none w-full"
+                          />
+                        </div>
+                      </div>
+                      {services.filter((service) =>
+                        service.TechnologyMasterName.toLowerCase().includes(
+                          searchTermTechnology.toLowerCase()
+                        )
+                      ).length > 0 ? (
+                        services
+                          .filter((service) =>
+                            service.TechnologyMasterName.toLowerCase().includes(
+                              searchTermTechnology.toLowerCase()
+                            )
+                          )
+                          .map((service) => (
+                            <div
+                              key={service._id}
+                              onClick={() => handleSelectCandidate(service)}
+                              className="cursor-pointer hover:bg-gray-200 p-2"
+                            >
+                              {service.TechnologyMasterName}
+                            </div>
+                          ))
+                      ) : (
+                        <div className="p-2 text-gray-500">
+                          No technologies found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {errors.technologies && (
+                    <p className="text-red-500 text-sm sm:text-xs mt-2">
+                      {errors.technologies}
+                    </p>
+                  )}
+                </div>
 
-                  <div className=" mb-5 relative">
-                    {selectedCandidates.map((candidate, index) => (
+                <div className=" mb-5 relative">
+                  {selectedCandidates.map((candidate, index) => (
+                    <div
+                      key={index}
+                      className="border border-custom-blue rounded px-2 py-1 inline-block mr-2 m-1 text-sm sm:text-xs sm:w-[90%]"
+                    >
+                      <div className="flex items-center justify-between gap-2 text-custom-blue">
+                        <div className="flex">
+                          <span className="sm:w-5 w-8">
+                            {" "}
+                            <Technology className="pt-1 text-custom-blue h-6 w-6 " />
+                          </span>
+                          {candidate.TechnologyMasterName}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCandidate(index)}
+                          className="ml-2 text-red-500 rounded px-2"
+                        >
+                          X
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Skills */}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Skills <span className="text-red-500">*</span>
+              </label>
+              <div className="space-y-2">
+                <div className="relative" ref={skillsPopupRef}>
+                  <input
+                    onClick={toggleSkillsPopup}
+                    className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 `}
+                    placeholder="Select Multiple Skills"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
+                    <ChevronDown
+                      className="text-lg"
+                      onClick={toggleSkillsPopup}
+                    />
+                  </div>
+                  {showSkillsPopup && (
+                    <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
+                      <div className="border-b">
+                        <div className="flex items-center border rounded px-2 py-1 m-2">
+                          <Search className="absolute ml-1 text-gray-500" />
+                          <input
+                            type="text"
+                            placeholder="Search Skills"
+                            value={searchTermSkills}
+                            onChange={(e) =>
+                              setSearchTermSkills(e.target.value)
+                            }
+                            className="pl-8  focus:border-black focus:outline-none w-full"
+                          />
+                        </div>
+                      </div>
+                      {filteredSkills.length > 0 ? (
+                        filteredSkills.map((skill) => (
+                          <div
+                            key={skill?._id}
+                            onClick={() => handleSelectSkill(skill)}
+                            className="cursor-pointer hover:bg-gray-200 p-2"
+                          >
+                            {skill?.SkillName}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-2 text-gray-500">No skills found</div>
+                      )}
+                    </div>
+                  )}
+                  {/* {errors.Skills && <p className="text-red-500 text-sm sm:text-xs">{errors.Skills}</p>} */}
+                </div>
+                {errors.skills && (
+                  <p className="text-red-500 text-sm mt-1">{errors.skills}</p>
+                )}
+                <div className="mt-4 mb-5 relative">
+                  {formData.skills.length > 0 ? (
+                    formData.skills.map((skill, index) => (
                       <div
                         key={index}
-                        className="border border-custom-blue rounded px-2 py-1 inline-block mr-2 m-1 text-sm sm:text-xs sm:w-[90%]"
+                        className="border border-custom-blue rounded px-2 m-1 py-1 inline-block mr-2 text-sm sm:text-xs sm:w-[90%]"
                       >
                         <div className="flex items-center justify-between gap-2 text-custom-blue">
                           <div className="flex">
                             <span className="sm:w-5 w-8">
-                              {" "}
-                              <Technology className="pt-1 text-custom-blue h-6 w-6 " />
+                              <SkillIcon className="pt-1 text-custom-blue h-6 w-6" />
+                              {/* <SkillIcon className="pt-1 text-lg" /> */}
                             </span>
-                            {candidate.TechnologyMasterName}
+                            {skill}
                           </div>
                           <button
                             type="button"
-                            onClick={() => handleRemoveCandidate(index)}
+                            onClick={() => handleRemoveSkill(index)}
                             className="ml-2 text-red-500 rounded px-2"
                           >
                             X
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Skills */}
-              <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Skills <span className="text-red-500">*</span>
-                </label>
-                <div className="space-y-2">
-                  <div className="relative" ref={skillsPopupRef}>
-                    <input
-                      onClick={toggleSkillsPopup}
-                      className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 `}
-                      placeholder="Select Multiple Skills"
-                    />
-                    <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                      <ChevronDown
-                        className="text-lg"
-                        onClick={toggleSkillsPopup}
-                      />
-                    </div>
-                    {showSkillsPopup && (
-                      <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                        <div className="border-b">
-                          <div className="flex items-center border rounded px-2 py-1 m-2">
-                            <Search className="absolute ml-1 text-gray-500" />
-                            <input
-                              type="text"
-                              placeholder="Search Skills"
-                              value={searchTermSkills}
-                              onChange={(e) =>
-                                setSearchTermSkills(e.target.value)
-                              }
-                              className="pl-8  focus:border-black focus:outline-none w-full"
-                            />
-                          </div>
-                        </div>
-                        {filteredSkills.length > 0 ? (
-                          filteredSkills.map((skill) => (
-                            <div
-                              key={skill?._id}
-                              onClick={() => handleSelectSkill(skill)}
-                              className="cursor-pointer hover:bg-gray-200 p-2"
-                            >
-                              {skill?.SkillName}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-2 text-gray-500">
-                            No skills found
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {/* {errors.Skills && <p className="text-red-500 text-sm sm:text-xs">{errors.Skills}</p>} */}
-                  </div>
-                  {errors.skills && (
-                    <p className="text-red-500 text-sm mt-1">{errors.skills}</p>
+                    ))
+                  ) : (
+                    <p className="text-gray-500">No skills added yet</p>
                   )}
-                  <div className="mt-4 mb-5 relative">
-                    {formData.skills.length > 0 ? (
-                      formData.skills.map((skill, index) => (
-                        <div
-                          key={index}
-                          className="border border-custom-blue rounded px-2 m-1 py-1 inline-block mr-2 text-sm sm:text-xs sm:w-[90%]"
-                        >
-                          <div className="flex items-center justify-between gap-2 text-custom-blue">
-                            <div className="flex">
-                              <span className="sm:w-5 w-8">
-                                <SkillIcon className="pt-1 text-custom-blue h-6 w-6" />
-                                {/* <SkillIcon className="pt-1 text-lg" /> */}
-                              </span>
-                              {skill}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveSkill(index)}
-                              className="ml-2 text-red-500 rounded px-2"
-                            >
-                              X
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500">No skills added yet</p>
-                    )}
-                  </div>
-                  {/* <button
+                </div>
+                {/* <button
                     onClick={() => setIsModalOpen(true)}
                   className="text-custom-blue"
                 >
                   + Add Expertise
                 </button> */}
-                </div>
               </div>
             </div>
+          </div>
 
-            {/* <div className="space-y-4 grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-10"> */}
+          {/* <div className="space-y-4 grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-10"> */}
 
-            <div className="col-span-2 sm:col-span-6 space-y-6">
-              {/* Previous Experience */}
-              <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
-                <p>
-                  Do you have any previous experience conducting interviews?{" "}
-                  <span className="text-red-500">*</span>
+          <div className="col-span-2 sm:col-span-6 space-y-6">
+            {/* Previous Experience */}
+            <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+              <p>
+                Do you have any previous experience conducting interviews?{" "}
+                <span className="text-red-500">*</span>
+              </p>
+              <div className="mt-3 mb-3 flex space-x-6">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio text-gray-600"
+                    name="InterviewPreviousExperience"
+                    value="yes"
+                    checked={InterviewPreviousExperience === "yes"}
+                    onChange={handleRadioChange}
+                  />
+                  <span className="ml-2">Yes</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio text-gray-600"
+                    name="InterviewPreviousExperience"
+                    value="no"
+                    checked={InterviewPreviousExperience === "no"}
+                    onChange={handleRadioChange}
+                  />
+                  <span className="ml-2">No</span>
+                </label>
+              </div>
+              {errors.PreviousExperienceConductingInterviews && (
+                <p className="text-red-500 text-sm sm:text-xs">
+                  {errors.PreviousExperienceConductingInterviews}
                 </p>
-                <div className="mt-3 mb-3 flex space-x-6">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      className="form-radio text-gray-600"
-                      name="InterviewPreviousExperience"
-                      value="yes"
-                      checked={InterviewPreviousExperience === "yes"}
-                      onChange={handleRadioChange}
-                    />
-                    <span className="ml-2">Yes</span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      className="form-radio text-gray-600"
-                      name="InterviewPreviousExperience"
-                      value="no"
-                      checked={InterviewPreviousExperience === "no"}
-                      onChange={handleRadioChange}
-                    />
-                    <span className="ml-2">No</span>
-                  </label>
-                </div>
-                {errors.PreviousExperienceConductingInterviews && (
-                  <p className="text-red-500 text-sm sm:text-xs">
-                    {errors.PreviousExperienceConductingInterviews}
-                  </p>
-                )}
-                {/* {errors.PreviousExperience && (
+              )}
+              {/* {errors.PreviousExperience && (
                     <p className="text-red-500 text-sm sm:text-xs">{errors.PreviousExperience}</p>
                   )} */}
-              </div>
+            </div>
 
-              {/* Conditional Experience Years */}
-              {InterviewPreviousExperience === "yes" && (
-                <div className="w-full">
-                  <label
-                    htmlFor="InterviewPreviousExperienceYears"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    How many years of experience do you have in conducting
-                    interviews? <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    id="InterviewPreviousExperienceYears"
-                    name="InterviewPreviousExperienceYears"
-                    min="1"
-                    max="15"
-                    value={formData.PreviousExperienceConductingInterviewsYears}
-                    onChange={handleChangeExperienceYears}
-                    className={`block border rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 w-2/5 sm:w-1/2 focus:outline-none ${errors.InterviewPreviousExperienceYears
-                        ? "border-red-500"
-                        : "border-gray-400"
-                      }`}
-                  />
-                  {errors.PreviousExperienceConductingInterviewsYears && (
-                    <p className="text-red-500 text-sm sm:text-xs mt-2">
-                      {errors.PreviousExperienceConductingInterviewsYears}
-                    </p>
-                  )}
-                  {/* {errors.PreviousExperienceConductingInterviewsYears && (
-                      <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.InterviewPreviousExperienceYears}</p>
-                    )} */}
-                </div>
-              )}
-
-              {/* Level of Expertise */}
-              <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
-                <p>
-                  Choose your level of expertise in conducting interviews{" "}
-                  <span className="text-red-500">*</span>
-                </p>
-                <div className="mt-3 flex flex-wrap space-x-8 md:space-x-10 sm:space-x-0 sm:flex-col">
-                  {["junior", "mid-level", "senior", "lead"].map(
-                    (level, index) => (
-                      <label key={index} className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          className="form-radio text-gray-600"
-                          name="InterviewExpertiseLevel"
-                          value={level}
-                          checked={expertiseLevel === level}
-                          onChange={handleRadioChange2}
-                        />
-                        <span className="ml-2 capitalize">
-                          {level.replace("-", " ")} ({index * 3}-
-                          {(index + 1) * 3} years)
-                        </span>
-                      </label>
-                    )
-                  )}
-                </div>
-                {errors.ExpertiseLevel_ConductingInterviews && (
-                  <p className="text-red-500 text-sm sm:text-xs mt-2">
-                    {errors.ExpertiseLevel_ConductingInterviews}
-                  </p>
-                )}
-              </div>
-
-              {/* Expected Rate Per Hour */}
-              {/* <div > */}
-              <label
-                htmlFor="hourly_rate"
-                className="block text-sm font-medium text-gray-900 mb-2"
-              >
-                Expected Hourly Rate (USD){" "}
-                <span className="text-red-500">*</span>
-              </label>
-              <div className="grid  gap-6">
-                <div className="flex flex-col w-full">
-                  <div className="relative w-full">
-                    {/* Dollar Symbol */}
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">$</span>
-                    </div>
-
-                    {/* Input Field with $ Symbol Inside */}
-
-                    <input
-                      type="number"
-                      id="hourlyRate"
-                      name="hourlyRate"
-                      min="20"
-                      max="500"
-                      placeholder="75"
-                      value={formData.hourlyRate || ""}
-                      onChange={handleHourlyRateChange}
-                      className={`block border rounded-md bg-white pl-7 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 w-full focus:outline-none ${errors.hourlyRate ? "border-red-500" : "border-gray-400"
-                        } `}
-                    />
-                  </div>
-
-                  {/* Error Message Below Input */}
-                  {errors.hourlyRate && (
-                    <p className="text-red-500 text-xs sm:text-xs mt-1 ml-1">
-                      {errors.hourlyRate}
-                    </p>
-                  )}
-                </div>
-              </div>
-              {/* </div> */}
-
-              {/* Interview Formats You Offer */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Interview Formats You Offer{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                  {[
-                    {
-                      id: "format_technical",
-                      value: "technical",
-                      label: "Technical Coding",
-                      description:
-                        "Algorithmic problem-solving and coding challenges",
-                    },
-                    {
-                      id: "format_system_design",
-                      value: "system_design",
-                      label: "System Design",
-                      description: "Architecture and scalability discussions",
-                    },
-                    {
-                      id: "format_behavioral",
-                      value: "behavioral",
-                      label: "Behavioral",
-                      description: "Soft skills and situational questions",
-                    },
-                    {
-                      id: "format_mock",
-                      value: "mock",
-                      label: "Mock Interviews",
-                      description: "Full interview simulation with feedback",
-                    },
-                  ].map(({ id, value, label, description }) => (
-                    <div
-                      key={id}
-                      className="relative flex items-start p-4 rounded-lg border border-gray-200  transition-colors"
-                    >
-                      <div className="flex items-center h-5">
-                        <input
-                          id={id}
-                          type="checkbox"
-                          value={value}
-                          // Changed: Use includes() to check if value is in interviewFormatWeOffer
-                          // checked={formData.interviewFormatWeOffer.includes(value)}
-                          checked={
-                            formData.interviewFormatWeOffer?.includes(value) ||
-                            false
-                          }
-                          onChange={handleInterviewFormatChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        />
-                      </div>
-                      <div className="ml-3">
-                        <label
-                          htmlFor={id}
-                          className="font-medium text-gray-700"
-                        >
-                          {label}
-                        </label>
-                        <p className="text-sm text-gray-500">{description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {/* Changed: Added error display for interviewFormatWeOffer */}
-                {errors.interviewFormatWeOffer && (
-                  <p className="text-red-500 text-sm mt-2">
-                    {errors.interviewFormatWeOffer}
-                  </p>
-                )}
-              </div>
-
-              {/* Expected Rate Per Mock Interview */}
-              {isMockInterviewSelected && (
-                <div>
-                  <label
-                    htmlFor="hourly_rate"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    Expected rate per mock interview (USD){" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-
-                  <div className="relative">
-                    {/* Dollar Symbol */}
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">$</span>
-                    </div>
-
-                    {/* Hourly Rate Input */}
-                    <input
-                      id="expectedRatePerMockInterview"
-                      type="number"
-                      name="expectedRatePerMockInterview"
-                      min="20"
-                      max="500"
-                      value={formData?.expectedRatePerMockInterview}
-                      onChange={handleChangeforExp}
-                      className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.expectedRatePerMockInterview
-                          ? "border-red-500"
-                          : "border-gray-300"
-                        }`}
-                      placeholder="75"
-                    />
-                  </div>
-
-                  {/* Error Message */}
-                  {errors.expectedRatePerMockInterview && (
-                    <p className="mt-1.5 text-sm text-red-600">
-                      {errors.expectedRatePerMockInterview}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* No-Show Policy */}
-              {/* {isReady && ( */}
-              <div>
-                <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
-                  Policy for No-Show Cases{" "}
-                  <span className="text-red-500">*</span>
-                </p>
-                <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
-                  {["25%", "50%", "75%", "100%"].map((policy) => (
-                    <label key={policy} className="inline-flex items-center">
-                      <input
-                        type="radio"
-                        name="NoShowPolicy"
-                        value={policy}
-                        checked={formData.NoShowPolicy === policy}
-                        onChange={handleNoShow}
-                        className="form-radio text-gray-600"
-                      />
-                      <span className="ml-2">
-                        Charge {policy} without rescheduling
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {errors.NoShowPolicy && (
-                  <p className="text-red-500 text-sm sm:text-xs mt-2">
-                    {errors.NoShowPolicy}
-                  </p>
-                )}
-              </div>
-              {/* // )} */}
-
-              {/* Professional Title */}
-              <div className="sm:col-span-6 col-span-2">
+            {/* Conditional Experience Years */}
+            {InterviewPreviousExperience === "yes" && (
+              <div className="w-full">
                 <label
-                  htmlFor="title"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="InterviewPreviousExperienceYears"
+                  className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Professional Title <span className="text-red-500">*</span>
+                  How many years of experience do you have in conducting
+                  interviews? <span className="text-red-500">*</span>
                 </label>
                 <input
-                  id="Professional Title"
-                  name="professionalTitle"
-                  type="text"
-                  value={formData.professionalTitle}
-                  // onChange={(e) =>
-                  //   setFormData((prevData) => ({
-                  //     ...prevData,
-                  //     professionalTitle: e.target.value,
-                  //   }))
-                  // }
-                  onChange={(e) => {
-                    setFormData((prevData) => ({
-                      ...prevData,
-                      professionalTitle: e.target.value,
-                    }));
-                    // Clear error when user starts typing
-                    if (e.target.value.length >= 50) {
-                      setErrors((prev) => ({ ...prev, professionalTitle: "" }));
-                    }
-                  }}
-                  // onBlur={(e) => {
-                  //   const value = e.target.value.trim();
-                  //   if (!value) {
-                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
-                  //   } else if (value.length < 50) {
-                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
-                  //   } else if (value.length > 100) {
-                  //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
-                  //   } else {
-                  //     setErrors(prev => ({ ...prev, professionalTitle: '' }));
-                  //   }
-                  // }}
-                  className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2  sm:text-sm"
-                  placeholder="Senior Software Engineer"
+                  type="number"
+                  id="InterviewPreviousExperienceYears"
+                  name="InterviewPreviousExperienceYears"
+                  min="1"
+                  max="15"
+                  value={formData.PreviousExperienceConductingInterviewsYears}
+                  onChange={handleChangeExperienceYears}
+                  className={`block border rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 w-2/5 sm:w-1/2 focus:outline-none ${
+                    errors.InterviewPreviousExperienceYears
+                      ? "border-red-500"
+                      : "border-gray-400"
+                  }`}
                 />
-                <div className="flex justify-between ">
-                  {errors.professionalTitle ? (
-                    <p className="text-sm text-red-600">
-                      {errors.professionalTitle}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-gray-500">Min 50 characters</p>
-                  )}
-                  {formData.professionalTitle?.length > 0 && (
-                    <p
-                      className={`text-xs ${formData.professionalTitle.length < 50 ||
-                          errors.professionalTitle
-                          ? "text-red-500"
-                          : "text-gray-500"
-                        }`}
-                    >
-                      {formData.professionalTitle.length}/100
-                    </p>
-                  )}
-                </div>
-                {/* {errors.title && (
-                  <p className="mt-1.5 text-sm text-red-600">{errors.title.message}</p>
-                )} */}
+                {errors.PreviousExperienceConductingInterviewsYears && (
+                  <p className="text-red-500 text-sm sm:text-xs mt-2">
+                    {errors.PreviousExperienceConductingInterviewsYears}
+                  </p>
+                )}
+                {/* {errors.PreviousExperienceConductingInterviewsYears && (
+                      <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.InterviewPreviousExperienceYears}</p>
+                    )} */}
               </div>
+            )}
 
-              {/* Professional Bio */}
-              <div className="sm:col-span-6 col-span-2">
-                <label
-                  htmlFor="bio"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Professional Bio <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <textarea
-                    id="bio"
-                    rows="5"
-                    value={formData.bio}
-                    // onChange={handleBioChange}
-                    onChange={(e) => {
-                      handleBioChange(e);
-                      // Clear error when user starts typing
-                      // if (e.target.value.length >= 150) {
-                      //   setErrors(prev => ({ ...prev, bio: '' }));
-                      // }
-                    }}
-                    // onBlur={(e) => {
-                    //   const value = e.target.value.trim();
-                    //   if (!value) {
-                    //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
-                    //   } else if (value.length < 150) {
-                    //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
-                    //   } else {
-                    //     setErrors(prev => ({ ...prev, bio: '' }));
-                    //   }
-                    // }}
-                    className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2  sm:text-sm `}
-                    // ${errors.bio ? 'border-red-500' : 'border-gray-300'
-                    //   }
-                    placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
-                    minLength={150}
-                    maxLength={500}
-                  ></textarea>
-                  {bioLength > 0 && (
-                    <p
-                      className={`absolute -bottom-6 right-0 text-xs ${bioLength < 150 || errors.bio
-                          ? "text-red-500"
-                          : bioLength > 450
-                            ? "text-yellow-500"
-                            : "text-gray-500"
-                        }`}
-                    >
-                      {bioLength}/500
-                    </p>
-                  )}
+            {/* Level of Expertise */}
+            <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+              <p>
+                Choose your level of expertise in conducting interviews{" "}
+                <span className="text-red-500">*</span>
+              </p>
+              {/* v1.0.0 <------------------------------------------------------------------------------- */}
+              {/* <div className="mt-3 flex flex-wrap space-x-8 md:space-x-10 sm:space-x-0 sm:flex-col"> */}
+              <div className="mt-3 flex flex-wrap gap-4">
+              {/* v1.0.0 -------------------------------------------------------------------------------> */}
+                {["junior", "mid-level", "senior", "lead"].map(
+                  (level, index) => (
+                    <label key={index} className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        className="form-radio text-gray-600"
+                        name="InterviewExpertiseLevel"
+                        value={level}
+                        checked={expertiseLevel === level}
+                        onChange={handleRadioChange2}
+                      />
+                      <span className="ml-2 capitalize">
+                        {level.replace("-", " ")} ({index * 3}-{(index + 1) * 3}{" "}
+                        years)
+                      </span>
+                    </label>
+                  )
+                )}
+              </div>
+              {errors.ExpertiseLevel_ConductingInterviews && (
+                <p className="text-red-500 text-sm sm:text-xs mt-2">
+                  {errors.ExpertiseLevel_ConductingInterviews}
+                </p>
+              )}
+            </div>
+
+            {/* Expected Rate Per Hour */}
+            {/* <div > */}
+            <label
+              htmlFor="hourly_rate"
+              className="block text-sm font-medium text-gray-900 mb-2"
+            >
+              Expected Hourly Rate (USD) <span className="text-red-500">*</span>
+            </label>
+            <div className="grid  gap-6">
+              <div className="flex flex-col w-full">
+                <div className="relative w-full">
+                  {/* Dollar Symbol */}
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">$</span>
+                  </div>
+
+                  {/* Input Field with $ Symbol Inside */}
+
+                  <input
+                    type="number"
+                    id="hourlyRate"
+                    name="hourlyRate"
+                    min="20"
+                    max="500"
+                    placeholder="75"
+                    value={formData.hourlyRate || ""}
+                    onChange={handleHourlyRateChange}
+                    className={`block border rounded-md bg-white pl-7 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 w-full focus:outline-none ${
+                      errors.hourlyRate ? "border-red-500" : "border-gray-400"
+                    } `}
+                  />
                 </div>
-                <div className="flex justify-between ">
-                  {errors.bio ? (
-                    <p className="text-sm text-red-600">{errors.bio}</p>
-                  ) : (
-                    <p className="text-xs text-gray-500">Min 150 characters</p>
-                  )}
-                </div>
+
+                {/* Error Message Below Input */}
+                {errors.hourlyRate && (
+                  <p className="text-red-500 text-xs sm:text-xs mt-1 ml-1">
+                    {errors.hourlyRate}
+                  </p>
+                )}
               </div>
             </div>
             {/* </div> */}
 
-            <div className="flex justify-end space-x-3  ">
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                onClick={handleSave}
-                className="px-4 py-2 bg-custom-blue text-white rounded-lg "
-              >
-                Save Changes
-              </button>
+            {/* Interview Formats You Offer */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Interview Formats You Offer{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                {[
+                  {
+                    id: "format_technical",
+                    value: "technical",
+                    label: "Technical Coding",
+                    description:
+                      "Algorithmic problem-solving and coding challenges",
+                  },
+                  {
+                    id: "format_system_design",
+                    value: "system_design",
+                    label: "System Design",
+                    description: "Architecture and scalability discussions",
+                  },
+                  {
+                    id: "format_behavioral",
+                    value: "behavioral",
+                    label: "Behavioral",
+                    description: "Soft skills and situational questions",
+                  },
+                  {
+                    id: "format_mock",
+                    value: "mock",
+                    label: "Mock Interviews",
+                    description: "Full interview simulation with feedback",
+                  },
+                ].map(({ id, value, label, description }) => (
+                  <div
+                    key={id}
+                    className="relative flex items-start p-4 rounded-lg border border-gray-200  transition-colors"
+                  >
+                    <div className="flex items-center h-5">
+                      <input
+                        id={id}
+                        type="checkbox"
+                        value={value}
+                        // Changed: Use includes() to check if value is in interviewFormatWeOffer
+                        // checked={formData.interviewFormatWeOffer.includes(value)}
+                        checked={
+                          formData.interviewFormatWeOffer?.includes(value) ||
+                          false
+                        }
+                        onChange={handleInterviewFormatChange}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                    </div>
+                    <div className="ml-3">
+                      <label htmlFor={id} className="font-medium text-gray-700">
+                        {label}
+                      </label>
+                      <p className="text-sm text-gray-500">{description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Changed: Added error display for interviewFormatWeOffer */}
+              {errors.interviewFormatWeOffer && (
+                <p className="text-red-500 text-sm mt-2">
+                  {errors.interviewFormatWeOffer}
+                </p>
+              )}
             </div>
-          </form>
-        </div>
+
+            {/* Expected Rate Per Mock Interview */}
+            {isMockInterviewSelected && (
+              <div>
+                <label
+                  htmlFor="hourly_rate"
+                  className="block text-sm font-medium text-gray-900 mb-2"
+                >
+                  Expected rate per mock interview (USD){" "}
+                  <span className="text-red-500">*</span>
+                </label>
+
+                <div className="relative">
+                  {/* Dollar Symbol */}
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">$</span>
+                  </div>
+
+                  {/* Hourly Rate Input */}
+                  <input
+                    id="expectedRatePerMockInterview"
+                    type="number"
+                    name="expectedRatePerMockInterview"
+                    min="20"
+                    max="500"
+                    value={formData?.expectedRatePerMockInterview}
+                    onChange={handleChangeforExp}
+                    className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
+                      errors.expectedRatePerMockInterview
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                    placeholder="75"
+                  />
+                </div>
+
+                {/* Error Message */}
+                {errors.expectedRatePerMockInterview && (
+                  <p className="mt-1.5 text-sm text-red-600">
+                    {errors.expectedRatePerMockInterview}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* No-Show Policy */}
+            {/* {isReady && ( */}
+            <div>
+              <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
+                Policy for No-Show Cases <span className="text-red-500">*</span>
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
+                {["25%", "50%", "75%", "100%"].map((policy) => (
+                  <label key={policy} className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="NoShowPolicy"
+                      value={policy}
+                      checked={formData.NoShowPolicy === policy}
+                      onChange={handleNoShow}
+                      className="form-radio text-gray-600"
+                    />
+                    <span className="ml-2">
+                      Charge {policy} without rescheduling
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {errors.NoShowPolicy && (
+                <p className="text-red-500 text-sm sm:text-xs mt-2">
+                  {errors.NoShowPolicy}
+                </p>
+              )}
+            </div>
+            {/* // )} */}
+
+            {/* Professional Title */}
+            <div className="sm:col-span-6 col-span-2">
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Professional Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="Professional Title"
+                name="professionalTitle"
+                type="text"
+                value={formData.professionalTitle}
+                // onChange={(e) =>
+                //   setFormData((prevData) => ({
+                //     ...prevData,
+                //     professionalTitle: e.target.value,
+                //   }))
+                // }
+                onChange={(e) => {
+                  setFormData((prevData) => ({
+                    ...prevData,
+                    professionalTitle: e.target.value,
+                  }));
+                  // Clear error when user starts typing
+                  if (e.target.value.length >= 50) {
+                    setErrors((prev) => ({ ...prev, professionalTitle: "" }));
+                  }
+                }}
+                // onBlur={(e) => {
+                //   const value = e.target.value.trim();
+                //   if (!value) {
+                //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
+                //   } else if (value.length < 50) {
+                //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
+                //   } else if (value.length > 100) {
+                //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
+                //   } else {
+                //     setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                //   }
+                // }}
+                className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2  sm:text-sm"
+                placeholder="Senior Software Engineer"
+              />
+              <div className="flex justify-between ">
+                {errors.professionalTitle ? (
+                  <p className="text-sm text-red-600">
+                    {errors.professionalTitle}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500">Min 50 characters</p>
+                )}
+                {formData.professionalTitle?.length > 0 && (
+                  <p
+                    className={`text-xs ${
+                      formData.professionalTitle.length < 50 ||
+                      errors.professionalTitle
+                        ? "text-red-500"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {formData.professionalTitle.length}/100
+                  </p>
+                )}
+              </div>
+              {/* {errors.title && (
+                  <p className="mt-1.5 text-sm text-red-600">{errors.title.message}</p>
+                )} */}
+            </div>
+
+            {/* Professional Bio */}
+            <div className="sm:col-span-6 col-span-2">
+              <label
+                htmlFor="bio"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Professional Bio <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <textarea
+                  id="bio"
+                  rows="5"
+                  value={formData.bio}
+                  // onChange={handleBioChange}
+                  onChange={(e) => {
+                    handleBioChange(e);
+                    // Clear error when user starts typing
+                    // if (e.target.value.length >= 150) {
+                    //   setErrors(prev => ({ ...prev, bio: '' }));
+                    // }
+                  }}
+                  // onBlur={(e) => {
+                  //   const value = e.target.value.trim();
+                  //   if (!value) {
+                  //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
+                  //   } else if (value.length < 150) {
+                  //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
+                  //   } else {
+                  //     setErrors(prev => ({ ...prev, bio: '' }));
+                  //   }
+                  // }}
+                  className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2  sm:text-sm `}
+                  // ${errors.bio ? 'border-red-500' : 'border-gray-300'
+                  //   }
+                  placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
+                  minLength={150}
+                  maxLength={500}
+                ></textarea>
+                {bioLength > 0 && (
+                  <p
+                    className={`absolute -bottom-6 right-0 text-xs ${
+                      bioLength < 150 || errors.bio
+                        ? "text-red-500"
+                        : bioLength > 450
+                        ? "text-yellow-500"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {bioLength}/500
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-between ">
+                {errors.bio ? (
+                  <p className="text-sm text-red-600">{errors.bio}</p>
+                ) : (
+                  <p className="text-xs text-gray-500">Min 150 characters</p>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* </div> */}
+
+          <div className="flex justify-end space-x-3  ">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              onClick={handleSave}
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg "
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
-    </Modal>
+    </SidebarPopup>
+    // v1.0.2 ----------------------------------------------------------------->
   );
 };
 

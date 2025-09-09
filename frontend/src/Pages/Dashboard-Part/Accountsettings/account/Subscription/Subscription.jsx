@@ -1,5 +1,6 @@
 // ----- v1.0.0 ----- Venkatesh----update LoadingButton colors
 // v1.0.1 - Ashok - fixed z-index issue when popup is open
+// v1.0.2 - Ashok - Improved responsiveness
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -33,11 +34,13 @@ const CurrentPlanSkeleton = () => {
 // Loading Skeleton for Billing Toggle
 const BillingToggleSkeleton = () => {
   return (
-    <div className="flex justify-center items-center space-x-2 mb-16">
-      <div className="skeleton-animation">
+    // v1.0.2 <-----------------------------------------------------------------
+    <div className="mb-16">
+      <div className="flex justify-center items-center gap-2 skeleton-animation">
+    {/*  v1.0.2 <-----------------------------------------------------------------> */}
         <div className="h-6 bg-gray-200 rounded w-24"></div>
-        <div className="w-12 h-6 bg-gray-200 rounded-full mt-2"></div>
-        <div className="h-6 bg-gray-200 rounded w-24 mt-2"></div>
+        <div className="w-12 h-6 bg-gray-200 rounded-full"></div>
+        <div className="h-6 bg-gray-200 rounded w-24"></div>
       </div>
     </div>
   );
@@ -116,8 +119,10 @@ const Subscription = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
-  const [showDowngradeConfirmModal, setShowDowngradeConfirmModal] = useState(false);
-  const [selectedPlanForDowngrade, setSelectedPlanForDowngrade] = useState(null);
+  const [showDowngradeConfirmModal, setShowDowngradeConfirmModal] =
+    useState(false);
+  const [selectedPlanForDowngrade, setSelectedPlanForDowngrade] =
+    useState(null);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
 
   // Sync billing toggle with subscription data
@@ -137,16 +142,23 @@ const Subscription = () => {
       await cancelSubscription({ reason: "user_requested" });
     } catch (error) {
       console.error("Error cancelling subscription:", error);
-      toast.error(error?.response?.data?.message || "Failed to cancel subscription");
+      toast.error(
+        error?.response?.data?.message || "Failed to cancel subscription"
+      );
     }
   };
 
   const handleUpdateSubscriptionPlan = async (plan) => {
     try {
-      await updateSubscriptionPlan({ planId: plan.planId, billingCycle: isAnnual ? "annual" : "monthly" });
+      await updateSubscriptionPlan({
+        planId: plan.planId,
+        billingCycle: isAnnual ? "annual" : "monthly",
+      });
     } catch (error) {
       console.error("Error updating subscription plan:", error);
-      toast.error(error?.response?.data?.message || "Failed to update subscription plan");
+      toast.error(
+        error?.response?.data?.message || "Failed to update subscription plan"
+      );
     }
   };
 
@@ -192,18 +204,25 @@ const Subscription = () => {
         const thisPlanIndex = plans.findIndex((p) => p.planId === plan.planId);
         const viewingCycle = isAnnual ? "annual" : "monthly";
         const currentCycle = subscriptionData.selectedBillingCycle;
-        const isSamePlan =
-          subscriptionData.subscriptionPlanId === plan.planId;
+        const isSamePlan = subscriptionData.subscriptionPlanId === plan.planId;
 
         // Treat monthly -> annual on the same plan as an upgrade
-        if ((isSamePlan || !isSamePlan) && currentCycle === "monthly" && viewingCycle === "annual") {
+        if (
+          (isSamePlan || !isSamePlan) &&
+          currentCycle === "monthly" &&
+          viewingCycle === "annual"
+        ) {
           setSelectedPlanForUpgrade(plan);
           setShowUpgradeConfirmModal(true);
           return;
         }
 
         // Treat annual -> monthly on the same plan as a downgrade
-        if ((isSamePlan || !isSamePlan) && currentCycle === "annual" && viewingCycle === "monthly") {
+        if (
+          (isSamePlan || !isSamePlan) &&
+          currentCycle === "annual" &&
+          viewingCycle === "monthly"
+        ) {
           setSelectedPlanForDowngrade(plan);
           setShowDowngradeConfirmModal(true);
           return;
@@ -212,8 +231,7 @@ const Subscription = () => {
         if (
           currentPlanIndex !== -1 &&
           thisPlanIndex > currentPlanIndex &&
-          subscriptionData.selectedBillingCycle ===
-            viewingCycle
+          subscriptionData.selectedBillingCycle === viewingCycle
         ) {
           // This is an upgrade
           setSelectedPlanForUpgrade(plan);
@@ -259,14 +277,19 @@ const Subscription = () => {
 
   return (
     <>
-      <div className="space-y-6 sm:mt-10 md:mt-20">
+      {/* v1.0.2 <--------------------------------------------------- */}
+      <div className="space-y-6 sm:mt-10 sm:mx-2 md:mt-20">
+        {/* v1.0.2 <--------------------------------------------------- */}
         {/* Hidden element for Razorpay */}
         <div id="razorpay-card-update" style={{ display: "none" }}></div>
 
         {/* Header Section - Always visible */}
         <div className="flex-1">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Subscription</h2>
+            {/* v1.0.2 <--------------------------------------------------- */}
+            <h2 className="sm:text-xl text-2xl font-bold">Subscription</h2>
+            {/* v1.0.2 ---------------------------------------------------> */}
+
             {!loading &&
               subscriptionData &&
               subscriptionData.status === "active" &&
@@ -290,8 +313,10 @@ const Subscription = () => {
             {/* Billing toggle */}
             <div className="flex justify-between items-start p-4">
               <div>
-                <h3 className="text-base sm:text-lg md:text-xl font-medium">{`Current Plan: ${subscriptionData.planName} (${subscriptionData.selectedBillingCycle})`}</h3>
-                <p className="text-gray-600 mt-1 text-sm sm:text-base">
+                {/* v1.0.2 <------------------------------------------------------- */}
+                <h3 className="text-base sm:text-sm md:text-xl font-medium">{`Current Plan: ${subscriptionData.planName} (${subscriptionData.selectedBillingCycle})`}</h3>
+                <p className="text-gray-600 mt-1 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base">
+                  {/* v1.0.2 <------------------------------------------------------- */}
                   Next billing date:{" "}
                   {subscriptionData.nextBillingDate
                     ? new Date(
@@ -457,8 +482,7 @@ const Subscription = () => {
                     if (
                       currentPlanIndex !== -1 &&
                       thisPlanIndex > currentPlanIndex &&
-                      subscriptionData.selectedBillingCycle ===
-                        viewingCycle
+                      subscriptionData.selectedBillingCycle === viewingCycle
                     ) {
                       return "upgrade-button-animation";
                     }
@@ -513,16 +537,19 @@ const Subscription = () => {
                           const currentCycle =
                             subscriptionData.selectedBillingCycle;
                           const isSamePlan =
-                            subscriptionData.subscriptionPlanId ===
-                            plan.planId;
+                            subscriptionData.subscriptionPlanId === plan.planId;
 
                           // Show Upgrade/Downgrade when switching billing cycle on the same plan
-                          if ((isSamePlan || !isSamePlan) && currentCycle !== viewingCycle) {
-                            return currentCycle === "monthly" && viewingCycle === "annual"
+                          if (
+                            (isSamePlan || !isSamePlan) &&
+                            currentCycle !== viewingCycle
+                          ) {
+                            return currentCycle === "monthly" &&
+                              viewingCycle === "annual"
                               ? "Upgrade"
                               : "Downgrade";
                           }
-                          
+
                           const currentPlanIndex = plans.findIndex(
                             (p) =>
                               p.planId === subscriptionData.subscriptionPlanId
@@ -549,11 +576,13 @@ const Subscription = () => {
         )}
       </div>
       {/* Cancel Subscription Modal */}
-      
+
       {showCancelModal &&
         createPortal(
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            {/* v1.0.2 <------------------------------------------------------------- */}
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full m-4">
+            {/* v1.0.2 <------------------------------------------------------------- */}
               <h2 className="text-xl font-semibold mb-4 text-custom-blue">
                 Cancel Subscription
               </h2>
@@ -591,76 +620,94 @@ const Subscription = () => {
         )}
       {/* v1.0.1 ----------------------------------------------------------------------> */}
       {/* Upgrade Confirmation Modal */}
-      {showUpgradeConfirmModal && selectedPlanForUpgrade && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-xl font-semibold mb-4 text-custom-blue">
-              Upgrade Subscription
-            </h2>
-            <p className="mb-4 text-sm sm:text-base text-gray-600">
-              Are you sure you want to upgrade to{" "}
-              <span className="font-medium">{selectedPlanForUpgrade.name}</span>
-              ?
-            </p>
-            <p className="mb-6 text-sm sm:text-base text-gray-600">
-            Your current subscription will be cancelled automatically and a new subscription will be created with the selected plan and billing cycle with the difference in price.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowUpgradeConfirmModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowUpgradeConfirmModal(false);
-                  handleUpdateSubscriptionPlan(selectedPlanForUpgrade);
-                }}
-                className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
-              >
-                Upgrade
-              </button>
+      {/* v1.0.2 <---------------------------------------------------------------------- */}
+      {showUpgradeConfirmModal &&
+        selectedPlanForUpgrade &&
+        createPortal(
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-70 flex justify-center items-center right-0 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full m-4">
+              <h2 className="sm:text-lg text-xl font-semibold mb-4 text-custom-blue">
+                Upgrade Subscription
+              </h2>
+              <p className="mb-4 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base text-gray-600">
+                Are you sure you want to upgrade to{" "}
+                <span className="font-medium">
+                  {selectedPlanForUpgrade.name}
+                </span>
+                ?
+              </p>
+              <p className="mb-6 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base text-gray-600">
+                Your current subscription will be cancelled automatically and a
+                new subscription will be created with the selected plan and
+                billing cycle with the difference in price.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowUpgradeConfirmModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowUpgradeConfirmModal(false);
+                    handleUpdateSubscriptionPlan(selectedPlanForUpgrade);
+                  }}
+                  className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
+                >
+                  Upgrade
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
+      {/* v1.0.2 ----------------------------------------------------------------------> */}
 
+      {/* v1.0.2 <---------------------------------------------------------------------- */}
       {/* Downgrade Confirmation Modal */}
-      {showDowngradeConfirmModal && selectedPlanForDowngrade && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center right-0 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-xl font-semibold mb-4 text-custom-blue">
-              Downgrade Subscription
-            </h2>
-            <p className="mb-4 text-sm sm:text-base text-gray-600">
-              Are you sure you want to downgrade to{" "}
-              <span className="font-medium">{selectedPlanForDowngrade.name}</span>
-              ?
-            </p>
-            <p className="mb-6 text-sm sm:text-base text-gray-600">
-              Your current subscription will be cancelled automatically and a new subscription will be created with the selected plan and billing cycle with the difference in price.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowDowngradeConfirmModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowDowngradeConfirmModal(false);
-                  handleUpdateSubscriptionPlan(selectedPlanForDowngrade);
-                }}
-                className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
-              >
-                Downgrade
-              </button>
+      {showDowngradeConfirmModal &&
+        selectedPlanForDowngrade &&
+        createPortal(
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-70 flex justify-center items-center right-0 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full m-4">
+              <h2 className="sm:text-lg text-xl font-semibold mb-4 text-custom-blue">
+                Downgrade Subscription
+              </h2>
+              <p className="mb-4 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base text-gray-600">
+                Are you sure you want to downgrade to{" "}
+                <span className="font-medium">
+                  {selectedPlanForDowngrade.name}
+                </span>
+                ?
+              </p>
+              <p className="mb-6 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base text-gray-600">
+                Your current subscription will be cancelled automatically and a
+                new subscription will be created with the selected plan and
+                billing cycle with the difference in price.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowDowngradeConfirmModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDowngradeConfirmModal(false);
+                    handleUpdateSubscriptionPlan(selectedPlanForDowngrade);
+                  }}
+                  className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150"
+                >
+                  Downgrade
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
+      {/* v1.0.2 ----------------------------------------------------------------------> */}
     </>
   );
 };

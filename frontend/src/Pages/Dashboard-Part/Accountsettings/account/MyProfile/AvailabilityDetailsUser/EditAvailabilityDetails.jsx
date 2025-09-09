@@ -1,33 +1,51 @@
 // v1.0.0 - Ashok - Removed border left and set outline as none
 // v1.0.1 - Ashok - Changed Maximize and Minimize icons to follow consistent design
-import React, { useEffect, useState } from 'react'
-import TimezoneSelect from 'react-timezone-select'; // Make sure to install this package
-import DatePicker from 'react-datepicker';
+// v1.0.2 - Ashok - Improved responsiveness and added common code to popup
+
+import React, { useEffect, useState } from "react";
+import TimezoneSelect from "react-timezone-select"; // Make sure to install this package
+import DatePicker from "react-datepicker";
 // import "react-datepicker/dist/react-datepicker.css";
 import "react-datepicker/dist/react-datepicker.css";
-import { Minus, Plus, Maximize, Minimize } from 'lucide-react';
-import { X } from 'lucide-react';
-import { Copy } from 'lucide-react';
+import { Minus, Plus, Maximize, Minimize } from "lucide-react";
+import { X } from "lucide-react";
+import { Copy } from "lucide-react";
 
-import classNames from 'classnames';
-import Modal from 'react-modal';
-import axios from 'axios';
-import { isEmptyObject, validateAvailabilityForm } from '../../../../../../utils/MyProfileValidations';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useCustomContext } from '../../../../../../Context/Contextfetch';
-import { config } from '../../../../../../config';
-import Availability from '../../../../Tabs/CommonCode-AllTabs/Availability';
-import { useUpdateContactDetail, useUserProfile } from '../../../../../../apiHooks/useUsers';
-import { useQueryClient } from '@tanstack/react-query';
+import classNames from "classnames";
+import Modal from "react-modal";
+import axios from "axios";
+import {
+  isEmptyObject,
+  validateAvailabilityForm,
+} from "../../../../../../utils/MyProfileValidations";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useCustomContext } from "../../../../../../Context/Contextfetch";
+import { config } from "../../../../../../config";
+import Availability from "../../../../Tabs/CommonCode-AllTabs/Availability";
+import {
+  useUpdateContactDetail,
+  useUserProfile,
+} from "../../../../../../apiHooks/useUsers";
+import { useQueryClient } from "@tanstack/react-query";
 // v1.0.1 <---------------------------------------------------------------------------------
-import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+} from "@heroicons/react/24/outline";
 // v1.0.1 --------------------------------------------------------------------------------->
+// v1.0.2 <------------------------------------------------------------------------------------
+import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+// v1.0.2 ------------------------------------------------------------------------------------>
 
+Modal.setAppElement("#root");
 
-Modal.setAppElement('#root');
-
-const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuccess, availabilityData }) => {
-  
+const EditAvailabilityDetails = ({
+  from,
+  usersId,
+  setAvailabilityEditOpen,
+  onSuccess,
+  availabilityData,
+}) => {
   const { usersRes } = useCustomContext();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,8 +61,7 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
   const navigationState = location.state;
   const availabilityDataFromProps = availabilityData || navigationState;
 
-
-  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId)
+  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId);
   // const requestEmailChange = useRequestEmailChange();
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
@@ -66,26 +83,23 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
     Wed: [{ startTime: null, endTime: null }],
     Thu: [{ startTime: null, endTime: null }],
     Fri: [{ startTime: null, endTime: null }],
-    Sat: [{ startTime: null, endTime: null }]
+    Sat: [{ startTime: null, endTime: null }],
   });
-
 
   // Separate form state
   const [formData, setFormData] = useState({
     times: times,
-    selectedTimezone: '',
-    selectedOption: '',
-    contactId: '',
+    selectedTimezone: "",
+    selectedOption: "",
+    contactId: "",
   });
-
-
 
   // Initialize form state when modal opens
   useEffect(() => {
     const fetchData = () => {
       try {
         // const user = contacts.find(user => user.ownerId === id);
-        //  const contact = singlecontact[0]; 
+        //  const contact = singlecontact[0];
         // console.log("singlecontact availability contact" , contact);
 
         // let contact
@@ -101,17 +115,23 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
         if (!userProfile || !userProfile._id) return;
 
         console.log("EditAvailabilityDetails - userProfile:", userProfile);
-        console.log("EditAvailabilityDetails - availabilityDataFromProps:", availabilityDataFromProps);
+        console.log(
+          "EditAvailabilityDetails - availabilityDataFromProps:",
+          availabilityDataFromProps
+        );
 
         // Use availability data from props/navigation state if available
         let updatedTimes = { ...times };
         let userProfileData = userProfile;
         let timezoneData = userProfile?.timeZone || "";
-        let durationData = userProfile?.preferredDuration || '';
+        let durationData = userProfile?.preferredDuration || "";
 
         // If we have availability data from props/navigation, use it
         if (availabilityDataFromProps) {
-          console.log("Using availability data from props/navigation:", availabilityDataFromProps);
+          console.log(
+            "Using availability data from props/navigation:",
+            availabilityDataFromProps
+          );
 
           if (availabilityDataFromProps.times) {
             updatedTimes = { ...availabilityDataFromProps.times };
@@ -124,7 +144,9 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
 
           if (availabilityDataFromProps.selectedTimezone) {
             // Handle both string and object timezone values
-            if (typeof availabilityDataFromProps.selectedTimezone === 'object') {
+            if (
+              typeof availabilityDataFromProps.selectedTimezone === "object"
+            ) {
               timezoneData = availabilityDataFromProps.selectedTimezone;
             } else {
               timezoneData = availabilityDataFromProps.selectedTimezone;
@@ -138,10 +160,10 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
           // Fallback to original logic
           const days = userProfileData?.availability?.[0]?.availability || [];
           if (Array.isArray(days)) {
-            days.forEach(day => {
-              updatedTimes[day.day] = day.timeSlots.map(slot => ({
+            days.forEach((day) => {
+              updatedTimes[day.day] = day.timeSlots.map((slot) => ({
                 startTime: slot?.startTime || null,
-                endTime: slot?.endTime || null
+                endTime: slot?.endTime || null,
               }));
             });
           }
@@ -158,56 +180,48 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
           selectedTimezone: timezoneData,
           selectedOption: durationData,
           id: userProfileData?._id,
-          contactId: userProfileData?.contactId || "Not Found"
+          contactId: userProfileData?.contactId || "Not Found",
         });
         setErrors({});
-
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
       }
-
-    }
+    };
     fetchData();
   }, [resolvedId, userProfile, availabilityDataFromProps]);
 
-
-
   const handleOptionClick = (option) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      selectedOption: option || ''
+      selectedOption: option || "",
     }));
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      PreferredDuration: ""
+      PreferredDuration: "",
     }));
   };
 
   const handleTimezoneChange = (timezone) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      selectedTimezone: timezone
+      selectedTimezone: timezone,
     }));
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      TimeZone: ""
+      TimeZone: "",
     }));
   };
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-
   const handleCloseModal = () => {
-    if (from === 'users') {
+    if (from === "users") {
       setAvailabilityEditOpen(false);
-
     } else {
       // navigate('/account-settings/my-profile/availability');
       navigate(-1); // Added by Ashok
     }
-
-  }
-
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -225,27 +239,28 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
         .map(([day, timeSlots]) => ({
           day,
           timeSlots: timeSlots
-            .filter(slot => slot.startTime && slot.endTime) // Only include slots with both start and end times
-            .map(slot => ({
+            .filter((slot) => slot.startTime && slot.endTime) // Only include slots with both start and end times
+            .map((slot) => ({
               startTime: slot.startTime,
               endTime: slot.endTime,
             })),
         }))
-        .filter(day => day.timeSlots?.length > 0), // Only include days with valid time slots
+        .filter((day) => day.timeSlots?.length > 0), // Only include days with valid time slots
     };
 
     const cleanFormData = {
-      timeZone: typeof formData.selectedTimezone === 'object'
-        ? formData.selectedTimezone.value  // Extract just the value property
-        : formData.selectedTimezone,
+      timeZone:
+        typeof formData.selectedTimezone === "object"
+          ? formData.selectedTimezone.value // Extract just the value property
+          : formData.selectedTimezone,
       // timeZone: formData.selectedTimezone, // Already a string from handleTimezoneChange
-      preferredDuration: formData.selectedOption || '',
-      availability: formattedAvailability.days?.length > 0 ? [formattedAvailability] : [],
-      contactId: userProfile?.contactId || "Not Found"
+      preferredDuration: formData.selectedOption || "",
+      availability:
+        formattedAvailability.days?.length > 0 ? [formattedAvailability] : [],
+      contactId: userProfile?.contactId || "Not Found",
     };
 
     console.log("cleanFormData", cleanFormData);
-
 
     try {
       // const response = await axios.patch(
@@ -261,7 +276,6 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
 
       console.log("response cleanFormData", response);
 
-
       if (response.status === 200) {
         if (usersId) {
           // Call the success callback to refresh parent data
@@ -269,7 +283,7 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
             onSuccess();
           }
         }
-        handleCloseModal()
+        handleCloseModal();
         // navigate('/account-settings/my-profile/availability')
         // Update parent states
         // setParentTimes(formData.times);
@@ -289,10 +303,10 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
         // setIsBasicModalOpen(false);
       }
     } catch (error) {
-      console.error('Error updating availability details:', error);
-      setErrors(prev => ({
+      console.error("Error updating availability details:", error);
+      setErrors((prev) => ({
         ...prev,
-        apiError: 'Failed to save changes. Please try again.'
+        apiError: "Failed to save changes. Please try again.",
       }));
     }
   };
@@ -309,60 +323,26 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
   // v1.0.0 <--------------------------------------------------------------------
   const modalClass = classNames(
     // 'fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto',
-    'fixed bg-white shadow-2xl overflow-y-auto outline-none',
+    "fixed bg-white shadow-2xl overflow-y-auto outline-none",
     // v1.0.0 -------------------------------------------------------------------->
     {
-      'inset-0': isFullScreen,
-      'inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2': !isFullScreen
+      "inset-0": isFullScreen,
+      "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
 
-
-
-
   return (
-    <Modal
-      // isOpen={isBasicModalOpen}
-      isOpen={true}
-      onRequestClose={handleCloseModal}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-    >
-      <div className="p-6 ">
-
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-custom-blue">Edit Availability Details</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsFullScreen(!isFullScreen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              {/* v1.0.4 <---------------------------------------------------------- */}
-              {isFullScreen ? (
-                // <Minimize className="w-5 h-5 text-gray-500" />
-                <ArrowsPointingInIcon className="w-5 h-5" />
-              ) : (
-                // <Maximize className="w-5 h-5 text-gray-500" />
-                <ArrowsPointingOutIcon className="w-5 h-5" />
-              )}
-              {/* v1.0.4 ----------------------------------------------------------> */}
-            </button>
-            <button
-              onClick={handleCloseModal}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
-        </div>
-
-
+    <SidebarPopup title="Edit Availability Details" onClose={handleCloseModal}>
+      <div className="sm:p-0 p-6">
         <div className="flex flex-col md:flex-col lg:flex-col xl:flex-col 2xl:flex-col md:gap-10 lg:gap-10 xl:gap-12 2xl:gap-12">
           {/* Left Side: Time Zone and Availability Times */}
           <div className="flex-1 mb-6 md:mb-0">
             {/* Time Zone */}
             <div className="mb-6">
-              <label htmlFor="TimeZone" className="block text-sm font-medium text-gray-900 mb-1">
+              <label
+                htmlFor="TimeZone"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
                 Time Zone <span className="text-red-500">*</span>
               </label>
               <div className="w-full">
@@ -371,7 +351,9 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
                   onChange={handleTimezoneChange}
                   className="mt-1 text-sm"
                 />
-                {errors.TimeZone && <p className="text-red-500 text-sm mt-2">{errors.TimeZone}</p>}
+                {errors.TimeZone && (
+                  <p className="text-red-500 text-sm mt-2">{errors.TimeZone}</p>
+                )}
                 {/* {errors.TimeZone && (
                     <p className="text-red-500 text-sm mt-2">{errors.TimeZone}</p>
                   )} */}
@@ -383,7 +365,9 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
               <h2 className="block text-sm font-medium text-gray-900 mb-2">
                 Availability <span className="text-red-500">*</span>
               </h2>
-              {errors.TimeSlot && <p className="text-red-500 text-sm mb-2">{errors.TimeSlot}</p>}
+              {errors.TimeSlot && (
+                <p className="text-red-500 text-sm mb-2">{errors.TimeSlot}</p>
+              )}
               {/* {errors.TimeSlot && (
                   <p className="text-red-500 text-sm mb-2">{errors.TimeSlot}</p>
                 )} */}
@@ -402,27 +386,35 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
                     // You can handle availability data updates here if needed
                   }}
                 />
-                {console.log("Passing to Availability component - times:", times, "availabilityData:", availabilityDataFromProps)}
-
-
+                {console.log(
+                  "Passing to Availability component - times:",
+                  times,
+                  "availabilityData:",
+                  availabilityDataFromProps
+                )}
               </div>
             </div>
           </div>
 
           {/* Right Side: Preferred Duration */}
-          <div >
+          <div>
             <label
               htmlFor="PreferredInterviewDuration"
               className="block text-sm font-medium text-gray-900 mb-1"
             >
-              Preferred Interview Duration <span className="text-red-500">*</span>
+              Preferred Interview Duration{" "}
+              <span className="text-red-500">*</span>
             </label>
             <div className="border border-gray-500 text-sm p-3 rounded-lg w-full">
               <ul className="flex text-xs font-medium space-x-3">
                 {["30", "45", "60", "90"].map((duration) => (
                   <li
                     key={duration}
-                    className={`option cursor-pointer inline-block py-2 px-3 rounded-lg border border-custom-blue ${formData.selectedOption === duration ? "text-white bg-custom-blue" : "bg-white"}`}
+                    className={`option cursor-pointer inline-block py-2 px-3 rounded-lg border border-custom-blue ${
+                      formData.selectedOption === duration
+                        ? "text-white bg-custom-blue"
+                        : "bg-white"
+                    }`}
                     onClick={() => handleOptionClick(duration)}
                   >
                     {duration} mins
@@ -430,7 +422,11 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
                 ))}
               </ul>
             </div>
-            {errors.PreferredDuration && <p className="text-red-500 text-sm mt-2">{errors.PreferredDuration}</p>}
+            {errors.PreferredDuration && (
+              <p className="text-red-500 text-sm mt-2">
+                {errors.PreferredDuration}
+              </p>
+            )}
             {/* {errors.PreferredDuration && (
                 <p className="text-red-500 text-sm mt-2">{errors.PreferredDuration}</p>
               )} */}
@@ -451,12 +447,9 @@ const EditAvailabilityDetails = ({ from, usersId, setAvailabilityEditOpen, onSuc
             Save Changes
           </button>
         </div>
-
-
       </div>
-    </Modal>
-  )
-}
+    </SidebarPopup>
+  );
+};
 
-export default EditAvailabilityDetails
-
+export default EditAvailabilityDetails;
