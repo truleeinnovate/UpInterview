@@ -29,17 +29,10 @@ import { validateFile } from "../../../../utils/FileValidation/FileValidation";
 // Field components
 import ProfilePhotoUpload from "../../../../Components/FormFields/ProfilePhotoUpload";
 import ResumeUpload from "../../../../Components/FormFields/ResumeUpload";
-import FirstNameField from "../../../../Components/FormFields/FirstNameField";
-import LastNameField from "../../../../Components/FormFields/LastNameField";
 import DateOfBirthField from "../../../../Components/FormFields/DateOfBirthField";
 import GenderField from "../../../../Components/FormFields/GenderField";
 import EmailField from "../../../../Components/FormFields/EmailField";
 import PhoneField from "../../../../Components/FormFields/PhoneField";
-import HigherQualificationField from "../../../../Components/FormFields/HigherQualificationField";
-import UniversityCollegeField from "../../../../Components/FormFields/UniversityCollegeField";
-import CurrentExperienceField from "../../../../Components/FormFields/CurrentExperienceField";
-import RelevantExperienceField from "../../../../Components/FormFields/RelevantExperienceField";
-import CurrentRoleField from "../../../../Components/FormFields/CurrentRoleField";
 // v1.0.2 <---------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.2 --------------------------------------------------------------------->
@@ -51,6 +44,9 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 import { notify } from "../../../../services/toastService";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
+import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
+import InputField from "../../../../Components/FormFields/InputField";
 
 // v1.0.3 ----------------------------------------------------------------->
 
@@ -237,7 +233,19 @@ const AddCandidateForm = ({
     }
   }, [id, candidateData]);
 
-  
+  // Ensure University/College custom input is shown in edit mode when the saved value
+  // is not present in master list (handles the '+ Others' flow gracefully)
+  useEffect(() => {
+    const saved = (formData.UniversityCollege || '').trim();
+    // When nothing saved, keep dropdown mode
+    if (!saved) {
+      setIsCustomUniversity(false);
+      return;
+    }
+    const list = (colleges || []).map((c) => (c?.University_CollegeName || '').trim().toLowerCase());
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomUniversity(!existsInList);
+  }, [colleges, formData.UniversityCollege]);
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
@@ -404,8 +412,9 @@ const AddCandidateForm = ({
   // -------------------------------------------------------------------------->
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    let errorMessage = getErrorMessage(name, value);
+    // Build next form data so cross-field validation can use the latest values
+    const nextFormData = { ...formData, [name]: value };
+    let errorMessage = getErrorMessage(name, value, nextFormData);
 
     if (name === "CurrentExperience" || name === "RelevantExperience") {
       if (!/^\d*$/.test(value)) {
@@ -413,8 +422,21 @@ const AddCandidateForm = ({
       }
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: errorMessage }));
+    setFormData(nextFormData);
+    // Update this field's error, and if CurrentExperience changed, also revalidate RelevantExperience
+    setErrors((prev) => ({
+      ...prev,
+      [name]: errorMessage,
+      ...(name === "CurrentExperience" && formData.RelevantExperience
+        ? {
+            RelevantExperience: getErrorMessage(
+              "RelevantExperience",
+              formData.RelevantExperience,
+              nextFormData
+            ),
+          }
+        : {}),
+    }));
   };
 
   const handleDateChange = (date) => {
@@ -716,19 +738,21 @@ const AddCandidateForm = ({
                   Personal Details
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <FirstNameField
+                  <InputField
                     value={formData.FirstName}
                     onChange={handleChange}
                     inputRef={fieldRefs.FirstName}
                     label="First Name"
+                    name="FirstName"
                     required={false}
                   />
-                  <LastNameField
+                  <InputField
                     value={formData.LastName}
                     onChange={handleChange}
                     inputRef={fieldRefs.LastName}
                     error={errors.LastName}
                     label="Last Name"
+                    name="LastName"
                     required
                   />
                 </div>
@@ -789,16 +813,17 @@ const AddCandidateForm = ({
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <HigherQualificationField
+                  <DropdownWithSearchField
                     value={formData.HigherQualification}
                     options={qualificationOptionsRS}
                     onChange={handleChange}
                     error={errors.HigherQualification}
                     containerRef={fieldRefs.HigherQualification}
                     label="Higher Qualification"
+                    name="HigherQualification"
                     required
                   />
-                  <UniversityCollegeField
+                  <DropdownWithSearchField
                     value={formData.UniversityCollege}
                     options={collegeOptionsRS}
                     onChange={(e) => {
@@ -809,10 +834,11 @@ const AddCandidateForm = ({
                       }
                     }}
                     error={errors.UniversityCollege}
-                    isCustomUniversity={isCustomUniversity}
-                    setIsCustomUniversity={setIsCustomUniversity}
+                    isCustomName={isCustomUniversity}
+                    setIsCustomName={setIsCustomUniversity}
                     containerRef={fieldRefs.UniversityCollege}
                     label="University/College"
+                    name="UniversityCollege"
                     required
                   />
                 </div>
@@ -825,20 +851,22 @@ const AddCandidateForm = ({
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <CurrentExperienceField
+                  <IncreaseAndDecreaseField
                     value={formData.CurrentExperience}
                     onChange={handleChange}
                     inputRef={fieldRefs.CurrentExperience}
                     error={errors.CurrentExperience}
                     label="Current Experience"
+                    name="CurrentExperience"
                     required
                   />
-                  <RelevantExperienceField
+                  <IncreaseAndDecreaseField
                     value={formData.RelevantExperience}
                     onChange={handleChange}
                     inputRef={fieldRefs.RelevantExperience}
                     error={errors.RelevantExperience}
                     label="Relevant Experience"
+                    name="RelevantExperience"
                     required
                   />
                 </div>
@@ -846,13 +874,14 @@ const AddCandidateForm = ({
                 {/* Current Role */}
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <CurrentRoleField
+                  <DropdownWithSearchField
                     value={formData.CurrentRole}
                     options={roleOptionsRS}
                     onChange={handleChange}
                     error={errors.CurrentRole}
                     containerRef={fieldRefs.CurrentRole}
                     label="Current Role"
+                    name="CurrentRole"
                     required
                   />
                 </div>

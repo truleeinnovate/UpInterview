@@ -51,6 +51,7 @@ import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
 import { config } from "./config.js";
 import ToastProvider from "./Components/ToastProvider";
 
+
 // Lazy-loaded components (unchanged)
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 // const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
@@ -179,6 +180,10 @@ const ScheduleAssessment = lazy(() =>
 const ScheduleAssDetails = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
 );
+const SubscriptionPlansPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Subscription-Plans/Plans.jsx")
+);
+
 // Feedback Components
 const FeedbackTab = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback.jsx")
@@ -1218,6 +1223,20 @@ const MainAppRoutes = ({
                   path="/interviewer-requests"
                   element={<InterviewerRequestsPage />}
                 />
+              )}
+              {hasPermission("SubscriptionPlans") && (
+                <>
+                  <Route path="/sub-plans" element={<SubscriptionPlansPage />} />
+                  {hasPermission("SubscriptionPlans", "Create") && (
+                    <Route path="/sub-plans/new" element={<> <SubscriptionPlansPage /></>} />
+                  )}
+                  {hasPermission("SubscriptionPlans", "View") && (
+                    <Route path="/sub-plans/:id" element={<><SubscriptionPlansPage /></>} />
+                  )}
+                  {hasPermission("SubscriptionPlans", "Edit") && (
+                    <Route path="/sub-plans/:id/edit" element={<><SubscriptionPlansPage /></>} />
+                  )}
+                </>
               )}
               {hasPermission("Billing") && (
                 <Route path="/admin-billing" element={<BillingPage />}>
