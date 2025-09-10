@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - To handle bulk imports like .csv file improved careteMaster controller
 // v1.0.1 - Ashok - Removed get masters controller which is not in use
+// v1.0.2 - Ashok - Removed tenantId from create master
 
 const { Industry } = require("../../models/MasterSchemas/industries");
 const { LocationMaster } = require("../../models/MasterSchemas/LocationMaster");
@@ -46,6 +47,7 @@ const getModel = (type) => {
 // v1.0.0 <-----------------------------------------------------------
 
 // v1.0.1 <---------------------------------------------------------------------
+// v1.0.2 <--------------------------------------------------------------------------------
 // ✅ CREATE (supports single + bulk via CSV)
 // const createMaster = async (req, res) => {
 //   try {
@@ -140,7 +142,6 @@ const createMaster = async (req, res) => {
 
       // Feed data for bulk creation
       res.locals.feedData = {
-        tenantId: req.body[0]?.tenantId || null,
         feedType: "bulk_create",
         action: {
           name: "master_bulk_created",
@@ -182,7 +183,6 @@ const createMaster = async (req, res) => {
 
       // Feed data for single creation
       res.locals.feedData = {
-        tenantId: req.body?.tenantId || null,
         feedType: "info",
         action: {
           name: `${type}_created`,
@@ -202,6 +202,7 @@ const createMaster = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+// v1.0.2 -------------------------------------------------------------------------------->
 // v1.0.1 --------------------------------------------------------------------->
 // v1.0.0 ----------------------------------------------------------->
 

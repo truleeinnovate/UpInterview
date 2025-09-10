@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Added toast message for creating, updating and deleting masters
 // v1.0.1 - Ashok - Fixed issues
+// v1.0.2 - Ashok - Change placement of category field
 
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
@@ -228,6 +229,7 @@ const MasterTable = () => {
   };
 
   // v1.0.1 <------------------------------------------------------------
+  // v1.0.2 <------------------------------------------------------------
   const tableColumns = [
     {
       key: "name",
@@ -273,6 +275,19 @@ const MasterTable = () => {
         );
       },
     },
+    ...(type === "technology"
+      ? [
+          {
+            key: "Category",
+            header: "Category",
+            render: (value, row) => (
+              <span>
+                {row.Category ? capitalizeFirstLetter(row.Category) : "N/A"}
+              </span>
+            ),
+          },
+        ]
+      : []),
     {
       key: "createdBy",
       header: "Created By",
@@ -321,19 +336,6 @@ const MasterTable = () => {
         );
       },
     },
-    ...(type === "technology"
-      ? [
-          {
-            key: "Category",
-            header: "Category",
-            render: (value, row) => (
-              <span>
-                {row.Category ? capitalizeFirstLetter(row.Category) : "N/A"}
-              </span>
-            ),
-          },
-        ]
-      : []),
     ...(type === "category"
       ? [
           {
@@ -350,6 +352,7 @@ const MasterTable = () => {
         ]
       : []),
   ];
+  // v1.0.2 ------------------------------------------------------------>
   // v1.0.1 ------------------------------------------------------------>
 
   // v1.0.1 <------------------------------------------------------------

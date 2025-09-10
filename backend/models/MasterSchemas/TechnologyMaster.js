@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Added Category field
 // v1.0.1 - Ashok - Added fields
+// v1.0.2 - Ashok - Removed Tenant field
 
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
@@ -46,11 +47,6 @@ const TechnologyMasterSchema = new Schema(
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
-      default: null,
-    },
-    tenantId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Tenant",
       default: null,
     },
   },

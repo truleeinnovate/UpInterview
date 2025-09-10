@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - commented the code to implement master manipulations
+// v1.0.1 - Ashok - Removed Tenant field
 
 const mongoose = require("mongoose");
 
@@ -27,11 +28,6 @@ const companySchema = new mongoose.Schema(
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
-      default: null,
-    },
-    tenantId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Tenant",
       default: null,
     },
     // v1.0.0 ----------------------------------------->
