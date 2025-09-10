@@ -617,13 +617,13 @@ const deletePosition = async (req, res) => {
 
   try {
     // Permission check
-    const canDelete = await hasPermission(res.locals?.effectivePermissions?.Positions, 'Delete');
-    if (!canDelete) {
-      return res.status(403).json({ 
-        status: 'error',
-        message: 'Forbidden: missing Positions.Delete permission' 
-      });
-    }
+    // const canDelete = await hasPermission(res.locals?.effectivePermissions?.Positions, 'Delete');
+    // if (!canDelete) {
+    //   return res.status(403).json({ 
+    //     status: 'error',
+    //     message: 'Forbidden: missing Positions.Delete permission' 
+    //   });
+    // }
 
     // Validate ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
