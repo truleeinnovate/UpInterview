@@ -436,10 +436,10 @@ const deleteTask = async(req,res)=>{
 
     // const { tenantId, ownerId } = req.body;
 
-    const canDelete = await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Delete');
-    if (!canDelete) {
-      return res.status(403).json({ message: 'Forbidden: missing Task.Delete permission' });
-    }
+    // const canDelete = await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Delete');
+    // if (!canDelete) {
+    //   return res.status(403).json({ message: 'Forbidden: missing Task.Delete permission' });
+    // }
 
     // Find the task to ensure it exists and user has permission
     const task = await Task.findOne({

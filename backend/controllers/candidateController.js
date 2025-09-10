@@ -452,11 +452,11 @@ const deleteCandidate = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Permission check - adjust permission name as needed
-    const canDelete = await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Delete');
-    if (!canDelete) {
-      return res.status(403).json({ message: 'Forbidden: missing Candidates.Delete permission' });
-    }
+    // // Permission check - adjust permission name as needed
+    // const canDelete = await hasPermission(res.locals?.effectivePermissions?.Candidates, 'Delete');
+    // if (!canDelete) {
+    //   return res.status(403).json({ message: 'Forbidden: missing Candidates.Delete permission' });
+    // }
 
     // Validate ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
