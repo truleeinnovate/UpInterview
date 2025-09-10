@@ -461,3 +461,32 @@ export const useQuestions = (filters = {}) => {
     refetchSuggestedQuestions,
   };
 };
+
+
+export const useQuestionDeletion = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload) => {
+      const response = await axios.delete(`${config.REACT_APP_API_URL}/delete-questions`, {
+        data: payload,
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to delete questions");
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      // ✅ Refresh related queries after deletion
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
+      queryClient.invalidateQueries({ queryKey: ["createdLists"] });
+      queryClient.invalidateQueries({ queryKey: ["suggestedQuestions"] });
+    },
+    onError: (error) => {
+      console.error("Error deleting questions:", error);
+    },
+  });
+};

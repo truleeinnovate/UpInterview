@@ -4,7 +4,8 @@ const {
   updatePosition,
   saveInterviewRoundPosition,
   deleteRound,
-  updateInterviewRound
+  updateInterviewRound,
+  deletePosition
   // getPositionById,
   // updateRounds
 } = require('../controllers/positionController.js');
@@ -18,6 +19,12 @@ router.post('/add-rounds',loggingService.internalLoggingMiddleware,loggingServic
 router.patch('/update-round/:positionId/:roundId',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateInterviewRound);
 // Delete a specific round
 router.delete('/delete-round/:roundId', loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, deleteRound);
+
+
+
+// delete position
+router.delete('/delete-position/:id', deletePosition);
+
 
 // router.get("/:id", updateRounds);
 

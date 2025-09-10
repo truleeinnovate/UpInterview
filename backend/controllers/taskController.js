@@ -427,9 +427,64 @@ function formatValue(value) {
   return value.toString();
 }
 
+const deleteTask = async(req,res)=>{
+  res.locals.loggedByController = true;
+  res.locals.processName = "Delete Tasks";
+  const { id } = req.params;
+
+  try {
+
+    // const { tenantId, ownerId } = req.body;
+
+    const canDelete = await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Delete');
+    if (!canDelete) {
+      return res.status(403).json({ message: 'Forbidden: missing Task.Delete permission' });
+    }
+
+    // Find the task to ensure it exists and user has permission
+    const task = await Task.findOne({
+      _id: id,
+      // tenantId,
+      // ownerId
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found or you do not have permission to delete it'
+      });
+    }
+
+    // Delete the task
+    const deletedTask = await Task.findByIdAndDelete(id);
+
+    if (!deletedTask) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found'
+      });
+    }
+
+    res.status(200).json({
+      success: 'success',
+      message: 'Task deleted successfully',
+    
+    });
+
+  } catch (error) {
+    console.error('Delete task error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
+  }
+}
+
 module.exports = {
   getTasks,
   createTask,
   updateTask,
-  getTaskById
+  getTaskById,
+  deleteTask
 };

@@ -10,6 +10,7 @@ import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 export const useTasks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Tasks?.View;
+  const hasDeletePermission = effectivePermissions?.Tasks?.Delete;
 
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
@@ -102,10 +103,18 @@ export const useUpdateTask = () => {
 // Delete task
 export const useDeleteTask = () => {
   const queryClient = useQueryClient();
+  const { effectivePermissions } = usePermissions();
+  const hasDeletePermission = effectivePermissions?.Tasks?.Delete;
+  
   return useMutation({
     mutationFn: async (id) => {
+      if (!hasDeletePermission) {
+        throw new Error("You don't have permission to delete tasks");
+      }
       if (!id) throw new Error('Missing task id');
-      const res = await axios.delete(`${config.REACT_APP_API_URL}/tasks/${id}`);
+      
+      // Make sure this endpoint matches your backend route
+      const res = await axios.delete(`${config.REACT_APP_API_URL}/tasks/delete-task/${id}`);
       return res.data;
     },
     onSuccess: () => {
@@ -116,3 +125,42 @@ export const useDeleteTask = () => {
     },
   });
 };
+
+
+
+// const deleteMutation = useMutation({
+//   mutationFn: async (positionId) => {
+//     if (!hasDeletePermission) {
+//       throw new Error("You don't have permission to delete positions");
+//     }
+
+//     const response = await axios.delete(
+//       `${config.REACT_APP_API_URL}/position/delete-position/${positionId}`,
+//       // {
+//       //   headers: {
+//       //     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+//       //     'Content-Type': 'application/json'
+//       //   }
+//       // }
+//     );
+//     return response.data;
+//   },
+//   onSuccess: (data, positionId) => {
+//     // Optimistically remove from cache
+//     queryClient.setQueryData(["positions", filters], (oldData) => {
+//       if (!oldData) return oldData;
+//       return oldData.filter(position => position._id !== positionId);
+//     });
+    
+//     // Invalidate queries to ensure consistency
+//     queryClient.invalidateQueries(["positions"]);
+    
+//     console.log("Position deleted successfully:", data);
+//   },
+//   onError: (error, positionId) => {
+//     console.error("Error deleting position:", error);
+    
+//     // Revert optimistic update on error
+//     queryClient.invalidateQueries(["positions"]);
+//   },
+// });
