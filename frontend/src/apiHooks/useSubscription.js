@@ -73,7 +73,7 @@ export const useSubscription = () => {
     queryKey: ['subscription', ownerId],
     queryFn: async () => {
       if (!ownerId) return {};
-      const res = await axios.get(`${config.REACT_APP_API_URL}/subscriptions/${ownerId}`,(authToken ? authHeader(authToken) : undefined));
+      const res = await axios.get(`${config.REACT_APP_API_URL}/subscription-plans/${ownerId}`,(authToken ? authHeader(authToken) : undefined));
       const sub = res?.data?.customerSubscription?.[0] || {};
       if (sub && !sub.paymentMethod) {
         sub.paymentMethod = 'card';

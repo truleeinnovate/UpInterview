@@ -531,7 +531,7 @@ const CustomProvider = ({ children }) => {
     const fetchData = async () => {
       try {
         const Sub_res = await axios.get(
-          `${config.REACT_APP_API_URL}/subscriptions/${userId}`
+          `${config.REACT_APP_API_URL}/subscription-plans/${userId}`
         );
         const Subscription_data = Sub_res.data.customerSubscription?.[0] || {};
         // If subscription exists, set it; otherwise, keep it empty

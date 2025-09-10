@@ -20,6 +20,11 @@ export const useSubscriptionPlansAdmin = () => {
   const queryClient = useQueryClient();
   const { headers, userName } = getAuth();
 
+  // Remove any `_id` keys deep in the object (pricing/features, etc.)
+  const stripIds = (input) => JSON.parse(
+    JSON.stringify(input, (key, value) => (key === '_id' ? undefined : value))
+  );
+
   const plansQuery = useQuery({
     queryKey: ['subscriptionPlansAdmin'],
     queryFn: async () => {
@@ -33,7 +38,7 @@ export const useSubscriptionPlansAdmin = () => {
 
   const createMutation = useMutation({
     mutationFn: async (payload) => {
-      const body = { ...payload };
+      const body = stripIds({ ...payload });
       if (!body.createdBy) body.createdBy = userName;
       return (await axios.post(`${config.REACT_APP_API_URL}/subscriptions`, body, headers)).data;
     },
@@ -52,7 +57,7 @@ export const useSubscriptionPlansAdmin = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
-      const body = { ...data };
+      const body = stripIds({ ...data });
       body.modifiedBy = body.modifiedBy || userName;
       return (await axios.put(`${config.REACT_APP_API_URL}/subscription-plan-update/${id}`, body, headers)).data;
     },

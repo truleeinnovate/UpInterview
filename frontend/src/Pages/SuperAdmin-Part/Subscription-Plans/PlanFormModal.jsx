@@ -2,9 +2,11 @@
 // v1.0.0 - Create/Edit Subscription Plan modal
 
 import { useEffect, useMemo, useState } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import SidebarPopup from '../../../Components/Shared/SidebarPopup/SidebarPopup';
 import { useScrollLock } from '../../../apiHooks/scrollHook/useScrollLock';
+import { InputField, DescriptionField } from '../../../Components/FormFields';
+import DropdownSelect from '../../../Components/Dropdowns/DropdownSelect';
 
 const defaultPricingRow = (cycle = 'monthly') => ({ billingCycle: cycle, price: '', discount: 0, discountType: 'flat', currency: 'USD' });
 const defaultFeatureRow = () => ({ name: '', limit: '', description: '' });
@@ -144,25 +146,50 @@ export default function PlanFormModal({
             {/* Basic */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Plan ID<span className="text-red-500">*</span></label>
-                <input value={form.planId} onChange={(e) => handleChange('planId', e.target.value)} className="mt-1 w-full border rounded px-3 py-2" />
-                {errors.planId && <p className="text-xs text-red-600 mt-1">{errors.planId}</p>}
+                <InputField
+                  name="planId"
+                  label="Plan ID"
+                  required
+                  value={form.planId}
+                  onChange={(e) => handleChange('planId', e.target.value)}
+                  error={errors.planId}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name<span className="text-red-500">*</span></label>
-                <input value={form.name} onChange={(e) => handleChange('name', e.target.value)} className="mt-1 w-full border rounded px-3 py-2" />
-                {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+                <InputField
+                  name="name"
+                  label="Name"
+                  required
+                  value={form.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  error={errors.name}
+                />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea value={form.description} onChange={(e) => handleChange('description', e.target.value)} className="mt-1 w-full border rounded px-3 py-2" rows={2} />
+                <DescriptionField
+                  name="description"
+                  label="Description"
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => handleChange('description', e.target.value)}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Subscription Type<span className="text-red-500">*</span></label>
-                <select value={form.subscriptionType} onChange={(e) => handleChange('subscriptionType', e.target.value)} className="mt-1 w-full border rounded px-3 py-2">
-                  <option value="organization">Organization</option>
-                  <option value="individual">Individual</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subscription Type</label>
+                <DropdownSelect
+                  isSearchable={false}
+                  options={[
+                    { value: 'organization', label: 'Organization' },
+                    { value: 'individual', label: 'Individual' },
+                  ]}
+                  hasError={!!errors.subscriptionType}
+                  value={[
+                    { value: 'organization', label: 'Organization' },
+                    { value: 'individual', label: 'Individual' },
+                  ].find((o) => o.value === form.subscriptionType) || null}
+                  onChange={(opt) => handleChange('subscriptionType', opt?.value || '')}
+                  classNamePrefix="rs"
+                />
                 {errors.subscriptionType && <p className="text-xs text-red-600 mt-1">{errors.subscriptionType}</p>}
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -176,12 +203,26 @@ export default function PlanFormModal({
                 </label>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Max Users</label>
-                <input type="number" value={form.maxUsers} onChange={(e) => handleChange('maxUsers', Number(e.target.value))} className="mt-1 w-full border rounded px-3 py-2" />
+                <InputField
+                  name="maxUsers"
+                  label="Max Users"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={form.maxUsers}
+                  onChange={(e) => handleChange('maxUsers', Number(e.target.value))}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Trial Period (days)</label>
-                <input type="number" value={form.trialPeriod} onChange={(e) => handleChange('trialPeriod', Number(e.target.value))} className="mt-1 w-full border rounded px-3 py-2" />
+                <InputField
+                  name="trialPeriod"
+                  label="Trial Period (days)"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={form.trialPeriod}
+                  onChange={(e) => handleChange('trialPeriod', Number(e.target.value))}
+                />
               </div>
             </div>
 
@@ -195,38 +236,81 @@ export default function PlanFormModal({
                 {form.pricing.map((p, idx) => (
                   <div key={idx} className="grid grid-cols-1 md:grid-cols-5 gap-2 border rounded p-2">
                     <div>
-                      <label className="block text-xs text-gray-500">Billing Cycle</label>
-                      <select value={p.billingCycle} onChange={(e) => handlePricingChange(idx, 'billingCycle', e.target.value)} className="w-full border rounded px-2 py-1">
-                        <option value="monthly">Monthly</option>
-                        <option value="quarterly">Quarterly</option>
-                        <option value="annual">Annual</option>
-                      </select>
+                      <label className="block text-xs text-gray-500 pb-2">Billing Cycle</label>
+                      <DropdownSelect
+                        isSearchable={false}
+                        options={[
+                          { value: 'monthly', label: 'Monthly' },
+                          { value: 'quarterly', label: 'Quarterly' },
+                          { value: 'annual', label: 'Annual' },
+                        ]}
+                        hasError={!!errors.pricing?.[idx]?.billingCycle}
+                        value={[
+                          { value: 'monthly', label: 'Monthly' },
+                          { value: 'quarterly', label: 'Quarterly' },
+                          { value: 'annual', label: 'Annual' },
+                        ].find((o) => o.value === p.billingCycle) || null}
+                        onChange={(opt) => handlePricingChange(idx, 'billingCycle', opt?.value || '')}
+                        classNamePrefix="rs"
+                      />
                       {errors.pricing?.[idx]?.billingCycle && <p className="text-xs text-red-600 mt-1">{errors.pricing[idx].billingCycle}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500">Price</label>
-                      <input type="number" value={p.price} onChange={(e) => handlePricingChange(idx, 'price', e.target.value)} className="w-full border rounded px-2 py-1" />
-                      {errors.pricing?.[idx]?.price && <p className="text-xs text-red-600 mt-1">{errors.pricing[idx].price}</p>}
+                      <InputField
+                        name={`price_${idx}`}
+                        label="Price"
+                        type="number"
+                        value={p.price}
+                        onChange={(e) => handlePricingChange(idx, 'price', e.target.value)}
+                        error={errors.pricing?.[idx]?.price}
+                        className="!py-1 !px-2"
+                      />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500">Discount</label>
-                      <input type="number" value={p.discount} onChange={(e) => handlePricingChange(idx, 'discount', e.target.value)} className="w-full border rounded px-2 py-1" />
+                      <InputField
+                        name={`discount_${idx}`}
+                        label="Discount"
+                        type="number"
+                        value={p.discount}
+                        onChange={(e) => handlePricingChange(idx, 'discount', e.target.value)}
+                        className="!py-1 !px-2"
+                      />
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500">Discount Type</label>
-                      <select value={p.discountType} onChange={(e) => handlePricingChange(idx, 'discountType', e.target.value)} className="w-full border rounded px-2 py-1">
-                        <option value="flat">Flat</option>
-                        <option value="percentage">Percentage</option>
-                      </select>
+                      <DropdownSelect
+                        isSearchable={false}
+                        options={[
+                          { value: 'flat', label: 'Flat' },
+                          { value: 'percentage', label: 'Percentage' },
+                        ]}
+                        value={[
+                          { value: 'flat', label: 'Flat' },
+                          { value: 'percentage', label: 'Percentage' },
+                        ].find((o) => o.value === p.discountType) || null}
+                        onChange={(opt) => handlePricingChange(idx, 'discountType', opt?.value || '')}
+                        classNamePrefix="rs"
+                      />
                     </div>
                     <div className="flex items-end gap-2">
                       <div className="flex-1">
                         <label className="block text-xs text-gray-500">Currency</label>
-                        <select value={p.currency} onChange={(e) => handlePricingChange(idx, 'currency', e.target.value)} className="w-full border rounded px-2 py-1">
-                          <option value="USD">USD</option>
-                          <option value="INR">INR</option>
-                          <option value="EUR">EUR</option>
-                        </select>
+                        <DropdownSelect
+                          isSearchable={false}
+                          options={[
+                            { value: 'USD', label: 'USD' },
+                            { value: 'INR', label: 'INR' },
+                            { value: 'EUR', label: 'EUR' },
+                          ]}
+                          hasError={!!errors.pricing?.[idx]?.currency}
+                          value={[
+                            { value: 'USD', label: 'USD' },
+                            { value: 'INR', label: 'INR' },
+                            { value: 'EUR', label: 'EUR' },
+                          ].find((o) => o.value === p.currency) || null}
+                          onChange={(opt) => handlePricingChange(idx, 'currency', opt?.value || '')}
+                          classNamePrefix="rs"
+                        />
                         {errors.pricing?.[idx]?.currency && <p className="text-xs text-red-600 mt-1">{errors.pricing[idx].currency}</p>}
                       </div>
                       <button type="button" className="p-2 text-red-600 hover:bg-red-50 rounded self-end" onClick={() => removePricing(idx)}>
@@ -248,19 +332,35 @@ export default function PlanFormModal({
                 {form.features.map((f, idx) => (
                   <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-2 border rounded p-2">
                     <div>
-                      <label className="block text-xs text-gray-500">Name</label>
-                      <input value={f.name} onChange={(e) => handleFeatureChange(idx, 'name', e.target.value)} className="w-full border rounded px-2 py-1" />
-                      {errors.features?.[idx]?.name && <p className="text-xs text-red-600 mt-1">{errors.features[idx].name}</p>}
+                      <InputField
+                        name={`feature_name_${idx}`}
+                        label="Name"
+                        value={f.name}
+                        onChange={(e) => handleFeatureChange(idx, 'name', e.target.value)}
+                        error={errors.features?.[idx]?.name}
+                        className="!py-1 !px-2"
+                      />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500">Limit</label>
-                      <input type="number" value={f.limit} onChange={(e) => handleFeatureChange(idx, 'limit', e.target.value)} className="w-full border rounded px-2 py-1" />
-                      {errors.features?.[idx]?.limit && <p className="text-xs text-red-600 mt-1">{errors.features[idx].limit}</p>}
+                      <InputField
+                        name={`feature_limit_${idx}`}
+                        label="Limit"
+                        type="number"
+                        value={f.limit}
+                        onChange={(e) => handleFeatureChange(idx, 'limit', e.target.value)}
+                        error={errors.features?.[idx]?.limit}
+                        className="!py-1 !px-2"
+                      />
                     </div>
                     <div className="flex items-end gap-2">
                       <div className="flex-1">
-                        <label className="block text-xs text-gray-500">Description</label>
-                        <input value={f.description} onChange={(e) => handleFeatureChange(idx, 'description', e.target.value)} className="w-full border rounded px-2 py-1" />
+                        <InputField
+                          name={`feature_description_${idx}`}
+                          label="Description"
+                          value={f.description}
+                          onChange={(e) => handleFeatureChange(idx, 'description', e.target.value)}
+                          className="!py-1 !px-2"
+                        />
                       </div>
                       <button type="button" className="p-2 text-red-600 hover:bg-red-50 rounded self-end" onClick={() => removeFeature(idx)}>
                         <Trash2 className="w-4 h-4" />
@@ -276,20 +376,20 @@ export default function PlanFormModal({
               <h4 className="text-sm font-semibold text-gray-800 mb-2">Razorpay Plan IDs</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500">Monthly Plan ID</label>
-                  <input
+                  <InputField
+                    name="razorpay_monthly"
+                    label="Monthly Plan ID"
                     value={form.razorpayPlanIds.monthly}
                     onChange={(e) => handleRazorpayIdChange('monthly', e.target.value)}
-                    className="w-full border rounded px-3 py-2"
                     placeholder="plan_xxxxx_monthly"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500">Annual Plan ID</label>
-                  <input
+                  <InputField
+                    name="razorpay_annual"
+                    label="Annual Plan ID"
                     value={form.razorpayPlanIds.annual}
                     onChange={(e) => handleRazorpayIdChange('annual', e.target.value)}
-                    className="w-full border rounded px-3 py-2"
                     placeholder="plan_xxxxx_annual"
                   />
                 </div>
