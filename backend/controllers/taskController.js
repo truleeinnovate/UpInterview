@@ -34,11 +34,11 @@ const createTask = async (req, res) => {
   res.locals.processName = "Create Task";
   //<-----v1.0.1---
   // Permission: Tasks.Create (or super admin override)
-  const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Create')
-  if (!canCreate) {
-    return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
-  }
+  // const canCreate =
+  //   await hasPermission(res.locals?.effectivePermissions?.Tasks, 'Create')
+  // if (!canCreate) {
+  //   return res.status(403).json({ message: 'Forbidden: missing Tasks.Create permission' });
+  // }
   //-----v1.0.1--->
 
   //<------v1.0.0---
