@@ -1,7 +1,16 @@
 // v1.0.0 - Ashok - Added toast message for creating, updating and deleting masters
+// v1.0.1 - Ashok - Fixed issues
+
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
-import { Eye, Pencil, Trash2, ArrowLeft, AlertTriangle, Edit2 } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  ArrowLeft,
+  AlertTriangle,
+  Edit2,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -38,17 +47,17 @@ const MasterTable = () => {
   const [popupMode, setPopupMode] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  
-     const authToken = Cookies.get("authToken");
-      const impersonationToken = Cookies.get("impersonationToken");
-   
-      const impersonatedTokenPayload = decodeJwt(impersonationToken);
-    const  ownerId = impersonatedTokenPayload?.impersonatedUserId;
-    // const tenantId = tokenPayload?.tenantId;
 
-    // console.log("ownerId",ownerId);
-    // console.log("impersonatedTokenPayload",impersonatedTokenPayload);
-    // console.log("impersonationToken",impersonationToken);
+  const authToken = Cookies.get("authToken");
+  const impersonationToken = Cookies.get("impersonationToken");
+
+  const impersonatedTokenPayload = decodeJwt(impersonationToken);
+  const ownerId = impersonatedTokenPayload?.impersonatedUserId;
+  // const tenantId = tokenPayload?.tenantId;
+
+  // console.log("ownerId",ownerId);
+  // console.log("impersonatedTokenPayload",impersonatedTokenPayload);
+  // console.log("impersonationToken",impersonationToken);
 
   // Used to disable outer scrollbar
   useScrollLock(isPopupOpen || isDeletePopupOpen);
@@ -70,43 +79,72 @@ const MasterTable = () => {
     };
     fetchData();
   }, [type]);
- 
-  
 
   // Create and update
-  // v1.0.0 <-----------------------------------------------------------------
+  // v1.0.1 <-----------------------------------------------------------------
+
+  // const handleSaveMaster = async (data) => {
+  //   try {
+  //     console.log("MASTER DATA FOR SAVING FORM ==========> ", data)
+  //     if (selectedMaster) {
+  //       // Update existing master
+  //       const res = await axios.put(
+  //         `${config.REACT_APP_API_URL}/master-data/${type}/${selectedMaster._id}`,
+  //         data,
+  //         ownerId
+  //       );
+  //       console.log("Updated master:", res.data);
+
+  //       toast.success(`Master updated successfully!`);
+  //     } else {
+  //       // Create new master
+  //       const res = await axios.post(
+  //         `${config.REACT_APP_API_URL}/master-data/${type}`,
+  //         {
+  //           // data,
+  //           ...data,
+  //           ownerId,
+  //         }
+  //       );
+  //       console.log("Created master:", res.data);
+
+  //       toast.success(`Master created successfully!`);
+  //     }
+
+  //     // Reset selected master
+  //     setSelectedMaster(null);
+  //   } catch (err) {
+  //     console.error("Error saving master:", err);
+  //     const message =
+  //       err.response?.data?.message ||
+  //       `Failed to save Master. Please try again.`;
+  //     toast.error(message);
+  //   }
+  // };
   const handleSaveMaster = async (data) => {
     try {
+      console.log("MASTER DATA FOR SAVING FORM ==========> ", data);
+
+      const payload =
+        Array.isArray(data) && data.length > 0
+          ? data.map((item) => ({ ...item, ownerId })) // bulk + ownerId
+          : { ...data, ownerId }; // single
+
       if (selectedMaster) {
         // Update existing master
         const res = await axios.put(
           `${config.REACT_APP_API_URL}/master-data/${type}/${selectedMaster._id}`,
-          data
+          payload
         );
         console.log("Updated master:", res.data);
-
-        // Update state
-        setMasterData((prev) =>
-          prev.map((item) =>
-            item._id === selectedMaster._id ? res.data : item
-          )
-        );
         toast.success(`Master updated successfully!`);
       } else {
         // Create new master
         const res = await axios.post(
           `${config.REACT_APP_API_URL}/master-data/${type}`,
-          {
-            // data,
-           ...data,
-           ownerId,
-   
-          }
+          payload
         );
         console.log("Created master:", res.data);
-
-        // Append to state
-        setMasterData((prev) => [...prev, res.data]);
         toast.success(`Master created successfully!`);
       }
 
@@ -115,12 +153,14 @@ const MasterTable = () => {
     } catch (err) {
       console.error("Error saving master:", err);
       const message =
-        err.response?.data?.message ||
-        `Failed to save Master. Please try again.`;
+        err.response?.data?.error || `Failed to save Master. Please try again.`;
       toast.error(message);
     }
   };
 
+  // v1.0.1 ----------------------------------------------------------------->
+
+  // v1.0.0 <-----------------------------------------------------------------
   // Delete
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -173,7 +213,6 @@ const MasterTable = () => {
       return matchesQuery && matchesFilters;
     });
   };
-
   // Pagination
   const rowsPerPage = 10;
   const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
@@ -188,6 +227,7 @@ const MasterTable = () => {
     setCurrentPage(0);
   };
 
+  // v1.0.1 <------------------------------------------------------------
   const tableColumns = [
     {
       key: "name",
@@ -219,6 +259,9 @@ const MasterTable = () => {
           case "company":
             displayName = row.CompanyName;
             break;
+          case "category":
+            displayName = row.CategoryName;
+            break;
           default:
             displayName = null;
         }
@@ -233,40 +276,88 @@ const MasterTable = () => {
     {
       key: "createdBy",
       header: "Created By",
-      render: (value, row) => <span>{row.CreatedBy || "N/A"}</span>,
+      render: (value, row) => (
+        <span>
+          {row?.createdBy
+            ? `${capitalizeFirstLetter(row.createdBy.firstName) || ""} ${
+                capitalizeFirstLetter(row.createdBy.lastName) || ""
+              }`.trim() || "N/A"
+            : "N/A"}
+        </span>
+      ),
     },
     {
-      key: "createdDate",
+      key: "createdAt",
       header: "Created Date",
-      render: (value, row) =>
-        row.CreatedDate ? (
-          <span>{new Date(row.CreatedDate).toLocaleDateString()}</span>
+      render: (value, row) => {
+        return row.createdAt ? (
+          <span>{new Date(row.createdAt).toLocaleDateString()}</span>
         ) : (
           "N/A"
-        ),
+        );
+      },
     },
     {
-      key: "modifiedBy",
-      header: "Modified By",
-      render: (value, row) => <span>{row.ModifiedBy || "N/A"}</span>,
+      key: "updatedBy",
+      header: "Updated By",
+      render: (value, row) => (
+        <span>
+          {row?.updatedBy
+            ? `${capitalizeFirstLetter(row.updatedBy.firstName) || ""} ${
+                capitalizeFirstLetter(row.updatedBy.lastName) || ""
+              }`.trim() || "N/A"
+            : "N/A"}
+        </span>
+      ),
     },
     {
-      key: "modifiedDate",
-      header: "Modified Date",
-      render: (value, row) =>
-        row.ModifiedDate ? (
-          <span>{new Date(row.ModifiedDate).toLocaleDateString()}</span>
+      key: "updatedAt",
+      header: "Updated Date",
+      render: (value, row) => {
+        return row.updatedAt ? (
+          <span>{new Date(row.updatedAt).toLocaleDateString()}</span>
         ) : (
           "N/A"
-        ),
+        );
+      },
     },
+    ...(type === "technology"
+      ? [
+          {
+            key: "Category",
+            header: "Category",
+            render: (value, row) => (
+              <span>
+                {row.Category ? capitalizeFirstLetter(row.Category) : "N/A"}
+              </span>
+            ),
+          },
+        ]
+      : []),
+    ...(type === "category"
+      ? [
+          {
+            key: "isActive",
+            header: "Status",
+            render: (value, row) => (
+              <span>
+                {row.isActive !== undefined && row.isActive !== null
+                  ? capitalizeFirstLetter(row.isActive.toString())
+                  : "N/A"}
+              </span>
+            ),
+          },
+        ]
+      : []),
   ];
+  // v1.0.1 ------------------------------------------------------------>
 
+  // v1.0.1 <------------------------------------------------------------
   const tableActions = [
     {
       key: "view",
       label: "View",
-      icon: <Edit2 className="w-4 h-4 text-green-600" />,
+      icon: <Eye className="w-4 h-4 text-green-600" />,
       onClick: (item) => {
         setSelectedMaster(item);
         setPopupMode("edit");
@@ -293,6 +384,7 @@ const MasterTable = () => {
       },
     },
   ];
+  // v1.0.1 ------------------------------------------------------------>
 
   const kanbanColumns = [
     {

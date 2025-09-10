@@ -3,6 +3,7 @@
 // v1.0.2 - Ashok - modified some styles
 // v1.0.3 - Ashok - fixed default view and unique key issue
 // v1.0.4 - Ashok - Improved responsiveness
+// v1.0.5 - Ashok - Fixed issues in responsiveness for activity
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
@@ -539,12 +540,13 @@ const PositionSlideDetails = () => {
             {/* v1.0.4 -----------------------------------------------------------------------------> */}
           </div>
         )}
-
+        {/* v1.0.5 <------------------------------- */}
         {activeTab === "Activity" && (
-          <div className="p-6">
+          <div className="sm:p-0 p-6">
             <Activity parentId={id} />
           </div>
         )}
+        {/* v1.0.5 -------------------------------> */}
       </div>
     </div>
     // v1.0.4 ---------------------------------------------------------------->
