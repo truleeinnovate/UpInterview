@@ -1,12 +1,19 @@
 const cron = require('node-cron');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const os = require('os');
 const Task = require('../../models/task'); // Fix case-sensitive path on Linux/CI
 const { Users } = require('../../models/Users'); // Adjust path as per your structure
 const PushNotification = require('../../models/PushNotifications');
 //const { sendEmail } = require('../../utils/sendEmail'); // Adjust path as per your structure
 //const emailTemplateModel = require('../../models/EmailTemplatemodel'); // Adjust path as per your structure
 
+
+// Runtime configuration for cron in different environments (e.g., Azure App Service)
+const CRON_ENABLED = process.env.TASK_REMINDER_CRON_ENABLED !== 'false'; // default: enabled
+const CRON_TZ = process.env.TASK_REMINDER_CRON_TZ || 'UTC'; // Azure typically runs in UTC
+const LOCK_TTL_MS = parseInt(process.env.TASK_REMINDER_LOCK_TTL_MS || '', 10) || (55 * 60 * 1000); // 55 mins
+const INSTANCE_ID = process.env.WEBSITE_INSTANCE_ID || process.env.HOSTNAME || os.hostname();
 
 // console.log('pushNotificationEmailController.js LOADED at', new Date().toISOString(), ' - If you see this, the file is being executed.');
 
@@ -19,6 +26,13 @@ const PushNotification = require('../../models/PushNotifications');
 
 // The actual cron job logic extracted for reuse
 const runTaskReminderJob = async () => {
+  // Ensure DB connection is ready to avoid queries before initial connection completes
+  if (mongoose.connection.readyState !== 1) {
+    // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+    // Skip this run and wait for the connection to be established
+    // console.warn('Skipping task reminder job: MongoDB not connected yet.');
+    return;
+  }
 
   //console.log('Running automated task email reminder job at', new Date().toISOString());
 
@@ -163,14 +177,79 @@ const runTaskReminderJob = async () => {
   }
 };
 
-// Cron job to automate email reminders for tasks due in 24 hours
-cron.schedule('* * * * *', async () => {
-  runTaskReminderJob();
-});
+// Simple distributed lock using MongoDB to prevent duplicate cron runs across multiple instances
+// Strategy: try to take over an expired lock via update; if none, attempt to insert a new lock.
+// This avoids upsert races that can cause E11000 errors.
+async function acquireJobLock(lockName, ttlMs) {
+  if (mongoose.connection.readyState !== 1) return false;
+  const now = new Date();
+  const lockUntil = new Date(now.getTime() + ttlMs);
+  const coll = mongoose.connection.collection('jobLocks');
 
+  // 1) Try to update an existing, expired lock atomically
+  try {
+    const res = await coll.findOneAndUpdate(
+      { _id: lockName, lockUntil: { $lte: now } },
+      { $set: { lockUntil, holder: INSTANCE_ID, updatedAt: now } },
+      { returnDocument: 'after' }
+    );
+    if (res && res.value) {
+      return true; // we took ownership
+    }
+  } catch (err) {
+    console.error('Job lock takeover attempt failed:', err);
+    // fall through to insert attempt
+  }
 
-// console.log('Task reminder cron job scheduled to run every minute for testing.');
+  // 2) Try to insert a new lock if none existed
+  try {
+    await coll.insertOne({ _id: lockName, lockUntil, holder: INSTANCE_ID, updatedAt: now, createdAt: now });
+    return true; // created new lock
+  } catch (err) {
+    // If another instance inserted concurrently, treat as not acquired (noisy logs avoided)
+    if (err && (err.code === 11000 || err.codeName === 'DuplicateKey')) {
+      return false;
+    }
+    console.error('Job lock acquisition failed:', err);
+    return false;
+  }
+}
+// Cron job to automate email reminders for tasks due in 24 hours.
+// Schedule only AFTER MongoDB connection is established to prevent pre-connection queries.
+let cronTask;
+function scheduleTaskReminderCron() {
+  if (cronTask || !CRON_ENABLED) return; // prevent duplicate schedules or disabled
+  // Run every hour at minute 0
+  cronTask = cron.schedule(
+    '0 * * * *',
+    async () => {
+      try {
+        const hasLock = await acquireJobLock('task_reminder_cron', LOCK_TTL_MS);
+        if (!hasLock) {
+          // Another instance owns the lock; skip this tick
+          return;
+        }
+        await runTaskReminderJob();
+      } catch (err) {
+        console.error('Automated Task Email Reminder Job Error:', err);
+      }
+    },
+    { timezone: CRON_TZ }
+  );
+  // console.log(`Task reminder cron job scheduled to run hourly (TZ=${CRON_TZ}).`);
+}
 
-// Run immediately on file load for testing
-// console.log('Running initial test of task reminder job at startup...');
-runTaskReminderJob();
+if (mongoose.connection.readyState === 1) {
+  scheduleTaskReminderCron();
+  // Optionally run once immediately after confirmed connection (guarded by lock to avoid duplicates)
+  acquireJobLock('task_reminder_cron', 5 * 60 * 1000)
+    .then((ok) => ok && runTaskReminderJob())
+    .catch((err) => console.error('Initial task reminder lock/run error:', err));
+} else {
+  mongoose.connection.once('connected', () => {
+    scheduleTaskReminderCron();
+    acquireJobLock('task_reminder_cron', 5 * 60 * 1000)
+      .then((ok) => ok && runTaskReminderJob())
+      .catch((err) => console.error('Initial task reminder lock/run error after connect:', err));
+  });
+}
