@@ -1,15 +1,16 @@
 import React from "react";
 import DropdownSelect, { StickyFooterMenuList, preserveStickyOptionFilter } from "../Dropdowns/DropdownSelect";
 
-const UniversityCollegeField = ({
+const DropdownWithSearchField = ({
   value,
   options,
+  name,
   onChange,
   error,
-  isCustomUniversity,
-  setIsCustomUniversity,
+  isCustomName = false,
+  setIsCustomName = undefined,
   containerRef,
-  label = "University/College",
+  label = "DropdownWithSearchField",
   required = false,
 }) => {
   return (
@@ -17,7 +18,7 @@ const UniversityCollegeField = ({
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      {!isCustomUniversity ? (
+      {!isCustomName ? (
         <div ref={containerRef}>
           <DropdownSelect
             options={options}
@@ -27,14 +28,18 @@ const UniversityCollegeField = ({
             value={options.find((o) => o.value === value) || null}
             onChange={(opt) => {
               if (opt?.value === "__other__") {
-                setIsCustomUniversity(true);
-                onChange({ target: { name: "UniversityCollege", value: "" } });
+                if (typeof setIsCustomName === "function") {
+                  setIsCustomName(true);
+                }
+                onChange({ target: { name: name, value: "" } });
               } else {
-                setIsCustomUniversity(false);
-                onChange({ target: { name: "UniversityCollege", value: opt?.value || "" } });
+                if (typeof setIsCustomName === "function") {
+                  setIsCustomName(false);
+                }
+                onChange({ target: { name: name, value: opt?.value || "" } });
               }
             }}
-            placeholder="Select a University/College"
+            placeholder={`Select a ${label}`}
             hasError={!!error}
             classNamePrefix="rs"
           />
@@ -45,7 +50,7 @@ const UniversityCollegeField = ({
             ref={containerRef}
             type="text"
             value={value}
-            onChange={(e) => onChange({ target: { name: "UniversityCollege", value: e.target.value } })}
+            onChange={(e) => onChange({ target: { name: name, value: e.target.value } })}
             className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
             border ${
               error
@@ -54,13 +59,15 @@ const UniversityCollegeField = ({
             }
             focus:outline-gray-300
           `}
-            placeholder="Enter custom university/college name"
+            placeholder={`Enter custom ${label} name`}
           />
           <button
             type="button"
             onClick={() => {
-              setIsCustomUniversity(false);
-              onChange({ target: { name: "UniversityCollege", value: "" } });
+              if (typeof setIsCustomName === "function") {
+                setIsCustomName(false);
+              }
+              onChange({ target: { name: name, value: "" } });
             }}
             className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
           >
@@ -75,4 +82,4 @@ const UniversityCollegeField = ({
   );
 };
 
-export default UniversityCollegeField;
+export default DropdownWithSearchField;

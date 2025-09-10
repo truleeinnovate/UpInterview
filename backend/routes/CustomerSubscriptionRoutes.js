@@ -8,6 +8,6 @@ router.post("/update-customer-subscription",updateCustomerSubscriptionController
 
 router.get('/get-CustomerSubscription',getAllCustomerSubscription);
 
-router.get("/subscriptions/:ownerId",getBasedTentIdCustomerSubscription)
+router.get("/subscription-plans/:ownerId",getBasedTentIdCustomerSubscription)
 
 module.exports = router;

@@ -47,12 +47,12 @@ exports.createTicket = async (req, res) => {
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-    await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Create') ||
-    await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Create')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing SupportDesk.Create permission' });
-    }
+    // const canCreate =
+    // await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Create') ||
+    // await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Create')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.Create permission' });
+    // }
     //-----v1.0.1--->
 
 
@@ -414,12 +414,12 @@ exports.updateTicketById = async (req, res) => {
     console.log("ownerId",ownerId);
     console.log("tenantId",tenantId);
 
-    const canCreate =
-      await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
-      await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Edit')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing SupportDesk.Edit permission' });
-    }
+    // const canCreate =
+    //   await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
+    //   await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Edit')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.Edit permission' });
+    // }
 
     const currentTicket = await SupportUser.findById(id).lean();
     if (!currentTicket) {
@@ -560,12 +560,12 @@ exports.updateSupportTicket = async (req, res) => {
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-      await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
-     await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Edit')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing SupportDesk.Edit permission' });
-    }
+    // const canCreate =
+    //   await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'Edit') ||
+    //  await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'Edit')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.Edit permission' });
+    // }
     //-----v1.0.1--->
 
     const ticket = await SupportUser.findById(id);
@@ -614,12 +614,12 @@ exports.getAllTickets = async (req, res) => {
     //console.log("effectivePermissions",res.locals?.effectivePermissions)
     //<-----v1.0.1---
     // Permission: Tasks.Create (or super admin override)
-    const canCreate =
-      await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'View') ||
-      await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'View')
-    if (!canCreate) {
-      return res.status(403).json({ message: 'Forbidden: missing SupportDesk.ViewTab permission' });
-    }
+    // const canCreate =
+    //   await hasPermission(res.locals?.effectivePermissions?.SupportDesk, 'View') ||
+    //   await hasPermission(res.locals?.superAdminPermissions?.SupportDesk, 'View')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing SupportDesk.ViewTab permission' });
+    // }
     //-----v1.0.1--->
 
 

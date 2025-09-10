@@ -1,15 +1,18 @@
 import React from "react";
 
-const LastNameField = ({ value, onChange, inputRef, error, label = "Last Name", required = false }) => {
+const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, label = "IncreaseAndDecreaseField", required = false }) => {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
         ref={inputRef}
-        type="text"
-        name="LastName"
+        type="number"
+        name={name}
+        id={name}
+        min="1"
+        max="15"
         value={value}
         onChange={onChange}
         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
@@ -20,11 +23,11 @@ const LastNameField = ({ value, onChange, inputRef, error, label = "Last Name", 
         }
         focus:outline-gray-300
       `}
-        placeholder="Enter Last Name"
+        placeholder={`Enter ${label}`}
       />
       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
     </div>
   );
 };
 
-export default LastNameField;
+export default IncreaseAndDecreaseField;
