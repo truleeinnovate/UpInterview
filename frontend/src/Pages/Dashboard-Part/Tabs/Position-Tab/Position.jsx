@@ -23,13 +23,16 @@ import { useMediaQuery } from "react-responsive";
 // v1.0.2 ------------------------------------------------------>
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 import { notify } from "../../../../services/toastService";//<----v1.02-----
+import { Button } from "../CommonCode-AllTabs/ui/button";
+import { createPortal } from "react-dom";
+import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal";
 
 const PositionTab = () => {
   // <---------------------- v1.0.0
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
   const { locations, skills, companies } = useMasterData();//<-----v1.03-----
-  const { positionData, isLoading, addOrUpdatePosition, isMutationLoading } = usePositions();//<----v1.02-----
+  const { positionData, isLoading, addOrUpdatePosition,deletePositionMutation, isMutationLoading } = usePositions();//<----v1.02-----
   //console.log("pos",positionData);
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,6 +82,31 @@ const PositionTab = () => {
   const [statusTargetRow, setStatusTargetRow] = useState(null);
   const [statusValue, setStatusValue] = useState("draft");
   //----v1.02----->
+
+
+    
+    //  Ranjith added delete Candidate functionality 
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deletePosition, setDeletePosition] = useState(null);
+
+
+    const handleDeletePosition = async () => {
+      try {
+        // console.log("deletePosition", deletePosition);
+        let res = await deletePositionMutation(deletePosition?._id || deletePosition?.id || 'N/A');
+        // console.log("res deleteCandidateData", res);
+        if (res.status === "success") {
+          setShowDeleteConfirmModal(false);
+          notify.success("Position Deleted successfully");
+        }
+  
+      } catch (error) {
+        console.error("Error Deleting Round:", error);
+        notify.error("Failed to Delete Round");
+      }
+    };
+      
+    //  Ranjith added delete Candidate functionality 
 
   // Memoize unique locations from master data
   const uniqueLocations = useMemo(() => {
@@ -515,7 +543,10 @@ const PositionTab = () => {
             key: "delete",
             label: "Delete",
             icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => navigate(`delete/${row._id}`),
+            onClick: (row) => {
+              setShowDeleteConfirmModal(true)
+              setDeletePosition(row)
+            }
           },
         ]
       : []),
@@ -913,6 +944,17 @@ const PositionTab = () => {
         </div>
       )}
       {/*----v1.02---->*/}
+
+{/* Ranjith added deleetd functionality  */}
+<DeleteConfirmModal 
+    isOpen={showDeleteConfirmModal}
+    onClose={() => setShowDeleteConfirmModal(false)}
+    onConfirm={handleDeletePosition}
+    title="Position"
+    entityName={deletePosition?.title}
+  />
+
+
     </div>
   );
 };

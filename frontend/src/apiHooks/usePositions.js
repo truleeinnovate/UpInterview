@@ -10,6 +10,7 @@ export const usePositions = (filters = {}) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Positions?.View;
+  const hasDeletePermission = effectivePermissions?.Positions?.Delete;
 
   const {
     data: positionData = [],
@@ -130,7 +131,7 @@ export const usePositions = (filters = {}) => {
   });
   // v1.0.0 ------------------------------------------------------------------------------>
 
-
+// Delete positiion round specific Round
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId) => {
       const response = await axios.delete(
@@ -156,8 +157,47 @@ export const usePositions = (filters = {}) => {
     },
   });
 
-  const isMutationLoading = positionMutation.isPending || addRoundsMutation.isPending || deleteRoundMutation.isPending;
-  const isLoading = isQueryLoading || isMutationLoading;
+  // delete entire position api added by Ranjith
+   
+   const deleteMutation = useMutation({
+    mutationFn: async (positionId) => {
+      if (!hasDeletePermission) {
+        throw new Error("You don't have permission to delete positions");
+      }
+
+      const response = await axios.delete(
+        `${config.REACT_APP_API_URL}/position/delete-position/${positionId}`,
+        // {
+        //   headers: {
+        //     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        //     'Content-Type': 'application/json'
+        //   }
+        // }
+      );
+      return response.data;
+    },
+    onSuccess: (data, positionId) => {
+      // Optimistically remove from cache
+      queryClient.setQueryData(["positions", filters], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.filter(position => position._id !== positionId);
+      });
+      
+      // Invalidate queries to ensure consistency
+      queryClient.invalidateQueries(["positions"]);
+      
+      console.log("Position deleted successfully:", data);
+    },
+    onError: (error, positionId) => {
+      console.error("Error deleting position:", error);
+      
+      // Revert optimistic update on error
+      queryClient.invalidateQueries(["positions"]);
+    },
+  });
+
+  const isMutationLoading = positionMutation.isPending || addRoundsMutation.isPending || deleteRoundMutation.isPending || deleteMutation.isPending;
+  const isLoading = isQueryLoading || isMutationLoading ;
 
   return {
     positionData,
@@ -173,6 +213,7 @@ export const usePositions = (filters = {}) => {
     addOrUpdatePosition: positionMutation.mutateAsync,
     addRounds: addRoundsMutation.mutateAsync,
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
+    deletePositionMutation: deleteMutation.mutateAsync,
     refetch,
   };
 };

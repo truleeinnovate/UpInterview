@@ -11,6 +11,7 @@ export const useCandidates = (filters = {}) => {
 
   // Check if user has permission to view candidates
   const hasViewPermission = effectivePermissions?.Candidates?.View;
+  const hasDeletePermission = effectivePermissions?.Candidates?.Delete;
 
   const {
     data: candidateData = [],
@@ -128,10 +129,50 @@ const candidateId = candidate?._id;         // only defined if changes occurred
     },
   });
 
+   // Delete candidate mutation
+   const deleteMutation = useMutation({
+    mutationFn: async (candidateId) => {
+      if (!hasDeletePermission) {
+        throw new Error("You don't have permission to delete candidates");
+      }
+
+      const response = await axios.delete(
+        `${config.REACT_APP_API_URL}/candidate/delete-candidate/${candidateId}`,
+        // {
+        //   headers: {
+        //     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        //     'Content-Type': 'application/json'
+        //   }
+        // }
+      );
+      return response.data;
+    },
+    onSuccess: (data, candidateId) => {
+      // Optimistically remove from cache
+      queryClient.setQueryData(["candidates", filters], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.filter(candidate => candidate._id !== candidateId);
+      });
+      
+      // Invalidate queries to ensure consistency
+      queryClient.invalidateQueries(["candidates"]);
+      
+      console.log("Candidate deleted successfully:", data);
+    },
+    onError: (error, candidateId) => {
+      console.error("Error deleting candidate:", error);
+      
+      // Revert optimistic update on error
+      queryClient.invalidateQueries(["candidates"]);
+    },
+  });
+
+
   // Use mutation.isPending instead of checking status (for v5+)
   // For v4, use mutation.isLoading
   const isMutationLoading = mutation.isPending; // or mutation.isLoading for v4
-  const isLoading = isQueryLoading || isMutationLoading;
+  const isDeleteLoading = deleteMutation.isPending;
+  const isLoading = isQueryLoading || isMutationLoading || isDeleteLoading;
 
   return {
     candidateData,
@@ -143,6 +184,7 @@ const candidateId = candidate?._id;         // only defined if changes occurred
     isMutationError: mutation.isError,
     mutationError: mutation.error,
     addOrUpdateCandidate: mutation.mutateAsync,
+    deleteCandidateData: deleteMutation.mutateAsync,
     refetch,
   };
 };

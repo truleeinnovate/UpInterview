@@ -4,7 +4,7 @@
 // v1.0.3 - Ashok - Improved responsiveness and modified clickable id
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Eye, Pencil, ChevronUp, ChevronDown } from "lucide-react";
+import { Eye, Pencil, ChevronUp, ChevronDown, Trash } from "lucide-react";
 
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
@@ -25,9 +25,11 @@ import TaskForm from "./Task_form.jsx";
 import TaskProfileDetails from "./TaskProfileDetails.jsx";
 import TaskKanban from "./TaskKanban.jsx";
 import { usePermissions } from "../../../../Context/PermissionsContext";
-import { useTasks } from "../../../../apiHooks/useTasks";
+import { useDeleteTask, useTasks } from "../../../../apiHooks/useTasks";
 // v1.0.3 <---------------------------------------------------------
 import { useMediaQuery } from "react-responsive";
+import DeleteConfirmModal from "../../Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
+import { notify } from "../../../../services/toastService.js";
 // v1.0.3 --------------------------------------------------------->
 
 const Task = () => {
@@ -73,6 +75,34 @@ const Task = () => {
   const filterIconRef = useRef(null);
   const assignedDropdownRef = useRef(null);
   //-------v1.0.2--------->
+
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deleteTask, setDeleteTask] = useState(null);
+  const deleteTaskMutation = useDeleteTask();
+
+  const handleDeletePosition = async () => {
+    try {
+      console.log("Deleting task with ID:", deleteTask?._id);
+      let res = await deleteTaskMutation.mutateAsync(deleteTask?._id);
+      console.log("Delete response:", res);
+      
+      if (res && res.success) {
+        setShowDeleteConfirmModal(false);
+        notify.success("Task deleted successfully");
+      } else {
+        notify.error(res?.message || "Failed to delete task");
+      }
+    } catch (error) {
+      console.error("Error Deleting Task:", error);
+      console.error("Error response:", error.response);
+      
+      if (error.response?.data?.message) {
+        notify.error(error.response.data.message);
+      } else {
+        notify.error("Failed to delete task");
+      }
+    }
+  };
 
   // v1.0.3 <---------------------------------------------------------
   const isTablet = useMediaQuery({ maxWidth: 1024 });
@@ -471,6 +501,15 @@ const Task = () => {
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       onClick: (row) => handleEditTask(row._id),
     },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: <Trash className="w-4 h-4 text-red-600" />,
+      onClick: (row) => {
+        setShowDeleteConfirmModal(true)
+        setDeleteTask(row)
+      }
+    },
   ];
 
   const handleEditTask = (taskId) => {
@@ -537,7 +576,7 @@ const Task = () => {
                       task.title.charAt(0).toUpperCase() + task.title.slice(1),
                     Email:
                       task.assignedTo.charAt(0).toUpperCase() +
-                        task.assignedTo.slice(1) || "None",
+                      task.assignedTo.slice(1) || "None",
                     Phone: task.relatedTo?.objectName || "N/A",
                     HigherQualification: task.priority || "N/A",
                     UniversityCollege: task.status || "N/A",
@@ -736,11 +775,10 @@ const Task = () => {
                               </div>
                               <ul className="max-h-48 overflow-y-auto py-1">
                                 <li
-                                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${
-                                    selectedAssignedUserId === ""
+                                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${selectedAssignedUserId === ""
                                       ? "text-custom-blue font-medium"
                                       : "text-gray-700"
-                                  }`}
+                                    }`}
                                   onClick={() => {
                                     handleAssignedUserChange("");
                                     setIsAssignedDropdownOpen(false);
@@ -751,19 +789,17 @@ const Task = () => {
                                 {filteredAssignedUsers.length > 0 ? (
                                   filteredAssignedUsers.map((user) => {
                                     const name =
-                                      `${user.firstName || ""} ${
-                                        user.lastName || ""
-                                      }`.trim() || user.email;
+                                      `${user.firstName || ""} ${user.lastName || ""
+                                        }`.trim() || user.email;
                                     const isSelected =
                                       selectedAssignedUserId === user._id;
                                     return (
                                       <li
                                         key={user._id}
-                                        className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${
-                                          isSelected
+                                        className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${isSelected
                                             ? "text-custom-blue font-medium"
                                             : "text-gray-700"
-                                        }`}
+                                          }`}
                                         onClick={() => {
                                           handleAssignedUserChange(user._id);
                                           setIsAssignedDropdownOpen(false);
@@ -865,6 +901,14 @@ const Task = () => {
       {selectedTask && (
         <TaskProfileDetails task={selectedTask} onClosetask={handleCloseTask} />
       )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleDeletePosition}
+        title="Task"
+        entityName={deleteTask?.title}
+      />
     </div>
   );
 };
