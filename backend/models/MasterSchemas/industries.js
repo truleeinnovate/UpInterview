@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Added fields
+// v1.0.1 - Ashok - Removed Tenant field
 
 const mongoose = require("mongoose");
 
@@ -22,11 +23,6 @@ const IndustrySchema = new mongoose.Schema(
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
-      default: null,
-    },
-    tenantId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Tenant",
       default: null,
     },
   },

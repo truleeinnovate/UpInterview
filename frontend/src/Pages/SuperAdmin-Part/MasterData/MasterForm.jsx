@@ -1,4 +1,5 @@
 // // v1.0.0 - Ashok - Added extra fields for technology and category
+// v1.0.1 - Ashok - implemented drag and drop functionality
 
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Upload, ChevronDown } from "lucide-react";
@@ -65,6 +66,43 @@ const MasterForm = ({
   const [formData, setFormData] = useState({});
   const [csvData, setCsvData] = useState(null);
   const [fields, setFields] = useState([]);
+
+  // v1.0.1 <---------------------------------------------------
+  // Add inside MasterForm
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type === "text/csv") {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            setCsvData(results.data);
+          },
+        });
+      } else {
+        alert("Only .csv files are supported!");
+      }
+    }
+  };
+
+  // v1.0.1 --------------------------------------------------->
 
   // get name field key based on type
   const getNameFieldKey = () => {
@@ -262,7 +300,8 @@ const MasterForm = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* CSV upload (create only) */}
-          {mode === "create" && (
+          {/* v1.0.1 <--------------------------------------------------------- */}
+          {/* {mode === "create" && (
             <div className="mt-4">
               <label className="block text-gray-700 text-sm font-medium mb-2">
                 Upload CSV (optional)
@@ -295,7 +334,55 @@ const MasterForm = ({
                 </p>
               )}
             </div>
+          )} */}
+          {/* CSV upload (create only) */}
+          {mode === "create" && (
+            <div className="mt-4">
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Upload CSV (optional)
+              </label>
+              <div
+                className={`flex items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition p-6 
+              ${
+                dragActive
+                  ? "border-green-500 bg-green-50"
+                  : "border-custom-blue bg-custom-blue/5 hover:bg-custom-blue/10"
+              }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <label
+                  htmlFor="csv-upload"
+                  className="flex flex-col items-center justify-center w-full"
+                >
+                  <Upload size={30} className="text-custom-blue mb-2" />
+                  <span className="text-sm text-custom-blue font-medium">
+                    Drag & Drop CSV here or Click to upload
+                  </span>
+                  <span className="text-xs text-gray-500 mt-1">
+                    Only .csv files supported
+                  </span>
+                </label>
+                <input
+                  id="csv-upload"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </div>
+
+              {csvData && (
+                <p className="mt-2 text-xs font-medium text-green-600">
+                  {csvData.length} records ready to upload
+                </p>
+              )}
+            </div>
           )}
+
+          {/* v1.0.1 ---------------------------------------------------------> */}
 
           {/* Manual fields (create OR bulk-edit) */}
           {!csvData && (
