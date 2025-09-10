@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - improved responsiveness
+
 function StatusBadge({ status, text }) {
   const getStatusClass = () => {
     const normalizedStatus = (status || "").toLowerCase();
@@ -42,7 +44,9 @@ function StatusBadge({ status, text }) {
     }
   };
 
-  return <span className={`${getStatusClass()}`}>{text || status}</span>;
+  // v1.0.0 <----------------------------------------------------------------------
+  return <span className={`sm:text-xs ${getStatusClass()}`}>{text || status}</span>;
+  // v1.0.0 ---------------------------------------------------------------------->
 }
 
 export default StatusBadge;

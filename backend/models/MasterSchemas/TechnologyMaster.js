@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - Added Category field
+// v1.0.1 - Ashok - Added fields
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -14,26 +16,49 @@ const TechnologyMasterSchema = new Schema(
       required: true,
     },
     // v1.0.0 ------------------------------------>
-    CreatedDate: {
-      type: Date,
-      required: true,
-      default: Date.now,
+    // v1.0.1 <---------------------------------------------------
+    // CreatedDate: {
+    //   type: Date,
+    //   required: true,
+    //   default: Date.now,
+    // },
+    // CreatedBy: {
+    //   type: String,
+    //   required: true,
+    // },
+    // ModifiedDate: {
+    //   type: Date,
+    //   default: Date.now,
+    // },
+    // ModifiedBy: {
+    //   type: String,
+    // },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
     },
-    CreatedBy: {
-      type: String,
-      required: true,
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
     },
-    ModifiedDate: {
-      type: Date,
-      default: Date.now,
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
     },
-    ModifiedBy: {
-      type: String,
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tenant",
+      default: null,
     },
   },
   {
     collection: "TechnologyMaster", // 👈 Exact collection name in your DB
+    timestamps: true,
   }
+  // v1.0.1 --------------------------------------------------->
 );
 
 const TechnologyMaster = mongoose.model(

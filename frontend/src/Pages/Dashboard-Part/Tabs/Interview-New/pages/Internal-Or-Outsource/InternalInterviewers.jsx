@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  fixed internal interviews get based on tenantid,border-b removed for header
 // v1.0.1  -  Ashok   -  Improved responsiveness added common popup
 // v1.0.2  -  Ashok   -  fixed z-index and alignment issues
+// v1.0.3  -  Ashok   -  fixed responsiveness style issues in form
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
@@ -247,6 +248,7 @@ const InternalInterviews = ({
   console.log("filteredData", filteredData);
 
   return (
+    // v1.0.3 <----------------------------------------------------------------------------------
     <SidebarPopup
       title={`Select Internal ${
         viewType === "individuals" ? "Individuals" : "Groups"
@@ -256,296 +258,256 @@ const InternalInterviews = ({
       setIsFullscreen={setIsFullscreen}
       // v1.0.2 -------------------------------->
     >
-      {/* <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50">
-        <div
-          ref={modalRef}
-          className={`bg-white h-full shadow-xl flex flex-col ${
-            isFullscreen
-              ? "w-full"
-              : "w-full md:w-2/3 lg:w-1/2 xl:w-1/2 2xl:w-1/2"
-          }`}
-        > */}
-      {/* <------------------------------- v1.0.0  */}
-      {/* Fixed Header */}
-      <div className="flex justify-between items-center sm:px-4 px-5">
-        {/* ------------------------------ v1.0.0 > */}
-        <div>
-          {/* <h2 className="text-2xl font-semibold text-custom-blue">
-            Select Internal{" "}
-            {viewType === "individuals" ? "Individuals" : "Groups"}
-          </h2> */}
-          <p className="text-sm text-gray-500">
-            {selectedInterviewers.length}{" "}
-            {viewType === "individuals" ? "Individual" : "group"}
-            {selectedInterviewers.length !== 1 ? "s" : ""} selected
-          </p>
+      <div className="flex flex-col h-full">
+        {/* <------------------------------- v1.0.0  */}
+        <div className="flex justify-between bg-white items-center sm:px-2 px-6">
+          {/* ------------------------------ v1.0.0 > */}
+          <div>
+            <p className="text-sm text-gray-500">
+              {selectedInterviewers.length}{" "}
+              {viewType === "individuals" ? "Individual" : "group"}
+              {selectedInterviewers.length !== 1 ? "s" : ""} selected
+            </p>
+          </div>
         </div>
-        {/* <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-          >
-            {isFullscreen ? (
-              <Minimize className="w-5 h-5 text-gray-500" />
-            ) : (
-              <Expand className="w-5 h-5 text-gray-500" />
-            )}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
-        </div> */}
-      </div>
 
-      {/* Fixed Dropdown and Search Section */}
+        {/* Fixed Dropdown and Search Section */}
 
-      {/* <------------------------------- v1.0.0  */}
-      <div className="sm:px-4 px-6 bg-white">
-        {/* ------------------------------ v1.0.0 > */}
-        {/* <div className="flex gap-x-4 md:flex-row md:items-end md:space-x-4 md:space-y-0 justify-between my-5"> */}
-        <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-3 my-5">
-          {/* View Type Dropdown */}
-          <div className="flex-1 relative" ref={dropdownRef}>
-            <button
-              onClick={toggleDropdown}
-              className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <span>
-                {viewType === "individuals" ? "Individuals" : "Groups"}
-              </span>
-              {showDropdown ? (
-                <ChevronUp className="h-4 w-4 text-gray-400" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-gray-400" />
-              )}
-            </button>
-            {showDropdown && (
-              <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
+        {/* <------------------------------- v1.0.0  */}
+
+        {/* Scrollable Data Section */}
+        <div className="flex-1 sm:px-2 px-6 py-4">
+          <div className="bg-white">
+            {/* ------------------------------ v1.0.0 > */}
+            {/* <div className="flex gap-x-4 md:flex-row md:items-end md:space-x-4 md:space-y-0 justify-between my-5"> */}
+            <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-3 my-5">
+              {/* View Type Dropdown */}
+              <div className="flex-1 relative" ref={dropdownRef}>
                 <button
-                  onClick={() => selectViewType("individuals")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={toggleDropdown}
+                  className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  Individuals
+                  <span>
+                    {viewType === "individuals" ? "Individuals" : "Groups"}
+                  </span>
+                  {showDropdown ? (
+                    <ChevronUp className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                  )}
                 </button>
+                {showDropdown && (
+                  <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
+                    <button
+                      onClick={() => selectViewType("individuals")}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Individuals
+                    </button>
+                    <button
+                      onClick={() => selectViewType("groups")}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Groups
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Role Filter Dropdown */}
+              <div
+                className={`flex-1 relative ${
+                  viewType === "groups" && "hidden"
+                }`}
+                ref={roleDropdownRef}
+              >
                 <button
-                  onClick={() => selectViewType("groups")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={toggleRoleDropdown}
+                  className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  Groups
+                  <span>
+                    {roles.find((r) => r.value === selectedRole)?.label ||
+                      "Select Role"}
+                  </span>
+                  {showRoleDropdown ? (
+                    <ChevronUp className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                  )}
                 </button>
+                {showRoleDropdown && (
+                  <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
+                    {roles.map((role) => (
+                      <button
+                        key={role.value}
+                        onClick={() => selectRole(role.value)}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        {role.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Role Filter Dropdown */}
-          <div
-            className={`flex-1 relative ${viewType === "groups" && "hidden"}`}
-            ref={roleDropdownRef}
-          >
-            <button
-              onClick={toggleRoleDropdown}
-              className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <span>
-                {roles.find((r) => r.value === selectedRole)?.label ||
-                  "Select Role"}
-              </span>
-              {showRoleDropdown ? (
-                <ChevronUp className="h-4 w-4 text-gray-400" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-gray-400" />
-              )}
-            </button>
-            {showRoleDropdown && (
-              <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
-                {roles.map((role) => (
-                  <button
-                    key={role.value}
-                    onClick={() => selectRole(role.value)}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    {role.label}
-                  </button>
-                ))}
+              {/* Search Bar */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={`Search ${
+                      viewType === "individuals" ? "interviewers" : "groups"
+                    }...`}
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
               </div>
-            )}
-          </div>
-
-          {/* Search Bar */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder={`Search ${
-                  viewType === "individuals" ? "interviewers" : "groups"
-                }...`}
-                value={searchQuery}
-                onChange={handleSearchInputChange}
-                className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Scrollable Data Section */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
-        {/* v1.0.2 <-------------------------------------------------------------------------- */}
-        <div
-          // className={`grid gap-4 ${
-          //   isFullscreen
-          //     ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4"
-          //     : "grid-cols-2"
-          // }`}
-          // className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-3"
-          className={`grid gap-3 sm:grid-cols-1 md:grid-cols-2 
+          {/* v1.0.2 <-------------------------------------------------------------------------- */}
+          <div
+            className={`grid gap-3 sm:grid-cols-1 md:grid-cols-2 
             ${
               isFullscreen
                 ? "lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
                 : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
             }
           `}
-        >
-        {/* v1.0.2 --------------------------------------------------------------------------> */}
-          {filteredData?.map((item) => (
-            <div
-              key={item._id}
-              className={`flex items-center justify-between p-3 rounded-md ${
-                navigatedfrom !== "dashboard"
-                  ? "cursor-pointer"
-                  : "cursor-default"
-              } ${
-                navigatedfrom !== "dashboard" && isInterviewerSelected(item)
-                  ? "bg-custom-bg border border-custom-blue"
-                  : "hover:bg-gray-50 border border-gray-200"
-              }`}
-              onClick={() =>
-                navigatedfrom !== "dashboard" && handleSelectClick(item)
-              }
-            >
-              <div className="flex items-center">
-                {viewType === "individuals" ? (
-                  <>
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={`${item.firstName} ${item.lastName}`}
-                        className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
-                        <span className="text-white font-semibold text-md -mt-[4px]">
-                          {(item.firstName || "?")[0].toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        {item.firstName || item.lastName
-                          ? `${item.firstName || ""} ${item.lastName || ""}`
-                          : "no name available"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {Array.isArray(item.technologies) &&
-                        item.technologies.length > 0
-                          ? item.technologies.join(", ")
-                          : "no technology available"}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <svg
-                        className="h-5 w-5 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+          >
+            {/* v1.0.2 --------------------------------------------------------------------------> */}
+            {filteredData?.map((item) => (
+              <div
+                key={item._id}
+                className={`flex items-center justify-between p-3 rounded-md ${
+                  navigatedfrom !== "dashboard"
+                    ? "cursor-pointer"
+                    : "cursor-default"
+                } ${
+                  navigatedfrom !== "dashboard" && isInterviewerSelected(item)
+                    ? "bg-custom-bg border border-custom-blue"
+                    : "hover:bg-gray-50 border border-gray-200"
+                }`}
+                onClick={() =>
+                  navigatedfrom !== "dashboard" && handleSelectClick(item)
+                }
+              >
+                <div className="flex items-center">
+                  {viewType === "individuals" ? (
+                    <>
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={`${item.firstName} ${item.lastName}`}
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200"
                         />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        {item.name || "no name available"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {Array.isArray(item.usersNames) &&
-                        item.usersNames.length > 0
-                          ? item.usersNames.join(", ")
-                          : "No users available"}
-                      </p>
-                      {/* <span>{item?.usersNames?.firstName || item?.contact?.lastName ?`
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
+                          <span className="text-white font-semibold text-md -mt-[4px]">
+                            {(item.firstName || "?")[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">
+                          {item.firstName || item.lastName
+                            ? `${item.firstName || ""} ${item.lastName || ""}`
+                            : "no name available"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {Array.isArray(item.technologies) &&
+                          item.technologies.length > 0
+                            ? item.technologies.join(", ")
+                            : "no technology available"}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <svg
+                          className="h-5 w-5 text-gray-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">
+                          {item.name || "no name available"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {Array.isArray(item.usersNames) &&
+                          item.usersNames.length > 0
+                            ? item.usersNames.join(", ")
+                            : "No users available"}
+                        </p>
+                        {/* <span>{item?.usersNames?.firstName || item?.contact?.lastName ?`
                               ${item?.contact?.firstName + " " + item?.contact?.lastName}` : "Not Provided"}</span> */}
-                      {/* <p className="text-xs text-gray-500">{item.description || 'No description available'}</p> */}
-                    </div>
-                  </>
+                        {/* <p className="text-xs text-gray-500">{item.description || 'No description available'}</p> */}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {isInterviewerSelected(item) && (
+                  <div className="h-5 w-5 rounded-full flex items-center justify-center bg-blue-500 text-white">
+                    <svg
+                      className="h-3 w-3"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
                 )}
               </div>
-
-              {isInterviewerSelected(item) && (
-                <div className="h-5 w-5 rounded-full flex items-center justify-center bg-blue-500 text-white">
-                  <svg
-                    className="h-3 w-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              )}
+            ))}
+          </div>
+          {/* v1.0.2 <------------------------------------------------------------------ */}
+          {filteredData.length === 0 && (
+            <div className="text-gray-500 flex items-center justify-center h-full mb-8">
+              <p>
+                No {viewType === "individuals" ? "interviewers" : "groups"}{" "}
+                found for the selected criteria.
+              </p>
             </div>
-          ))}
+          )}
+          {/* v1.0.2 ------------------------------------------------------------------> */}
         </div>
-        {/* v1.0.2 <------------------------------------------------------------------ */}
-        {filteredData.length === 0 && (
-          <div
-            // className={`text-gray-500 ${
-            //   isFullscreen
-            //     ? "min-h-full flex items-center justify-center mt-10"
-            //     : "flex items-center justify-center h-full mt-8"
-            // }`}
-            className="text-gray-500 flex items-center justify-center h-full mt-8 mb-8"
-          >
-            <p>
-              No {viewType === "individuals" ? "interviewers" : "groups"} found
-              for the selected criteria.
-            </p>
+
+        {/* v1.0.2 <----------------------------------------------------------------------- */}
+        {/* Fixed Footer (Hidden when navigatedfrom is 'dashboard') */}
+        {navigatedfrom !== "dashboard" && (
+          // <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end">
+          <div className="bg-white p-4 flex justify-end">
+            <button
+              onClick={handleScheduleClick}
+              disabled={selectedInterviewers.length === 0}
+              // className="bg-custom-blue px-4 py-2 rounded-md text-white  disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-custom-blue sm:text-sm px-4 py-2 rounded-md text-white  disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Schedule ({selectedInterviewers.length})
+            </button>
           </div>
         )}
-        {/* v1.0.2 ------------------------------------------------------------------> */}
+        {/* v1.0.2 -----------------------------------------------------------------------> */}
       </div>
-
-      {/* v1.0.2 <----------------------------------------------------------------------- */}
-      {/* Fixed Footer (Hidden when navigatedfrom is 'dashboard') */}
-      {navigatedfrom !== "dashboard" && (
-        // <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end">
-        <div className="bg-white border-t border-gray-200 p-4 flex justify-end">
-          <button
-            onClick={handleScheduleClick}
-            disabled={selectedInterviewers.length === 0}
-            // className="bg-custom-blue px-4 py-2 rounded-md text-white  disabled:bg-gray-400 disabled:cursor-not-allowed"
-            className="bg-custom-blue sm:text-sm px-4 py-2 rounded-md text-white  disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            Schedule ({selectedInterviewers.length})
-          </button>
-        </div>
-      )}
-      {/* v1.0.2 -----------------------------------------------------------------------> */}
-      {/* </div>
-      </div> */}
     </SidebarPopup>
+    // v1.0.3 ---------------------------------------------------------------------------------->
   );
 };
 

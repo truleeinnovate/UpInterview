@@ -9,6 +9,7 @@ import {
   GraduationCap,
   School,
   Building,
+  Tag,
 } from "lucide-react";
 import MasterCard from "./MasterCard";
 // v1.0.0 <---------------------------------------------------------------
@@ -64,6 +65,13 @@ const masterItems = [
     key: "company",
     label: "Companies",
     icon: <Building />,
+    description:
+      "Organizations where individuals have worked or are currently employed.",
+  },
+  {
+    key: "category",
+    label: "Category",
+    icon: <Tag />,
     description:
       "Organizations where individuals have worked or are currently employed.",
   },

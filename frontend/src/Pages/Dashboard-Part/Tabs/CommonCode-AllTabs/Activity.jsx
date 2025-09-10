@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - fixed styles issues padding, spacing etc
 // v1.0.1 - Ashok - fixed spacing at activity sub tab and added optional chaining (ex. value?.value)
+// v1.0.2 - Ashok - Improved responsiveness
+
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 // v1.0.0 <--------------------------------------------------------------------------------
@@ -97,17 +99,27 @@ function Activity({ parentId, parentId2, mode }) {
         });
 
         // Check if response has data
-        if (response.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
+        if (
+          response.data &&
+          Array.isArray(response.data.data) &&
+          response.data.data.length > 0
+        ) {
           // If we got data with parentId, use it
           setFeeds(response.data.data);
           console.log("Set feeds with parentId:", response.data.data);
           setError(null);
         } else {
           // If no data with parentId, try with parentId2
-          console.log("No data with parentId, trying with parentId2:", parentId2);
-          const response2 = await axios.get(`${config.REACT_APP_API_URL}/feeds`, {
-            params: { parentId: parentId2 },
-          });
+          console.log(
+            "No data with parentId, trying with parentId2:",
+            parentId2
+          );
+          const response2 = await axios.get(
+            `${config.REACT_APP_API_URL}/feeds`,
+            {
+              params: { parentId: parentId2 },
+            }
+          );
 
           // Ensure data is an array, fallback to empty array if undefined
           const fetchedFeeds = Array.isArray(response2.data.data)
@@ -316,37 +328,39 @@ function Activity({ parentId, parentId2, mode }) {
             {skill.skill || skill}
             {skill.experience && (
               <span className="ml-1 text-blue-600">({skill.experience})</span>
-            )}{
-              skill.expertise && (
-                <span className="ml-1 text-blue-600">({skill.expertise})</span>
-              )
-            }
+            )}
+            {skill.expertise && (
+              <span className="ml-1 text-blue-600">({skill.expertise})</span>
+            )}
           </span>
         ))}
       </div>
     );
   };
 
-
-
-
   const renderMetadataContent = (feed) => {
     const { parentObject, metadata, action, fieldMessage } = feed;
 
     // Helper function to truncate long text with ellipsis
     const truncateText = (text, maxLength = 30) => {
-      if (typeof text !== 'string') return text;
-      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+      if (typeof text !== "string") return text;
+      return text.length > maxLength
+        ? text.substring(0, maxLength) + "..."
+        : text;
     };
 
     // Helper function to handle responsive text display
     const ResponsiveText = ({ value, className = "" }) => (
-      <span className={`break-words overflow-hidden ${className}`} title={value}>
+      <span
+        className={`break-words overflow-hidden sm:text-xs ${className}`}
+        title={value}
+      >
         {value}
       </span>
     );
     console.log("metadata", metadata, feed.parentObject, mode, action.name);
 
+    // v1.0.3 <-------------------------------------------------------------------------------
 
     switch (action.name) {
       case "position_round_created":
@@ -355,7 +369,7 @@ function Activity({ parentId, parentId2, mode }) {
       case mode === "round" && "position_created":
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {Object.entries(metadata.round || metadata.rounds)
                 .filter(
                   ([key]) =>
@@ -390,21 +404,20 @@ function Activity({ parentId, parentId2, mode }) {
 
                       "tenantId",
 
-                      "title"
-
+                      "title",
                     ].includes(key)
                 )
                 .slice(0, 4)
                 .map(([key, value]) => (
                   <div key={key} className="flex items-center space-x-2">
                     {getFieldIcon(key)}
-                    <span className="text-gray-600 capitalize">
+                    <span className="text-gray-600 capitalize sm:text-xs">
                       {key.replace(/([A-Z])/g, " $1").trim()}:
                     </span>
-                    <span >
+                    <span>
                       <ResponsiveText
                         value={formatValue(key, value)}
-                        className="font-medium truncate"
+                        className="font-medium truncate sm:text-xs"
                       />
                     </span>
                   </div>
@@ -412,9 +425,6 @@ function Activity({ parentId, parentId2, mode }) {
             </div>
           </div>
         );
-
-
-
 
       case "candidate_created":
       case "position_created":
@@ -424,7 +434,7 @@ function Activity({ parentId, parentId2, mode }) {
 
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
@@ -435,24 +445,23 @@ function Activity({ parentId, parentId2, mode }) {
                       "ownerId",
                       "CreatedBy",
                       "LastModifiedById",
-                      "updatedBy"
+                      "updatedBy",
                     ].includes(key)
                 )
                 .slice(0, 4)
                 .map(([key, value]) => (
                   <div key={key} className="flex items-center space-x-2">
                     {getFieldIcon(key)}
-                    <span className="text-gray-600 capitalize">
+                    <span className="text-gray-600 capitalize sm:text-xs">
                       {key.replace(/([A-Z])/g, " $1").trim()}:
                     </span>
-                    <span className="font-medium">
-
+                    <span className="font-medium sm:text-xs">
                       {key === "skills" ? (
                         renderSkills(value)
                       ) : (
                         <ResponsiveText
                           value={formatValue(key, value)}
-                          className="font-medium truncate"
+                          className="font-medium truncate sm:text-xs"
                         />
                       )}
 
@@ -469,7 +478,6 @@ function Activity({ parentId, parentId2, mode }) {
           </div>
         );
 
-
       case "candidate_updated":
       case "position_updated":
       case "ticket_updated":
@@ -479,46 +487,64 @@ function Activity({ parentId, parentId2, mode }) {
         return (
           <div className="space-y-3">
             {fieldMessage && fieldMessage?.length > 0 ? (
-              fieldMessage.filter(({ fieldName }) => !["round", "rounds", "updatedBy", "createdBy"].includes(fieldName))
-              .map(({ fieldName, message }, index) => (
-                // Only render if fieldName is NOT "round" AND NOT "rounds"
-                fieldName !== "round" && fieldName !== "rounds" && (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      {getFieldIcon(fieldName)}
-                      <span className="text-gray-600">{message}</span>
-                    </div>
-                    {console.log("message", message.skills)}
-                    {fieldName === "skills" ? (
-                      // Special handling for skills with side-by-side comparison
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
-                        <div className="space-y-2">
-                          <div className="text-sm text-gray-500 font-medium">Previous Skills</div>
-                          {renderSkills(feed?.history[index]?.oldValue)}
+              fieldMessage
+                .filter(
+                  ({ fieldName }) =>
+                    !["round", "rounds", "updatedBy", "createdBy"].includes(
+                      fieldName
+                    )
+                )
+                .map(
+                  ({ fieldName, message }, index) =>
+                    // Only render if fieldName is NOT "round" AND NOT "rounds"
+                    fieldName !== "round" &&
+                    fieldName !== "rounds" && (
+                      <div key={index} className="space-y-2">
+                        <div className="flex items-center space-x-2 sm:space-y-2 sm:text-xs">
+                          {getFieldIcon(fieldName)}
+                          <span className="text-gray-600">{message}</span>
                         </div>
-                        <div className="space-y-2">
-                          <div className="text-sm text-gray-500 font-medium">New Skills</div>
-                          {renderSkills(feed?.history[index]?.newValue)}
-                        </div>
-                      </div>
-                    ) : (
-                      // Regular field comparison
-                      <div className="flex items-center space-x-2 ml-6">
-                        <span className="px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-600 min-w-[100px] text-center">
-                          <ResponsiveText
-                            value={formatValue(fieldName, feed?.history[index]?.oldValue)}
-                          />
-                        </span>
-                        <AiOutlineSync className="text-gray-400 flex-shrink-0" />
-                        <span className="px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-900 font-medium min-w-[100px] text-center">
-                          <ResponsiveText
-                            value={formatValue(fieldName, feed?.history[index]?.newValue)}
-                          />
-                        </span>
-                      </div>
-                    )}
+                        {console.log("message", message.skills)}
+                        {fieldName === "skills" ? (
+                          // Special handling for skills with side-by-side comparison
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+                            <div className="space-y-2">
+                              <div className="text-sm text-gray-500 font-medium sm:text-xs">
+                                Previous Skills
+                              </div>
+                              {renderSkills(feed?.history[index]?.oldValue)}
+                            </div>
+                            <div className="space-y-2">
+                              <div className="text-sm text-gray-500 font-medium sm:text-xs">
+                                New Skills
+                              </div>
+                              {renderSkills(feed?.history[index]?.newValue)}
+                            </div>
+                          </div>
+                        ) : (
+                          // Regular field comparison
+                          <div className="flex sm:flex-col sm:items-start items-center sm:space-y-2 sm:space-x-0 space-x-2 ml-6">
+                            <span className="px-3 py-1.5 sm:text-xs rounded bg-white border border-gray-200 text-gray-600 min-w-[100px] text-center">
+                              <ResponsiveText
+                                value={formatValue(
+                                  fieldName,
+                                  feed?.history[index]?.oldValue
+                                )}
+                              />
+                            </span>
+                            <AiOutlineSync className="text-gray-400 flex-shrink-0" />
+                            <span className="px-3 py-1.5 sm:text-xs rounded bg-white border border-gray-200 text-gray-900 font-medium min-w-[100px] text-center">
+                              <ResponsiveText
+                                value={formatValue(
+                                  fieldName,
+                                  feed?.history[index]?.newValue
+                                )}
+                              />
+                            </span>
+                          </div>
+                        )}
 
-                    {/* <div className="flex items-center space-x-2 ml-6">
+                        {/* <div className="flex items-center space-x-2 ml-6">
                           <span className="px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-600 min-w-[100px] text-center">
                             <ResponsiveText 
                               value={formatValue(fieldName, feed?.history[index]?.oldValue)} 
@@ -531,15 +557,14 @@ function Activity({ parentId, parentId2, mode }) {
                             />
                           </span>
                         </div> */}
-                  </div>
+                      </div>
+                    )
                 )
-              ))
             ) : (
               <div>No changes recorded</div>
             )}
           </div>
         );
-
 
       case "interview_scheduled":
         return (
@@ -637,6 +662,7 @@ function Activity({ parentId, parentId2, mode }) {
       default:
         return <div>Unsupported action type</div>;
     }
+    // v1.0.3 ------------------------------------------------------------------------------->
   };
 
   // v1.0.0 <------------------------------------------------------------------------
@@ -647,12 +673,13 @@ function Activity({ parentId, parentId2, mode }) {
 
   // v.0.1 <------------------------------------------------------------------------------------
   return (
+    // v1.0.2 <----------------------------------------------------------------------------------------
     <div className="space-y-6 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:mt-4 gap-4">
           <h3 className="text-lg font-medium text-gray-900">Activity Feed</h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:mt-4">
           <div className="relative">
             <button
               className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md border border-gray-200 hover:bg-gray-50"
@@ -664,13 +691,14 @@ function Activity({ parentId, parentId2, mode }) {
               <AiOutlineFilter />
               <span>Filter</span>
               <AiOutlineDown
-                className={`transition-transform ${showFilters ? "rotate-180" : ""
-                  }`}
+                className={`transition-transform ${
+                  showFilters ? "rotate-180" : ""
+                }`}
               />
             </button>
             {showFilters && (
               <div
-                className="absolute right-0 mt-2 w-48 left-0 bg-white rounded-md shadow-lg border border-gray-200 z-10"
+                className="absolute mt-2 w-48 sm:w-40 md:left-0 lg:left-0 xl:left-0 2xl:left-0 sm:right-0 bg-white rounded-md shadow-lg border border-gray-200 z-10"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-2">
@@ -681,10 +709,11 @@ function Activity({ parentId, parentId2, mode }) {
                     {["all", "info", "alert", "update"].map((type) => (
                       <button
                         key={type}
-                        className={`w-full text-left px-2 py-1 rounded text-sm ${typeFilter === type
+                        className={`w-full text-left px-2 py-1 rounded text-sm ${
+                          typeFilter === type
                             ? "bg-blue-50 text-blue-700"
                             : "text-gray-700 hover:bg-gray-50"
-                          }`}
+                        }`}
                         onClick={() => {
                           setTypeFilter(type);
                           setShowFilters(false);
@@ -706,80 +735,84 @@ function Activity({ parentId, parentId2, mode }) {
         <div className="space-y-6">
           {/* v1.0.1 <--------------------------------------------------------------------- */}
           {loading ? (
-            <div className="text-center py-16 text-gray-500">
+            <div className="text-center sm:py-20 py-16 text-gray-500">
               Loading feeds...
             </div>
           ) : // v1.0.1 ---------------------------------------------------------------------->
-            error ? (
-              <div className="text-center py-8 text-red-500">{error}</div>
-            ) : filteredFeeds.length > 0 ? (
-              filteredFeeds?.map((feed) => {
-                const styles = getFeedTypeStyle(feed?.feedType);
-                return (
-                  <div
-                    key={feed?._id}
-                    className={`
-                    relative pl-8 sm:pl-16 pr-8 sm:pr-4 py-4 rounded-lg border 
+          error ? (
+            <div className="text-center py-16 text-red-500">{error}</div>
+          ) : filteredFeeds.length > 0 ? (
+            filteredFeeds?.map((feed) => {
+              const styles = getFeedTypeStyle(feed?.feedType);
+              return (
+                <div
+                  key={feed?._id}
+                  className={`
+                    relative sm:px-4 px-8 py-4 rounded-lg border 
                     transition-all duration-200 overflow-hidden
                     ${styles.container} ${styles.border} ${styles.hover}
                   `}
-                  >
-                    {/* v1.0.0 <------------------------------------------------------------------------ */}
-                    <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-white rounded-full p-2 shadow-sm">
-                            {getFeedIcon(feed.feedType, feed?.action)}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className={`font-medium ${styles.text} truncate`}>
-                              {feed.parentObject === "Position" && mode === "round"
-                                && feed?.action?.name === "position_created"
-                                ? "Position Round Was Created" : feed.parentObject === "Position"
-                                  && mode === "round"
-                                  && feed?.action?.name === "position_updated"
-                                  ? "Position Round Was Updated" : feed?.action?.description}
-                            </h4>
-                            <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
-                              <div className="flex items-center">
-                                <AiOutlineUser className="mr-1 flex-shrink-0" />
-                                <span className="truncate">
-                                  {feed?.metadata?.changedBy || "System"}
-                                </span>
-                              </div>
-                              <span className="hidden sm:inline">•</span>
-                              <time className="flex-shrink-0">
-                                {formatDate(
-                                  feed?.metadata?.changedAt || feed?.createdAt
-                                )}
-                              </time>
+                >
+                  {/* v1.0.0 <------------------------------------------------------------------------ */}
+                  <div className="space-y-2">
+                    <div className="flex sm:flex-col flex-row justify-between items-start gap-2">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-white rounded-full p-2 shadow-sm">
+                          {getFeedIcon(feed.feedType, feed?.action)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className={`sm:text-xs font-medium ${styles.text} truncate`}>
+                            {feed.parentObject === "Position" &&
+                            mode === "round" &&
+                            feed?.action?.name === "position_created"
+                              ? "Position Round Was Created"
+                              : feed.parentObject === "Position" &&
+                                mode === "round" &&
+                                feed?.action?.name === "position_updated"
+                              ? "Position Round Was Updated"
+                              : feed?.action?.description}
+                          </h4>
+                          <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
+                            <div className="flex items-center">
+                              <AiOutlineUser className="mr-1 flex-shrink-0" />
+                              <span className="sm:text-xs truncate">
+                                {feed?.metadata?.changedBy || "System"}
+                              </span>
                             </div>
+                            <span className="hidden sm:inline">•</span>
+                            <time className="sm:text-xs flex-shrink-0">
+                              {formatDate(
+                                feed?.metadata?.changedAt || feed?.createdAt
+                              )}
+                            </time>
                           </div>
                         </div>
-                        <StatusBadge
-                          status={feed?.feedType}
-                          text={capitalizeFirstLetter(feed?.feedType)}
-                        />
                       </div>
+                      <StatusBadge
+                        status={feed?.feedType}
+                        text={capitalizeFirstLetter(feed?.feedType)}
+                      />
+                    </div>
 
-                      <div
-                        className={`${styles.text} bg-white bg-opacity-50 rounded-lg p-4 sm:p-4 overflow-x-auto`}
-                      >
-                        {renderMetadataContent(feed)}
-                        {/* v1.0.0 ---------------------------------------------------------------------------------> */}
-                      </div>
+                    <div
+                      className={`${styles.text} bg-white bg-opacity-50 rounded-lg p-4 sm:p-4 overflow-x-auto`}
+                    >
+                      {renderMetadataContent(feed)}
+                      {/* v1.0.0 ---------------------------------------------------------------------------------> */}
                     </div>
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-16 text-gray-500">
-                No activity found for the selected filters
-              </div>
-            )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-16 text-gray-500">
+              No activity found for the selected filters
+            </div>
+          )}
         </div>
       </div>
     </div>
+    // v1.0.2 ---------------------------------------------------------------------------------------->
   );
   // v.0.1 ------------------------------------------------------------------------------------>
 }
