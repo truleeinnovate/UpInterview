@@ -7,6 +7,21 @@ const CategoryQuestionsMasterSchema = new mongoose.Schema({
         enum: ["Active","InActive"],
         default: "Active",
       },
+    createdBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Users",
+          default: null,
+    },
+    updatedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Users",
+          default: null,
+    },
+    ownerId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Users",
+          default: null,
+    },
 }, {
     timestamps: true,
     collection: 'CategoryQuestionsMaster'  

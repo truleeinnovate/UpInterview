@@ -661,17 +661,17 @@ const AddCandidateForm = ({
   const countryCodeOptionsRS = countryCodes; // already in { value, label }
   const qualificationOptionsRS =
     qualifications?.map((q) => ({
-      value: q.QualificationName,
-      label: q.QualificationName,
+      value: q?.QualificationName,
+      label: q?.QualificationName,
     })) || [];
   const collegeOptionsRS = (
     colleges?.map((c) => ({
-      value: c.University_CollegeName,
-      label: c.University_CollegeName,
+      value: c?.University_CollegeName,
+      label: c?.University_CollegeName,
     })) || []
   ).concat([{ value: "__other__", label: "+ Others" }]);
   const roleOptionsRS =
-    currentRoles?.map((r) => ({ value: r.RoleName, label: r.RoleName })) || [];
+    currentRoles?.map((r) => ({ value: r?.RoleName, label: r?.RoleName })) || [];
 
   return (
     <>

@@ -471,7 +471,7 @@ const {
 } = require("./models/MasterSchemas/higherqualification.js");
 const { University_CollegeName } = require("./models/MasterSchemas/college.js");
 const { Company } = require("./models/MasterSchemas/company.js");
-const { CategoryQuestionMaster } = require("./models/MasterSchemas/CategoryQuestionsMaster.js");
+const { CategoryQuestionsMaster } = require("./models/MasterSchemas/CategoryQuestionsMaster.js");
 
 // Master Data Endpoints
 // v1.0.9 <------------------------------------------------------------------------
@@ -577,7 +577,7 @@ app.get("/company", async (req, res) => {
 
 app.get("/category", async (req, res) => {
   try {
-    const CategoryNames = await CategoryQuestionMaster.find({})
+    const CategoryNames = await CategoryQuestionsMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
       .populate("updatedBy", "firstName lastName email -password");
