@@ -6,41 +6,26 @@
     border-radius: 8px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    /* width: 70%;; */
-    /* margin-left:50px; */
+    /* Match calendar width to input/container width */
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box; /* include border in width calc so it matches trigger */
   }
 
-  /* Adjust calendar container width at different screen sizes */
-@media (max-width: 640px) {
-    .react-datepicker {
-      width: 90vw !important;
-    }
-  }
-  
-  @media (min-width: 641px) and (max-width: 768px) {
-    .react-datepicker {
-      width: 80vw !important;
-    }
-  }
-  
-  @media (min-width: 800px) {
-    .react-datepicker {
-      min-width: 440px !important;
-      /* height: 200px; */
-    }
-  }
-  
+  /* Remove viewport-based width overrides to keep parity with trigger width */
+
+
   /* Make sure the datepicker input field takes full width of its container */
   .react-datepicker-wrapper,
   .react-datepicker__input-container {
     display: block;
     width: 100%;
   }
-  
+
   .react-datepicker__input-container input {
     width: 100%;
   }
-  
+
   .react-datepicker__month-container {
     width: 100%;
   }
@@ -135,9 +120,9 @@
     justify-content: center;
   }
   
-  /* Calendar container */
+  /* Calendar container (no extra padding to keep width equal to input) */
   .calendar-container {
-    padding: 8px;
+    padding: 0;
   }
   
   /* Fix for the popper positioning */
