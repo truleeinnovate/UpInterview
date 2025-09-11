@@ -1,16 +1,34 @@
-const mongoose = require('mongoose');
+// v1.0.0 - Ashok - Added fields
+// v1.0.1 - Ashok - Removed Tenant field
 
-const IndustrySchema = new mongoose.Schema({
+const mongoose = require("mongoose");
+
+const IndustrySchema = new mongoose.Schema(
+  {
     IndustryName: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
-    CreatedDate: {
-        type: Date,
-        default: Date.now
+    // v1.0.0 <-------------------------------------------------------
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
     },
-    CreatedBy: String,
-});
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
+    },
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
+    },
+  },
+  { timestamps: true }
+  // v1.0.0 ------------------------------------------------------->
+);
 
 const Industry = mongoose.model("Industry", IndustrySchema);
 

@@ -4,6 +4,7 @@
 const { TenantQuestions } = require("../models/tenantQuestions");
 const { TenantInterviewQuestions } = require("../models/QuestionBank/tenantInterviewQuestions");
 const { TenantAssessmentQuestions } = require("../models/QuestionBank/tenantAssessmentQuestions");
+const QuestionbankFavList = require("../models/QuestionBank/tenantQuestionsListNames.js");
 
 const mongoose = require('mongoose');
 //<----v1.0.1----
@@ -556,5 +557,154 @@ exports.getQuestionBySuggestedId = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+
+// DELETE API for questions
+exports.deleteQuestionsById =  async (req, res) => {
+  try {
+    console.log("req.body",req.body)
+    const { deleteType, questionIds, label, questionType,tenantId, ownerId } = req.body;
+    // const {  } = req.user; // Assuming you have user authentication
+
+    // Validate input
+    if (!deleteType || (deleteType === 'selected' && (!questionIds || !Array.isArray(questionIds)))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request parameters"
+      });
+    }
+
+    let result;
+    let labelresult;
+    
+    // Determine which collection to use based on question type
+    const QuestionModel = questionType === 'Interview Questions' 
+      ? TenantInterviewQuestions 
+      : TenantAssessmentQuestions;
+
+    if (deleteType === 'all') {
+      // Delete all questions from a specific label
+      if (!label) {
+        return res.status(400).json({
+          success: false,
+          message: "Label is required for deleting all questions"
+        });
+      }
+
+      // First find the list ID for the given label
+      const list = await  QuestionbankFavList.findOne({
+        _id: label,
+        // tenantId: tenantId,
+        // ownerId: ownerId
+      });
+
+      if (!list) {
+        return res.status(404).json({
+          success: false,
+          message: "Label not found"
+        });
+      }
+
+      // console.log("list",list);
+      // console.log("tenantId",tenantId);
+      // console.log("ownerId",ownerId);
+      
+
+      // Delete all questions with this list ID
+      result = await QuestionModel.deleteMany({
+        tenantListId: list._id,
+        // tenantId: tenantId,
+        // ownerId: ownerId
+      });
+
+      labelresult = await QuestionbankFavList.deleteOne({ _id: list._id });
+
+
+
+      console.log("result",result);
+      
+
+      res.json({
+        success: true,
+        message: `Deleted all questions from ${label}`,
+        deletedCount: result.deletedCount
+      });
+
+    } else if (deleteType === 'selected') {
+      const validQuestionIds = questionIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+
+      if (validQuestionIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No valid question IDs provided"
+        });
+      }
+
+      // First find the list ID for the given label
+      const list = await QuestionbankFavList.findOne({ _id: label });
+
+      if (!list) {
+        return res.status(404).json({
+          success: false,
+          message: "Label not found"
+        });
+      }
+
+      // Fetch all selected questions
+      // Fetch all selected docs (custom OR suggested wrapper)
+  const questions = await QuestionModel.find({
+    $or: [
+      { _id: { $in: validQuestionIds } },                // custom questions
+      { suggestedQuestionId: { $in: validQuestionIds } } // suggested wrappers
+    ],
+    tenantListId: list._id
+  });
+
+
+      let deletedCount = 0;
+      let updatedCount = 0;
+
+      for (const q of questions) {
+        if (q.tenantListId.length === 1 && q.tenantListId[0].toString() === list._id.toString()) {
+          // 🚨 Case 1: Only one label → delete whole question
+          await QuestionModel.deleteOne({ _id: q._id });
+          deletedCount++;
+        } else {
+          // 🚨 Case 2: Multiple labels → just remove this label from array
+          await QuestionModel.updateOne(
+            { _id: q._id },
+            { $pull: { tenantListId: list._id } }
+          );
+          updatedCount++;
+        }
+      }
+      console.log("deletedCount",deletedCount);
+      console.log("updatedCount",updatedCount);
+      console.log("questions",questions);
+
+      res.json({
+        success: true,
+        message: `Processed ${questions.length} questions`,
+        deletedCount,
+        updatedCount
+      });
+     
+
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid deleteType. Use 'all' or 'selected'"
+      });
+    }
+
+  } catch (error) {
+    console.error("Error deleting questions:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 };

@@ -1,24 +1,51 @@
-const mongoose = require('mongoose');
+// v1.0.0 - Ashok - Added fields
+// v1.0.1 - Ashok - Removed Tenant field
+const mongoose = require("mongoose");
 
-const University_CollegeSchema = new mongoose.Schema({
-    University_CollegeName : {
-        type: String,
-        required: true
+const University_CollegeSchema = new mongoose.Schema(
+  {
+    University_CollegeName: {
+      type: String,
+      required: true,
     },
-    CreatedDate: {
-        type: Date,
-        default: Date.now
+    // v1.0.0 <----------------------------------------------
+    //   CreatedDate: {
+    //     type: Date,
+    //     default: Date.now,
+    //   },
+    //   CreatedBy: String,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
     },
-    CreatedBy: String,
-});
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
+    },
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
+    },
+    // v1.0.0 ---------------------------------------------->
+  },
+  {
+    timestamps: true,
+  }
+);
 
-University_CollegeSchema.pre('save', function(next) {
-    if (this.isNew) {
-        this.CreatedDate = Date.now();
-    }
-    next();
-});
+// University_CollegeSchema.pre("save", function (next) {
+//   if (this.isNew) {
+//     this.CreatedDate = Date.now();
+//   }
+//   next();
+// });
 
-const University_CollegeName = mongoose.model("University_CollegeName", University_CollegeSchema);
+const University_CollegeName = mongoose.model(
+  "University_CollegeName",
+  University_CollegeSchema
+);
 
 module.exports = { University_CollegeName };

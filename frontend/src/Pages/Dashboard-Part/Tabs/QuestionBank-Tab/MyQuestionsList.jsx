@@ -3,9 +3,9 @@
 // v1.0.2  -  Venkatesh  -  fixed selected label issue now default first label is selected
 // v1.0.3  -  Venkatesh  -  pass isInterviewType to sidebar
 // v1.0.4  -  Venkatesh  -  fixed selected label issue now default first label is selected
-
+//  v1.0.5  -  Ranjith  -  fixed delete questions from db add all functionality
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { ChevronUp, ChevronDown, Plus, Pencil, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, Pencil, Search, ChevronLeft, ChevronRight, TrashIcon, CheckSquare, Square, X } from "lucide-react";
 import { ReactComponent as IoIosArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { ReactComponent as IoIosArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
@@ -16,8 +16,9 @@ import Editassesmentquestion from "./QuestionBank-Form.jsx";
 import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
 import { toast, Toaster } from 'react-hot-toast';
 import Cookies from "js-cookie";
-import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
+import { useQuestionDeletion, useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 
 
 // Safely render solutions which can be string | object | array of objects
@@ -112,6 +113,7 @@ const MyQuestionsList = ({
   setSidebarOpen,
 }) => {
   const { myQuestionsList, createdLists, isLoading } = useQuestions();//<----v1.0.4---
+  const { mutateAsync: deleteQuestions } = useQuestionDeletion();
   console.log("myQuestionsList:", myQuestionsList);
 
   const myQuestionsListRef = useRef(null);
@@ -130,6 +132,12 @@ const MyQuestionsList = ({
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
+  const ownerId = tokenPayload?.userId;
+  const tenantId = tokenPayload?.tenantId;
 
   //<----v1.0.4---
   // Map list type to display value
@@ -177,6 +185,236 @@ const MyQuestionsList = ({
   const [selectedQTypeFilterItems, setSelectedQTypeFilterItems] = useState([]);
   const [selectedCategoryFilterItems, setSelectedCategoryFilterItems] = useState([]);
 
+
+  // Ranjith added these feilds //  v1.0.5 
+  // Add these state variables after the existing state declarations
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
+  const [isSelectAll, setIsSelectAll] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteLabelConfirmOpen, setDeleteLabelConfirmOpen] = useState(false);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
+
+  // Add these functions before the return statement
+  const toggleQuestionSelection = (questionId) => {
+    setSelectedQuestions(prev =>
+      prev.includes(questionId)
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (isSelectAll) {
+      setSelectedQuestions([]);
+    } else {
+      const allQuestionIds = paginatedItems.map(q => q._id);
+      setSelectedQuestions(allQuestionIds);
+    }
+    setIsSelectAll(!isSelectAll);
+  };
+
+  const handleDeleteClick = () => {
+    if (selectedQuestions.length === 0) {
+      toast.error("Please select at least one question to delete");
+      return;
+    }
+
+    // If all questions are selected, ask if they want to delete the label too
+    if (isSelectAll && selectedQuestions.length === paginatedItems.length) {
+      setDeleteLabelConfirmOpen(true);
+    } else {
+      setDeleteConfirmOpen(true);
+    }
+  };
+
+
+
+  const handleDeleteQuestions = async (deleteLabel = false) => {
+
+    try {
+      let payload;
+      const isInterviewType = dropdownValue === "Interview Questions";
+
+      let labelId = Cookies.get("lastSelectedListId");
+      if (deleteLabel && selectedQuestions) {
+        // Delete the entire label
+        payload = {
+          deleteType: "all",
+          label: labelId,
+          questionType: dropdownValue
+        };
+      }
+      //  else if (isSelectAll && selectedQuestions.length === paginatedItems.length) {
+      //   // Delete all questions in the label but keep the label
+      //   payload = { 
+      //     deleteType: "all", 
+      //     label: labelId,
+      //     questionType: dropdownValue,
+      //     selectedQuestionsId: selectedQuestions,
+
+      //   };
+      // } 
+      else {
+        // Delete only selected questions
+        payload = {
+          deleteType: "selected",
+          questionIds: selectedQuestions,
+          questionType: dropdownValue,
+          label: labelId
+        };
+      }
+      console.log("payload selected", payload);
+
+      payload.ownerId = ownerId;
+      payload.tenantId = tenantId;
+
+      // Call the delete API
+      const response = await deleteQuestions(payload);
+      console.log("response", response);
+
+      if (response.success) {
+        // Show success message
+        toast.success(deleteLabel ? 'Label and questions deleted successfully' : 'Questions deleted successfully');
+
+        // Reset selection states
+        setSelectedQuestions([]);
+        setIsSelectAll(false);
+        setDeleteConfirmOpen(false);
+        setDeleteLabelConfirmOpen(false);
+        setShowCheckboxes(false);
+
+        // If label was deleted, reset the selected label
+        if (deleteLabel) {
+          const availableLabels = Object.keys(groupedQuestions || {}).filter(label => label !== selectedLabel);
+          setSelectedLabel(availableLabels[0] || "");
+
+          // Also remove from createdLists if needed
+          // You might need to refetch the lists here
+        }
+
+        // Refresh the questions list
+        // You'll need to implement a way to refetch the questions data
+        // This could be done by adding a refetch function to your useQuestions hook
+        // and calling it here
+        // window.location.reload(); // Temporary solution until you implement proper refetching
+      } else {
+        toast.error(response.message || 'Failed to delete questions');
+      }
+    } catch (error) {
+      toast.error('Failed to delete questions');
+      console.error("Error deleting questions:", error);
+    }
+
+    // try {
+    //   let payload;
+
+    //   if (deleteLabel && selectedQuestions) {
+    //     // Delete the entire label
+    //     payload = { type: "label", labelId: selectedQuestions };
+    //   } else if (isSelectAll && selectedQuestions.length === paginatedItems.length) {
+    //     // Delete all questions in the label but keep the label
+    //     payload = { type: "all", labelId: selectedQuestions };
+    //   } else {
+    //     // Delete only selected questions
+    //     payload = { type: "selected", questionIds: selectedQuestions };
+    //   }
+    //   console.log("payload selected", payload);
+
+    //   // Call your delete API here
+    //   // const response = await axios.delete('/api/questions/delete', { data: payload });
+
+    //   // if (response.data.success) {
+    //   // Show success message
+    //   toast.success(deleteLabel ? 'Label and questions deleted successfully' : 'Questions deleted successfully');
+
+    //   // Reset selection states
+    //   setSelectedQuestions([]);
+    //   setIsSelectAll(false);
+    //   setDeleteConfirmOpen(false);
+    //   setDeleteLabelConfirmOpen(false);
+    //   setShowCheckboxes(false);
+
+    //   // If label was deleted, reset the selected label
+    //   if (deleteLabel) {
+    //     const availableLabels = Object.keys(groupedQuestions || {}).filter(label => label !== selectedLabel);
+    //     setSelectedLabel(availableLabels[0] || "");
+    //   }
+
+    //   // Refresh the questions list
+    //   // You might need to refetch data here or update local state
+    //   // For now, let's assume we need to refresh the page
+    //   // window.location.reload();
+    //   // } else {
+    //   //   toast.error('Failed to delete questions');
+    //   // }
+    // } catch (error) {
+    //   toast.error('Failed to delete questions');
+    //   console.error("Error deleting questions:", error);
+    // }
+  };
+
+  // Add the delete confirmation modal components
+  const DeleteConfirmationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-96">
+        <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+        <p className="mb-6">
+          Are you sure you want to delete {selectedQuestions.length} question(s)?
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            onClick={() => setDeleteConfirmOpen(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            onClick={() => handleDeleteQuestions(false)}
+          >
+            Delete Questions
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const DeleteLabelConfirmationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-96">
+        <h3 className="text-lg font-semibold mb-4">Delete Options</h3>
+        <p className="mb-4">You've selected all questions in "{selectedLabel}".</p>
+        <p className="mb-6">Would you like to delete the entire label or just the questions?</p>
+        <div className="flex flex-col gap-3">
+          <button
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            onClick={() => handleDeleteQuestions(true)}
+          >
+            Delete Entire Label
+          </button>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            onClick={() => handleDeleteQuestions(false)}
+          >
+            Delete Questions Only
+          </button>
+          <button
+            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            onClick={() => setDeleteLabelConfirmOpen(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+    // Ranjith added these feilds //  v1.0.5 
+
+
+
+
+
   // Sync tempFiltrationData when filtrationData changes
   useEffect(() => {
     setTempFiltrationData(filtrationData);
@@ -212,8 +450,8 @@ const MyQuestionsList = ({
             Array.isArray(q?.technology)
               ? q.technology
               : typeof q?.technology === "string"
-              ? [q.technology]
-              : []
+                ? [q.technology]
+                : []
           )
           .filter(Boolean)
           .map((t) => String(t).trim())
@@ -234,7 +472,7 @@ const MyQuestionsList = ({
         if (!section || !Array.isArray(section.options)) return false;
         const found = section.options.find((o) => (o.value || o.type || o.level) === val);
         return found ? !!found.isChecked : false;
-        };
+      };
 
       const techSection = prev.find((s) => s.filterType === "Technology");
       const qTypeSection = prev.find((s) => s.filterType === "Question Type");
@@ -311,8 +549,8 @@ const MyQuestionsList = ({
         const techs = Array.isArray(question?.technology)
           ? question.technology
           : typeof question?.technology === "string"
-          ? [question.technology]
-          : [];
+            ? [question.technology]
+            : [];
         const techsLower = techs.map((t) => String(t || "").toLowerCase());
         const matchesTechnology =
           !selectedTechnologyFilterItems.length ||
@@ -443,12 +681,19 @@ const MyQuestionsList = ({
     };
   }, [sidebarOpen, handleOutsideClick]);
 
+
+
+
   const handleLabelChange = (label) => {
+
+
     const allQuestions = Object.values(myQuestionsList || {}).flat();
     const matchingQuestion = allQuestions.find((q) => q.label === label);
     if (matchingQuestion) {
       Cookies.set("lastSelectedListId", matchingQuestion.listId);
     }
+
+
     //<----v1.0.4---
     // Immediately sync dropdown with selected label's type (if available)
     const meta = Array.isArray(createdLists)
@@ -868,6 +1113,8 @@ const MyQuestionsList = ({
     });
     return result;
   }, [filteredMyQuestionsList, createdLists, dropdownValue]);
+  console.log("groupedQuestions", groupedQuestions);
+
 
   // Ensure selectedLabel is valid for the currently filtered lists
   useEffect(() => {
@@ -880,7 +1127,7 @@ const MyQuestionsList = ({
       setSelectedLabel(availableLabels[0]);
     }
   }, [groupedQuestions, dropdownValue, selectedLabel]);
-  
+
 
   // Search + Pagination for selected label
   const selectedLabelItems = useMemo(() => {
@@ -978,14 +1225,14 @@ const MyQuestionsList = ({
         <div className={`flex items-center justify-between ${type === "interviewerSection" || type === "feedback" || type === "assessment" ? "" : ""}`}>
           <div className="flex items-center gap-2">
 
-          <div className="relative inline-block w-48">
+            <div className="relative inline-block w-48">
               <button
                 className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
                 onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
               >
                 <span className="truncate">{dropdownValue || "Select Question Type"}</span>
                 <svg
-                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen? "rotate-180" : "rotate-0"}`}
+                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen ? "rotate-180" : "rotate-0"}`}
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -998,17 +1245,17 @@ const MyQuestionsList = ({
                 <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
                   <div
                     className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interview Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Interview Questions"); setIsInterviewTypeOpen(false);}}
+                    onClick={() => { setDropdownValue("Interview Questions"); setIsInterviewTypeOpen(false); }}
                   >
                     Interview Questions
                   </div>
                   <div
                     className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignment Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => {setDropdownValue("Assignment Questions"); setIsInterviewTypeOpen(false);}}
+                    onClick={() => { setDropdownValue("Assignment Questions"); setIsInterviewTypeOpen(false); }}
                   >
                     Assignment Questions
                   </div>
-                  
+
                 </div>
               )}
             </div>
@@ -1035,10 +1282,10 @@ const MyQuestionsList = ({
                       <div
                         key={idx}
                         className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
-                            ? "bg-blue-50 text-custom-blue font-semibold"
-                            : groupedQuestions[listName].length === 0
-                              ? "text-gray-400"
-                              : ""
+                          ? "bg-blue-50 text-custom-blue font-semibold"
+                          : groupedQuestions[listName].length === 0
+                            ? "text-gray-400"
+                            : ""
                           }`}
                         onClick={() => handleLabelChange(listName)}
                         title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
@@ -1049,8 +1296,8 @@ const MyQuestionsList = ({
                           {/*-------v1.0.0------>*/}
                           <span
                             className={`text-xs px-2 py-1 rounded-full ${groupedQuestions[listName].length === 0
-                                ? "text-gray-500 bg-gray-100"
-                                : "text-gray-500 bg-gray-100"
+                              ? "text-gray-500 bg-gray-100"
+                              : "text-gray-500 bg-gray-100"
                               }`}
                           >
                             {groupedQuestions[listName].length}
@@ -1081,23 +1328,43 @@ const MyQuestionsList = ({
                   toast.error("Please select a label to edit");
                 }
               }}
-              //-------v1.0.4----->
+            //-------v1.0.4----->
             >
-             Edit List
+              Edit List
             </button>
             <strong className="text-md text-gray-400"> | </strong>
             <button
               className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
               onClick={openListPopup}
             >
-             Create New List
+              Create New List
             </button>
+
+            <strong className="text-md text-gray-400"> | </strong>
+            {/* // Add this button right after the "Create New List" button 
+    // Ranjith added these feilds //  v1.0.5   */}
+            <button
+              className="text-md hover:underline text-red-600 font-semibold flex items-center gap-2"
+              onClick={() => setShowCheckboxes(true)}
+            >
+              <TrashIcon className="w-4 h-4" />
+              Delete 
+            </button>
+
+            {/* // Ranjith added these feilds //  v1.0.5  */}
+
           </div>
+
+
           {/*<-----v1.0.4----Serach bar and pagination */}
           <div className="flex items-center gap-3">
-          <div className="flex items-center">
-                <p>{rangeLabel}</p>
-          </div>
+
+
+
+            {/*  added by ranjith */}
+            <div className="flex items-center">
+              <p>{rangeLabel}</p>
+            </div>
             <div className="relative flex items-center rounded-md border">
               <span className="p-2 text-custom-blue">
                 <Search className="w-5 h-5" />
@@ -1113,19 +1380,18 @@ const MyQuestionsList = ({
 
             <div className="flex items-center gap-3">
               <div className="flex items-center">
-              <p>
-                {currentPage}/{totalPages || 1}
-              </p>
-            </div>
+                <p>
+                  {currentPage}/{totalPages || 1}
+                </p>
+              </div>
               <div className="flex items-center">
                 <button
                   type="button"
                   title="Previous"
                   onClick={onClickLeftPaginationIcon}
                   disabled={currentPage === 1}
-                  className={`border p-2 mr-2 text-xl rounded-md ${
-                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
-                  }`}
+                  className={`border p-2 mr-2 text-xl rounded-md ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
+                    }`}
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -1134,17 +1400,16 @@ const MyQuestionsList = ({
                   title="Next"
                   onClick={onClickRightPagination}
                   disabled={currentPage * itemsPerPage >= totalItems || totalItems === 0}
-                  className={`border p-2 text-xl rounded-md ${
-                    currentPage * itemsPerPage >= totalItems || totalItems === 0
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-100"
-                  }`}
+                  className={`border p-2 text-xl rounded-md ${currentPage * itemsPerPage >= totalItems || totalItems === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-100"
+                    }`}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             </div>
-           {/*-----v1.0.4-----> */}
+            {/*-----v1.0.4-----> */}
             <div
               ref={filterIconRef}
               onClick={() => setIsPopupOpen(!isPopupOpen)}
@@ -1166,196 +1431,307 @@ const MyQuestionsList = ({
               <SkeletonLoader />
             </>
           ) : (
-          <>
-          {(selectedLabel && groupedQuestions[selectedLabel]?.length === 0) ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px]">
-              <div className="text-center max-w-md">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16 mx-auto text-gray-400 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-500 mb-2">No Questions in {selectedLabel}</h3>
-                <p className="text-gray-400">This label has no questions. Add questions to this list or select another label.</p>
-              </div>
-            </div>
-          ) : !selectedLabel ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px]">
-              <div className="text-center max-w-md">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16 mx-auto text-gray-400 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-500 mb-2">No Label Selected</h3>
-                <p className="text-gray-400">Please select a label from the dropdown to view questions</p>
-              </div>
-            </div>
-          ) : 
-          (!selectedLabel || groupedQuestions[selectedLabel]?.length > 0) ? (
             <>
-              {Object.entries(groupedQuestions).map(([listName, items]) => (
-                selectedLabel === listName && (
-                  <div key={listName} className="mt-4">
-
-                    {isOpen[listName] && items.length > 0 && (
-                      <div
-                        className={`px-2 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-200px)]"
-                          } overflow-y-auto`}
-                      >
-                        {paginatedItems.map((question, index) => (
-                          <div
-                            key={index}
-                            className="border border-gray-300 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex flex-col p-4 border-b border-gray-300">
-                            <div className="flex justify-between items-center w-full">
-                              <div className="rounded-md bg-custom-blue/80 px-3 py-1 text-white text-sm transition-colors">
-                                <p className="font-medium">{question.category}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={`text-xs px-2 py-1 rounded-md ${question.isCustom ? "bg-[#BBDEFB] text-blue-800" : "bg-[#D1C4E9] text-blue-800"
-                                    }`}
-                                  title="Question Type"
-                                >
-                                  {question.isCustom ? "Custom" : "System"}
-                                </span>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded-md ${getDifficultyStyles(question.difficultyLevel)}`}
-                                  title="Difficulty Level"
-                                >
-                                  {question.difficultyLevel}
-                                </span>
-                                {(type === "interviewerSection" || type === "feedback") && (
-                                  <div>
-                                    {interviewQuestionsLists?.some((q) => q.questionId === question._id) ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => onClickRemoveQuestion(question, listName, index)}
-                                        className="rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
-                                      >
-                                        Remove
-                                      </button>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
-                                        onClick={() => onClickAddButton(question, listName, index)}
-                                      >
-                                        Add
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-                                {type === "assessment" && (
-                                  <div>
-                                    {addedSections.some((s) => s.Questions.some((q) => q.questionId === question._id)) ? (
-                                      <span className="text-green-600 text-sm font-medium py-1 px-1">✓ Added</span>
-                                    ) : (
-                                      <button
-                                        className={`bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
-                                          ? "opacity-50 cursor-not-allowed"
-                                          : ""
-                                          }`}
-                                        onClick={() => onClickAddButton(question, listName, index)}
-                                        disabled={addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit}
-                                      >
-                                        Add
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-                                {question.isCustom && (
-                                  <div className="relative">
-                                    <button
-                                      onClick={() => toggleDropdown(question._id)}
-                                      className="hover:bg-gray-100 p-1 rounded-full transition-colors"
-                                    >
-                                      <MdMoreVert className="text-gray-600" />
-                                    </button>
-                                    {dropdownOpen === question._id && (
-                                      <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                                        <p
-                                          className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
-                                          onClick={() => handleEditClick(question)}
-                                        >
-                                          <Pencil className="w-4 h-4 text-blue-600" /> Edit
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-start w-full pt-2">
-                                <span className="font-semibold w-8">{(currentPage - 1) * itemsPerPage + index + 1}.</span>
-                                <p className="text-gray-700 break-words">{question.questionText}</p>
-                            </div>
-                              {question.questionType === "MCQ" && question.options && (
-                              <div className="mb-2 ml-12 mt-2">
-                                <ul className="list-none">
-                                  {(() => {
-                                    const isAnyOptionLong = question.options.some((option) => option.length > 55);
-                                    return question.options.map((option, idx) => (
-                                      <li key={idx} className={`${isAnyOptionLong ? "block w-full" : "inline-block w-1/2"} mb-2`}>
-                                        {question.isCustom && <span className="mr-2 text-gray-500">{String.fromCharCode(97 + idx)})</span>}
-                                        <span className="text-gray-700">{option}</span>
-                                      </li>
-                                    ));
-                                  })()}
-                                </ul>
-                              </div>
-                            )}
-                            </div>
-                            <div className="p-4 pt-0">
-                              <p className="text-sm break-words whitespace-pre-wrap pt-2">
-                                <span className="font-medium text-gray-700">Answer: </span>
-                                <span className="text-gray-600">
-                                  {question.isCustom && question.questionType === "MCQ" && question.options
-                                    ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer)) +") "}`
-                                    : ""}
-                              {question.questionType === "Programming" ?  renderSolutions(question.solutions) : question.correctAnswer}
-                                </span>
-                              </p>
-                              <p className="font-medium pt-2">
-                             Tags:{" "}
-                            <span className="text-sm text-gray-600">
-                             {Array.isArray(question.tags) ? question.tags.join(", ") : String(question.tags || "")}
-                            </span>
-                           </p>
-                         </div>
-                            
-                          </div>
-                        ))}
-                      </div>
-                    )}
+              {(selectedLabel && groupedQuestions[selectedLabel]?.length === 0) ? (
+                <div className="flex flex-col items-center justify-center min-h-[400px]">
+                  <div className="text-center max-w-md">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 mx-auto text-gray-400 mb-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                    <h3 className="text-lg font-medium text-gray-500 mb-2">No Questions in {selectedLabel}</h3>
+                    <p className="text-gray-400">This label has no questions. Add questions to this list or select another label.</p>
                   </div>
-                )
-              ))}
+                </div>
+              ) : !selectedLabel ? (
+                <div className="flex flex-col items-center justify-center min-h-[400px]">
+                  <div className="text-center max-w-md">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 mx-auto text-gray-400 mb-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                    <h3 className="text-lg font-medium text-gray-500 mb-2">No Label Selected</h3>
+                    <p className="text-gray-400">Please select a label from the dropdown to view questions</p>
+                  </div>
+                </div>
+              ) :
+                (!selectedLabel || groupedQuestions[selectedLabel]?.length > 0) ? (
+                  <>
+                    {Object.entries(groupedQuestions).map(([listName, items]) => (
+                      selectedLabel === listName && (
+                        <div key={listName} className="mt-4">
+
+                          {isOpen[listName] && items.length > 0 && (
+                            <div
+                              className={`px-2 ${type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-200px)]"
+                                } overflow-y-auto`}
+                            >
+                              {paginatedItems.map((question, index) => (
+                                <div className="flex w-full items-center">
+
+
+                                  {showCheckboxes && (
+                                    <div className="left-3 top-3 mr-2">
+                                      <label className="inline-flex items-center cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedQuestions.includes(question._id)}
+                                          onChange={() => toggleQuestionSelection(question._id)}
+                                          className="sr-only" // Hide the default checkbox
+                                        />
+                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedQuestions.includes(question._id)
+                                            ? 'bg-custom-blue border-custom-blue'
+                                            : 'bg-white border-gray-300'
+                                          }`}>
+                                          {selectedQuestions.includes(question._id) && (
+                                            <svg className="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                          )}
+                                        </div>
+                                      </label>
+                                    </div>
+                                  )}
+
+
+                                  {/* {showCheckboxes && (
+                                    <div className=" left-3 top-3 mr-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedQuestions.includes(question._id)}
+                                        onChange={() => toggleQuestionSelection(question._id)}
+                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  )} */}
+
+
+                                  <div
+                                    key={index}
+                                    className="border w-full border-gray-300 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                                  >
+
+
+
+
+                                    <div className="flex flex-col p-4 border-b border-gray-300">
+                                      <div className="flex justify-between items-center w-full">
+                                        <div className="rounded-md bg-custom-blue/80 px-3 py-1 text-white text-sm transition-colors">
+                                          <p className="font-medium">{question.category}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span
+                                            className={`text-xs px-2 py-1 rounded-md ${question.isCustom ? "bg-[#BBDEFB] text-blue-800" : "bg-[#D1C4E9] text-blue-800"
+                                              }`}
+                                            title="Question Type"
+                                          >
+                                            {question.isCustom ? "Custom" : "System"}
+                                          </span>
+                                          <span
+                                            className={`text-xs px-2 py-1 rounded-md ${getDifficultyStyles(question.difficultyLevel)}`}
+                                            title="Difficulty Level"
+                                          >
+                                            {question.difficultyLevel}
+                                          </span>
+                                          {(type === "interviewerSection" || type === "feedback") && (
+                                            <div>
+                                              {interviewQuestionsLists?.some((q) => q.questionId === question._id) ? (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => onClickRemoveQuestion(question, listName, index)}
+                                                  className="rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
+                                                >
+                                                  Remove
+                                                </button>
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
+                                                  onClick={() => onClickAddButton(question, listName, index)}
+                                                >
+                                                  Add
+                                                </button>
+                                              )}
+                                            </div>
+                                          )}
+                                          {type === "assessment" && (
+                                            <div>
+                                              {addedSections.some((s) => s.Questions.some((q) => q.questionId === question._id)) ? (
+                                                <span className="text-green-600 text-sm font-medium py-1 px-1">✓ Added</span>
+                                              ) : (
+                                                <button
+                                                  className={`bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : ""
+                                                    }`}
+                                                  onClick={() => onClickAddButton(question, listName, index)}
+                                                  disabled={addedSections.reduce((acc, s) => acc + s.Questions.length, 0) >= questionsLimit}
+                                                >
+                                                  Add
+                                                </button>
+                                              )}
+                                            </div>
+                                          )}
+                                          {question.isCustom && (
+                                            <div className="relative">
+                                              <button
+                                                onClick={() => toggleDropdown(question._id)}
+                                                className="hover:bg-gray-100 p-1 rounded-full transition-colors"
+                                              >
+                                                <MdMoreVert className="text-gray-600" />
+                                              </button>
+                                              {dropdownOpen === question._id && (
+                                                <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                                  <p
+                                                    className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
+                                                    onClick={() => handleEditClick(question)}
+                                                  >
+                                                    <Pencil className="w-4 h-4 text-blue-600" /> Edit
+                                                  </p>
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-start w-full pt-2">
+                                        <span className="font-semibold w-8">{(currentPage - 1) * itemsPerPage + index + 1}.</span>
+                                        <p className="text-gray-700 break-words">{question.questionText}</p>
+                                      </div>
+                                      {question.questionType === "MCQ" && question.options && (
+                                        <div className="mb-2 ml-12 mt-2">
+                                          <ul className="list-none">
+                                            {(() => {
+                                              const isAnyOptionLong = question.options.some((option) => option.length > 55);
+                                              return question.options.map((option, idx) => (
+                                                <li key={idx} className={`${isAnyOptionLong ? "block w-full" : "inline-block w-1/2"} mb-2`}>
+                                                  {question.isCustom && <span className="mr-2 text-gray-500">{String.fromCharCode(97 + idx)})</span>}
+                                                  <span className="text-gray-700">{option}</span>
+                                                </li>
+                                              ));
+                                            })()}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="p-4 pt-0">
+                                      <p className="text-sm break-words whitespace-pre-wrap pt-2">
+                                        <span className="font-medium text-gray-700">Answer: </span>
+                                        <span className="text-gray-600">
+                                          {question.isCustom && question.questionType === "MCQ" && question.options
+                                            ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer)) + ") "}`
+                                            : ""}
+                                          {question.questionType === "Programming" ? renderSolutions(question.solutions) : question.correctAnswer}
+                                        </span>
+                                      </p>
+                                      <p className="font-medium pt-2">
+                                        Tags:{" "}
+                                        <span className="text-sm text-gray-600">
+                                          {Array.isArray(question.tags) ? question.tags.join(", ") : String(question.tags || "")}
+                                        </span>
+                                      </p>
+                                    </div>
+
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    ))}
+                  </>
+                ) : null}
             </>
-          ) : null}
-          </>
           )}
         </div>
+
+
+
+        {/* // Ranjith added these feilds //  v1.0.5  */}
+        {showCheckboxes &&
+          <div className="fixed bottom-0 left-0 right-0 flex justify-center z-50 animate-slide-up">
+            <div className="bg-blue-50 border border-gray-200 w-[70%] max-w-2xl h-16 rounded-t-lg p-4 flex items-center justify-center gap-4 shadow-lg mb-4">
+              <button
+                onClick={toggleSelectAll}
+                className="p-2 text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-2"
+                title={isSelectAll ? "Deselect all" : "Select all"}
+              >
+                 Select All
+                {/* {isSelectAll ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />} */}
+                <span className="text-sm hidden sm:block">
+                  {isSelectAll ? "Deselect All" : "Select All"}
+                </span>
+              </button>
+
+              <div className="h-6 w-px bg-gray-300"></div>
+
+              <span className="text-sm text-gray-700 font-medium">
+                {selectedQuestions.length} {selectedQuestions.length === 1 ? 'Question' : 'Questions'} Selected
+              </span>
+
+              <div className="h-6 w-px bg-gray-300"></div>
+
+              <button
+                onClick={handleDeleteClick}
+                className="p-2 text-red-600 hover:text-red-800 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Delete selected questions"
+                disabled={selectedQuestions.length === 0}
+              >
+                <TrashIcon className="w-5 h-5" />
+                <span className="text-sm hidden sm:block">Delete</span>
+              </button>
+
+              <div className="h-6 w-px bg-gray-300"></div>
+
+              <button
+                onClick={() => {
+                  setShowCheckboxes(false);
+                  setSelectedQuestions([]);
+                  setIsSelectAll(false);
+                }}
+                className="p-2 hover:text-red-800 text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors"
+                title="Cancel selection"
+              >
+                <X className="w-5 h-5" />
+                <span className="text-sm hidden sm:block">Cancel</span>
+              </button>
+            </div>
+          </div>
+        }
+ 
+  
+
+        {/* Add the modals at the end of the component */}
+        {deleteConfirmOpen && <DeleteConfirmationModal />}
+        {deleteLabelConfirmOpen && <DeleteLabelConfirmationModal />}
+
+       
+    {/* // Ranjith added these feilds //  v1.0.5  */}
+
+
+
+
         <FilterPopup
           isOpen={isPopupOpen}
           onClose={() => setIsPopupOpen(false)}

@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - modified piece of code
+
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { config } from '../config';
@@ -42,7 +44,9 @@ export const useMasterData = () => {
           axios.get(`${config.REACT_APP_API_URL}/qualification`),
           axios.get(`${config.REACT_APP_API_URL}/universitycollege`),
           axios.get(`${config.REACT_APP_API_URL}/company`),
-          axios.get(`${config.REACT_APP_API_URL}/master-data/category`),
+          // v1.0.0 <-------------------------------------------------------
+          axios.get(`${config.REACT_APP_API_URL}/category`),
+          // v1.0.0 ------------------------------------------------------->
         ]);
 
         return {

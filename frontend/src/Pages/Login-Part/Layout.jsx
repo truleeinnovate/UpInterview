@@ -6,7 +6,7 @@ const Layout = ({ children, showBackButton = false, backPath = '/' }) => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14">
             <div className="flex items-center">
               {showBackButton && (
                 <Link
@@ -18,9 +18,11 @@ const Layout = ({ children, showBackButton = false, backPath = '/' }) => {
                   </svg>
                 </Link>
               )}
-              <Link to="/" className="text-2xl font-bold text-primary-500">
-                InterviewHub
-              </Link>
+              <img
+                src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
+                alt="Logo"
+                className="w-32"
+              />
             </div>
             <div className="hidden md:flex items-center space-x-4">
               <span className="text-sm text-gray-600">Accelerating hiring for 200+ companies</span>

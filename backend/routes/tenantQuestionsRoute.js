@@ -4,7 +4,8 @@ const {
     newQuestion,
     updateQuestion,
     updateByOwner,
-    getQuestionBySuggestedId
+    getQuestionBySuggestedId,
+    deleteQuestionsById
 } = require("../controllers/tenantQuestionsController.js");
 const loggingService = require('../middleware/loggingService.js');
 
@@ -19,5 +20,7 @@ router.patch(
 //router.patch('/addtenantids/:id',updateByOwner)
 
   router.get('/tenant-questions/:suggestedQuestionId',getQuestionBySuggestedId);
+
+router.delete('/delete-questions', deleteQuestionsById);
 
 module.exports = router;

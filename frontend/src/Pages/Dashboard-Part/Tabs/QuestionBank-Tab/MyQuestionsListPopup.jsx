@@ -42,12 +42,12 @@ const MyQuestionsList1 = forwardRef(
       addQuestionToListLoading,
       useQuestionBySuggestedId,
     } = useQuestions();
-    console.log("selectedListId ---", selectedListId);
-    console.log("notEditmode ---", notEditmode);
-    console.log("created ---", createdLists);
+    // console.log("selectedListId ---", selectedListId);
+    // console.log("notEditmode ---", notEditmode);
+    // console.log("created ---", createdLists);
 
     const [selectedListIds, setSelectedListIds] = useState(notEditmode ? [selectedListId] : []);
-    console.log("selectedListIds ---", selectedListIds);
+    // console.log("selectedListIds ---", selectedListIds);
     const [showNewListPopup, setShowNewListPopup] = useState(false);
     const [newListName, setNewListName] = useState('');
     const [newListNameForName, setNewListNameForName] = useState('');

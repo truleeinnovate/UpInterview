@@ -2,6 +2,7 @@
 //<---v1.0.1------venkatesh------update scroll into view for error msg
 //<---v1.0.2------venkatesh------default and enforce time to after 2 hours from now
 // v1.0.3 - Ashok - Improved responsiveness and used common code for popup
+// v1.0.4 - Ranjith -  added due date changes
 
 import React, { useState, useEffect, useRef, useCallback } from "react"; //<---v1.0.2-----
 import Modal from "react-modal";
@@ -399,8 +400,10 @@ const TaskForm = ({
         ...formData,
         ownerId,
         tenantId,
+        // Ranjith v1.0.4
         dueDate: scheduledDate ? formatForISOString(scheduledDate) : formData.dueDate,
         // dueDate: dueDateISO,
+        // Ranjith v1.0.4
         priority: selectedPriority,
         status: selectedStatus,
         assignedTo: formData.assignedTo,

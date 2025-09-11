@@ -608,12 +608,129 @@ const updatePosition = async (req, res) => {
 
 
 
+// Delete position by ID
+const deletePosition = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Delete Position";
 
+  const { id } = req.params;
 
+  try {
+    // Permission check
+    // const canDelete = await hasPermission(res.locals?.effectivePermissions?.Positions, 'Delete');
+    // if (!canDelete) {
+    //   return res.status(403).json({ 
+    //     status: 'error',
+    //     message: 'Forbidden: missing Positions.Delete permission' 
+    //   });
+    // }
 
+    // Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid position ID format'
+      });
+    }
 
+    // Find the position first to get details for logging
+    const position = await Position.findById(id);
+    
+    if (!position) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Position not found'
+      });
+    }
 
+    // Store position data for logging before deletion
+    // const positionData = {
+    //   title: position.title,
+    //   positionCode: position.positionCode,
+    //   company: position.companyname,
+    //   id: position._id
+    // };
 
+    // Delete the position
+    const deletedPosition = await Position.findByIdAndDelete(id);
+
+    if (!deletedPosition) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Position not found or already deleted'
+      });
+    }
+
+    // Set feed data for activity feed
+    // res.locals.feedData = {
+    //   tenantId: position.tenantId,
+    //   feedType: "delete",
+    //   action: {
+    //     name: "position_deleted",
+    //     description: `Position "${position.title}" (${position.positionCode}) was deleted`,
+    //   },
+    //   ownerId: position.ownerId,
+    //   parentId: id,
+    //   parentObject: "Position",
+    //   metadata: {
+    //     positionTitle: position.title,
+    //     positionCode: position.positionCode,
+    //     company: position.companyname,
+    //     deletedAt: new Date().toISOString()
+    //   },
+    //   severity: "medium",
+    //   fieldMessage: [{
+    //     fieldName: "deletion",
+    //     message: `Position "${position.title}" (${position.positionCode}) at ${position.companyname} was permanently deleted`
+    //   }],
+    //   history: [{
+    //     fieldName: "deletion",
+    //     oldValue: `Position ${position.positionCode} - ${position.title}`,
+    //     newValue: null
+    //   }]
+    // };
+
+    // Set log data for auditing
+    // res.locals.logData = {
+    //   tenantId: position.tenantId,
+    //   ownerId: position.ownerId,
+    //   processName: "Delete Position",
+    //   requestBody: req.body,
+    //   status: "success",
+    //   message: "Position deleted successfully",
+    //   responseBody: {
+    //     deletedPosition: positionData,
+    //     deletionTime: new Date().toISOString()
+    //   },
+    // };
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Position deleted successfully',
+   
+    });
+
+  } catch (error) {
+    console.error('Error deleting position:', error);
+
+    // Error logging
+    // res.locals.logData = {
+    //   tenantId: req.body?.tenantId,
+    //   ownerId: req.body?.ownerId,
+    //   processName: "Delete Position",
+    //   requestBody: req.body,
+    //   message: error.message,
+    //   status: "error",
+    //   error: error.stack
+    // };
+
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error while deleting position',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
 
 
 
@@ -2042,5 +2159,6 @@ const updateInterviewRound = async (req, res) => {
       updatePosition,
       saveInterviewRoundPosition,
       deleteRound,
-      updateInterviewRound
+      updateInterviewRound,
+      deletePosition
     };
