@@ -2,14 +2,15 @@
 // v1.0.1  -  Venkatesh  -  removed the format function
 // v1.0.2  -  changed noImage url path from local to cloud storage url
 import React, { useRef, useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { XCircle } from "lucide-react";
-// import noImage from "../../Dashboard-Part/Images/no-photo.png";
 import InfoBox from "./InfoBox.jsx";
-//import { format } from "date-fns";
-import { ReactComponent as MdArrowDropDown } from "../../../icons/MdArrowDropDown.svg";
 import { validateFile } from "../../../utils/FileValidation/FileValidation.js";
+import EmailField from "../../../Components/FormFields/EmailField.jsx";
+import InputField from "../../../Components/FormFields/InputField.jsx";
+import DateOfBirthField from "../../../Components/FormFields/DateOfBirthField.jsx";
+import GenderField from "../../../Components/FormFields/GenderDropdown.jsx";
+import PhoneField from "../../../Components/FormFields/PhoneField.jsx";
 
 const BasicDetails = ({
   basicDetailsData,
@@ -24,52 +25,40 @@ const BasicDetails = ({
   setIsProfileRemoved,
 }) => {
   const { useCallback } = React;
-
-  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
-  const [suggestedProfileIds, setSuggestedProfileIds] = useState("");
-//  const [startDate, setStartDate] = useState(
-//     basicDetailsData.dateOfBirth? new Date(basicDetailsData.dateOfBirth):null
-//   );
-//<----v1.0.1-----
-  // Ensure we never pass an Invalid Date to DatePicker
-  const toValidDate = (v) => {
+  const [suggestedProfileIds, setSuggestedProfileIds] = useState([]);
+  const [profileError, setProfileError] = useState("");
+    const toValidDate = (v) => {
     if (!v) return null;
     const d = v instanceof Date ? v : new Date(v);
     return isNaN(d.getTime()) ? null : d;
   };
   const [startDate, setStartDate] = useState(() =>
     toValidDate(basicDetailsData.dateOfBirth)
-  //----v1.0.1----->
   );
-  const [selectedGender, setSelectedGender] = useState(
-    basicDetailsData.gender || ""
-  );
-  const [showDropdowngender, setShowDropdownGender] = useState(false);
+  const [selectedGender, setSelectedGender] = useState(basicDetailsData.gender || "");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [profileError, setProfileError] = useState("");
-  // const [isProfileRemoved, setIsProfileRemoved] = useState(false);
-
-  // // Refs
-  // const emailInputRef = useRef(null);
   const profileIdInputRef = useRef(null);
-  const emailTimeoutRef = useRef(null);
   const profileIdTimeoutRef = useRef(null);
-
-  const genderDropdownRef = useRef(null);
   const fileInputRef = useRef(null);
-
-  // Constants
-  const genders = ["Male", "Female", "Others"];
+  const genderDropdownRef = useRef(null);
+  const genderOptions = [
+    { value: "Male", label: "Male" },
+    { value: "Female", label: "Female" },
+    { value: "Others", label: "Others" }
+  ];
+  const countryCodeOptions = [
+    { value: "+91", label: "+91" },
+    { value: "+1", label: "+1" },
+    { value: "+44", label: "+44" },
+    { value: "+61", label: "+61" },
+    { value: "+971", label: "+971" },
+    { value: "+60", label: "+60" }
+  ];
 
   // Update local state when basicDetailsData changes
   useEffect(() => {
-    // if (basicDetailsData.dateOfBirth) {
-    //   setStartDate(new Date(basicDetailsData.dateOfBirth));
-    // } else {
-    //   setStartDate(null);
-    // }
-    setStartDate(toValidDate(basicDetailsData.dateOfBirth));//----v1.0.1---->
+    setStartDate(toValidDate(basicDetailsData.dateOfBirth));
     if (basicDetailsData.gender) {
       setSelectedGender(basicDetailsData.gender);
     } else {
@@ -77,7 +66,6 @@ const BasicDetails = ({
     }
   }, [basicDetailsData.dateOfBirth, basicDetailsData.gender]);
 
-  // Generate profileId from email
   const generateProfileId = useCallback((email) => {
     if (!email) return "";
     return email
@@ -85,53 +73,6 @@ const BasicDetails = ({
       .replace(/[^a-zA-Z0-9.]/g, "")
       .toLowerCase();
   }, []);
-
-  // Real-time email validation
-  const handleEmailValidation = async (email) => {
-    clearTimeout(emailTimeoutRef.current);
-    setIsCheckingEmail(true);
-
-    emailTimeoutRef.current = setTimeout(async () => {
-      let errorMessage = "";
-
-      if (!email) {
-        errorMessage = "Email is required";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        errorMessage = "Invalid email format";
-      } else {
-        try {
-          // const exists = await checkEmailExists(email);
-          // if (exists) {
-          //   errorMessage = 'Email already registered';
-          // }
-        } catch (err) {
-          console.error("Error checking email:", err);
-          errorMessage = "Error verifying email";
-        }
-      }
-
-      setErrors((prev) => ({ ...prev, email: errorMessage }));
-
-      if (!errorMessage && email) {
-        const generatedProfileId = generateProfileId(email);
-        // Only update profileId if it's empty or matches the generated pattern
-        if (
-          !basicDetailsData.profileId ||
-          basicDetailsData.profileId ===
-            generateProfileId(basicDetailsData.email)
-        ) {
-          setBasicDetailsData((prev) => ({
-            ...prev,
-            profileId: generatedProfileId,
-          }));
-          // Immediately validate the generated profileId
-          handleProfileIdValidation(generatedProfileId);
-        }
-      }
-
-      setIsCheckingEmail(false);
-    }, 500);
-  };
 
   // Real-time profileId validation
   const handleProfileIdValidation = useCallback(
@@ -150,21 +91,7 @@ const BasicDetails = ({
         } else if (!/^[a-zA-Z0-9.]+$/.test(profileId)) {
           errorMessage = "Only letters, numbers, and dots allowed";
         } else {
-          try {
-            // const exists = await checkProfileIdExists(profileId);
-            // if (exists) {
-            //   errorMessage = 'Profile ID already taken';
-            //   // Generate 3 random suggestions
-            //   suggestions = [
-            //     `${profileId}${Math.floor(Math.random() * 100)}`,
-            //     `${profileId}.${Math.floor(Math.random() * 10)}`,
-            //     `${profileId.split('.')[0]}${Math.floor(Math.random() * 100)}`
-            //   ];
-            // }
-          } catch (err) {
-            console.error("Error checking Profile ID:", err);
-            errorMessage = "Error verifying Profile ID";
-          }
+          console.log("Profile ID is valid");
         }
 
         setErrors((prev) => ({ ...prev, profileId: errorMessage }));
@@ -198,26 +125,19 @@ const BasicDetails = ({
     if (name === "profileId") {
       setShowSuggestions(false);
       handleProfileIdValidation(value);
-    } else if (name === "email") {
-      handleEmailValidation(value);
     }
   };
 
-  // Handle blur for email and profileId
   const handleBlur = (e) => {
     const { name, value } = e.target;
 
-    if (name === "email") {
-      clearTimeout(emailTimeoutRef.current);
-      handleEmailValidation(value);
-    } else if (name === "profileId") {
+    if (name === "profileId") {
       clearTimeout(profileIdTimeoutRef.current);
       handleProfileIdValidation(value);
       setShowSuggestions(false);
     }
   };
 
-  // Handle focus for profileId to show suggestions if available
   const handleProfileIdFocus = () => {
     if (suggestedProfileIds.length > 0) {
       setShowSuggestions(true);
@@ -233,30 +153,6 @@ const BasicDetails = ({
     setSuggestedProfileIds([]);
     setShowSuggestions(false);
     setErrors((prev) => ({ ...prev, profileId: "" }));
-  };
-
-  // Clean up timeouts and event listeners
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        genderDropdownRef.current &&
-        !genderDropdownRef.current.contains(event.target)
-      ) {
-        setShowDropdownGender(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      clearTimeout(emailTimeoutRef.current);
-      clearTimeout(profileIdTimeoutRef.current);
-    };
-  }, []);
-
-  const toggleDropdowngender = () => {
-    setShowDropdownGender(!showDropdowngender);
   };
 
   const handleFileChange = async (e) => {
@@ -283,22 +179,35 @@ const BasicDetails = ({
   };
 
   const handleInputChange = (e, fieldName) => {
-    let { value } = e.target;
+    const { value } = e.target;
 
-    setBasicDetailsData((prev) => ({
-      ...prev,
+    setBasicDetailsData((prevData) => ({
+      ...prevData,
       [fieldName]: value,
     }));
 
-    if (fieldName !== "portfolioUrl") {
+    if (errors[fieldName]) {
       setErrors((prevErrors) => ({
         ...prevErrors,
         [fieldName]: "",
       }));
     }
+
+    if (fieldName === "profileId") {
+      clearTimeout(profileIdTimeoutRef.current);
+      handleProfileIdValidation(value);
+      setShowSuggestions(false);
+    }
   };
 
-  // v1.0.0 removed the format function and used the date.toISOString() instead to store the date of birth in the database
+  const formatDate = (date) => {
+    if (!date) return '';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const handleDateChange = (date) => {
     if (!date) {
       setBasicDetailsData((prevData) => ({ ...prevData, dateOfBirth: "" }));
@@ -306,42 +215,14 @@ const BasicDetails = ({
       setErrors((prevErrors) => ({ ...prevErrors, dateOfBirth: "" }));
       return;
     }
+    const formattedDate = formatDate(date);
     setBasicDetailsData((prevData) => ({
       ...prevData,
-      dateOfBirth: date.toISOString(),
+      dateOfBirth: formattedDate,
     }));
     setStartDate(date);
   };
 
-  const handleGenderSelect = (gender) => {
-    setSelectedGender(gender);
-    setShowDropdownGender(false);
-    setBasicDetailsData((prevFormData) => ({
-      ...prevFormData,
-      gender,
-    }));
-  };
-
-  // const genderDropdownRef = useRef(null);
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        genderDropdownRef.current &&
-        !genderDropdownRef.current.contains(event.target)
-      ) {
-        setShowDropdownGender(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      clearTimeout(emailTimeoutRef.current);
-      clearTimeout(profileIdTimeoutRef.current);
-    };
-  }, []);
-
-  // Initialize profile ID from email when component mounts or when email changes
   useEffect(() => {
     if (basicDetailsData.email && !basicDetailsData.profileId) {
       const generatedProfileId = generateProfileId(basicDetailsData.email);
@@ -398,10 +279,10 @@ const BasicDetails = ({
                     />
                   ) : (
                     <img
-                    // v1.0.2 <----------------------------------------------------------------------------------------------
+                      // v1.0.2 <----------------------------------------------------------------------------------------------
                       // src={noImage}
                       src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/no-photo_ifdshr.png"
-                    // v1.0.2 ---------------------------------------------------------------------------------------------->
+                      // v1.0.2 ---------------------------------------------------------------------------------------------->
                       alt="Preview"
                       className="w-full h-full object-cover"
                     />
@@ -453,135 +334,61 @@ const BasicDetails = ({
 
         {/* Email Field */}
         <div className="sm:col-span-6 col-span-2">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Email Address <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                className="h-5 w-5 text-gray-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-              </svg>
-            </div>
-            <input
-              name="email"
-              type="text"
-              id="email"
-              value={basicDetailsData.email}
-              className="block w-full pl-10 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm bg-gray-100 cursor-not-allowed"
-              placeholder="your.email@example.com"
-              autoComplete="email"
-              readOnly
-            />
-          </div>
-          {errors.email && (
-            <p className="text-red-500 text-sm sm:text-xs">{errors.email}</p>
-          )}
+          <EmailField
+            value={basicDetailsData.email || ""}
+            onChange={handleChange}
+            error={errors.email}
+            label="Email Address"
+            disabled={true}
+            required
+          />
         </div>
 
         {/* First Name */}
         <div className="sm:col-span-6">
-          <label
-            htmlFor="firstName"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            First Name
-          </label>
-          <input
-            type="text"
+          <InputField
             name="firstName"
-            id="firstName"
-            value={basicDetailsData.firstName}
+            value={basicDetailsData.firstName || ""}
             onChange={(e) => handleInputChange(e, "firstName")}
+            label="First Name"
             placeholder="John"
-            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-              errors.firstName ? "border-red-500" : "border-gray-300"
-            }`}
+            error={errors.firstName}
             autoComplete="given-name"
           />
         </div>
 
         {/* Last Name */}
         <div className="sm:col-span-6">
-          <label
-            htmlFor="lastName"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Last Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
+          <InputField
             name="lastName"
-            id="lastName"
-            value={basicDetailsData.lastName}
+            value={basicDetailsData.lastName || ""}
             onChange={(e) => handleInputChange(e, "lastName")}
+            label="Last Name"
             placeholder="Doe"
-            className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-              errors.lastName ? "border-red-500" : "border-gray-300"
-            }`}
+            error={errors.lastName}
+            required
             autoComplete="family-name"
           />
-          {errors.lastName && (
-            <p className="text-red-500 text-sm sm:text-xs">{errors.lastName}</p>
-          )}
         </div>
 
         {/* Date of Birth */}
         <div className="sm:col-span-6">
-          <label
-            htmlFor="dateofbirth"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Date of Birth
-          </label>
-          <DatePicker
-            selected={startDate}
+          <DateOfBirthField
+            selectedDate={startDate}
             onChange={handleDateChange}
-            dateFormat="MMMM d, yyyy"
-            maxDate={new Date()}
-            showYearDropdown
-            showMonthDropdown
-            dropdownMode="select"
-            placeholderText="MM/DD/YYYY" // Use placeholderText for DatePicker
-            className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 sm:text-sm"
-            wrapperClassName="w-full"
-            customInput={
-              <input
-                type="text"
-                readOnly
-                className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 placeholder-gray-400 border border-gray-300 focus:outline-none sm:text-sm"
-                placeholder="MM/DD/YYYY" // Fallback placeholder
-              />
-            }
-            onChangeRaw={(e) => e.preventDefault()}
+            label="Date of Birth"
+            placeholder="MM/DD/YYYY"
+            error={errors.dateOfBirth}
           />
         </div>
 
         {/* Profile ID Field */}
         <div className="sm:col-span-6">
-          <label
-            htmlFor="profileId"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Profile ID <span className="text-red-500">*</span>
-          </label>
-
-          {/* This wrapper controls the width for both input and dropdown */}
-          <div className="relative inline-block w-full">
-            <input
-              ref={profileIdInputRef}
-              type="text"
+          <div className="relative">
+            <InputField
               name="profileId"
               id="profileId"
-              value={basicDetailsData.profileId}
+              value={basicDetailsData.profileId || ""}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^a-zA-Z0-9.]/g, "");
                 setBasicDetailsData((prev) => ({ ...prev, profileId: value }));
@@ -589,20 +396,21 @@ const BasicDetails = ({
               }}
               onBlur={handleBlur}
               onFocus={handleProfileIdFocus}
+              label="Profile ID"
               placeholder="profile.id"
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                errors.profileId ? "border-red-500" : "border-gray-300"
-              }`}
-              autoComplete="profileId"
+              error={errors.profileId}
+              required
+              inputRef={profileIdInputRef}
+              className={isCheckingProfileId ? "pr-8" : ""}
             />
             {isCheckingProfileId && (
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <div className="absolute right-3 top-8">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
               </div>
             )}
 
             {showSuggestions && suggestedProfileIds.length > 0 && (
-              <div className="absolute z-10 mt-7 w-full bg-white shadow-lg rounded-md border border-gray-200">
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">
                 <div className="py-1">
                   <p className="px-3 py-1 text-xs text-gray-500">
                     Try one of these:
@@ -621,119 +429,50 @@ const BasicDetails = ({
               </div>
             )}
           </div>
-
-          {errors.profileId && (
-            <p className="text-red-500 text-sm mt-1">{errors.profileId}</p>
-          )}
         </div>
 
         {/* Gender */}
-        <div className="sm:col-span-6 relative" ref={genderDropdownRef}>
-          <label
-            htmlFor="gender"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Gender
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              id="gender"
-              autoComplete="off"
-              value={selectedGender}
-              placeholder="Select gender"
-              onClick={toggleDropdowngender}
-              readOnly
-              className="block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm"
-            />
-            <div
-              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500"
-              onClick={toggleDropdowngender}
-            >
-              <MdArrowDropDown className="text-lg" />
-            </div>
-          </div>
-          {showDropdowngender && (
-            <div className="absolute z-50 mt-1 text-xs w-full rounded-md bg-white shadow-lg border border-gray-200">
-              {genders.map((gender) => (
-                <div
-                  key={gender}
-                  className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleGenderSelect(gender)}
-                >
-                  {gender}
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="sm:col-span-6">
+          <GenderField
+            value={selectedGender}
+            options={genderOptions}
+            onChange={(e) => handleInputChange(e, "gender")}
+            error={errors.gender}
+            containerRef={genderDropdownRef}
+            label="Gender"
+          />
         </div>
 
         {/* Phone Number */}
         <div className="sm:col-span-6 w-full">
-          <label
-            htmlFor="Phone"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Phone Number <span className="text-red-500">*</span>
-          </label>
-          <div className="flex gap-2">
-            <select
-              name="countryCode"
-              id="countryCode"
-              value={basicDetailsData.countryCode}
-              onChange={(e) => handleInputChange(e, "countryCode")}
-              className={`block w-[18%] px-1 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                errors.phone ? "border-red-500" : "border-gray-300"
-              }`}
-            >
-              <option value="+91">+91</option>
-              <option value="+1">+1</option>
-              <option value="+44">+44</option>
-              <option value="+61">+61</option>
-              <option value="+971">+971</option>
-              <option value="+60">+60</option>
-            </select>
-            <div className="relative w-[82%]">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                name="phone"
-                id="phone"
-                value={basicDetailsData.phone}
-                onChange={(e) => handleInputChange(e, "phone")}
-                autoComplete="off"
-                maxLength="10"
-                placeholder="Enter phone number"
-                className={`block w-full pl-10 px-1 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                  errors.phone ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-            </div>
-          </div>
-          {errors.phone && (
-            <p className="text-red-500 text-sm sm:text-xs">{errors.phone}</p>
-          )}
+          <PhoneField
+            countryCodeOptions={countryCodeOptions}
+            countryCodeValue={basicDetailsData.countryCode}
+            onCountryCodeChange={(e) => handleInputChange(e, "countryCode")}
+            countryCodeError={errors.phone}
+            countryCodeRef={null}
+            phoneValue={basicDetailsData.phone}
+            onPhoneChange={(e) => handleInputChange(e, "phone")}
+            phoneError={errors.phone}
+            phoneRef={null}
+            label="Phone Number"
+            required
+          />
         </div>
 
         {/* LinkedIn URL */}
-        <div className="sm:col-span-6 col-span-2">
-          <label
-            htmlFor="linkedin_url"
-            className="block text-sm font-medium text-gray-700 mb-1 mt-6"
-          >
-            LinkedIn URL <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <div className="sm:col-span-6 col-span-2 mt-6">
+          <InputField
+            name="linkedinUrl"
+            value={basicDetailsData.linkedinUrl || ""}
+            onChange={(e) => handleInputChange(e, "linkedinUrl")}
+            label="LinkedIn URL"
+            placeholder="linkedin.com/in/johndoe"
+            error={errors.linkedinUrl}
+            required
+            disabled={!!basicDetailsData.linkedinUrl}
+            type="url"
+            leftIcon={
               <svg
                 className="h-5 w-5 text-gray-400"
                 xmlns="http://www.w3.org/2000/svg"
@@ -746,37 +485,20 @@ const BasicDetails = ({
                   clipRule="evenodd"
                 />
               </svg>
-            </div>
-            <input
-              id="linkedin_url"
-              type="url"
-              name="linkedinUrl"
-              value={basicDetailsData.linkedinUrl}
-              onChange={(e) => handleInputChange(e, "linkedinUrl")}
-              placeholder="linkedin.com/in/johndoe"
-              autoComplete="off"
-              className={`block w-full pl-10 px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                errors.linkedinUrl ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-          </div>
-          {errors.linkedinUrl && (
-            <p className="text-red-500 text-sm sm:text-xs">
-              {errors.linkedinUrl}
-            </p>
-          )}
+            }
+          />
         </div>
 
         {/* Portfolio URL */}
-        <div className="sm:col-span-6 col-span-2">
-          <label
-            htmlFor="portfolio_url"
-            className="block text-sm font-medium text-gray-700 mb-1 mt-6"
-          >
-            Portfolio URL
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <div className="sm:col-span-6 col-span-2 mt-6">
+          <InputField
+            name="portfolioUrl"
+            value={basicDetailsData.portfolioUrl || ""}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            label="Portfolio URL"
+            placeholder="portfolio.com/yourname"
+            leftIcon={
               <svg
                 className="h-5 w-5 text-gray-400"
                 xmlns="http://www.w3.org/2000/svg"
@@ -789,18 +511,8 @@ const BasicDetails = ({
                   clipRule="evenodd"
                 />
               </svg>
-            </div>
-            <input
-              id="portfolio_url"
-              type="text"
-              name="portfolioUrl"
-              value={basicDetailsData.portfolioUrl}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className="block w-full pl-10 px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm"
-              placeholder="portfolio.com/yourname"
-            />
-          </div>
+            }
+          />
         </div>
       </div>
     </>

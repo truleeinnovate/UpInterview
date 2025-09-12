@@ -180,15 +180,15 @@ const SubscriptionPlan = () => {
             <div
               key={plan.name}
               className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 ${isHighlighted(plan)
-                  ? "-translate-y-6 z-10 bg-[#217989] text-white"
-                  : "bg-white text-[#217989]"
+                  ? "-translate-y-2  md:-translate-y-4 lg:-translate-y-6 xl:-translate-y-6 2xl:-translate-y-6 z-10 bg-[#217989] text-white transform scale-[1.02]"
+                  : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
                 }`}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
             >
               <div className="flex justify-between items-center">
                 <h5
-                  className={`text-xl sm:text-md font-semibold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                  className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
                     }`}
                 >
                   {plan.name}
@@ -207,24 +207,30 @@ const SubscriptionPlan = () => {
                   )
                 )}
               </div>
-              <ul className="mt-4 flex text-xs flex-col gap-1">
+              <div className="flex-grow mt-4">
+              <ul className="space-y-2 text-xs sm:text-sm md:text-base lg:text-lg">
                 {plan.features.map((feature, idx) => (
-                  <li key={idx}>{feature}</li>
+                  
+                  <li key={idx} className="flex items-start">
+                     <span className="mr-2">•</span>
+                     <span>{feature}</span>
+                  </li>
                 ))}
               </ul>
-              <p className="text-3xl sm:text-xl font-bold mt-4">
-                <span className="text-xl">$</span>
+              </div>
+              <p className="text-2xl sm:text-3xl md:text-4xl  font-bold mt-4">
+                <span className="text-lg sm:text-xl md:text-2xl">$</span>
                 {isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                <span className="text-lg font-medium"> /{isAnnual ? "annual" : "month"}</span>
+                <span className="text-lg sm:text-base md:text-lg font-medium"> /{isAnnual ? "annual" : "month"}</span>
               </p>
-              <LoadingButton
+              <button
               key={plan._id}
                 onClick={() => submitPlans(plan)}
                 isLoading={subscriptionData.subscriptionPlanId === plan.planId  && isSubmitting}
                 loadingText={subscriptionData.subscriptionPlanId === plan.planId  &&
                    "Processing..."}
                 className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
-                ${isHighlighted(plan) ? "bg-purple-500 text-white" : "text-purple-600 bg-purple-200"}
+                ${isHighlighted(plan) ? "bg-white text-custom-blue hover:text-custom-blue " : "text-white bg-custom-blue"}
                 ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
               >
@@ -233,7 +239,7 @@ const SubscriptionPlan = () => {
                   : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
                     ? "Continue to Payment"
                     : "Choose"}
-              </LoadingButton>
+              </button>
             </div>
           ))}
         </div>
