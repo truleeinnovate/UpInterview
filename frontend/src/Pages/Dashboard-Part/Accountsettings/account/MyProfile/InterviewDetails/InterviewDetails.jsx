@@ -7,6 +7,22 @@ import { useCustomContext } from "../../../../../../Context/Contextfetch";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 
+// Create a formatting function
+const formatInterviewType = (type) => {
+  const formatMap = {
+    'technical': 'Technical',
+    'mock': 'Mock',
+    'system_design': 'System Design',
+    'behavioral': 'Behavioral',
+    // Add more mappings as needed
+  };
+  
+  return formatMap[type] || type
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
   const { usersRes } = useCustomContext();
   const navigate = useNavigate();
@@ -201,7 +217,7 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
                     key={index}
                     className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
                   >
-                    {interview || "N/A"}
+                    {formatInterviewType(interview) || "N/A"}
                   </span>
                 ))
               ) : (

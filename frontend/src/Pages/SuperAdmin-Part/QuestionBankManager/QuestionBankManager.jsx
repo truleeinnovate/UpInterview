@@ -6,11 +6,13 @@ import InterviewQuestions from "./InterviewQuestions";
 import AssignmentQuestions from "./AssignmentQuestions";
 import axios from "axios";
 import { config } from "../../../config";
-import { FaChevronLeft, FaChevronRight, FaChevronDown } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaChevronDown, FaTrash } from "react-icons/fa";
 import QuestionBankManagerForm from "./QuestionBankManagerForm";
 import { notify } from "../../../services/toastService";
 import SidebarPopup from "../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock";
+import { CheckSquare, Square, TrashIcon, X } from "lucide-react";
+import DeleteConfirmModal from "../../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal";
 
 const CustomDropdown = ({ value, onChange, options }) => {
   const [open, setOpen] = useState(false);
@@ -34,9 +36,8 @@ const CustomDropdown = ({ value, onChange, options }) => {
       >
         {options.find((opt) => opt.value === value)?.label}
         <FaChevronDown
-          className={`text-custom-blue transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`text-custom-blue transition-transform ${open ? "rotate-180" : ""
+            }`}
         />
       </button>
 
@@ -49,11 +50,10 @@ const CustomDropdown = ({ value, onChange, options }) => {
                 onChange(opt.value);
                 setOpen(false);
               }}
-              className={`px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-custom-blue/40 ${
-                opt.value === value
+              className={`px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-custom-blue/40 ${opt.value === value
                   ? "bg-custom-blue font-medium text-white"
                   : ""
-              }`}
+                }`}
             >
               {opt.label}
             </li>
@@ -74,10 +74,70 @@ const QuestionBankManager = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   useScrollLock(selectedQuestion);
 
+  // Delete functionality states added by Ranjith
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
+  const [isSelectAll, setIsSelectAll] = useState(false);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const CUSTOM_ROWS_PER_PAGE = 10;
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(CUSTOM_ROWS_PER_PAGE);
+
+
+  // Delete question functionality added by Ranjith
+  const handleDeleteQuestions = async () => {
+
+    console.log("selectedQuestions", selectedQuestions);
+    try {
+
+      const response = await axios.delete(
+        `${config.REACT_APP_API_URL}/questions-manager/${activeTab}`,
+        {
+          data: { questionIds: selectedQuestions }
+        }
+      );
+
+      if (response.data.success) {
+        notify.success("Questions deleted successfully");
+        // Refresh the questions list
+        // const res = await axios.get(
+        //   `${config.REACT_APP_API_URL}/questions-manager/${activeTab}`
+        // );
+        // setQuestions(res.data || []);
+        // Reset selection
+        setSelectedQuestions([]);
+        setIsSelectAll(false);
+        setShowCheckboxes(false);
+        setDeleteConfirmOpen(false);
+      } else {
+        notify.error("Failed to delete questions");
+      }
+    } catch (err) {
+      console.error("Error deleting questions:", err);
+      notify.error("Failed to delete questions");
+    }
+  };
+
+  const toggleQuestionSelection = (questionId) => {
+    setSelectedQuestions(prev =>
+      prev.includes(questionId)
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (isSelectAll) {
+      setSelectedQuestions([]);
+    } else {
+      const allQuestionIds = filteredQuestions.map(q => q._id);
+      setSelectedQuestions(allQuestionIds);
+    }
+    setIsSelectAll(!isSelectAll);
+  };
+  // Delete question functionality added by Ranjith
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -96,6 +156,12 @@ const QuestionBankManager = () => {
 
     fetchQuestions();
     setPage(1);
+
+    // Reset selection when tab changes added by Ranjith
+    setSelectedQuestions([]);
+    setIsSelectAll(false);
+    setShowCheckboxes(false);
+
   }, [activeTab]);
 
   const handleUploadCSV = async (file) => {
@@ -389,6 +455,11 @@ const QuestionBankManager = () => {
     );
   };
 
+  // Delete Confirmation Modal by Ranjith
+  // const DeleteConfirmationModal = () => (
+
+  // );
+
   return (
     <div className="px-6">
       <Header
@@ -404,25 +475,37 @@ const QuestionBankManager = () => {
         <div className="flex gap-4">
           <button
             onClick={() => setActiveTab("interview")}
-            className={`px-4 py-2 -mb-px border-b-2 font-medium transition-colors ${
-              activeTab === "interview"
+            className={`px-4 py-2 -mb-px border-b-2 font-medium transition-colors ${activeTab === "interview"
                 ? "border-custom-blue text-custom-blue"
                 : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             Interview Questions
           </button>
 
           <button
             onClick={() => setActiveTab("assessment")}
-            className={`px-4 py-2 -mb-px border-b-2 font-medium transition-colors ${
-              activeTab === "assessment"
+            className={`px-4 py-2 -mb-px border-b-2 font-medium transition-colors ${activeTab === "assessment"
                 ? "border-custom-blue text-custom-blue"
                 : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             Assignment Questions
           </button>
+
+          {/* Delete selection buttons by Ranjith */}
+          <button
+            className="text-md hover:underline text-red-600 font-semibold flex items-center gap-2"
+            onClick={() => setShowCheckboxes(true)}
+          >
+            <TrashIcon className="w-4 h-4" />
+            Delete
+          </button>
+
+          {/* // Ranjith added these feilds  */}
+
+
+
         </div>
 
         {/* Search + Per Page + Pagination */}
@@ -507,17 +590,84 @@ const QuestionBankManager = () => {
               <InterviewQuestions
                 questions={paginatedQuestions}
                 onView={handleViewQuestion}
+                showCheckboxes={showCheckboxes}
+                selectedQuestions={selectedQuestions}
+                onToggleSelection={toggleQuestionSelection}
               />
             )}
             {activeTab === "assessment" && (
               <AssignmentQuestions
                 questions={paginatedQuestions}
                 onView={handleViewQuestion}
+                showCheckboxes={showCheckboxes}
+                selectedQuestions={selectedQuestions}
+                onToggleSelection={toggleQuestionSelection}
               />
             )}
           </>
         )}
       </div>
+
+      {/* // Ranjith added these feilds */}
+      {showCheckboxes &&
+        <div className="fixed bottom-0 left-0 right-0 flex justify-center z-50 animate-slide-up">
+          <div className="bg-blue-50 border border-gray-200 w-[70%] max-w-2xl h-16 rounded-t-lg p-4 flex items-center justify-center gap-4 shadow-lg mb-4">
+            <button
+              onClick={toggleSelectAll}
+              className="p-2 text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-2"
+              title={isSelectAll ? "Deselect all" : "Select all"}
+            >
+              Select All
+              {/* {isSelectAll ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />} */}
+              <span className="text-sm hidden sm:block">
+                {isSelectAll ? "Deselect All" : "Select All"}
+              </span>
+            </button>
+
+            <div className="h-6 w-px bg-gray-300"></div>
+
+            <span className="text-sm text-gray-700 font-medium">
+              {selectedQuestions.length} {selectedQuestions.length === 1 ? 'Question' : 'Questions'} Selected
+            </span>
+
+            <div className="h-6 w-px bg-gray-300"></div>
+
+            <button
+              onClick={() => setDeleteConfirmOpen(true)}
+              // onClick={handleDeleteQuestions}
+              className="p-2 text-red-600 hover:text-red-800 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Delete selected questions"
+              disabled={selectedQuestions.length === 0}
+            >
+              <TrashIcon className="w-5 h-5" />
+              <span className="text-sm hidden sm:block">Delete</span>
+            </button>
+
+            <div className="h-6 w-px bg-gray-300"></div>
+
+            <button
+              onClick={() => {
+                setShowCheckboxes(false);
+                setSelectedQuestions([]);
+                setIsSelectAll(false);
+              }}
+              className="p-2 hover:text-red-800 text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors"
+              title="Cancel selection"
+            >
+              <X className="w-5 h-5" />
+              <span className="text-sm hidden sm:block">Cancel</span>
+            </button>
+          </div>
+        </div>
+      }
+
+      <DeleteConfirmModal
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteQuestions}
+        title="Question"
+        entityName={selectedQuestions.length + " Questions"}
+      />
 
       {/* Modal */}
       {isModalOpen && (
