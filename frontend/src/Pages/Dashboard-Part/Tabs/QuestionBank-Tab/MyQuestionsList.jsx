@@ -44,8 +44,6 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 
-
-import { createPortal } from "react-dom";
 import { notify } from "../../../../services/toastService.js";
 
 // v1.0.6 <-------------------------------------------------------------
@@ -53,12 +51,8 @@ function QuestionHeaderBar({
   type,
   dropdownValue,
   setDropdownValue,
-  isInterviewTypeOpen,
-  setIsInterviewTypeOpen,
   selectedLabel,
   setSelectedLabel,
-  isDropdownOpen,
-  setIsDropdownOpen,
   groupedQuestions,
   handleLabelChange,
   handleEdit,
@@ -79,30 +73,6 @@ function QuestionHeaderBar({
   createdLists,
   selectedLabelId,
 }) {
-  const interviewBtnRef = useRef(null);
-  const labelBtnRef = useRef(null);
-  const [dropdownPos, setDropdownPos] = useState({});
-
-  // Track dropdown position
-  useEffect(() => {
-    if (isInterviewTypeOpen && interviewBtnRef.current) {
-      const rect = interviewBtnRef.current.getBoundingClientRect();
-      setDropdownPos({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
-    }
-    if (isDropdownOpen && labelBtnRef.current) {
-      const rect = labelBtnRef.current.getBoundingClientRect();
-      setDropdownPos({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
-    }
-  }, [isInterviewTypeOpen, isDropdownOpen]);
-
   return (
     <div
       className={`flex items-center sm:justify-start justify-between overflow-x-auto ${type === "interviewerSection" ||
@@ -113,162 +83,44 @@ function QuestionHeaderBar({
         }`}
     >
       <div className="flex items-center gap-2 ">
-        {/* Interview Type Dropdown */}
-        <div className="relative inline-block w-48">
-          <button
-            ref={interviewBtnRef}
-            className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-            onClick={() => {
-              const nextState = !isInterviewTypeOpen;
-              setIsInterviewTypeOpen(nextState);
-              if (nextState) setIsDropdownOpen(false); // close other dropdown
-            }}
-          >
-            <span className="truncate">
-              {dropdownValue || "Select Question Type"}
-            </span>
-            <svg
-              className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen ? "rotate-180" : "rotate-0"
-                }`}
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-          {isInterviewTypeOpen &&
-            createPortal(
-              <div
-                className="absolute max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-50"
-                style={{
-                  top: dropdownPos.top,
-                  left: dropdownPos.left,
-                  width: dropdownPos.width,
-                  position: "absolute",
-                }}
-              >
-                <div
-                  className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interview Questions"
-                      ? "bg-blue-50 text-custom-blue font-semibold"
-                      : ""
-                    }`}
-                  onClick={() => {
-                    setDropdownValue("Interview Questions");
-                    setIsInterviewTypeOpen(false);
-                  }}
-                >
-                  Interview Questions
-                </div>
-                <div
-                  className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignment Questions"
-                      ? "bg-blue-50 text-custom-blue font-semibold"
-                      : ""
-                    }`}
-                  onClick={() => {
-                    setDropdownValue("Assignment Questions");
-                    setIsInterviewTypeOpen(false);
-                  }}
-                >
-                  Assignment Questions
-                </div>
-              </div>,
-              document.body
-            )}
+        {/* Interview Type Dropdown (using DropdownSelect) */}
+        <div className="w-48">
+          <DropdownSelect
+            isSearchable={false}
+            value={dropdownValue ? { value: dropdownValue, label: dropdownValue } : null}
+            onChange={(opt) => setDropdownValue(opt?.value || "")}
+            options={[
+              { value: "Interview Questions", label: "Interview Questions" },
+              { value: "Assignment Questions", label: "Assignment Questions" },
+            ]}
+            placeholder="Select Question Type"
+          />
         </div>
 
-        {/* Label Dropdown */}
-        <div className="relative inline-block w-48">
-          <button
-            ref={labelBtnRef}
-            className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-            onClick={() => {
-              const nextState = !isDropdownOpen;
-              setIsDropdownOpen(nextState);
-              if (nextState) setIsInterviewTypeOpen(false); // close other dropdown
-            }}
-          >
-            <span className="truncate">
-              {selectedLabel
-                ? selectedLabel.charAt(0).toUpperCase() + selectedLabel.slice(1)
-                : "Select Label"}
-            </span>
-            <svg
-              className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"
-                }`}
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-          {isDropdownOpen &&
-            createPortal(
-              <div
-                className="absolute max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-50"
-                style={{
-                  top: dropdownPos.top,
-                  left: dropdownPos.left,
-                  width: dropdownPos.width,
-                  position: "absolute",
-                }}
-              >
-                {Object.keys(groupedQuestions).length > 0 ? (
-                  Object.keys(groupedQuestions).map((listName, idx) => (
-                    <div
-                      key={idx}
-                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
-                          ? "bg-blue-50 text-custom-blue font-semibold"
-                          : groupedQuestions[listName].length === 0
-                            ? "text-gray-400"
-                            : ""
-                        }`}
-                      onClick={() => handleLabelChange(listName)}
-                      title={
-                        groupedQuestions[listName].length === 0
-                          ? "This label has no questions"
-                          : ""
-                      }
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="truncate">
-                          {listName
-                            ? listName.charAt(0).toUpperCase() +
-                            listName.slice(1)
-                            : ""}
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${groupedQuestions[listName].length === 0
-                              ? "text-gray-500 bg-gray-100"
-                              : "text-gray-500 bg-gray-100"
-                            }`}
-                        >
-                          {groupedQuestions[listName].length}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-4 py-3 text-sm text-gray-500">
-                    No labels found. Create a new list to get started.
+        {/* Label Dropdown (using DropdownSelect) */}
+        <div className="w-48">
+          <DropdownSelect
+            isSearchable
+            value={selectedLabel ? { value: selectedLabel, label: selectedLabel.charAt(0).toUpperCase() + selectedLabel.slice(1) } : null}
+            onChange={(opt) => handleLabelChange(opt?.value || "")}
+            options={Object.keys(groupedQuestions || {}).map((listName) => ({
+              value: listName,
+              label: listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : "",
+            }))}
+            formatOptionLabel={(option, { context }) => {
+              if (context === 'menu') {
+                const count = Array.isArray(groupedQuestions?.[option?.value]) ? groupedQuestions[option.value].length : 0;
+                return (
+                  <div className="flex items-center justify-between w-full">
+                    <span className="truncate">{option?.label || ""}</span>
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded-full text-gray-600 bg-gray-100">{count}</span>
                   </div>
-                )}
-              </div>,
-              document.body
-            )}
+                );
+              }
+              return <span className="truncate">{option?.label || ""}</span>;
+            }}
+            placeholder="Select Label"
+          />
         </div>
 
         {/* Rest of your buttons */}
@@ -1110,14 +962,11 @@ const MyQuestionsList = ({
     // }
     //----v1.0.4--->
     setSelectedLabel(label);
-    setIsDropdownOpen(false);
-    // v1.0.6 <--------------------------------------------------------------------------------
     setSelectedQuestions([]);
     setShowCheckboxes(false);
     setIsSelectAll(false);
     setDeleteConfirmOpen(false);
     setDeleteLabelConfirmOpen(false);
-    // v1.0.6 -------------------------------------------------------------------------------->
   };
 
   //<----v1.0.4---
@@ -1676,12 +1525,8 @@ const MyQuestionsList = ({
             type={type}
             dropdownValue={dropdownValue}
             setDropdownValue={setDropdownValue}
-            isInterviewTypeOpen={isInterviewTypeOpen}
-            setIsInterviewTypeOpen={setIsInterviewTypeOpen}
             selectedLabel={selectedLabel}
             setSelectedLabel={setSelectedLabel}
-            isDropdownOpen={isDropdownOpen}
-            setIsDropdownOpen={setIsDropdownOpen}
             groupedQuestions={groupedQuestions}
             handleLabelChange={handleLabelChange}
             handleEdit={handleEdit}
