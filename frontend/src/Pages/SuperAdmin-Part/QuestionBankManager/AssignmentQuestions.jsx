@@ -1,7 +1,7 @@
 import React from "react";
 import { Eye } from "lucide-react";
 
-const AssignmentQuestions = ({ questions, onView }) => {
+const AssignmentQuestions = ({ questions, onView,showCheckboxes, selectedQuestions, onToggleSelection  }) => {
   if (!questions || questions.length === 0) {
     return (
       <div className="text-center py-10 text-gray-500 font-medium">
@@ -13,9 +13,38 @@ const AssignmentQuestions = ({ questions, onView }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {questions.map((q) => (
+        <div className="relative flex justify-center items-center">
+          
+             {/* Checkbox for selection by Ranjith */}
+
+             {showCheckboxes && (
+            <div className="left-3 top-3 mr-2">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedQuestions.includes(q._id)}
+                  onChange={() => onToggleSelection(q._id)}
+                  className="sr-only" // Hide the default checkbox
+                />
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedQuestions.includes(q._id)
+                  ? 'bg-custom-blue border-custom-blue'
+                  : 'bg-white border-gray-300'
+                  }`}>
+                  {selectedQuestions.includes(q._id) && (
+                    <svg className="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+              </label>
+            </div>
+          )}
+
+
+
         <div
           key={q._id}
-          className="relative bg-white rounded-2xl shadow-md p-5 border border-gray-200 group"
+          className=" w-full bg-white rounded-2xl shadow-md p-5 border border-gray-200 group"
         >
           {/* Eye icon - hidden by default, shows on hover */}
           <button
@@ -85,6 +114,7 @@ const AssignmentQuestions = ({ questions, onView }) => {
               </span>
             </div>
           )}
+        </div>
         </div>
       ))}
     </div>

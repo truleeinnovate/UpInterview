@@ -556,6 +556,8 @@ const MultiStepForm = () => {
         ownerId: matchedContact.ownerId,
         tenantData,
       };
+      console.log("contactData",contactData);
+      
 
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Individual/Signup`,
@@ -568,16 +570,16 @@ const MultiStepForm = () => {
         }
       );
       console.log("response", response);
-      if( currentStep === 3 ){
-        if(response.data.success === true){
-          notify.success("Individual Signup Successfully");
-        }
-      }
+      // if( currentStep === 3 ){
+      //   if(response.data.success === true){
+         
+      //   }
+      // }
 
       if (response.data.token) {
         await clearAllAuth();
         await setAuthCookies({ authToken: response.data.token });
-  
+       
         // update state immediately after setting cookie
         // setAuthToken(response.data.token);
   
@@ -649,8 +651,14 @@ const MultiStepForm = () => {
           setTimeout(() => {
             if (isProfileCompleteStateOrg) {
               navigate("/home");
+              // if( currentStep === 3 ){
+                notify.success("Individual Signup Successfully");
+                // }
             } else {
               navigate("/subscription-plans");
+              // if( currentStep === 3 ){
+                notify.success("Individual Signup Successfully");
+                // }
             }
           }, 2000);
         }
@@ -679,7 +687,7 @@ const MultiStepForm = () => {
       {/* Removed loading overlay and spinner */}
       <form>
         <div className="min-h-screen bg-gray-50">
-          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <p className="text-2xl font-bold text-gray-900 mb-4">
               Create Profile
             </p>
