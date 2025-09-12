@@ -125,6 +125,13 @@ const Subscription = () => {
     useState(null);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
 
+  // Helper to get numeric price for a plan given billing cycle
+  const getPlanPrice = (plan, cycle) => {
+    const raw = cycle === "annual" ? plan?.annualPrice : plan?.monthlyPrice;
+    const num = typeof raw === "string" ? parseFloat(raw) : raw;
+    return Number.isFinite(num) ? num : null;
+  };
+
   // Sync billing toggle with subscription data
   useEffect(() => {
     if (subscriptionData?.selectedBillingCycle === "annual") {
@@ -228,26 +235,39 @@ const Subscription = () => {
           return;
         }
 
+        // Within the same billing cycle, compare plan price first (fallback to index)
         if (
+          subscriptionData.selectedBillingCycle === viewingCycle &&
           currentPlanIndex !== -1 &&
-          thisPlanIndex > currentPlanIndex &&
-          subscriptionData.selectedBillingCycle === viewingCycle
+          thisPlanIndex !== -1
         ) {
-          // This is an upgrade
-          setSelectedPlanForUpgrade(plan);
-          setShowUpgradeConfirmModal(true);
-          return;
-        }
+          const currentPlan = plans[currentPlanIndex];
+          const currentPrice = getPlanPrice(currentPlan, viewingCycle);
+          const thisPrice = getPlanPrice(plan, viewingCycle);
 
-        // This is a downgrade within the same billing cycle (lower tier)
-        if (
-          currentPlanIndex !== -1 &&
-          thisPlanIndex < currentPlanIndex &&
-          subscriptionData.selectedBillingCycle === viewingCycle
-        ) {
-          setSelectedPlanForDowngrade(plan);
-          setShowDowngradeConfirmModal(true);
-          return;
+          if (currentPrice != null && thisPrice != null) {
+            if (thisPrice > currentPrice) {
+              setSelectedPlanForUpgrade(plan);
+              setShowUpgradeConfirmModal(true);
+              return;
+            } else if (thisPrice < currentPrice) {
+              setSelectedPlanForDowngrade(plan);
+              setShowDowngradeConfirmModal(true);
+              return;
+            }
+          }
+
+          // Fallback to index comparison (or equal price)
+          if (thisPlanIndex > currentPlanIndex) {
+            setSelectedPlanForUpgrade(plan);
+            setShowUpgradeConfirmModal(true);
+            return;
+          }
+          if (thisPlanIndex < currentPlanIndex) {
+            setSelectedPlanForDowngrade(plan);
+            setShowDowngradeConfirmModal(true);
+            return;
+          }
         }
       }
 
@@ -480,11 +500,24 @@ const Subscription = () => {
                       (p) => p.planId === plan.planId
                     );
                     if (
+                      subscriptionData.selectedBillingCycle === viewingCycle &&
                       currentPlanIndex !== -1 &&
-                      thisPlanIndex > currentPlanIndex &&
-                      subscriptionData.selectedBillingCycle === viewingCycle
+                      thisPlanIndex !== -1
                     ) {
-                      return "upgrade-button-animation";
+                      const currentPlan = plans[currentPlanIndex];
+                      const currentPrice = getPlanPrice(
+                        currentPlan,
+                        viewingCycle
+                      );
+                      const thisPrice = getPlanPrice(plan, viewingCycle);
+                      if (currentPrice != null && thisPrice != null) {
+                        if (thisPrice > currentPrice) {
+                          return "upgrade-button-animation";
+                        }
+                      }
+                      if (thisPlanIndex > currentPlanIndex) {
+                        return "upgrade-button-animation";
+                      }
                     }
                   }
                   return "";
@@ -560,9 +593,24 @@ const Subscription = () => {
 
                           // If current plan index exists and this plan index exists
                           if (currentPlanIndex !== -1 && thisPlanIndex !== -1) {
-                            return thisPlanIndex > currentPlanIndex
-                              ? "Upgrade"
-                              : "Downgrade";
+                            const currentPlan = plans[currentPlanIndex];
+                            const currentPrice = getPlanPrice(
+                              currentPlan,
+                              viewingCycle
+                            );
+                            const thisPrice = getPlanPrice(plan, viewingCycle);
+                            if (
+                              currentPrice != null &&
+                              thisPrice != null &&
+                              thisPrice !== currentPrice
+                            ) {
+                              return thisPrice > currentPrice
+                                ? "Upgrade"
+                                : "Downgrade";
+                            }
+                            if (thisPlanIndex > currentPlanIndex) return "Upgrade";
+                            if (thisPlanIndex < currentPlanIndex)
+                              return "Downgrade";
                           }
                         }
                         return "Choose";

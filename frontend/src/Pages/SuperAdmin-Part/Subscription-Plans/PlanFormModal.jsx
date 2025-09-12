@@ -150,6 +150,7 @@ export default function PlanFormModal({
                   name="planId"
                   label="Plan ID"
                   required
+                  placeholder="Eg: PlanName-000"
                   value={form.planId}
                   onChange={(e) => handleChange('planId', e.target.value)}
                   error={errors.planId}
@@ -160,6 +161,7 @@ export default function PlanFormModal({
                   name="name"
                   label="Name"
                   required
+                  placeholder="Enter Plan Name"
                   value={form.name}
                   onChange={(e) => handleChange('name', e.target.value)}
                   error={errors.name}
@@ -169,6 +171,7 @@ export default function PlanFormModal({
                 <DescriptionField
                   name="description"
                   label="Description"
+                  placeholder="This plan is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
                   rows={3}
                   value={form.description}
                   onChange={(e) => handleChange('description', e.target.value)}

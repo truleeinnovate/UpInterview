@@ -1,4 +1,6 @@
 // v1.0.0  -  Ashraf  -  added assessment expiry date in kanban view
+// v1.0.1  -  Ashok   - Improved responsiveness
+
 // src/Components/Shared/Kanban/KanbanView.jsx
 import React from "react";
 import { motion } from "framer-motion";
@@ -20,10 +22,11 @@ const KanbanView = ({
   if (loading) {
     return (
       <div
-        className={`w-full bg-gray-50 rounded-xl p-6 overflow-y-auto transition-all duration-300 ${isMenuOpen
-          ? "md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]"
-          : "w-full"
-          }`}
+        className={`w-full bg-gray-50 rounded-xl p-6 overflow-y-auto transition-all duration-300 ${
+          isMenuOpen
+            ? "md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]"
+            : "w-full"
+        }`}
       >
         {[...Array(columns.length > 0 ? columns.length : 1)].map(
           (_, colIndex) => (
@@ -63,7 +66,7 @@ const KanbanView = ({
                         <div className="h-3 bg-gray-200 skeleton-animation rounded"></div>
                         <div className="h-3 bg-gray-200 skeleton-animation rounded"></div>
                       </div>
-                    </div> 
+                    </div>
                     <div className="mt-4 flex gap-2">
                       <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
                       <div className="h-6 w-16 bg-gray-200 skeleton-animation rounded-full"></div>
@@ -96,18 +99,19 @@ const KanbanView = ({
   const groupedData =
     columns.length > 0
       ? columns.reduce((acc, column) => {
-        acc[column.key] = data.filter((item) => item.status === column.key);
-        return acc;
-      }, {})
+          acc[column.key] = data.filter((item) => item.status === column.key);
+          return acc;
+        }, {})
       : { all: data };
 
   return (
     <DndContext collisionDetection={closestCenter}>
       <motion.div
-        className={`w-full bg-gray-50 rounded-xl p-6 overflow-y-auto transition-all duration-300 ${isMenuOpen
-          ? "md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]"
-          : "w-full"
-          } ${columns.length === 0 ? "h-[calc(100vh-12rem)]" : ""}`}
+        className={`w-full bg-gray-50 rounded-xl p-6 overflow-y-auto transition-all duration-300 ${
+          isMenuOpen
+            ? "md:w-[60%] sm:w-[50%] lg:w-[70%] xl:w-[75%] 2xl:w-[80%]"
+            : "w-full"
+        } ${columns.length === 0 ? "h-[calc(100vh-12rem)]" : ""}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -122,9 +126,8 @@ const KanbanView = ({
                 {column.header}
               </h3>
               <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-                {(groupedData[column.key] || []).length} {(
-                  groupedData[column.key] || []
-                ).length === 1
+                {(groupedData[column.key] || []).length}{" "}
+                {(groupedData[column.key] || []).length === 1
                   ? "Candidate"
                   : "Candidates"}
               </span>
@@ -156,7 +159,8 @@ const KanbanView = ({
                           </div>
                         )}
                       </div>
-                      <div className="ml-3 overflow-hidden">
+                      {/* v1.0.0 <------------------------------------------------------ */}
+                      {/* <div className="ml-3 overflow-hidden">
                         <h4
                           className="text-sm font-medium text-custom-blue truncate hover:cursor-pointer"
                           onClick={(e) => {
@@ -169,7 +173,30 @@ const KanbanView = ({
                         <p className="text-sm text-gray-500 truncate">
                           {item.currentRole || "N/A"}
                         </p>
+                      </div> */}
+                      <div className="overflow-hidden ml-3">
+                        <h4
+                          className="text-sm font-medium text-custom-blue hover:cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCardClick?.(item);
+                          }}
+                        >
+                          {item?.firstName
+                            ? item?.firstName.length > 12
+                              ? item?.firstName?.slice(0, 12) + "..."
+                              : item?.firstName
+                            : "Untitled"}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {item?.currentRole
+                            ? item?.currentRole.length > 12
+                              ? item?.currentRole?.slice(0, 12) + "..."
+                              : item?.currentRole
+                            : "N/A"}
+                        </p>
                       </div>
+                      {/* v1.0.0 ------------------------------------------------------> */}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0 [&>*]:cursor-pointer">
                       {renderActions &&
@@ -192,39 +219,60 @@ const KanbanView = ({
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-gray-600 truncate">
-                        <span className="truncate">{item.linkedinUrl || "N/A"}</span>
+                        <span className="truncate">
+                          {item.linkedinUrl || "N/A"}
+                        </span>
                       </div>
                     </div>
                     {/* <-------------------------------v1.0.0 */}
                     {/* Show expiry date for assessment view */}
                     {item.expiryAt && (
                       <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                        <div className="text-xs text-gray-600 font-medium mb-1">Assessment Expiry</div>
+                        <div className="text-xs text-gray-600 font-medium mb-1">
+                          Assessment Expiry
+                        </div>
                         <div className="text-xs text-gray-800">
                           {(() => {
                             const now = new Date();
                             const expiry = new Date(item.expiryAt);
                             const timeDiff = expiry.getTime() - now.getTime();
-                            
+
                             if (timeDiff <= 0) {
-                              return <span className="text-red-600 font-medium">Expired</span>;
+                              return (
+                                <span className="text-red-600 font-medium">
+                                  Expired
+                                </span>
+                              );
                             }
-                            
-                            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-                            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            
-                            let timeText = '';
+
+                            const days = Math.floor(
+                              timeDiff / (1000 * 60 * 60 * 24)
+                            );
+                            const hours = Math.floor(
+                              (timeDiff % (1000 * 60 * 60 * 24)) /
+                                (1000 * 60 * 60)
+                            );
+
+                            let timeText = "";
                             if (days > 0) {
                               timeText = `${days}d ${hours}h`;
                             } else if (hours > 0) {
                               timeText = `${hours}h`;
                             } else {
-                              const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                              const minutes = Math.floor(
+                                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+                              );
                               timeText = `${minutes}m`;
                             }
-                            
+
                             return (
-                              <span className={timeDiff < 24 * 60 * 60 * 1000 ? 'text-red-600' : 'text-gray-600'}>
+                              <span
+                                className={
+                                  timeDiff < 24 * 60 * 60 * 1000
+                                    ? "text-red-600"
+                                    : "text-gray-600"
+                                }
+                              >
                                 {timeText} remaining
                               </span>
                             );

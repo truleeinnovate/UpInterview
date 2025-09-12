@@ -16,7 +16,8 @@ const {
   University_CollegeName,
 } = require("../../models/MasterSchemas/college");
 const { Company } = require("../../models/MasterSchemas/company");
-const { CategoryMaster } = require("../../models/MasterSchemas/categoryMaster");
+const { CategoryQuestionsMaster } = require("../../models/MasterSchemas/CategoryQuestionsMaster");
+
 
 // Map string type → Model
 const getModel = (type) => {
@@ -28,7 +29,7 @@ const getModel = (type) => {
     case "company":
       return Company;
     case "category":
-      return CategoryMaster;
+      return CategoryQuestionsMaster;
     case "qualification":
       return HigherQualification;
     case "locations":

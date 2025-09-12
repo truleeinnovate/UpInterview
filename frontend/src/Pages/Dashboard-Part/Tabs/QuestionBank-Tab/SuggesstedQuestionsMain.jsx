@@ -5,6 +5,8 @@
 // v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.3 ----Venkatesh---add questions lengthn for pagination
 // v1.0.4 ----Venkatesh---add new filter like technology and category
+// v1.0.5 - Ashok - Improved responsiveness
+
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { Tooltip } from "@mui/material";
@@ -16,6 +18,188 @@ import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
+// v1.0.5 <-------------------------------------------------------
+import { createPortal } from "react-dom";
+// v1.0.5 ------------------------------------------------------->
+
+// v1.0.5 <------------------------------------------------------------------
+function HeaderBar({
+  rangeLabel,
+  searchInput,
+  setSearchInput,
+  dropdownValue,
+  setDropdownValue,
+  isPopupOpen,
+  openFilterPopup,
+  filterIconRef,
+  currentPage,
+  totalPages,
+  onClickLeftPaginationIcon,
+  onClickRightPagination,
+}) {
+  const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const dropdownButtonRef = useRef(null);
+
+  // Recalculate dropdown position when opened
+  useEffect(() => {
+    if (isInterviewTypeOpen && dropdownButtonRef.current) {
+      const rect = dropdownButtonRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [isInterviewTypeOpen]);
+
+  return (
+    <div className="flex items-center sm:justify-start justify-end px-4 py-3 marker:flex-shrink-0 overflow-x-auto">
+      <div className="flex gap-x-3 min-w-max whitespace-nowrap">
+        {/* Range Label */}
+        <div className="flex items-center">
+          <p>{rangeLabel}</p>
+        </div>
+
+        {/* Search */}
+        <div className="relative flex items-center rounded-md border flex-shrink-0 w-64 bg-white">
+          <span className="p-2 text-custom-blue">
+            <Search className="w-5 h-5" />
+          </span>
+          <input
+            type="search"
+            placeholder="Search by Skills & Questions"
+            className="flex-1 rounded-md focus:outline-none pr-2"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </div>
+
+        {/* Dropdown */}
+        <div
+          className="relative inline-block w-48 flex-shrink-0"
+          ref={dropdownButtonRef}
+        >
+          <button
+            className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
+            onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
+          >
+            <span className="truncate">
+              {dropdownValue || "Select Question Type"}
+            </span>
+            <svg
+              className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${
+                isInterviewTypeOpen ? "rotate-180" : "rotate-0"
+              }`}
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Render dropdown in portal to avoid clipping */}
+        {isInterviewTypeOpen &&
+          createPortal(
+            <div
+              className="absolute mt-1 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-50"
+              style={{
+                top: dropdownPos.top,
+                left: dropdownPos.left,
+                width: dropdownPos.width,
+                position: "absolute",
+              }}
+            >
+              <div
+                className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+                  dropdownValue === "Interview Questions"
+                    ? "bg-blue-50 text-custom-blue font-semibold"
+                    : ""
+                }`}
+                onClick={() => {
+                  setDropdownValue("Interview Questions");
+                  setIsInterviewTypeOpen(false);
+                }}
+              >
+                Interview Questions
+              </div>
+              <div
+                className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+                  dropdownValue === "Assignment Questions"
+                    ? "bg-blue-50 text-custom-blue font-semibold"
+                    : ""
+                }`}
+                onClick={() => {
+                  setDropdownValue("Assignment Questions");
+                  setIsInterviewTypeOpen(false);
+                }}
+              >
+                Assignment Questions
+              </div>
+            </div>,
+            document.body
+          )}
+
+        {/* Pagination + Filter */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center">
+            <p>
+              {currentPage}/{totalPages || 1}
+            </p>
+          </div>
+          <div className="flex items-center">
+            <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
+              <span
+                onClick={onClickLeftPaginationIcon}
+                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${
+                  currentPage === 1
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <IoIosArrowBack />
+              </span>
+            </Tooltip>
+            <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
+              <span
+                onClick={onClickRightPagination}
+                className={`border p-2 text-xl rounded-md cursor-pointer ${
+                  currentPage === totalPages || totalPages === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <IoIosArrowForward />
+              </span>
+            </Tooltip>
+          </div>
+          <div>
+            <div
+              ref={filterIconRef}
+              onClick={openFilterPopup}
+              className="border p-2 text-xl rounded-md cursor-pointer"
+            >
+              {isPopupOpen ? (
+                <LuFilterX className="text-custom-blue" />
+              ) : (
+                <FiFilter className="text-custom-blue" />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+// v1.0.5 ------------------------------------------------------------------>
 
 const SuggestedQuestionsComponent = ({
   sectionName,
@@ -44,7 +228,8 @@ const SuggestedQuestionsComponent = ({
 
   // Map dropdown selection to backend-supported questionType filter
   const selectedQuestionType = useMemo(
-    () => (dropdownValue === "Interview Questions" ? "Interview" : "Assignment"),
+    () =>
+      dropdownValue === "Interview Questions" ? "Interview" : "Assignment",
     [dropdownValue]
   );
   const { suggestedQuestions, isLoading } = useQuestions({
@@ -106,8 +291,18 @@ const SuggestedQuestionsComponent = ({
         { level: "Hard", isChecked: false },
       ],
     });
-    sections.push({ id: 3, filterType: "Category", isOpen: false, options: uniqueCategories.map((c) => ({ value: c, isChecked: false })) });
-    sections.push({ id: 4, filterType: "Technology", isOpen: false, options: uniqueTechnologies.map((t) => ({ value: t, isChecked: false })) });
+    sections.push({
+      id: 3,
+      filterType: "Category",
+      isOpen: false,
+      options: uniqueCategories.map((c) => ({ value: c, isChecked: false })),
+    });
+    sections.push({
+      id: 4,
+      filterType: "Technology",
+      isOpen: false,
+      options: uniqueTechnologies.map((t) => ({ value: t, isChecked: false })),
+    });
     return sections;
   };
   //------v1.0.4-------->
@@ -158,7 +353,9 @@ const SuggestedQuestionsComponent = ({
   const [tempDifficultyLevelFilterItems, setTempDifficultyLevelFilterItems] =
     useState([]);
   const [tempCategoryFilterItems, setTempCategoryFilterItems] = useState([]);
-  const [tempTechnologyFilterItems, setTempTechnologyFilterItems] = useState([]);
+  const [tempTechnologyFilterItems, setTempTechnologyFilterItems] = useState(
+    []
+  );
   const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
   const [tempSkillInput, setTempSkillInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -204,7 +401,7 @@ const SuggestedQuestionsComponent = ({
         );
 
       const matchesType =
-      //<------v1.0.4--------
+        //<------v1.0.4--------
         !showQuestionTypeFilter ||
         questionTypeFilterItems.length === 0 ||
         questionTypeFilterItems.includes(
@@ -220,7 +417,9 @@ const SuggestedQuestionsComponent = ({
       const matchesCategory =
         categoryFilterItems.length === 0 ||
         (question.category &&
-          categoryFilterItems.includes(String(question.category).toLowerCase()));
+          categoryFilterItems.includes(
+            String(question.category).toLowerCase()
+          ));
 
       const matchesTechnology =
         technologyFilterItems.length === 0 ||
@@ -267,16 +466,19 @@ const SuggestedQuestionsComponent = ({
   //console.log("pagedata",paginatedData);
 
   //<-----v1.0.3-----
-  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const startIndex =
+    totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
   const rangeLabel =
     totalItems === 0
       ? "0/0"
       : startIndex === endIndex
-        ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
-        : `${startIndex}-${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`;
+      ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
+      : `${startIndex}-${endIndex}/${totalItems} ${
+          totalItems > 1 ? "Questions" : "Question"
+        }`;
 
-        // Reset page when filters/search change
+  // Reset page when filters/search change
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -699,9 +901,13 @@ const SuggestedQuestionsComponent = ({
       <div>
         <div className="flex items-end justify-end gap-x-3 w-full px-5 py-4">
           {/* Search box skeleton */}
-          <div>
+          {/* v1.0.5 <------------------------------------------------------------------- */}
+          <div className="flex items-center gap-3">
+            <div className="h-10 bg-gray-200 rounded-md w-28 shimmer"></div>
             <div className="h-10 bg-gray-200 rounded-md w-52 shimmer"></div>
+            <div className="h-10 bg-gray-200 rounded-md w-40 shimmer"></div>
           </div>
+          {/* v1.0.5 -------------------------------------------------------------------> */}
 
           {/* Pagination skeleton */}
           <div className="flex items-center gap-3">
@@ -783,10 +989,12 @@ const SuggestedQuestionsComponent = ({
   return (
     <div className="h-full flex flex-col">
       {/* Search/Filter Bar */}
-      <div
-        className={`flex items-center justify-end px-4 py-3 bg-white flex-shrink-0`}
+      {/* v1.0.5 <----------------------------------------------------------------- */}
+
+      {/* <div
+        className={`flex items-center justify-end px-4 py-3 bg-white flex-shrink-0 overflow-x-auto`}
       >
-        <div className="flex gap-x-3">
+        <div className="flex gap-x-3 min-w-max whitespace-nowrap">
           <div className="flex items-center">
             <p>{rangeLabel}</p>
           </div>
@@ -907,12 +1115,31 @@ const SuggestedQuestionsComponent = ({
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
+
+      {/* It's Implemented to avoid responsive issues  */}
+      <HeaderBar
+        rangeLabel={rangeLabel}
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+        dropdownValue={dropdownValue}
+        setDropdownValue={setDropdownValue}
+        isPopupOpen={isPopupOpen}
+        openFilterPopup={() => setIsPopupOpen((prev) => !prev)}
+        filterIconRef={filterIconRef}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onClickLeftPaginationIcon={() => console.log("Prev page")}
+        onClickRightPagination={() => console.log("Next page")}
+      />
+
+      {/* v1.0.5 -----------------------------------------------------------------> */}
       {isLoading ? (
         <SkeletonLoader />
       ) : (
         <>
           {/* Content */}
+          {/* v1.0.5 <----------------------------------------------------------------- */}
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {selectedSkills.length > 0 && (
               <ul className="flex gap-2 flex-wrap px-4 pb-2">
@@ -977,10 +1204,10 @@ const SuggestedQuestionsComponent = ({
                     className="border border-gray-200 rounded-lg h-full shadow-sm hover:shadow-md transition-shadow text-sm"
                   >
                     <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                      <div className="w-[85%]">
-                      <div className="flex items-center justify-center rounded-md bg-custom-blue/80 px-3 py-1 text-white text-sm transition-colors w-24">
-                        <p className="font-medium">{item.category}</p>
-                      </div>
+                      <div className="sm:w-[50%] md:w-[58%] w-[80%]">
+                        <div className="flex items-center justify-center rounded-md bg-custom-blue/80 px-3 py-1 text-white text-sm transition-colors w-24">
+                          <p className="font-medium">{item.category}</p>
+                        </div>
                       </div>
                       <div
                         className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${
@@ -988,7 +1215,7 @@ const SuggestedQuestionsComponent = ({
                           type === "feedback" ||
                           type === "assessment"
                             ? "w-[15%]"
-                            : "w-[10%]"
+                            : "sm:w-[28%] md:w-[20%] w-[10%]"
                         }`}
                       >
                         <p
@@ -1089,58 +1316,84 @@ const SuggestedQuestionsComponent = ({
                       )}
 
                       {!type && !fromScheduleLater && (
-                        <div className="w-[10%] flex justify-center relative">
+                        <div className="flex justify-center relative">
                           <button
                             type="button"
                             className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
                             onClick={() => toggleDropdown(item._id)}
                           >
-                            Add to list
+                            Add{" "}
+                            <span className="sm:hidden md:hidden inline">
+                              to list
+                            </span>
                           </button>
                           {dropdownOpen === item._id && (
                             <MyQuestionList
                               question={item}
                               closeDropdown={closeDropdown}
-                              isInterviewType={dropdownValue === "Interview Questions"}
+                              isInterviewType={
+                                dropdownValue === "Interview Questions"
+                              }
                             />
                           )}
                         </div>
                       )}
                     </div>
                     <div className="p-4 border-b">
-                    <div className="flex items-start w-full pt-2 gap-2">
-                      <span className="font-semibold">{(currentPage - 1) * itemsPerPage + index + 1}.</span>
-                      <p className="text-gray-700 break-words w-full">{item.questionText}</p>
-                    </div>
-                    {item.questionType === "MCQ" && item.options && (
-                      <div className="mb-2 ml-12 mt-2">
-                        <ul className="list-none">
-                          {(() => {
-                            const isAnyOptionLong = item.options.some((option) => option.length > 55);
+                      <div className="flex items-start w-full pt-2 gap-2">
+                        <span className="font-semibold">
+                          {(currentPage - 1) * itemsPerPage + index + 1}.
+                        </span>
+                        <p className="text-gray-700 break-words w-full">
+                          {item.questionText}
+                        </p>
+                      </div>
+                      {item.questionType === "MCQ" && item.options && (
+                        <div className="mb-2 ml-12 mt-2">
+                          <ul className="list-none">
+                            {(() => {
+                              const isAnyOptionLong = item.options.some(
+                                (option) => option.length > 55
+                              );
                               return item.options.map((option, idx) => (
-                                <li key={idx} className={`${isAnyOptionLong ? "block w-full" : "inline-block w-1/2"} mb-2`}>
-                                  <span className="text-gray-700">{option}</span>
+                                <li
+                                  key={idx}
+                                  className={`${
+                                    isAnyOptionLong
+                                      ? "block w-full"
+                                      : "inline-block w-1/2"
+                                  } mb-2`}
+                                >
+                                  <span className="text-gray-700">
+                                    {option}
+                                  </span>
                                 </li>
                               ));
                             })()}
-                        </ul>
-                      </div>
-                    )}
-                   </div>
-                   <div className="p-4">
-                    <p className="text-sm break-words whitespace-pre-wrap">
-                        <span className="font-medium text-gray-700">Answer: </span>
-                          <span className="text-gray-600">
-                              {item.questionType === "Programming" ?  renderSolutions(item.solutions) : item.correctAnswer}
-                          </span>
-                    </p>
-                    <p className="font-medium pt-2">
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm break-words whitespace-pre-wrap">
+                        <span className="font-medium text-gray-700">
+                          Answer:{" "}
+                        </span>
+                        <span className="text-gray-600">
+                          {item.questionType === "Programming"
+                            ? renderSolutions(item.solutions)
+                            : item.correctAnswer}
+                        </span>
+                      </p>
+                      <p className="font-medium pt-2">
                         Tags:{" "}
-                      <span className="text-sm text-gray-600">
-                        {Array.isArray(item.tags) ? item.tags.join(", ") : String(item.tags || "")}
-                      </span>
-                     </p>
-                  </div>
+                        <span className="text-sm text-gray-600">
+                          {Array.isArray(item.tags)
+                            ? item.tags.join(", ")
+                            : String(item.tags || "")}
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -1171,6 +1424,7 @@ const SuggestedQuestionsComponent = ({
               )}
             </ul>
           </div>
+          {/* v1.0.5 -----------------------------------------------------------------> */}
         </>
       )}
 
