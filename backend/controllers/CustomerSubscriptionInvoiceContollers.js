@@ -86,18 +86,35 @@ const  createInvoice = async (
   
 
   // Generate invoice code
-  const lastInvoice = await Invoicemodels.findOne({})
+  const lastInvoice = await Invoicemodels.findOne({tenantId: tenantId })
     .sort({ _id: -1 })
-    .select('invoiceCode')
+    .select("invoiceCode")
     .lean();
   let nextNumber = 1;
-  if (lastInvoice && lastInvoice.invoiceCode) {
+  if (lastInvoice?.invoiceCode) {
     const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
     if (match) {
       nextNumber = parseInt(match[1], 10) + 1;
     }
   }
   const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
+
+  // // Generate custom Code like INVC-00001
+  //     const lastInvoice = await Invoicemodels.findOne({ tenantId: tenantId })
+  //       .sort({ _id: -1 })
+  //       .select("invoiceCode")
+  //       .lean();
+  
+  //     let nextNumber = 1;
+  //     if (lastInvoice && lastInvoice?.invoiceCode) {
+  //       const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
+
+  //       if (match) {
+  //         nextNumber = parseInt(match[1], 10) + 1;
+  //       }
+  //     }
+  
+  //     const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
 
   return await Invoicemodels.create({
     // invoiceId: invoiceId,

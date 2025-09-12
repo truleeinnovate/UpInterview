@@ -199,6 +199,7 @@ const walletVerifyPayment = async (req, res) => {
         console.log("Creating new wallet for owner:", ownerId);
         wallet = await WalletTopup.create({
           ownerId,
+          walletCode,
           tenantId: tenantId || "default",
           balance: 0,
           transactions: [],
@@ -282,7 +283,7 @@ const walletVerifyPayment = async (req, res) => {
               tax: 0,
             },
           ],
-          invoiceCode: `INVC-${Date.now()}`,
+          invoiceCode: walletCode,
         });
 
         // 2. Receipt – reference the created invoice
