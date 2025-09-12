@@ -20,7 +20,6 @@ import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx"
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 // v1.0.5 <-------------------------------------------------------
-import { createPortal } from "react-dom";
 // v1.0.5 ------------------------------------------------------->
 
 // v1.0.5 <------------------------------------------------------------------
@@ -38,21 +37,7 @@ function HeaderBar({
   onClickLeftPaginationIcon,
   onClickRightPagination,
 }) {
-  const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
-  const dropdownButtonRef = useRef(null);
-
-  // Recalculate dropdown position when opened
-  useEffect(() => {
-    if (isInterviewTypeOpen && dropdownButtonRef.current) {
-      const rect = dropdownButtonRef.current.getBoundingClientRect();
-      setDropdownPos({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
-    }
-  }, [isInterviewTypeOpen]);
+  // Using DropdownSelect for interview type selection; no manual portal/open-state needed.
 
   return (
     <div className="flex items-center sm:justify-start justify-end px-4 py-3 marker:flex-shrink-0 overflow-x-auto">
@@ -77,77 +62,20 @@ function HeaderBar({
         </div>
 
         {/* Dropdown */}
-        <div
-          className="relative inline-block w-48 flex-shrink-0"
-          ref={dropdownButtonRef}
-        >
-          <button
-            className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-            onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
-          >
-            <span className="truncate">
-              {dropdownValue || "Select Question Type"}
-            </span>
-            <svg
-              className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${
-                isInterviewTypeOpen ? "rotate-180" : "rotate-0"
-              }`}
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
+        <div className="w-48 flex-shrink-0">
+          <DropdownSelect
+            isSearchable={false}
+            value={dropdownValue ? { value: dropdownValue, label: dropdownValue } : null}
+            onChange={(opt) => setDropdownValue(opt?.value || "")}
+            options={[
+              { value: "Interview Questions", label: "Interview Questions" },
+              { value: "Assignment Questions", label: "Assignment Questions" },
+            ]}
+            placeholder="Select Question Type"
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
+          />
         </div>
-
-        {/* Render dropdown in portal to avoid clipping */}
-        {isInterviewTypeOpen &&
-          createPortal(
-            <div
-              className="absolute mt-1 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-50"
-              style={{
-                top: dropdownPos.top,
-                left: dropdownPos.left,
-                width: dropdownPos.width,
-                position: "absolute",
-              }}
-            >
-              <div
-                className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
-                  dropdownValue === "Interview Questions"
-                    ? "bg-blue-50 text-custom-blue font-semibold"
-                    : ""
-                }`}
-                onClick={() => {
-                  setDropdownValue("Interview Questions");
-                  setIsInterviewTypeOpen(false);
-                }}
-              >
-                Interview Questions
-              </div>
-              <div
-                className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
-                  dropdownValue === "Assignment Questions"
-                    ? "bg-blue-50 text-custom-blue font-semibold"
-                    : ""
-                }`}
-                onClick={() => {
-                  setDropdownValue("Assignment Questions");
-                  setIsInterviewTypeOpen(false);
-                }}
-              >
-                Assignment Questions
-              </div>
-            </div>,
-            document.body
-          )}
 
         {/* Pagination + Filter */}
         <div className="flex items-center gap-3 flex-shrink-0">

@@ -94,6 +94,8 @@ function QuestionHeaderBar({
               { value: "Assignment Questions", label: "Assignment Questions" },
             ]}
             placeholder="Select Question Type"
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
           />
         </div>
 
@@ -120,6 +122,8 @@ function QuestionHeaderBar({
               return <span className="truncate">{option?.label || ""}</span>;
             }}
             placeholder="Select Label"
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
           />
         </div>
 

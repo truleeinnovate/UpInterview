@@ -1391,13 +1391,13 @@ const extractValidationErrors = (axiosError) => {
                       //questionListRef={fieldRefs.questionListRef}
                       ref={listRef}
                       // v1.0.6 ----------------------------------------->
-                      // fromform={true}
-                      // onSelectList={handleListSelection}
-                      // // ref={listRef}
-                      // error={errors.tenantListId}
-                      // defaultTenantList={selectedLabels}
-                      // notEditmode={!isEdit}
-                      // selectedListId={selectedLabelId}
+                      //fromform={true}
+                      onSelectList={handleListSelection}
+                      // ref={listRef}
+                      error={errors.tenantListId}
+                      defaultTenantList={selectedLabels}
+                      notEditmode={!isEdit}
+                      selectedListId={selectedLabelId}
                       // onErrorClear={handleErrorClear}
                       // isInterviewType={dropdownValue === "Interview Questions"}
                       fromcreate={true}
