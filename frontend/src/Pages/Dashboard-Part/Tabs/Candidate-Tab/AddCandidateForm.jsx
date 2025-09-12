@@ -531,6 +531,7 @@ const AddCandidateForm = ({
       return;
     }
 
+   
     
 
     const data = {
@@ -571,21 +572,38 @@ const AddCandidateForm = ({
       //   message: 'Candidate updated successfully',
       //   data: updatedCandidate,
       // });
-      if (response.status === "success") {
-        notify.success("Candidate added successfully");
-      } else if (response.status === "no_changes" || response.status === "Updated successfully") {
-        notify.success("Candidate Updated successfully");
-      }
+      // if (response.status === "success") {
+      //   notify.success("Candidate added successfully");
+      // } else if (response.status === "no_changes" || response.status === "Updated successfully") {
+      //   notify.success("Candidate Updated successfully");
+      // }
 
       // notify.success("Candidate added successfully");
+
+
+
+      if (isAddCandidate){
+        if (response.status === "success") {
+          notify.success("Candidate added successfully");
+        }
+      }
+  
 
       resetFormData();
 
       if (!isAddCandidate) {
-        setTimeout(() => {
+        // setTimeout(() => {
           // If it's a modal, call the onClose function with the new candidate data
           if (isModal && onClose) {
             onClose(response.data);
+            if (response.status === "success") {
+              notify.success("Candidate added successfully");
+            } else if (
+              response.status === "no_changes" ||
+              response.status === "Updated successfully"
+            ) {
+              notify.success("Candidate updated successfully");
+            }
             return;
           }
 
@@ -599,22 +617,33 @@ const AddCandidateForm = ({
           }
 
           switch (mode) {
-            case "Edit" && response?.status === "no_changes":
+            case "Edit" &&  response.status === "no_changes" ||
+            response.status === "Updated successfully":
               navigate(`/candidate`);
+              notify.success("Candidate updated successfully");
               break;
             case "Candidate Edit":
               navigate(`/candidate/${id}`);
+              notify.success("Candidate updated successfully");
               break;
             default:
               navigate("/candidate");
+              if (response.status === "success") {
+                notify.success("Candidate added successfully");
+              } else if (
+                response.status === "no_changes" ||
+                response.status === "Updated successfully"
+              ) {
+                notify.success("Candidate updated successfully");
+              }
           }
-        }, 1000); // Delay navigation to ensure loading state is visible
+        // }, 1000); // Delay navigation to ensure loading state is visible
       } else {
         // For "Add Candidate" button, also close modal if in modal mode
         if (isModal && onClose) {
-          setTimeout(() => {
+          // setTimeout(() => {
             onClose(response.data);
-          }, 1000);
+          // }, 1000);
         }
       }
     } catch (error) {
