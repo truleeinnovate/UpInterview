@@ -1,6 +1,6 @@
 import React from "react";
 
-const EmailField = ({ value, onChange, inputRef, error, label = "Email", required = false }) => {
+const EmailField = ({ value, onChange, inputRef, error, label = "Email", required = false, disabled = false }) => {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -16,11 +16,15 @@ const EmailField = ({ value, onChange, inputRef, error, label = "Email", require
         border ${
           error
             ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+            : disabled
+            ? "border-gray-200 bg-gray-100"
             : "border-gray-300 focus:ring-red-300"
         }
         focus:outline-gray-300
+        ${disabled ? 'cursor-not-allowed' : ''}
       `}
         placeholder="Enter Email Address"
+        disabled={disabled}
       />
       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
     </div>
