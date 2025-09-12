@@ -30,7 +30,7 @@ import { validateFile } from "../../../../utils/FileValidation/FileValidation";
 import ProfilePhotoUpload from "../../../../Components/FormFields/ProfilePhotoUpload";
 import ResumeUpload from "../../../../Components/FormFields/ResumeUpload";
 import DateOfBirthField from "../../../../Components/FormFields/DateOfBirthField";
-import GenderField from "../../../../Components/FormFields/GenderField";
+import GenderDropdown from "../../../../Components/FormFields/GenderDropdown";
 import EmailField from "../../../../Components/FormFields/EmailField";
 import PhoneField from "../../../../Components/FormFields/PhoneField";
 // v1.0.2 <---------------------------------------------------------------------
@@ -764,7 +764,7 @@ const AddCandidateForm = ({
                     label="Date of Birth"
                     required={false}
                   />
-                  <GenderField
+                  <GenderDropdown
                     value={formData.Gender}
                     options={genderOptionsRS}
                     onChange={handleChange}

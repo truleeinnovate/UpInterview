@@ -237,7 +237,7 @@ const LinkedInCallback = () => {
             console.warn('Invalid returnUrl format, proceeding with default navigation');
           }
         }
-    
+
         // Existing navigation logic
         if (existingUser) {
           const contact = await fetchAndFilterContacts(email);
@@ -254,7 +254,7 @@ const LinkedInCallback = () => {
         console.error('Error in LinkedIn callback:', error);
         setError(error.message || 'Failed to process LinkedIn login');
         setTimeout(() => {
-          navigate('/login', {
+          navigate('/individual-login', {
             state: { error: 'LinkedIn login failed. Please try again.' },
           });
         }, 5000);
