@@ -98,9 +98,13 @@ export const preserveStickyOptionFilter = (stickyValue = "__other__") =>
   };
 
 // Reusable Select wrapper with default styles and easy error state
-const DropdownSelect = ({ hasError = false, classNamePrefix = "rs", styles, ref, ...rest }) => {
+const DropdownSelect = React.forwardRef(({ hasError = false, classNamePrefix = "rs", styles, ...rest }, ref) => {
   const mergedStyles = styles || selectBaseStyles(hasError);
-  return <div ref={ref}><Select  styles={mergedStyles} classNamePrefix={classNamePrefix} {...rest} /></div>;
-};
+  return (
+    <div ref={ref} tabIndex={-1}>
+      <Select styles={mergedStyles} classNamePrefix={classNamePrefix} {...rest} />
+    </div>
+  );
+});
 
 export default DropdownSelect;

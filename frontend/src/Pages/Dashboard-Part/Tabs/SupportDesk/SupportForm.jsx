@@ -30,6 +30,10 @@ import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 // v1.0.4 <-----------------------------------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 // v1.0.4 ----------------------------------------------------------------------------------->
+import InputField from "../../../../Components/FormFields/InputField";
+import DescriptionField from "../../../../Components/FormFields/DescriptionField";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
+import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError";
 // v1.0.3 <-------------------------------------------------------------------------
 const maxDescriptionLen = 1000;
 const maxSubjectLen = 150;
@@ -153,6 +157,15 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
 
   const [organization, setOrganization] = useState("");
 
+  // Field refs for scrollToFirstError
+  const issueTypeRef = useRef(null);
+  const subjectRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const fieldRefsMap = useMemo(
+    () => ({ issueType: issueTypeRef, subject: subjectRef, description: descriptionRef }),
+    []
+  );
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -214,8 +227,11 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
     }
 
     setErrors(newErrors);
+    if (!isValid) {
+      scrollToFirstError(newErrors, fieldRefsMap);
+    }
     return isValid;
-  }, [selectedIssue, otherIssue, description, subject]);
+  }, [selectedIssue, otherIssue, description, subject, fieldRefsMap]);
 
   const toggleFullWidth = () => {
     setIsFullWidth(!isFullWidth);
@@ -225,9 +241,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
     const value = e.target.value;
     setFormState((prev) => ({
       ...prev,
-      otherIssueFlag: value === "Other",
-      selectedIssue: value === "Other" ? "Other" : value,
-      otherIssue: value === "Other" ? "" : prev.otherIssue,
+      selectedIssue: value,
     }));
     setErrors((prev) => ({ ...prev, issueType: "" }));
   }, []);
@@ -470,67 +484,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
 
   // ----------------------- added by Ranjith for ffedback supprot ticket>
 
-  // <--------v1.0.1 ------
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
-
-  const CustomDropdown = ({ options, value, onChange, error }) => (
-    <div className="relative">
-      <button
-        type="button"
-        className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 text-left flex justify-between items-center ${
-          error ? "border-red-500" : ""
-        }`}
-        onClick={toggleDropdown}
-      >
-        <span>{value || "Select Issue"}</span>
-        <svg
-          className={`w-5 h-5 transform transition-transform ${
-            dropdownOpen ? "rotate-180" : ""
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-
-      {dropdownOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-          {options.map((option) => (
-            <div
-              key={option.id}
-              className="cursor-pointer hover:bg-gray-100 px-4 py-2"
-              onClick={() => {
-                onChange({ target: { value: option.value } });
-                setDropdownOpen(false);
-              }}
-            >
-              {option.label}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const issueOptions = [
-    ...issuesData.map((each) => ({
-      id: each.id,
-      value: `${each.issue}`,
-      label: `${each.issue}`,
-    })),
-    { id: "other", value: "Other", label: "Other" },
-  ];
-  // --------v1.0.1 ------>
+  // v1.0.1 replaced with reusable DropdownWithSearchField
 
   return (
     <>
@@ -648,109 +602,77 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
 
                 {/* Issue Type Section */}
                 <div>
-                  <label
-                    htmlFor="issueType"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Issue Type <span className="text-red-500">*</span>
-                  </label>
                   {!otherIssueFlag ? (
-                    <div>
-                      {/* <------v1.0.1------*/}
-                      <CustomDropdown
-                        options={issueOptions}
-                        value={selectedIssue}
-                        onChange={onChangeIssue}
-                        error={errors.issueType}
-                      />
-                      {/* -----v1.0.1------>*/}
-                      {errors.issueType && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.issueType}
-                        </p>
-                      )}
-                    </div>
+                    <DropdownWithSearchField
+                      containerRef={issueTypeRef}
+                      label="Issue Type"
+                      required
+                      name="selectedIssue"
+                      value={selectedIssue}
+                      options={[
+                        ...issuesData.map((each) => ({
+                          value: `${each.issue}`,
+                          label: `${each.issue}`,
+                        })),
+                        { value: "__other__", label: "Other" },
+                      ]}
+                      onChange={onChangeIssue}
+                      error={errors.issueType}
+                      isCustomName={otherIssueFlag}
+                      setIsCustomName={(flag) =>
+                        setFormState((prev) => ({ ...prev, otherIssueFlag: flag }))
+                      }
+                    />
                   ) : (
                     <div>
-                      <input
-                        id="otherIssue"
-                        placeholder="Enter issue"
+                      <InputField
+                        inputRef={issueTypeRef}
+                        label="Issue Type"
+                        required
+                        name="otherIssue"
                         value={otherIssue}
                         onChange={onChangeOtherIssue}
-                        className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${
-                          errors.issueType ? "border-red-500" : ""
-                        }`}
+                        error={errors.issueType}
+                        placeholder="Enter issue"
                       />
                       <p className="text-right text-gray-500 text-xs mt-1">
                         {otherIssue.length}/100
                       </p>
-                      {errors.issueType && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.issueType}
-                        </p>
-                      )}
                     </div>
                   )}
                 </div>
 
                 {/* Subject Section */}
                 <div>
-                  <label
-                    htmlFor="subject"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Subject / Title <span className="text-red-500">*</span>
-                  </label>
-                  <div>
-                    <input
-                      id="subject"
-                      type="text"
-                      placeholder="e.g., Unable to join interview room"
-                      value={subject}
-                      onChange={handleSubjectChange}
-                      className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${
-                        errors.subject ? "border-red-500" : ""
-                      }`}
-                    />
-                    <p className="text-right text-gray-500 text-xs mt-1">
-                      {subject.length}/{maxSubjectLen}
-                    </p>
-                    {errors.subject && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.subject}
-                      </p>
-                    )}
-                  </div>
+                  <InputField
+                    inputRef={subjectRef}
+                    id="subject"
+                    name="subject"
+                    label="Subject / Title"
+                    required
+                    placeholder="e.g., Unable to join interview room"
+                    value={subject}
+                    onChange={handleSubjectChange}
+                    error={errors.subject}
+                  />
+                  <p className="text-right text-gray-500 text-xs mt-1">
+                    {subject.length}/{maxSubjectLen}
+                  </p>
                 </div>
 
                 {/* Description Section */}
                 <div>
-                  <label
-                    htmlFor="description"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Description <span className="text-red-500">*</span>
-                  </label>
-                  <div>
-                    <textarea
-                      id="description"
-                      rows={8}
-                      placeholder="Enter description......"
-                      value={description}
-                      onChange={handleDescriptionChange}
-                      className={`w-full border rounded-md px-2 py-1.5 border-gray-300 focus:border-custom-blue focus:outline-none transition-colors duration-200 ${
-                        errors.description ? "border-red-500" : ""
-                      }`}
-                    />
-                    <p className="text-right text-gray-500 text-xs mt-1">
-                      {description.length}/{maxDescriptionLen}
-                    </p>
-                    {errors.description && (
-                      <p className="text-red-500 text-xs -mt-4">
-                        {errors.description}
-                      </p>
-                    )}
-                  </div>
+                  <DescriptionField
+                    inputRef={descriptionRef}
+                    name="description"
+                    label="Description"
+                    required
+                    rows={8}
+                    value={description}
+                    onChange={handleDescriptionChange}
+                    error={errors.description}
+                    maxLength={maxDescriptionLen}
+                  />
                 </div>
 
                 {/* File Upload Section */}

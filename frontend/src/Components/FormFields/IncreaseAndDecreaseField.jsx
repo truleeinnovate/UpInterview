@@ -1,6 +1,6 @@
 import React from "react";
 
-const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, label = "IncreaseAndDecreaseField", required = false }) => {
+const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, label = "IncreaseAndDecreaseField", required = false, min = 1, max = 15 }) => {
   return (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
@@ -11,8 +11,8 @@ const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, labe
         type="number"
         name={name}
         id={name}
-        min="1"
-        max="15"
+        min={min}
+        max={max}
         value={value}
         onChange={onChange}
         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm

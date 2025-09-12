@@ -733,11 +733,25 @@ class AuthCookieManager {
         localStorage.removeItem('app_permissions_cache');
         localStorage.removeItem('permissions_effective');
         localStorage.removeItem('app_permissions_timestamp');
-        if (effectivePermissions_RoleName === 'Individual' || effectivePermissions_RoleName === 'Individual_Freelancer') {
-          window.location.href = `${config.REACT_APP_API_URL_FRONTEND}/individual-login`;
-        } else {
-          window.location.href = `${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
+        console.log('Logging out with role:', effectivePermissions_RoleName);
+        console.log('Current config.REACT_APP_API_URL_FRONTEND:', config.REACT_APP_API_URL_FRONTEND);
+        
+        // Ensure the URL is properly formatted
+        let baseUrl = config.REACT_APP_API_URL_FRONTEND;
+        // Remove trailing slash if present
+        baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        // Ensure the URL has a protocol
+        if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+          baseUrl = window.location.protocol + '//' + baseUrl;
         }
+        
+        const loginPath = (effectivePermissions_RoleName === 'Individual' || effectivePermissions_RoleName === 'Individual_Freelancer')
+          ? '/individual-login'
+          : '/organization-login';
+          
+        const redirectUrl = `${baseUrl}${loginPath}`;
+        console.log('Redirecting to:', redirectUrl);
+        window.location.href = redirectUrl;
       } else if (authToken && impersonationToken) {
         AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
         AuthCookieManager.clearPermissions('effective');

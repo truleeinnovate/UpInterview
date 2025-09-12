@@ -30,7 +30,7 @@ import { validateFile } from "../../../../utils/FileValidation/FileValidation";
 import ProfilePhotoUpload from "../../../../Components/FormFields/ProfilePhotoUpload";
 import ResumeUpload from "../../../../Components/FormFields/ResumeUpload";
 import DateOfBirthField from "../../../../Components/FormFields/DateOfBirthField";
-import GenderField from "../../../../Components/FormFields/GenderField";
+import GenderDropdown from "../../../../Components/FormFields/GenderDropdown";
 import EmailField from "../../../../Components/FormFields/EmailField";
 import PhoneField from "../../../../Components/FormFields/PhoneField";
 // v1.0.2 <---------------------------------------------------------------------
@@ -57,7 +57,19 @@ const AddCandidateForm = ({
   isModal = false,
   hideAddButton = false,
 }) => {
-  const { skills, colleges, qualifications, currentRoles } = useMasterData();
+  const {
+    skills,
+    colleges,
+    qualifications,
+    currentRoles,
+    loadSkills,
+    loadColleges,
+    loadQualifications,
+    loadCurrentRoles,
+    isQualificationsFetching,
+    isCollegesFetching,
+    isCurrentRolesFetching,
+  } = useMasterData();
 
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -240,6 +252,10 @@ const AddCandidateForm = ({
     // When nothing saved, keep dropdown mode
     if (!saved) {
       setIsCustomUniversity(false);
+      return;
+    }
+    // Avoid forcing custom mode if colleges are not loaded yet
+    if (!Array.isArray(colleges) || colleges.length === 0) {
       return;
     }
     const list = (colleges || []).map((c) => (c?.University_CollegeName || '').trim().toLowerCase());
@@ -793,7 +809,7 @@ const AddCandidateForm = ({
                     label="Date of Birth"
                     required={false}
                   />
-                  <GenderField
+                  <GenderDropdown
                     value={formData.Gender}
                     options={genderOptionsRS}
                     onChange={handleChange}
@@ -851,6 +867,8 @@ const AddCandidateForm = ({
                     label="Higher Qualification"
                     name="HigherQualification"
                     required
+                    onMenuOpen={loadQualifications}
+                    loading={isQualificationsFetching}
                   />
                   <DropdownWithSearchField
                     value={formData.UniversityCollege}
@@ -869,6 +887,8 @@ const AddCandidateForm = ({
                     label="University/College"
                     name="UniversityCollege"
                     required
+                    onMenuOpen={loadColleges}
+                    loading={isCollegesFetching}
                   />
                 </div>
                 {/* --------v1.0.1----->*/}
@@ -912,6 +932,8 @@ const AddCandidateForm = ({
                     label="Current Role"
                     name="CurrentRole"
                     required
+                    onMenuOpen={loadCurrentRoles}
+                    loading={isCurrentRolesFetching}
                   />
                 </div>
               </div>
@@ -966,6 +988,7 @@ const AddCandidateForm = ({
                   handleAddEntry={handleAddEntry}
                   skillpopupcancelbutton={skillpopupcancelbutton}
                   editingIndex={editingIndex}
+                  onOpenSkills={loadSkills}
                 />
               </div>
 
