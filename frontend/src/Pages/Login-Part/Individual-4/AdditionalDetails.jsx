@@ -1,10 +1,10 @@
 // v1.0.0 - mansoor - change resume and cover letter buttons color to custom blue
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import InfoBox from "./InfoBox.jsx";
-import { ChevronDown } from "lucide-react";
-import { Search } from "lucide-react";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import { validateFile } from "../../../utils/FileValidation/FileValidation.js";
+import DropdownWithSearchField from "../../../Components/FormFields/DropdownWithSearchField";
+import IncreaseAndDecreaseField from "../../../Components/FormFields/IncreaseAndDecreaseField";
 
 const AdditionalDetails = ({
   errors,
@@ -17,18 +17,12 @@ const AdditionalDetails = ({
   setIsCoverLetterRemoved,
   isProfileCompleteStateOrg
 }) => {
-  const { locations, industries, currentRoles } = useMasterData();
+  const { locations, loadLocations, isLocationsFetching, industries, loadIndustries, isIndustriesFetching, currentRoles, loadCurrentRoles, isCurrentRolesFetching } = useMasterData();
   const resumeInputRef = useRef(null);
   const coverLetterInputRef = useRef(null);
   const [coverLetterName, setCoverLetterName] = useState(
     additionalDetailsData?.coverLetter?.filename || ""
   );
-  const [searchTermLocation, setSearchTermLocation] = useState("");
-  const [searchTermCurrentRole, setSearchTermCurrentRole] = useState("");
-  const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
-  const [showDropdownLocation, setShowDropdownLocation] = useState(false);
-  const [showDropdownIndustry, setShowDropdownIndustry] = useState(false);
-  const [searchTermIndustry, setSearchTermIndustry] = useState("");
   const [resumeName, setResumeName] = useState(
     additionalDetailsData?.resume?.filename || ""
   );
@@ -59,77 +53,7 @@ const AdditionalDetails = ({
     setResumeName("");
   };
 
-  const toggleCurrentRole = () => {
-    setShowDropdownCurrentRole((prev) => {
-      const newState = !prev;
-      if (newState) {
-        setShowDropdownIndustry(false);
-        setShowDropdownLocation(false);
-      }
-      return newState;
-    });
-  };
 
-  const toggleIndustry = () => {
-    setShowDropdownIndustry((prev) => {
-      const newState = !prev;
-      if (newState) {
-        setShowDropdownCurrentRole(false);
-        setShowDropdownLocation(false);
-      }
-      return newState;
-    });
-  };
-
-  const toggleLocation = () => {
-    setShowDropdownLocation((prev) => {
-      const newState = !prev;
-      if (newState) {
-        setShowDropdownCurrentRole(false);
-        setShowDropdownIndustry(false);
-      }
-      return newState;
-    });
-  };
-
-  const handleRoleSelect = (role) => {
-    handleChange({ target: { name: "currentRole", value: role } });
-    setShowDropdownCurrentRole(false);
-
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      currentRole: "",
-    }));
-  };
-
-  const filteredCurrentRoles = currentRoles?.filter((role) =>
-    role.RoleName.toLowerCase().includes(searchTermCurrentRole.toLowerCase())
-  );
-
-  const handleIndustrySelect = (industry) => {
-    setAdditionalDetailsData((prev) => ({
-      ...prev,
-      industry: industry.IndustryName,
-    }));
-    setShowDropdownIndustry(false);
-
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      industry: "",
-    }));
-  };
-
-  const handleLocationSelect = (location) => {
-    setAdditionalDetailsData((prev) => ({
-      ...prev,
-      location: location.LocationName,
-    }));
-    setShowDropdownLocation(false);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      location: "",
-    }));
-  };
 
   const handleInputChangeintro = (e, fieldName) => {
     const { value } = e.target;
@@ -143,17 +67,6 @@ const AdditionalDetails = ({
     }));
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setAdditionalDetailsData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      yearsOfExperience: "",
-    }));
-  };
 
   const handleCoverLetterUpload = async (e, fieldName) => {
     const file = e.target.files[0];
@@ -182,31 +95,17 @@ const AdditionalDetails = ({
     setCoverLetterName("");
   };
 
-  const currentRoleDropdownRef = useRef(null); // Ref for currentRole dropdown
-  const industryDropdownRef = useRef(null); // Ref for industry dropdown
-  const locationDropdownRef = useRef(null); // Ref for location dropdown
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        currentRoleDropdownRef.current &&
-        !currentRoleDropdownRef.current.contains(event.target) &&
-        industryDropdownRef.current &&
-        !industryDropdownRef.current.contains(event.target) &&
-        locationDropdownRef.current &&
-        !locationDropdownRef.current.contains(event.target)
-      ) {
-        setShowDropdownCurrentRole(false);
-        setShowDropdownIndustry(false);
-        setShowDropdownLocation(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setAdditionalDetailsData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: "",
+    }));
+  };
 
   return (
     <>
@@ -233,237 +132,89 @@ const AdditionalDetails = ({
         />
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-8">
-        {/* current role */}
-        <div className="sm:col-span-2 col-span-1" ref={currentRoleDropdownRef}>
-          <label
-            htmlFor="currentRole"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Current Role <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <input
-              name="currentRole"
-              type="text"
-              id="currentRole"
-              value={additionalDetailsData.currentRole}
-              onClick={toggleCurrentRole}
-              placeholder="Senior Software Engineer"
-              autoComplete="off"
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.currentRole ? "border-red-500" : "border-gray-300"
-                }`}
-              readOnly
-            />
-            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-              <ChevronDown className="text-lg" onClick={toggleCurrentRole} />
-            </div>
-            {showDropdownCurrentRole && (
-              <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-                <div className="border-b">
-                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder="Search Current Role"
-                      value={searchTermCurrentRole}
-                      onChange={(e) => setSearchTermCurrentRole(e.target.value)}
-                      className="pl-8 focus:border-black focus:outline-none w-full"
-                    />
-                  </div>
-                </div>
-                {filteredCurrentRoles?.length > 0 ? (
-                  filteredCurrentRoles.map((role) => (
-                    <div
-                      key={role._id}
-                      onClick={() => handleRoleSelect(role.RoleName)}
-                      className="cursor-pointer hover:bg-gray-200 p-2"
-                    >
-                      {role.RoleName}
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-2 text-gray-500">No roles found</div>
-                )}
-              </div>
-            )}
-          </div>
-          {errors.currentRole && (
-            <p className="text-red-500 text-sm sm:text-xs">
-              {errors.currentRole}
-            </p>
-          )}
+        {/* Current Role */}
+        <div className="sm:col-span-2 col-span-1">
+          <DropdownWithSearchField
+            value={additionalDetailsData.CurrentRole}
+            options={currentRoles?.map(role => ({
+              value: role.RoleName,
+              label: role.RoleName
+            })) || []}
+            onChange={handleChange}
+            error={errors.CurrentRole}
+            label="Current Role"
+            name="CurrentRole"
+            required
+            onMenuOpen={loadCurrentRoles}
+            loading={isCurrentRolesFetching}
+          />
         </div>
 
         {/* Industry */}
-        <div className="sm:col-span-2 col-span-1" ref={industryDropdownRef}>
-          <label
-            htmlFor="industry"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Industry <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <input
-              name="industry"
-              type="text"
-              id="industry"
-              value={additionalDetailsData.industry}
-              placeholder="Information Technology"
-              autoComplete="off"
-              onClick={toggleIndustry}
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.industry ? "border-red-500" : "border-gray-300"
-                }`}
-              readOnly
-            />
-            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-              <ChevronDown className="text-lg" onClick={toggleIndustry} />
-            </div>
-            {showDropdownIndustry && (
-              <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                <div className="border-b">
-                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder="Search Industry"
-                      value={searchTermIndustry}
-                      onChange={(e) => setSearchTermIndustry(e.target.value)}
-                      className="pl-8 focus:border-black focus:outline-none w-full"
-                    />
-                  </div>
-                </div>
-                {industries.filter((industry) =>
-                  industry.IndustryName.toLowerCase().includes(
-                    searchTermIndustry.toLowerCase()
-                  )
-                ).length > 0 ? (
-                  industries
-                    .filter((industry) =>
-                      industry.IndustryName.toLowerCase().includes(
-                        searchTermIndustry.toLowerCase()
-                      )
-                    )
-                    .map((industry) => (
-                      <div
-                        key={industry._id}
-                        onClick={() => handleIndustrySelect(industry)}
-                        className="cursor-pointer hover:bg-gray-200 p-2"
-                      >
-                        {industry.IndustryName}
-                      </div>
-                    ))
-                ) : (
-                  <div className="p-2 text-gray-500">No industries found</div>
-                )}
-              </div>
-            )}
-          </div>
-          {errors.industry && (
-            <p className="text-red-500 text-sm sm:text-xs">{errors.industry}</p>
-          )}
+        <div className="sm:col-span-2 col-span-1">
+          <DropdownWithSearchField
+            value={additionalDetailsData.industry}
+            options={industries
+              ?.filter(industry => industry.IndustryName)
+              .map(industry => ({
+                value: industry.IndustryName,
+                label: industry.IndustryName
+              })) || []}
+            name="industry"
+            onChange={handleChange}
+            error={errors.industry}
+            label="Industry"
+            placeholder="Select industry"
+            required={true}
+            onMenuOpen={loadIndustries}
+            loading={isIndustriesFetching}
+          />
         </div>
 
         {/* Experience */}
         <div className="sm:col-span-2 col-span-1">
-          <label
-            htmlFor="yearsOfExperience"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Years of Experience <span className="text-red-500">*</span>
-          </label>
-          <div>
-            <input
-              type="number"
-              name="yearsOfExperience"
-              autoComplete="off"
-              value={additionalDetailsData.yearsOfExperience}
-              placeholder="5 years"
-              onChange={handleChange}
-              id="yearsOfExperience"
-              min="1"
-              max="15"
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.yearsOfExperience ? "border-red-500" : "border-gray-300"
-                }`}
-            />
-            {errors.yearsOfExperience && (
-              <p className="text-red-500 text-sm sm:text-xs">
-                {errors.yearsOfExperience}
-              </p>
-            )}
-          </div>
+          <IncreaseAndDecreaseField
+            value={additionalDetailsData.yearsOfExperience}
+            onChange={(e) => {
+              const value = e.target.value;
+              setAdditionalDetailsData(prev => ({
+                ...prev,
+                yearsOfExperience: value
+              }));
+              setErrors(prev => ({
+                ...prev,
+                yearsOfExperience: ""
+              }));
+            }}
+            name="yearsOfExperience"
+            error={errors.yearsOfExperience}
+            label="Years of Experience"
+            required={true}
+            min={1}
+            max={15}
+          />
         </div>
 
         {/* Location */}
-        <div className="sm:col-span-2 col-span-1" ref={locationDropdownRef}>
-          <label
-            htmlFor="location"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Location <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <input
-              name="location"
-              type="text"
-              id="location"
-              value={additionalDetailsData.location}
-              placeholder="Delhi,India"
-              autoComplete="off"
-              onClick={toggleLocation}
-              className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.location ? "border-red-500" : "border-gray-300"
-                }`}
-              readOnly
-            />
-            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-              <ChevronDown className="text-lg" onClick={toggleLocation} />
-            </div>
-            {showDropdownLocation && (
-              <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
-                <div className="border-b">
-                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder="Search Location"
-                      value={searchTermLocation}
-                      autoComplete="off"
-                      onChange={(e) => setSearchTermLocation(e.target.value)}
-                      className="pl-8 focus:border-black focus:outline-none w-full"
-                    />
-                  </div>
-                </div>
-                {(() => {
-                  const filteredLocations = locations.filter(
-                    (location) =>
-                      location.LocationName &&
-                      location.LocationName.toLowerCase().includes(
-                        searchTermLocation.toLowerCase()
-                      )
-                  );
-
-                  return filteredLocations.length > 0 ? (
-                    filteredLocations.map((location) => (
-                      <div
-                        key={location._id}
-                        onClick={() => handleLocationSelect(location)}
-                        className="cursor-pointer hover:bg-gray-200 p-2"
-                      >
-                        {location.LocationName}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-2 text-gray-500">No locations found</div>
-                  );
-                })()}
-              </div>
-            )}
-          </div>
-          {errors.location && (
-            <p className="text-red-500 text-sm sm:text-xs">{errors.location}</p>
-          )}
+        <div className="sm:col-span-2 col-span-1">
+          <DropdownWithSearchField
+            value={additionalDetailsData.location}
+            options={locations
+              ?.filter(location => location.LocationName)
+              .map(location => ({
+                value: location.LocationName,
+                label: location.LocationName
+              })) || []}
+            name="location"
+            onChange={handleChange}
+            error={errors.location}
+            label="Location"
+            placeholder="Select location"
+            required={true}
+            onMenuOpen={loadLocations}
+            loading={isLocationsFetching}
+          />
         </div>
-
-        {/* </div> */}
 
         {!isProfileCompleteStateOrg && (
           <>
@@ -486,9 +237,9 @@ const AdditionalDetails = ({
                     onChange={(e) => handleFileUpload(e, "resume")}
                   />
                   <div
-                  // <-------------------------v1.0.0
+                    // <-------------------------v1.0.0
                     className="bg-custom-blue text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
-                  // v1.0.0-------------------------->
+                    // v1.0.0-------------------------->
                     onClick={() => resumeInputRef.current.click()} // Trigger file input click
                   >
                     {resumeName ? "Uploaded" : "Upload File"}
@@ -533,9 +284,9 @@ const AdditionalDetails = ({
                     onChange={(e) => handleCoverLetterUpload(e, "coverLetter")}
                   />
                   <div
-                  // <-------------------------v1.0.0
+                    // <-------------------------v1.0.0
                     className="bg-custom-blue text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
-                  // v1.0.0-------------------------->
+                    // v1.0.0-------------------------->
                     onClick={() => coverLetterInputRef.current.click()} // Trigger file input click
                   >
                     {coverLetterName ? "Uploaded" : "Upload File"}
@@ -562,7 +313,7 @@ const AdditionalDetails = ({
             </div>
 
             {/* coverLetterdescription */}
-            <div className="col-span-2 sm:col-span-2">
+            {/* <div className="col-span-2 sm:col-span-2">
               <p className="flex justify-center mb-3">(OR)</p>
               <div>
                 <textarea
@@ -582,7 +333,7 @@ const AdditionalDetails = ({
                   {additionalDetailsData.coverLetterdescription?.length}/2000
                 </p>
               </div>
-            </div>
+            </div> */}
           </>
         )}
       </div>

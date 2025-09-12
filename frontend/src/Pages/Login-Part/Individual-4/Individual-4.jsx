@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { TailSpin } from "react-loader-spinner";
-import { toast } from "react-toastify";
 import StepIndicator from "./StepIndicator.jsx";
 import BasicDetails from "./BasicDetails.jsx";
 import AdditionalDetails from "./AdditionalDetails.jsx";
@@ -13,9 +11,7 @@ import { config } from "../../../config.js";
 import { setAuthCookies, clearAllAuth } from "../../../utils/AuthCookieManager/AuthCookieManager.jsx";
 import { useIndividualLogin } from "../../../apiHooks/useIndividualLogin";
 import { uploadFile } from "../../../apiHooks/imageApis.js";
-import Loading from "../../../Components/Loading.js";
 import Cookies from "js-cookie";
-import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode.js";
 import { notify } from "../../../services/toastService.js";
 
 const FooterButtons = ({
@@ -36,10 +32,11 @@ const FooterButtons = ({
           type="button"
           onClick={onPrev}
           disabled={isSubmitting}
-          className={`border ${isSubmitting
-            ? "border-gray-300 text-gray-400 cursor-not-allowed"
-            : "border-custom-blue text-custom-blue hover:bg-gray-50"
-            } rounded px-6 sm:px-3 py-1`}
+          className={`border ${
+            isSubmitting
+              ? "border-gray-300 text-gray-300 cursor-not-allowed"
+              : "border-custom-blue text-custom-blue hover:bg-gray-50"
+          } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
         >
           Prev
         </button>
@@ -49,15 +46,17 @@ const FooterButtons = ({
       <button
         onClick={onNext}
         disabled={isSubmitting}
-        className={`px-6 sm:px-3 py-1 rounded text-white flex items-center justify-center ${isSubmitting
-          ? "bg-custom-blue/70 cursor-not-allowed"
-          : "bg-custom-blue hover:bg-custom-blue/90"
-          }`}
+        className={`px-6 sm:px-3 py-1.5 rounded text-white flex items-center justify-center min-w-24 ${
+          isSubmitting
+            ? "bg-custom-blue/60 cursor-not-allowed"
+            : "bg-custom-blue hover:bg-custom-blue/90"
+        } transition-colors duration-200`}
         type="button"
+        isSubmitting={isSubmitting}
       >
         {isSubmitting ? (
-          <>
-            {/* <svg
+          <div className="flex items-center">
+            <svg
               className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -70,17 +69,15 @@ const FooterButtons = ({
                 r="10"
                 stroke="currentColor"
                 strokeWidth="4"
-              ></circle>
+              />
               <path
                 className="opacity-75"
                 fill="currentColor"
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg> */}
-            <Loading message="Loading..." />
-
+              />
+            </svg>
             {isLastStep ? "Saving..." : "Processing..."}
-          </>
+          </div>
         ) : isLastStep ? (
           "Save"
         ) : (
@@ -120,20 +117,14 @@ const MultiStepForm = () => {
   );
 
   const [formLoading, setFormLoading] = useState(false);
-  const loading = contactLoading || formLoading;
 
-  // Keep the form loading state in sync with the contact loading state
   useEffect(() => {
     setFormLoading(contactLoading);
   }, [contactLoading]);
 
   const [selectedTimezone, setSelectedTimezone] = useState({});
   const [errors, setErrors] = useState({});
-  const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [file, setFile] = useState(null);
-  // const [currentStep, setCurrentStep] = useState(location.state?.currentStep || 0);
-  // const [formLoading, setFormLoading] = useState(false);
-  // const loading = contactLoading || formLoading;
   const [filePreview, setFilePreview] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [previousInterviewExperience, setPreviousInterviewExperience] =
@@ -186,11 +177,10 @@ const MultiStepForm = () => {
     technologies: [],
     previousInterviewExperience: "",
     previousInterviewExperienceYears: "",
-    // expertiseLevel_ConductingInterviews: "",
     hourlyRate: "",
-    interviewFormatWeOffer: [], // This will be mapped to InterviewFormatWeOffer in the backend
+    interviewFormatWeOffer: [],
     expectedRatePerMockInterview: "",
-    noShowPolicy: "", // This will be mapped to NoShowPolicy in the backend
+    noShowPolicy: "",
     bio: "",
     professionalTitle: "",
   });
@@ -206,8 +196,8 @@ const MultiStepForm = () => {
   const [isProfileRemoved, setIsProfileRemoved] = useState(false);
   const [isResumeRemoved, setIsResumeRemoved] = useState(false);
   const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Populate fields with matched contact data, falling back to LinkedIn data or defaults
   useEffect(() => {
     if (matchedContact) {
       setBasicDetailsData({
@@ -242,9 +232,6 @@ const MultiStepForm = () => {
           matchedContact.previousInterviewExperience || "",
         previousInterviewExperienceYears:
           matchedContact.previousInterviewExperienceYears || "",
-         // comment ed by Ranjith expertiseLevel_ConductingInterviews
-          // expertiseLevel_ConductingInterviews:
-        //   matchedContact.expertiseLevel_ConductingInterviews || "",
         hourlyRate: matchedContact.hourlyRate || "",
         interviewFormatWeOffer: matchedContact.interviewFormatWeOffer || [],
         expectedRatePerMockInterview:
@@ -334,112 +321,80 @@ const MultiStepForm = () => {
   }, [authToken]);
 
   const handleNextStep = async () => {
-    let isValid = false;
-
-    // Validate current step
-    if (currentStep === 0) {
-      const basicDetailsErrors = {};
-      if (!basicDetailsData.email)
-        basicDetailsErrors.email = "Email is required";
-      if (!basicDetailsData.lastName)
-        basicDetailsErrors.lastName = "Last name is required";
-      if (!basicDetailsData.phone)
-        basicDetailsErrors.phone = "Phone number is required";
-      if (!basicDetailsData.linkedinUrl)
-        basicDetailsErrors.linkedinUrl = "LinkedIn URL is required";
-      setErrors({ ...errors, ...basicDetailsErrors });
-      isValid = Object.keys(basicDetailsErrors).length === 0;
-    } else if (currentStep === 1) {
-      const professionalErrors = {};
-      if (!additionalDetailsData.currentRole)
-        professionalErrors.currentRole = "Current role is required";
-      if (!additionalDetailsData.industry)
-        professionalErrors.industry = "Industry is required";
-      if (!additionalDetailsData.yearsOfExperience)
-        professionalErrors.yearsOfExperience =
-          "Years of experience is required";
-      if (!additionalDetailsData.location)
-        professionalErrors.location = "Location is required";
-      setErrors({ ...errors, ...professionalErrors });
-      isValid = Object.keys(professionalErrors).length === 0;
-    } else if (currentStep === 2) {
-      const interviewErrors = {};
-      const validSkills = interviewDetailsData.skills?.filter(skill => skill !== null) || [];
-      if (validSkills.length === 0) {
-        interviewErrors.skills = "Skills are required";
-      }
-      if (!interviewDetailsData.technologies?.length) {
-        interviewErrors.technologies = "Technologies are required";
-      }
-      if (!interviewDetailsData.previousInterviewExperience) {
-        interviewErrors.previousInterviewExperience = "Previous interview experience is required";
-      }
-       // comment ed by Ranjith expertiseLevel_ConductingInterviews
-      // if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
-      //   interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
-      // }
-      if (!interviewDetailsData.interviewFormatWeOffer?.length) {
-        interviewErrors.interviewFormatWeOffer = "At least one interview format is required";
-      }
-       // comment ed by Ranjith expertiseLevel_ConductingInterviews
-      // if (!interviewDetailsData.expertiseLevel_ConductingInterviews) {
-      //   interviewErrors.expertiseLevel_ConductingInterviews = "Expertise level is required";
-      // }
-      if (!interviewDetailsData.interviewFormatWeOffer?.length) {
-        interviewErrors.interviewFormatWeOffer = "At least one interview format is required";
-      }
-      if (!interviewDetailsData.noShowPolicy) {
-        interviewErrors.noShowPolicy = "No-show policy is required";
-      }
-      if (!interviewDetailsData.professionalTitle?.trim()) {
-        interviewErrors.professionalTitle = "Professional title is required";
-      } else if (interviewDetailsData.professionalTitle.length < 50) {
-        interviewErrors.professionalTitle = "Professional title must be at least 50 characters";
-      } else if (interviewDetailsData.professionalTitle.length > 100) {
-        interviewErrors.professionalTitle = "Professional title cannot exceed 100 characters";
-      }
-      if (!interviewDetailsData.bio?.trim()) {
-        interviewErrors.bio = "Professional bio is required";
-      } else if (interviewDetailsData.bio.length < 150) {
-        interviewErrors.bio = "Professional bio must be at least 150 characters";
-      }
-
-      setErrors({ ...errors, ...interviewErrors });
-      isValid = Object.keys(interviewErrors).length === 0;
-    } else if (currentStep === 3) {
-      const availabilityErrors = {};
-      if (!availabilityDetailsData.timeZone)
-        availabilityErrors.timeZone = "Timezone is required";
-      if (!availabilityDetailsData.preferredDuration)
-        availabilityErrors.preferredDuration = "Preferred duration is required";
-      setErrors({ ...errors, ...availabilityErrors });
-      isValid = Object.keys(availabilityErrors).length === 0;
-    } else {
-      isValid = true;
-    }
-
-    if (!isValid) {
-      console.log("Validation failed. Errors:", errors);
-      return;
-    }
-
-    const statusKey =
-      currentStep === 0
-        ? "basicDetails"
-        : currentStep === 1
-          ? "additionalDetails"
-          : currentStep === 2
-            ? "interviewDetails"
-            : "availabilityDetails";
-
-    const updatedCompletionStatus = {
-      ...completionStatus,
-      [statusKey]: true,
-    };
-
-    setCompletionStatus(updatedCompletionStatus);
-
     try {
+      setIsSubmitting(true);
+      let isValid = false;
+      const currentErrors = {};
+
+      // Validate current step
+      if (currentStep === 0) {
+        if (!basicDetailsData.firstName) currentErrors.firstName = "First name is required";
+        if (!basicDetailsData.lastName) currentErrors.lastName = "Last name is required";
+        if (!basicDetailsData.email) currentErrors.email = "Email is required";
+        if (!basicDetailsData.phone) currentErrors.phone = "Phone number is required";
+        if (!basicDetailsData.linkedinUrl) currentErrors.linkedinUrl = "LinkedIn URL is required";
+        
+        setErrors(prev => ({ ...prev, ...currentErrors }));
+        isValid = Object.keys(currentErrors).length === 0;
+      } 
+      else if (currentStep === 1) {
+        if (!additionalDetailsData.currentRole) currentErrors.currentRole = "Current role is required";
+        if (!additionalDetailsData.industry) currentErrors.industry = "Industry is required";
+        if (!additionalDetailsData.yearsOfExperience) currentErrors.yearsOfExperience = "Years of experience is required";
+        if (!additionalDetailsData.location) currentErrors.location = "Location is required";
+        
+        setErrors(prev => ({ ...prev, ...currentErrors }));
+        isValid = Object.keys(currentErrors).length === 0;
+      } 
+      else if (currentStep === 2) {
+        const validSkills = interviewDetailsData.skills?.filter(skill => skill !== null) || [];
+        if (validSkills.length === 0) currentErrors.skills = "Skills are required";
+        if (!interviewDetailsData.technologies?.length) currentErrors.technologies = "Technologies are required";
+        if (!interviewDetailsData.previousInterviewExperience) currentErrors.previousInterviewExperience = "Previous interview experience is required";
+        if (!interviewDetailsData.interviewFormatWeOffer?.length) currentErrors.interviewFormatWeOffer = "At least one interview format is required";
+        if (!interviewDetailsData.noShowPolicy) currentErrors.noShowPolicy = "No-show policy is required";
+        
+        if (!interviewDetailsData.professionalTitle?.trim()) {
+          currentErrors.professionalTitle = "Professional title is required";
+        } else if (interviewDetailsData.professionalTitle.length < 50) {
+          currentErrors.professionalTitle = "Professional title must be at least 50 characters";
+        } else if (interviewDetailsData.professionalTitle.length > 100) {
+          currentErrors.professionalTitle = "Professional title cannot exceed 100 characters";
+        }
+        
+        if (!interviewDetailsData.bio?.trim()) {
+          currentErrors.bio = "Professional bio is required";
+        } else if (interviewDetailsData.bio.length < 150) {
+          currentErrors.bio = "Professional bio must be at least 150 characters";
+        }
+
+        setErrors(prev => ({ ...prev, ...currentErrors }));
+        isValid = Object.keys(currentErrors).length === 0;
+      } 
+      else if (currentStep === 3) {
+        if (!availabilityDetailsData.timeZone) currentErrors.timeZone = "Timezone is required";
+        if (!availabilityDetailsData.preferredDuration) currentErrors.preferredDuration = "Preferred duration is required";
+        
+        setErrors(prev => ({ ...prev, ...currentErrors }));
+        isValid = Object.keys(currentErrors).length === 0;
+      } 
+      else {
+        isValid = true;
+      }
+
+      if (!isValid) {
+        console.log("Validation failed. Errors:", currentErrors);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const statusKey = ["basicDetails", "additionalDetails", "interviewDetails", "availabilityDetails"][currentStep] || "";
+      
+      setCompletionStatus(prev => ({
+        ...prev,
+        [statusKey]: true
+      }));
+
       setFormLoading(true);
 
       const userData = {
@@ -483,9 +438,6 @@ const MultiStepForm = () => {
             interviewDetailsData.previousInterviewExperience,
           previousInterviewExperienceYears:
             interviewDetailsData.previousInterviewExperienceYears,
-            // comment ed by Ranjith expertiseLevel_ConductingInterviews
-          // expertiseLevel_ConductingInterviews:
-            // interviewDetailsData.expertiseLevel_ConductingInterviews,
           hourlyRate: Number(interviewDetailsData.hourlyRate),
           interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
           expectedRatePerMockInterview:
@@ -499,7 +451,7 @@ const MultiStepForm = () => {
           preferredDuration: availabilityDetailsData.preferredDuration,
         }),
         LetUsKnowYourProfession: profession,
-        completionStatus: updatedCompletionStatus,
+        completionStatus: completionStatus,
         _id: contactId,
       };
 
@@ -664,8 +616,9 @@ const MultiStepForm = () => {
         }
       }
     } catch (error) {
-      console.error("Error saving profile:", error);
+      console.error("Error in handleNextStep:", error);
     } finally {
+      setIsSubmitting(false);
       setFormLoading(false);
     }
   };
@@ -771,7 +724,7 @@ const MultiStepForm = () => {
               currentStep={currentStep}
               isFreelancer={Freelancer || isInternalInterviewer}
               isInternalInterviewer={isInternalInterviewer}
-              isSubmitting={false} // Always false, disables loading state
+              isSubmitting={isSubmitting}
             />
           </div>
         </div>
