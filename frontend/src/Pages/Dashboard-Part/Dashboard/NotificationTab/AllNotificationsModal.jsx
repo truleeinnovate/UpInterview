@@ -1,25 +1,27 @@
 // v1.0.0 - Ashok - Disabled outer scrollbar when popup is open for better user experience
+// v1.0.1 - Ashok - Improved responsiveness and added common to popup
 
 /* eslint-disable no-case-declarations */
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X,
   Search,
   Filter,
-  Minimize,
-  Expand,
   Bell,
   MessageSquare,
   ChevronDown,
   RefreshCw,
   Mail,
+  Eye,
 } from "lucide-react";
 import { format, isValid } from "date-fns";
 import NotificationDetailsModal from "./NotificationDetailsModal";
 import Modal from "react-modal";
 import classNames from "classnames";
+// v1.0.1 <---------------------------------------------------------
+import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+// v1.0.1 --------------------------------------------------------->
 
 const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,68 +138,23 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
 
   if (!isOpen) return null;
 
-  const modalClass = classNames(
-    "fixed bg-white shadow-2xl border-l border-gray-200",
-    {
-      "overflow-y-auto": !isModalOpen,
-      "overflow-hidden": isModalOpen,
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-    }
-  );
-
+  //  v1.0.1 <-----------------------------------------------------------------
   return (
     <>
-      <Modal
-        isOpen={true}
-        // onRequestClose={onClose}
-        className={modalClass}
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+    {/* v1.0.0 <--------------------------------------------------------------------- */}
+      <SidebarPopup
+        title="All Notifications"
+        subTitle="View and manage your notifications"
+        icon={<Bell />}
+        onClose={onClose}
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-indigo-100 rounded-xl">
-                <Bell className="w-6 h-6 text-custom-blue" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800">
-                  All Notifications
-                </h2>
-                <p className="text-sm text-gray-500">
-                  View and manage your notifications
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
-                title={isFullScreen ? "Collapse" : "Expand"}
-              >
-                {/* {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />} */}
-                {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <Expand className="w-5 h-5 text-gray-500" />
-                )}
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
-                title="Close"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          </div>
-
+        <div className="sm:px-0 p-6 border-b border-gray-200">
           {/* Notification Type Tabs */}
-          <div className="flex items-center space-x-2 mb-4">
+          <div className="flex items-center sm:space-x-0 space-x-2 mb-4">
             <button
               onClick={() => setActiveTab("all")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
                 activeTab === "all"
                   ? "bg-indigo-50 text-custom-blue"
                   : "text-gray-600 hover:bg-gray-50"
@@ -339,7 +296,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
           className="overflow-y-auto"
           style={{ height: "calc(100vh - 230px)" }}
         >
-          <div className="p-6 space-y-4">
+          <div className="sm:px-0 p-6 space-y-4">
             {filterNotifications().length > 0 ? (
               filterNotifications().map((notification) => (
                 <motion.div
@@ -351,12 +308,17 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex items-center space-x-2">
-                        {notification.type === "email" ? (
-                          <Mail size={16} className="text-custom-blue" />
-                        ) : (
-                          <MessageSquare size={16} className="text-green-600" />
-                        )}
-                        <span className="text-sm font-medium text-gray-900">
+                        <div>
+                          {notification.type === "email" ? (
+                            <Mail size={16} className="text-custom-blue" />
+                          ) : (
+                            <MessageSquare
+                              size={16}
+                              className="text-green-600"
+                            />
+                          )}
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 truncate">
                           {notification.subject || "No Subject"}
                         </span>
                         <span
@@ -372,7 +334,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                         </span>
                       </div>
                       <p
-                        className="text-sm text-gray-600 line-clamp-2"
+                        className="sm:text-xs text-sm text-gray-600 line-clamp-2"
                         dangerouslySetInnerHTML={{
                           __html: notification.message,
                         }}
@@ -406,13 +368,14 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-start justify-end">
+                    <div className="flex items-start justify-end sm:ml-4">
                       <button
                         onClick={() => setSelectedNotification(notification)}
-                        className="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-2 space-x-2 text-sm text-gray-600 hover:text-custom-blue transition-colors duration-300"
+                        className="flex items-center justify-center sm:border-0 border border-gray-200 font-medium rounded-lg md:ml-4 lg:ml-4 xl:ml-4 2xl:ml-4 sm:text-custom-blue bg-gray-50 sm:py-1.5 p-2 sm:space-x-0 space-x-2 text-sm text-gray-600 hover:text-custom-blue transition-colors duration-300"
                       >
-                        <span className="text-sm font-medium">
-                          View Details
+                        <span className="sm:hidden inline">View Details</span>
+                        <span className="inline md:hidden lg:hidden xl:hidden 2xl:hidden">
+                          <Eye className="w-4 h-4" />
                         </span>
                       </button>
                     </div>
@@ -423,21 +386,21 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
               <div className="flex flex-col items-center justify-center py-16 text-gray-500">
                 <div className="p-4 bg-gray-100 rounded-full mb-4">
                   {activeTab === "email" ? (
-                    <Mail size={32} className="text-gray-400" />
+                    <Mail className="text-gray-400 w-10 h-10 sm:h-6 sm:w-6" />
                   ) : activeTab === "whatsapp" ? (
-                    <MessageSquare size={32} className="text-gray-400" />
+                    <MessageSquare className="text-gray-400 w-10 h-10 sm:h-6 sm:w-6" />
                   ) : (
-                    <Bell size={32} className="text-gray-400" />
+                    <Bell className="text-gray-400 w-10 h-10 sm:h-6 sm:w-6" />
                   )}
                 </div>
-                <h3 className="text-lg font-medium text-gray-700 mb-2">
+                <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-700 mb-2">
                   {activeTab === "all"
                     ? "No Notifications Found"
                     : `No ${
                         activeTab === "email" ? "Email" : "WhatsApp"
                       } Notifications`}
                 </h3>
-                <p className="text-gray-500 text-center max-w-md mb-4">
+                <p className="sm:text-sm text-gray-500 text-center max-w-md mb-4">
                   {searchQuery
                     ? `No notifications match your search for "${searchQuery}".`
                     : selectedFilter !== "all" || selectedTimeRange !== "all"
@@ -466,8 +429,8 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
             )}
           </div>
         </div>
-      </Modal>
-      {/* v1.0.1 <------------------------------------------------------------- */}
+      </SidebarPopup>
+      {/* </Modal> */}
       <div>
         <NotificationDetailsModal
           isOpen={!!selectedNotification}
@@ -475,9 +438,9 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
           notification={selectedNotification}
         />
       </div>
-      {/* v1.0.1 -------------------------------------------------------------> */}
     </>
   );
+  //  v1.0.1 ----------------------------------------------------------------->
 };
 
 export default AllNotificationsModal;

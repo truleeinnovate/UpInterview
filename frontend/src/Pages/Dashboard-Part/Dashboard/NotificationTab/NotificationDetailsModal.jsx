@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 /* eslint-disable react/prop-types */
 import React from "react";
 import { motion } from "framer-motion";
@@ -80,6 +82,7 @@ const NotificationDetailsModal = ({
   };
 
   return (
+    // v1.0.0 <------------------------------------------------------------------------
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -90,16 +93,16 @@ const NotificationDetailsModal = ({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-2xl shadow-xl w-[800px] max-w-full max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-2xl shadow-xl w-[800px] max-w-full max-h-[90vh] overflow-hidden mx-4"
       >
-        <div className="p-4 sm:p-6 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200">
           <div className="flex flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-gray-100 rounded-lg">
                 {getNotificationIcon()}
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-800">
+                <h2 className="sm:text-md md:text-md lg:text-md xl:text-xl 2xl:text-xl font-semibold text-gray-800">
                   {showContentDetails && notification?.object?.objectName
                     ? `${getCategoryDisplay()} Details`
                     : "Notification Details"}
@@ -123,11 +126,11 @@ const NotificationDetailsModal = ({
             {/* Email Header */}
             {notification.type === "email" && (
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                <div className="flex sm:flex-col sm:items-start items-center justify-between">
+                  <h3 className="sm:text-sm md:text-sm lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
                     {notification.subject}
                   </h3>
-                  <span className="text-sm text-gray-500">
+                  <span className="sm:text-xs sm:mt-2 text-sm text-gray-500">
                     {new Date(notification.timestamp).toLocaleString("en-CA")}
                   </span>
                 </div>
@@ -168,7 +171,7 @@ const NotificationDetailsModal = ({
             <div className="bg-white rounded-xl">
               <div className="prose max-w-none">
                 <div
-                  className="text-gray-700 leading-relaxed whitespace-pre-line"
+                  className="sm:text-sm text-gray-700 leading-relaxed whitespace-pre-line"
                   dangerouslySetInnerHTML={{ __html: notification.message }}
                 ></div>
               </div>
@@ -283,6 +286,7 @@ const NotificationDetailsModal = ({
         </div>
       </motion.div>
     </motion.div>
+    // v1.0.0 ------------------------------------------------------------------------>
   );
 };
 

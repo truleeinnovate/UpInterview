@@ -5,6 +5,7 @@
 // v1.0.4  -  Venkatesh   -  added new filter options like created date, relevant experience, role, university
 // v1.0.5  -  Ashok   -  Improved responsiveness
 // v1.0.6  -  Ashok   -  Disabled outer scrollbar
+// v1.0.7  -  Ashok   -  Added table view for mobiles (small devices)
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -88,7 +89,10 @@ function Candidate({
   //-----v1.0.4-------->
   const { candidateData, deleteCandidateData, isLoading } = useCandidates();
   const navigate = useNavigate();
-  const isTablet = useMediaQuery({ maxWidth: 1024 });
+  // v1.0.7 <----------------------------------------------------------------------
+  // const isTablet = useMediaQuery({ maxWidth: 1024 });
+  const isTablet = useMediaQuery({ maxWidth: 320 });
+  // v1.0.7 ---------------------------------------------------------------------->
   const filterIconRef = useRef(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
@@ -945,15 +949,19 @@ function Candidate({
           </div>
         )}
         <main
+        // v1.0.7 <----------------------------------------------------------
           className={
             isAssessmentView
               ? ""
-              : "fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
+              : "fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
           }
+        // v1.0.7 ---------------------------------------------------------->
         >
           <div className="sm:px-0">
             <motion.div className="bg-white">
-              <div className="relative w-full">
+              {/* v1.0.7 <--------------------------------------------------- */}
+              <div className="relative w-full overflow-x-auto">
+              {/* v1.0.7 ---------------------------------------------------> */}
                 {view === "table" ? (
                   <div className="w-full">
                     <TableView
@@ -966,7 +974,7 @@ function Candidate({
                     />
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto">
+                  <div className="w-full">
                     <KanbanView
                       data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
