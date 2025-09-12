@@ -5,20 +5,15 @@
 
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  XMarkIcon,
-  ArrowsPointingOutIcon,
-  ArrowsPointingInIcon,
-} from "@heroicons/react/24/outline";
 import { validateBankAccount } from "../../../../../utils/BankAccountValidation"; //<-----v1.0.0------
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError"; //<-----v1.0.0-----
-import Modal from "react-modal";
-import classNames from "classnames";
+
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import InputField from "../../../../../Components/FormFields/InputField.jsx";
+import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect.jsx";
 
 export function BankAccountsPopup({ onClose, onSave }) {
   const navigate = useNavigate();
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [errors, setErrors] = useState({}); //<-----v1.0.0-----
@@ -88,26 +83,17 @@ export function BankAccountsPopup({ onClose, onSave }) {
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Account Holder Information</h3>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Account Holder Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
+          <InputField
+            label="Account Holder Name"
+            required
             name="accountName"
-            ref={fieldRefs.accountName} //<-----v1.0.0-----
+            inputRef={fieldRefs.accountName}
             value={newAccount.accountName}
             onChange={(e) =>
               setNewAccount({ ...newAccount, accountName: e.target.value })
             }
-            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue  ${
-              errors.accountName ? "border-red-500" : "border-gray-300"
-            }`}
+            error={errors.accountName}
           />
-          {errors.accountName && (
-            <p className="text-red-500 text-sm mt-2 font-medium">
-              {errors.accountName}
-            </p>
-          )}
           {/*<-----v1.0.0-----*/}
           <p className="mt-1 text-sm text-gray-500">
             Enter the name exactly as it appears on your bank account
@@ -119,26 +105,17 @@ export function BankAccountsPopup({ onClose, onSave }) {
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Bank Account Details</h3>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Bank Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
+          <InputField
+            label="Bank Name"
+            required
             name="bankName"
-            ref={fieldRefs.bankName} //<-----v1.0.0-----
+            inputRef={fieldRefs.bankName}
             value={newAccount.bankName}
             onChange={(e) =>
               setNewAccount({ ...newAccount, bankName: e.target.value })
             }
-            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${
-              errors.bankName ? "border-red-500" : "border-gray-300"
-            }`}
+            error={errors.bankName}
           />
-          {errors.bankName && (
-            <p className="text-red-500 text-sm mt-2 font-medium">
-              {errors.bankName}
-            </p>
-          )}
           {/*<-----v1.0.0-----*/}
         </div>
 
@@ -146,124 +123,85 @@ export function BankAccountsPopup({ onClose, onSave }) {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Account Type <span className="text-red-500">*</span>
           </label>
-          <select
-            name="accountType"
-            ref={fieldRefs.accountType} //<-----v1.0.0-----
-            value={newAccount.accountType}
-            onChange={(e) =>
-              setNewAccount({ ...newAccount, accountType: e.target.value })
-            }
-            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${
-              errors.accountType ? "border-red-500" : "border-gray-300"
-            }`}
-          >
-            <option value="checking">Checking</option>
-            <option value="savings">Savings</option>
-          </select>
+          <div ref={fieldRefs.accountType}>
+            <DropdownSelect
+              isSearchable={false}
+              value={newAccount.accountType ? { value: newAccount.accountType, label: newAccount.accountType.charAt(0).toUpperCase() + newAccount.accountType.slice(1) } : null}
+              onChange={(opt) =>
+                setNewAccount({ ...newAccount, accountType: opt?.value || "checking" })
+              }
+              options={[
+                { value: "checking", label: "Checking" },
+                { value: "savings", label: "Savings" },
+              ]}
+              placeholder="Select Account Type"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+            />
+          </div>
           {errors.accountType && (
-            <p className="text-red-500 text-sm mt-2 font-medium">
-              {errors.accountType}
-            </p>
+            <p className="text-red-500 text-sm mt-2 font-medium">{errors.accountType}</p>
           )}
           {/*<-----v1.0.0-----*/}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Account Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
+          <InputField
+            label="Account Number"
+            required
             name="accountNumber"
-            ref={fieldRefs.accountNumber} //<-----v1.0.0-----
+            inputRef={fieldRefs.accountNumber}
             value={newAccount.accountNumber}
             onChange={(e) =>
               setNewAccount({ ...newAccount, accountNumber: e.target.value })
             }
-            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${
-              errors.accountNumber ? "border-red-500" : "border-gray-300"
-            }`}
+            error={errors.accountNumber}
           />
-          {errors.accountNumber && (
-            <p className="text-red-500 text-sm mt-2 font-medium">
-              {errors.accountNumber}
-            </p>
-          )}
           {/*<-----v1.0.0-----*/}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Confirm Account Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
+          <InputField
+            label="Confirm Account Number"
+            required
             name="confirmAccountNumber"
-            ref={fieldRefs.confirmAccountNumber} //<-----v1.0.0-----
+            inputRef={fieldRefs.confirmAccountNumber}
             value={newAccount.confirmAccountNumber}
             onChange={(e) =>
-              setNewAccount({
-                ...newAccount,
-                confirmAccountNumber: e.target.value,
-              })
+              setNewAccount({ ...newAccount, confirmAccountNumber: e.target.value })
             }
-            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${
-              errors.confirmAccountNumber ? "border-red-500" : "border-gray-300"
-            }`}
+            error={errors.confirmAccountNumber}
           />
-          {errors.confirmAccountNumber && (
-            <p className="text-red-500 text-sm mt-2 font-medium">
-              {errors.confirmAccountNumber}
-            </p>
-          )}
           {/*<-----v1.0.0-----*/}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Routing Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
+          <InputField
+            label="Routing Number"
+            required
             name="routingNumber"
-            ref={fieldRefs.routingNumber} //<-----v1.0.0-----
+            inputRef={fieldRefs.routingNumber}
             value={newAccount.routingNumber}
             onChange={(e) =>
               setNewAccount({ ...newAccount, routingNumber: e.target.value })
             }
-            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${
-              errors.routingNumber ? "border-red-500" : "border-gray-300"
-            }`}
+            error={errors.routingNumber}
           />
-          {errors.routingNumber && (
-            <p className="text-red-500 text-sm mt-2 font-medium">
-              {errors.routingNumber}
-            </p>
-          )}
           {/*<-----v1.0.0-----*/}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            SWIFT/BIC Code <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
+          <InputField
+            label="SWIFT/BIC Code"
+            required
             name="swiftCode"
-            ref={fieldRefs.swiftCode} //<-----v1.0.0-----
+            inputRef={fieldRefs.swiftCode}
             value={newAccount.swiftCode}
             onChange={(e) =>
               setNewAccount({ ...newAccount, swiftCode: e.target.value })
             }
-            className={`w-full p-1 border rounded-md focus:ring-2 focus:ring-custom-blue ${
-              errors.swiftCode ? "border-red-500" : "border-gray-300"
-            }`}
+            error={errors.swiftCode}
           />
-          {errors.swiftCode && (
-            <p className="text-red-500 text-sm mt-2 font-medium">
-              {errors.swiftCode}
-            </p>
-          )}
           {/*<-----v1.0.0-----*/}
           <p className="mt-1 text-sm text-gray-500">
             8-11 characters. You can find it on your bank statement
@@ -358,9 +296,6 @@ export function BankAccountsPopup({ onClose, onSave }) {
     </div>
   );
 
-  const handleClose = () => {
-    navigate("/account-settings/wallet");
-  };
 
   // v1.0.2 <----------------------------------------------------------------------
   return (

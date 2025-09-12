@@ -21,6 +21,9 @@ export const selectBaseStyles = (hasError) => ({
   valueContainer: (base) => ({ ...base, padding: "0 8px" }),
   indicatorsContainer: (base) => ({ ...base, paddingRight: 8 }),
   menu: (base) => ({ ...base, zIndex: 50 }),
+  // When using menuPortalTarget, react-select renders into a portal container;
+  // ensure it's above scrollable content like question lists
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   menuList: (base) => ({
     ...base,
     maxHeight: 200,

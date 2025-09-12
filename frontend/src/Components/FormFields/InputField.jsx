@@ -35,6 +35,7 @@ const InputField = ({
         onChange={onChange}
         disabled={disabled}
         readOnly={readOnly}
+        required={required}
         min={min}
         max={max}
         step={step}

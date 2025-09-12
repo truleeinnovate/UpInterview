@@ -4,17 +4,10 @@
 // v1.0.3 - Ashok - Ashok - Improved responsiveness and added common code to popup
 
 import { useState, useEffect } from "react";
-import Modal from "react-modal";
-import classNames from "classnames";
 import { useNavigate } from "react-router-dom";
 
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
-import {
-  XMarkIcon,
-  ArrowsPointingOutIcon,
-  ArrowsPointingInIcon,
-} from "@heroicons/react/24/outline";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
 // import logo from "../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
@@ -24,11 +17,11 @@ import {
 } from "../../../../../apiHooks/useWallet.js";
 // v1.0.3 <------------------------------------------------------------------
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+import InputField from "../../../../../Components/FormFields/InputField.jsx";
 // v1.0.3 ------------------------------------------------------------------>
 
 export function WalletTopupPopup({ onClose, onTopup }) {
   const navigate = useNavigate();
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const [amount, setAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
@@ -208,9 +201,6 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
   const predefinedAmounts = [100, 500, 1000, 5000];
 
-  const handleClose = () => {
-    navigate("/account-settings/wallet");
-  };
 
 
   return (
@@ -239,24 +229,19 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               ))}
             </div>
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Custom Amount
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  $
-                </span>
-                <input
+                <InputField
+                  label="Custom Amount (USD)"
                   type="number"
+                  name="customAmount"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-8 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                   placeholder="Enter amount"
                   min="1"
                   step="0.01"
                   required
+                  className="pl-2"
                 />
-              </div>
+              
             </div>
           </div>
 
