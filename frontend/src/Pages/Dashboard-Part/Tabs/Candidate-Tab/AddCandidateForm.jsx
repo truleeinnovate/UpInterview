@@ -57,7 +57,19 @@ const AddCandidateForm = ({
   isModal = false,
   hideAddButton = false,
 }) => {
-  const { skills, colleges, qualifications, currentRoles } = useMasterData();
+  const {
+    skills,
+    colleges,
+    qualifications,
+    currentRoles,
+    loadSkills,
+    loadColleges,
+    loadQualifications,
+    loadCurrentRoles,
+    isQualificationsFetching,
+    isCollegesFetching,
+    isCurrentRolesFetching,
+  } = useMasterData();
 
   // Get user token information
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -240,6 +252,10 @@ const AddCandidateForm = ({
     // When nothing saved, keep dropdown mode
     if (!saved) {
       setIsCustomUniversity(false);
+      return;
+    }
+    // Avoid forcing custom mode if colleges are not loaded yet
+    if (!Array.isArray(colleges) || colleges.length === 0) {
       return;
     }
     const list = (colleges || []).map((c) => (c?.University_CollegeName || '').trim().toLowerCase());
@@ -822,6 +838,8 @@ const AddCandidateForm = ({
                     label="Higher Qualification"
                     name="HigherQualification"
                     required
+                    onMenuOpen={loadQualifications}
+                    loading={isQualificationsFetching}
                   />
                   <DropdownWithSearchField
                     value={formData.UniversityCollege}
@@ -840,6 +858,8 @@ const AddCandidateForm = ({
                     label="University/College"
                     name="UniversityCollege"
                     required
+                    onMenuOpen={loadColleges}
+                    loading={isCollegesFetching}
                   />
                 </div>
                 {/* --------v1.0.1----->*/}
@@ -883,6 +903,8 @@ const AddCandidateForm = ({
                     label="Current Role"
                     name="CurrentRole"
                     required
+                    onMenuOpen={loadCurrentRoles}
+                    loading={isCurrentRolesFetching}
                   />
                 </div>
               </div>
@@ -937,6 +959,7 @@ const AddCandidateForm = ({
                   handleAddEntry={handleAddEntry}
                   skillpopupcancelbutton={skillpopupcancelbutton}
                   editingIndex={editingIndex}
+                  onOpenSkills={loadSkills}
                 />
               </div>
 

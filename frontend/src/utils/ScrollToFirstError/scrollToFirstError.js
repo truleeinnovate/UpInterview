@@ -27,30 +27,38 @@ export function scrollToFirstError(newErrors, fieldRefs) {
   if (errorFields.length > 0) {
     const { key, element } = errorFields[0];
 
-    element.scrollIntoView({ behavior: "smooth", block: "center" });
-
-    const originalBorderRadius = element.style.borderRadius;
-
+    // Allow DOM updates (error messages, layout) before we scroll
     setTimeout(() => {
       try {
-        if (typeof element.focus === "function") element.focus();
-
-        // Add field keys here to skip red border
-        const skipBorderFields = ["skills", "interviewerType", "questions"];
-
-        if (!skipBorderFields.includes(key)) {
-          element.classList.add("outline", "outline-2", "outline-red-500");
-          element.style.borderRadius = "0.375rem";
-
-          setTimeout(() => {
-            element.classList.remove("outline", "outline-2", "outline-red-500");
-            element.style.borderRadius = originalBorderRadius;
-          }, 3000);
-        }
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
       } catch {
-        // Completely silent if anything fails
+        // no-op
       }
-    }, 400);
+
+      const originalBorderRadius = element.style.borderRadius;
+
+      // Focus and optional outline after we initiate scroll
+      setTimeout(() => {
+        try {
+          if (typeof element.focus === "function") element.focus();
+
+          // Add field keys here to skip red border (keep minimal to show outline for most fields)
+          const skipBorderFields = ["skills", "interviewerType", "questions"]; // do not skip 'skill' or 'tenantListId' so they get red outline
+
+          if (!skipBorderFields.includes(key)) {
+            element.classList.add("outline", "outline-2", "outline-red-500");
+            element.style.borderRadius = "0.375rem";
+
+            setTimeout(() => {
+              element.classList.remove("outline", "outline-2", "outline-red-500");
+              element.style.borderRadius = originalBorderRadius;
+            }, 3000);
+          }
+        } catch {
+          // Completely silent if anything fails
+        }
+      }, 200);
+    }, 100);
   } else {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }

@@ -28,9 +28,9 @@ import {
 } from "lucide-react";
 import { ReactComponent as IoIosArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { ReactComponent as IoIosArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
+import { ReactComponent as MdMoreVert } from "../../../../icons/MdMoreVert.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
-import { ReactComponent as MdMoreVert } from "../../../../icons/MdMoreVert.svg";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import Editassesmentquestion from "./QuestionBank-Form.jsx";
 import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
@@ -41,7 +41,9 @@ import {
   useQuestions,
 } from "../../../../apiHooks/useQuestionBank.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
+
 
 import { createPortal } from "react-dom";
 
@@ -381,7 +383,6 @@ function QuestionHeaderBar({
   );
 }
 // v1.0.6 ------------------------------------------------------------->
-
 // Safely render solutions which can be string | object | array of objects
 const renderSolutions = (solutions) => {
   if (!solutions) return "N/A";
@@ -486,8 +487,7 @@ const MyQuestionsList = ({
   const [actionViewMoreSection, setActionViewMoreSection] = useState({});
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [showNewCandidateContent, setShowNewCandidateContent] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
+  
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
   const [dropdownValue, setDropdownValue] = useState("Interview Questions");
@@ -1102,7 +1102,6 @@ const MyQuestionsList = ({
     if (matchingQuestion) {
       Cookies.set("lastSelectedListId", matchingQuestion.listId);
     }
-
     //<----v1.0.4---
     // Immediately sync dropdown with selected label's type (if available)
     const meta = Array.isArray(createdLists)
@@ -2048,24 +2047,10 @@ const MyQuestionsList = ({
                                           Answer:{" "}
                                         </span>
                                         <span className="text-gray-600">
-                                          {question.isCustom &&
-                                          question.questionType === "MCQ" &&
-                                          question.options
-                                            ? `${
-                                                String.fromCharCode(
-                                                  97 +
-                                                    question.options.indexOf(
-                                                      question.correctAnswer
-                                                    )
-                                                ) + ") "
-                                              }`
-                                            : ""}
-                                          {question.questionType ===
-                                          "Programming"
-                                            ? renderSolutions(
-                                                question.solutions
-                                              )
-                                            : question.correctAnswer}
+                                          {/* {question.isCustom && question.questionType === "MCQ" && question.options
+                                            ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer)) + ") "}`
+                                            : ""} */}
+                                          {question.questionType === "Programming" ? renderSolutions(question.solutions) : question.correctAnswer}
                                         </span>
                                       </p>
                                       <p className="font-medium pt-2">

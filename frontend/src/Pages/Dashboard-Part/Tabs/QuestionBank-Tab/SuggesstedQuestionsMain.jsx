@@ -16,6 +16,7 @@ import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArro
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 // v1.0.5 <-------------------------------------------------------
@@ -224,7 +225,6 @@ const SuggestedQuestionsComponent = ({
   const itemsPerPage = 10;
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [dropdownValue, setDropdownValue] = useState("Interview Questions");
-  const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
 
   // Map dropdown selection to backend-supported questionType filter
   const selectedQuestionType = useMemo(
@@ -1011,61 +1011,17 @@ const SuggestedQuestionsComponent = ({
             />
           </div>
 
-          <div className="relative inline-block w-48">
-            <button
-              className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-              onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
-            >
-              <span className="truncate">
-                {dropdownValue || "Select Question Type"}
-              </span>
-              <svg
-                className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${
-                  isInterviewTypeOpen ? "rotate-180" : "rotate-0"
-                }`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            {isInterviewTypeOpen && (
-              <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                <div
-                  className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
-                    dropdownValue === "Interview Questions"
-                      ? "bg-blue-50 text-custom-blue font-semibold"
-                      : ""
-                  }`}
-                  onClick={() => {
-                    setDropdownValue("Interview Questions");
-                    setIsInterviewTypeOpen(false);
-                  }}
-                >
-                  Interview Questions
-                </div>
-                <div
-                  className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
-                    dropdownValue === "Assignment Questions"
-                      ? "bg-blue-50 text-custom-blue font-semibold"
-                      : ""
-                  }`}
-                  onClick={() => {
-                    setDropdownValue("Assignment Questions");
-                    setIsInterviewTypeOpen(false);
-                  }}
-                >
-                  Assignment Questions
-                </div>
-              </div>
-            )}
+          <div className="w-48">
+            <DropdownSelect
+              isSearchable={false}
+              value={dropdownValue ? { value: dropdownValue, label: dropdownValue } : null}
+              onChange={(opt) => setDropdownValue(opt?.value || "")}
+              options={[
+                { value: "Interview Questions", label: "Interview Questions" },
+                { value: "Assignment Questions", label: "Assignment Questions" },
+              ]}
+              placeholder="Select Question Type"
+            />
           </div>
 
           <div className="flex items-center gap-3">

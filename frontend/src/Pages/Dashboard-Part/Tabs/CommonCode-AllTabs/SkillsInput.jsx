@@ -30,6 +30,7 @@ const SkillsField = forwardRef(
       experienceOptions,
       isNextEnabled,
       handleAddEntry,
+      onOpenSkills,
     },
     ref
   ) => {
@@ -150,6 +151,7 @@ const SkillsField = forwardRef(
                         onChange={(opt) => setSelectedSkill(opt?.value || "")}
                         placeholder="Select Skill"
                         classNamePrefix="rs"
+                        onMenuOpen={onOpenSkills}
                       />
                     </div>
                     <div className="px-1">
