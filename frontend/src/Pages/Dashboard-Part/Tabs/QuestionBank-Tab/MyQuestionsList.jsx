@@ -228,14 +228,18 @@ const MyQuestionsList = ({
   };
 
 
-
+  let labelId = Cookies.get("lastSelectedListId");
+  
+  // console.log("labelId", labelId);
   const handleDeleteQuestions = async (deleteLabel = false) => {
+    
+    console.log("labelId", labelId);
 
     try {
       let payload;
       const isInterviewType = dropdownValue === "Interview Questions";
 
-      let labelId = Cookies.get("lastSelectedListId");
+     
       if (deleteLabel && selectedQuestions) {
         // Delete the entire label
         payload = {
@@ -1342,7 +1346,8 @@ const MyQuestionsList = ({
 
             <strong className="text-md text-gray-400"> | </strong>
             {/* // Add this button right after the "Create New List" button 
-    // Ranjith added these feilds //  v1.0.5   */}
+   
+   // Ranjith added these feilds //  v1.0.5   */}
             <button
               className="text-md hover:underline text-red-600 font-semibold flex items-center gap-2"
               onClick={() => setShowCheckboxes(true)}

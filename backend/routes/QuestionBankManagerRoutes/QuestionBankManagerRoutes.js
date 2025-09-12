@@ -5,6 +5,7 @@ const {
   createQuestions,
   getQuestionById,
   getQuestions,
+  getQuestionDeleteById,
 } = require("../../controllers/QuestionBankManagerControllers/QuestionBankManagerController");
 
 // Configure multer for temporary file storage
@@ -18,5 +19,7 @@ router.get("/:type", getQuestions);
 
 // Get by id
 router.get("/:type/:id", getQuestionById);
+
+router.delete("/:type", getQuestionDeleteById);
 
 module.exports = router;

@@ -39,6 +39,7 @@ import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/s
 import { notify } from "../../../../../../services/toastService.js";
 // v1.0.1 <----------------------------------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+import { formatDateOfBirth } from "./BasicDetails.jsx";
 // v1.0.1 ---------------------------------------------------------------------------------------->
 Modal.setAppElement("#root");
 
@@ -103,6 +104,9 @@ const BasicDetailsEditPage = ({
   //   }
   // }, [tenantId]);
 
+  console.log("formattedDate", formData);
+  
+
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -145,7 +149,7 @@ const BasicDetailsEditPage = ({
       countryCode: userProfile.countryCode || "+91",
       phone: userProfile.phone || "",
       profileId: userProfile.profileId || "",
-      dateOfBirth: userProfile.dateOfBirth || "",
+      dateOfBirth: formatDateOfBirth(userProfile.dateOfBirth) || "",
       gender: userProfile.gender || "",
       linkedinUrl: userProfile.linkedinUrl || "",
       portfolioUrl: userProfile.portfolioUrl || "",
@@ -160,16 +164,17 @@ const BasicDetailsEditPage = ({
 
     setOriginalEmail(userProfile.email || "");
     setOriginalProfileId(userProfile.profileId || "");
-    if (userProfile.dateOfBirth?.match(/^\d{2}-\d{2}-\d{4}$/)) {
-      const parsedDate = parse(
-        userProfile.dateOfBirth,
-        "dd-MM-yyyy",
-        new Date()
-      );
-      setStartDate(!isNaN(parsedDate.getTime()) ? parsedDate : null);
-    } else {
-      setStartDate(null);
-    }
+    setStartDate(userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth) : null);
+    // if (userProfile.dateOfBirth?.match(/^\d{2}-\d{2}-\d{4}$/)) {
+    //   const parsedDate = parse(
+    //     userProfile.dateOfBirth,
+    //     "dd-MM-yyyy",
+    //     new Date()
+    //   );
+    //   setStartDate(!isNaN(parsedDate.getTime()) ?  : null);
+    // } else {
+    //   setStartDate(null);
+    // }
 
     setErrors({});
   }, [resolvedId, userProfile]);
@@ -207,10 +212,11 @@ const BasicDetailsEditPage = ({
       return;
     }
 
-    const formattedDate = format(date, "dd-MM-yyyy");
+    const formattedDate = formatDateOfBirth(date);
     setFormData((prevData) => ({ ...prevData, dateOfBirth: formattedDate }));
     setStartDate(date);
   };
+ 
 
   const checkProfileIdExists = useCallback(async (profileId) => {
     if (!profileId) return false;
@@ -764,7 +770,8 @@ const BasicDetailsEditPage = ({
               <DatePicker
                 selected={startDate}
                 onChange={handleDateChange}
-                dateFormat="dd-MM-yyyy"
+                // dateFormat="dd-MM-yyyy"
+                dateFormat="MMMM d, yyyy"
                 placeholderText="Select Date of Birth"
                 maxDate={new Date()}
                 showYearDropdown
@@ -772,7 +779,16 @@ const BasicDetailsEditPage = ({
                 dropdownMode="select"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
                 wrapperClassName="w-full"
-                customInput={<input readOnly />}
+                customInput={
+                  <input
+                    type="text"
+                    readOnly
+                    className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 placeholder-gray-400 border border-gray-300 focus:outline-none sm:text-sm"
+                    placeholder="MM/DD/YYYY" // Fallback placeholder
+                  />
+                }
+                onChangeRaw={(e) => e.preventDefault()}
+                // customInput={<input readOnly />}
               />
             </div>
 

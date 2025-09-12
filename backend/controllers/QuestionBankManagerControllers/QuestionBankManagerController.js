@@ -363,8 +363,73 @@ const getQuestionById = async (req, res) => {
   }
 };
 
+// Delete multiple questions
+const getQuestionDeleteById =  async (req, res) => {
+  try {
+    const { type } = req.params;
+    console.log("type", type);
+    console.log("req.body", req.body);
+    const { questionIds } = req.body;
+
+    if (!questionIds || !Array.isArray(questionIds) || questionIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Question IDs array is required"
+      });
+    }
+
+    let Model;
+    if (type === "interview") {
+      Model = InterviewQuestion;
+    } else if (type === "assessment") {
+      Model = AssessmentQuestion;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid question type. Use 'interview' or 'assessment'"
+      });
+    }
+
+    // Verify all questions exist before deletion
+    const existingQuestions = await Model.find({
+      _id: { $in: questionIds }
+    });
+
+    if (existingQuestions.length !== questionIds.length) {
+      const foundIds = existingQuestions.map(q => q._id.toString());
+      const missingIds = questionIds.filter(id => !foundIds.includes(id));
+      
+      return res.status(404).json({
+        success: false,
+        message: "Some questions not found",
+        missingIds
+      });
+    }
+
+    // Delete the questions
+    const result = await Model.deleteMany({
+      _id: { $in: questionIds }
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} questions`,
+      deletedCount: result.deletedCount
+    });
+
+  } catch (error) {
+    console.error("Error deleting questions:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createQuestions,
   getQuestions,
   getQuestionById,
+  getQuestionDeleteById
 };

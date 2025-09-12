@@ -13,6 +13,17 @@ import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 
 import { toast } from "react-hot-toast";
 
+export   const formatDateOfBirth = (dateString) => {
+  if (!dateString) return "Not Provided";
+  
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
 const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
   console.log("type in BasicDetails", type);
   console.log(
@@ -94,6 +105,10 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
     }
   };
   console.log("contactData handleResendPasswordChange", contactData);
+
+
+  
+  
 
   return (
     // v1.0.1 <-------------------
@@ -214,7 +229,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
           <div>
             <p className="text-sm text-gray-500">Date Of Birth</p>
             <p className="font-medium sm:text-sm">
-              {contactData.dateOfBirth || "Not Provided"}
+              { formatDateOfBirth(contactData.dateOfBirth) || "Not Provided"}
             </p>
           </div>
 
