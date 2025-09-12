@@ -1,5 +1,6 @@
 import React from "react";
 import DropdownSelect, { StickyFooterMenuList, preserveStickyOptionFilter } from "../Dropdowns/DropdownSelect";
+import { components as RSComponents } from "react-select";
 
 const DropdownWithSearchField = ({
   value,
@@ -12,7 +13,32 @@ const DropdownWithSearchField = ({
   containerRef,
   label = "DropdownWithSearchField",
   required = false,
+  onMenuOpen,
+  loading = false,
 }) => {
+  // Merge react-select components to include our custom loading indicator when loading
+  const componentsMap = { MenuList: StickyFooterMenuList };
+  if (loading) {
+    const LoadingDotsIndicator = (props) => (
+      <RSComponents.LoadingIndicator {...props}>
+        <div className="flex items-center gap-1 pr-1">
+          <span
+            className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"
+            style={{ animationDelay: "0s" }}
+          />
+          <span
+            className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"
+            style={{ animationDelay: "0.15s" }}
+          />
+          <span
+            className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"
+            style={{ animationDelay: "0.3s" }}
+          />
+        </div>
+      </RSComponents.LoadingIndicator>
+    );
+    componentsMap.LoadingIndicator = LoadingDotsIndicator;
+  }
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -23,7 +49,7 @@ const DropdownWithSearchField = ({
           <DropdownSelect
             options={options}
             isSearchable
-            components={{ MenuList: StickyFooterMenuList }}
+            components={componentsMap}
             filterOption={preserveStickyOptionFilter()}
             value={options.find((o) => o.value === value) || null}
             onChange={(opt) => {
@@ -42,6 +68,8 @@ const DropdownWithSearchField = ({
             placeholder={`Select a ${label}`}
             hasError={!!error}
             classNamePrefix="rs"
+            onMenuOpen={onMenuOpen}
+            isLoading={loading}
           />
         </div>
       ) : (

@@ -3,7 +3,6 @@
 //<---------------------- v1.0.1------Venkatesh------Prevent double-click save (simplified)
 //<---------------------- v1.0.2------Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
 //<---------------------- v1.0.3------Venkatesh------Type dropdown value is now passed to the backend as a boolean (true for Interviews, false for Assignments)
-
 import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
 import { ReactComponent as IoIosAdd } from '../../../../icons/IoIosAdd.svg';
 import Cookies from 'js-cookie';
@@ -13,6 +12,7 @@ import { ReactComponent as MdArrowDropDown } from '../../../../icons/MdArrowDrop
 import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import { useQuestions } from '../../../../apiHooks/useQuestionBank.js';
 import LoadingButton from '../../../../Components/LoadingButton';
+import DropdownSelect from '../../../../Components/Dropdowns/DropdownSelect.jsx';
 
 const MyQuestionsList1 = forwardRef(
   (
@@ -618,14 +618,18 @@ const MyQuestionsList1 = forwardRef(
                 <label className="text-sm font-medium w-20">
                     Type <span className="text-red-500">*</span>
                   </label>
-              <select
-                className="flex-1 border rounded-md p-2 pr-8 text-sm focus:outline-none cursor-pointer"
-                value={dropdownValue || "Select Question Type"}
-                onChange={(e) => setDropdownValue(e.target.value)}
-              >
-                <option value="Interview Questions">Interview Questions</option>
-                <option value="Assignment Questions">Assignment Questions</option>
-              </select>
+              <div className="flex-1">
+                <DropdownSelect
+                  isSearchable={false}
+                  value={dropdownValue ? { value: dropdownValue, label: dropdownValue } : null}
+                  onChange={(opt) => setDropdownValue(opt?.value || "")}
+                  options={[
+                    { value: "Interview Questions", label: "Interview Questions" },
+                    { value: "Assignment Questions", label: "Assignment Questions" },
+                  ]}
+                  placeholder="Select Question Type"
+                />
+              </div>
             {/*----v1.0.2---->*/}
             </div>
               </div>

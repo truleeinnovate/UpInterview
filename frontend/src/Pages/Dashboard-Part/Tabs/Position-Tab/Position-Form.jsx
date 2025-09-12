@@ -29,266 +29,29 @@ import { useInterviewTemplates } from "../../../../apiHooks/useInterviewTemplate
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { notify } from "../../../../services/toastService.js";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards.jsx";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
+import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
+import InputField from "../../../../Components/FormFields/InputField";
+import DescriptionField from "../../../../Components/FormFields/DescriptionField";
 // v1.0.1 ---------------------------------------------------------------------------->
 
-// Reusable CustomDropdown Component
-const CustomDropdown = ({
-  label,
-  name,
-  value,
-  options,
-  onChange,
-  error,
-  placeholder,
-  optionKey,
-  optionValue,
-  disableSearch = false,
-  hideLabel = false,
-  disabledError = false,
-  // v1.0.3 <--------------------
-  hideInfo = false,
-  // v1.0.3 -------------------->
-}) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const dropdownRef = useRef(null);
 
-  const toggleDropdown = () => {
-    setShowDropdown(!showDropdown);
-  };
-
-  const handleSelect = (option) => {
-    const selectedValue = optionValue ? option[optionValue] : option;
-    onChange({ target: { name, value: selectedValue } });
-    setShowDropdown(false);
-    setSearchTerm("");
-  };
-
-  const filteredOptions = options?.filter((option) => {
-    const displayValue = optionKey ? option[optionKey] : option;
-    return displayValue
-      ?.toString()
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-  });
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  return (
-    <div ref={dropdownRef}>
-      {!hideLabel && (
-        <div className="flex items-start mb-2">
-          <label
-            htmlFor={name}
-            // v1.0.3 <-------------------------------------------------------------------
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            {label}{" "}
-            {disabledError && <span className="text-red-500 ml-1">*</span>}
-          </label>
-          <div className="relative group ml-6">
-            <Info size={18} className="text-gray-400 cursor-pointer" />
-            {/* <i className="fas fa-info-circle text-gray-400 cursor-pointer">i</i> */}
-            <div className="absolute  transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10">
-              Select a pre-defined interview template that includes rounds,
-              questions
-            </div>
-          </div>
-        </div>
-        // v1.0.3 -------------------------------------------------------------------->
-      )}
-      <div className="relative">
-        <input
-          name={name}
-          type="text"
-          id={name}
-          value={value}
-          onClick={toggleDropdown}
-          placeholder={placeholder}
-          autoComplete="off"
-          className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-            error ? "border-red-500" : "border-gray-300"
-          }`}
-          readOnly
-        />
-        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-          <ChevronDown className="text-lg" onClick={toggleDropdown} />
-        </div>
-        {showDropdown && (
-          <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-            {!disableSearch && (
-              <div className="border-b">
-                <div className="flex items-center border rounded px-2 py-1 m-2">
-                  <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder={`Search ${label}`}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 focus:border-black focus:outline-none w-full"
-                  />
-                </div>
-              </div>
-            )}
-            {filteredOptions?.length > 0 ? (
-              filteredOptions.map((option, index) => (
-                <div
-                  key={option._id || index}
-                  onClick={() => handleSelect(option)}
-                  className="cursor-pointer hover:bg-gray-200 p-2"
-                >
-                  {optionKey ? option[optionKey] : option}
-                </div>
-              ))
-            ) : (
-              <div className="p-2 text-gray-500">No options found</div>
-            )}
-          </div>
-        )}
-      </div>
-      {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
-    </div>
-  );
-};
-
-// const RoundModal = ({ isOpen, onClose, onNext, currentRoundNumber }) => {
-//   const [formData, setFormData] = useState({
-//     roundName: '',
-//     interviewType: ''
-//   });
-//   const [errors, setErrors] = useState({});
-//   if (!isOpen) return null;
-
-//   const handleNext = () => {
-//     const validationErrors = validateRoundPopup(formData);
-
-//     if (Object.keys(validationErrors).length > 0) {
-//       setErrors(validationErrors);
-//       return;
-//     }
-
-//     setErrors({});
-//     onNext(formData.interviewType, formData);
-//   };
-
-//   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//       <div className="bg-white rounded-lg w-[500px] border-2">
-//         <div className="flex justify-between items-center p-4">
-//           <h2 className="text-lg font-semibold"> {currentRoundNumber === 0 ? "Add Round" : `Add Round ${currentRoundNumber}`}</h2>
-//           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-//             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-//               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-//             </svg>
-//           </button>
-//         </div>
-
-//         <div className="p-4">
-//           <div className="mb-4">
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Round Name <span className="text-red-500">*</span>
-//             </label>
-//             <input
-//               type="text"
-//               value={formData.roundName}
-//               onChange={(e) => {
-//                 const value = e.target.value;
-//                 setFormData(prev => ({ ...prev, roundName: value }));
-//                 setErrors(prev => ({ ...prev, roundName: value ? '' : prev.roundName }));
-//               }}
-//               className={`w-full border px-2 py-1.5 rounded focus:outline-none ${errors.roundName ? 'border-red-500' : ''}`}
-//               placeholder='Enter name'
-//             />
-
-//             {errors.roundName && <p className="text-red-500 text-sm mt-1">{errors.roundName}</p>}
-//           </div>
-
-//           <div className="mb-4">
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Interview Type <span className="text-red-500">*</span>
-//             </label>
-//             <div className={`px-2 py-1.5 border rounded ${errors.interviewType ? 'border-red-500' : ''}`}>
-//               <select
-//                 value={formData.interviewType}
-//                 onChange={(e) => {
-//                   const value = e.target.value;
-//                   setFormData(prev => ({ ...prev, interviewType: value }));
-//                   setErrors(prev => ({ ...prev, interviewType: value ? '' : prev.interviewType }));
-//                 }}
-//                 className='w-full focus:outline-none'
-//               >
-//                 <option value="">Select Type</option>
-//                 <option value="Technical">Technical</option>
-//                 <option value="Assessment">Assessment</option>
-//               </select>
-//             </div>
-//             {errors.interviewType && <p className="text-red-500 text-sm mt-1">{errors.interviewType}</p>}
-//           </div>
-//         </div>
-
-//         <div className="flex justify-end gap-3 p-4">
-//           <button
-//             onClick={onClose}
-//             className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50"
-//           >
-//             Cancel
-//           </button>
-//           <button
-//             onClick={handleNext}
-//             className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
-//           // disabled={!formData.roundName || !formData.interviewType}
-//           >
-//             Next
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// const DeleteConfirmationModal = ({ isOpen, roundNumber, onConfirm, onCancel }) => {
-//   if (!isOpen) return null;
-//   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//       <div className="bg-white rounded-lg border p-6 w-[400px]">
-//         <h3 className="text-lg font-semibold mb-4">Delete Round {roundNumber}?</h3>
-//         <p className="text-gray-600 mb-6">Are you sure you want to delete this round? This action cannot be undone.</p>
-//         <div className="flex justify-end space-x-3">
-//           <button
-//             onClick={onCancel}
-//             className="px-4 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
-//           >
-//             No
-//           </button>
-//           <button
-//             onClick={onConfirm}
-//             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-//           >
-//             Yes, Delete
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
 
 const PositionForm = ({ mode, onClose, isModal = false }) => {
   const { positionData, isMutationLoading, addOrUpdatePosition } =
     usePositions();
 
-  const { templatesData } = useInterviewTemplates();
-  const { companies, locations, skills } = useMasterData();
+  const { templatesData, isQueryLoading: isTemplatesFetching } = useInterviewTemplates();
+  const {
+    companies,
+    locations,
+    skills,
+    loadCompanies,
+    loadLocations,
+    loadSkills,
+    isCompaniesFetching,
+    isLocationsFetching,
+  } = useMasterData();
 
   const { id } = useParams();
   const location = useLocation();
@@ -308,6 +71,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     companyname: useRef(null),
     minexperience: useRef(null),
     maxexperience: useRef(null),
+    minSalary: useRef(null),
+    maxSalary: useRef(null),
     NoofPositions: useRef(null),
     location: useRef(null),
     jobDescription: useRef(null),
@@ -334,7 +99,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
 
-  const [errors, setErrors] = useState("");
+  const [errors, setErrors] = useState({});
   const [showDropdownCompany, setShowDropdownCompany] = useState(false);
   const [isCustomCompany, setIsCustomCompany] = useState(false);
   const [companySearchTerm, setCompanySearchTerm] = useState("");
@@ -461,6 +226,95 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
   const expertiseOptions = ["Basic", "Medium", "Expert"];
 
+  // Mapped options for shared DropdownWithSearchField
+  const companyOptionsRS = (
+    companies || []
+  ).map((c) => ({ value: c?.CompanyName, label: c?.CompanyName })).concat([
+    { value: "__other__", label: "+ Others" },
+  ]);
+  const locationOptionsRS = (
+    locations || []
+  ).map((l) => ({ value: l?.LocationName, label: l?.LocationName })).concat([
+    { value: "__other__", label: "+ Others" },
+  ]);
+  const templateOptions = (templatesData || [])
+    .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
+    .map((t) => ({ value: t._id, label: t.templateName }));
+
+  // Generic change handler for shared form fields + live cross-field validation
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setErrors((prev) => {
+      const next = { ...prev };
+      const keyMap = {
+        companyName: "companyname",
+        minSalary: "minsalary",
+        maxSalary: "maxsalary",
+      };
+
+      // Clear direct field error if it uses the same key
+      if (next?.[name]) next[name] = "";
+      if (keyMap[name] && next?.[keyMap[name]]) next[keyMap[name]] = "";
+
+      // Live cross-field validation: Experience
+      if (name === "minexperience" || name === "maxexperience") {
+        const min = name === "minexperience" ? parseInt(value) : parseInt(formData.minexperience);
+        const max = name === "maxexperience" ? parseInt(value) : parseInt(formData.maxexperience);
+        if (!Number.isNaN(min) && !Number.isNaN(max)) {
+          if (min > max) {
+            next.minexperience = "Min Experience cannot be greater than Max";
+            next.maxexperience = "Max Experience cannot be less than Min";
+          } else {
+            next.minexperience = "";
+            next.maxexperience = "";
+          }
+        } else {
+          // If either is empty, clear cross-field errors
+          if (next.minexperience === "Min Experience cannot be greater than Max") next.minexperience = "";
+          if (next.maxexperience === "Max Experience cannot be less than Min") next.maxexperience = "";
+        }
+      }
+
+      // Live cross-field validation: Salary (keys are minsalary/maxsalary in validation)
+      if (name === "minSalary" || name === "maxSalary") {
+        const minS = name === "minSalary" ? parseInt(value) : parseInt(formData.minSalary);
+        const maxS = name === "maxSalary" ? parseInt(value) : parseInt(formData.maxSalary);
+
+        // Negative checks
+        if (name === "minSalary") {
+          if (!Number.isNaN(minS) && minS < 0) {
+            next.minsalary = "Minimum salary cannot be negative";
+          } else if (next.minsalary && next.minsalary.startsWith("Minimum salary")) {
+            next.minsalary = "";
+          }
+        }
+        if (name === "maxSalary") {
+          if (!Number.isNaN(maxS) && maxS < 0) {
+            next.maxsalary = "Maximum salary cannot be negative";
+          } else if (next.maxsalary && next.maxsalary.startsWith("Maximum salary")) {
+            next.maxsalary = "";
+          }
+        }
+
+        if (!Number.isNaN(minS) && !Number.isNaN(maxS)) {
+          if (minS > maxS) {
+            next.minsalary = "Minimum Salary cannot be greater than Maximum";
+            next.maxsalary = "Maximum Salary cannot be less than Minimum";
+          } else {
+            if (next.minsalary === "Minimum Salary cannot be greater than Maximum") next.minsalary = "";
+            if (next.maxsalary === "Maximum Salary cannot be less than Minimum") next.maxsalary = "";
+          }
+        }
+      }
+
+      return next;
+    });
+  };
+
+  // (Removed old toggle for manual Location dropdown; now using shared DropdownWithSearchField)
+
   const handleAddEntry = () => {
     if (editingIndex !== null) {
       const oldSkill = entries[editingIndex].skill;
@@ -540,10 +394,18 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const companyName = selectedPosition?.companyname || "";
 
       // Check if the company name exists in the companies list
-      const companyExists = companies?.some(
-        (company) => company.CompanyName === companyName
-      );
-      if (companyName && !companyExists) {
+      // Guard: wait until companies are loaded before deciding custom mode
+      if (companyName && Array.isArray(companies) && companies.length > 0) {
+        const companyExists = companies.some(
+          (company) => company.CompanyName === companyName
+        );
+        if (!companyExists) {
+          setIsCustomCompany(true);
+        } else {
+          setIsCustomCompany(false);
+        }
+      } else if (companyName && (!Array.isArray(companies) || companies.length === 0)) {
+        // Defer decision; will re-run when companies update
         setIsCustomCompany(true);
       }
 
@@ -1192,793 +1054,151 @@ console.log("error", error);
                   <form className="space-y-5 mb-5">
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Title <span className="text-red-500">*</span>
-                        </label>
-                        {/* v1.0.1 <------------------------------------------------------------ */}
-                        <input
-                          ref={fieldRefs.title}
-                          type="text"
+                        <InputField
                           value={formData.title}
-                          onChange={(e) => {
-                            setFormData({ ...formData, title: e.target.value });
-                            if (errors.title) {
-                              setErrors((prevErrors) => ({
-                                ...prevErrors,
-                                title: "",
-                              }));
-                            }
-                          }}
+                          onChange={handleChange}
+                          name="title"
+                          inputRef={fieldRefs.title}
+                          error={errors.title}
+                          label="Title"
+                          required
                           placeholder="UI/UX Designer"
-                          // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
-                          // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                          //   errors.roundTitle
-                          //     ? "border-red-500 focus:ring-red-500"
-                          //     : "border-gray-300 focus:ring-gray-300"
-                          // }`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                              errors.title
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
                         />
-                        {/* v1.0.1 -------------------------------------------------------------> */}
-                        {errors.title && (
-                          <p className="text-red-500 text-xs mt-1 ">
-                            {errors.title}
-                          </p>
-                        )}
                       </div>
 
                       {/* Company Name */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Company Name <span className="text-red-500">*</span>
-                        </label>
-                        {/*  v1.0.1 <--------------------------------------------------------------------------- */}
-                        {!isCustomCompany ? (
-                          <div className="relative" ref={companyDropdownRef}>
-                            <input
-                              ref={fieldRefs.companyname}
-                              type="text"
-                              value={formData.companyName}
-                              onClick={() =>
-                                setShowDropdownCompany(!showDropdownCompany)
-                              }
-                              placeholder="Select a Company"
-                              autoComplete="off"
-                              // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                              //   errors.companyname
-                              //     ? "border-red-500"
-                              //     : "border-gray-300"
-                              // }`}
-                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.companyname
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
-                                }
-                                focus:outline-gray-300
-                              `}
-                              readOnly
-                            />
-                            {/* v1.0.1 ------------------------------------------------------------------------> */}
-                            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                              <ChevronDown
-                                className="text-lg"
-                                onClick={() =>
-                                  setShowDropdownCompany(!showDropdownCompany)
-                                }
-                              />
-                            </div>
-                            {showDropdownCompany && (
-                              <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
-                                <div className="border-b">
-                                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                                    <input
-                                      type="text"
-                                      placeholder="Search Company"
-                                      value={companySearchTerm}
-                                      onChange={(e) =>
-                                        setCompanySearchTerm(e.target.value)
-                                      }
-                                      className="pl-8 focus:border-black focus:outline-none w-full"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="max-h-48 overflow-y-auto">
-                                  {filteredCompanies?.length > 0 ? (
-                                    filteredCompanies.map((company, index) => (
-                                      <div
-                                        key={company._id || index}
-                                        onClick={() =>
-                                          handleCompanySelect(company)
-                                        }
-                                        className="cursor-pointer hover:bg-gray-200 p-2"
-                                      >
-                                        {company.CompanyName}
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <div className="p-2 text-gray-500">
-                                      No companies found
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="border-t border-gray-200">
-                                  <div
-                                    onClick={() =>
-                                      handleCompanySelect("others")
-                                    }
-                                    className="cursor-pointer hover:bg-gray-200 p-2"
-                                  >
-                                    <span className="text-gray-900 font-medium">
-                                      + Others
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="relative">
-                            <input
-                              // v1.0.1 <-------------------------------------------------------------------------------
-                              ref={fieldRefs.companyname}
-                              type="text"
-                              value={formData.companyName}
-                              onChange={(e) => {
-                                setFormData({
-                                  ...formData,
-                                  companyName: e.target.value,
-                                });
-                                if (errors.companyname) {
-                                  setErrors((prevErrors) => ({
-                                    ...prevErrors,
-                                    companyname: "",
-                                  }));
-                                }
-                              }}
-                              // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                              //   errors.companyname
-                              //     ? "border-red-500"
-                              //     : "border-gray-300"
-                              // }`}
-                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.companyname
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
-                                }
-                                focus:outline-gray-300
-                              `}
-                              placeholder="Enter custom company name"
-                            />
-                            {/* v1.0.1 -------------------------------------------------------------------------------> */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsCustomCompany(false);
-                                setFormData({ ...formData, companyName: "" });
-                              }}
-                              className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                        {errors.companyname && (
-                          <p className="text-red-500 text-xs pt-1">
-                            {errors.companyname}
-                          </p>
-                        )}
+                        
+                        <DropdownWithSearchField
+                          value={formData.companyName}
+                          options={companyOptionsRS}
+                          onChange={handleChange}
+                          error={errors.companyname}
+                          containerRef={fieldRefs.companyname}
+                          label="Company Name"
+                          name="companyName"
+                          required
+                          isCustomName={isCustomCompany}
+                          setIsCustomName={setIsCustomCompany}
+                          onMenuOpen={loadCompanies}
+                          loading={isCompaniesFetching}
+                          
+                        />
                       </div>
                     </div>
 
                     {/* Experience */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Experience <span className="text-red-500">*</span>
-                        </label>
-                        {/* v1.0.2 <----------------------------------------------------------------------------------------- */}
-                        {/* <div className="grid grid-cols-2 gap-4"> */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                          {/* v1.0.2 -----------------------------------------------------------------------------------------> */}
-                          {/* Min Experience */}
-                          <div>
-                            <div className="flex flex-row items-center gap-3">
-                              <label className="block text-xs text-gray-500 mb-1">
-                                Min
-                              </label>
-                              {/* v1.0.1 <---------------------------------------------------------------------------- */}
-                              <input
-                                ref={fieldRefs.minexperience}
-                                type="number"
-                                min="1"
-                                max="15"
-                                value={formData.minexperience ?? ""}
-                                onChange={(e) => {
-                                  const minExp = e.target.value
-                                    ? parseInt(e.target.value)
-                                    : "";
-
-                                  // Validate min experience is not greater than current max experience
-                                  if (
-                                    minExp !== "" &&
-                                    formData.maxexperience &&
-                                    minExp > formData.maxexperience
-                                  ) {
-                                    setErrors((prev) => ({
-                                      ...prev,
-                                      minexperience:
-                                        "Min Experience cannot be greater than Max",
-                                      maxexperience:
-                                        "Max Experience cannot be less than Min",
-                                    }));
-                                  } else {
-                                    setErrors((prev) => ({
-                                      ...prev,
-                                      minexperience: "",
-                                      maxexperience: "",
-                                    }));
-                                  }
-
-                                  // Update state
-                                  setFormData({
-                                    ...formData,
-                                    minexperience: minExp,
-                                    // Reset max experience if it's now less than min
-                                    maxexperience:
-                                      minExp !== "" &&
-                                      formData.maxexperience &&
-                                      minExp > formData.maxexperience
-                                        ? ""
-                                        : formData.maxexperience,
-                                  });
-                                }}
-                                // className={`w-full px-3 py-2 border rounded-md ${
-                                //   errors.minexperience
-                                //     ? "border-red-500 focus:ring-red-500"
-                                //     : "border-gray-300"
-                                // }`}
-                                className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                  border ${
-                                    errors.minexperience
-                                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                      : "border-gray-300 focus:ring-red-300"
-                                  }
-                                  focus:outline-gray-300
-                                `}
-                                placeholder="Enter Min Experience"
-                              />
-                            </div>
-                            {errors.minexperience && (
-                              <p className="text-red-500 text-xs pl-8 mt-1 ">
-                                {errors.minexperience}
-                              </p>
-                            )}
-                          </div>
-                          {/* v1.0.1 ----------------------------------------------------------------------------> */}
-
-                          {/* Max Experience */}
-                          <div>
-                            <div className="flex flex-row items-center gap-3">
-                              <label className="block text-xs text-gray-500 mb-1">
-                                Max
-                              </label>
-                              {/* v1.0.1 <------------------------------------------------------------------------------------- */}
-                              <input
-                                ref={fieldRefs.maxexperience}
-                                type="number"
-                                min="1"
-                                max="15"
-                                value={formData.maxexperience ?? ""}
-                                onChange={(e) => {
-                                  const maxExp = e.target.value
-                                    ? parseInt(e.target.value)
-                                    : "";
-
-                                  // Validate max experience is not less than current min experience
-                                  if (
-                                    maxExp !== "" &&
-                                    formData.minexperience &&
-                                    maxExp < formData.minexperience
-                                  ) {
-                                    setErrors((prev) => ({
-                                      ...prev,
-                                      maxexperience:
-                                        "Max Experience cannot be less than Min",
-                                      minexperience:
-                                        "Min Experience cannot be greater than Max",
-                                    }));
-                                  } else {
-                                    setErrors((prev) => ({
-                                      ...prev,
-                                      maxexperience: "",
-                                      minexperience: "",
-                                    }));
-                                  }
-
-                                  // Update state
-                                  setFormData({
-                                    ...formData,
-                                    maxexperience: maxExp,
-                                  });
-                                }}
-                                // className={`w-full px-3 py-2 border rounded-md ${
-                                //   errors.maxexperience
-                                //     ? "border-red-500 focus:ring-red-500 "
-                                //     : "border-gray-300"
-                                // }`}
-                                className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                  border ${
-                                    errors.maxexperience
-                                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                      : "border-gray-300 focus:ring-red-300"
-                                  }
-                                  focus:outline-gray-300
-                                `}
-                                placeholder="Enter Max Experience"
-                              />
-                            </div>
-                            {errors.maxexperience && (
-                              <p className="text-red-500 text-xs pl-8 mt-1 ">
-                                {errors.maxexperience}
-                              </p>
-                            )}
-                          </div>
-                          {/* v1.0.1 -------------------------------------------------------------------------------------> */}
+                        <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
+                          <IncreaseAndDecreaseField
+                            value={formData.minexperience}
+                            onChange={handleChange}
+                            inputRef={fieldRefs.minexperience}
+                            error={errors.minexperience}
+                            label="Min Experience"
+                            min={1}
+                            max={15}
+                            name="minexperience"
+                            required
+                          />
+                          <IncreaseAndDecreaseField
+                            value={formData.maxexperience}
+                            onChange={handleChange}
+                            inputRef={fieldRefs.maxexperience}
+                            error={errors.maxexperience}
+                            min={1}
+                            max={15}
+                            label="Max Experience"
+                            name="maxexperience"
+                            required
+                          />
                         </div>
-                      </div>
-
-                      {/* max and min salary  */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Salary
-                          {/* <span className="text-red-500">*</span> */}
-                        </label>
-                        {/* v1.0.2 <----------------------------------------------------------------------------------------------- */}
-                        {/* <div className="grid grid-cols-2 gap-4"> */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                          {/* Min Salary */}
-
-                          {/* <div className="flex flex-row items-center gap-3"> */}
-                          <div className="flex flex-row items-center gap-3">
-                            <label className="block text-xs text-gray-500 mb-1">
-                              Min
-                            </label>
-                            {/* <div className="flex-col"> */}
-                            <div className="flex-col w-full">
-                              <div className="relative w-full">
-                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                                  $
-                                </span>
-                                <input
-                                  type="number"
-                                  min={1}
-                                  value={formData.minSalary ?? ""}
-                                  placeholder="Enter Min Salary"
-                                  onChange={(e) => {
-                                    const minSalary = e.target.value;
-
-                                    // Validate min salary is not greater than current max salary
-                                    if (
-                                      minSalary !== "" &&
-                                      formData.maxSalary &&
-                                      parseInt(minSalary) >
-                                        parseInt(formData.maxSalary)
-                                    ) {
-                                      setErrors((prev) => ({
-                                        ...prev,
-                                        minsalary:
-                                          "Min Salary cannot be greater than Max",
-                                        maxsalary:
-                                          "Max Salary cannot be less than Min",
-                                      }));
-                                    } else {
-                                      setErrors((prev) => ({
-                                        ...prev,
-                                        minsalary: "",
-                                        maxsalary: "",
-                                      }));
-                                    }
-
-                                    // Update state
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      minSalary:
-                                        minSalary === ""
-                                          ? ""
-                                          : parseInt(minSalary),
-                                    }));
-                                  }}
-                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${
-                                    errors.salary
-                                      ? "border-red-500"
-                                      : "border-gray-300"
-                                  }`}
-
-                                  // onChange={(e) => setFormData({ ...formData, minSalary: e.target.value })}
-                                  // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
-                                />
-                              </div>
-                              {errors.minsalary && (
-                                <p className="text-red-500 text-xs pl-1 mt-1 ">
-                                  {errors.minsalary}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Max Salary */}
-                          <div className="flex flex-row items-center gap-3">
-                            <label className="block text-xs text-gray-500 mb-1">
-                              Max
-                            </label>
-                            {/* <div className="flex-col"> */}
-                            <div className="flex-col w-full">
-                              <div className="relative w-full">
-                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                                  $
-                                </span>
-                                <input
-                                  type="number"
-                                  min={1}
-                                  value={formData.maxSalary ?? ""}
-                                  placeholder="Enter Max Salary"
-                                  onChange={(e) => {
-                                    const maxSalary = e.target.value;
-
-                                    // Validate max salary is not less than current min salary
-                                    if (
-                                      maxSalary !== "" &&
-                                      formData.minSalary &&
-                                      parseInt(maxSalary) <
-                                        parseInt(formData.minSalary)
-                                    ) {
-                                      setErrors((prev) => ({
-                                        ...prev,
-                                        maxsalary:
-                                          "Max Salary cannot be less than Min",
-                                        minsalary:
-                                          "Min Salary cannot be greater than Max",
-                                      }));
-                                    } else {
-                                      setErrors((prev) => ({
-                                        ...prev,
-                                        maxsalary: "",
-                                        minsalary: "",
-                                      }));
-                                    }
-
-                                    // Update state
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      maxSalary:
-                                        maxSalary === ""
-                                          ? ""
-                                          : parseInt(maxSalary),
-                                    }));
-                                  }}
-                                  className={`w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none ${
-                                    errors.salary
-                                      ? "border-red-500"
-                                      : "border-gray-300"
-                                  }`}
-                                  // onChange={(e) => setFormData({ ...formData, maxSalary: e.target.value })}
-                                  // className="w-full pl-7 py-2 pr-3 border rounded-md focus:outline-none"
-                                />
-                              </div>
-                              {errors.maxsalary && (
-                                <p className="text-red-500 text-xs pl-1 mt-1 ">
-                                  {errors.maxsalary}
-                                </p>
-                              )}
-                            </div>
-                          </div>
+                        
+                        <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
+                          <IncreaseAndDecreaseField
+                            value={formData.minSalary}
+                            onChange={handleChange}
+                            inputRef={fieldRefs.minSalary}
+                            error={errors.minsalary}
+                            min={0}
+                            max={1000000000}
+                            label="Min Salary"
+                            name="minSalary"
+                            required={formData.maxSalary ? true : false}
+                          />
+                          <IncreaseAndDecreaseField
+                            value={formData.maxSalary}
+                            onChange={handleChange}
+                            min={0}
+                            max={1000000000}
+                            inputRef={fieldRefs.maxSalary}
+                            error={errors.maxsalary}
+                            label="Max Salary"
+                            name="maxSalary"
+                            required={formData.minSalary ? true : false}
+                          />
                         </div>
-                        {/* v1.0.2 -----------------------------------------------------------------------------------------------> */}
-                      </div>
+
+                      
                     </div>
 
-                    {/* location  and no of positions  */}
+                      {/* location  and no of positions  */}
 
-                    {/* <div> */}
-
-                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          No. of Positions
-                        </label>
-
-                        <input
-                          // v1.0.1 <------------------------------------------
-                          ref={fieldRefs.NoofPositions}
-                          // v1.0.1 ------------------------------------------>
-                          type="number"
-                          min={1}
+                      <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                        <IncreaseAndDecreaseField
                           value={formData.NoofPositions}
-                          // onChange={(e) => {
-                          //   setFormData({ ...formData, NoofPositions: e.target.value });
-                          // }}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setFormData({ ...formData, NoofPositions: value });
-
-                            // Clear error if valid
-                            if (value && parseInt(value) > 0) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                NoofPositions: "",
-                              }));
-                            }
-                          }}
-                          // readOnly
-                          // onClick={() => setShowDropdownCompany(!showDropdownCompany)}
-                          placeholder="Select No. of Positions"
-                          // className={`w-full px-3 py-2 border rounded-md ${
-                          //   errors.noOfPositions
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // }`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                              errors.NoofPositions
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
-                          // className="w-full px-3 py-2 border rounded-md focus:outline-none"
+                          onChange={handleChange}
+                          inputRef={fieldRefs.NoofPositions}
+                          error={errors.NoofPositions}
+                          min={1}
+                          max={100}
+                          label="No. of Positions"
+                          name="NoofPositions"
+                          required
                         />
-                        {errors.NoofPositions && (
-                          <p className="text-red-500 text-xs mt-1 ">
-                            {errors.NoofPositions}
-                          </p>
-                        )}
-                      </div>
 
-                      {/* location */}
-                      {/*<-----v1.0.0------ */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Location <span className="text-red-500">*</span>
-                        </label>
-                        {!isCustomLocation ? (
-                          <div className="relative" ref={locationDropdownRef}>
-                            <input
-                              // v1.0.1 <------------------------------------------
-                              ref={fieldRefs.Location}
-                              // v1.0.1 ------------------------------------------>
-                              type="text"
-                              value={formData.Location}
-                              onClick={() =>
-                                setShowDropdownLocation(!showDropdownLocation)
-                              }
-                              placeholder="Select a Location"
-                              autoComplete="off"
-                              // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                              //   errors.location
-                              //     ? "border-red-500"
-                              //     : "border-gray-300"
-                              // }`}
-                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.Location
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
-                                }
-                                focus:outline-gray-300
-                              `}
-                              readOnly
-                            />
-                            <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                              <ChevronDown
-                                className="text-lg"
-                                onClick={() =>
-                                  setShowDropdownLocation(!showDropdownLocation)
-                                }
-                              />
-                            </div>
-                            {showDropdownLocation && (
-                              <div className="absolute bg-white border border-gray-300 mt-1 w-full z-10 text-xs">
-                                <div className="border-b">
-                                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                                    <input
-                                      type="text"
-                                      placeholder="Search Location"
-                                      value={locationSearchTerm}
-                                      onChange={(e) =>
-                                        setLocationSearchTerm(e.target.value)
-                                      }
-                                      className="pl-8 focus:border-black focus:outline-none w-full"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="max-h-48 overflow-y-auto">
-                                  {filteredLocations?.length > 0 ? (
-                                    filteredLocations.map((location, index) => (
-                                      <div
-                                        key={location._id || index}
-                                        onClick={() =>
-                                          handleLocationSelect(location)
-                                        }
-                                        className="cursor-pointer hover:bg-gray-200 p-2"
-                                      >
-                                        {location.LocationName}
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <div className="p-2 text-gray-500">
-                                      No locations found
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="border-t border-gray-200">
-                                  <div
-                                    onClick={() =>
-                                      handleLocationSelect("others")
-                                    }
-                                    className="cursor-pointer hover:bg-gray-200 p-2"
-                                  >
-                                    <span className="text-gray-900 font-medium">
-                                      + Others
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="relative">
-                            <input
-                              // v1.0.1 <------------------------------------------
-                              ref={fieldRefs.Location}
-                              // v1.0.1 ------------------------------------------>
-                              type="text"
-                              value={formData.Location}
-                              onChange={(e) => {
-                                setFormData({
-                                  ...formData,
-                                  Location: e.target.value,
-                                });
-                                if (errors.Location) {
-                                  setErrors((prevErrors) => ({
-                                    ...prevErrors,
-                                    Location: "",
-                                  }));
-                                }
-                              }}
-                              // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                              //   errors.location
-                              //     ? "border-red-500"
-                              //     : "border-gray-300"
-                              // }`}
-                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.Location
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
-                                }
-                                focus:outline-gray-300
-                              `}
-                              placeholder="Enter custom location name"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsCustomLocation(false);
-                                setFormData({ ...formData, Location: "" });
-                              }}
-                              className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                        {errors.Location && (
-                          <p className="text-red-500 text-xs pt-1">
-                            {errors.Location}
-                          </p>
-                        )}
+                        <div>
+                          
+                          <DropdownWithSearchField
+                            value={formData.Location}
+                            options={locationOptionsRS}
+                            onChange={handleChange}
+                            error={errors.Location}
+                            containerRef={fieldRefs.location}
+                            label="Location"
+                            name="Location"
+                            required
+                            isCustomName={isCustomLocation}
+                            setIsCustomName={setIsCustomLocation}
+                            onMenuOpen={loadLocations}
+                            loading={isLocationsFetching}
+                          />
+                         
+                        </div>
+                        {/* -----v1.0.0-----> */}
                       </div>
-                      {/* -----v1.0.0-----> */}
-                    </div>
-                    {/* </div> */}
+                      {/* </div> */}
 
                     {/* Job Description */}
-                    <div>
-                      <label
-                        htmlFor="jobDescription"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Job Description <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        ref={fieldRefs.jobDescription}
-                        id="jobDescription"
-                        name="jobDescription"
-                        value={formData.jobDescription}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setFormData({ ...formData, jobDescription: value });
-                          // Clear jobdescription error when user starts typing
-                          if (errors.jobDescription) {
-                            setErrors((prev) => ({
-                              ...prev,
-                              jobDescription: "",
-                            }));
-                          }
-                        }}
-                        // className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3  sm:text-sm h-32 ${
-                        //   errors.jobdescription
-                        //     ? "border-red-500 focus:ring-red-500"
-                        //     : "border-gray-300"
-                        // }`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.jobDescription
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                        placeholder="This position is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-                        rows={10}
-                        minLength={50}
-                        maxLength={1000}
-                      />
-                      <div>
-                        <div className="flex justify-between items-center mt-1">
-                          <span className="text-sm text-gray-500">
-                            {errors.jobDescription ? (
-                              <p className="text-red-500 text-xs pt-1">
-                                {errors.jobDescription}
-                              </p>
-                            ) : formData.jobDescription.length > 0 &&
-                              formData.jobDescription.length < 50 ? (
-                              <p className="text-gray-500 text-xs">
-                                Minimum {50 - formData.jobDescription.length}{" "}
-                                more characters needed
-                              </p>
-                            ) : null}
-                          </span>
-                          <p className="text-sm text-gray-500">
-                            {formData.jobDescription.length}/1000
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    <DescriptionField
+                      value={formData.jobDescription}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({ ...formData, jobDescription: value });
+                        if (errors.jobDescription) {
+                          setErrors((prev) => ({ ...prev, jobDescription: "" }));
+                        }
+                      }}
+                      name="jobDescription"
+                      inputRef={fieldRefs.jobDescription}
+                      error={errors.jobDescription}
+                      label="Job Description"
+                      required
+                      placeholder="This position is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+                      rows={10}
+                      minLength={50}
+                      maxLength={1000}
+                    />
 
                     {/* skills */}
                     <div>
@@ -2035,100 +1255,43 @@ console.log("error", error);
                         handleAddEntry={handleAddEntry}
                         skillpopupcancelbutton={skillpopupcancelbutton}
                         editingIndex={editingIndex}
+                        onOpenSkills={loadSkills}
                       />
                     </div>
 
-                    {/* template */}
-                    {/* v1.0.2 <--------------------------------------------------- */}
-                    {/* <div className="grid grid-cols-2"> */}
+                    {/* Select Template */}
                     <div className="grid sm:grid-cols-1 grid-cols-2">
-                      <CustomDropdown
+                      <DropdownWithSearchField
+                        value={formData.template?._id || ""}
+                        options={templateOptions}
+                        onChange={(e) => {
+                          const selectedTemplate = templatesData.find((t) => t._id === e.target.value);
+                          setFormData({ ...formData, template: selectedTemplate || {} });
+                        }}
+                        error={errors?.template}
                         label="Select Template"
                         name="template"
-                        value={formData.template?.templateName || ""}
-                        // options={templatesData}
-                        options={templatesData.filter(
-                          (template) =>
-                            template.rounds &&
-                            template.rounds.length > 0 &&
-                            template.status === "active"
-                        )}
-                        onChange={(e) => {
-                          const selectedTemplate = templatesData.find(
-                            (t) => t._id === e.target.value
-                          );
-                          setFormData({
-                            ...formData,
-                            template: selectedTemplate,
-                          });
-                        }}
-                        disabledError={false}
-                        placeholder="Select Template"
-                        // optionKey="templateName"
-                        // optionValue="templateName"
-                        optionKey="templateName" // Display template name
-                        optionValue="_id"
-                        // v1.0.3 <---------------------------
-                        hideInfo={true}
-                        // v1.0.3 --------------------------->
+                        required={false}
+                        loading={isTemplatesFetching}
                       />
-                      {/* <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Select Template
-                      </label>
-                      <div className="relative w-1/2 sm:w-full md:w-full">
-                      <input
-                            type="text"
-                            value={formData.template?.templateName || ""}
-                            readOnly
-                            onClick={() => setShowDropdownTemplate(!showDropdownTemplate)}
-                            placeholder="Select Template"
-                            className='w-full px-3 py-2 border rounded-md focus:outline-none' 
-                          />
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                          <Search size={20} className="text-gray-400" />
-                        </div>
-                        {showDropdownTemplate && (
-                            <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {templates.map((template) => (
-                                <div
-                                  key={template._id}
-                                  className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleTemplateSelect(template)}
-                                >
-                                  {template.templateName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        
-                      </div> */}
                     </div>
                     {/* v1.0.2 ---------------------------------------------------> */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Additional Notes
-                      </label>
-                      <textarea
-                        value={formData.additionalNotes}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            additionalNotes: e.target.value,
-                          })
-                        }
-                        rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                        placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-                      />
-                    </div>
-                  </form>
-                </div>
-              </div>
-              {/* footer */}
-              <div className="flex justify-end mt-4 space-x-3 mb-5">
-                <button
-                  className="px-3 py-1 border-custom-blue rounded border"
-                  onClick={() => {
+                    <DescriptionField
+                      value={formData.additionalNotes}
+                      onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
+                      name="additionalNotes"
+                      error={errors?.additionalNotes}
+                      label="Additional Notes"
+                      placeholder="Type your notes here..."
+                      rows={5}
+                      maxLength={1000}
+                    />
+                    </form>
+                  <div className="flex justify-end items-center p-4 gap-2">
+                    <button 
+                    className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50"
+                    type="button" 
+                    onClick={() => {
                     // If it's a modal, call the onClose function
                     if (isModal && onClose) {
                       onClose();
@@ -2157,13 +1320,17 @@ console.log("error", error);
                 >
                   {isEdit ? "Update" : "Save"}
                 </LoadingButton>
-              </div>
+                </div>
+            </div>
+            </div>
             </>
           )}
         </div>
       </div>
     </div>
+
   );
-};
+}
+
 
 export default PositionForm;

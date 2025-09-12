@@ -8,9 +8,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { ChevronUp, ChevronDown, Plus, Pencil, Search, ChevronLeft, ChevronRight, TrashIcon, CheckSquare, Square, X } from "lucide-react";
 import { ReactComponent as IoIosArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
 import { ReactComponent as IoIosArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
+import { ReactComponent as MdMoreVert } from "../../../../icons/MdMoreVert.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
-import { ReactComponent as MdMoreVert } from "../../../../icons/MdMoreVert.svg";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
 import Editassesmentquestion from "./QuestionBank-Form.jsx";
 import Sidebar from "../QuestionBank-Tab/QuestionBank-Form.jsx";
@@ -18,8 +18,8 @@ import { toast, Toaster } from 'react-hot-toast';
 import Cookies from "js-cookie";
 import { useQuestionDeletion, useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
-
 
 // Safely render solutions which can be string | object | array of objects
 const renderSolutions = (solutions) => {
@@ -124,8 +124,7 @@ const MyQuestionsList = ({
   const [actionViewMoreSection, setActionViewMoreSection] = useState({});
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [showNewCandidateContent, setShowNewCandidateContent] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
+  
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
   const [dropdownValue, setDropdownValue] = useState("Interview Questions");
@@ -685,26 +684,13 @@ const MyQuestionsList = ({
 
 
   const handleLabelChange = (label) => {
-
-
     const allQuestions = Object.values(myQuestionsList || {}).flat();
     const matchingQuestion = allQuestions.find((q) => q.label === label);
     if (matchingQuestion) {
       Cookies.set("lastSelectedListId", matchingQuestion.listId);
     }
 
-
-    //<----v1.0.4---
-    // Immediately sync dropdown with selected label's type (if available)
-    const meta = Array.isArray(createdLists)
-      ? createdLists.find((l) => l?.label === label || l?.name === label)
-      : null;
-    // if (meta && typeof meta.type !== 'undefined') {
-    //   setDropdownValue(mapListTypeToDisplay(meta.type));
-    // }
-    //----v1.0.4--->
     setSelectedLabel(label);
-    setIsDropdownOpen(false);
   };
 
   //<----v1.0.4---
@@ -1225,99 +1211,45 @@ const MyQuestionsList = ({
         <div className={`flex items-center justify-between ${type === "interviewerSection" || type === "feedback" || type === "assessment" ? "" : ""}`}>
           <div className="flex items-center gap-2">
 
-            <div className="relative inline-block w-48">
-              <button
-                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-                onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
-              >
-                <span className="truncate">{dropdownValue || "Select Question Type"}</span>
-                <svg
-                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isInterviewTypeOpen ? "rotate-180" : "rotate-0"}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {isInterviewTypeOpen && (
-                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                  <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Interview Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => { setDropdownValue("Interview Questions"); setIsInterviewTypeOpen(false); }}
-                  >
-                    Interview Questions
-                  </div>
-                  <div
-                    className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${dropdownValue === "Assignment Questions" ? "bg-blue-50 text-custom-blue font-semibold" : ""}`}
-                    onClick={() => { setDropdownValue("Assignment Questions"); setIsInterviewTypeOpen(false); }}
-                  >
-                    Assignment Questions
-                  </div>
-
-                </div>
-              )}
+            <div className="w-48">
+              <DropdownSelect
+                isSearchable={false}
+                value={dropdownValue ? { value: dropdownValue, label: dropdownValue } : null}
+                onChange={(opt) => setDropdownValue(opt?.value || "")}
+                options={[
+                  { value: "Interview Questions", label: "Interview Questions" },
+                  { value: "Assignment Questions", label: "Assignment Questions" },
+                ]}
+                placeholder="Select Question Type"
+              />
             </div>
-            <div className="relative inline-block w-48">
-              <button
-                className="px-4 py-2 border border-gray-300 text-sm rounded-md w-full text-left flex justify-between items-center hover:border-gray-400 transition-colors bg-white"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <span className="truncate">{selectedLabel ? selectedLabel.charAt(0).toUpperCase() + selectedLabel.slice(1) : "Select Label"}</span>
-                <svg
-                  className={`w-4 h-4 ml-2 flex-shrink-0 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : "rotate-0"}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {isDropdownOpen && (
-                <div className="absolute mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                  {Object.keys(groupedQuestions).length > 0 ? (
-                    Object.keys(groupedQuestions).map((listName, idx) => (
-                      <div
-                        key={idx}
-                        className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${selectedLabel === listName
-                          ? "bg-blue-50 text-custom-blue font-semibold"
-                          : groupedQuestions[listName].length === 0
-                            ? "text-gray-400"
-                            : ""
-                          }`}
-                        onClick={() => handleLabelChange(listName)}
-                        title={groupedQuestions[listName].length === 0 ? "This label has no questions" : ""}
-                      >
-                        <div className="flex justify-between items-center">
-                          {/*<-------v1.0.0------ */}
-                          <span className="truncate">{listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : ""}</span>
-                          {/*-------v1.0.0------>*/}
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${groupedQuestions[listName].length === 0
-                              ? "text-gray-500 bg-gray-100"
-                              : "text-gray-500 bg-gray-100"
-                              }`}
-                          >
-                            {groupedQuestions[listName].length}
-                          </span>
-                        </div>
+            <div className="w-48">
+              <DropdownSelect
+                isSearchable
+                value={selectedLabel ? { value: selectedLabel, label: selectedLabel.charAt(0).toUpperCase() + selectedLabel.slice(1) } : null}
+                onChange={(opt) => handleLabelChange(opt?.value || "")}
+                options={Object.keys(groupedQuestions || {}).map((listName) => ({
+                  value: listName,
+                  label: listName ? listName.charAt(0).toUpperCase() + listName.slice(1) : "",
+                }))}
+                formatOptionLabel={(option, { context }) => {
+                  if (context === 'menu') {
+                    const count = Array.isArray(groupedQuestions?.[option?.value]) ? groupedQuestions[option.value].length : 0;
+                    return (
+                      <div className="flex items-center justify-between w-full">
+                        <span className="truncate">{option?.label || ""}</span>
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full text-gray-600 bg-gray-100">{count}</span>
                       </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-3 text-sm text-gray-500">
-                      No labels found. Create a new list to get started.
-                    </div>
-                  )}
-                </div>
-              )}
+                    );
+                  }
+                  return <span className="truncate">{option?.label || ""}</span>;
+                }}
+                placeholder="Select Label"
+              />
             </div>
             <button
               className="text-md hover:underline text-custom-blue font-semibold flex items-center gap-2"
               onClick={() => {
-                //<-----v1.0.4-----
-                // Prefer createdLists to resolve the list id (works even for empty lists)
                 const meta = Array.isArray(createdLists)
                   ? createdLists.find((l) => l?.label === selectedLabel || l?.name === selectedLabel)
                   : null;
@@ -1328,7 +1260,6 @@ const MyQuestionsList = ({
                   toast.error("Please select a label to edit");
                 }
               }}
-            //-------v1.0.4----->
             >
               Edit List
             </button>
@@ -1638,9 +1569,9 @@ const MyQuestionsList = ({
                                       <p className="text-sm break-words whitespace-pre-wrap pt-2">
                                         <span className="font-medium text-gray-700">Answer: </span>
                                         <span className="text-gray-600">
-                                          {question.isCustom && question.questionType === "MCQ" && question.options
+                                          {/* {question.isCustom && question.questionType === "MCQ" && question.options
                                             ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer)) + ") "}`
-                                            : ""}
+                                            : ""} */}
                                           {question.questionType === "Programming" ? renderSolutions(question.solutions) : question.correctAnswer}
                                         </span>
                                       </p>
