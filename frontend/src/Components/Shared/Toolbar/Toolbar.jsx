@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - changed responsive break point
+// v1.0.1 - Ashok - added 320 as max width for small screens
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Tooltip } from '@mantine/core';
@@ -29,7 +31,9 @@ const Toolbar = ({
   filterIconRef
 }) => {
   // v1.0.0 <--------------------------------------------------------
-  const isTablet = useMediaQuery({ maxWidth: 1024 });
+  // v1.0.1 <-------------------------------------------------------------------
+  const isTablet = useMediaQuery({ maxWidth: 320 });
+  // v1.0.1 ------------------------------------------------------------------->
   // v1.0.0 -------------------------------------------------------->
   return (
     <motion.div

@@ -2,6 +2,8 @@
 /* v1.0.1 - Ashok - Added setIsFullscreen using this for some popup's alignments are aligned
                     added createPortal it avoids z-index issues at any level
 */
+// v1.0.2 - Ashok - Added subtitle and Icon
+
 import { useState } from "react";
 import { Minimize, Expand, X, ExternalLink } from "lucide-react";
 import { FaEdit } from "react-icons/fa";
@@ -10,12 +12,14 @@ import { createPortal } from "react-dom";
 
 function SidebarPopup({
   title,
+  subTitle = "", // v1.0.2 <--------------------------->
   children,
   onClose,
   id, // needed for edit
   showEdit = false,
   showExternal = false,
   setIsFullscreen, // v1.0.1 <--------------------------->
+  icon = null, // v1.0.2 <--------------------------->
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
@@ -55,9 +59,21 @@ function SidebarPopup({
       >
         <div className="sticky top-0 bg-white px-4 py-6 z-10">
           <div className="flex justify-between items-center px-2">
-            <h2 className="sm:text-xl text-2xl font-semibold text-custom-blue">
-              {title}
-            </h2>
+            {/* v1.0.2 <----------------------------------------------------------- */}
+            <div className="flex items-center gap-3">
+              {icon && (
+                <span className="p-2 bg-indigo-100 rounded-xl text-custom-blue w-10 h-10 flex-shrink-0">
+                  {icon}
+                </span>
+              )}
+              <div>
+                <h2 className="sm:text-xl text-2xl font-semibold text-custom-blue">
+                  {title}
+                </h2>
+                <p className="text-sm text-gray-500">{subTitle}</p>
+              </div>
+            </div>
+            {/* v1.0.2 <----------------------------------------------------------- */}
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">

@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import { motion } from 'framer-motion';
 import { useCustomContext } from "../../../../Context/Contextfetch";
 import { useSingleContact } from "../../../../apiHooks/useUsers";
@@ -17,22 +19,24 @@ const WelcomeSection = () => {
   const lastName = formatName(singleContact?.lastName || userProfile?.lastName);
   
   return (
+    // v1.0.0 <---------------------------------------------------------------------------
     <div className="flex flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row md:items-center justify-between mb-8 space-y-4 md:space-y-0">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-3xl mt-7 font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#217989] via-[#2a8ca0] to-[#359fb8]">
+        <h2 className="sm:text-lg md:text-xl lg:text-3xl xl:text-3xl 2xl:3xl mt-7 font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#217989] via-[#2a8ca0] to-[#359fb8]">
           Welcome back, {isLoading ? (
             <span className="inline-block w-32 h-8 bg-gray-200 skeleton-animation rounded"></span>
           ) : (
             `${firstName} ${lastName}`
           )}! 👋
         </h2>
-        <p className="text-gray-600 mt-2">Here's what's happening with your interviews today.</p>
+        <p className="sm:text-sm text-gray-600 mt-2">Here's what's happening with your interviews today.</p>
       </motion.div>
     </div>
+    // v1.0.0 --------------------------------------------------------------------------->
   );
 };
 

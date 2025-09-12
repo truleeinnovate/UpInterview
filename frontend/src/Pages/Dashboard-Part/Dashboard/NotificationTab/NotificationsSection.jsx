@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - fixed z-index issue by wrapping the popup in the container div
 // v1.0.1 - Ashok - Disabled outer scrollbars of popups for better user experience
+// v1.0.2 - Ashok - Improved responsiveness
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
@@ -81,6 +83,7 @@ const NotificationsSection = () => {
 
   return (
     <>
+      {/* v1.0.2 <---------------------------------------------------------------------- */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -89,16 +92,17 @@ const NotificationsSection = () => {
       >
         <div className="flex flex-row items-start justify-between gap-4 mb-6">
           <div>
-            <h3 className="text-xl font-semibold text-gray-800">
+            <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl font-semibold text-gray-800">
               Notification Center
             </h3>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="sm:text-xs text-gray-500 text-sm mt-1">
               Manage and track all communication
             </p>
           </div>
           <div className="flex flex-row items-center gap-4">
             <div className="flex items-center space-x-2">
               <button
+                title="Mail"
                 onClick={() => setActiveTab("email")}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
                   activeTab === "email"
@@ -107,9 +111,10 @@ const NotificationsSection = () => {
                 }`}
               >
                 <Mail size={20} />
-                <span className="text-sm">Email</span>
+                <span className="sm:hidden inline text-sm">Email</span>
               </button>
               <button
+                title="WhatsApp"
                 onClick={() => setActiveTab("whatsapp")}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
                   activeTab === "whatsapp"
@@ -118,7 +123,7 @@ const NotificationsSection = () => {
                 }`}
               >
                 <MessageSquare size={20} />
-                <span className="text-sm">WhatsApp</span>
+                <span className="sm:hidden inline text-sm">WhatsApp</span>
               </button>
             </div>
           </div>
@@ -166,7 +171,7 @@ const NotificationsSection = () => {
                         >
                           {notification.priority?.charAt(0).toUpperCase() +
                             notification.priority?.slice(1) || "Normal"}{" "}
-                          Priority
+                          <span className="sm:hidden inline">Priority</span>
                         </span>
                       </div>
                       <p
@@ -284,6 +289,7 @@ const NotificationsSection = () => {
           </button>
         </div>
       </motion.div>
+      {/* v1.0.2 ----------------------------------------------------------------------> */}
 
       <AllNotificationsModal
         isOpen={showAllNotifications}
