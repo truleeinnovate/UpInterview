@@ -78,7 +78,7 @@ const createInvoice = async (req, res) => {
 
     let nextNumber = 1;
     if (lastInvoice?.invoiceCode) {
-      const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+      const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
       if (match) {
         nextNumber = parseInt(match[1], 10) + 1;
       }

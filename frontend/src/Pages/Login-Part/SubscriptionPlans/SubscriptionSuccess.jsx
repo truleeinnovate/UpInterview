@@ -16,7 +16,7 @@ const SubscriptionSuccess = () => {
 
         const timer = setTimeout(() => {
             navigate(nextRoute || '/home');
-        }, 5000);
+        }, 40000);
 
         return () => clearTimeout(timer);
     }, [paymentId, subscriptionId, navigate, nextRoute]);

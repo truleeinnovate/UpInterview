@@ -18,6 +18,7 @@ const WalletSchema = new mongoose.Schema(
     ownerId: String,
     balance: { type: Number, required: true, default: 0 },
     holdAmount: { type: Number, required: true, default: 0 },
+    walletCode: { type: String, unique:true},
     transactions: [
       {
         type: {
