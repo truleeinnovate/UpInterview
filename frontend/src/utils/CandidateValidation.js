@@ -1,4 +1,5 @@
 // utils/CandidateValidation.js
+
 const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
@@ -87,10 +88,5 @@ const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
     return { formIsValid, newErrors };
 };
 
-const countryCodes = [
-    { value: '+1', label: '🇺🇸 +1 (USA)' },
-    { value: '+44', label: '🇬🇧 +44 (UK)' },
-    { value: '+91', label: '🇮🇳 +91 (India)' },
-];
 
-export { validateCandidateForm, getErrorMessage, countryCodes };
+export { validateCandidateForm, getErrorMessage};

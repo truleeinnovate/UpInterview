@@ -793,16 +793,16 @@ const MyQuestionsList = ({
     }
     return Object.keys(myQuestionsList).reduce((acc, key) => {
       acc[key] = myQuestionsList[key].filter((question) => {
+        const diffLower = String(question?.difficultyLevel || "").toLowerCase();
         const matchesDifficulty =
           !selectedDifficultyLevelFilterItems.length ||
-          selectedDifficultyLevelFilterItems.includes(
-            question.difficultyLevel.toLowerCase()
-          );
+          selectedDifficultyLevelFilterItems.includes(diffLower);
         const questionType = question.isCustom ? "custom" : "system";
         const matchesQuestionType =
           !selectedQuestionTypeFilterItems.length ||
           selectedQuestionTypeFilterItems.includes(questionType);
         const qTypeKind = (question?.questionType || "").toLowerCase();
+
         const matchesQType =
           !selectedQTypeFilterItems.length ||
           selectedQTypeFilterItems.includes(qTypeKind);
@@ -1284,16 +1284,18 @@ const MyQuestionsList = ({
                   <input
                     checked={option.isChecked}
                     className="w-4 cursor-pointer"
-                    value={(
+                    value={String(
                       option.type ||
                       option.level ||
-                      option.value
+                      option.value ||
+                      ""
                     ).toLowerCase()}
                     id={`${filter.filterType}-${option.type || option.level || option.value
                       }`}
                     type="checkbox"
                     onChange={() => onChangeCheckbox(filter.id, index)}
                   />
+
                   <label
                     htmlFor={`${filter.filterType}-${option.type || option.level || option.value
                       }`}
@@ -1316,30 +1318,31 @@ const MyQuestionsList = ({
         ?.options ?? []
     )
       .filter((o) => o.isChecked)
-      .map((o) => (o.type || o.value)?.toLowerCase());
+      .map((o) => String(o.type || o.value || "").toLowerCase());
     const difficultyItems = (
       tempFiltrationData.find((f) => f.filterType === "Difficulty Level")
         ?.options ?? []
     )
       .filter((o) => o.isChecked)
-      .map((o) => o.level.toLowerCase());
+      .map((o) => String(o.level || "").toLowerCase());
     const technologyItems = (
       tempFiltrationData.find((f) => f.filterType === "Technology")?.options ??
       []
     )
       .filter((o) => o.isChecked)
-      .map((o) => (o.value || o.type || o.level)?.toLowerCase());
+      .map((o) => String(o.value || o.type || o.level || "").toLowerCase());
     const qTypeItems = (
       tempFiltrationData.find((f) => f.filterType === "Question Type")
         ?.options ?? []
     )
       .filter((o) => o.isChecked)
-      .map((o) => (o.value || o.type || o.level)?.toLowerCase());
+      .map((o) => String(o.value || o.type || o.level || "").toLowerCase());
     const categoryItems = (
       tempFiltrationData.find((f) => f.filterType === "Category")?.options ?? []
     )
       .filter((o) => o.isChecked)
-      .map((o) => (o.value || o.type || o.level)?.toLowerCase());
+      .map((o) => String(o.value || o.type || o.level || "").toLowerCase());
+
     setSelectedQuestionTypeFilterItems(questionTypeItems);
     setSelectedDifficultyLevelFilterItems(difficultyItems);
     setSelectedTechnologyFilterItems(technologyItems);
@@ -1428,16 +1431,16 @@ const MyQuestionsList = ({
 
   const filteredSelectedItems = useMemo(() => {
     if (!searchInput) return selectedLabelItems;
-    const s = searchInput.toLowerCase();
+    const s = String(searchInput || "").toLowerCase();
     return selectedLabelItems.filter((q) => {
-      const inText = q?.questionText?.toLowerCase()?.includes(s);
+      const inText = String(q?.questionText || "").toLowerCase().includes(s);
       const inTags =
         Array.isArray(q?.tags) &&
-        q.tags.some((t) => t?.toLowerCase()?.includes(s));
+        q.tags.some((t) => String(t || "").toLowerCase().includes(s));
       const inSkill = Array.isArray(q?.skill)
-        ? q.skill.some((sk) => sk?.toLowerCase()?.includes(s))
+        ? q.skill.some((sk) => String(sk || "").toLowerCase().includes(s))
         : typeof q?.skill === "string"
-          ? q.skill.toLowerCase().includes(s)
+          ? String(q?.skill || "").toLowerCase().includes(s)
           : false;
       return inText || inTags || inSkill;
     });

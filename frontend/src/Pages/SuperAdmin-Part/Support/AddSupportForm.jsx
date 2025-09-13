@@ -21,6 +21,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Minimize, Expand, ChevronDown, X } from "lucide-react";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import { useCandidates } from "../../../apiHooks/useCandidates";
+import PhoneField from "../../../Components/FormFields/PhoneField";
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -914,7 +915,19 @@ const AddSupportForm = ({ mode }) => {
                 </div>
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <PhoneField
+                    countryCodeValue={formData.CountryCode}
+                    onCountryCodeChange={handleChange}
+                    countryCodeError={errors.CountryCode}
+                    //countryCodeRef={fieldRefs.CountryCode}
+                    phoneValue={formData.Phone}
+                    onPhoneChange={handleChange}
+                    phoneError={errors.Phone}
+                    //phoneRef={fieldRefs.Phone}
+                    label="Phone"
+                    required
+                  />
+                  {/* <label className="block text-sm font-medium text-gray-700 mb-1">
                     Phone <span className="text-red-500">*</span>
                   </label>
                   <div className="flex  gap-2">
@@ -957,7 +970,7 @@ const AddSupportForm = ({ mode }) => {
                         </p>
                       )}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
                 <p className="text-lg font-semibold col-span-2">
                   Education Details
