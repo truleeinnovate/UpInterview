@@ -85,7 +85,7 @@ const  createInvoice = async (
 
   
 
-  // Generate invoice code
+  // Generate invoice code like INVC-00001
   const lastInvoice = await Invoicemodels.findOne({tenantId: tenantId })
     .sort({ _id: -1 })
     .select("invoiceCode")

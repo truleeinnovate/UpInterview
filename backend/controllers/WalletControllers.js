@@ -54,21 +54,27 @@ const createTopupOrder = async (req, res) => {
       return res.status(400).json({ error: "ownerId is required" });
     }
 
-    // Generate walletCode like "WLT-00001"
-    const lastTopup = await WalletTopup.findOne({})
-      .sort({ _id: -1 })
+    // Determine walletCode: reuse existing wallet's code if present, otherwise generate a new one
+    let walletCode;
+    const existingWallet = await WalletTopup.findOne({ ownerId })
       .select("walletCode")
       .lean();
-
-    let nextWalletNumber = 1;
-    if (lastTopup && lastTopup.walletCode) {
-      const match = lastTopup.walletCode.match(/WLT-(\d+)/);
-      if (match) {
-        nextWalletNumber = parseInt(match[1], 10) + 1;
+    if (existingWallet?.walletCode) {
+      walletCode = existingWallet.walletCode;
+    } else {
+      const lastWallet = await WalletTopup.findOne({})
+        .sort({ _id: -1 })
+        .select("walletCode")
+        .lean();
+      let nextWalletNumber = 1;
+      if (lastWallet?.walletCode) {
+        const match = lastWallet.walletCode.match(/WLT-(\d+)/);
+        if (match) {
+          nextWalletNumber = parseInt(match[1], 10) + 1;
+        }
       }
+      walletCode = `WLT-${String(nextWalletNumber).padStart(5, "0")}`;
     }
-
-    const walletCode = `WLT-${String(nextWalletNumber).padStart(5, "0")}`;
 
     // Convert amount to smallest currency unit (cents)
     const amountInSmallestUnit = Math.round(amount * 100);
@@ -190,20 +196,53 @@ const walletVerifyPayment = async (req, res) => {
     // The signature verification is our primary method of validating payments
     console.log("Proceeding based on valid signature verification");
 
-    // Find or create wallet
+    // Try to retrieve walletCode from the Razorpay order notes if available
+    let walletCodeFromNotes = null;
+    try {
+      const orderDetails = await razorpay.orders.fetch(razorpay_order_id);
+      walletCodeFromNotes = orderDetails?.notes?.walletCode || null;
+      if (walletCodeFromNotes) {
+        console.log("walletCode from Razorpay order notes:", walletCodeFromNotes);
+      }
+    } catch (orderFetchErr) {
+      console.log("Could not fetch Razorpay order details; proceeding without notes");
+    }
+
+    // Find or create wallet and ensure it has a walletCode
     let wallet;
     try {
       wallet = await WalletTopup.findOne({ ownerId });
+
+      // Determine effective wallet code
+      let effectiveWalletCode = (wallet && wallet.walletCode) || walletCodeFromNotes;
+
+      if (!effectiveWalletCode) {
+        const lastWallet = await WalletTopup.findOne({})
+          .sort({ _id: -1 })
+          .select("walletCode")
+          .lean();
+        let nextWalletNumber = 1;
+        if (lastWallet?.walletCode) {
+          const match = lastWallet.walletCode.match(/WLT-(\d+)/);
+          if (match) {
+            nextWalletNumber = parseInt(match[1], 10) + 1;
+          }
+        }
+        effectiveWalletCode = `WLT-${String(nextWalletNumber).padStart(5, "0")}`;
+      }
 
       if (!wallet) {
         console.log("Creating new wallet for owner:", ownerId);
         wallet = await WalletTopup.create({
           ownerId,
-          walletCode,
+          walletCode: effectiveWalletCode,
           tenantId: tenantId || "default",
           balance: 0,
           transactions: [],
         });
+      } else if (!wallet.walletCode) {
+        wallet.walletCode = effectiveWalletCode;
+        await wallet.save();
       }
     } catch (dbError) {
       console.error("Database error when finding/creating wallet:", dbError);
@@ -266,6 +305,20 @@ const walletVerifyPayment = async (req, res) => {
          ------------------------------------------------------------------ */
       
       try {
+        // Generate a unique invoice code like INVC-00001
+        const lastInvoice = await Invoice.findOne({})
+          .sort({ _id: -1 })
+          .select("invoiceCode")
+          .lean();
+        let nextInvNumber = 1;
+        if (lastInvoice?.invoiceCode) {
+          const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
+          if (match) {
+            nextInvNumber = parseInt(match[1], 10) + 1;
+          }
+        }
+        const invoiceCode = `INVC-${String(nextInvNumber).padStart(5, "0")}`;
+
         // 1. Invoice
         invoice = await Invoice.create({
           tenantId: tenantId || "default",
@@ -283,7 +336,12 @@ const walletVerifyPayment = async (req, res) => {
               tax: 0,
             },
           ],
-          invoiceCode: walletCode,
+          invoiceCode,
+          metadata: {
+            walletCode: wallet?.walletCode || null,
+            orderId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
+          },
         });
 
         // 2. Receipt – reference the created invoice

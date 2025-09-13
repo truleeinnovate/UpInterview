@@ -108,7 +108,10 @@ const Subscription = () => {
     tenantId,
     organization,
     userType,
+    refetchSubscription,
+    refetchPlans,
   } = useSubscription();
+ // console.log("subscriptionData", subscriptionData);
   const [isAnnual, setIsAnnual] = useState(false);
   const [hoveredPlan, setHoveredPlan] = useState(null);
   const user = { userType, tenantId, ownerId };
@@ -147,6 +150,9 @@ const Subscription = () => {
     try {
       setShowCancelModal(false);
       await cancelSubscription({ reason: "user_requested" });
+      // Force immediate data refresh so UI reflects cancelled status without manual reload
+      await refetchSubscription();
+      await refetchPlans();
     } catch (error) {
       console.error("Error cancelling subscription:", error);
       toast.error(
@@ -334,7 +340,7 @@ const Subscription = () => {
             <div className="flex justify-between items-start p-4">
               <div>
                 {/* v1.0.2 <------------------------------------------------------- */}
-                <h3 className="text-base sm:text-sm md:text-xl font-medium">{`Current Plan: ${subscriptionData.planName} (${subscriptionData.selectedBillingCycle})`}</h3>
+                <h3 className="text-base sm:text-sm md:text-xl font-medium">{`Current Plan: ${subscriptionData?.planName ? subscriptionData?.planName : "Plan Name Not Available"} (${subscriptionData?.selectedBillingCycle ? subscriptionData?.selectedBillingCycle : "Billing Cycle Not Available"})`}</h3>
                 <p className="text-gray-600 mt-1 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base">
                   {/* v1.0.2 <------------------------------------------------------- */}
                   Next billing date:{" "}
@@ -428,7 +434,7 @@ const Subscription = () => {
                         isHighlighted(plan) ? "text-white" : "text-[#217989]"
                       }`}
                     >
-                      {plan.name}
+                      {plan?.name ? plan?.name : "Plan Name Not Available"}
                     </h5>
                     {isAnnual
                       ? plan.annualBadge && (
