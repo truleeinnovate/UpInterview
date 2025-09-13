@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Added another number 100 for display questions per page
 // v1.0.1 - Ashok - Added type based uploading questions
 // v1.0.2 - Ashok - Added separate states for questions
+// v1.0.3 - Ashok - Improved the performance of loading questions Changed renderPopupContent to Component
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Header from "../../../Components/Shared/Header/Header";
@@ -8,18 +9,21 @@ import InterviewQuestions from "./InterviewQuestions";
 import AssignmentQuestions from "./AssignmentQuestions";
 import axios from "axios";
 import { config } from "../../../config";
-import {
-  FaChevronLeft,
-  FaChevronRight,
-  FaChevronDown,
-  FaTrash,
-} from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaChevronDown } from "react-icons/fa";
 import QuestionBankManagerForm from "./QuestionBankManagerForm";
 import { notify } from "../../../services/toastService";
 import SidebarPopup from "../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock";
-import { CheckSquare, Square, TrashIcon, X } from "lucide-react";
+import {
+  TrashIcon,
+  X,
+  ArrowUpAZ,
+  ArrowDownZA,
+} from "lucide-react";
 import DeleteConfirmModal from "../../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal";
+// v1.0.3 <--------------------------------------------------------------------------
+import QuestionBankManagerDetails from "./QuestionBankManagerDetails";
+// v1.0.3 -------------------------------------------------------------------------->
 
 const CustomDropdown = ({ value, onChange, options }) => {
   const [open, setOpen] = useState(false);
@@ -96,6 +100,12 @@ const QuestionBankManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(CUSTOM_ROWS_PER_PAGE);
+  // v1.0.2 <--------------------------------------------------------
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortOrder, setSortOrder] = useState("asc");
+  // v1.0.2 -------------------------------------------------------->
+
+  // const [totalPages, setTotalPages] = useState(1);
 
   // Delete question functionality added by Ranjith
   const handleDeleteQuestions = async () => {
@@ -148,19 +158,68 @@ const QuestionBankManager = () => {
   };
   // Delete question functionality added by Ranjith
 
+  // v1.0.3 <-----------------------------------------------------------
+  // useEffect(() => {
+  //   const fetchQuestions = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const res = await axios.get(
+  //         `${config.REACT_APP_API_URL}/questions-manager/${activeTab}`,
+  //         {
+  //           params: {
+  //             page,
+  //             perPage,
+  //             searchTerm,
+  //           },
+  //         }
+  //       );
+  //       // setQuestions(res.data || []);
+  //       if (activeTab === "interview") {
+  //         setInterviewQuestions(res.data || []);
+  //       } else {
+  //         setAssignmentQuestions(res.data || []);
+  //       }
+  //     } catch (err) {
+  //       console.error("Error fetching questions:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchQuestions();
+  //   setPage(1);
+
+  //   // Reset selection when tab changes added by Ranjith
+  //   setSelectedQuestions([]);
+  //   setIsSelectAll(false);
+  //   setShowCheckboxes(false);
+  // }, [activeTab]);
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${config.REACT_APP_API_URL}/questions-manager/${activeTab}`
+          `${config.REACT_APP_API_URL}/questions-manager/${activeTab}`,
+          {
+            params: {
+              page,
+              perPage,
+              searchTerm,
+              sortOrder,
+            },
+          }
         );
-        // setQuestions(res.data || []);
+
+        const { questions, total } = res.data;
+
         if (activeTab === "interview") {
-          setInterviewQuestions(res.data || []);
+          setInterviewQuestions(questions || []);
         } else {
-          setAssignmentQuestions(res.data || []);
+          setAssignmentQuestions(questions || []);
         }
+
+        setTotalPages(Math.ceil(total / perPage));
       } catch (err) {
         console.error("Error fetching questions:", err);
       } finally {
@@ -169,13 +228,19 @@ const QuestionBankManager = () => {
     };
 
     fetchQuestions();
-    setPage(1);
 
-    // Reset selection when tab changes added by Ranjith
+    // Reset selection when tab changes
     setSelectedQuestions([]);
     setIsSelectAll(false);
     setShowCheckboxes(false);
-  }, [activeTab]);
+
+    // Reset to first page
+    // setPage(1);
+  }, [activeTab, page, perPage, searchTerm, sortOrder]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, perPage, searchTerm, sortOrder]);
 
   // v1.0.1 <-----------------------------------------------------------
   const handleUploadCSV = async (file, questionType) => {
@@ -234,9 +299,29 @@ const QuestionBankManager = () => {
   //   );
   // }, [questions, searchTerm]);
 
+  // const filteredQuestions = useMemo(() => {
+  //   const currentQuestions =
+  //     activeTab === "interview" ? interviewQuestions : assignmentQuestions;
+
+  //   if (!searchTerm) return currentQuestions;
+
+  //   const searchableFields = ["topic", "questionOrderId", "questionText"];
+
+  //   return currentQuestions.filter((q) =>
+  //     searchableFields.some((field) => {
+  //       const value = Array.isArray(q[field]) ? q[field].join(" ") : q[field];
+  //       return (
+  //         value &&
+  //         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //       );
+  //     })
+  //   );
+  // }, [activeTab, interviewQuestions, assignmentQuestions, searchTerm]);
   const filteredQuestions = useMemo(() => {
     const currentQuestions =
-      activeTab === "interview" ? interviewQuestions : assignmentQuestions;
+      activeTab === "interview"
+        ? interviewQuestions || []
+        : assignmentQuestions || [];
 
     if (!searchTerm) return currentQuestions;
 
@@ -252,13 +337,15 @@ const QuestionBankManager = () => {
       })
     );
   }, [activeTab, interviewQuestions, assignmentQuestions, searchTerm]);
+
   // v1.0.2 ------------------------------------------------------------------->
 
-  const totalPages = Math.ceil(filteredQuestions.length / perPage);
-  const paginatedQuestions = useMemo(() => {
-    const start = (page - 1) * perPage;
-    return filteredQuestions.slice(start, start + perPage);
-  }, [filteredQuestions, page, perPage]);
+  // const totalPages = Math.ceil(filteredQuestions.length / perPage);
+
+  // const paginatedQuestions = useMemo(() => {
+  //   const start = (page - 1) * perPage;
+  //   return filteredQuestions.slice(start, start + perPage);
+  // }, [filteredQuestions, page, perPage]);
 
   const handleViewQuestion = (question) => {
     setSelectedQuestion(question);
@@ -266,287 +353,6 @@ const QuestionBankManager = () => {
 
   const capitalizeFirstLetter = (str) =>
     str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
-  // v1.0.1 <--------------------------------------------------------------------
-  // const renderPopupContent = (content) => {
-  //   if (!content) return <div>No data available</div>;
-
-  //   return (
-  //     <div className="w-full bg-white rounded-2xl p-4 overflow-y-auto space-y-4">
-  //       {/* Header */}
-  //       <div className="flex justify-between items-start">
-  //         <h2 className="text-xl font-medium text-gray-900">
-  //           {content.questionOrderId ?? "N/A"}: {content.questionText ?? "N/A"}
-  //         </h2>
-  //         <span className="px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full">
-  //           {content.questionType ?? "N/A"}
-  //         </span>
-  //       </div>
-
-  //       {/* Badges */}
-  //       <div className="flex flex-wrap gap-2">
-  //         <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-  //           <span className="strong">Difficulty:</span>{" "}
-  //           {content.difficultyLevel ?? "N/A"}
-  //         </span>
-  //         <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
-  //           Category: {content.category ?? "N/A"}
-  //         </span>
-  //         <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-  //           Area: {content.area ?? "N/A"}
-  //         </span>
-  //         <span className="px-2 py-1 text-xs bg-pink-100 text-pink-800 rounded-full">
-  //           SubTopic: {content.subTopic ?? "N/A"}
-  //         </span>
-  //       </div>
-
-  //       {/* Explanation */}
-  //       <div className="bg-gray-50 p-4 rounded-lg">
-  //         <h3 className="font-semibold text-gray-800 mb-2">
-  //           Answer / Explanation
-  //         </h3>
-  //         <p className="text-gray-700">{content.explanation ?? "N/A"}</p>
-  //       </div>
-
-  //       {/* Tags */}
-  //       <div>
-  //         <h3 className="font-semibold text-gray-800 mb-1">Tags</h3>
-  //         <div className="flex flex-wrap gap-2">
-  //           {content.tags?.length > 0 ? (
-  //             content.tags.map((tag, idx) => (
-  //               <span
-  //                 key={idx}
-  //                 className="px-2 py-1 text-xs bg-indigo-100 text-indigo-800 rounded-full"
-  //               >
-  //                 #{tag}
-  //               </span>
-  //             ))
-  //           ) : (
-  //             <span className="text-gray-400">N/A</span>
-  //           )}
-  //         </div>
-  //       </div>
-
-  //       {/* Technology */}
-  //       <div>
-  //         <h3 className="font-semibold text-gray-800 mb-1">Technology</h3>
-  //         <p className="text-gray-700">
-  //           {content.technology?.length > 0
-  //             ? content.technology.join(", ")
-  //             : "N/A"}
-  //         </p>
-  //       </div>
-
-  //       {/* Related Questions */}
-  //       <div>
-  //         <h3 className="font-semibold text-gray-800 mb-1">
-  //           Related Questions
-  //         </h3>
-  //         <p className="text-gray-700">
-  //           {content.relatedQuestions?.length > 0
-  //             ? content.relatedQuestions.join(", ")
-  //             : "N/A"}
-  //         </p>
-  //       </div>
-
-  //       {/* Solutions */}
-  //       <div>
-  //         <h3 className="font-semibold text-gray-800 mb-1">Solutions</h3>
-  //         {content.solutions?.length > 0 ? (
-  //           content.solutions.map((s, idx) => (
-  //             <div key={idx} className="mb-3 p-4 bg-gray-100 rounded-lg">
-  //               <div>
-  //                 <strong>Language:</strong> {s?.language ?? "N/A"}
-  //               </div>
-  //               <div className="mt-1">
-  //                 <strong>Code:</strong>
-  //                 <pre className="bg-gray-200 p-2 rounded mt-1 text-sm overflow-x-auto">
-  //                   {s?.code ?? "N/A"}
-  //                 </pre>
-  //               </div>
-  //               <div className="mt-1">
-  //                 <strong>Approach:</strong> {s?.approach ?? "N/A"}
-  //               </div>
-  //             </div>
-  //           ))
-  //         ) : (
-  //           <span className="text-gray-400">N/A</span>
-  //         )}
-  //       </div>
-
-  //       {/* Hints */}
-  //       <div>
-  //         <h3 className="font-semibold text-gray-800 mb-1">Hints</h3>
-  //         <p className="text-gray-700">
-  //           {content.hints?.length > 0 ? content.hints.join(", ") : "N/A"}
-  //         </p>
-  //       </div>
-
-  //       {/* Attachments */}
-  //       <div>
-  //         <h3 className="font-semibold text-gray-800 mb-1">Attachments</h3>
-  //         <p className="text-gray-700">
-  //           {content.attachments?.length > 0
-  //             ? content.attachments.join(", ")
-  //             : "N/A"}
-  //         </p>
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
-  const renderPopupContent = (content, type) => {
-    if (!content) return <div>No data available</div>;
-
-    return (
-      <div className="w-full bg-white rounded-2xl p-4 overflow-y-auto space-y-4">
-        {/* Header */}
-        <div className="flex justify-between items-start">
-          <h2 className="text-xl font-medium text-gray-900">
-            {content.questionOrderId ?? "N/A"}: {content.questionText ?? "N/A"}
-          </h2>
-          <span className="px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full">
-            {content.questionType ?? "N/A"}
-          </span>
-        </div>
-
-        {/* Common badges */}
-        <div className="flex flex-wrap gap-2">
-          <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-            <span className="strong">Difficulty:</span>{" "}
-            {content.difficultyLevel ?? "N/A"}
-          </span>
-          <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
-            Category: {content.category ?? "N/A"}
-          </span>
-          <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-            Area: {content.area ?? "N/A"}
-          </span>
-          <span className="px-2 py-1 text-xs bg-pink-100 text-pink-800 rounded-full">
-            SubTopic: {content.subTopic ?? "N/A"}
-          </span>
-        </div>
-
-        {/* Assessment Type */}
-        {type === "assessment" && (
-          <>
-            {/* Options */}
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-1">Options</h3>
-              <ul className="list-disc ml-6 text-gray-700">
-                {content.options?.length > 0 ? (
-                  content.options.map((opt, idx) => <li key={idx}>{opt}</li>)
-                ) : (
-                  <span className="text-gray-400">N/A</span>
-                )}
-              </ul>
-            </div>
-            {/* No explanation for assessment */}
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-1">
-                Correct Answer
-              </h3>
-              <p className="text-gray-700">{content.correctAnswer ?? "N/A"}</p>
-            </div>
-          </>
-        )}
-
-        {/* Interview Type */}
-        {type === "interview" && (
-          <>
-            {/* Explanation */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-800 mb-2">
-                Answer / Explanation
-              </h3>
-              <p className="text-gray-700">{content.explanation ?? "N/A"}</p>
-            </div>
-
-            {/* Solutions */}
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-1">Solutions</h3>
-              {content.solutions?.length > 0 ? (
-                content.solutions.map((s, idx) => (
-                  <div key={idx} className="mb-3 p-4 bg-gray-100 rounded-lg">
-                    <div>
-                      <strong>Language:</strong> {s?.language ?? "N/A"}
-                    </div>
-                    <div className="mt-1">
-                      <strong>Code:</strong>
-                      <pre className="bg-gray-200 p-2 rounded mt-1 text-sm overflow-x-auto">
-                        {s?.code ?? "N/A"}
-                      </pre>
-                    </div>
-                    <div className="mt-1">
-                      <strong>Approach:</strong> {s?.approach ?? "N/A"}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <span className="text-gray-400">N/A</span>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Common Sections (show for both) */}
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">Tags</h3>
-          <div className="flex flex-wrap gap-2">
-            {content.tags?.length > 0 ? (
-              content.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-1 text-xs bg-indigo-100 text-indigo-800 rounded-full"
-                >
-                  #{tag}
-                </span>
-              ))
-            ) : (
-              <span className="text-gray-400">N/A</span>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">Technology</h3>
-          <p className="text-gray-700">
-            {content.technology?.length > 0
-              ? content.technology.join(", ")
-              : "N/A"}
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">
-            Related Questions
-          </h3>
-          <p className="text-gray-700">
-            {content.relatedQuestions?.length > 0
-              ? content.relatedQuestions.join(", ")
-              : "N/A"}
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">Hints</h3>
-          <p className="text-gray-700">
-            {content.hints?.length > 0 ? content.hints.join(", ") : "N/A"}
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">Attachments</h3>
-          <p className="text-gray-700">
-            {content.attachments?.length > 0
-              ? content.attachments.join(", ")
-              : "N/A"}
-          </p>
-        </div>
-      </div>
-    );
-  };
-  // v1.0.1 -------------------------------------------------------------------->
 
   return (
     <div className="px-6">
@@ -584,13 +390,24 @@ const QuestionBankManager = () => {
           </button>
 
           {/* Delete selection buttons by Ranjith */}
+          {/* v1.0.2 <-------------------------------------------------------- */}
           <button
-            className="text-md hover:underline text-red-600 font-semibold flex items-center gap-2"
             onClick={() => setShowCheckboxes(true)}
+            disabled={filteredQuestions.length === 0}
+            className="text-md font-semibold flex items-center gap-2 
+             text-red-600 enabled:hover:underline 
+             disabled:opacity-50 disabled:cursor-not-allowed"
+            title={
+              filteredQuestions.length === 0
+                ? "No questions to delete"
+                : "Delete questions"
+            }
           >
             <TrashIcon className="w-4 h-4" />
             Delete
           </button>
+
+          {/* v1.0.2 --------------------------------------------------------> */}
 
           {/* // Ranjith added these feilds  */}
         </div>
@@ -622,6 +439,28 @@ const QuestionBankManager = () => {
             ]}
           />
           {/* v1.0.0 -----------------------------------------------------------> */}
+          {/* v1.0.2 <-------------------------------------------------------------------- */}
+          <button
+            onClick={() =>
+              setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+            }
+            title={sortOrder === "asc" ? "Sort Descending" : "Sort Ascending"}
+            className="w-28 p-2 border rounded-lg text-sm bg-white flex items-center justify-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            {sortOrder === "asc" ? (
+              <>
+                <ArrowUpAZ className="w-4 h-4 text-custom-blue" />
+                <span>Asc</span>
+              </>
+            ) : (
+              <>
+                <ArrowDownZA className="w-4 h-4 text-custom-blue" />
+                <span>Des</span>
+              </>
+            )}
+          </button>
+
+          {/* v1.0.2 --------------------------------------------------------------------> */}
 
           <div className="flex items-center gap-2">
             <button
@@ -675,7 +514,10 @@ const QuestionBankManager = () => {
           <>
             {activeTab === "interview" && (
               <InterviewQuestions
-                questions={paginatedQuestions}
+                // v1.0.2 <-----------------------------------
+                // questions={paginatedQuestions}
+                questions={filteredQuestions}
+                // v1.0.2 ----------------------------------->
                 onView={handleViewQuestion}
                 showCheckboxes={showCheckboxes}
                 selectedQuestions={selectedQuestions}
@@ -684,7 +526,10 @@ const QuestionBankManager = () => {
             )}
             {activeTab === "assessment" && (
               <AssignmentQuestions
-                questions={paginatedQuestions}
+                // v1.0.2 <-----------------------------------
+                // questions={paginatedQuestions}
+                questions={filteredQuestions}
+                // v1.0.2 ----------------------------------->
                 onView={handleViewQuestion}
                 showCheckboxes={showCheckboxes}
                 selectedQuestions={selectedQuestions}
@@ -777,7 +622,14 @@ const QuestionBankManager = () => {
           onClose={() => setSelectedQuestion(null)}
         >
           {/* v1.0.1 <----------------------------------------------------- */}
-          {renderPopupContent(selectedQuestion, activeTab)}
+          {/* v1.0.3 <----------------------------------------------------- */}
+
+          <QuestionBankManagerDetails
+            content={selectedQuestion}
+            type={activeTab}
+          />
+
+          {/* v1.0.3 -----------------------------------------------------> */}
           {/* v1.0.1 -----------------------------------------------------> */}
         </SidebarPopup>
       )}

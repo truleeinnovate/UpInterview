@@ -2,6 +2,8 @@
 // v1.0.1 - Ashok - commented man.png, woman.png, transgender.png
 // v1.0.2 - Venkatesh - added new filters priority, status, due date, created date and assigned to(only shown in organization)
 // v1.0.3 - Ashok - Improved responsiveness and modified clickable id
+// v1.0.4 - Ashok - Fixed style issue
+
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil, ChevronUp, ChevronDown, Trash } from "lucide-react";
@@ -567,7 +569,9 @@ const Task = () => {
                 />
               </div>
             ) : (
-              <div className="w-full">
+              // v1.0.4 <--------------------------------
+              <div className="w-full sm:mt-8">
+              {/* v1.0.4 <-------------------------------- */}
                 <TaskKanban
                   data={currentFilteredRows.map((task) => ({
                     ...task,

@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - changed minExperience, maxExperience to minexperience, maxexperience
 // v1.0.1 - Ashok - changed some code in createQuestions Controller
+// v1.0.2 - Ashok - added backend pagination for improve loading speed by getting chunk of data
 
 const fs = require("fs"); // for reading uploaded files
 const Papa = require("papaparse"); // for parsing CSV
@@ -335,18 +336,68 @@ const createQuestions = async (req, res) => {
 
 // v1.0.1 <-------------------------------------------------------------------------->
 
+// v1.0.2 <--------------------------------------------------------------------------------
+// const getQuestions1 = async (req, res) => {
+//   try {
+//     const { type } = req.params;
+//     const Model = getModel(type);
+
+//     const data = await Model.find();
+//     res.status(200).json(data);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 const getQuestions = async (req, res) => {
   try {
     const { type } = req.params;
+    const {
+      page = 1,
+      perPage = 10,
+      searchTerm = "",
+      sortOrder = "asc",
+    } = req.query;
     const Model = getModel(type);
 
-    const data = await Model.find();
-    res.status(200).json(data);
+    const query = {};
+
+    // Optional search across fields
+    if (searchTerm) {
+      const regex = new RegExp(searchTerm, "i"); // case-insensitive
+      query.$or = [
+        { topic: regex },
+        { questionOrderId: regex },
+        { questionText: regex },
+      ];
+    }
+
+    const total = await Model.countDocuments(query);
+
+    // 👇 choose sort direction dynamically
+    const sortDirection = sortOrder === "asc" ? 1 : -1;
+
+    const questions = await Model.find(query)
+      .skip((page - 1) * perPage)
+      .limit(parseInt(perPage))
+      .sort({ questionOrderId: sortDirection });
+    // you can also change this to "createdAt" or "_id" depending on requirement
+
+    res.status(200).json({
+      success: true,
+      total,
+      page: parseInt(page),
+      perPage: parseInt(perPage),
+      sortOrder,
+      questions,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// v1.0.2 -------------------------------------------------------------------------------->
 
 // Get by ID
 const getQuestionById = async (req, res) => {
@@ -364,17 +415,21 @@ const getQuestionById = async (req, res) => {
 };
 
 // Delete multiple questions
-const getQuestionDeleteById =  async (req, res) => {
+const getQuestionDeleteById = async (req, res) => {
   try {
     const { type } = req.params;
     console.log("type", type);
     console.log("req.body", req.body);
     const { questionIds } = req.body;
 
-    if (!questionIds || !Array.isArray(questionIds) || questionIds.length === 0) {
+    if (
+      !questionIds ||
+      !Array.isArray(questionIds) ||
+      questionIds.length === 0
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Question IDs array is required"
+        message: "Question IDs array is required",
       });
     }
 
@@ -386,43 +441,42 @@ const getQuestionDeleteById =  async (req, res) => {
     } else {
       return res.status(400).json({
         success: false,
-        message: "Invalid question type. Use 'interview' or 'assessment'"
+        message: "Invalid question type. Use 'interview' or 'assessment'",
       });
     }
 
     // Verify all questions exist before deletion
     const existingQuestions = await Model.find({
-      _id: { $in: questionIds }
+      _id: { $in: questionIds },
     });
 
     if (existingQuestions.length !== questionIds.length) {
-      const foundIds = existingQuestions.map(q => q._id.toString());
-      const missingIds = questionIds.filter(id => !foundIds.includes(id));
-      
+      const foundIds = existingQuestions.map((q) => q._id.toString());
+      const missingIds = questionIds.filter((id) => !foundIds.includes(id));
+
       return res.status(404).json({
         success: false,
         message: "Some questions not found",
-        missingIds
+        missingIds,
       });
     }
 
     // Delete the questions
     const result = await Model.deleteMany({
-      _id: { $in: questionIds }
+      _id: { $in: questionIds },
     });
 
     res.json({
       success: true,
       message: `Successfully deleted ${result.deletedCount} questions`,
-      deletedCount: result.deletedCount
+      deletedCount: result.deletedCount,
     });
-
   } catch (error) {
     console.error("Error deleting questions:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -431,5 +485,5 @@ module.exports = {
   createQuestions,
   getQuestions,
   getQuestionById,
-  getQuestionDeleteById
+  getQuestionDeleteById,
 };
