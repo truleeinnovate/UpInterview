@@ -28,7 +28,7 @@ const getUsageByTenant = async (req, res) => {
 
     // Fallback to latest by toDate
     if (!usage) {
-      usage = await Usage.findOne(filter).sort({ toDate: -1 }).lean();
+      usage = await Usage.findOne(filter).sort({ _id: -1 }).lean();
     }
 
     if (!usage) {
@@ -79,6 +79,73 @@ const getUsageByTenant = async (req, res) => {
   }
 };
 
-module.exports = { getUsageByTenant };
+//<------v1.1.0-----Venkatesh----write controller for getUsageHistory
+// GET /usage/history/:tenantId?ownerId=...&from=YYYY-MM-DD&to=YYYY-MM-DD&page=1&limit=10
+// Returns paginated history entries from embedded usageHistory arrays
+const getUsageHistory = async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const { ownerId, from, to, page = 1, limit = 10 } = req.query;
 
-//-------v1.0.0------->
+    if (!tenantId) {
+      return res.status(400).json({ error: 'tenantId is required' });
+    }
+
+    const filter = { tenantId };
+    if (ownerId) filter.ownerId = ownerId;
+
+    const usageDocs = await Usage.find(filter).lean();
+
+    if (!usageDocs || usageDocs.length === 0) {
+      return res.status(404).json({ message: 'No usage documents found' });
+    }
+
+    let entries = [];
+    for (const doc of usageDocs) {
+      const history = Array.isArray(doc.usageHistory) ? doc.usageHistory : [];
+      const mapped = history.map((h) => ({
+        tenantId: doc.tenantId,
+        ownerId: doc.ownerId,
+        fromDate: h.fromDate,
+        toDate: h.toDate,
+        usageAttributes: h.usageAttributes,
+        archivedAt: h.archivedAt || null,
+      }));
+      entries.push(...mapped);
+    }
+
+    // Optional date range filtering (overlap semantics)
+    const fromDate = from ? new Date(from) : null;
+    const toDate = to ? new Date(to) : null;
+
+    if (fromDate) {
+      entries = entries.filter((e) => new Date(e.toDate) >= fromDate);
+    }
+    if (toDate) {
+      entries = entries.filter((e) => new Date(e.fromDate) <= toDate);
+    }
+
+    // Sort by toDate desc
+    entries.sort((a, b) => new Date(b.toDate) - new Date(a.toDate));
+
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const pageSize = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+    const total = entries.length;
+    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+    const start = (pageNum - 1) * pageSize;
+    const data = entries.slice(start, start + pageSize);
+
+    return res.json({
+      tenantId,
+      ownerId: ownerId || null,
+      pagination: { page: pageNum, limit: pageSize, total, totalPages },
+      data,
+    });
+  } catch (error) {
+    console.error('getUsageHistory error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getUsageByTenant, getUsageHistory };
+//-------v1.1.0------->

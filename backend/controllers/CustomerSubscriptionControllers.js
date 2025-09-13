@@ -280,7 +280,8 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
     const customerSubscriptions = await CustomerSubscription.find({ ownerId: ownerId }).lean();
 
     if (!customerSubscriptions || customerSubscriptions.length === 0) {
-      return res.status(404).json({ message: 'No matching subscription plans found.' });
+      // Return a 200 with empty array to simplify frontend handling
+      return res.status(200).json({ customerSubscription: [] });
     }
 
     // Extract subscriptionPlanIds from customerSubscriptions
@@ -291,7 +292,8 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
     const subscriptionPlans = await SubscriptionPlan.find({ _id: { $in: subscriptionPlanIds } }).lean();
 
     if (!subscriptionPlans || subscriptionPlans.length === 0) {
-      return res.status(404).json({ message: 'Subscription plan details not found.' });
+      // Return a 200 with empty array to simplify frontend handling
+      return res.status(200).json({ customerSubscription: [] });
     }
 
 

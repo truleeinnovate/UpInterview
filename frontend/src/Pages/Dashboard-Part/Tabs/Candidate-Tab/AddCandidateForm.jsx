@@ -15,8 +15,7 @@ import { format } from "date-fns";
 import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
 import {
   validateCandidateForm,
-  getErrorMessage,
-  countryCodes,
+  getErrorMessage
 } from "../../../../utils/CandidateValidation";
 import Cookies from "js-cookie";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -33,6 +32,7 @@ import DateOfBirthField from "../../../../Components/FormFields/DateOfBirthField
 import GenderDropdown from "../../../../Components/FormFields/GenderDropdown";
 import EmailField from "../../../../Components/FormFields/EmailField";
 import PhoneField from "../../../../Components/FormFields/PhoneField";
+
 // v1.0.2 <---------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.2 --------------------------------------------------------------------->
@@ -94,6 +94,7 @@ const AddCandidateForm = ({
   const navigate = useNavigate();
   const location = useLocation();
   console.log("location", location);
+
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -703,7 +704,6 @@ const AddCandidateForm = ({
 
   // Mapped options for react-select
   const genderOptionsRS = genderOptions.map((g) => ({ value: g, label: g }));
-  const countryCodeOptionsRS = countryCodes; // already in { value, label }
   const qualificationOptionsRS =
     qualifications?.map((q) => ({
       value: q?.QualificationName,
@@ -836,7 +836,6 @@ const AddCandidateForm = ({
                     required
                   />
                   <PhoneField
-                    countryCodeOptions={countryCodeOptionsRS}
                     countryCodeValue={formData.CountryCode}
                     onCountryCodeChange={handleChange}
                     countryCodeError={errors.CountryCode}

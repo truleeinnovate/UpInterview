@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Typography, CircularProgress, Paper, } from '@mui/material';
 import { motion } from 'framer-motion';
@@ -8,17 +8,26 @@ const SubscriptionSuccess = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { paymentId, subscriptionId, isUpgrading, planName, membershipType, nextRoute } = location.state || {};
+    const [secondsRemaining, setSecondsRemaining] = useState(60);
 
     useEffect(() => {
         if (!paymentId || !subscriptionId) {
-            navigate('/home');
+            window.location.replace('/home');
+            return;
         }
 
-        const timer = setTimeout(() => {
-            navigate(nextRoute || '/home');
-        }, 5000);
+        const interval = setInterval(() => {
+            setSecondsRemaining((prev) => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    window.location.replace(nextRoute || '/home');
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
 
-        return () => clearTimeout(timer);
+        return () => clearInterval(interval);
     }, [paymentId, subscriptionId, navigate, nextRoute]);
 
 
@@ -214,7 +223,7 @@ const SubscriptionSuccess = () => {
                             transition={{ duration: 0.6, delay: 0.6 }}
                         >
                             <Typography variant="body2" color="text.secondary">
-                                Redirecting you in <strong>5 seconds...</strong>
+                                Redirecting you in <strong>{secondsRemaining} seconds...</strong>
                             </Typography>
                         </motion.div>
                     </motion.div>

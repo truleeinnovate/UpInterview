@@ -11,6 +11,7 @@ const getUserContext = () => {
   const authToken = Cookies.get('authToken');
   const tokenPayload = decodeJwt(authToken);
   const ownerId = tokenPayload?.userId;
+  console.log("ownerId",ownerId);
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization; // could be boolean true or string 'false'
   const userType = organization === true ? 'organization' : 'individual';
@@ -73,7 +74,7 @@ export const useSubscription = () => {
     queryKey: ['subscription', ownerId],
     queryFn: async () => {
       if (!ownerId) return {};
-      const res = await axios.get(`${config.REACT_APP_API_URL}/subscription-plans/${ownerId}`,(authToken ? authHeader(authToken) : undefined));
+      const res = await axios.get(`${config.REACT_APP_API_URL}/subscription-plans/user/${ownerId}`,(authToken ? authHeader(authToken) : undefined));
       const sub = res?.data?.customerSubscription?.[0] || {};
       if (sub && !sub.paymentMethod) {
         sub.paymentMethod = 'card';
@@ -172,6 +173,8 @@ export const useSubscription = () => {
       toast.success('Your subscription has been cancelled successfully!');
       queryClient.invalidateQueries(['subscription', ownerId]);
       queryClient.invalidateQueries(['subscriptionPlans', userType]);
+      refetchSubscription();
+      refetchPlans();
     },
     onError: (error) => {
       toast.dismiss('subscription-cancel');
@@ -237,6 +240,8 @@ export const useSubscription = () => {
       // Keep subscription data fresh after successful verification
       queryClient.invalidateQueries(['subscription', ownerId]);
       queryClient.invalidateQueries(['subscriptionPlans', userType]);
+      refetchSubscription();
+      refetchPlans();
     },
     onError: (error) => {
       const msg = error?.response?.data?.message || error?.message || 'Payment verification failed';
