@@ -11,6 +11,7 @@ const DropdownWithSearchField = ({
   isCustomName = false,
   setIsCustomName = undefined,
   containerRef,
+  disabled = false,
   label = "DropdownWithSearchField",
   required = false,
   onMenuOpen,
@@ -66,6 +67,7 @@ const DropdownWithSearchField = ({
               }
             }}
             placeholder={`Select a ${label}`}
+            disabled={disabled}
             hasError={!!error}
             classNamePrefix="rs"
             onMenuOpen={onMenuOpen}

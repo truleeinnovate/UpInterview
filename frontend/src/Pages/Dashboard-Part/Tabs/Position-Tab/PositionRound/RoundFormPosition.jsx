@@ -32,6 +32,9 @@ import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 // v1.0.0 ------------------------------------------------------------------------>
 // v1.0.1 <------------------------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
+import InputField from "../../../../../Components/FormFields/InputField.jsx";
+import DescriptionField from "../../../../../Components/FormFields/DescriptionField.jsx";
 // v1.0.1 ------------------------------------------------------------------------>
 
 function RoundFormPosition() {
@@ -100,6 +103,7 @@ function RoundFormPosition() {
   const [filteredAssessments, setFilteredAssessments] = useState([]);
   const [hasFiltered, setHasFiltered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
 
   const clearError = (fieldName) => {
     setErrors((prev) => ({
@@ -107,6 +111,11 @@ function RoundFormPosition() {
       [fieldName]: "",
     }));
   };
+
+  // Keep the custom input mode in sync when editing existing custom titles
+  useEffect(() => {
+    setIsCustomRoundTitle(formData.roundTitle === "Other");
+  }, [formData.roundTitle]);
 
   // v1.0.2 <------------------------------------------------------------
   const fieldRefs = {
@@ -219,6 +228,44 @@ function RoundFormPosition() {
     setErrors({});
     clearError("roundTitle");
     setShowDropdown(false);
+  };
+
+  // Unified handler for DropdownWithSearchField to support inline custom input
+  const handleRoundTitleUnifiedChange = (e) => {
+    const value = e.target.value;
+
+    // When in custom mode, treat input text as customRoundTitle and keep roundTitle as "Other"
+    if (isCustomRoundTitle) {
+      if (!value.trim()) {
+        // Clearing custom input -> revert to normal dropdown state
+        setFormData((prev) => ({
+          ...prev,
+          roundTitle: "",
+          customRoundTitle: "",
+        }));
+        setIsCustomRoundTitle(false);
+        clearError("roundTitle");
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          roundTitle: "Other",
+          customRoundTitle: value,
+        }));
+        clearError("roundTitle");
+      }
+      return;
+    }
+
+    // When switching to custom mode, DropdownWithSearchField fires onChange with value ""
+    if (value === "") {
+      // Apply the same side-effects as selecting "Other"
+      handleRoundTitleChange({ target: { value: "Other" } });
+      clearError("roundTitle");
+      return;
+    }
+
+    // Normal predefined selection path
+    handleRoundTitleChange({ target: { value } });
   };
 
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
@@ -667,21 +714,27 @@ function RoundFormPosition() {
     // v1.0.0 --------------------------------------------------------------------------------->
     // console.log('errors after validation', errors);
 
-    // Format interviewers data based on view type
+    // Format interviewers data based on view type (ensure strings)
     let formattedInterviewers = [];
     if (
       formData.interviewerViewType === "groups" &&
       formData.interviewers.length > 0
     ) {
-      // For groups, we store the group ID and user IDs
-      formattedInterviewers = formData.interviewers.flatMap(
-        (group) => group.userIds || []
+      // For groups, send string IDs only
+      formattedInterviewers = formData.interviewers.flatMap((group) =>
+        (group.userIds || []).filter((uid) => typeof uid === "string" || typeof uid === "number").map((uid) => String(uid))
       );
     } else {
-      // For individuals, store their contact IDs
-      formattedInterviewers = formData.interviewers.map((interviewer) =>
-        organization ? interviewer._id : interviewer.contactId
-      );
+      // For individuals, support both contactId (non-org) and _id (org) shapes; fallback to id
+      formattedInterviewers = formData.interviewers
+        .map((interviewer) => {
+          const rawId = organization
+            ? interviewer?._id
+            : interviewer?.contactId ?? interviewer?._id ?? interviewer?.id;
+          if (typeof rawId === "string" || typeof rawId === "number") return String(rawId);
+          return null;
+        })
+        .filter(Boolean);
     }
 
     const roundData = {
@@ -945,155 +998,60 @@ function RoundFormPosition() {
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
                     {/* round title */}
                     <div>
-                      <label
-                        htmlFor="roundTitle"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Round Title <span className="text-red-500">*</span>
-                      </label>
-                      {/* v1.0.0 <------------------------------------------------------------- */}
-                      {formData.roundTitle === "Other" ? (
-                        <input
-                          ref={fieldRefs.roundTitle}
-                          type="text"
-                          id="roundTitle"
-                          name="roundTitle"
-                          value={formData.customRoundTitle}
-                          onChange={(e) => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              customRoundTitle: e.target.value,
-                              // DO NOT update roundTitle here!
-                            }));
-                            clearError("roundTitle");
-                          }}
-                          onBlur={() => {
-                            if (!formData.customRoundTitle.trim()) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                roundTitle: "", // 👈 Show dropdown again
-                                customRoundTitle: "", // 👈 Clear the input
-                              }));
-                              clearError("roundTitle");
-                            }
-                          }}
-                          // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.roundTitle
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                          required
-                          placeholder="Enter custom round title"
-                        />
-                      ) : (
-                        <select
-                          ref={fieldRefs.roundTitle}
-                          id="roundTitle"
-                          name="roundTitle"
-                          value={formData.roundTitle}
-                          onChange={handleRoundTitleChange}
-                          // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
-
-                          // className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3
-                          //   ${
-                          //     errors.roundTitle
-                          //       ? "border-red-500 focus:ring-red-500"
-                          //       : "border-gray-300"
-                          //   }
-                          //   focus:outline-none  sm:text-sm`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                              errors.roundTitle
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
-                          required
-                        >
-                          <option value="">Select Round Title</option>
-                          <option value="Assessment">Assessment</option>
-                          <option value="Technical">Technical</option>
-                          <option value="Final">Final</option>
-                          <option value="HR Interview">HR Interview</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      )}
-                      {errors.roundTitle && (
-                        <p className="mt-1 text-xs text-red-500">
-                          {errors.roundTitle}
-                        </p>
-                      )}
-                      {/* v1.0.0 ---------------------------------------------------------------> */}
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.roundTitle}
+                        label="Round Title"
+                        required
+                        name="roundTitle"
+                        value={isCustomRoundTitle ? formData.customRoundTitle : formData.roundTitle}
+                        options={[
+                          { value: "Assessment", label: "Assessment" },
+                          { value: "Technical", label: "Technical" },
+                          { value: "Final", label: "Final" },
+                          { value: "HR Interview", label: "HR Interview" },
+                          { value: "__other__", label: "Other" },
+                        ]}
+                        isCustomName={isCustomRoundTitle}
+                        setIsCustomName={setIsCustomRoundTitle}
+                        onChange={handleRoundTitleUnifiedChange}
+                        error={errors.roundTitle}
+                      />
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="mode"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Interview Mode <span className="text-red-500">*</span>
-                      </label>
-                      {/* v1.0.0 <---------------------------------------------------------- */}
-                      <select
-                        ref={fieldRefs.interviewMode}
-                        id="interviewMode"
-                        name="interviewMode"
-                        value={formData.interviewMode}
-                        onChange={(e) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            interviewMode: e.target.value,
-                          }));
-                          clearError("interviewMode");
-                        }}
-                        // className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none
-                        // sm:text-sm rounded-md ${
-                        //   errors.interviewMode
-                        //     ? "border-red-500 focus:ring-red-500"
-                        //     : "border-gray-300"
-                        // }`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${
-                            errors.interviewMode
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                        required
-                        disabled={formData.roundTitle === "Assessment"}
-                      >
-                        <option value="">Select Interview Mode</option>
-                        <option value="Face to Face">Face to Face</option>
-                        <option value="Virtual">Virtual</option>
-                      </select>
-                      {errors.interviewMode && (
-                        <p className="mt-1 text-xs text-red-500">
-                          {errors.interviewMode}
-                        </p>
-                      )}
-                      {/* v1.0.0 -----------------------------------------------------------------------> */}
+                      <div className={formData.roundTitle === "Assessment" ? "pointer-events-none opacity-60" : undefined}>
+                        <DropdownWithSearchField
+                          containerRef={fieldRefs.interviewMode}
+                          label="Interview Mode"
+                          required
+                          disabled={formData.roundTitle === "Assessment"}
+                          name="interviewMode"
+                          value={formData.interviewMode}
+                          options={[
+                            { value: "Face to Face", label: "Face to Face" },
+                            { value: "Virtual", label: "Virtual" },
+                          ]}
+                          onChange={(e) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              interviewMode: e.target.value,
+                            }));
+                            clearError("interviewMode");
+                          }}
+                          error={errors.interviewMode}
+                        />
+                      </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
                     <div>
-                      <label
-                        htmlFor="sequence"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Sequence
-                      </label>
-                      <input
+                      <InputField
+                        label="Sequence"
                         type="number"
                         id="sequence"
                         name="sequence"
-                        min="1"
+                        min={1}
                         value={formData.sequence}
                         onChange={(e) => {
                           setFormData((prev) => ({
@@ -1102,8 +1060,8 @@ function RoundFormPosition() {
                           }));
                           clearError("sequence");
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
                         required
+                        error={errors.sequence}
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         The order in which this round appears in the interview
@@ -1113,16 +1071,17 @@ function RoundFormPosition() {
 
                     {formData.roundTitle !== "Assessment" && (
                       <div>
-                        <label
-                          htmlFor="duration"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Duration (Minutes)
-                        </label>
-                        <select
-                          id="duration"
+                        <DropdownWithSearchField
+                          label="Duration (Minutes)"
                           name="duration"
                           value={formData.duration}
+                          options={[
+                            { value: 30, label: "30 min" },
+                            { value: 45, label: "45 min" },
+                            { value: 60, label: "60 min" },
+                            { value: 90, label: "90 min" },
+                            { value: 120, label: "120 min" },
+                          ]}
                           onChange={(e) => {
                             setFormData((prev) => ({
                               ...prev,
@@ -1130,115 +1089,51 @@ function RoundFormPosition() {
                             }));
                             clearError("duration");
                           }}
-                          className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm
-                            ${
-                              errors.duration
-                                ? "border-red-500 focus:ring-red-500 "
-                                : "border-gray-300"
-                            }
-                            `}
-                        >
-                          <option value="30">30 min</option>
-                          <option value="45">45 min</option>
-                          <option value="60">60 min</option>
-                          <option value="90">90 min</option>
-                          <option value="120">120 min</option>
-                        </select>
-                        {errors.duration && (
-                          <p className="mt-1 text-xs text-red-500">
-                            {errors.duration}
-                          </p>
-                        )}
+                          error={errors.duration}
+                        />
                       </div>
                     )}
 
                     {formData.roundTitle === "Assessment" && (
                       <>
                         <div>
-                          <label
-                            htmlFor="assessmentTemplate"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Assessment Template{" "}
-                            <span className="text-red-500">*</span>{" "}
-                          </label>
-                          <div className="relative flex-1">
-                            {/* v1.0.0 <----------------------------------------------------- */}
-                            <input
-                              ref={fieldRefs.assessmentTemplate}
-                              type="text"
-                              name="assessmentTemplate"
-                              id="assessmentTemplate"
-                              //   className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm
-                              // ${
-                              //   errors.assessmentTemplate
-                              //     ? "border-red-500 focus:ring-red-500 "
-                              //     : "border-gray-300"
-                              // }
-                              //     `}
-                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.assessmentTemplate
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
-                                }
-                                focus:outline-gray-300
-                              `}
-                              placeholder="Enter assessment template name"
-                              value={
-                                formData.assessmentTemplate?.assessmentName ||
-                                ""
-                              }
-                              onChange={(e) => {
+                          <DropdownWithSearchField
+                            containerRef={fieldRefs.assessmentTemplate}
+                            label="Assessment Template"
+                            required
+                            name="assessmentTemplate"
+                            value={formData.assessmentTemplate?.assessmentId}
+                            options={
+                              Array.isArray(filteredAssessments)
+                                ? filteredAssessments.map((a) => ({
+                                    value: a._id,
+                                    label: a.AssessmentTitle,
+                                  }))
+                                : []
+                            }
+                            loading={!hasFiltered}
+                            onChange={(e) => {
+                              const selected = (filteredAssessments || []).find(
+                                (a) => a._id === e.target.value
+                              );
+                              if (selected) {
+                                handleAssessmentSelect(selected);
+                                clearError("assessmentTemplate");
+                                clearError("assessmentQuestions");
+                              } else {
+                                // Clear selection
                                 setFormData((prev) => ({
                                   ...prev,
                                   assessmentTemplate: {
-                                    ...prev.assessmentTemplate,
-                                    assessmentName: e.target.value,
+                                    assessmentId: "",
+                                    assessmentName: "",
                                   },
                                 }));
-                                // CHANGE: Clear assessmentTemplate error when user types
                                 clearError("assessmentTemplate");
-                                // clearError("assessmentQuestions");
-                              }}
-                              onClick={() => setShowDropdown(!showDropdown)}
-                              readOnly
-                            />
-                            <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none">
-                              {/* <FaSearch className="text-gray-600 text-lg" /> */}
-                            </div>
-                            {showDropdown && (
-                              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                {filteredAssessments.length > 0 ? (
-                                  filteredAssessments.map(
-                                    (assessment, index) => (
-                                      <div
-                                        key={index}
-                                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() => {
-                                          handleAssessmentSelect(assessment);
-                                          clearError("assessmentTemplate");
-                                          clearError("assessmentQuestions");
-                                        }}
-                                      >
-                                        {assessment.AssessmentTitle}
-                                      </div>
-                                    )
-                                  )
-                                ) : (
-                                  <div className="px-3 py-2 text-gray-500">
-                                    No Assessments Found
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            {errors.assessmentTemplate && (
-                              <p className="mt-1 text-xs text-red-500">
-                                {errors.assessmentTemplate}
-                              </p>
-                            )}
-                            {/* v1.0.0 <----------------------------------------------------- */}
-                          </div>
+                              }
+                            }}
+                            error={errors.assessmentTemplate}
+                          />
                         </div>
                       </>
                     )}
@@ -2006,18 +1901,18 @@ function RoundFormPosition() {
                   )}
 
                   <div>
-                    <label
-                      htmlFor="instructions"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Instructions <span className="text-red-500">*</span>
-                    </label>
-                    {/* v1.0.0 <--------------------------------------------------------------- */}
-                    <textarea
-                      ref={fieldRefs.instructions}
+                    <DescriptionField
+                      inputRef={fieldRefs.instructions}
                       value={formData.instructions}
-                      id="instructions"
                       name="instructions"
+                      label="Instructions"
+                      required
+                      placeholder="Enter round instructions..."
+                      rows={10}
+                      minLength={50}
+                      maxLength={1000}
+                      readOnly={formData.roundTitle === "Assessment"}
+                      error={errors.instructions}
                       onChange={(e) => {
                         setFormData((prev) => ({
                           ...prev,
@@ -2025,58 +1920,7 @@ function RoundFormPosition() {
                         }));
                         clearError("instructions");
                       }}
-                      // className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm h-64
-                      //   ${
-                      //     errors.instructions
-                      //       ? "border-red-500 focus:ring-red-500"
-                      //       : "border-gray-300"
-                      //   }
-                      // `}
-
-                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                        border ${
-                          errors.instructions
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                        }
-                        focus:outline-gray-300
-                      `}
-                      placeholder="Enter round instructions..."
-                      rows="10"
-                      minLength={50}
-                      maxLength={1000}
-                      readOnly={formData.roundTitle === "Assessment"}
                     />
-                    <div className="flex justify-between items-center mt-1">
-                      <span className="text-sm text-gray-500">
-                        {errors.instructions ? (
-                          <p className="text-red-500 text-xs pt-1">
-                            {errors.instructions}
-                          </p>
-                        ) : formData.instructions.length > 0 &&
-                          formData.instructions.length < 50 ? (
-                          <p className="text-gray-500 text-xs">
-                            Minimum {50 - formData.instructions.length} more
-                            characters needed
-                          </p>
-                        ) : null}
-                      </span>
-                      <p className="text-sm text-gray-500">
-                        {formData.instructions.length}/1000
-                      </p>
-                    </div>
-
-                    {/* <div className="flex justify-between items-center mt-1">
-                      {errors.instructions && (
-                        <p className="mt-1 text-xs text-red-500">{errors.instructions}</p>
-                      )}
-                      <span>
-                        <span className="text-sm text-gray-500">
-                          {formData.instructions.length < 250 && `Minimum ${250 - formData.instructions.length} more characters needed`}
-                        </span>
-                        <span className="text-sm text-gray-500"> {formData.instructions?.length || 0}/1000</span>
-                      </span>
-                    </div> */}
                   </div>
                   {/* footer */}
                   <div className="flex justify-end">

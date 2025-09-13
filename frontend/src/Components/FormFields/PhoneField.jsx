@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
+import * as countryCodesList from "country-codes-list";
 import DropdownSelect from "../Dropdowns/DropdownSelect";
 
+
+
+
 const PhoneField = ({
-  countryCodeOptions,
   countryCodeValue,
   onCountryCodeChange,
   countryCodeError,
@@ -14,17 +17,46 @@ const PhoneField = ({
   label = "Phone",
   required = false,
 }) => {
+  // Build options like: "India (+91)" with value "+91"
+  const countryOptions = useMemo(() => {
+    try {
+      // Resolve customList from module namespace or default (interop-safe)
+      const mod = countryCodesList;
+      const customListFn =
+        (mod && typeof mod.customList === "function" && mod.customList) ||
+        (mod && mod.default && typeof mod.default.customList === "function" && mod.default.customList);
+      if (!customListFn) return [];
+
+      // Use documented API: customList(keyProp, template)
+      const labelsByIso = customListFn(
+        "countryCode",
+        "{countryNameEn} (+{countryCallingCode})"
+      );
+      const codesByIso = customListFn(
+        "countryCode",
+        "+{countryCallingCode}"
+      );
+      const mapped = Object.keys(labelsByIso).map((iso2) => ({
+        iso2,
+        label: labelsByIso[iso2],
+        value: codesByIso[iso2],
+      }));
+      return mapped.sort((a, b) => a.label.localeCompare(b.label));
+    } catch (e) {
+      return [];
+    }
+  }, []);
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="flex items-center gap-2">
-        <div className="w-28" ref={countryCodeRef}>
+        <div className="w-36" ref={countryCodeRef}>
           <DropdownSelect
-            options={countryCodeOptions}
-            isSearchable={false}
-            value={countryCodeOptions.find((o) => o.value === countryCodeValue) || null}
+            options={countryOptions}
+            isSearchable={true}
+            value={countryOptions.find((o) => o.value === countryCodeValue) || null}
             onChange={(opt) =>
               onCountryCodeChange({ target: { name: "CountryCode", value: opt?.value || "" } })
             }
