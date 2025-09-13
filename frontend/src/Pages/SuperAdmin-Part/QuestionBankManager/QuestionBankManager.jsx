@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Added another number 100 for display questions per page
 // v1.0.1 - Ashok - Added type based uploading questions
+// v1.0.2 - Ashok - Added separate states for questions
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Header from "../../../Components/Shared/Header/Header";
@@ -74,7 +75,10 @@ const CustomDropdown = ({ value, onChange, options }) => {
 
 const QuestionBankManager = () => {
   const [activeTab, setActiveTab] = useState("interview");
-  const [questions, setQuestions] = useState([]);
+  // v1.0.2 <------------------------------------------------------
+  const [interviewQuestions, setInterviewQuestions] = useState([]);
+  const [assignmentQuestions, setAssignmentQuestions] = useState([]);
+  // v1.0.2 ------------------------------------------------------>
   const [loading, setLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -151,7 +155,12 @@ const QuestionBankManager = () => {
         const res = await axios.get(
           `${config.REACT_APP_API_URL}/questions-manager/${activeTab}`
         );
-        setQuestions(res.data || []);
+        // setQuestions(res.data || []);
+        if (activeTab === "interview") {
+          setInterviewQuestions(res.data || []);
+        } else {
+          setAssignmentQuestions(res.data || []);
+        }
       } catch (err) {
         console.error("Error fetching questions:", err);
       } finally {
@@ -196,7 +205,13 @@ const QuestionBankManager = () => {
         `${config.REACT_APP_API_URL}/questions-manager/${questionType}`
       );
       console.log("Fetched questions:", res);
-      setQuestions(res.data || []);
+      // v1.0.2 <---------------------------------------------------------
+      if (questionType === "interview") {
+        setInterviewQuestions(res.data || []);
+      } else if (questionType === "assessment") {
+        setAssignmentQuestions(res.data || []);
+      }
+      // v1.0.2 --------------------------------------------------------->
     } catch (err) {
       console.error("Upload failed:", err);
       notify.error("Failed to upload questions");
@@ -204,10 +219,30 @@ const QuestionBankManager = () => {
   };
   // v1.0.1 ----------------------------------------------------------->
 
+  // v1.0.2 <-------------------------------------------------------------------
+  // const filteredQuestions = useMemo(() => {
+  //   if (!searchTerm) return questions;
+  //   const searchableFields = ["topic", "questionOrderId", "questionText"];
+  //   return questions.filter((q) =>
+  //     searchableFields.some((field) => {
+  //       const value = Array.isArray(q[field]) ? q[field].join(" ") : q[field];
+  //       return (
+  //         value &&
+  //         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //       );
+  //     })
+  //   );
+  // }, [questions, searchTerm]);
+
   const filteredQuestions = useMemo(() => {
-    if (!searchTerm) return questions;
+    const currentQuestions =
+      activeTab === "interview" ? interviewQuestions : assignmentQuestions;
+
+    if (!searchTerm) return currentQuestions;
+
     const searchableFields = ["topic", "questionOrderId", "questionText"];
-    return questions.filter((q) =>
+
+    return currentQuestions.filter((q) =>
       searchableFields.some((field) => {
         const value = Array.isArray(q[field]) ? q[field].join(" ") : q[field];
         return (
@@ -216,7 +251,8 @@ const QuestionBankManager = () => {
         );
       })
     );
-  }, [questions, searchTerm]);
+  }, [activeTab, interviewQuestions, assignmentQuestions, searchTerm]);
+  // v1.0.2 ------------------------------------------------------------------->
 
   const totalPages = Math.ceil(filteredQuestions.length / perPage);
   const paginatedQuestions = useMemo(() => {
@@ -704,7 +740,9 @@ const QuestionBankManager = () => {
                 setSelectedQuestions([]);
                 setIsSelectAll(false);
               }}
-              className="p-2 hover:text-red-800 text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors"
+              // v1.0.2 <-------------------------------------------------------------
+              className="p-2 hover:text-red-800 text-gray-600 flex items-center gap-2 transition-colors"
+              // v1.0.2 ------------------------------------------------------------->
               title="Cancel selection"
             >
               <X className="w-5 h-5" />
