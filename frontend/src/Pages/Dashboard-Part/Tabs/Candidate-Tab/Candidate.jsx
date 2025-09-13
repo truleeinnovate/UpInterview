@@ -99,9 +99,10 @@ function Candidate({
   // <---------------------- v1.0.2
   // Helper function to check if a candidate is cancelled (handles all case variations)
 
-
   // v1.0.6 <--------------------------------------------------------
-  useScrollLock(showDeleteConfirmModal)
+  // v1.0.7 <--------------------------------------------------------
+  useScrollLock(showDeleteConfirmModal || view === "table" || view === "kanban");
+  // v1.0.7 -------------------------------------------------------->
   // v1.0.6 -------------------------------------------------------->
 
   const isCandidateCancelled = (candidate) => {
@@ -949,21 +950,23 @@ function Candidate({
           </div>
         )}
         <main
-        // v1.0.7 <----------------------------------------------------------
+          // v1.0.7 <----------------------------------------------------------
           className={
             isAssessmentView
               ? ""
               : "fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
           }
-        // v1.0.7 ---------------------------------------------------------->
+          // v1.0.7 ---------------------------------------------------------->
         >
           <div className="sm:px-0">
             <motion.div className="bg-white">
               {/* v1.0.7 <--------------------------------------------------- */}
-              <div className="relative w-full overflow-x-auto">
-              {/* v1.0.7 ---------------------------------------------------> */}
+              {/* v1.0.8 <---------------------------------------------------------------------------------------------- */}
+              <div className="relative w-full">
+                {/* v1.0.7 ---------------------------------------------------> */}
                 {view === "table" ? (
-                  <div className="w-full">
+                  <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                    {/* v1.0.8 ----------------------------------------------------------------------------------------------> */}
                     <TableView
                       data={currentFilteredRows}
                       columns={tableColumns}
