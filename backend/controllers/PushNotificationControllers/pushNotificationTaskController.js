@@ -42,7 +42,7 @@ const runTaskReminderJob = async () => {
     const now = moment();
     const dueIn24Hours = moment(now).add(24, 'hours');
 
-    //console.log(`Checking tasks due between ${now.toISOString()} and ${dueIn24Hours.toISOString()}`);
+    console.log(`Checking tasks due between ${now.toISOString()} and ${dueIn24Hours.toISOString()}`);
 
     const tasks = await Task.find({
       dueDate: {
@@ -58,95 +58,41 @@ const runTaskReminderJob = async () => {
 
 
     
-    // console.log(`Found ${tasks.length} tasks due in the next 24 hours.`);
+    console.log(`Found ${tasks.length} tasks due in the next 24 hours.`);
 
-    // // Fetch email template for task reminder
-    // const emailTemplate = await emailTemplateModel.findOne({
-    //   category: 'task_due_reminder',
-    //   isActive: true,
-    //   isSystemTemplate: true,
-    // });
-
-    // if (!emailTemplate) {
-    //   console.error('No email template found for task_due_reminder');
-    //   return;
-    // }
-
-    // for (const task of tasks) {
-    //   if (!task.ownerId) {
-    //     console.warn(`Task ${task._id} has no ownerId.`);
-    //     continue;
-    //   }
-
-    //   const userId = task.ownerId.toString();
-    //   if (!mongoose.Types.ObjectId.isValid(task.ownerId)) {
-    //     console.warn(`Invalid user ObjectId ${userId} for task ${task._id}`);
-    //     continue;
-    //   }
-
-    //   let user;
-    //   try {
-    //     user = await Users.findOne({ _id: task.ownerId });
-    //   } catch (err) {
-    //     console.error(`Error fetching user for ID ${userId}:`, err.message);
-    //   }
-
-    //   if (!user || !user.email) {
-    //     console.warn(`No valid user/email for task ${task._id}`);
-    //     continue;
-    //   }
-    //   const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
-    //   const formattedDueDate = moment(task.dueDate).format('MMMM Do, YYYY, h:mm a');
-
-    //   const emailSubject = emailTemplate.subject
-    //     .replace('{{taskTitle}}', task.title || 'Task')
-    //     .replace('{{companyName}}', process.env.COMPANY_NAME)
-    //     .replace('{{dueDate}}', formattedDueDate);
-
-    //   const emailBody = emailTemplate.body
-    //     .replace(/{{userName}}/g, userName)
-    //     .replace(/{{taskTitle}}/g, task.title || 'Task')
-    //     .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
-    //     .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
-    //     .replace(/{{dueDate}}/g, formattedDueDate);
-
-    //   const emailResponse = await sendEmail(user.email, emailSubject, emailBody);
+   
 
     for (const task of tasks) {
-      if (!task.ownerId) {
+      // Prefer notifying the assigned user; fall back to ownerId if not present
+      const recipientUserId = (task.assignedToId && String(task.assignedToId)) || (task.ownerId && String(task.ownerId));
 
-        //console.warn(`Task ${task._id} has no ownerId.`);
-
+      if (!recipientUserId) {
+        // console.warn(`Task ${task._id} has no assignedToId/ownerId to notify.`);
         continue;
       }
 
-      const userId = task.ownerId.toString();
-      if (!mongoose.Types.ObjectId.isValid(task.ownerId)) {
-
-        //console.warn(`Invalid user ObjectId ${userId} for task ${task._id}`);
-
+      if (!mongoose.Types.ObjectId.isValid(recipientUserId)) {
+        // console.warn(`Invalid user ObjectId ${recipientUserId} for task ${task._id}`);
         continue;
       }
 
       let user;
       try {
-        user = await Users.findOne({ _id: task.ownerId });
+        user = await Users.findById(recipientUserId).select('email firstName lastName');
       } catch (err) {
-        console.error(`Error fetching user for ID ${userId}:`, err.message);
+        console.error(`Error fetching user for ID ${recipientUserId}:`, err.message);
       }
 
       if (!user || !user.email) {
-
-        console.warn(`No valid user/email for task ${task._id}`);
-
+        // console.warn(`No valid user/email for task ${task._id}`);
         continue;
       }
-      const userName = (user.firstName ? user.firstName + ' ' : '') + (user.lastName || '');
+
       const formattedDueDate = moment(task.dueDate).format('MMMM Do, YYYY, h:mm a');
 
       // Save notification to PushNotifications schema only if one doesn't already exist
       const existingNotification = await PushNotification.findOne({
-        ownerId: user._id.toString(),
+        ownerId: String(user._id),
         category: 'task_reminder',
         // Rough match to ensure this task's reminder isn't duplicated
         message: `Your task "${task.title}" is due on ${formattedDueDate} status: ${task.status}.`
@@ -154,8 +100,8 @@ const runTaskReminderJob = async () => {
 
       if (!existingNotification) {
         const notification = new PushNotification({
-          ownerId: user._id.toString(),
-          tenantId: task.tenantId ? task.tenantId.toString() : '',
+          ownerId: String(user._id),
+          tenantId: task.tenantId ? String(task.tenantId) : '',
           title: 'Task Due Reminder',
           message: `Your task "${task.title}" is due on ${formattedDueDate} status: ${task.status}.`,
           type: 'system',
