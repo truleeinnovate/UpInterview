@@ -901,41 +901,18 @@ class AuthCookieManager {
    */
   static setAuthCookies(data) {
     try {
-      console.log("🔐 setAuthCookies called with data:", data);
 
       // Step 1: Set auth token (effective user token) if provided
       if (data.authToken) {
-        console.log("➡️ Setting Auth Token...");
         AuthCookieManager.setAuthToken(data.authToken);
-        console.log("✅ Auth Token set successfully");
-      } else {
-        console.log("⚠️ No auth token provided");
       }
 
       // Step 2: Set impersonation token (super admin token) if provided
       if (data.impersonationToken) {
-        console.log("➡️ Setting Impersonation Token for user:", data.impersonatedUser);
         AuthCookieManager.setImpersonationToken(data.impersonationToken, data.impersonatedUser);
-        console.log("✅ Impersonation Token set successfully");
-      } else {
-        console.log("⚠️ No impersonation token provided");
       }
 
-      // Step 3: Update user type based on current token state
-      console.log("➡️ Updating user type...");
       AuthCookieManager.updateUserType();
-      console.log("✅ User type updated");
-
-      // Step 4: Verify final state
-      const finalAuthToken = AuthCookieManager.getAuthToken();
-      const finalImpersonationToken = AuthCookieManager.getImpersonationToken();
-      const finalUserType = AuthCookieManager.getUserType();
-
-      console.log("🔎 Final Auth State:", {
-        finalAuthToken: finalAuthToken ? "[EXISTS]" : null,
-        finalImpersonationToken: finalImpersonationToken ? "[EXISTS]" : null,
-        finalUserType,
-      });
 
     } catch (error) {
       console.error("❌ Error setting auth cookies:", error);

@@ -30,6 +30,13 @@ const AdditionalDetails = ({
   const [resumeError, setResumeError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");
 
+  // Load all dropdown data when component mounts
+  React.useEffect(() => {
+    loadCurrentRoles();
+    loadIndustries();
+    loadLocations();
+  }, [loadCurrentRoles, loadIndustries, loadLocations]);
+
   const handleFileUpload = async (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
@@ -55,18 +62,34 @@ const AdditionalDetails = ({
 
 
 
-  const handleInputChangeintro = (e, fieldName) => {
-    const { value } = e.target;
-    setAdditionalDetailsData((prev) => ({
+  const handleChange = (selectedOption, meta) => {
+    // Handle both select dropdown and regular input changes
+    let name, value;
+    
+    if (meta && meta.name) {
+      // This is from react-select
+      name = meta.name;
+      value = selectedOption?.value || '';
+    } else if (selectedOption && selectedOption.target) {
+      // This is from a regular input
+      name = selectedOption.target.name;
+      value = selectedOption.target.value;
+    } else {
+      // Fallback
+      name = '';
+      value = selectedOption;
+    }
+    
+    setAdditionalDetailsData(prev => ({
       ...prev,
-      [fieldName]: value,
+      [name]: value,
     }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [fieldName]: "",
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: "",
     }));
   };
-
 
   const handleCoverLetterUpload = async (e, fieldName) => {
     const file = e.target.files[0];
@@ -95,17 +118,6 @@ const AdditionalDetails = ({
     setCoverLetterName("");
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setAdditionalDetailsData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
 
   return (
     <>
@@ -135,15 +147,24 @@ const AdditionalDetails = ({
         {/* Current Role */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
-            value={additionalDetailsData.CurrentRole}
-            options={currentRoles?.map(role => ({
-              value: role.RoleName,
-              label: role.RoleName
-            })) || []}
+            value={additionalDetailsData.currentRole || ''}
+            options={[
+              // Include the current value in options even if not in the database yet
+              ...(additionalDetailsData.currentRole && !currentRoles?.some(role => role.RoleName === additionalDetailsData.currentRole)
+                ? [{
+                    value: additionalDetailsData.currentRole,
+                    label: additionalDetailsData.currentRole
+                  }]
+                : []),
+              ...(currentRoles?.map(role => ({
+                value: role.RoleName,
+                label: role.RoleName
+              })) || [])
+            ]}
             onChange={handleChange}
-            error={errors.CurrentRole}
+            error={errors.currentRole}
             label="Current Role"
-            name="CurrentRole"
+            name="currentRole"
             required
             onMenuOpen={loadCurrentRoles}
             loading={isCurrentRolesFetching}
@@ -153,13 +174,22 @@ const AdditionalDetails = ({
         {/* Industry */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
-            value={additionalDetailsData.industry}
-            options={industries
-              ?.filter(industry => industry.IndustryName)
-              .map(industry => ({
-                value: industry.IndustryName,
-                label: industry.IndustryName
-              })) || []}
+            value={additionalDetailsData.industry || ''}
+            options={[
+              // Include the current value in options even if not in the database yet
+              ...(additionalDetailsData.industry && !industries?.some(ind => ind.IndustryName === additionalDetailsData.industry)
+                ? [{
+                    value: additionalDetailsData.industry,
+                    label: additionalDetailsData.industry
+                  }]
+                : []),
+              ...(industries
+                ?.filter(industry => industry.IndustryName)
+                .map(industry => ({
+                  value: industry.IndustryName,
+                  label: industry.IndustryName
+                })) || [])
+            ]}
             name="industry"
             onChange={handleChange}
             error={errors.industry}
@@ -198,13 +228,22 @@ const AdditionalDetails = ({
         {/* Location */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
-            value={additionalDetailsData.location}
-            options={locations
-              ?.filter(location => location.LocationName)
-              .map(location => ({
-                value: location.LocationName,
-                label: location.LocationName
-              })) || []}
+            value={additionalDetailsData.location || ''}
+            options={[
+              // Include the current value in options even if not in the database yet
+              ...(additionalDetailsData.location && !locations?.some(loc => loc.LocationName === additionalDetailsData.location)
+                ? [{
+                    value: additionalDetailsData.location,
+                    label: additionalDetailsData.location
+                  }]
+                : []),
+              ...(locations
+                ?.filter(location => location.LocationName)
+                .map(location => ({
+                  value: location.LocationName,
+                  label: location.LocationName
+                })) || [])
+            ]}
             name="location"
             onChange={handleChange}
             error={errors.location}
@@ -219,7 +258,7 @@ const AdditionalDetails = ({
         {!isProfileCompleteStateOrg && (
           <>
             {/* Resume Section */}
-            < div className="sm:col-span-2 col-span-1">
+            < div className="sm:col-span-2 col-span-2">
               <div>
                 <label
                   htmlFor="resume"
@@ -260,13 +299,20 @@ const AdditionalDetails = ({
                   </button>
                 </div>
               )}
-              <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
-                {resumeError}
-              </p>
+              {errors.resume && (
+                <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
+                  {errors.resume}
+                </p>
+              )}
+              {resumeError && !errors.resume && (
+                <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
+                  {resumeError}
+                </p>
+              )}
             </div>
 
             {/* Cover Letter Section */}
-            <div className="sm:col-span-2 col-span-1">
+            <div className="sm:col-span-2 col-span-2">
               <div>
                 <label
                   htmlFor="coverLetter"

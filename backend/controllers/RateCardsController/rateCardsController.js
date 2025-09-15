@@ -46,6 +46,35 @@ const getAllRateCards = async (req, res) => {
   }
 };
 
+const getRateCardsByTechnology = async (req, res) => {
+  console.log("🔥 req.params =", req.params);
+  console.log("🔥 req.query =", req.query);
+  try {
+    const { technology } = req.params;
+    if (!technology) {
+      return res.status(400).json({ message: "Technology parameter is required" });
+    }
+
+    const cards = await RateCard.find({
+      technology: { $regex: new RegExp(technology, "i") }, // case-insensitive match
+      isActive: true,
+    });
+
+    if (!cards || cards.length === 0) {
+      return res.status(404).json({
+        message: `No rate cards found for technology: ${technology}`,
+      });
+    }
+
+    res.status(200).json(cards);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching rate cards by technology",
+      error: error.message,
+    });
+  }
+};
+
 // Fetch one RateCard by ID
 const getRateCardById = async (req, res) => {
   try {
@@ -106,4 +135,5 @@ module.exports = {
   getRateCardById,
   updateRateCard,
   deleteRateCard,
+  getRateCardsByTechnology,
 };

@@ -1,9 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Trash2, X, Search, ChevronDown } from 'lucide-react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { Trash2, X } from 'lucide-react';
 import InfoBox from './InfoBox.jsx';
-import { useMasterData } from '../../../apiHooks/useMasterData.js';
+import { useMasterData } from "../../../apiHooks/useMasterData.js";
+import InputField from '../../../Components/FormFields/InputField';
+import DescriptionField from '../../../Components/FormFields/DescriptionField';
+import IncreaseAndDecreaseField from '../../../Components/FormFields/IncreaseAndDecreaseField';
+import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
 import { ReactComponent as SkillsIcon } from '../../../icons/Skills.svg';
-import { ReactComponent as TechnologyIcon } from '../../../icons/technology.svg';
+import DropdownWithSearchField from '../../../Components/FormFields/DropdownWithSearchField';
 
 const InterviewDetails = ({
     errors,
@@ -18,67 +23,142 @@ const InterviewDetails = ({
     setPreviousInterviewExperience,
     isMockInterviewSelected,
     setIsMockInterviewSelected,
+    yearsOfExperience = 0, // Default to 0 if not provided
 }) => {
+    const [showCustomDiscount, setShowCustomDiscount] = useState(false);
+    const [customDiscountValue, setCustomDiscountValue] = useState('');
+    // Parse yearsOfExperience to ensure it's a number
+    const expYears = parseInt(yearsOfExperience, 10) || 0;
 
+    // Update rate visibility based on years of experience when component mounts or yearsOfExperience changes
+    useEffect(() => {
+        setInterviewDetailsData(prev => ({
+            ...prev,
+            rates: {
+                junior: {
+                    ...prev.rates?.junior,
+                    isVisible: true // Always show junior level
+                },
+                mid: {
+                    ...prev.rates?.mid,
+                    isVisible: expYears >= 3 // Show mid-level if 3+ years
+                },
+                senior: {
+                    ...prev.rates?.senior,
+                    isVisible: expYears > 6 // Show senior level if 7+ years
+                }
+            }
+        }));
+    }, [yearsOfExperience, expYears]);
+
+    // For backward compatibility with old UI
+    const showJuniorLevel = expYears >= 0; // Always show junior level
+    const showMidLevel = expYears >= 3; // Show mid-level if 3+ years
+    const showSeniorLevel = expYears > 6; // Show senior level only if more than 6 years (7+)
     const {
         skills,
+        loadSkills,
+        isSkillsFetching,
         technologies,
+        loadTechnologies,
+        isTechnologiesFetching,
     } = useMasterData();
 
-    const [showTechPopup, setTechpopup] = useState(false);
-    const [searchTermTechnology, setSearchTermTechnology] = useState('');
-    const [searchTermSkills, setSearchTermSkills] = useState('');
-    const [showSkillsPopup, setShowSkillsPopup] = useState(false);
+    // State to store rate cards data
+    const [rateCards, setRateCards] = useState([]);
+
+    // Memoize the fetch function to prevent unnecessary re-renders
+    const fetchRateCardsMemoized = useCallback(async (techName) => {
+        if (!techName) return;
+
+        console.group('=== fetchRateCards ===');
+        console.log('1. Input technologyName:', techName);
+
+        try {
+            const token = localStorage.getItem('token');
+            const baseUrl = process.env.REACT_APP_API_URL || '';
+            const encodedTech = encodeURIComponent(techName);
+            // Updated endpoint to match new backend route structure
+            const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
+
+            console.log('2. Making API request to:', apiUrl);
+
+            const response = await axios.get(apiUrl, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            console.log('3. API Response:', {
+                status: response.status,
+                data: response.data || 'No data'
+            });
+
+            if (response.data) {
+                const rateCardsData = Array.isArray(response.data) ? response.data : [response.data];
+                setRateCards(rateCardsData);
+            }
+        } catch (error) {
+            console.error('Error fetching rate cards:', {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            setRateCards([]);
+        } finally {
+            console.groupEnd();
+        }
+    }, []);
+
+    // Function to fetch rate cards by technology (public API)
+    const fetchRateCards = (technologyName) => {
+        return fetchRateCardsMemoized(technologyName);
+    }
+
+    // Helper function to get rate ranges for a specific level
+    const getRateRanges = (level) => {
+        if (!rateCards.length) return null;
+
+        // Find the first rate card that has the specified level
+        const rateCard = rateCards.find(card =>
+            card.levels.some(lvl => lvl.level === level)
+        );
+
+        if (!rateCard) return null;
+
+        // Find the level data
+        const levelData = rateCard.levels.find(lvl => lvl.level === level);
+        if (!levelData || !levelData.rateRange) return null;
+
+        return levelData.rateRange;
+    }
+
     const bioLength = interviewDetailsData.bio?.length || 0;
 
-    const handleSelectedTechnology = (technology) => {
-        if (!selectedTechnologyies.some((t) => t._id === technology._id)) {
-            const updatedCandidates = [...selectedTechnologyies, technology];
-            setSelectedTechnologyies(updatedCandidates);
-            setInterviewDetailsData((prev) => ({
-                ...prev,
-                technologies: updatedCandidates.map((t) => t.TechnologyMasterName),
-            }));
+    // Handle technology selection
+    const handleTechnologyChange = (event) => {
+
+        const selectedValue = event.target.value; // Value from DropdownWithSearchField
+        if (selectedValue) {
+
+            fetchRateCards(selectedValue);
+
+            const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue);
+
+            if (technology) {
+                setSelectedTechnologyies([technology]); // Store single technology
+                setInterviewDetailsData((prev) => ({
+                    ...prev,
+                    technologies: [technology.TechnologyMasterName],
+                }));
+                setErrors((prevErrors) => ({ ...prevErrors, technologies: '' }));
+            }
+        } else {
+            setSelectedTechnologyies([]);
+            setErrors(prev => ({ ...prev, technologies: 'Please select a technology' }));
         }
-        setTechpopup(false);
-        setErrors((prevErrors) => ({ ...prevErrors, technologies: "" }));
-    };
-
-    const handleRemoveTechnology = (index) => {
-        const updatedCandidates = selectedTechnologyies.filter((_, i) => i !== index);
-        setSelectedTechnologyies(updatedCandidates);
-        setInterviewDetailsData((prev) => ({
-            ...prev,
-            technologies: updatedCandidates.map((t) => t.TechnologyMasterName),
-        }));
-    };
-
-    const clearRemoveTechnology = () => {
-        setSelectedTechnologyies([]);
-        setInterviewDetailsData((prev) => ({
-            ...prev,
-            technologies: [],
-        }));
-    };
-
-    const toggleTechPopup = () => {
-        setTechpopup(prev => {
-            const newState = !prev;
-            if (newState) {
-                setShowSkillsPopup(false);
-            }
-            return newState;
-        });
-    };
-
-    const toggleSkillsPopup = () => {
-        setShowSkillsPopup(prev => {
-            const newState = !prev;
-            if (newState) {
-                setTechpopup(false);
-            }
-            return newState;
-        });
     };
 
     const handleRemoveSkill = (index) => {
@@ -97,21 +177,51 @@ const InterviewDetails = ({
         }));
         setErrors((prevErrors) => ({
             ...prevErrors,
-            mock_interview_discount: "",
+            mock_interview_discount: '',
         }));
     };
 
-    const handleSelectSkill = (skill) => {
-        if (!selectedSkills.some((s) => s._id === skill._id)) {
-            const updatedSkills = [...selectedSkills, skill];
-            setSelectedSkills(updatedSkills);
-            setInterviewDetailsData((prev) => ({
-                ...prev,
-                skills: updatedSkills.map((s) => s?.SkillName),
-            }));
+    const handleSelectSkill = (event) => {
+        try {
+            const skillName = event?.target?.value?.trim();
+            if (!skillName) {
+                console.error('No skill selected or invalid selection');
+                return;
+            }
+
+            // Find the skill object from the skills list
+            const skill = skills?.find(s =>
+                s?.SkillName?.trim().toLowerCase() === skillName.toLowerCase()
+            );
+
+            if (!skill) {
+                console.error('Skill not found in the list:', skillName);
+                return;
+            }
+
+            // Check if skill is already selected (case-insensitive comparison)
+            const isAlreadySelected = selectedSkills.some(selectedSkill =>
+                selectedSkill?.SkillName?.trim().toLowerCase() === skillName.toLowerCase()
+            );
+
+            if (!isAlreadySelected) {
+                const updatedSkills = [...selectedSkills, skill];
+                setSelectedSkills(updatedSkills);
+                setInterviewDetailsData(prev => ({
+                    ...prev,
+                    skills: updatedSkills.map(s => s?.SkillName).filter(Boolean),
+                }));
+                setErrors(prevErrors => ({ ...prevErrors, skills: '' }));
+
+                // Clear the input field after selection
+                const input = document.querySelector('.rs__input input');
+                if (input) {
+                    input.value = '';
+                }
+            }
+        } catch (error) {
+            console.error('Error in handleSelectSkill:', error);
         }
-        setShowSkillsPopup(false);
-        setErrors((prevErrors) => ({ ...prevErrors, skills: "" }));
     };
 
     const handleRadioChange = (e) => {
@@ -120,23 +230,11 @@ const InterviewDetails = ({
         setInterviewDetailsData((prev) => ({
             ...prev,
             previousInterviewExperience: value,
-            previousInterviewExperienceYears: value === "no" ? "" : prev.previousInterviewExperienceYears,
+            previousInterviewExperienceYears: value === 'no' ? '' : prev.previousInterviewExperienceYears,
         }));
         setErrors((prev) => ({
             ...prev,
-            previousInterviewExperience: "",
-        }));
-    };
-
-    const expertiseLevel_ConductingInterviews = (e) => {
-        const value = e.target.value;
-        setInterviewDetailsData((prev) => ({
-            ...prev,
-            expertiseLevel_ConductingInterviews: value,
-        }));
-        setErrors((prevErrors) => ({
-            ...prevErrors,
-            expertiseLevel_ConductingInterviews: "",
+            previousInterviewExperience: '',
         }));
     };
 
@@ -148,7 +246,7 @@ const InterviewDetails = ({
         }));
         setErrors((prevErrors) => ({
             ...prevErrors,
-            previousInterviewExperienceYears: value ? "" : "Years of experience is required",
+            previousInterviewExperienceYears: value ? '' : 'Years of experience is required',
         }));
     };
 
@@ -160,7 +258,7 @@ const InterviewDetails = ({
         }));
         setErrors((prev) => ({
             ...prev,
-            noShowPolicy: "",
+            noShowPolicy: '',
         }));
     };
 
@@ -169,19 +267,48 @@ const InterviewDetails = ({
         setInterviewDetailsData({ ...interviewDetailsData, bio: value });
         setErrors((prevErrors) => ({
             ...prevErrors,
-            bio: "",
+            bio: '',
         }));
     };
 
-    const handleHourlyRateChange = (level) => (e) => {
+    const handleHourlyRateChange = (level, currency) => (e) => {
         const value = e.target.value;
-        setInterviewDetailsData((prev) => ({
+        const numericValue = value.replace(/\D/g, ''); // Remove non-numeric characters
+        
+        // Get rate range for validation
+        const levelKey = level.charAt(0).toUpperCase() + level.slice(1);
+        const rateRange = getRateRanges(levelKey);
+        
+        let error = '';
+        
+        if (numericValue) {
+            const minRate = rateRange?.[currency]?.min || 0;
+            const maxRate = rateRange?.[currency]?.max || (currency === 'inr' ? 100000 : 1000);
+            const numValue = parseInt(numericValue, 10);
+            
+            if (numValue < minRate) {
+                error = `Rate cannot be less than ${currency === 'inr' ? '₹' : '$'}${minRate}`;
+            } else if (numValue > maxRate) {
+                error = `Rate cannot exceed ${currency === 'inr' ? '₹' : '$'}${maxRate}`;
+            }
+        }
+        
+        // Update the rate in the nested structure
+        setInterviewDetailsData(prev => ({
             ...prev,
-            [level]: value,
+            rates: {
+                ...prev.rates,
+                [level]: {
+                    ...prev.rates?.[level],
+                    [currency]: numericValue ? parseInt(numericValue, 10) : 0
+                }
+            }
         }));
-        setErrors((prevErrors) => ({
-            ...prevErrors,
-            [level]: value ? "" : `${level.replace('_', ' ')} rate is required`,
+        
+        // Update errors
+        setErrors(prev => ({
+            ...prev,
+            [`${level}_${currency}`]: error
         }));
     };
 
@@ -204,39 +331,22 @@ const InterviewDetails = ({
             };
         });
 
-        if (value === "mock") {
+        if (value === 'mock') {
             setIsMockInterviewSelected(checked);
         }
 
         setErrors((prev) => ({
             ...prev,
-            interviewFormatWeOffer: "",
+            interviewFormatWeOffer: '',
         }));
     };
 
-    const filteredTechnologies = technologies?.filter((tech) =>
-        tech.TechnologyMasterName.toLowerCase().includes(searchTermTechnology.toLowerCase())
-    );
+    const technologyOptions = technologies?.map((tech) => ({
+        value: tech.TechnologyMasterName,
+        label: tech.TechnologyMasterName,
+    })) || [];
 
     const techPopupRef = useRef(null);
-    const skillsPopupRef = useRef(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (
-                (techPopupRef.current && !techPopupRef.current.contains(event.target)) &&
-                (skillsPopupRef.current && !skillsPopupRef.current.contains(event.target))
-            ) {
-                setTechpopup(false);
-                setShowSkillsPopup(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
 
     return (
         <>
@@ -245,203 +355,124 @@ const InterviewDetails = ({
                     title="Interview Expertise"
                     description="Share your experience conducting technical interviews and your areas of specialization."
                     icon={
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                         </svg>
                     }
                 />
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
-                <div className="col-span-1 sm:col-span-6" ref={techPopupRef}>
-                    <label htmlFor="technology" className="block text-sm font-medium text-gray-700 mb-3">
-                        Select Your Comfortable Technologies <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                        <input
-                            placeholder="Select Multiple Technologies"
-                            readOnly
-                            onClick={toggleTechPopup}
-                            className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.technologies ? "border-red-500" : "border-gray-300"}`}
-                        />
-                        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            <ChevronDown className="text-lg" onClick={toggleTechPopup} />
-                        </div>
-                        {showTechPopup && (
-                            <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                                <div className="border-b">
-                                    <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search Technology"
-                                            value={searchTermTechnology}
-                                            onChange={(e) => setSearchTermTechnology(e.target.value)}
-                                            className="pl-8 focus:border-black focus:outline-none w-full"
-                                        />
-                                    </div>
-                                </div>
-                                {filteredTechnologies.map((tech) => (
-                                    <div
-                                        key={tech._id}
-                                        onClick={() => handleSelectedTechnology(tech)}
-                                        className="p-2 hover:bg-gray-100 cursor-pointer"
-                                    >
-                                        {tech.TechnologyMasterName}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        {errors.technologies && <p className="text-red-500 text-sm sm:text-xs">{errors.technologies}</p>}
-                    </div>
+                <div className="col-span-2 w-[50%] sm:col-span-6" ref={techPopupRef}>
+                    <DropdownWithSearchField
+                        value={selectedTechnologyies[0]?.TechnologyMasterName || ''} // Pass the selected technology name
+                        options={technologyOptions}
+                        onChange={handleTechnologyChange} // Use the updated handler
+                        error={errors.technologies}
+                        label="Select Your Comfortable Technology"
+                        name="technology"
+                        required={true}
+                        onMenuOpen={loadTechnologies}
+                        loading={isTechnologiesFetching}
+                    />
                 </div>
 
-                <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 -mt-3">
-                    {selectedTechnologyies.length === 0 ? (
-                        <p className="text-sm text-gray-500 text-center">No technologies selected</p>
-                    ) : (
-                        <div>
+                {/* Skills Section */}
+                <div className="col-span-2 sm:col-span-6 space-y-4">
+                    <div className="relative w-[50%]">
+                        <DropdownWithSearchField
+                            value=""
+                            options={skills
+                                ?.filter(skill =>
+                                    skill &&
+                                    skill.SkillName &&
+                                    typeof skill.SkillName === 'string' &&
+                                    !selectedSkills.some(selectedSkill =>
+                                        selectedSkill &&
+                                        selectedSkill.SkillName &&
+                                        typeof selectedSkill.SkillName === 'string' &&
+                                        selectedSkill.SkillName.trim().toLowerCase() === skill.SkillName.trim().toLowerCase()
+                                    )
+                                )
+                                .map(skill => ({
+                                    value: skill.SkillName,
+                                    label: skill.SkillName
+                                })) || []}
+                            onChange={handleSelectSkill}
+                            error={errors.skills}
+                            label="Select Skills"
+                            name="skills"
+                            required={selectedSkills.length === 0}
+                            className="w-full"
+                            placeholder="Search and select skills..."
+                            onMenuOpen={loadSkills}
+                            loading={isSkillsFetching}
+                            isClearable={true}
+                            classNamePrefix="select"
+                            noOptionsMessage={({ inputValue }) =>
+                                inputValue ? 'No matching skills found' : 'Start typing to search skills'
+                            }
+                        />
+                    </div>
+
+                    {selectedSkills.length > 0 && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center">
-                                    <TechnologyIcon className="h-4 w-4 text-gray-500 mr-2" />
-                                    <span className="text-sm text-gray-700">
-                                        {selectedTechnologyies.length} technologie{selectedTechnologyies.length !== 1 ? "s" : ""} selected
+                                    <SkillsIcon className="h-4 w-4 text-purple-500 mr-2" />
+                                    <span className="text-sm font-medium text-gray-700">
+                                        {selectedSkills.length} skill{selectedSkills.length !== 1 ? 's' : ''} selected
                                     </span>
                                 </div>
-                                {selectedTechnologyies.length > 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={clearRemoveTechnology}
-                                        className="text-sm text-red-600 hover:text-red-800 flex items-center"
-                                    >
-                                        <Trash2 className="h-3 w-3 mr-1" />
-                                        Clear All
-                                    </button>
-                                )}
+                                <button
+                                    type="button"
+                                    onClick={clearSkills}
+                                    className="text-sm text-red-600 hover:text-red-800 flex items-center transition-colors"
+                                >
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    Clear All
+                                </button>
                             </div>
+
                             <div className="flex flex-wrap gap-2">
-                                {selectedTechnologyies.map((candidate, index) => (
+                                {selectedSkills.map((skill, index) => (
                                     <div
-                                        key={index}
-                                        className="flex items-center justify-between bg-custom-blue/10 border border-custom-blue/10 rounded-md p-2"
-                                        style={{ minWidth: '150px', maxWidth: '250px' }}
+                                        key={skill._id}
+                                        className="flex items-center bg-custom-blue/10 border border-custom-blue/20 rounded-md py-1.5 px-3 group"
                                     >
-                                        <div className="flex-1 overflow-hidden">
-                                            <span className="ml-2 text-sm text-custom-blue truncate whitespace-nowrap">
-                                                {candidate.TechnologyMasterName}
-                                            </span>
-                                        </div>
+                                        <span className="text-sm font-medium text-custom-blue truncate max-w-[180px]">
+                                            {skill.SkillName}
+                                        </span>
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveTechnology(index)}
-                                            className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-custom-blue/10 ml-2"
-                                            title="Remove technology"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRemoveSkill(index);
+                                            }}
+                                            className="ml-2 text-custom-blue/60 hover:text-custom-blue/90 hover:bg-custom-blue/20 rounded-full p-0.5 transition-colors"
+                                            title="Remove skill"
                                         >
-                                            <X className="h-4 w-4" />
+                                            <X className="h-3.5 w-3.5" />
                                         </button>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
-                </div>
 
-                <div className="col-span-1 sm:col-span-6" ref={skillsPopupRef}>
-                    <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Skills <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                        <input
-                            onClick={toggleSkillsPopup}
-                            className={`block w-full pl-5 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.skills ? 'border-red-500' : 'border-gray-300'}`} 
-                            placeholder="Select Multiple Skills"
-                        />
-                        <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                            <ChevronDown className="text-lg" onClick={toggleSkillsPopup} />
-                        </div>
-                        {showSkillsPopup && (
-                            <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                                <div className="border-b">
-                                    <div className="flex items-center border rounded px-2 py-1 m-2">
-                                        <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search Skills"
-                                            value={searchTermSkills}
-                                            onChange={(e) => setSearchTermSkills(e.target.value)}
-                                            className="pl-8 focus:border-black focus:outline-none w-full"
-                                        />
-                                    </div>
-                                </div>
-                                {skills?.filter(skill =>
-                                    skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
-                                ).length > 0 ? (
-                                    skills?.filter(skill =>
-                                        skill.SkillName.toLowerCase().includes(searchTermSkills.toLowerCase())
-                                    ).map((skill) => (
-                                        <div
-                                            key={skill._id}
-                                            onClick={() => handleSelectSkill(skill)}
-                                            className="cursor-pointer hover:bg-custom-blue/10 p-2"
-                                        >
-                                            {skill.SkillName}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="p-2 text-gray-500">No skills found</div>
-                                )}
-                            </div>
-                        )}
-                        {errors.skills && <p className="text-red-500 text-sm sm:text-xs">{errors.skills}</p>}
-                    </div>
-                </div>
-
-                <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 -mt-3">
-                    {selectedSkills.length === 0 ? (
-                        <p className="text-sm text-gray-500 text-center">No skills selected</p>
-                    ) : (
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center">
-                                    <SkillsIcon className="h-4 w-4 text-purple-500 mr-2" />
-                                    <span className="text-sm text-gray-700">
-                                        {selectedSkills.length} skill{selectedSkills.length !== 1 ? "s" : ""} selected
-                                    </span>
-                                </div>
-                                {selectedSkills.length > 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={clearSkills}
-                                        className="text-sm text-red-600 hover:text-red-800 flex items-center"
-                                    >
-                                        <Trash2 className="h-3 w-3 mr-1" />
-                                        Clear All
-                                    </button>
-                                )}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {selectedSkills.map((skill, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center justify-between bg-custom-blue/10 border border-custom-blue/10 rounded-md p-2"
-                                        style={{ minWidth: '150px', maxWidth: '250px' }}
-                                    >
-                                        <div className="flex-1 overflow-hidden">
-                                            <span className="ml-2 text-sm text-custom-blue truncate whitespace-nowrap">
-                                                {skill.SkillName}
-                                            </span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveSkill(index)}
-                                            className="text-custom-blue hover:text-custom-blue/80 p-1 rounded-full hover:bg-custom-blue/10 ml-2"
-                                            title="Remove skill"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
+                    {selectedSkills.length === 0 && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-center">
+                            <p className="text-sm text-gray-500">No skills selected yet.</p>
                         </div>
                     )}
                 </div>
@@ -449,7 +480,8 @@ const InterviewDetails = ({
                 <div className="col-span-2 sm:col-span-6 space-y-6">
                     <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
                         <p>
-                            Do you have any previous experience conducting interviews? <span className="text-red-500">*</span>
+                            Do you have any previous experience conducting interviews?{' '}
+                            <span className="text-red-500">*</span>
                         </p>
                         <div className="mt-3 mb-3 flex space-x-6">
                             <label className="inline-flex items-center">
@@ -458,7 +490,7 @@ const InterviewDetails = ({
                                     className="form-radio text-gray-600"
                                     name="previousInterviewExperience"
                                     value="yes"
-                                    checked={previousInterviewExperience === "yes"}
+                                    checked={previousInterviewExperience === 'yes'}
                                     onChange={handleRadioChange}
                                 />
                                 <span className="ml-2">Yes</span>
@@ -469,115 +501,254 @@ const InterviewDetails = ({
                                     className="form-radio text-gray-600"
                                     name="previousInterviewExperience"
                                     value="no"
-                                    checked={previousInterviewExperience === "no"}
+                                    checked={previousInterviewExperience === 'no'}
                                     onChange={handleRadioChange}
                                 />
                                 <span className="ml-2">No</span>
                             </label>
                         </div>
                         {errors.previousInterviewExperience && (
-                            <p className="text-red-500 text-sm sm:text-xs">{errors.previousInterviewExperience}</p>
+                            <p className="text-red-500 text-sm sm:text-xs">
+                                {errors.previousInterviewExperience}
+                            </p>
                         )}
                     </div>
 
-                    {previousInterviewExperience === "yes" && (
+                    {previousInterviewExperience === 'yes' && (
                         <div>
-                            <label htmlFor="previousInterviewExperienceYears" className="block text-sm font-medium text-gray-900 mb-2">
-                                How many years of experience do you have in conducting interviews? <span className="text-red-500">*</span>
+                            <label
+                                htmlFor="previousInterviewExperienceYears"
+                                className="block text-sm font-medium text-gray-900 mb-2"
+                            >
+                                How many years of experience do you have in conducting interviews?{' '}
+                                <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type='number'
-                                id="previousInterviewExperienceYears"
-                                name="previousInterviewExperienceYears"
-                                min="1"
-                                max="15"
-                                placeholder="Enter years of experience"
-                                value={interviewDetailsData.previousInterviewExperienceYears || ""}
-                                onChange={handleChangeExperienceYears}
-                                className={`block w-1/2 sm:w-full pl-3 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${errors.previousInterviewExperienceYears ? "border-red-500" : "border-gray-400"}`}
-                            />
+                            <div className="w-1/2 sm:w-full">
+                                <IncreaseAndDecreaseField
+                                    name="previousInterviewExperienceYears"
+                                    value={interviewDetailsData.previousInterviewExperienceYears || ''}
+                                    onChange={handleChangeExperienceYears}
+                                    min={1}
+                                    max={15}
+                                    label="Years of experience"
+                                    required={true}
+                                    error={errors.previousInterviewExperienceYears}
+                                    className={errors.previousInterviewExperienceYears ? 'border-red-500' : 'border-gray-400'}
+                                />
+                            </div>
                             {errors.previousInterviewExperienceYears && (
-                                <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.previousInterviewExperienceYears}</p>
+                                <p className="text-red-500 text-sm sm:text-xs mt-2">
+                                    {errors.previousInterviewExperienceYears}
+                                </p>
                             )}
                         </div>
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-4">
-                            Hourly Rates by Experience Level (USD) <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Hourly Rates by Experience Level <span className="text-red-500">*</span>
                         </label>
                         <div className="space-y-4">
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label htmlFor="junior_rate" className="text-sm font-medium text-gray-700">
-                                        Junior Level (0-3 years)
-                                    </label>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 sm:text-sm">$</span>
+                            {showJuniorLevel && (
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label htmlFor="junior_rate" className="text-sm font-medium text-gray-700">
+                                            Junior Level (0-3 years)
+                                        </label>
+                                        {showJuniorLevel && (
+                                            <span className="text-xs text-gray-500">
+                                                {getRateRanges('Junior')?.usd && getRateRanges('Junior')?.inr && (
+                                                    <span>
+                                                        Range: ${getRateRanges('Junior').usd.min}-${getRateRanges('Junior').usd.max}
+                                                        {" "}({`₹${getRateRanges('Junior').inr.min}–${getRateRanges('Junior').inr.max}`})
+                                                    </span>
+                                                )}
+                                            </span>
+                                        )}
                                     </div>
-                                    <input
-                                        id="junior_rate"
-                                        type="number"
-                                        className="block w-full pl-7 pr-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        placeholder="Enter junior rate"
-                                        value={interviewDetailsData.junior_rate || ""}
-                                        onChange={handleHourlyRateChange('junior_rate')}
-                                    />
-                                </div>
-                                {errors.junior_rate && (
-                                    <p className="mt-1.5 text-sm text-red-600">{errors.junior_rate}</p>
-                                )}
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label htmlFor="mid_rate" className="text-sm font-medium text-gray-700">
-                                        Mid-Level (3-6 years)
-                                    </label>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 sm:text-sm">$</span>
+                                    <div className="flex sm:flex-col w-full">
+                                        <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">USD</label>
+                                            <div className="relative">
+                                                <IncreaseAndDecreaseField
+                                                    name="junior_usd"
+                                                    value={interviewDetailsData.rates?.junior?.usd || ''}
+                                                    onChange={handleHourlyRateChange('junior', 'usd')}
+                                                    label=""
+                                                    min={getRateRanges('Junior')?.usd?.min || 0}
+                                                    max={getRateRanges('Junior')?.usd?.max || 1000}
+                                                    inputProps={{
+                                                        className: 'pl-7',
+                                                        placeholder: 'Enter USD rate'
+                                                    }}
+                                                    prefix="$"
+                                                />
+                                            </div>
+                                            {errors.junior_usd && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.junior_usd}</p>
+                                            )}
+                                        </div>
+                                        <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">INR</label>
+                                            <div className="relative">
+                                                <IncreaseAndDecreaseField
+                                                    name="junior_inr"
+                                                    value={interviewDetailsData.rates?.junior?.inr || ''}
+                                                    onChange={handleHourlyRateChange('junior', 'inr')}
+                                                    label=""
+                                                    min={getRateRanges('Junior')?.inr?.min || 0}
+                                                    max={getRateRanges('Junior')?.inr?.max || 100000}
+                                                    inputProps={{
+                                                        className: 'pl-7',
+                                                        placeholder: 'Enter INR rate'
+                                                    }}
+                                                    prefix="₹"
+                                                />
+                                            </div>
+                                            {errors.junior_inr && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.junior_inr}</p>
+                                            )}
+                                        </div>
                                     </div>
-                                    <input
-                                        id="mid_rate"
-                                        type="number"
-                                        className="block w-full pl-7 pr-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        placeholder="Enter mid-level rate"
-                                        value={interviewDetailsData.mid_rate || ""}
-                                        onChange={handleHourlyRateChange('mid_rate')}
-                                    />
                                 </div>
-                                {errors.mid_rate && (
-                                    <p className="mt-1.5 text-sm text-red-600">{errors.mid_rate}</p>
-                                )}
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label htmlFor="senior_rate" className="text-sm font-medium text-gray-700">
-                                        Senior Level (6+ years)
-                                    </label>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 sm:text-sm">$</span>
+                            )}
+
+                            {showMidLevel && (
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label htmlFor="mid_rate" className="text-sm font-medium text-gray-700">
+                                            Mid-Level (3-6 years)
+                                        </label>
+                                        {showMidLevel && (
+                                            <span className="text-xs text-gray-500">
+                                                {getRateRanges('Mid-Level')?.usd && getRateRanges('Mid-Level')?.inr && (
+                                                    <span>
+                                                        Range: ${getRateRanges('Mid-Level').usd.min}-${getRateRanges('Mid-Level').usd.max}
+                                                        {" "}({`₹${getRateRanges('Mid-Level').inr.min}–${getRateRanges('Mid-Level').inr.max}`})
+                                                    </span>
+                                                )}
+                                            </span>
+                                        )}
                                     </div>
-                                    <input
-                                        id="senior_rate"
-                                        type="number"
-                                        className="block w-full pl-7 pr-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        placeholder="Enter senior rate"
-                                        value={interviewDetailsData.senior_rate || ""}
-                                        onChange={handleHourlyRateChange('senior_rate')}
-                                    />
+                                    <div className="flex sm:flex-col w-full">
+                                        <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">USD</label>
+                                            <div className="relative">
+                                                <IncreaseAndDecreaseField
+                                                    name="mid_usd"
+                                                    value={interviewDetailsData.rates?.mid?.usd || ''}
+                                                    onChange={handleHourlyRateChange('mid', 'usd')}
+                                                    label=""
+                                                    min={getRateRanges('Mid-Level')?.usd?.min || 0}
+                                                    max={getRateRanges('Mid-Level')?.usd?.max || 1000}
+                                                    inputProps={{
+                                                        className: 'pl-7',
+                                                        placeholder: 'Enter USD rate'
+                                                    }}
+                                                    prefix="$"
+                                                />
+                                            </div>
+                                            {errors.rates?.mid?.usd && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.rates?.mid?.usd}</p>
+                                            )}
+                                        </div>
+                                        <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">INR</label>
+                                            <div className="relative">
+                                                <IncreaseAndDecreaseField
+                                                    name="mid_inr"
+                                                    value={interviewDetailsData.rates?.mid?.inr || ''}
+                                                    onChange={handleHourlyRateChange('mid', 'inr')}
+                                                    label=""
+                                                    min={getRateRanges('Mid-Level')?.inr?.min || 0}
+                                                    max={getRateRanges('Mid-Level')?.inr?.max || 100000}
+                                                    inputProps={{
+                                                        className: 'pl-7',
+                                                        placeholder: 'Enter INR rate'
+                                                    }}
+                                                    prefix="₹"
+                                                />
+                                            </div>
+                                            {errors.rates?.mid?.inr && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.rates?.mid?.inr}</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                {errors.senior_rate && (
-                                    <p className="mt-1.5 text-sm text-red-600">{errors.senior_rate}</p>
-                                )}
-                            </div>
+                            )}
+
+                            {showSeniorLevel && (
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label htmlFor="senior_rate" className="text-sm font-medium text-gray-700">
+                                            Senior Level (6+ years)
+                                        </label>
+                                        {showSeniorLevel && (
+                                            <span className="text-xs text-gray-500">
+                                                {getRateRanges('Senior')?.usd && getRateRanges('Senior')?.inr && (
+                                                    <span>
+                                                        Range: ${getRateRanges('Senior').usd.min}-${getRateRanges('Senior').usd.max}
+                                                        {" "}({`₹${getRateRanges('Senior').inr.min}–${getRateRanges('Senior').inr.max}`})
+                                                    </span>
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex sm:flex-col w-full">
+                                        <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">USD</label>
+                                            <div className="relative">
+                                                <IncreaseAndDecreaseField
+                                                    name="senior_usd"
+                                                    value={interviewDetailsData.rates?.senior?.usd || ''}
+                                                    onChange={handleHourlyRateChange('senior', 'usd')}
+                                                    label=""
+                                                    min={getRateRanges('Senior')?.usd?.min || 0}
+                                                    max={getRateRanges('Senior')?.usd?.max || 1000}
+                                                    inputProps={{
+                                                        className: 'pl-7',
+                                                        placeholder: 'Enter USD rate'
+                                                    }}
+                                                    prefix="$"
+                                                />
+                                            </div>
+                                            {errors.senior_usd && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.senior_usd}</p>
+                                            )}
+                                        </div>
+                                        <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">INR</label>
+                                            <div className="relative">
+                                                <IncreaseAndDecreaseField
+                                                    name="senior_inr"
+                                                    value={interviewDetailsData.rates?.senior?.inr || ''}
+                                                    onChange={handleHourlyRateChange('senior', 'inr')}
+                                                    label=""
+                                                    min={getRateRanges('Senior')?.inr?.min || 0}
+                                                    max={getRateRanges('Senior')?.inr?.max || 100000}
+                                                    inputProps={{
+                                                        className: 'pl-7',
+                                                        placeholder: 'Enter INR rate'
+                                                    }}
+                                                    prefix="₹"
+                                                />
+                                            </div>
+                                            {errors.senior_inr && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.senior_inr}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <p className="mt-2 text-xs text-gray-500">Set competitive rates based on candidate experience levels.</p>
+                        <p className="mt-2 text-xs text-gray-500">
+                            {expYears > 0 ? (
+                                `Based on your ${expYears} years of experience, we're showing the most relevant experience levels.`
+                            ) : (
+                                'Set competitive rates based on candidate experience levels.'
+                            )}
+                            {expYears === 6 && <span className="block mt-1">For Senior Level (7+ years), please select 7 or more years of experience.</span>}
+                        </p>
                     </div>
 
                     <div>
@@ -591,7 +762,7 @@ const InterviewDetails = ({
                                         id="format_technical"
                                         type="checkbox"
                                         value="technical"
-                                        checked={interviewDetailsData?.interviewFormatWeOffer?.includes("technical")}
+                                        checked={interviewDetailsData?.interviewFormatWeOffer?.includes('technical')}
                                         onChange={handleInterviewFormatChange}
                                         className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                                     />
@@ -600,7 +771,9 @@ const InterviewDetails = ({
                                     <label htmlFor="format_technical" className="font-medium text-gray-700">
                                         Technical Coding
                                     </label>
-                                    <p className="text-sm text-gray-500">Algorithmic problem-solving and coding challenges</p>
+                                    <p className="text-sm text-gray-500">
+                                        Algorithmic problem-solving and coding challenges
+                                    </p>
                                 </div>
                             </div>
                             <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
@@ -609,7 +782,7 @@ const InterviewDetails = ({
                                         id="format_system_design"
                                         type="checkbox"
                                         value="system_design"
-                                        checked={interviewDetailsData?.interviewFormatWeOffer?.includes("system_design")}
+                                        checked={interviewDetailsData?.interviewFormatWeOffer?.includes('system_design')}
                                         onChange={handleInterviewFormatChange}
                                         className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                                     />
@@ -627,7 +800,7 @@ const InterviewDetails = ({
                                         id="format_behavioral"
                                         type="checkbox"
                                         value="behavioral"
-                                        checked={interviewDetailsData?.interviewFormatWeOffer?.includes("behavioral")}
+                                        checked={interviewDetailsData?.interviewFormatWeOffer?.includes('behavioral')}
                                         onChange={handleInterviewFormatChange}
                                         className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                                     />
@@ -645,7 +818,7 @@ const InterviewDetails = ({
                                         id="format_mock"
                                         type="checkbox"
                                         value="mock"
-                                        checked={interviewDetailsData?.interviewFormatWeOffer?.includes("mock")}
+                                        checked={interviewDetailsData?.interviewFormatWeOffer?.includes('mock')}
                                         onChange={handleInterviewFormatChange}
                                         className="h-4 w-4 text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                                     />
@@ -664,33 +837,117 @@ const InterviewDetails = ({
                     </div>
 
                     {isMockInterviewSelected && (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                            <label htmlFor="mock_interview_discount" className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="p-4 rounded-lg border border-gray-200">
+                            <label
+                                htmlFor="mock_interview_discount"
+                                className="block text-sm font-medium text-gray-700 mb-2"
+                            >
                                 Mock Interview Discount Percentage
                             </label>
-                            <select
-                                id="mock_interview_discount"
-                                className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                value={interviewDetailsData.mock_interview_discount || ""}
-                                onChange={handleChangeforExp}
-                            >
-                                <option value="">Select discount percentage</option>
-                                <option value="10">10% discount</option>
-                                <option value="20">20% discount</option>
-                                <option value="30">30% discount</option>
-                            </select>
-                            <p className="mt-1.5 text-xs text-blue-600">
+                            <div className="relative">
+                                {showCustomDiscount ? (
+                                    <div className="flex items-center">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={customDiscountValue}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/\D/g, '');
+                                                setCustomDiscountValue(value);
+                                            }}
+                                            onBlur={() => {
+                                                if (customDiscountValue) {
+                                                    handleChangeforExp({
+                                                        target: {
+                                                            name: 'mock_interview_discount',
+                                                            value: customDiscountValue
+                                                        }
+                                                    });
+                                                }
+                                                setShowCustomDiscount(false);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.target.blur();
+                                                }
+                                            }}
+                                            className="w-24 px-3 py-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500"
+                                            autoFocus
+                                        />
+                                        <span className="px-3 py-2 bg-gray-100 border-t border-b border-r border-gray-300 rounded-r-md text-gray-700">
+                                            % Discount
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowCustomDiscount(false);
+                                                setCustomDiscountValue('');
+                                            }}
+                                            className="ml-2 text-gray-500 hover:text-gray-700"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <DropdownSelect
+                                        id="mock_interview_discount"
+                                        name="mock_interview_discount"
+                                        value={interviewDetailsData.mock_interview_discount
+                                            ? {
+                                                value: interviewDetailsData.mock_interview_discount,
+                                                label: `${interviewDetailsData.mock_interview_discount}% discount`
+                                            }
+                                            : null
+                                        }
+                                        onChange={(selected) => {
+                                            if (selected?.value === 'custom') {
+                                                setShowCustomDiscount(true);
+                                                setCustomDiscountValue('');
+                                            } else if (selected) {
+                                                handleChangeforExp({
+                                                    target: {
+                                                        name: 'mock_interview_discount',
+                                                        value: selected.value
+                                                    }
+                                                });
+                                            } else {
+                                                handleChangeforExp({
+                                                    target: {
+                                                        name: 'mock_interview_discount',
+                                                        value: ''
+                                                    }
+                                                });
+                                            }
+                                        }}
+                                        options={[
+                                            { value: '10', label: '10% discount' },
+                                            { value: '20', label: '20% discount' },
+                                            { value: '30', label: '30% discount' },
+                                            { value: 'custom', label: 'Add custom percentage...' }
+                                        ]}
+                                        placeholder="Select discount percentage"
+                                        className="w-full"
+                                        classNamePrefix="select"
+                                        isClearable={true}
+                                    />
+                                )}
+                            </div>
+                            <p className="mt-1.5 text-xs text-custom-blue">
                                 Offer a discount for mock interviews to attract more candidates
                             </p>
                         </div>
                     )}
 
-                    <div>
+                    {/* policy for no-show cases - for now this want to be comment */}
+                    {/* <div>
                         <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
                             Policy for No-Show Cases <span className="text-red-500">*</span>
                         </p>
                         <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
-                            {["25%", "50%", "75%", "100%"].map((policy) => (
+                            {['25%', '50%', '75%', '100%'].map((policy) => (
                                 <label key={policy} className="inline-flex items-center">
                                     <input
                                         type="radio"
@@ -704,112 +961,121 @@ const InterviewDetails = ({
                                 </label>
                             ))}
                         </div>
-                        {errors.noShowPolicy && <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.noShowPolicy}</p>}
-                    </div>
+                        {errors.noShowPolicy && (
+                            <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.noShowPolicy}</p>
+                        )}
+                    </div> */}
 
                     <div className="sm:col-span-6 col-span-2">
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                            Professional Title <span className="text-red-500">*</span>
-                        </label>
-                        <div>
-                            <input
-                                id="Professional Title"
-                                name="professionalTitle"
-                                type="text"
-                                required
-                                value={interviewDetailsData.professionalTitle || ''}
-                                onChange={(e) => {
-                                    setInterviewDetailsData((prevData) => ({
-                                        ...prevData,
-                                        professionalTitle: e.target.value,
+                        <InputField
+                            value={interviewDetailsData.professionalTitle || ''}
+                            onChange={(e) => {
+                                setInterviewDetailsData(prev => ({
+                                    ...prev,
+                                    professionalTitle: e.target.value
+                                }));
+                                if (e.target.value.length >= 50) {
+                                    setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                                }
+                            }}
+                            onBlur={(e) => {
+                                const value = e.target.value.trim();
+                                if (!value) {
+                                    setErrors(prev => ({
+                                        ...prev,
+                                        professionalTitle: 'Professional title is required'
                                     }));
-                                    if (e.target.value.length >= 50) {
-                                        setErrors(prev => ({ ...prev, professionalTitle: '' }));
-                                    }
-                                }}
-                                onBlur={(e) => {
-                                    const value = e.target.value.trim();
-                                    if (!value) {
-                                        setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
-                                    } else if (value.length < 50) {
-                                        setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
-                                    } else if (value.length > 100) {
-                                        setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
-                                    } else {
-                                        setErrors(prev => ({ ...prev, professionalTitle: '' }));
-                                    }
-                                }}
-                                className={`block w-full px-3 py-2.5 text-gray-900 border ${errors.professionalTitle ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                                placeholder="Senior Software Engineer with 5+ years of experience in full-stack development"
-                                minLength={50}
-                                maxLength={100}
-                            />
-                            <div className="flex justify-between mt-2">
-                                {errors.professionalTitle ? (
-                                    <p className="text-sm text-red-600">{errors.professionalTitle}</p>
-                                ) : (
-                                    <p className="text-xs text-gray-500">Min 50 characters</p>
-                                )}
-                                {interviewDetailsData.professionalTitle?.length > 0 && (
-                                    <p className={`text-xs ${interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle ? 'text-red-500' : 'text-gray-500'}`}>
-                                        {interviewDetailsData.professionalTitle.length}/100
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="sm:col-span-6 col-span-2">
-                        <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                            Professional Bio <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                            <textarea
-                                id="bio"
-                                rows="5"
-                                required
-                                value={interviewDetailsData.bio || ''}
-                                onChange={(e) => {
-                                    handleBioChange(e);
-                                    if (e.target.value.length >= 150) {
-                                        setErrors(prev => ({ ...prev, bio: '' }));
-                                    }
-                                }}
-                                onBlur={(e) => {
-                                    const value = e.target.value.trim();
-                                    if (!value) {
-                                        setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
-                                    } else if (value.length < 150) {
-                                        setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
-                                    } else {
-                                        setErrors(prev => ({ ...prev, bio: '' }));
-                                    }
-                                }}
-                                className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.bio ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer. Please provide detailed information about your experience, skills, and any specific areas of expertise you have in conducting interviews..."
-                                minLength={150}
-                                maxLength={500}
-                            ></textarea>
-                            {bioLength > 0 && (
-                                <p
-                                    className={`absolute -bottom-6 right-0 text-xs ${bioLength < 150 || errors.bio ? 'text-red-500' : bioLength > 450 ? 'text-yellow-500' : 'text-gray-500'}`}
-                                >
-                                    {bioLength}/500
+                                } else if (value.length < 50) {
+                                    setErrors(prev => ({
+                                        ...prev,
+                                        professionalTitle: 'Professional title must be at least 50 characters'
+                                    }));
+                                } else if (value.length > 100) {
+                                    setErrors(prev => ({
+                                        ...prev,
+                                        professionalTitle: 'Professional title cannot exceed 100 characters'
+                                    }));
+                                } else {
+                                    setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                                }
+                            }}
+                            name="professionalTitle"
+                            error={errors.professionalTitle}
+                            label="Professional Title"
+                            required
+                            minLength={50}
+                            maxLength={100}
+                            placeholder="Senior Software Engineer with 5+ years of experience in full-stack development"
+                        />
+                        <div className="flex justify-between mt-1">
+                            {!errors.professionalTitle && (
+                                <p className="text-xs text-gray-500">Min 50 characters</p>
+                            )}
+                            {interviewDetailsData.professionalTitle?.length > 0 && (
+                                <p className={`text-xs ${
+                                    interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle
+                                        ? 'text-red-500'
+                                        : 'text-gray-500'
+                                }`}>
+                                    {interviewDetailsData.professionalTitle.length}/100
                                 </p>
                             )}
                         </div>
-                        <div className="flex justify-between mt-2">
-                            {errors.bio ? (
-                                <p className="text-sm text-red-600">{errors.bio}</p>
-                            ) : (
+                    </div>
+
+                    <div className="sm:col-span-6 col-span-2">
+                        <DescriptionField
+                            showCounter={false}
+                            value={interviewDetailsData.bio || ''}
+                            onChange={(e) => {
+                                handleBioChange(e);
+                                if (e.target.value.length >= 150) {
+                                    setErrors(prev => ({ ...prev, bio: '' }));
+                                }
+                            }}
+                            onBlur={(e) => {
+                                const value = e.target.value.trim();
+                                if (!value) {
+                                    setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
+                                } else if (value.length < 150) {
+                                    setErrors(prev => ({
+                                        ...prev,
+                                        bio: 'Professional bio must be at least 150 characters'
+                                    }));
+                                } else {
+                                    setErrors(prev => ({ ...prev, bio: '' }));
+                                }
+                            }}
+                            name="bio"
+                            error={errors.bio}
+                            label="Professional Bio"
+                            required
+                            rows={5}
+                            minLength={150}
+                            maxLength={500}
+                            placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer. Please provide detailed information about your experience, skills, and any specific areas of expertise you have in conducting interviews..."
+                        />
+                        <div className="flex justify-between mt-1">
+                            {!errors.bio && (
                                 <p className="text-xs text-gray-500">Min 150 characters</p>
+                            )}
+                            {interviewDetailsData.bio?.length > 0 && (
+                                <p className={`text-xs ${
+                                    interviewDetailsData.bio.length < 150 || errors.bio
+                                        ? 'text-red-500'
+                                        : interviewDetailsData.bio.length > 450
+                                            ? 'text-yellow-500'
+                                            : 'text-gray-500'
+                                }`}>
+                                    {interviewDetailsData.bio.length}/500
+                                </p>
                             )}
                         </div>
                     </div>
                 </div>
             </div>
         </>
-    )
-}
+    );
+};
 
-export default InterviewDetails
+export default InterviewDetails;

@@ -157,21 +157,35 @@ const ContactsSchema = new mongoose.Schema(
       uploadDate: Date, 
     },
     // ranjith added have to check proeprly
-    coverLetterdescription: String,
+    // coverLetterdescription: String,
     professionalTitle: String,
     bio: String,
     InterviewFormatWeOffer: [String],
     mock_interview_discount: { type: String },
     isMockInterviewSelected: { type: Boolean },
-    NoShowPolicy: { type: String },
+    // NoShowPolicy: { type: String },
     PreviousExperienceConductingInterviews: String,
     PreviousExperienceConductingInterviewsYears: String,
     // ExpertiseLevel_ConductingInterviews: String,
-        junior_rate: { type: Number },
-    mid_rate: { type: Number },
-    senior_rate: { type: Number },
+    rates: {
+      junior: {
+        usd: { type: Number, default: 0 },
+        inr: { type: Number, default: 0 },
+        isVisible: { type: Boolean, default: true }
+      },
+      mid: {
+        usd: { type: Number, default: 0 },
+        inr: { type: Number, default: 0 },
+        isVisible: { type: Boolean, default: false }
+      },
+      senior: {
+        usd: { type: Number, default: 0 },
+        inr: { type: Number, default: 0 },
+        isVisible: { type: Boolean, default: false }
+      }
+    },
     lead_rate: { type: Number },
-    expectedRatePerMockInterview: String, //newly added  Ranjith
+    // expectedRatePerMockInterview: String, //newly added  Ranjith
     technologies: [String],
     isReadyForMockInterviews: String, //this feild have to check from login page this feild data is not getting properly
     skills: [String],
