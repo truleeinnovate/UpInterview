@@ -1013,8 +1013,8 @@ const SuggestedQuestionsComponent = ({
         filterIconRef={filterIconRef}
         currentPage={currentPage}
         totalPages={totalPages}
-        onClickLeftPaginationIcon={() => console.log("Prev page")}
-        onClickRightPagination={() => console.log("Next page")}
+        onClickLeftPaginationIcon={onClickLeftPaginationIcon}
+        onClickRightPagination={onClickRightPagination}
       />
 
       {/* v1.0.5 -----------------------------------------------------------------> */}
