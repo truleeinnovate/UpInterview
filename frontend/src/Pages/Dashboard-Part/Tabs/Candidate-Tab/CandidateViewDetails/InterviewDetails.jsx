@@ -41,13 +41,13 @@ const InterviewDetails = ({ interview, onClose, onEdit }) => {
       `Interview Feedback - ${interview.company} - ${round.round}`
     );
     const body = encodeURIComponent(`
-Interview Details:
-Company: ${interview.company}
-Position: ${interview.position}
-Round: ${round.round}
-Date: ${format(new Date(round.date), "MMM dd, yyyy")}
-Interviewer: ${round.interviewer}
-Feedback: ${round.feedback || "N/A"}
+      Interview Details:
+      Company: ${interview.company}
+      Position: ${interview.position}
+      Round: ${round.round}
+      Date: ${format(new Date(round.date), "MMM dd, yyyy")}
+      Interviewer: ${round.interviewer}
+      Feedback: ${round.feedback || "N/A"}
     `);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -68,27 +68,27 @@ Feedback: ${round.feedback || "N/A"}
     onEdit({ ...editingRound, ...editFormData });
     setIsEditModalOpen(false);
   };
+
   // v1.0.0 <------------------------------------------------------------------------ 
   const downloadConsolidatedFeedback = () => {
     const feedbackContent = interview?.rounds
       .filter((round) => round?.feedback)
       .map(
         (round) => `
-                    Round: ${round?.round}
-                    Date: ${format(new Date(round?.date), "MMM dd, yyyy")}
-                    Interviewer: ${round?.interviewer}
-                    Feedback: ${round?.feedback}
-                    Status: ${round?.status}
-                    -------------------
-                  `
+          Round: ${round?.round}
+          Date: ${format(new Date(round?.date), "MMM dd, yyyy")}
+          Interviewer: ${round?.interviewer}
+          Feedback: ${round?.feedback}
+          Status: ${round?.status}
+          -------------------
+        `
       )
       .join("\n");
 
     const element = document.createElement("a");
     const file = new Blob(
       [
-        `Interview Feedback for ${
-          interview?.positionId?.companyname || "N/A"
+        `Interview Feedback for ${interview?.positionId?.companyname || "N/A"
         } - ${interview?.positionId?.title || "N/A"}\n\n${feedbackContent}`,
       ],
       {
@@ -244,30 +244,30 @@ Feedback: ${round.feedback || "N/A"}
                       <span className="text-sm">
                         {round?.dateTime
                           ? (() => {
-                              try {
-                                // Extract date part from datetime string
-                                const datePart = round.dateTime.split(" ")[0];
+                            try {
+                              // Extract date part from datetime string
+                              const datePart = round.dateTime.split(" ")[0];
 
-                                // Convert DD-MM-YYYY → YYYY-MM-DD
-                                const formattedDate = datePart
-                                  .split("-")
-                                  .reverse()
-                                  .join("-");
+                              // Convert DD-MM-YYYY → YYYY-MM-DD
+                              const formattedDate = datePart
+                                .split("-")
+                                .reverse()
+                                .join("-");
 
-                                // Format date to "MMM dd, yyyy"
-                                return format(
-                                  new Date(formattedDate),
-                                  "MMM dd, yyyy"
-                                );
-                              } catch (error) {
-                                console.error(
-                                  "Invalid date format:",
-                                  round?.dateTime,
-                                  error
-                                );
-                                return "Invalid Date";
-                              }
-                            })()
+                              // Format date to "MMM dd, yyyy"
+                              return format(
+                                new Date(formattedDate),
+                                "MMM dd, yyyy"
+                              );
+                            } catch (error) {
+                              console.error(
+                                "Invalid date format:",
+                                round?.dateTime,
+                                error
+                              );
+                              return "Invalid Date";
+                            }
+                          })()
                           : "N/A"}
                       </span>
                     </div>

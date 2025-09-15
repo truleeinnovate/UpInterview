@@ -435,11 +435,58 @@ const updateContactsDetails = async (req, res) => {
 
 
     const contactId = req.params.id;
-    const { availability, ...contactData } = req.body;
+    const { availability, yearsOfExperience, ...contactData } = req.body;
 
     // If timeZone is an object (e.g., { label: "", value: "" }), extract value
     if (contactData.timeZone && typeof contactData.timeZone === "object") {
       contactData.timeZone = contactData.timeZone.value;
+    }
+
+    // Process rates object if provided
+    if (contactData.rates) {
+      // Ensure rates object has proper structure
+      const defaultRate = { usd: 0, inr: 0, isVisible: false };
+      const levels = ['junior', 'mid', 'senior'];
+      
+      // Initialize rates object if not present
+      if (!contactData.rates) contactData.rates = {};
+      
+      // Process each level
+      levels.forEach(level => {
+        if (!contactData.rates[level]) {
+          contactData.rates[level] = { ...defaultRate };
+        } else {
+          // Ensure all required fields exist and are of correct type
+          contactData.rates[level] = {
+            usd: Number(contactData.rates[level].usd) || 0,
+            inr: Number(contactData.rates[level].inr) || 0,
+            isVisible: Boolean(contactData.rates[level].isVisible)
+          };
+        }
+      });
+      
+      // Set visibility based on years of experience if not explicitly set
+      const expYears = parseInt(yearsOfExperience || contactData.yearsOfExperience || 0, 10);
+      
+      if (contactData.rates.junior.isVisible === undefined) {
+        contactData.rates.junior.isVisible = expYears >= 0; // Always show junior
+      }
+      if (contactData.rates.mid.isVisible === undefined) {
+        contactData.rates.mid.isVisible = expYears >= 3; // Show mid if 3+ years
+      }
+      if (contactData.rates.senior.isVisible === undefined) {
+        contactData.rates.senior.isVisible = expYears > 6; // Show senior if 7+ years
+      }
+    }
+
+    // Process mock interview discount
+    if (contactData.mock_interview_discount !== undefined) {
+      contactData.mock_interview_discount = String(contactData.mock_interview_discount || '0');
+    }
+
+    // Ensure mock interview selected flag is a boolean
+    if (contactData.isMockInterviewSelected !== undefined) {
+      contactData.isMockInterviewSelected = Boolean(contactData.isMockInterviewSelected);
     }
 
     // Update the contact document based on ownerId (contactId)

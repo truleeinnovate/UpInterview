@@ -206,7 +206,6 @@ const CustomProvider = ({ children }) => {
   // Fetch users data
   const fetchUsersData = async () => {
     try {
-      console.log('config.REACT_APP_API_URL', config.REACT_APP_API_URL);
       const response = await axios.get(`${config.REACT_APP_API_URL}/users`, {
         withCredentials: true
       });
