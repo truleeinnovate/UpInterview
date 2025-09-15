@@ -15,6 +15,7 @@ import {
 } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTasks } from "../../../../apiHooks/useTasks";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 
 const TaskList = () => {
   const { data: taskData = [], isLoading } = useTasks();
@@ -22,6 +23,22 @@ const TaskList = () => {
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
   const navigate = useNavigate();
+
+  // Options for react-select dropdowns
+  const timeOptionsRS = [
+    { value: "all", label: "All Time" },
+    { value: "today", label: "Today" },
+    { value: "tomorrow", label: "Tomorrow" },
+    { value: "this-week", label: "This Week" },
+    { value: "next-week", label: "Next Week" },
+  ];
+  const statusOptionsRS = [
+    { value: "all", label: "All Status" },
+    { value: "new", label: "New" },
+    { value: "in progress", label: "In Progress" },
+    { value: "completed", label: "Completed" },
+    { value: "no response", label: "No Response" },
+  ];
 
   // Custom function to check if a date is in the next week
   const isNextWeek = (date) => {
@@ -76,30 +93,24 @@ const TaskList = () => {
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <Filter size={16} className="text-gray-400" />
-          <select
-            value={selectedTimeFilter}
-            onChange={(e) => setSelectedTimeFilter(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="tomorrow">Tomorrow</option>
-            <option value="this-week">This Week</option>
-            <option value="next-week">Next Week</option>
-          </select>
+          <Filter size={24} className="text-gray-400" />
+          <div className="min-w-[160px]">
+            <DropdownSelect
+              options={timeOptionsRS}
+              value={timeOptionsRS.find((opt) => opt.value === selectedTimeFilter)}
+              onChange={(opt) => setSelectedTimeFilter(opt?.value || "all")}
+              placeholder="All Time"
+            />
+          </div>
         </div>
-        <select
-          value={selectedStatusFilter}
-          onChange={(e) => setSelectedStatusFilter(e.target.value)}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="all">All Status</option>
-          <option value="new">New</option>
-          <option value="in progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="no response">No Response</option>
-        </select>
+        <div className="min-w-[160px]">
+          <DropdownSelect
+            options={statusOptionsRS}
+            value={statusOptionsRS.find((opt) => opt.value === selectedStatusFilter)}
+            onChange={(opt) => setSelectedStatusFilter(opt?.value || "all")}
+            placeholder="All Status"
+          />
+        </div>
       </div>
 
       <div className="space-y-3 overflow-y-auto max-h-[400px] pr-2">
