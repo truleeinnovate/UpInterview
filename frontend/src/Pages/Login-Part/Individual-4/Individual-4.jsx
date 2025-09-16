@@ -387,13 +387,24 @@ const MultiStepForm = () => {
         return;
       }
 
-      const statusKey = ["basicDetails", "additionalDetails", "interviewDetails", "availabilityDetails"][currentStep] || "";
+      // Calculate the updated completion status
+      const currentStepKey = ["basicDetails", "additionalDetails", "interviewDetails", "availabilityDetails"][currentStep];
+      const isLastStep = currentStep === (isInternalInterviewer ? 3 : Freelancer ? 3 : 1);
       
-      setCompletionStatus(prev => ({
-        ...prev,
-        [statusKey]: true
-      }));
-
+      // Create the updated completion status
+      const updatedCompletionStatus = {
+        ...completionStatus,
+        [currentStepKey]: true,
+        ...(isLastStep ? {
+          basicDetails: true,
+          additionalDetails: true,
+          interviewDetails: true,
+          availabilityDetails: true
+        } : {})
+      };
+      
+      // Update local state
+      setCompletionStatus(updatedCompletionStatus);
       setFormLoading(true);
 
       const userData = {
@@ -468,7 +479,7 @@ const MultiStepForm = () => {
           preferredDuration: availabilityDetailsData.preferredDuration,
         }),
         LetUsKnowYourProfession: profession,
-        completionStatus: completionStatus,
+        completionStatus: updatedCompletionStatus,
         _id: contactId,
       };
 

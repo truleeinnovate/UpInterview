@@ -23,12 +23,51 @@ const InterviewDetails = ({
     setPreviousInterviewExperience,
     isMockInterviewSelected,
     setIsMockInterviewSelected,
-    yearsOfExperience = 0, // Default to 0 if not provided
+    yearsOfExperience = 0,
 }) => {
+    // Log all props when component renders
+    console.log('=== InterviewDetails Component Props ===');
+    console.log('interviewDetailsData:', interviewDetailsData);
     const [showCustomDiscount, setShowCustomDiscount] = useState(false);
     const [customDiscountValue, setCustomDiscountValue] = useState('');
     // Parse yearsOfExperience to ensure it's a number
     const expYears = parseInt(yearsOfExperience, 10) || 0;
+
+    // Initialize selectedSkills and selectedTechnologyies from interviewDetailsData
+    useEffect(() => {
+
+        if (interviewDetailsData.skills && interviewDetailsData.skills.length > 0) {
+            const skillsToSet = interviewDetailsData.skills
+                .filter(skill => skill && typeof skill === 'object' ? skill.SkillName : skill)
+                .map(skill => ({
+                    _id: skill._id || Math.random().toString(36).substr(2, 9),
+                    SkillName: typeof skill === 'object' ? skill.SkillName : skill
+                }));
+            setSelectedSkills(skillsToSet);
+        }
+
+        if (interviewDetailsData.technologies && interviewDetailsData.technologies.length > 0) {
+            const techsToSet = interviewDetailsData.technologies
+                .filter(tech => tech)
+                .map(tech => ({
+                    _id: Math.random().toString(36).substr(2, 9),
+                    TechnologyMasterName: tech
+                }));
+            setSelectedTechnologyies(techsToSet);
+        }
+
+        if (interviewDetailsData.previousInterviewExperience) {
+            setPreviousInterviewExperience(interviewDetailsData.previousInterviewExperience);
+        }
+
+        if (interviewDetailsData.interviewFormatWeOffer?.includes('mock')) {
+            setIsMockInterviewSelected(true);
+        }
+
+        if (interviewDetailsData.mock_interview_discount) {
+            setCustomDiscountValue(interviewDetailsData.mock_interview_discount);
+        }
+    }, [interviewDetailsData]);
 
     // Update rate visibility based on years of experience when component mounts or yearsOfExperience changes
     useEffect(() => {
@@ -139,44 +178,83 @@ const InterviewDetails = ({
 
     // Handle technology selection
     const handleTechnologyChange = (event) => {
-
-        const selectedValue = event.target.value; // Value from DropdownWithSearchField
+        const selectedValue = event.target.value;
         if (selectedValue) {
-
             fetchRateCards(selectedValue);
 
-            const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue);
+            // Check if the technology is already selected
+            const isAlreadySelected = selectedTechnologyies.some(
+                tech => tech.TechnologyMasterName === selectedValue
+            );
 
-            if (technology) {
-                setSelectedTechnologyies([technology]); // Store single technology
-                setInterviewDetailsData((prev) => ({
+            if (!isAlreadySelected) {
+                const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
+                    _id: Math.random().toString(36).substr(2, 9),
+                    TechnologyMasterName: selectedValue
+                };
+
+                const newTechnologies = [...selectedTechnologyies, technology];
+                setSelectedTechnologyies(newTechnologies);
+
+                setInterviewDetailsData(prev => ({
                     ...prev,
-                    technologies: [technology.TechnologyMasterName],
+                    technologies: newTechnologies.map(t => t.TechnologyMasterName),
                 }));
-                setErrors((prevErrors) => ({ ...prevErrors, technologies: '' }));
+
+                setErrors(prev => ({ ...prev, technologies: '' }));
             }
         } else {
             setSelectedTechnologyies([]);
+            setInterviewDetailsData(prev => ({
+                ...prev,
+                technologies: []
+            }));
             setErrors(prev => ({ ...prev, technologies: 'Please select a technology' }));
         }
     };
 
     const handleRemoveSkill = (index) => {
-        setSelectedSkills(selectedSkills.filter((_, i) => i !== index));
+        const updatedSkills = selectedSkills.filter((_, i) => i !== index);
+        setSelectedSkills(updatedSkills);
+
+        // Update interviewDetailsData with the new skills array
+        setInterviewDetailsData(prev => ({
+            ...prev,
+            skills: updatedSkills.map(skill => skill.SkillName)
+        }));
     };
 
     const clearSkills = () => {
         setSelectedSkills([]);
+
+        // Clear skills in interviewDetailsData
+        setInterviewDetailsData(prev => ({
+            ...prev,
+            skills: []
+        }));
     };
 
     const handleChangeforExp = (e) => {
         const value = e.target.value;
-        setInterviewDetailsData((prev) => ({
+        const discountValue = value.replace(/[^0-9]/g, ''); // Ensure only numbers
+
+        setCustomDiscountValue(discountValue);
+
+        setInterviewDetailsData(prev => ({
             ...prev,
-            mock_interview_discount: value,
+            mock_interview_discount: discountValue,
+            // Ensure mock interview is selected when setting a discount
+            interviewFormatWeOffer: prev.interviewFormatWeOffer?.includes('mock')
+                ? prev.interviewFormatWeOffer
+                : [...(prev.interviewFormatWeOffer || []), 'mock']
         }));
-        setErrors((prevErrors) => ({
-            ...prevErrors,
+
+        if (!isMockInterviewSelected) {
+            setIsMockInterviewSelected(true);
+        }
+
+        setErrors(prev => ({
+            ...prev,
             mock_interview_discount: '',
         }));
     };
@@ -189,14 +267,17 @@ const InterviewDetails = ({
                 return;
             }
 
-            // Find the skill object from the skills list
-            const skill = skills?.find(s =>
+            // Find the skill object from the skills list or create a new one
+            let skill = skills?.find(s =>
                 s?.SkillName?.trim().toLowerCase() === skillName.toLowerCase()
             );
 
+            // If skill not found in the master list, create a new one
             if (!skill) {
-                console.error('Skill not found in the list:', skillName);
-                return;
+                skill = {
+                    _id: Math.random().toString(36).substr(2, 9),
+                    SkillName: skillName
+                };
             }
 
             // Check if skill is already selected (case-insensitive comparison)
@@ -274,25 +355,25 @@ const InterviewDetails = ({
     const handleHourlyRateChange = (level, currency) => (e) => {
         const value = e.target.value;
         const numericValue = value.replace(/\D/g, ''); // Remove non-numeric characters
-        
+
         // Get rate range for validation
         const levelKey = level.charAt(0).toUpperCase() + level.slice(1);
         const rateRange = getRateRanges(levelKey);
-        
+
         let error = '';
-        
+
         if (numericValue) {
             const minRate = rateRange?.[currency]?.min || 0;
             const maxRate = rateRange?.[currency]?.max || (currency === 'inr' ? 100000 : 1000);
             const numValue = parseInt(numericValue, 10);
-            
+
             if (numValue < minRate) {
                 error = `Rate cannot be less than ${currency === 'inr' ? '₹' : '$'}${minRate}`;
             } else if (numValue > maxRate) {
                 error = `Rate cannot exceed ${currency === 'inr' ? '₹' : '$'}${maxRate}`;
             }
         }
-        
+
         // Update the rate in the nested structure
         setInterviewDetailsData(prev => ({
             ...prev,
@@ -304,7 +385,7 @@ const InterviewDetails = ({
                 }
             }
         }));
-        
+
         // Update errors
         setErrors(prev => ({
             ...prev,
@@ -314,27 +395,46 @@ const InterviewDetails = ({
 
     const handleInterviewFormatChange = (event) => {
         const { value, checked } = event.target;
+
         setInterviewDetailsData((prevData) => {
             let updatedFormats = Array.isArray(prevData.interviewFormatWeOffer)
                 ? [...prevData.interviewFormatWeOffer]
                 : [];
 
             if (checked) {
-                updatedFormats = [...updatedFormats, value];
+                // Add the format if it's not already in the array
+                if (!updatedFormats.includes(value)) {
+                    updatedFormats = [...updatedFormats, value];
+                }
             } else {
+                // Remove the format if it exists in the array
                 updatedFormats = updatedFormats.filter((format) => format !== value);
+            }
+
+            // Special handling for mock interviews
+            if (value === 'mock') {
+                setIsMockInterviewSelected(checked);
+
+                // If mock is being unchecked, clear the discount
+                if (!checked) {
+                    setCustomDiscountValue('');
+                    return {
+                        ...prevData,
+                        interviewFormatWeOffer: updatedFormats,
+                        mock_interview_discount: '0',
+                        isMockInterviewSelected: false
+                    };
+                }
             }
 
             return {
                 ...prevData,
                 interviewFormatWeOffer: updatedFormats,
+                isMockInterviewSelected: value === 'mock' ? checked : prevData.isMockInterviewSelected
             };
         });
 
-        if (value === 'mock') {
-            setIsMockInterviewSelected(checked);
-        }
-
+        // Clear any previous errors
         setErrors((prev) => ({
             ...prev,
             interviewFormatWeOffer: '',
@@ -1012,11 +1112,10 @@ const InterviewDetails = ({
                                 <p className="text-xs text-gray-500">Min 50 characters</p>
                             )}
                             {interviewDetailsData.professionalTitle?.length > 0 && (
-                                <p className={`text-xs ${
-                                    interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle
+                                <p className={`text-xs ${interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle
                                         ? 'text-red-500'
                                         : 'text-gray-500'
-                                }`}>
+                                    }`}>
                                     {interviewDetailsData.professionalTitle.length}/100
                                 </p>
                             )}
@@ -1060,13 +1159,12 @@ const InterviewDetails = ({
                                 <p className="text-xs text-gray-500">Min 150 characters</p>
                             )}
                             {interviewDetailsData.bio?.length > 0 && (
-                                <p className={`text-xs ${
-                                    interviewDetailsData.bio.length < 150 || errors.bio
+                                <p className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
                                         ? 'text-red-500'
                                         : interviewDetailsData.bio.length > 450
                                             ? 'text-yellow-500'
                                             : 'text-gray-500'
-                                }`}>
+                                    }`}>
                                     {interviewDetailsData.bio.length}/500
                                 </p>
                             )}
