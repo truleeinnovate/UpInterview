@@ -11,8 +11,8 @@ const DeleteConfirmModal = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform scale-95 animate-in fade-in-90 zoom-in-95">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50 p-2">
+      <div className="bg-white rounded-2xl shadow-2xl  w-[400px] overflow-hidden transform scale-95 animate-in fade-in-90 zoom-in-95">
         {/* Header */}
         {/* <div className="bg-gradient-to-r from-red-500 to-red-600 p-6">
           <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-full mx-auto mb-4">
@@ -36,7 +36,7 @@ const DeleteConfirmModal = ({
         </div> */}
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3">
           <p className="text-gray-600 text-center mb-4">
             Are you sure you want to permanently delete this {title}?
           </p>

@@ -323,6 +323,8 @@ function Candidate({
 
   const dataToUse = isAssessmentView ? candidates : candidateData;
 
+  console.log("dataToUse", dataToUse);
+
   const handleApplyFilters = () => {
     const filters = {
       status: selectedStatus,

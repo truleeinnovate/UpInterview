@@ -75,6 +75,8 @@ const CandidateDetails = ({ mode, candidateId }) => {
     };
   }, [id, candidateData]);
 
+  console.log("candidate Details", candidate);
+
   // v1.0.4 <-----------------------------------------------------------------
   // With this:
   // const getFromPath = () => {
@@ -391,7 +393,9 @@ const CandidateDetails = ({ mode, candidateId }) => {
                   candidate.skills.map((skill, index) => (
                     <>
                       {/* <------v1.0.0 ------*/}
-                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100">
+                      <div 
+                         key={skill._id || `${skill.skill}-${index}`}  
+                      className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100">
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
                           <span className="truncate max-w-full">
                             {skill.skill}

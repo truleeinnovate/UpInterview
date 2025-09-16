@@ -63,13 +63,13 @@ export const useCandidates = (filters = {}) => {
         : `${config.REACT_APP_API_URL}/candidate`;
 
       const response = await axios[method](url, data);
-      console.log("response", response);
+      // console.log("response", response);
       // const candidateId = response.data.data._id;
       const candidate = response.data?.data; // candidate may be undefined
       // v1.0.1 <----------------------------------------------------------------------
       const candidateId = candidate?._id || id; // only defined if changes occurred
       // v1.0.0 ---------------------------------------------------------------------->
-      console.log("candidateId", candidateId);
+      // console.log("candidateId", candidateId);
 
       if (candidateId) {
         // uploading or updating files profilePic and resume
@@ -102,7 +102,7 @@ export const useCandidates = (filters = {}) => {
 
       if (!candidate) {
         // no changes — close the form safely
-        console.log("No changes detected, closing form.");
+        // console.log("No changes detected, closing form.");
         if (variables.isModal && variables.onClose) {
           variables.onClose({}); // pass empty object
         }
@@ -162,7 +162,7 @@ export const useCandidates = (filters = {}) => {
       // Invalidate queries to ensure consistency
       queryClient.invalidateQueries(["candidates"]);
 
-      console.log("Candidate deleted successfully:", data);
+      // console.log("Candidate deleted successfully:", data);
     },
     onError: (error, candidateId) => {
       console.error("Error deleting candidate:", error);

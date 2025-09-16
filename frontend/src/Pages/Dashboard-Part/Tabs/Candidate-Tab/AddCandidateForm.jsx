@@ -10,7 +10,7 @@
 /* eslint-disable react/prop-types */
 // v1.0.6 - Ashok - Improved responsiveness and added sidebarPopup common code to popup to modal
 // v1.0.7 - Ashok - Fixed issues in responsiveness
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
 import {
@@ -93,7 +93,16 @@ const AddCandidateForm = ({
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  console.log("location", location);
+  console.log("skills", skills);
+
+  console.log("colleges", colleges);
+
+  console.log("isCurrentRolesFetching", isCurrentRolesFetching);
+
+
+  console.log("qualifications", qualifications);
+
+  console.log("currentRoles", currentRoles);
 
 
   const imageInputRef = useRef(null);
@@ -245,6 +254,8 @@ const AddCandidateForm = ({
       // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
     }
   }, [id, candidateData]);
+
+  console.log("candidate Form Details", formData);
 
   // Ensure University/College custom input is shown in edit mode when the saved value
   // is not present in master list (handles the '+ Others' flow gracefully)
@@ -703,20 +714,60 @@ const AddCandidateForm = ({
   // Using shared CollegeMenuList from CommonCode-AllTabs/DropdownSelect
 
   // Mapped options for react-select
-  const genderOptionsRS = genderOptions.map((g) => ({ value: g, label: g }));
-  const qualificationOptionsRS =
-    qualifications?.map((q) => ({
-      value: q?.QualificationName,
-      label: q?.QualificationName,
-    })) || [];
-  const collegeOptionsRS = (
-    colleges?.map((c) => ({
-      value: c?.University_CollegeName,
-      label: c?.University_CollegeName,
-    })) || []
-  ).concat([{ value: "__other__", label: "+ Others" }]);
-  const roleOptionsRS =
-    currentRoles?.map((r) => ({ value: r?.RoleName, label: r?.RoleName })) || [];
+  // const genderOptionsRS = genderOptions.map((g) => ({ value: g, label: g }));
+
+  
+  const genderOptionsRS = useMemo(
+    () => genderOptions.map((g) => ({ value: g, label: g })),
+    []
+  );
+  
+  // const qualificationOptionsRS =
+  //   qualifications?.map((q) => ({
+  //     value: q?.QualificationName,
+  //     label: q?.QualificationName,
+  //   })) || [];
+
+  const qualificationOptionsRS = useMemo(
+    () =>
+      qualifications?.map((q) => ({
+        value: q?.QualificationName,
+        label: q?.QualificationName,
+      })) || [],
+    [qualifications]
+  );
+
+
+  // const collegeOptionsRS = (
+  //   colleges?.map((c) => ({
+  //     value: c?.University_CollegeName,
+  //     label: c?.University_CollegeName,
+  //   })) || []
+  // ).concat([{ value: "__other__", label: "+ Others" }]);
+
+  const collegeOptionsRS = useMemo(
+    () =>
+      (colleges?.map((c) => ({
+        value: c?.University_CollegeName,
+        label: c?.University_CollegeName,
+      })) || []
+      ).concat([{ value: "__other__", label: "+ Others" }]),
+    [colleges]
+  );
+
+
+
+  // const roleOptionsRS =
+  //   currentRoles?.map((r) => ({ value: r?.RoleName, label: r?.RoleName })) || [];
+
+  const roleOptionsRS = useMemo(
+    () =>
+      currentRoles?.map((r) => ({
+        value: r?.RoleName,
+        label: r?.RoleName,
+      })) || [],
+    [currentRoles]
+  );
 
   return (
     <>

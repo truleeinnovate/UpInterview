@@ -53,6 +53,13 @@ const candidateSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ✅ Indexes to speed up filtering
+candidateSchema.index({ tenantId: 1 });
+candidateSchema.index({ ownerId: 1 });
+
+// If you often search by both
+candidateSchema.index({ tenantId: 1, ownerId: 1 });
+
 const Candidate = mongoose.models.Candidate || mongoose.model("Candidate", candidateSchema);
 
 module.exports = { Candidate };

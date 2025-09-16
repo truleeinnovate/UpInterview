@@ -22,8 +22,8 @@ const addCandidatePostCall = async (req, res) => {
 
      // Joi validation
      const { isValid, errors } = validateCandidateData(req.body);
-     console.log("isValid", isValid);
-     console.log("errors", errors);
+    //  console.log("isValid", isValid);
+    //  console.log("errors", errors);
      if (!isValid) {
        return res.status(400).json({
          status: "error",
@@ -116,6 +116,8 @@ const addCandidatePostCall = async (req, res) => {
       status: 'success',
       responseBody: newCandidate,
     };
+
+    console.log("newCandidate response", newCandidate);
 
     // Send response
     res.status(201).json({
@@ -264,6 +266,9 @@ const updateCandidatePatchCall = async (req, res) => {
       return res.status(404).json({ message: "Candidate not found after update" });
     }
 
+    console.log("updatedCandidate ", updatedCandidate);
+    
+
 
     // Generate feed
     res.locals.feedData = {
@@ -342,8 +347,8 @@ const getCandidates = async (req, res) => {
   //   }
     //-----v1.0.1--->
 
-    const candidates = await Candidate.find(query);
-    // console.log('[getCandidates] Candidates found:', candidates.length);
+    const candidates = await Candidate.find(query).lean();
+    console.log('[getCandidates] Candidates found:', candidates);
     res.json(candidates);
   } catch (error) {
     console.error('[getCandidates] Error:', error.message);
@@ -377,7 +382,7 @@ const getCandidateById = async (req, res) => {
   //   }
     //-----v1.0.1--->
 
-    const candidate = await Candidate.findById(id);
+    const candidate = await Candidate.findById(id).lean();
     // console.log("✅ [getCandidateById] Candidate fetched:", candidate);
 
     if (!candidate) {
@@ -433,10 +438,12 @@ const getCandidateById = async (req, res) => {
     }));
 
     const response = {
-      ...candidate.toObject(),
+      ...candidate,
       appliedPositions: positionDetails || []
     };
 
+    console.log("candidate getCandidateById response",response);
+    
     res.status(200).json(response);
   } catch (error) {
     console.error("🔥 [getCandidateById] Error:", error);
@@ -474,7 +481,9 @@ const deleteCandidate = async (req, res) => {
         status: 'error',
         message: 'Candidate not found'
       });
-    }
+    };
+
+    console.log("candidate delete before",candidate);
 
     // Store candidate data for logging before deletion
     // const candidateData = {
@@ -485,6 +494,9 @@ const deleteCandidate = async (req, res) => {
 
     // Delete the candidate
     const deletedCandidate = await Candidate.findByIdAndDelete(id);
+
+    console.log("candidate delete after",deletedCandidate);
+    
 
     if (!deletedCandidate) {
       return res.status(404).json({

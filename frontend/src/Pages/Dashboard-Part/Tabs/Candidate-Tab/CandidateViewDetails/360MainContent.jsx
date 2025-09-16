@@ -37,6 +37,10 @@ const MainContent = () => {
   const [editModeOn, setEditModeOn] = useState(false);
   const [slideShow, setSlideShow] = useState(false);
 
+
+  console.log("candidate 360 Details", candidate);
+  console.log("positions 360 Details", positions);
+
   // const {
   //   interviewData
   // } = useCustomContext();
