@@ -93,7 +93,7 @@ const InterviewDetails = ({
     // For backward compatibility with old UI
     const showJuniorLevel = expYears >= 0; // Always show junior level
     const showMidLevel = expYears >= 3; // Show mid-level if 3+ years
-    const showSeniorLevel = expYears > 6; // Show senior level only if more than 6 years (7+)
+    const showSeniorLevel = expYears >= 6; // Show senior level only if more than 6 years (7+)
     const {
         skills,
         loadSkills,

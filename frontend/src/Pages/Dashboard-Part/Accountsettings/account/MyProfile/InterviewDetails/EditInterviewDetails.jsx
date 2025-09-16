@@ -53,7 +53,8 @@ const EditInterviewDetails = ({
     // Set up rate visibility based on years of experience
     const showJuniorLevel = true; // Always show junior level
     const showMidLevel = userExpYears >= 3; // Show mid-level if 3+ years
-    const showSeniorLevel = userExpYears > 6; // Show senior level if 6+ years
+    const showSeniorLevel = userExpYears >= 6; // Show senior level if 6+ years
+    
     const {
         skills,
         loadSkills,

@@ -9,280 +9,285 @@ import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 
 // Create a formatting function
 const formatInterviewType = (type) => {
-  const formatMap = {
-    'technical': 'Technical',
-    'mock': 'Mock',
-    'system_design': 'System Design',
-    'behavioral': 'Behavioral',
-    // Add more mappings as needed
-  };
+    const formatMap = {
+        'technical': 'Technical',
+        'mock': 'Mock',
+        'system_design': 'System Design',
+        'behavioral': 'Behavioral',
+        // Add more mappings as needed
+    };
 
-  return formatMap[type] || type
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    return formatMap[type] || type
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 };
 
 const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
-  const { usersRes } = useCustomContext();
-  const navigate = useNavigate();
-  const [contactData, setContactData] = useState({});
+    const { usersRes } = useCustomContext();
+    const navigate = useNavigate();
+    const [contactData, setContactData] = useState({});
 
-  console.log('contactData', contactData);
+    useEffect(() => {
+        console.log('Full contactData:', contactData);
+        console.log('contactData.rates:', contactData?.rates);
+        console.log('contactData.rates.junior:', contactData?.rates?.junior);
+        console.log('contactData.rates.junior.isVisible:', contactData?.rates?.junior?.isVisible);
+        console.log('contactData.previousExperienceConductingInterviews:', contactData?.previousExperienceConductingInterviews);
+    }, [contactData]);
 
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
 
-  const userId = tokenPayload?.userId;
-  const ownerId = usersId || userId;
+    const userId = tokenPayload?.userId;
+    const ownerId = usersId || userId;
 
-  const { userProfile } = useUserProfile(ownerId);
+    const { userProfile } = useUserProfile(ownerId);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
+    // useEffect(() => {
+    //   const fetchData = async () => {
+    //     try {
 
-  //       //   const contact = singlecontact[0];
-  //       // if (contact) {
-  //       //   setContactData(contact);
-  //       // }
+    //       //   const contact = singlecontact[0];
+    //       // if (contact) {
+    //       //   setContactData(contact);
+    //       // }
 
-  //         if (usersId) {
-  //               const selectedContact = usersRes.find(user => user.contactId === usersId);
-  //                 setContactData(selectedContact);
-  //         //  fetchContacts(usersId);
-  //       } else {
-  //           const contact = singlecontact[0];
-  //            if (contact) {
-  //         setContactData(contact);
-  //       }
-  //       }
+    //         if (usersId) {
+    //               const selectedContact = usersRes.find(user => user.contactId === usersId);
+    //                 setContactData(selectedContact);
+    //         //  fetchContacts(usersId);
+    //       } else {
+    //           const contact = singlecontact[0];
+    //            if (contact) {
+    //         setContactData(contact);
+    //       }
+    //       }
 
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     }
-  //   };
-  //   fetchData();
-  // }, [userId, singlecontact]);
+    //     } catch (error) {
+    //       console.error('Error fetching data:', error);
+    //     }
+    //   };
+    //   fetchData();
+    // }, [userId, singlecontact]);
 
-  //  useEffect(() => {
-  //   const selectedContact = usersId
-  //     ? usersRes.find(user => user?.contactId === usersId)
-  //     : usersRes.find(user => user?._id === userId);
+    //  useEffect(() => {
+    //   const selectedContact = usersId
+    //     ? usersRes.find(user => user?.contactId === usersId)
+    //     : usersRes.find(user => user?._id === userId);
 
-  //   if (selectedContact) {
-  //     setContactData(selectedContact);
-  //     // console.log("Selected contact:", selectedContact);
-  //   }
-  // }, [usersId, userId, usersRes]);
+    //   if (selectedContact) {
+    //     setContactData(selectedContact);
+    //     // console.log("Selected contact:", selectedContact);
+    //   }
+    // }, [usersId, userId, usersRes]);
 
-  useEffect(() => {
-    if (!userProfile || !userProfile._id) return;
-    if (userProfile) {
-      // console.log("contact userProfile",userProfile )
-      setContactData(userProfile);
-    }
-  }, [userProfile, ownerId, userProfile._id]);
+    useEffect(() => {
+        if (!userProfile || !userProfile._id) return;
+        if (userProfile) {
+            // console.log("contact userProfile",userProfile )
+            setContactData(userProfile);
+        }
+    }, [userProfile, ownerId, userProfile._id]);
 
-  // console.log("contactData?.contactId", contactData);
+    // console.log("contactData?.contactId", contactData);
 
-  return (
-    // v1.0.0 <-------------------
-    <div className="mx-2">
-    {/* // v1.0.0 -------------------> */}
-    {/* v1.0.0 <---------------------------------- */}
-      <div
-        className={`flex  items-center my-4 ${
-          mode === "users" ? "justify-end" : "justify-between py-2"
-        }`}
-      >
-        <h3
-          className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}
-        >
-          Interview Details
-        </h3>
+    return (
+        // v1.0.0 <-------------------
+        <div className="mx-2">
+            {/* // v1.0.0 -------------------> */}
+            {/* v1.0.0 <---------------------------------- */}
+            <div
+                className={`flex  items-center my-4 ${mode === "users" ? "justify-end" : "justify-between py-2"
+                    }`}
+            >
+                <h3
+                    className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}
+                >
+                    Interview Details
+                </h3>
 
-        <button
-          onClick={() => {
-            mode === "users"
-              ? setInterviewEditOpen(true)
-              : navigate(
-                  `/account-settings/my-profile/interview-edit/${contactData?._id}`
-                );
-            //  details/:idinterview-edit
-            // navigate(`/account-settings/my-profile/interview-edit/${userId}`)
-          }}
-          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
-        >
-          Edit
-        </button>
-      </div>
-    {/* v1.0.0 ----------------------------------> */}
-
-      <div
-        className={`bg-white rounded-lg space-y-4 ${
-          mode !== "users" ? "p-4" : ""
-        }`}
-      >
-        <div className="grid mb-2 grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-          <div className="">
-            <p className="text-sm text-gray-500">Technologies</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {contactData?.technologies &&
-              Array.isArray(contactData.technologies) &&
-              contactData?.technologies.length > 0 ? (
-                contactData?.technologies.map((technology, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
-                  >
-                    {technology || "N/A"}
-                  </span>
-                ))
-              ) : (
-                <span className="font-medium sm:text-sm">No Technologies Available</span>
-              )}
+                <button
+                    onClick={() => {
+                        mode === "users"
+                            ? setInterviewEditOpen(true)
+                            : navigate(
+                                `/account-settings/my-profile/interview-edit/${contactData?._id}`
+                            );
+                        //  details/:idinterview-edit
+                        // navigate(`/account-settings/my-profile/interview-edit/${userId}`)
+                    }}
+                    className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
+                >
+                    Edit
+                </button>
             </div>
-          </div>
+            {/* v1.0.0 ----------------------------------> */}
 
-          <div>
-            <p className="text-sm text-gray-500">Skills</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {contactData?.skills &&
-              Array.isArray(contactData?.skills) &&
-              contactData?.skills.length > 0 ? (
-                contactData?.skills.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
-                  >
-                    {skill || "N/A"}
-                  </span>
-                ))
-              ) : (
-                <span className="font-medium sm:text-sm">No Skills Available</span>
-              )}
-            </div>
-          </div>
-        </div>
+            <div
+                className={`bg-white rounded-lg space-y-4 ${mode !== "users" ? "p-4" : ""
+                    }`}
+            >
+                <div className="grid mb-2 grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
+                    <div className="">
+                        <p className="text-sm text-gray-500">Technologies</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                            {contactData?.technologies &&
+                                Array.isArray(contactData.technologies) &&
+                                contactData?.technologies.length > 0 ? (
+                                contactData?.technologies.map((technology, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
+                                    >
+                                        {technology || "N/A"}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="font-medium sm:text-sm">No Technologies Available</span>
+                            )}
+                        </div>
+                    </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-500">
-              Previous Experience Conducting Interviews
-            </p>
-            <p className="font-medium sm:text-sm">
-              {contactData?.previousExperienceConductingInterviews ||
-                "Not Provided"}
-            </p>
-          </div>
-
-          {contactData?.previousExperienceConductingInterviews === "yes" && (
-            <>
-              <div>
-                <p className="text-sm text-gray-500">
-                  Previous Experience
-                </p>
-                <p className="font-medium sm:text-sm">
-                  {contactData?.previousExperienceConductingInterviewsYears ||
-                    "Not Provided"}{" "}
-                  Years
-                </p>
-              </div>
-
-              {contactData?.rates?.junior?.isVisible && (
-                <div>
-                  <p className="text-sm text-gray-500">Junior Level Rate</p>
-                  <p className="font-medium sm:text-sm">
-                    ${contactData?.rates?.junior?.usd || "0"} (${contactData?.rates?.junior?.inr} INR)
-                  </p>
+                    <div>
+                        <p className="text-sm text-gray-500">Skills</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                            {contactData?.skills &&
+                                Array.isArray(contactData?.skills) &&
+                                contactData?.skills.length > 0 ? (
+                                contactData?.skills.map((skill, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
+                                    >
+                                        {skill || "N/A"}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="font-medium sm:text-sm">No Skills Available</span>
+                            )}
+                        </div>
+                    </div>
                 </div>
-              )}
-              {contactData?.rates?.mid?.isVisible && (
-                <div>
-                  <p className="text-sm text-gray-500">Mid Level Rate</p>
-                  <p className="font-medium sm:text-sm">
-                    ${contactData?.rates?.mid?.usd || "0"} (${contactData?.rates?.mid?.inr} INR)
-                  </p>
-                </div>
-              )}
-              {contactData?.rates?.senior?.isVisible && (
-                <div>
-                  <p className="text-sm text-gray-500">Senior Level Rate</p>
-                  <p className="font-medium sm:text-sm">
-                    ${contactData?.rates?.senior?.usd || "0"} (${contactData?.rates?.senior?.inr} INR)
-                  </p>
-                </div>
-              )}
-            </>
-          )}
 
-          <div>
-            <p className="text-sm text-gray-500">Interview Formats You Offer</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {contactData?.interviewFormatWeOffer &&
-              Array.isArray(contactData?.interviewFormatWeOffer) &&
-              contactData?.interviewFormatWeOffer.length > 0 ? (
-                contactData?.interviewFormatWeOffer.map((interview, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
-                  >
-                    {formatInterviewType(interview) || "N/A"}
-                  </span>
-                ))
-              ) : (
-                <span className="font-medium sm:text-sm">
-                  No Interview Formats You Offer Available
-                </span>
-              )}
-            </div>
-            {/* <p className="font-medium">$ {contactData?.InterviewFormatWeOffer || "N/A"}</p> */}
-          </div>
+                <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
+                    <div>
+                        <p className="text-sm text-gray-500">
+                            Previous Experience Conducting Interviews
+                        </p>
+                        <p className="font-medium sm:text-sm">
+                            {contactData?.previousExperienceConductingInterviews ||
+                                "Not Provided"}
+                        </p>
+                    </div>
 
-          {/* <div>
+                    {contactData?.previousExperienceConductingInterviews === "yes" && (
+                        <>
+                            <div>
+                                <p className="text-sm text-gray-500">
+                                    Previous Experience
+                                </p>
+                                <p className="font-medium sm:text-sm">
+                                    {contactData?.previousExperienceConductingInterviewsYears ||
+                                        "Not Provided"}{" "}
+                                    Years
+                                </p>
+                            </div>
+                        </>
+                    )}
+
+                    {contactData?.rates?.junior?.isVisible && (
+                        <div>
+                            <p className="text-sm text-gray-500">Junior Level Rate</p>
+                            <p className="font-medium sm:text-sm">
+                                ${contactData?.rates?.junior?.usd || "0"} (${contactData?.rates?.junior?.inr} INR)
+                            </p>
+                        </div>
+                    )}
+
+                    {contactData?.rates?.mid?.isVisible && (
+                        <div>
+                            <p className="text-sm text-gray-500">Mid Level Rate</p>
+                            <p className="font-medium sm:text-sm">
+                                ${contactData?.rates?.mid?.usd || "0"} (${contactData?.rates?.mid?.inr} INR)
+                            </p>
+                        </div>
+                    )}
+
+                    {contactData?.rates?.senior?.isVisible && (
+                        <div>
+                            <p className="text-sm text-gray-500">Senior Level Rate</p>
+                            <p className="font-medium sm:text-sm">
+                                ${contactData?.rates?.senior?.usd || "0"} (${contactData?.rates?.senior?.inr} INR)
+                            </p>
+                        </div>
+                    )}
+
+                    <div>
+                        <p className="text-sm text-gray-500">Interview Formats You Offer</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                            {contactData?.interviewFormatWeOffer &&
+                                Array.isArray(contactData?.interviewFormatWeOffer) &&
+                                contactData?.interviewFormatWeOffer.length > 0 ? (
+                                contactData?.interviewFormatWeOffer.map((interview, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
+                                    >
+                                        {formatInterviewType(interview) || "N/A"}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="font-medium sm:text-sm">
+                                    No Interview Formats You Offer Available
+                                </span>
+                            )}
+                        </div>
+                        {/* <p className="font-medium">$ {contactData?.InterviewFormatWeOffer || "N/A"}</p> */}
+                    </div>
+
+                    {/* <div>
           <p className="text-sm text-gray-500">Mock Interview</p>
           <p>{contactData?.IsReadyForMockInterviews || "NO"}</p>
 
         </div> */}
-          {contactData?.expectedRatePerMockInterview && (
-            <div>
-              <p className="text-sm text-gray-500">
-                Rate Per Mock Interview Charges
-              </p>
-              <p className="font-medium sm:text-sm">
-                {contactData?.expectedRatePerMockInterview
-                  ? `$ ${contactData?.expectedRatePerMockInterview}`
-                  : "Not Provided"}
-              </p>
+                    {contactData?.expectedRatePerMockInterview && (
+                        <div>
+                            <p className="text-sm text-gray-500">
+                                Rate Per Mock Interview Charges
+                            </p>
+                            <p className="font-medium sm:text-sm">
+                                {contactData?.expectedRatePerMockInterview
+                                    ? `$ ${contactData?.expectedRatePerMockInterview}`
+                                    : "Not Provided"}
+                            </p>
+                        </div>
+                    )}
+
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Professional Title</p>
+                    <p className="font-medium  sm:text-sm whitespace-pre-line break-words">
+                        {contactData?.professionalTitle || "Not Provided"}
+                    </p>
+                </div>
+
+                {/* <div className="flex flex-col mt-2"> */}
+                <div
+                    className={`flex flex-col ${mode === "users" ? "w-full" : "max-w-3xl"
+                        } break-words`}
+                >
+                    <span className="text-sm text-gray-500">Professional Bio</span>
+
+                    {/* <p className="text-gray-800 text-sm sm:text-xs float-right mt-3 font-medium"> */}
+                    <p className="text-gray-800 text-sm sm:text-sm mt-1 font-medium whitespace-pre-line break-words">
+                        {contactData?.bio || "Not Provided"}
+                    </p>
+                </div>
             </div>
-          )}
-
         </div>
-
-        <div>
-          <p className="text-sm text-gray-500">Professional Title</p>
-          <p className="font-medium  sm:text-sm whitespace-pre-line break-words">
-            {contactData?.professionalTitle || "Not Provided"}
-          </p>
-        </div>
-
-        {/* <div className="flex flex-col mt-2"> */}
-        <div
-          className={`flex flex-col ${
-            mode === "users" ? "w-full" : "max-w-3xl"
-          } break-words`}
-        >
-          <span className="text-sm text-gray-500">Professional Bio</span>
-
-          {/* <p className="text-gray-800 text-sm sm:text-xs float-right mt-3 font-medium"> */}
-          <p className="text-gray-800 text-sm sm:text-sm mt-1 font-medium whitespace-pre-line break-words">
-            {contactData?.bio || "Not Provided"}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default InterviewUserDetails;
