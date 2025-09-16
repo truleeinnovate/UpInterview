@@ -160,7 +160,7 @@ const AvailabilityDetails = ({
         </label>
         <div className="border border-gray-500 text-sm p-3 rounded-lg w-full">
           <ul className="flex sm:flex-wrap sm:gap-2 text-xs font-medium sm:space-x-0 space-x-3">
-            {['30', '45', '60', '90'].map((duration) => (
+            {['30', '60', '90'].map((duration) => (
               <li
                 key={duration}
                 className={`option cursor-pointer inline-block py-2 px-3 rounded-lg border border-custom-blue ${

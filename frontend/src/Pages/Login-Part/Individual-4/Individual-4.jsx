@@ -52,7 +52,6 @@ const FooterButtons = ({
             : "bg-custom-blue hover:bg-custom-blue/90"
         } transition-colors duration-200`}
         type="button"
-        isSubmitting={isSubmitting}
       >
         {isSubmitting ? (
           <div className="flex items-center">
@@ -180,7 +179,7 @@ const MultiStepForm = () => {
     hourlyRate: "",
     interviewFormatWeOffer: [],
     expectedRatePerMockInterview: "",
-    noShowPolicy: "",
+    // noShowPolicy: "",
     bio: "",
     professionalTitle: "",
   });
@@ -197,6 +196,7 @@ const MultiStepForm = () => {
   const [isResumeRemoved, setIsResumeRemoved] = useState(false);
   const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [yearsOfExperience, setYearsOfExperience] = useState(0);
 
   useEffect(() => {
     if (matchedContact) {
@@ -213,7 +213,6 @@ const MultiStepForm = () => {
         dateOfBirth: matchedContact.dateOfBirth || "",
         gender: matchedContact.gender || "",
       });
-      console.log("matchedContact", matchedContact);
 
       setAdditionalDetailsData({
         currentRole: matchedContact.currentRole || "",
@@ -236,7 +235,7 @@ const MultiStepForm = () => {
         interviewFormatWeOffer: matchedContact.interviewFormatWeOffer || [],
         expectedRatePerMockInterview:
           matchedContact.expectedRatePerMockInterview || "",
-        noShowPolicy: matchedContact.noShowPolicy || "",
+        // noShowPolicy: matchedContact.noShowPolicy || "",
         bio: matchedContact.bio || "",
         professionalTitle: matchedContact.professionalTitle || "",
       });
@@ -352,7 +351,7 @@ const MultiStepForm = () => {
         if (!interviewDetailsData.technologies?.length) currentErrors.technologies = "Technologies are required";
         if (!interviewDetailsData.previousInterviewExperience) currentErrors.previousInterviewExperience = "Previous interview experience is required";
         if (!interviewDetailsData.interviewFormatWeOffer?.length) currentErrors.interviewFormatWeOffer = "At least one interview format is required";
-        if (!interviewDetailsData.noShowPolicy) currentErrors.noShowPolicy = "No-show policy is required";
+        // if (!interviewDetailsData.noShowPolicy) currentErrors.noShowPolicy = "No-show policy is required";
         
         if (!interviewDetailsData.professionalTitle?.trim()) {
           currentErrors.professionalTitle = "Professional title is required";
@@ -388,13 +387,24 @@ const MultiStepForm = () => {
         return;
       }
 
-      const statusKey = ["basicDetails", "additionalDetails", "interviewDetails", "availabilityDetails"][currentStep] || "";
+      // Calculate the updated completion status
+      const currentStepKey = ["basicDetails", "additionalDetails", "interviewDetails", "availabilityDetails"][currentStep];
+      const isLastStep = currentStep === (isInternalInterviewer ? 3 : Freelancer ? 3 : 1);
       
-      setCompletionStatus(prev => ({
-        ...prev,
-        [statusKey]: true
-      }));
-
+      // Create the updated completion status
+      const updatedCompletionStatus = {
+        ...completionStatus,
+        [currentStepKey]: true,
+        ...(isLastStep ? {
+          basicDetails: true,
+          additionalDetails: true,
+          interviewDetails: true,
+          availabilityDetails: true
+        } : {})
+      };
+      
+      // Update local state
+      setCompletionStatus(updatedCompletionStatus);
       setFormLoading(true);
 
       const userData = {
@@ -434,24 +444,42 @@ const MultiStepForm = () => {
         ...(currentStep >= 2 && {
           skills: interviewDetailsData.skills,
           technologies: interviewDetailsData.technologies,
-          previousInterviewExperience:
-            interviewDetailsData.previousInterviewExperience,
-          previousInterviewExperienceYears:
-            interviewDetailsData.previousInterviewExperienceYears,
-          hourlyRate: Number(interviewDetailsData.hourlyRate),
-          interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
-          expectedRatePerMockInterview:
-            Number(interviewDetailsData.expectedRatePerMockInterview),
-          noShowPolicy: interviewDetailsData.noShowPolicy,
+          previousInterviewExperience: interviewDetailsData.previousInterviewExperience,
+          previousInterviewExperienceYears: interviewDetailsData.previousInterviewExperienceYears,
+          hourlyRate: Number(interviewDetailsData.hourlyRate) || 0,
+          interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer || [],
+          expectedRatePerMockInterview: Number(interviewDetailsData.expectedRatePerMockInterview) || 0,
           bio: interviewDetailsData.bio,
           professionalTitle: interviewDetailsData.professionalTitle,
+          
+          // New nested rates structure
+          rates: {
+            junior: {
+              usd: Number(interviewDetailsData.rates?.junior?.usd) || 0,
+              inr: Number(interviewDetailsData.rates?.junior?.inr) || 0,
+              isVisible: interviewDetailsData.rates?.junior?.isVisible !== false
+            },
+            mid: {
+              usd: Number(interviewDetailsData.rates?.mid?.usd) || 0,
+              inr: Number(interviewDetailsData.rates?.mid?.inr) || 0,
+              isVisible: Boolean(interviewDetailsData.rates?.mid?.isVisible)
+            },
+            senior: {
+              usd: Number(interviewDetailsData.rates?.senior?.usd) || 0,
+              inr: Number(interviewDetailsData.rates?.senior?.inr) || 0,
+              isVisible: Boolean(interviewDetailsData.rates?.senior?.isVisible)
+            }
+          },
+          
+          mock_interview_discount: interviewDetailsData.mock_interview_discount || '0',
+          isMockInterviewSelected: Boolean(interviewDetailsData.isMockInterviewSelected),
         }),
         ...(currentStep >= 3 && {
           timeZone: availabilityDetailsData.timeZone,
           preferredDuration: availabilityDetailsData.preferredDuration,
         }),
         LetUsKnowYourProfession: profession,
-        completionStatus: completionStatus,
+        completionStatus: updatedCompletionStatus,
         _id: contactId,
       };
 
@@ -485,22 +513,69 @@ const MultiStepForm = () => {
             .filter((dayData) => dayData.timeSlots.length > 0)
           : [];
 
+      // Prepare interview details with proper type conversion
+      const interviewDetails = {
+        skills: (interviewDetailsData.skills || []).filter(skill => skill !== null),
+        technologies: interviewDetailsData.technologies || [],
+        previousInterviewExperience: interviewDetailsData.previousInterviewExperience,
+        previousInterviewExperienceYears: interviewDetailsData.previousInterviewExperienceYears,
+        hourlyRate: Number(interviewDetailsData.hourlyRate) || 0,
+        interviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer || [],
+        expectedRatePerMockInterview: Number(interviewDetailsData.expectedRatePerMockInterview) || 0,
+        
+        // New nested rates structure
+        rates: {
+          junior: {
+            usd: Number(interviewDetailsData.rates?.junior?.usd) || 0,
+            inr: Number(interviewDetailsData.rates?.junior?.inr) || 0,
+            isVisible: interviewDetailsData.rates?.junior?.isVisible !== false
+          },
+          mid: {
+            usd: Number(interviewDetailsData.rates?.mid?.usd) || 0,
+            inr: Number(interviewDetailsData.rates?.mid?.inr) || 0,
+            isVisible: Boolean(interviewDetailsData.rates?.mid?.isVisible)
+          },
+          senior: {
+            usd: Number(interviewDetailsData.rates?.senior?.usd) || 0,
+            inr: Number(interviewDetailsData.rates?.senior?.inr) || 0,
+            isVisible: Boolean(interviewDetailsData.rates?.senior?.isVisible)
+          }
+        },
+        
+        // Mock interview data
+        mock_interview_discount: interviewDetailsData.mock_interview_discount || '0',
+        isMockInterviewSelected: Boolean(interviewDetailsData.isMockInterviewSelected),
+        
+        // Other fields
+        bio: interviewDetailsData.bio,
+        professionalTitle: interviewDetailsData.professionalTitle,
+        yearsOfExperience: additionalDetailsData.yearsOfExperience
+      };
+
       const requestData = {
         userData,
         contactData: {
           ...contactData,
           // Map frontend field names to backend field names
-          skills: interviewDetailsData.skills.filter(skill => skill !== null),
-          technologies: interviewDetailsData.technologies,
-          PreviousExperienceConductingInterviews: interviewDetailsData.previousInterviewExperience,  // Map to backend field name
-          PreviousExperienceConductingInterviewsYears: interviewDetailsData.previousInterviewExperienceYears,
-          // ExpertiseLevel_ConductingInterviews: interviewDetailsData.expertiseLevel_ConductingInterviews,
-          hourlyRate: interviewDetailsData.hourlyRate,
-          InterviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
-          expectedRatePerMockInterview: interviewDetailsData.expectedRatePerMockInterview,
-          NoShowPolicy: interviewDetailsData.noShowPolicy,
-          bio: interviewDetailsData.bio,
-          professionalTitle: interviewDetailsData.professionalTitle,
+          skills: interviewDetails.skills,
+          technologies: interviewDetails.technologies,
+          PreviousExperienceConductingInterviews: interviewDetails.previousInterviewExperience,
+          PreviousExperienceConductingInterviewsYears: interviewDetails.previousInterviewExperienceYears,
+          hourlyRate: interviewDetails.hourlyRate,
+          InterviewFormatWeOffer: interviewDetails.interviewFormatWeOffer,
+          expectedRatePerMockInterview: interviewDetails.expectedRatePerMockInterview,
+          
+          // New nested rates structure
+          rates: interviewDetails.rates,
+          
+          // Mock interview data
+          mock_interview_discount: interviewDetails.mock_interview_discount,
+          isMockInterviewSelected: interviewDetails.isMockInterviewSelected,
+          
+          // Add yearsOfExperience for backend calculation
+          yearsOfExperience: interviewDetails.yearsOfExperience,
+          bio: interviewDetails.bio,
+          professionalTitle: interviewDetails.professionalTitle
         },
         ...(availabilityData.length > 0 && { availabilityData }),
         isInternalInterviewer,
@@ -508,8 +583,6 @@ const MultiStepForm = () => {
         ownerId: matchedContact.ownerId,
         tenantData,
       };
-      console.log("contactData",contactData);
-      
 
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/Individual/Signup`,
@@ -521,7 +594,7 @@ const MultiStepForm = () => {
           },
         }
       );
-      console.log("response", response);
+      
       // if( currentStep === 3 ){
       //   if(response.data.success === true){
          
@@ -673,7 +746,13 @@ const MultiStepForm = () => {
                     errors={errors}
                     setErrors={setErrors}
                     additionalDetailsData={additionalDetailsData}
-                    setAdditionalDetailsData={setAdditionalDetailsData}
+                    setAdditionalDetailsData={(newData) => {
+                      setAdditionalDetailsData(newData);
+                      // Update years of experience when it changes in AdditionalDetails
+                      if (newData.yearsOfExperience !== undefined) {
+                        setYearsOfExperience(parseInt(newData.yearsOfExperience, 10) || 0);
+                      }
+                    }}
                     setResumeFile={setResumeFile}
                     setIsResumeRemoved={setIsResumeRemoved}
                     setIsCoverLetterRemoved={setIsCoverLetterRemoved}
@@ -688,8 +767,8 @@ const MultiStepForm = () => {
                       <InterviewDetails
                         errors={errors}
                         setErrors={setErrors}
-                        selectedTechnologyies={selectedTechnologyies}  // Change from selectedCandidates
-                        setSelectedTechnologyies={setSelectedTechnologyies}  // Add this line
+                        selectedTechnologyies={selectedTechnologyies}
+                        setSelectedTechnologyies={setSelectedTechnologyies}
                         interviewDetailsData={interviewDetailsData}
                         setInterviewDetailsData={setInterviewDetailsData}
                         selectedSkills={selectedSkills}
@@ -698,6 +777,8 @@ const MultiStepForm = () => {
                         setPreviousInterviewExperience={setPreviousInterviewExperience}
                         isMockInterviewSelected={isMockInterviewSelected}
                         setIsMockInterviewSelected={setIsMockInterviewSelected}
+                        yearsOfExperience={additionalDetailsData?.yearsOfExperience || 0}
+                        key={`interview-details-${additionalDetailsData?.yearsOfExperience || 0}`}
                       />
                     )}
 

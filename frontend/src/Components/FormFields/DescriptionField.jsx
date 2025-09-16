@@ -42,6 +42,7 @@ const DescriptionField = ({
   maxLength = 1000,
   disabled = false,
   readOnly = false,
+  showCounter = true,
 }) => {
   const currentLength = (value || "").length;
   const computedId = id || name || "description";
@@ -70,22 +71,24 @@ const DescriptionField = ({
         readOnly={readOnly}
         aria-invalid={!!error}
       />
-      <div>
-        <div className="flex justify-between items-center mt-1">
-          <span className="text-sm text-gray-500">
-            {error ? (
-              <p className="text-red-500 text-xs pt-1">{error}</p>
-            ) : showMinHint ? (
-              <p className="text-gray-500 text-xs">
-                Minimum {minLength - currentLength} more characters needed
-              </p>
-            ) : null}
-          </span>
-          <p className="text-sm text-gray-500">
-            {typeof maxLength === "number" ? `${currentLength}/${maxLength}` : currentLength}
-          </p>
+      {showCounter && (
+        <div>
+          <div className="flex justify-between items-center mt-1">
+            <span className="text-sm text-gray-500">
+              {error ? (
+                <p className="text-red-500 text-xs pt-1">{error}</p>
+              ) : showMinHint ? (
+                <p className="text-gray-500 text-xs">
+                  Minimum {minLength - currentLength} more characters needed
+                </p>
+              ) : null}
+            </span>
+            <p className="text-sm text-gray-500">
+              {typeof maxLength === "number" ? `${currentLength}/${maxLength}` : currentLength}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

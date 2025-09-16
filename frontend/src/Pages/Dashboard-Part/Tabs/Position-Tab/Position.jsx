@@ -35,6 +35,12 @@ import { Button } from "../CommonCode-AllTabs/ui/button";
 import { createPortal } from "react-dom";
 import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal";
 import { format } from "date-fns";
+import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
+const capitalizeFirstLetter = (string) => {
+  if (!string) return "";
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 
 const PositionTab = () => {
   // <---------------------- v1.0.0
@@ -372,6 +378,11 @@ const PositionTab = () => {
   const endIndex = Math.min(startIndex + rowsPerPage, FilteredData.length);
   const currentFilteredRows = FilteredData.slice(startIndex, endIndex);
 
+  const statusOptions = STATUS_OPTIONS.map((s) => ({
+    value: s,
+    label: capitalizeFirstLetter(s),
+  }));
+
   const handleView = (position) => {
     if (effectivePermissions.Positions?.View) {
       navigate(`/position/view-details/${position._id}`, {
@@ -386,10 +397,10 @@ const PositionTab = () => {
     }
   };
 
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return "N/A";
-    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  };
+  // const capitalizeFirstLetter = (str) => {
+  //   if (!str) return "N/A";
+  //   return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+  // };
 
   //<----v1.02-----
   const handleStatusChange = async (row, newStatus) => {
@@ -1049,20 +1060,13 @@ const PositionTab = () => {
           <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-4">
             <h3 className="text-sm font-semibold mb-2">Change Status</h3>
             <div className="mb-4">
-              <label className="block text-xs text-gray-600 mb-1">
-                Select Status
-              </label>
-              <select
-                value={statusValue}
-                onChange={(e) => setStatusValue(e.target.value)}
-                className="w-full text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-custom-blue"
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {capitalizeFirstLetter(s)}
-                  </option>
-                ))}
-              </select>
+
+            <DropdownSelect
+            value={statusOptions.find((opt) => opt.value === statusValue)} // match current selection
+            onChange={(selected) => setStatusValue(selected.value)} // update state with value
+            options={statusOptions}
+            />
+      
             </div>
             <div className="flex justify-end gap-2">
               <button
