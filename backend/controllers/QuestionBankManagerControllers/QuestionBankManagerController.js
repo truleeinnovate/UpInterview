@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - changed minExperience, maxExperience to minexperience, maxexperience
 // v1.0.1 - Ashok - changed some code in createQuestions Controller
 // v1.0.2 - Ashok - added backend pagination for improve loading speed by getting chunk of data
+// v1.0.3 - Ashok - Tried to fix issue for getting data in online
 
 const fs = require("fs"); // for reading uploaded files
 const Papa = require("papaparse"); // for parsing CSV
@@ -337,17 +338,6 @@ const createQuestions = async (req, res) => {
 // v1.0.1 <-------------------------------------------------------------------------->
 
 // v1.0.2 <--------------------------------------------------------------------------------
-// const getQuestions1 = async (req, res) => {
-//   try {
-//     const { type } = req.params;
-//     const Model = getModel(type);
-
-//     const data = await Model.find();
-//     res.status(200).json(data);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 
 const getQuestions = async (req, res) => {
   try {
@@ -380,7 +370,9 @@ const getQuestions = async (req, res) => {
     const questions = await Model.find(query)
       .skip((page - 1) * perPage)
       .limit(parseInt(perPage))
-      .sort({ questionOrderId: sortDirection });
+      // v1.0.3 <---------------------------------------------
+      .sort({ _id: sortDirection });
+      // v1.0.3 --------------------------------------------->
     // you can also change this to "createdAt" or "_id" depending on requirement
 
     res.status(200).json({

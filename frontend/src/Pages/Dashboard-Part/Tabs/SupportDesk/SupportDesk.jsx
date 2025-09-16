@@ -4,6 +4,7 @@
 // v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
 // v1.0.3 - Venkatesh --- added new filters issue types,priority and created date
 // v1.0.4 - Ashok - Improved responsiveness
+// v1.0.5 - Ashok - Fixed issues in responsiveness
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
@@ -475,11 +476,14 @@ function SupportDesk() {
       </div>
       {/* v1.0.4 <------------------------------------------------------------------------------ */}
       {/* <main className="fixed top-48 left-0 right-0 bg-background"> */}
-      <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+      {/* v1.0.5 <------------------------------------------------------------------------------------ */}
+      <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+      {/* v1.0.5 ------------------------------------------------------------------------------------> */}
         {/* v1.0.4 ------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "table" ? (
+              <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
               <TableView
                 data={currentFilteredRows}
                 columns={tableColumns}
@@ -488,6 +492,7 @@ function SupportDesk() {
                 emptyState="No tickets found."
                 className="table-fixed w-full"
               />
+              </div>
             ) : (
               <KanbanView
                 currentTickets={currentFilteredRows}

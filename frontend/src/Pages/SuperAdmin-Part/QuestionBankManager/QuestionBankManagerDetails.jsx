@@ -1,7 +1,10 @@
+// v1.0.0 - Ashok - Improved issues
+
 import React from "react";
 const QuestionBankManagerDetails = ({ content, type }) => {
   if (!content) return <div>No data available</div>;
 
+  // v1.0.0 <----------------------------------------------------------------------------------
   return (
     <div className="w-full bg-white rounded-2xl p-4 overflow-y-auto space-y-4">
       {/* Header */}
@@ -31,39 +34,40 @@ const QuestionBankManagerDetails = ({ content, type }) => {
       </div>
 
       {/* Assessment Type */}
-      {type === "assessment" && (
-        <>
-          {/* Options */}
-          {content.options && content.options.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-1">Options</h3>
-              <ul className="list-disc ml-6 text-gray-700">
-                {content.options.map((opt, idx) => (
-                  <li key={idx}>{opt}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+      <>
+        {/* Options */}
+        {content.options && content.options.length > 0 && (
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-1">Options</h3>
+            <ul className="list-disc ml-6 text-gray-700">
+              {content.options.map((opt, idx) => (
+                <li key={idx}>{opt}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
+        {content.correctAnswer ? (
           <div>
             <h3 className="font-semibold text-gray-800 mb-1">Correct Answer</h3>
-            <p className="text-gray-700">{content.correctAnswer ?? "N/A"}</p>
+            <p className="text-gray-700">{content.correctAnswer}</p>
           </div>
-        </>
-      )}
+        ) : null}
+      </>
 
       {/* Interview Type */}
       {type === "interview" && (
         <>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-gray-800 mb-2">Explanation</h3>
+            <h3 className="font-semibold text-gray-800 mb-2">
+              Answer / Explanation
+            </h3>
             <p className="text-gray-700">{content.explanation ?? "N/A"}</p>
           </div>
-
-          <div>
-            <h3 className="font-semibold text-gray-800 mb-1">Solutions</h3>
-            {content.solutions?.length > 0 ? (
-              content.solutions.map((s, idx) => (
+          {content.solutions?.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-800 mb-1">Solutions</h3>
+              {content.solutions.map((s, idx) => (
                 <div key={idx} className="mb-3 p-4 bg-gray-100 rounded-lg">
                   <div>
                     <strong>Language:</strong> {s?.language ?? "N/A"}
@@ -78,11 +82,11 @@ const QuestionBankManagerDetails = ({ content, type }) => {
                     <strong>Approach:</strong> {s?.approach ?? "N/A"}
                   </div>
                 </div>
-              ))
-            ) : (
-              <span className="text-gray-400">N/A</span>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {/* v1.0.0 ---------------------------------------------------------------------------> */}
         </>
       )}
 
@@ -291,6 +295,7 @@ const QuestionBankManagerDetails = ({ content, type }) => {
       </div>
     </div>
   );
+  // v1.0.0 ---------------------------------------------------------------------------------->
 };
 
 export default QuestionBankManagerDetails;

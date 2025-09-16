@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Fixed issues
+// v1.0.2 - Ashok - fixed issues
 
 import React from "react";
 import { Eye } from "lucide-react";
@@ -92,10 +93,12 @@ const AssignmentQuestions = ({
             </div>
 
             {/* Answer / Explanation */}
+            {/* v1.0.1 <------------------------------------------------ */}
             <p className="text-gray-700 text-sm mb-3">
               <span className="font-semibold">Answer: </span>
-              {q?.explanation}
+              {q?.correctAnswer}
             </p>
+            {/* v1.0.1 ------------------------------------------------> */}
 
             {/* Tags */}
             {q?.tags?.length > 0 && (
