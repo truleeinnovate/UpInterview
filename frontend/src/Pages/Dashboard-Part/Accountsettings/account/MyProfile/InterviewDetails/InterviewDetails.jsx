@@ -16,7 +16,7 @@ const formatInterviewType = (type) => {
     'behavioral': 'Behavioral',
     // Add more mappings as needed
   };
-  
+
   return formatMap[type] || type
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -27,6 +27,8 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
   const { usersRes } = useCustomContext();
   const navigate = useNavigate();
   const [contactData, setContactData] = useState({});
+
+  console.log('contactData', contactData);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -178,33 +180,42 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
           {contactData?.previousExperienceConductingInterviews === "yes" && (
             <>
               <div>
-                <span className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500">
                   Previous Experience
-                </span>
+                </p>
                 <p className="font-medium sm:text-sm">
                   {contactData?.previousExperienceConductingInterviewsYears ||
                     "Not Provided"}{" "}
                   Years
                 </p>
               </div>
+
+              {contactData?.rates?.junior?.isVisible && (
+                <div>
+                  <p className="text-sm text-gray-500">Junior Level Rate</p>
+                  <p className="font-medium sm:text-sm">
+                    ${contactData?.rates?.junior?.usd || "0"} (${contactData?.rates?.junior?.inr} INR)
+                  </p>
+                </div>
+              )}
+              {contactData?.rates?.mid?.isVisible && (
+                <div>
+                  <p className="text-sm text-gray-500">Mid Level Rate</p>
+                  <p className="font-medium sm:text-sm">
+                    ${contactData?.rates?.mid?.usd || "0"} (${contactData?.rates?.mid?.inr} INR)
+                  </p>
+                </div>
+              )}
+              {contactData?.rates?.senior?.isVisible && (
+                <div>
+                  <p className="text-sm text-gray-500">Senior Level Rate</p>
+                  <p className="font-medium sm:text-sm">
+                    ${contactData?.rates?.senior?.usd || "0"} (${contactData?.rates?.senior?.inr} INR)
+                  </p>
+                </div>
+              )}
             </>
           )}
-
-          <div>
-            <p className="text-sm text-gray-500">
-              Expertise Level Conducting Interviews
-            </p>
-            <p className="font-medium sm:text-sm">
-              {contactData?.expertiseLevelConductingInterviews ||
-                "Not Provided"}{" "}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Hourly Charges</p>
-            <p className="font-medium sm:text-sm">
-              $ {contactData?.hourlyRate || "Not Provided"}
-            </p>
-          </div>
 
           <div>
             <p className="text-sm text-gray-500">Interview Formats You Offer</p>
@@ -232,7 +243,7 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
           {/* <div>
           <p className="text-sm text-gray-500">Mock Interview</p>
           <p>{contactData?.IsReadyForMockInterviews || "NO"}</p>
-       
+
         </div> */}
           {contactData?.expectedRatePerMockInterview && (
             <div>
@@ -247,12 +258,6 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
             </div>
           )}
 
-          <div>
-            <p className="text-sm text-gray-500">No Show Policy</p>
-            <p className="font-medium sm:text-sm">
-              {contactData?.noShowPolicy || "Not Provided"}
-            </p>
-          </div>
         </div>
 
         <div>

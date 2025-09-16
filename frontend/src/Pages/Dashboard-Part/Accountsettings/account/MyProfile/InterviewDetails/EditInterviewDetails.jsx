@@ -2,790 +2,872 @@
 // v1.0.1 - Ashok - Changed Maximize and Minimize icons to follow consistent design
 // v1.0.2 - Ashok - Improved responsiveness and added common code to popup
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Maximize, Minimize, Search, X, ChevronDown } from "lucide-react";
-import classNames from "classnames";
-import Modal from "react-modal";
+import { X } from "lucide-react";
 import axios from "axios";
 import { fetchMasterData } from "../../../../../../utils/fetchMasterData";
 import {
-  isEmptyObject,
-  validateInterviewForm,
+    isEmptyObject,
+    validateInterviewForm,
 } from "../../../../../../utils/MyProfileValidations";
 
 import { ReactComponent as Technology } from "../../../../../../icons/technology.svg";
 import { ReactComponent as SkillIcon } from "../../../../../../icons/Skills.svg";
-import { useCustomContext } from "../../../../../../Context/Contextfetch";
-import { redirect, useNavigate, useParams } from "react-router-dom";
-import { config } from "../../../../../../config";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData";
 import {
-  useUpdateContactDetail,
-  useUserProfile,
+    useUpdateContactDetail,
+    useUserProfile,
 } from "../../../../../../apiHooks/useUsers";
 import { useQueryClient } from "@tanstack/react-query";
-// v1.0.1 <---------------------------------------------------------------------------------
-import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-} from "@heroicons/react/24/outline";
 import { notify } from "../../../../../../services/toastService";
 // v1.0.1 --------------------------------------------------------------------------------->
 // v1.0.2 <-----------------------------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import DropdownWithSearchField from "../../../../../../Components/FormFields/DropdownWithSearchField";
 // v1.0.2 ----------------------------------------------------------------------------------->
 
 const EditInterviewDetails = ({
-  from,
-  usersId,
-  setInterviewEditOpen,
-  onSuccess,
+    from,
+    usersId,
+    setInterviewEditOpen,
+    onSuccess,
+    yearsOfExperience = 0,
 }) => {
-  // const {
-  //   usersRes
-  // } = useCustomContext();
-  const { skills } = useMasterData();
-  const popupRef = useRef(null);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+    // const {
+    //   usersRes
+    // } = useCustomContext();
+    const popupRef = useRef(null);
+    const skillsPopupRef = useRef(null);
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const resolvedId = usersId || id;
+    const { userProfile } = useUserProfile(resolvedId);
+    const updateContactDetail = useUpdateContactDetail();
+    const queryClient = useQueryClient();
 
-  const { id } = useParams();
-  const navigate = useNavigate();
+    // Get years of experience from user profile or props
+    const userExpYears = parseInt(userProfile?.yearsOfExperience || yearsOfExperience || 0, 10);
 
-  const resolvedId = usersId || id;
+    // Set up rate visibility based on years of experience
+    const showJuniorLevel = true; // Always show junior level
+    const showMidLevel = userExpYears >= 3; // Show mid-level if 3+ years
+    const showSeniorLevel = userExpYears > 6; // Show senior level if 6+ years
+    const {
+        skills,
+        loadSkills,
+        isSkillsFetching,
+    } = useMasterData();
 
-  const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId);
-  // const requestEmailChange = useRequestEmailChange();
-  const updateContactDetail = useUpdateContactDetail();
-  const queryClient = useQueryClient();
+    // State for form errors and loading
+    const [errors, setErrors] = useState({});
+    const [isReady, setIsReady] = useState(false);
 
-  const [searchTermSkills, setSearchTermSkills] = useState("");
-  const skillsPopupRef = useRef(null);
-  const [showSkillsPopup, setShowSkillsPopup] = useState(false);
-  const [selectedSkills, setSelectedSkills] = useState([]);
+    const [selectedCandidates, setSelectedCandidates] = useState([]);
+    const [searchTermTechnology, setSearchTermTechnology] = useState("");
+    const [showTechPopup, setTechpopup] = useState(false);
+    const [selectedSkills, setSelectedSkills] = useState([]);
+    const [showSkillsPopup, setShowSkillsPopup] = useState(false);
+    const [services, setServices] = useState([]);
+    const [rateCards, setRateCards] = useState([]);
+    const [InterviewPreviousExperience, setInterviewPreviousExperience] = useState("");
 
-  const [searchTermTechnology, setSearchTermTechnology] = useState("");
-  const [errors, setErrors] = useState({});
-  const [isReady, setIsReady] = useState(null);
-  const [expertiseLevel, setExpertiseLevel] = useState("");
-  const [showTechPopup, setTechpopup] = useState(false);
-  const [selectedCandidates, setSelectedCandidates] = useState([]);
-  const [InterviewPreviousExperience, setInterviewPreviousExperience] =
-    useState("");
-  const [services, setServices] = useState([]);
-
-  const [formData, setFormData] = useState({
-    PreviousExperienceConductingInterviews: "",
-    PreviousExperienceConductingInterviewsYears: "",
-    ExpertiseLevel_ConductingInterviews: "",
-    hourlyRate: "",
-    expectedRatePerMockInterview: "",
-    // IsReadyForMockInterviews: '',
-    // ExpectedRatePerMockInterviewMin: '',
-    // ExpectedRatePerMockInterviewMax: '',
-    Technology: [],
-    skills: [],
-    NoShowPolicy: "",
-    // ExpectedRateMin: '',
-    // ExpectedRateMax: '',
-    professionalTitle: "",
-    bio: "",
-    interviewFormatWeOffer: [],
-  });
-  const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
-
-  const bioLength = formData.bio?.length || 0;
-
-  // console.log("userId Interview Details", from);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const technologyData = await fetchMasterData("technology");
-        setServices(technologyData);
-      } catch (error) {
-        console.error("Error fetching master data:", error);
-      }
+    // Handle candidate removal
+    const handleRemoveCandidate = (index) => {
+        const updatedCandidates = [...selectedCandidates];
+        updatedCandidates.splice(index, 1);
+        setSelectedCandidates(updatedCandidates);
+        setFormData(prev => ({
+            ...prev,
+            technologies: updatedCandidates.map(t => t.TechnologyMasterName),
+        }));
     };
 
-    fetchData();
-  }, []);
-
-  // Changed: Updated useEffect to properly map all backend fields
-  useEffect(() => {
-    // const contact = usersRes.find(user => user.contactId === resolvedId);
-
-    // if (!contact) return;
-    if (!userProfile || !userProfile._id) return;
-
-    console.log("Edit Interview Details userProfile", userProfile);
-    // console.log("user", user);
-    setFormData({
-      PreviousExperienceConductingInterviews:
-        userProfile?.previousExperienceConductingInterviews || "",
-      PreviousExperienceConductingInterviewsYears:
-        userProfile?.previousExperienceConductingInterviewsYears || "",
-      ExpertiseLevel_ConductingInterviews:
-        userProfile?.expertiseLevelConductingInterviews || "",
-      // IsReadyForMockInterviews: user.IsReadyForMockInterviews || '',
-      // ExpectedRatePerMockInterviewMin: String(user.ExpectedRatePerMockInterviewMin || ''),
-      // ExpectedRatePerMockInterviewMax: String(user.ExpectedRatePerMockInterviewMax || ''),
-      Technology: Array.isArray(userProfile?.technologies)
-        ? userProfile?.technologies
-        : [],
-      NoShowPolicy: userProfile?.noShowPolicy || "",
-      // ExpectedRateMin: String(user.ExpectedRateMin || ''),
-      // ExpectedRateMax: String(user.ExpectedRateMax || ''),
-      skills: Array.isArray(userProfile?.skills) ? userProfile?.skills : [],
-      interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer)
-        ? userProfile?.interviewFormatWeOffer
-        : [],
-      professionalTitle: userProfile?.professionalTitle || "",
-      bio: userProfile?.bio || "",
-      hourlyRate: userProfile?.hourlyRate,
-      id: userProfile?._id,
-      expectedRatePerMockInterview:
-        userProfile?.expectedRatePerMockInterview || "",
-    });
-    setIsMockInterviewSelected(
-      userProfile?.expectedRatePerMockInterview ? true : false
-    );
-    setSelectedSkills(
-      Array.isArray(userProfile?.skills) ? userProfile?.skills : []
-    );
-    setInterviewPreviousExperience(
-      userProfile?.previousExperienceConductingInterviews || ""
-    );
-    setExpertiseLevel(userProfile?.expertiseLevelConductingInterviews || "");
-    setIsReady(userProfile?.IsReadyForMockInterviews === "yes");
-    setSelectedCandidates(
-      userProfile?.technologies.map((tech) => ({
-        TechnologyMasterName: tech,
-      })) || []
-    );
-    setErrors({});
-  }, [resolvedId, userProfile?._id]);
-
-  const handleBioChange = (e) => {
-    const value = e.target.value;
-    setFormData({ ...formData, bio: value });
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      bio: "",
-    }));
-  };
-
-  const toggleSkillsPopup = () => setShowSkillsPopup((prev) => !prev);
-
-  const handleSelectSkill = (skill) => {
-    if (skill && !selectedSkills.includes(skill.SkillName)) {
-      const newSkill = skill.SkillName;
-      setSelectedSkills((prev) => [...prev, newSkill]);
-      setFormData((prev) => ({
-        ...prev,
-        skills: [...prev.skills, newSkill],
-      }));
-      setErrors((prev) => ({ ...prev, skills: "" }));
-      // Note: Not updating `entries` here as it seems unused in this context
-    }
-    setShowSkillsPopup(false);
-  };
-
-  const handleRadioChange = (e) => {
-    const value = e.target.value;
-    setInterviewPreviousExperience(value);
-    setFormData((prev) => ({
-      ...prev,
-      PreviousExperienceConductingInterviews: value,
-      PreviousExperienceConductingInterviewsYears:
-        value === "no" ? "" : prev.PreviousExperienceConductingInterviewsYears,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      PreviousExperienceConductingInterviews: "",
-      PreviousExperienceConductingInterviewsYears:
-        value === "no"
-          ? ""
-          : prevErrors.PreviousExperienceConductingInterviewsYears,
-    }));
-  };
-
-  // level of expertice
-  const handleRadioChange2 = (e) => {
-    const value = e.target.value;
-    setExpertiseLevel(value);
-    setFormData((prev) => ({
-      ...prev,
-      ExpertiseLevel_ConductingInterviews: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      ExpertiseLevel_ConductingInterviews: "",
-    }));
-  };
-
-  // const handleRadioChange3 = (event) => {
-  //   const value = event.target.value;
-  //   setFormData((prevData) => ({
-  //     ...prevData,
-  //     IsReadyForMockInterviews: value,
-  //     ...(value === "no" ? {
-  //       ExpectedRatePerMockInterviewMin: "",
-  //       ExpectedRatePerMockInterviewMax: ""
-  //     } : {}),
-  //   }));
-  //   setIsReady(value === "yes");
-  //   setErrors((prevErrors) => ({
-  //     ...prevErrors,
-  //     IsReadyForMockInterviews: value ? "" : "Please select an option",
-  //     ...(value === "no" ? {
-  //       ExpectedRatePerMockInterviewMin: "",
-  //       ExpectedRatePerMockInterviewMax: ""
-  //     } : {}),
-  //   }));
-  // };
-
-  const handleChangeExperienceYears = (e) => {
-    const value = e.target.value;
-    setFormData((prev) => ({
-      ...prev,
-      PreviousExperienceConductingInterviewsYears: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      PreviousExperienceConductingInterviewsYears: "",
-    }));
-  };
-
-  const handleSelectCandidate = (technologies) => {
-    if (
-      !selectedCandidates.some(
-        (c) => c.TechnologyMasterName === technologies.TechnologyMasterName
-      )
-    ) {
-      setSelectedCandidates((prev) => [...prev, technologies]);
-      setFormData((prev) => ({
-        ...prev,
-        Technology: [...prev.Technology, technologies.TechnologyMasterName],
-      }));
-    }
-    setTechpopup(false);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      technologies: "",
-    }));
-  };
-
-  // const clearRemoveCandidate = () => {
-  //   setSelectedCandidates([]);
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     Technology: []
-  //   }));
-  //   setErrors((prevErrors) => ({
-  //     ...prevErrors,
-  //     Technology: "At least one technology is required",
-  //   }));
-  // };
-
-  const handleRemoveCandidate = (index) => {
-    const newCandidates = selectedCandidates.filter((_, i) => i !== index);
-    setSelectedCandidates(newCandidates);
-    setFormData((prev) => ({
-      ...prev,
-      Technology: newCandidates.map((c) => c.TechnologyMasterName),
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      Technology:
-        newCandidates.length === 0 ? "At least one technology is required" : "",
-    }));
-  };
-
-  const handleNoShow = (e) => {
-    const { value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      NoShowPolicy: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      NoShowPolicy: "",
-    }));
-  };
-
-  const handleCloseModal = () => {
-    if (from === "users") {
-      setInterviewEditOpen(false);
-    } else {
-      // navigate('/account-settings/my-profile/interview', { replace: true })
-      navigate(-1); // Added by Ashok
-    }
-  };
-
-  // API call to save all changes
-  const handleSave = async (e) => {
-    e.preventDefault();
-
-    const validationErrors = validateInterviewForm(formData, isReady);
-    setErrors(validationErrors);
-
-    // console.log("validationErrors", validationErrors);
-
-    if (!isEmptyObject(validationErrors)) {
-      return; // Prevent submission if there are errors
-    }
-
-    // console.log("form", formData , typeof Number(formData.hourlyRate));
-
-    const cleanFormData = {
-      PreviousExperienceConductingInterviews: String(
-        formData.PreviousExperienceConductingInterviews?.trim() || ""
-      ).trim(),
-      PreviousExperienceConductingInterviewsYears: String(
-        formData.PreviousExperienceConductingInterviewsYears || ""
-      ).trim(),
-      ExpertiseLevel_ConductingInterviews: String(
-        formData.ExpertiseLevel_ConductingInterviews || ""
-      ).trim(),
-      hourlyRate: Number(formData.hourlyRate) || "",
-
-      // IsReadyForMockInterviews: formData.IsReadyForMockInterviews?.trim() || '',
-      // ExpectedRatePerMockInterviewMin: String(formData.ExpectedRatePerMockInterviewMin)?.trim() || '', // Changed: Convert to string before trim
-      // ExpectedRatePerMockInterviewMax: String(formData.ExpectedRatePerMockInterviewMax)?.trim() || '', // Changed: Convert to string before trim
-      technologies: Array.isArray(formData.Technology)
-        ? formData.Technology
-        : [],
-      skills: Array.isArray(formData.skills) ? formData.skills : [],
-      NoShowPolicy: String(formData.NoShowPolicy || "").trim(),
-      // ExpectedRateMin: String(formData.ExpectedRateMin)?.trim() || '', // Changed: Convert to string before trim
-      // ExpectedRateMax: String(formData.ExpectedRateMax)?.trim() || '',  // Changed: Convert to string before trim
-      InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-      expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes(
-        "mock"
-      )
-        ? formData.expectedRatePerMockInterview
-        : "",
-      professionalTitle: String(formData.professionalTitle || "").trim(),
-      bio: String(formData.bio || "").trim(),
-      id: formData.id,
-    };
-
-    try {
-      // const response = await axios.patch(
-      //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-      //   cleanFormData
-      // );
-
-      const response = await updateContactDetail.mutateAsync({
-        resolvedId,
-        data: cleanFormData,
-      });
-      await queryClient.invalidateQueries(["userProfile", resolvedId]);
-
-      console.log("response cleanFormData", response);
-
-      if (response.status === 200) {
-        notify.success("Updated Interview Details Successfully");
-      }
-
-      if (response.status === 200) {
-        // setUserData((prev) => ({ ...prev, ...cleanFormData }));
-        // setIsBasicModalOpen(false);
-        handleCloseModal();
-        // onSuccess();
-        if (usersId) onSuccess();
-      }
-    } catch (error) {
-      if (error.response && error.response.status === 400) {
-        const backendErrors = error.response.data.errors || {};
-        console.log("backendErrors", backendErrors);
-        setErrors(backendErrors);
-        // scrollToFirstError(backendErrors, fieldRefs);
-      } else {
-        console.error("Error saving changes:", error);
-        setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
-      }
-      // console.error("Error updating interview details:", error);
-    }
-  };
-
-  const filteredSkills = Array.isArray(skills)
-    ? skills.filter((skill) =>
-        skill?.SkillName?.toLowerCase()?.includes(
-          searchTermSkills.toLowerCase() || ""
-        )
-      )
-    : [];
-
-  const handleRemoveSkill = (index) => {
-    const updatedSkills = selectedSkills.filter((_, i) => i !== index);
-    setSelectedSkills(updatedSkills);
-    setFormData((prev) => ({ ...prev, skills: updatedSkills }));
-
-    if (updatedSkills.length === 0) {
-      setErrors((prev) => ({
-        ...prev,
-        skills: "At least one skill is required",
-      }));
-    } else {
-      setErrors((prev) => ({ ...prev, skills: "" }));
-    }
-  };
-
-  const handleInterviewFormatChange = (event) => {
-    const { value, checked } = event.target;
-
-    setFormData((prevData) => {
-      let updatedFormats = [...(prevData.interviewFormatWeOffer || [])];
-
-      if (checked) {
-        if (!updatedFormats.includes(value)) {
-          updatedFormats.push(value);
+    const [formData, setFormData] = useState({
+        PreviousExperienceConductingInterviews: "",
+        PreviousExperienceConductingInterviewsYears: "",
+        ExpertiseLevel_ConductingInterviews: "",
+        hourlyRate: "",
+        expectedRatePerMockInterview: "",
+        Technology: [],
+        skills: [],
+        NoShowPolicy: "",
+        professionalTitle: "",
+        bio: "",
+        interviewFormatWeOffer: [],
+        yearsOfExperience: 0,
+        rates: {
+            junior: { usd: 0, inr: 0, isVisible: true },
+            mid: { usd: 0, inr: 0, isVisible: false },
+            senior: { usd: 0, inr: 0, isVisible: false }
         }
-      } else {
-        updatedFormats = updatedFormats.filter((format) => format !== value);
-      }
-
-      return {
-        ...prevData,
-        interviewFormatWeOffer: updatedFormats,
-      };
     });
+    const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
 
-    // Clear error when user selects an option
-    if (errors.interviewFormatWeOffer) {
-      setErrors((prev) => ({
-        ...prev,
-        interviewFormatWeOffer: "",
-      }));
+    const bioLength = formData.bio?.length || 0;
+
+    // console.log("userId Interview Details", from);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const technologyData = await fetchMasterData("technology");
+                setServices(technologyData);
+            } catch (error) {
+                console.error("Error fetching master data:", error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    // Changed: Updated useEffect to properly map all backend fields
+    useEffect(() => {
+        // const contact = usersRes.find(user => user.contactId === resolvedId);
+
+        // if (!contact) return;
+        if (!userProfile || !userProfile._id) return;
+
+        console.log("Edit Interview Details userProfile", userProfile);
+        // console.log("user", user);
+        setFormData({
+            PreviousExperienceConductingInterviews:
+                userProfile?.previousExperienceConductingInterviews || "",
+            PreviousExperienceConductingInterviewsYears:
+                userProfile?.previousExperienceConductingInterviewsYears || "",
+            ExpertiseLevel_ConductingInterviews:
+                userProfile?.expertiseLevelConductingInterviews || "",
+            // IsReadyForMockInterviews: user.IsReadyForMockInterviews || '',
+            // ExpectedRatePerMockInterviewMin: String(user.ExpectedRatePerMockInterviewMin || ''),
+            // ExpectedRatePerMockInterviewMax: String(user.ExpectedRatePerMockInterviewMax || ''),
+            Technology: Array.isArray(userProfile?.technologies)
+                ? userProfile?.technologies
+                : [],
+            NoShowPolicy: userProfile?.noShowPolicy || "",
+            // ExpectedRateMin: String(user.ExpectedRateMin || ''),
+            // ExpectedRateMax: String(user.ExpectedRateMax || ''),
+            skills: Array.isArray(userProfile?.skills) ? userProfile?.skills : [],
+            interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer)
+                ? userProfile?.interviewFormatWeOffer
+                : [],
+            professionalTitle: userProfile?.professionalTitle || "",
+            bio: userProfile?.bio || "",
+            // hourlyRate is now handled by the rates object
+            id: userProfile?._id,
+            expectedRatePerMockInterview:
+                userProfile?.expectedRatePerMockInterview || "",
+        });
+        setIsMockInterviewSelected(
+            userProfile?.expectedRatePerMockInterview ? true : false
+        );
+        setSelectedSkills(
+            Array.isArray(userProfile?.skills) ? userProfile?.skills : []
+        );
+        setInterviewPreviousExperience(
+            userProfile?.previousExperienceConductingInterviews || ""
+        );
+        // Removed unused setExpertiseLevel
+        setIsReady(userProfile?.IsReadyForMockInterviews === "yes");
+        setSelectedCandidates(
+            userProfile?.technologies.map((tech) => ({
+                TechnologyMasterName: tech,
+            })) || []
+        );
+        setErrors({});
+
+        // Update rate visibility based on years of experience
+        const years = parseInt(userProfile?.yearsOfExperience) || 0;
+        setFormData((prev) => ({
+            ...prev,
+            rates: {
+                junior: {
+                    usd: userProfile?.rates?.junior?.usd || 0,
+                    inr: userProfile?.rates?.junior?.inr || 0,
+                    isVisible: true
+                },
+                mid: {
+                    usd: userProfile?.rates?.mid?.usd || 0,
+                    inr: userProfile?.rates?.mid?.inr || 0,
+                    isVisible: years >= 3
+                },
+                senior: {
+                    usd: userProfile?.rates?.senior?.usd || 0,
+                    inr: userProfile?.rates?.senior?.inr || 0,
+                    isVisible: years > 6
+                }
+            }
+        }));
+    }, [resolvedId, userProfile, userProfile?._id]);
+
+    const handleBioChange = (e) => {
+        const value = e.target.value;
+        setFormData({ ...formData, bio: value });
+        setErrors((prevErrors) => ({
+            ...prevErrors,
+            bio: "",
+        }));
+    };
+
+
+    const handleSelectSkill = (skill) => {
+        if (!skill) return;
+
+        // Check if skill is already selected (case-insensitive comparison)
+        const isAlreadySelected = selectedSkills.some(selectedSkill =>
+            selectedSkill?.toLowerCase() === skill.SkillName?.toLowerCase()
+        );
+
+        if (!isAlreadySelected) {
+            const newSkill = skill.SkillName;
+            const updatedSkills = [...selectedSkills, newSkill];
+            setSelectedSkills(updatedSkills);
+
+            setFormData(prev => ({
+                ...prev,
+                skills: updatedSkills,
+            }));
+
+            setErrors(prev => ({ ...prev, skills: '' }));
+        }
+    };
+
+    const handleRadioChange = (e) => {
+        const value = e.target.value;
+        setInterviewPreviousExperience(value);
+        setFormData((prev) => ({
+            ...prev,
+            PreviousExperienceConductingInterviews: value,
+            PreviousExperienceConductingInterviewsYears:
+                value === "no" ? "" : prev.PreviousExperienceConductingInterviewsYears,
+        }));
+        setErrors((prevErrors) => ({
+            ...prevErrors,
+            PreviousExperienceConductingInterviews: "",
+            PreviousExperienceConductingInterviewsYears:
+                value === "no"
+                    ? ""
+                    : prevErrors.PreviousExperienceConductingInterviewsYears,
+        }));
+    };
+
+    const fetchRateCardsMemoized = useCallback(async (techName) => {
+        if (!techName) return;
+
+        console.group('=== fetchRateCards ===');
+        console.log('1. Input technologyName:', techName);
+
+        try {
+            const token = localStorage.getItem('token');
+            const baseUrl = process.env.REACT_APP_API_URL || '';
+            const encodedTech = encodeURIComponent(techName);
+            // Updated endpoint to match new backend route structure
+            const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
+
+            console.log('2. Making API request to:', apiUrl);
+
+            const response = await axios.get(apiUrl, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            console.log('3. API Response:', {
+                status: response.status,
+                data: response.data || 'No data'
+            });
+
+            if (response.data) {
+                const rateCardsData = Array.isArray(response.data) ? response.data : [response.data];
+                setRateCards(rateCardsData);
+            }
+        } catch (error) {
+            console.error('Error fetching rate cards:', {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            setRateCards([]);
+        } finally {
+            console.groupEnd();
+        }
+    }, []);
+
+    // Fetch rate cards for a specific technology
+    const fetchRateCards = (technologyName) => {
+        return fetchRateCardsMemoized(technologyName);
     }
 
-    if (value === "mock") {
-      setIsMockInterviewSelected(checked);
+    // Helper function to get rate ranges for a specific level
+    const getRateRanges = (level) => {
+        if (!rateCards.length) return null;
+
+        // Find the first rate card that has the specified level
+        const rateCard = rateCards.find(card =>
+            card.levels.some(lvl => lvl.level === level)
+        );
+
+        if (!rateCard) return null;
+
+        // Find the level data
+        const levelData = rateCard.levels.find(lvl => lvl.level === level);
+        if (!levelData || !levelData.rateRange) return null;
+
+        return levelData.rateRange;
     }
-  };
 
-  const handleChangeforExp = (e) => {
-    const value = e.target.value;
-    setFormData((prev) => {
-      return {
-        ...prev,
-        expectedRatePerMockInterview: value,
-      };
-    });
-    setErrors((prevErrors) => {
-      const errorMessage =
-        value >= 20 && value <= 500
-          ? ""
-          : "Hourly rate must be between $20 and $500.";
-      return { ...prevErrors, expectedRatePerMockInterview: errorMessage };
-    });
-  };
+    // Handle technology selection
+    const handleSelectCandidate = (technology) => {
+        if (
+            !selectedCandidates.some(
+                (c) => c.TechnologyMasterName === technology.TechnologyMasterName
+            )
+        ) {
+            const updatedCandidates = [...selectedCandidates, technology];
+            setSelectedCandidates(updatedCandidates);
 
-  const handleHourlyRateChange = (e) => {
-    const value = e.target.value || "";
-    setFormData((prev) => {
-      return {
-        ...prev,
-        hourlyRate: value,
-      };
-    });
-    setErrors((prevErrors) => {
-      const errorMessage =
-        value >= 20 && value <= 500
-          ? ""
-          : "Hourly rate must be between $20 and $500.";
-      console.log("Error Message:", errorMessage);
-      return { ...prevErrors, hourlyRate: errorMessage };
-    });
-  };
+            setFormData((prev) => ({
+                ...prev,
+                technologies: updatedCandidates.map(t => t.TechnologyMasterName),
+            }));
 
-  return (
-    // v1.0.2 <-----------------------------------------------------------------
-    <SidebarPopup title="Edit Interview Details" onClose={handleCloseModal}>
-      <div className="sm:p-0 p-6">
-        <form className="space-y-6 pb-2">
-          <div className="grid grid-cols-1  gap-4">
-            {/* technology */}
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Your Comfortable Technologies{" "}
-                <span className="text-red-500">*</span>
-              </label>
+            setErrors((prev) => ({ ...prev, technologies: "" }));
+            fetchRateCards(technology.TechnologyMasterName);
+        }
+    };
 
-              <div className="space-y-2">
-                <div className="relative" ref={popupRef}>
-                  <input
-                    placeholder="Select Multiple Technologies"
-                    readOnly // Prevent typing
-                    onClick={() => setTechpopup((prev) => !prev)}
-                    className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 `}
-                  />
-                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                    <ChevronDown
-                      className="text-lg"
-                      onClick={() => setTechpopup((prev) => !prev)}
-                    />
-                  </div>
-                  {showTechPopup && (
-                    <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                      <div className="border-b">
-                        <div className="flex items-center border rounded px-2 py-1 m-2">
-                          <Search className="absolute ml-1 text-gray-500" />
-                          <input
-                            type="text"
-                            placeholder="Search Technology"
-                            value={searchTermTechnology}
-                            onChange={(e) =>
-                              setSearchTermTechnology(e.target.value)
-                            }
-                            className="pl-8 focus:border-black focus:outline-none w-full"
-                          />
+    // Handle skill removal
+    const handleRemoveSkill = (index) => {
+        const updatedSkills = [...selectedSkills];
+        updatedSkills.splice(index, 1);
+        setSelectedSkills(updatedSkills);
+        setFormData(prev => ({
+            ...prev,
+            skills: updatedSkills,
+        }));
+    };
+
+
+    const handleNoShow = (e) => {
+        const { value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            NoShowPolicy: value,
+        }));
+        setErrors((prevErrors) => ({
+            ...prevErrors,
+            NoShowPolicy: "",
+        }));
+    };
+
+    const handleCloseModal = () => {
+        if (from === "users") {
+            setInterviewEditOpen(false);
+        } else {
+            // navigate('/account-settings/my-profile/interview', { replace: true })
+            navigate(-1); // Added by Ashok
+        }
+    };
+
+    // API call to save all changes
+    const handleSave = async (e) => {
+        e.preventDefault();
+
+        const validationErrors = validateInterviewForm(formData, isReady);
+        setErrors(validationErrors);
+
+        // console.log("validationErrors", validationErrors);
+
+        if (!isEmptyObject(validationErrors)) {
+            return; // Prevent submission if there are errors
+        }
+
+        // console.log("form", formData , typeof Number(formData.hourlyRate));
+
+        const cleanFormData = {
+            PreviousExperienceConductingInterviews: String(
+                formData.PreviousExperienceConductingInterviews?.trim() || ""
+            ).trim(),
+            PreviousExperienceConductingInterviewsYears: String(
+                formData.PreviousExperienceConductingInterviewsYears || ""
+            ).trim(),
+            ExpertiseLevel_ConductingInterviews: String(
+                formData.ExpertiseLevel_ConductingInterviews || ""
+            ).trim(),
+            hourlyRate: Number(formData.hourlyRate) || "",
+
+            // IsReadyForMockInterviews: formData.IsReadyForMockInterviews?.trim() || '',
+            // ExpectedRatePerMockInterviewMin: String(formData.ExpectedRatePerMockInterviewMin)?.trim() || '', // Changed: Convert to string before trim
+            // ExpectedRatePerMockInterviewMax: String(formData.ExpectedRatePerMockInterviewMax)?.trim() || '', // Changed: Convert to string before trim
+            technologies: Array.isArray(formData.Technology)
+                ? formData.Technology
+                : [],
+            skills: Array.isArray(formData.skills) ? formData.skills : [],
+            NoShowPolicy: String(formData.NoShowPolicy || "").trim(),
+            // ExpectedRateMin: String(formData.ExpectedRateMin)?.trim() || '', // Changed: Convert to string before trim
+            // ExpectedRateMax: String(formData.ExpectedRateMax)?.trim() || '',  // Changed: Convert to string before trim
+            InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
+            expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes(
+                "mock"
+            )
+                ? formData.expectedRatePerMockInterview
+                : "",
+            professionalTitle: String(formData.professionalTitle || "").trim(),
+            bio: String(formData.bio || "").trim(),
+            id: formData.id,
+            yearsOfExperience: formData.yearsOfExperience,
+            rates: formData.rates
+        };
+
+        try {
+            // const response = await axios.patch(
+            //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
+            //   cleanFormData
+            // );
+
+            const response = await updateContactDetail.mutateAsync({
+                resolvedId,
+                data: cleanFormData,
+            });
+            await queryClient.invalidateQueries(["userProfile", resolvedId]);
+
+            console.log("response cleanFormData", response);
+
+            if (response.status === 200) {
+                notify.success("Updated Interview Details Successfully");
+            }
+
+            if (response.status === 200) {
+                // setUserData((prev) => ({ ...prev, ...cleanFormData }));
+                // setIsBasicModalOpen(false);
+                handleCloseModal();
+                // onSuccess();
+                if (usersId) onSuccess();
+            }
+        } catch (error) {
+            if (error.response && error.response.status === 400) {
+                const backendErrors = error.response.data.errors || {};
+                console.log("backendErrors", backendErrors);
+                setErrors(backendErrors);
+                // scrollToFirstError(backendErrors, fieldRefs);
+            } else {
+                console.error("Error saving changes:", error);
+                setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
+            }
+            // console.error("Error updating interview details:", error);
+        }
+    };
+
+    const handleInterviewFormatChange = (event) => {
+        const { value, checked } = event.target;
+
+        setFormData((prevData) => {
+            let updatedFormats = [...(prevData.interviewFormatWeOffer || [])];
+
+            if (checked) {
+                if (!updatedFormats.includes(value)) {
+                    updatedFormats.push(value);
+                }
+            } else {
+                updatedFormats = updatedFormats.filter((format) => format !== value);
+            }
+
+            return {
+                ...prevData,
+                interviewFormatWeOffer: updatedFormats,
+            };
+        });
+
+        // Clear error when user selects an option
+        if (errors.interviewFormatWeOffer) {
+            setErrors((prev) => ({
+                ...prev,
+                interviewFormatWeOffer: "",
+            }));
+        }
+
+        if (value === "mock") {
+            setIsMockInterviewSelected(checked);
+        }
+    };
+
+    // Handle years of experience change
+    const handleYearsOfExperienceChange = (e) => {
+        const years = parseInt(e.target.value) || 0;
+        setFormData(prev => ({
+            ...prev,
+            PreviousExperienceConductingInterviewsYears: years,
+            rates: {
+                ...prev.rates,
+                junior: {
+                    ...(prev.rates?.junior || {}),
+                    isVisible: true
+                },
+                mid: {
+                    ...(prev.rates?.mid || {}),
+                    isVisible: years >= 3
+                },
+                senior: {
+                    ...(prev.rates?.senior || {}),
+                    isVisible: years > 6
+                }
+            }
+        }));
+
+        // Clear any errors
+        setErrors(prev => ({
+            ...prev,
+            PreviousExperienceConductingInterviewsYears: ""
+        }));
+    };
+
+    // Handle rate changes for different experience levels and currencies
+    const handleRateChange = (level, field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            rates: {
+                ...prev.rates,
+                [level]: {
+                    ...(prev.rates?.[level] || {}),
+                    [field]: value ? parseInt(value) : ""
+                }
+            }
+        }));
+
+        // Clear any errors for this field
+        setErrors(prev => {
+            const newErrors = { ...prev };
+            if (newErrors.rates?.[level]?.[field]) {
+                delete newErrors.rates[level][field];
+                // Clean up empty rate objects
+                if (Object.keys(newErrors.rates[level] || {}).length === 0) {
+                    delete newErrors.rates[level];
+                }
+                if (Object.keys(newErrors.rates || {}).length === 0) {
+                    delete newErrors.rates;
+                }
+            }
+            return newErrors;
+        });
+    };
+
+    const handleChangeforExp = (e) => {
+        const value = e.target.value;
+        setFormData(prev => ({
+            ...prev,
+            expectedRatePerMockInterview: value,
+        }));
+
+        // Clear rate errors when rate changes
+        setErrors(prev => ({
+            ...prev,
+            expectedRatePerMockInterview: ""
+        }));
+    };
+
+    // Handle technology selection
+    const handleTechnologyChange = (selectedValue) => {
+        if (selectedValue) {
+            fetchRateCards(selectedValue);
+
+            // Check if the technology is already selected
+            const isAlreadySelected = selectedCandidates.some(
+                tech => tech.TechnologyMasterName === selectedValue
+            );
+
+            if (!isAlreadySelected) {
+                const technology = services.find((t) => t.TechnologyMasterName === selectedValue) || {
+                    _id: Math.random().toString(36).substr(2, 9),
+                    TechnologyMasterName: selectedValue
+                };
+
+                const newTechnologies = [...selectedCandidates, technology];
+                setSelectedCandidates(newTechnologies);
+
+                setFormData(prev => ({
+                    ...prev,
+                    Technology: newTechnologies.map(t => t.TechnologyMasterName),
+                    rates: {
+                        ...prev.rates,
+                        junior: {
+                            ...prev.rates.junior,
+                            isVisible: true
+                        },
+                        mid: {
+                            ...prev.rates.mid,
+                            isVisible: userExpYears >= 3
+                        },
+                        senior: {
+                            ...prev.rates.senior,
+                            isVisible: userExpYears > 6
+                        }
+                    }
+                }));
+
+                setErrors(prev => ({ ...prev, technologies: '' }));
+            }
+        } else {
+            setSelectedCandidates([]);
+            setFormData(prev => ({
+                ...prev,
+                Technology: [],
+                rates: {
+                    ...prev.rates,
+                    junior: { ...prev.rates.junior, isVisible: false },
+                    mid: { ...prev.rates.mid, isVisible: false },
+                    senior: { ...prev.rates.senior, isVisible: false }
+                }
+            }));
+            setErrors(prev => ({ ...prev, technologies: 'Please select a technology' }));
+        }
+    };
+
+    // Helper to clean up rate errors
+    const cleanUpRateErrors = (errors) => {
+        const newErrors = { ...errors };
+        if (newErrors.rates) {
+            Object.keys(newErrors.rates).forEach(level => {
+                if (Object.keys(newErrors.rates[level] || {}).length === 0) {
+                    delete newErrors.rates[level];
+                }
+            });
+            if (Object.keys(newErrors.rates).length === 0) {
+                delete newErrors.rates;
+            }
+        }
+        return newErrors;
+    };
+
+    return (
+        <SidebarPopup title="Edit Interview Details" onClose={handleCloseModal}>
+            <div className="sm:p-0 p-6">
+                <form className="space-y-6 pb-2" onSubmit={handleSave}>
+                    <div className="grid grid-cols-1 gap-4">
+                        {/* Technology Selection */}
+                        <div className="space-y-4">
+                            <DropdownWithSearchField
+                                value={selectedCandidates[0]?.TechnologyMasterName || ''}
+                                options={services.map(tech => ({
+                                    value: tech.TechnologyMasterName,
+                                    label: tech.TechnologyMasterName
+                                }))}
+                                onChange={handleTechnologyChange}
+                                error={errors.technologies}
+                                label="Select Your Comfortable Technology"
+                                name="technology"
+                                required={true}
+                                onMenuOpen={() => { }}
+                                loading={false}
+                            />
+
+                            {/* Selected Technologies with Rate Ranges */}
+                            {/* <div className="mb-5 space-y-3">
+                                {selectedCandidates.map((candidate, index) => {
+                                    const juniorRange = getRateRanges('junior');
+                                    const midRange = getRateRanges('mid');
+                                    const seniorRange = getRateRanges('senior');
+
+                                    return (
+                                        <div key={index} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center">
+                                                    <Technology className="text-custom-blue h-5 w-5 mr-2" />
+                                                    <span className="font-medium text-gray-800">
+                                                        {candidate.TechnologyMasterName}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveCandidate(index)}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                                    aria-label="Remove technology"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-2 pl-7 text-xs text-gray-600 space-y-1">
+                                                {juniorRange && (
+                                                    <div>
+                                                        <span className="font-medium">Junior:</span> ${juniorRange.min} - ${juniorRange.max}/hr
+                                                    </div>
+                                                )}
+                                                {midRange && formData.rates?.mid?.isVisible && (
+                                                    <div>
+                                                        <span className="font-medium">Mid:</span> ${midRange.min} - ${midRange.max}/hr
+                                                    </div>
+                                                )}
+                                                {seniorRange && formData.rates?.senior?.isVisible && (
+                                                    <div>
+                                                        <span className="font-medium">Senior:</span> ${seniorRange.min} - ${seniorRange.max}/hr
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div> */}
+
+                            {errors.technologies && (
+                                <p className="text-red-500 text-sm mt-1">{errors.technologies}</p>
+                            )}
                         </div>
-                      </div>
-                      {services.filter((service) =>
-                        service.TechnologyMasterName.toLowerCase().includes(
-                          searchTermTechnology.toLowerCase()
-                        )
-                      ).length > 0 ? (
-                        services
-                          .filter((service) =>
-                            service.TechnologyMasterName.toLowerCase().includes(
-                              searchTermTechnology.toLowerCase()
-                            )
-                          )
-                          .map((service) => (
-                            <div
-                              key={service._id}
-                              onClick={() => handleSelectCandidate(service)}
-                              className="cursor-pointer hover:bg-gray-200 p-2"
-                            >
-                              {service.TechnologyMasterName}
+
+                        {/* Skills Selection */}
+                        <div className="space-y-4">
+                            {/* <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Select Skills <span className="text-red-500">*</span>
+                                <span className="text-xs text-gray-500 ml-2 font-normal">(Select up to 10 skills)</span>
+                            </label> */}
+
+                            <div className="space-y-2">
+                                <div className="relative" ref={skillsPopupRef}>
+                                    <DropdownWithSearchField
+                                        value=""
+                                        options={skills?.map(skill => ({
+                                            value: skill.SkillName,
+                                            label: skill.SkillName
+                                        })) || []}
+                                        name="skills"
+                                        label="Select Skills"
+                                        error={errors.skills}
+                                        required={true}
+                                        onChange={(e) => {
+                                            if (e.target.value && formData.skills.length < 10) {
+                                                const skill = skills?.find(s => s.SkillName === e.target.value);
+                                                if (skill) {
+                                                    handleSelectSkill(skill);
+                                                }
+                                            }
+                                        }}
+                                        onMenuOpen={loadSkills}
+                                        loading={isSkillsFetching}
+                                    />
+                                    {/* <span className="text-xs text-gray-500 ml-2 font-normal">(Select up to 10 skills)</span> */}
+                                </div>
+
+                                {/* Selected Skills */}
+                                {formData.skills.length > 0 && (
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {formData.skills.map((skill, index) => (
+                                            <div
+                                                key={index}
+                                                className="bg-blue-50 border border-blue-100 rounded-full px-3 py-1 text-sm text-blue-800 flex items-center"
+                                            >
+                                                <SkillIcon className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
+                                                <span className="mr-1.5">{skill}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveSkill(index)}
+                                                    className="ml-1 text-blue-400 hover:text-blue-600"
+                                                    aria-label={`Remove ${skill}`}
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {formData.skills.length >= 10 && (
+                                            <p className="text-xs text-amber-600 mt-1">
+                                                Maximum of 10 skills reached
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {errors.skills && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.skills}</p>
+                                )}
+
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {formData.skills.length} of 10 skills selected
+                                </p>
                             </div>
-                          ))
-                      ) : (
-                        <div className="p-2 text-gray-500">
-                          No technologies found
                         </div>
-                      )}
-                    </div>
-                  )}
-                  {errors.technologies && (
-                    <p className="text-red-500 text-sm sm:text-xs mt-2">
-                      {errors.technologies}
-                    </p>
-                  )}
-                </div>
 
-                <div className=" mb-5 relative">
-                  {selectedCandidates.map((candidate, index) => (
-                    <div
-                      key={index}
-                      className="border border-custom-blue rounded px-2 py-1 inline-block mr-2 m-1 text-sm sm:text-xs sm:w-[90%]"
-                    >
-                      <div className="flex items-center justify-between gap-2 text-custom-blue">
-                        <div className="flex">
-                          <span className="sm:w-5 w-8">
-                            {" "}
-                            <Technology className="pt-1 text-custom-blue h-6 w-6 " />
-                          </span>
-                          {candidate.TechnologyMasterName}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCandidate(index)}
-                          className="ml-2 text-red-500 rounded px-2"
-                        >
-                          X
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Skills */}
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Skills <span className="text-red-500">*</span>
-              </label>
-              <div className="space-y-2">
-                <div className="relative" ref={skillsPopupRef}>
-                  <input
-                    onClick={toggleSkillsPopup}
-                    className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 `}
-                    placeholder="Select Multiple Skills"
-                  />
-                  <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                    <ChevronDown
-                      className="text-lg"
-                      onClick={toggleSkillsPopup}
-                    />
-                  </div>
-                  {showSkillsPopup && (
-                    <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                      <div className="border-b">
-                        <div className="flex items-center border rounded px-2 py-1 m-2">
-                          <Search className="absolute ml-1 text-gray-500" />
-                          <input
-                            type="text"
-                            placeholder="Search Skills"
-                            value={searchTermSkills}
-                            onChange={(e) =>
-                              setSearchTermSkills(e.target.value)
-                            }
-                            className="pl-8  focus:border-black focus:outline-none w-full"
-                          />
-                        </div>
-                      </div>
-                      {filteredSkills.length > 0 ? (
-                        filteredSkills.map((skill) => (
-                          <div
-                            key={skill?._id}
-                            onClick={() => handleSelectSkill(skill)}
-                            className="cursor-pointer hover:bg-gray-200 p-2"
-                          >
-                            {skill?.SkillName}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-2 text-gray-500">No skills found</div>
-                      )}
-                    </div>
-                  )}
-                  {/* {errors.Skills && <p className="text-red-500 text-sm sm:text-xs">{errors.Skills}</p>} */}
-                </div>
-                {errors.skills && (
-                  <p className="text-red-500 text-sm mt-1">{errors.skills}</p>
-                )}
-                <div className="mt-4 mb-5 relative">
-                  {formData.skills.length > 0 ? (
-                    formData.skills.map((skill, index) => (
-                      <div
-                        key={index}
-                        className="border border-custom-blue rounded px-2 m-1 py-1 inline-block mr-2 text-sm sm:text-xs sm:w-[90%]"
-                      >
-                        <div className="flex items-center justify-between gap-2 text-custom-blue">
-                          <div className="flex">
-                            <span className="sm:w-5 w-8">
-                              <SkillIcon className="pt-1 text-custom-blue h-6 w-6" />
-                              {/* <SkillIcon className="pt-1 text-lg" /> */}
-                            </span>
-                            {skill}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSkill(index)}
-                            className="ml-2 text-red-500 rounded px-2"
-                          >
-                            X
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500">No skills added yet</p>
-                  )}
-                </div>
-                {/* <button
-                    onClick={() => setIsModalOpen(true)}
-                  className="text-custom-blue"
-                >
-                  + Add Expertise
-                </button> */}
-              </div>
-            </div>
-          </div>
-
-          {/* <div className="space-y-4 grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-10"> */}
-
-          <div className="col-span-2 sm:col-span-6 space-y-6">
-            {/* Previous Experience */}
-            <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
-              <p>
-                Do you have any previous experience conducting interviews?{" "}
-                <span className="text-red-500">*</span>
-              </p>
-              <div className="mt-3 mb-3 flex space-x-6">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    className="form-radio text-gray-600"
-                    name="InterviewPreviousExperience"
-                    value="yes"
-                    checked={InterviewPreviousExperience === "yes"}
-                    onChange={handleRadioChange}
-                  />
-                  <span className="ml-2">Yes</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    className="form-radio text-gray-600"
-                    name="InterviewPreviousExperience"
-                    value="no"
-                    checked={InterviewPreviousExperience === "no"}
-                    onChange={handleRadioChange}
-                  />
-                  <span className="ml-2">No</span>
-                </label>
-              </div>
-              {errors.PreviousExperienceConductingInterviews && (
-                <p className="text-red-500 text-sm sm:text-xs">
-                  {errors.PreviousExperienceConductingInterviews}
-                </p>
-              )}
-              {/* {errors.PreviousExperience && (
+                        {/* Skills Section */}
+                        <div className="space-y-4">
+                            {/* Previous Experience */}
+                            <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+                                <p>
+                                    Do you have any previous experience conducting interviews ?{" "}
+                                    <span className="text-red-500">*</span>
+                                </p>
+                                <div className="mt-3 mb-3 flex space-x-6">
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            className="form-radio text-gray-600"
+                                            name="InterviewPreviousExperience"
+                                            value="yes"
+                                            checked={InterviewPreviousExperience === "yes"}
+                                            onChange={handleRadioChange}
+                                        />
+                                        <span className="ml-2">Yes</span>
+                                    </label>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            className="form-radio text-gray-600"
+                                            name="InterviewPreviousExperience"
+                                            value="no"
+                                            checked={InterviewPreviousExperience === "no"}
+                                            onChange={handleRadioChange}
+                                        />
+                                        <span className="ml-2">No</span>
+                                    </label>
+                                </div>
+                                {errors.PreviousExperienceConductingInterviews && (
+                                    <p className="text-red-500 text-sm sm:text-xs">
+                                        {errors.PreviousExperienceConductingInterviews}
+                                    </p>
+                                )}
+                                {/* {errors.PreviousExperience && (
                     <p className="text-red-500 text-sm sm:text-xs">{errors.PreviousExperience}</p>
                   )} */}
-            </div>
+                            </div>
 
-            {/* Conditional Experience Years */}
-            {InterviewPreviousExperience === "yes" && (
-              <div className="w-full">
-                <label
-                  htmlFor="InterviewPreviousExperienceYears"
-                  className="block text-sm font-medium text-gray-900 mb-2"
-                >
-                  How many years of experience do you have in conducting
-                  interviews? <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="InterviewPreviousExperienceYears"
-                  name="InterviewPreviousExperienceYears"
-                  min="1"
-                  max="15"
-                  value={formData.PreviousExperienceConductingInterviewsYears}
-                  onChange={handleChangeExperienceYears}
-                  className={`block border rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 w-2/5 sm:w-1/2 focus:outline-none ${
-                    errors.InterviewPreviousExperienceYears
-                      ? "border-red-500"
-                      : "border-gray-400"
-                  }`}
-                />
-                {errors.PreviousExperienceConductingInterviewsYears && (
-                  <p className="text-red-500 text-sm sm:text-xs mt-2">
-                    {errors.PreviousExperienceConductingInterviewsYears}
-                  </p>
-                )}
-                {/* {errors.PreviousExperienceConductingInterviewsYears && (
+                            {/* Conditional Experience Years */}
+                            {InterviewPreviousExperience === "yes" && (
+                                <div className="w-full">
+                                    <label
+                                        htmlFor="InterviewPreviousExperienceYears"
+                                        className="block text-sm font-medium text-gray-900 mb-2"
+                                    >
+                                        How many years of experience do you have in conducting
+                                        interviews? <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="InterviewPreviousExperienceYears"
+                                        name="InterviewPreviousExperienceYears"
+                                        min="0"
+                                        max="50"
+                                        value={formData.PreviousExperienceConductingInterviewsYears}
+                                        onChange={handleYearsOfExperienceChange}
+                                        className={`block border rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 w-2/5 sm:w-1/2 focus:outline-none ${errors.PreviousExperienceConductingInterviewsYears
+                                            ? "border-red-500"
+                                            : "border-gray-400"
+                                            }`}
+                                    />
+                                    {errors.PreviousExperienceConductingInterviewsYears && (
+                                        <p className="text-red-500 text-sm sm:text-xs mt-2">
+                                            {errors.PreviousExperienceConductingInterviewsYears}
+                                        </p>
+                                    )}
+                                    {/* {errors.PreviousExperienceConductingInterviewsYears && (
                       <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.InterviewPreviousExperienceYears}</p>
                     )} */}
-              </div>
-            )}
+                                </div>
+                            )}
 
-            {/* Level of Expertise */}
-            <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+                            {/* Level of Expertise */}
+                            {/* <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
               <p>
                 Choose your level of expertise in conducting interviews{" "}
                 <span className="text-red-500">*</span>
               </p>
-              {/* v1.0.0 <------------------------------------------------------------------------------- */}
-              {/* <div className="mt-3 flex flex-wrap space-x-8 md:space-x-10 sm:space-x-0 sm:flex-col"> */}
               <div className="mt-3 flex flex-wrap gap-4">
-              {/* v1.0.0 -------------------------------------------------------------------------------> */}
                 {["junior", "mid-level", "senior", "lead"].map(
                   (level, index) => (
                     <label key={index} className="inline-flex items-center">
@@ -810,350 +892,497 @@ const EditInterviewDetails = ({
                   {errors.ExpertiseLevel_ConductingInterviews}
                 </p>
               )}
-            </div>
+            </div> */}
 
-            {/* Expected Rate Per Hour */}
-            {/* <div > */}
-            <label
-              htmlFor="hourly_rate"
-              className="block text-sm font-medium text-gray-900 mb-2"
-            >
-              Expected Hourly Rate (USD) <span className="text-red-500">*</span>
-            </label>
-            <div className="grid  gap-6">
-              <div className="flex flex-col w-full">
-                <div className="relative w-full">
-                  {/* Dollar Symbol */}
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">$</span>
-                  </div>
+                            {/* Hourly Rates by Experience Level */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Hourly Rates by Experience Level <span className="text-red-500">*</span>
+                                </label>
+                                <div className="space-y-4">
+                                    {/* Junior Level */}
+                                    {formData.rates?.junior?.isVisible && (
+                                        <div className="bg-gray-50 p-4 rounded-lg">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label htmlFor="junior_rate" className="text-sm font-medium text-gray-700">
+                                                    Junior Level (0-3 years)
+                                                </label>
+                                                {showJuniorLevel && (
+                                                    <span className="text-xs text-gray-500">
+                                                        {getRateRanges('Junior')?.usd && getRateRanges('Junior')?.inr && (
+                                                            <span>
+                                                                Range: ${getRateRanges('Junior').usd.min}-${getRateRanges('Junior').usd.max}
+                                                                {" "}({`₹${getRateRanges('Junior').inr.min}–${getRateRanges('Junior').inr.max}`})
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex sm:flex-col w-full">
+                                                <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">USD</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            name="junior_usd"
+                                                            value={formData.rates?.junior?.usd || ''}
+                                                            onChange={(e) => handleRateChange('junior', 'usd', e.target.value)}
+                                                            className="block w-full border border-gray-300 rounded-md py-2 pl-7 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+                                                            placeholder="Enter USD rate"
+                                                            min="0"
+                                                        />
+                                                        <span className="absolute left-2 top-2 text-gray-500">$</span>
+                                                    </div>
+                                                    {errors.rates?.junior?.usd && (
+                                                        <p className="mt-1 text-xs text-red-600">{errors.rates.junior.usd}</p>
+                                                    )}
+                                                </div>
+                                                <div className="w-1/2 sm:w-full pl-2 sm:pl-0 sm:mt-2">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">INR</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            name="junior_inr"
+                                                            value={formData.rates?.junior?.inr || ''}
+                                                            onChange={(e) => handleRateChange('junior', 'inr', e.target.value)}
+                                                            className="block w-full border border-gray-300 rounded-md py-2 pl-7 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+                                                            placeholder="Enter INR rate"
+                                                            min="0"
+                                                        />
+                                                        <span className="absolute left-2 top-2 text-gray-500">₹</span>
+                                                    </div>
+                                                    {errors.rates?.junior?.inr && (
+                                                        <p className="mt-1 text-xs text-red-600">{errors.rates.junior.inr}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
-                  {/* Input Field with $ Symbol Inside */}
+                                    {/* Mid Level */}
+                                    {formData.rates?.mid?.isVisible && (
+                                        <div className="bg-gray-50 p-4 rounded-lg">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label htmlFor="mid_rate" className="text-sm font-medium text-gray-700">
+                                                    Mid-Level (3-6 years)
+                                                </label>
+                                                {showMidLevel && (
+                                                    <span className="text-xs text-gray-500">
+                                                        {getRateRanges('Mid-Level')?.usd && getRateRanges('Mid-Level')?.inr && (
+                                                            <span>
+                                                                Range: ${getRateRanges('Mid-Level').usd.min}-${getRateRanges('Mid-Level').usd.max}
+                                                                {" "}({`₹${getRateRanges('Mid-Level').inr.min}–${getRateRanges('Mid-Level').inr.max}`})
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex sm:flex-col w-full">
+                                                <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">USD</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            name="mid_usd"
+                                                            value={formData.rates?.mid?.usd || ''}
+                                                            onChange={(e) => handleRateChange('mid', 'usd', e.target.value)}
+                                                            className="block w-full border border-gray-300 rounded-md py-2 pl-7 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+                                                            placeholder="Enter USD rate"
+                                                            min="0"
+                                                        />
+                                                        <span className="absolute left-2 top-2 text-gray-500">$</span>
+                                                    </div>
+                                                    {errors.rates?.mid?.usd && (
+                                                        <p className="mt-1 text-xs text-red-600">{errors.rates.mid.usd}</p>
+                                                    )}
+                                                </div>
+                                                <div className="w-1/2 sm:w-full pl-2 sm:pl-0 sm:mt-2">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">INR</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            name="mid_inr"
+                                                            value={formData.rates?.mid?.inr || ''}
+                                                            onChange={(e) => handleRateChange('mid', 'inr', e.target.value)}
+                                                            className="block w-full border border-gray-300 rounded-md py-2 pl-7 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+                                                            placeholder="Enter INR rate"
+                                                            min="0"
+                                                        />
+                                                        <span className="absolute left-2 top-2 text-gray-500">₹</span>
+                                                    </div>
+                                                    {errors.rates?.mid?.inr && (
+                                                        <p className="mt-1 text-xs text-red-600">{errors.rates.mid.inr}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
-                  <input
-                    type="number"
-                    id="hourlyRate"
-                    name="hourlyRate"
-                    min="20"
-                    max="500"
-                    placeholder="75"
-                    value={formData.hourlyRate || ""}
-                    onChange={handleHourlyRateChange}
-                    className={`block border rounded-md bg-white pl-7 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 w-full focus:outline-none ${
-                      errors.hourlyRate ? "border-red-500" : "border-gray-400"
-                    } `}
-                  />
-                </div>
+                                    {/* Senior Level */}
+                                    {formData.rates?.senior?.isVisible && (
+                                        <div className="bg-gray-50 p-4 rounded-lg">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label htmlFor="senior_rate" className="text-sm font-medium text-gray-700">
+                                                    Senior Level (6+ years)
+                                                </label>
+                                                {showSeniorLevel && (
+                                                    <span className="text-xs text-gray-500">
+                                                        {getRateRanges('Senior')?.usd && getRateRanges('Senior')?.inr && (
+                                                            <span>
+                                                                Range: ${getRateRanges('Senior').usd.min}-${getRateRanges('Senior').usd.max}
+                                                                {" "}({`₹${getRateRanges('Senior').inr.min}–${getRateRanges('Senior').inr.max}`})
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex sm:flex-col w-full">
+                                                <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">USD</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            name="senior_usd"
+                                                            value={formData.rates?.senior?.usd || ''}
+                                                            onChange={(e) => handleRateChange('senior', 'usd', e.target.value)}
+                                                            className="block w-full border border-gray-300 rounded-md py-2 pl-7 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+                                                            placeholder="Enter USD rate"
+                                                            min="0"
+                                                        />
+                                                        <span className="absolute left-2 top-2 text-gray-500">$</span>
+                                                    </div>
+                                                    {errors.rates?.senior?.usd && (
+                                                        <p className="mt-1 text-xs text-red-600">{errors.rates.senior.usd}</p>
+                                                    )}
+                                                </div>
+                                                <div className="w-1/2 sm:w-full pl-2 sm:pl-0 sm:mt-2">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">INR</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            name="senior_inr"
+                                                            value={formData.rates?.senior?.inr || ''}
+                                                            onChange={(e) => handleRateChange('senior', 'inr', e.target.value)}
+                                                            className="block w-full border border-gray-300 rounded-md py-2 pl-7 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+                                                            placeholder="Enter INR rate"
+                                                            min="0"
+                                                        />
+                                                        <span className="absolute left-2 top-2 text-gray-500">₹</span>
+                                                    </div>
+                                                    {errors.rates?.senior?.inr && (
+                                                        <p className="mt-1 text-xs text-red-600">{errors.rates.senior.inr}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="mt-2 text-xs text-gray-500">
+                                    {formData.PreviousExperienceConductingInterviewsYears > 0
+                                        ? `Based on your ${formData.PreviousExperienceConductingInterviewsYears} years of experience, we're showing the most relevant experience levels.`
+                                        : 'Set competitive rates based on candidate experience levels.'
+                                    }
+                                    {formData.PreviousExperienceConductingInterviewsYears === 6 &&
+                                        <span className="block mt-1">For Senior Level (7+ years), please select 7 or more years of experience.</span>
+                                    }
+                                </p>
+                            </div>
+                            {/* </div> */}
 
-                {/* Error Message Below Input */}
-                {errors.hourlyRate && (
-                  <p className="text-red-500 text-xs sm:text-xs mt-1 ml-1">
-                    {errors.hourlyRate}
-                  </p>
-                )}
-              </div>
-            </div>
-            {/* </div> */}
+                            {/* Interview Formats You Offer */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Interview Formats You Offer{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                                    {[
+                                        {
+                                            id: "format_technical",
+                                            value: "technical",
+                                            label: "Technical Coding",
+                                            description:
+                                                "Algorithmic problem-solving and coding challenges",
+                                        },
+                                        {
+                                            id: "format_system_design",
+                                            value: "system_design",
+                                            label: "System Design",
+                                            description: "Architecture and scalability discussions",
+                                        },
+                                        {
+                                            id: "format_behavioral",
+                                            value: "behavioral",
+                                            label: "Behavioral",
+                                            description: "Soft skills and situational questions",
+                                        },
+                                        {
+                                            id: "format_mock",
+                                            value: "mock",
+                                            label: "Mock Interviews",
+                                            description: "Full interview simulation with feedback",
+                                        },
+                                    ].map(({ id, value, label, description }) => (
+                                        <div
+                                            key={id}
+                                            className="relative flex items-start p-4 rounded-lg border border-gray-200  transition-colors"
+                                        >
+                                            <div className="flex items-center h-5">
+                                                <input
+                                                    id={id}
+                                                    type="checkbox"
+                                                    value={value}
+                                                    // Changed: Use includes() to check if value is in interviewFormatWeOffer
+                                                    // checked={formData.interviewFormatWeOffer.includes(value)}
+                                                    checked={
+                                                        formData.interviewFormatWeOffer?.includes(value) ||
+                                                        false
+                                                    }
+                                                    onChange={handleInterviewFormatChange}
+                                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                                />
+                                            </div>
+                                            <div className="ml-3">
+                                                <label htmlFor={id} className="font-medium text-gray-700">
+                                                    {label}
+                                                </label>
+                                                <p className="text-sm text-gray-500">{description}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Changed: Added error display for interviewFormatWeOffer */}
+                                {errors.interviewFormatWeOffer && (
+                                    <p className="text-red-500 text-sm mt-2">
+                                        {errors.interviewFormatWeOffer}
+                                    </p>
+                                )}
+                            </div>
 
-            {/* Interview Formats You Offer */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Interview Formats You Offer{" "}
-                <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                {[
-                  {
-                    id: "format_technical",
-                    value: "technical",
-                    label: "Technical Coding",
-                    description:
-                      "Algorithmic problem-solving and coding challenges",
-                  },
-                  {
-                    id: "format_system_design",
-                    value: "system_design",
-                    label: "System Design",
-                    description: "Architecture and scalability discussions",
-                  },
-                  {
-                    id: "format_behavioral",
-                    value: "behavioral",
-                    label: "Behavioral",
-                    description: "Soft skills and situational questions",
-                  },
-                  {
-                    id: "format_mock",
-                    value: "mock",
-                    label: "Mock Interviews",
-                    description: "Full interview simulation with feedback",
-                  },
-                ].map(({ id, value, label, description }) => (
-                  <div
-                    key={id}
-                    className="relative flex items-start p-4 rounded-lg border border-gray-200  transition-colors"
-                  >
-                    <div className="flex items-center h-5">
-                      <input
-                        id={id}
-                        type="checkbox"
-                        value={value}
-                        // Changed: Use includes() to check if value is in interviewFormatWeOffer
-                        // checked={formData.interviewFormatWeOffer.includes(value)}
-                        checked={
-                          formData.interviewFormatWeOffer?.includes(value) ||
-                          false
-                        }
-                        onChange={handleInterviewFormatChange}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                      />
-                    </div>
-                    <div className="ml-3">
-                      <label htmlFor={id} className="font-medium text-gray-700">
-                        {label}
-                      </label>
-                      <p className="text-sm text-gray-500">{description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {/* Changed: Added error display for interviewFormatWeOffer */}
-              {errors.interviewFormatWeOffer && (
-                <p className="text-red-500 text-sm mt-2">
-                  {errors.interviewFormatWeOffer}
-                </p>
-              )}
-            </div>
+                            {/* Expected Rate Per Mock Interview */}
+                            {isMockInterviewSelected && (
+                                <div>
+                                    <label
+                                        htmlFor="hourly_rate"
+                                        className="block text-sm font-medium text-gray-900 mb-2"
+                                    >
+                                        Expected rate per mock interview (USD){" "}
+                                        <span className="text-red-500">*</span>
+                                    </label>
 
-            {/* Expected Rate Per Mock Interview */}
-            {isMockInterviewSelected && (
-              <div>
-                <label
-                  htmlFor="hourly_rate"
-                  className="block text-sm font-medium text-gray-900 mb-2"
-                >
-                  Expected rate per mock interview (USD){" "}
-                  <span className="text-red-500">*</span>
-                </label>
+                                    <div className="relative">
+                                        {/* Dollar Symbol */}
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-gray-500 sm:text-sm">$</span>
+                                        </div>
 
-                <div className="relative">
-                  {/* Dollar Symbol */}
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">$</span>
-                  </div>
+                                        {/* Hourly Rate Input */}
+                                        <input
+                                            id="expectedRatePerMockInterview"
+                                            type="number"
+                                            name="expectedRatePerMockInterview"
+                                            min="20"
+                                            max="500"
+                                            value={formData?.expectedRatePerMockInterview}
+                                            onChange={handleChangeforExp}
+                                            className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2  sm:text-sm ${errors.expectedRatePerMockInterview
+                                                ? "border-red-500"
+                                                : "border-gray-300"
+                                                }`}
+                                            placeholder="75"
+                                        />
+                                    </div>
 
-                  {/* Hourly Rate Input */}
-                  <input
-                    id="expectedRatePerMockInterview"
-                    type="number"
-                    name="expectedRatePerMockInterview"
-                    min="20"
-                    max="500"
-                    value={formData?.expectedRatePerMockInterview}
-                    onChange={handleChangeforExp}
-                    className={`block w-full pl-7 pr-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-                      errors.expectedRatePerMockInterview
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                    placeholder="75"
-                  />
-                </div>
+                                    {/* Error Message */}
+                                    {errors.expectedRatePerMockInterview && (
+                                        <p className="mt-1.5 text-sm text-red-600">
+                                            {errors.expectedRatePerMockInterview}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
-                {/* Error Message */}
-                {errors.expectedRatePerMockInterview && (
-                  <p className="mt-1.5 text-sm text-red-600">
-                    {errors.expectedRatePerMockInterview}
-                  </p>
-                )}
-              </div>
-            )}
+                            {/* No-Show Policy */}
+                            {/* {isReady && ( */}
+                            {/* <div>
+                                <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
+                                    Policy for No-Show Cases <span className="text-red-500">*</span>
+                                </p>
+                                <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
+                                    {["25%", "50%", "75%", "100%"].map((policy) => (
+                                        <label key={policy} className="inline-flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="NoShowPolicy"
+                                                value={policy}
+                                                checked={formData.NoShowPolicy === policy}
+                                                onChange={handleNoShow}
+                                                className="form-radio text-gray-600"
+                                            />
+                                            <span className="ml-2">
+                                                Charge {policy} without rescheduling
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {errors.NoShowPolicy && (
+                                    <p className="text-red-500 text-sm sm:text-xs mt-2">
+                                        {errors.NoShowPolicy}
+                                    </p>
+                                )}
+                            </div> */}
+                            {/* // )} */}
 
-            {/* No-Show Policy */}
-            {/* {isReady && ( */}
-            <div>
-              <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
-                Policy for No-Show Cases <span className="text-red-500">*</span>
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
-                {["25%", "50%", "75%", "100%"].map((policy) => (
-                  <label key={policy} className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="NoShowPolicy"
-                      value={policy}
-                      checked={formData.NoShowPolicy === policy}
-                      onChange={handleNoShow}
-                      className="form-radio text-gray-600"
-                    />
-                    <span className="ml-2">
-                      Charge {policy} without rescheduling
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {errors.NoShowPolicy && (
-                <p className="text-red-500 text-sm sm:text-xs mt-2">
-                  {errors.NoShowPolicy}
-                </p>
-              )}
-            </div>
-            {/* // )} */}
-
-            {/* Professional Title */}
-            <div className="sm:col-span-6 col-span-2">
-              <label
-                htmlFor="title"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Professional Title <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="Professional Title"
-                name="professionalTitle"
-                type="text"
-                value={formData.professionalTitle}
-                // onChange={(e) =>
-                //   setFormData((prevData) => ({
-                //     ...prevData,
-                //     professionalTitle: e.target.value,
-                //   }))
-                // }
-                onChange={(e) => {
-                  setFormData((prevData) => ({
-                    ...prevData,
-                    professionalTitle: e.target.value,
-                  }));
-                  // Clear error when user starts typing
-                  if (e.target.value.length >= 50) {
-                    setErrors((prev) => ({ ...prev, professionalTitle: "" }));
-                  }
-                }}
-                // onBlur={(e) => {
-                //   const value = e.target.value.trim();
-                //   if (!value) {
-                //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
-                //   } else if (value.length < 50) {
-                //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
-                //   } else if (value.length > 100) {
-                //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
-                //   } else {
-                //     setErrors(prev => ({ ...prev, professionalTitle: '' }));
-                //   }
-                // }}
-                className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2  sm:text-sm"
-                placeholder="Senior Software Engineer"
-              />
-              <div className="flex justify-between ">
-                {errors.professionalTitle ? (
-                  <p className="text-sm text-red-600">
-                    {errors.professionalTitle}
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-500">Min 50 characters</p>
-                )}
-                {formData.professionalTitle?.length > 0 && (
-                  <p
-                    className={`text-xs ${
-                      formData.professionalTitle.length < 50 ||
-                      errors.professionalTitle
-                        ? "text-red-500"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {formData.professionalTitle.length}/100
-                  </p>
-                )}
-              </div>
-              {/* {errors.title && (
+                            {/* Professional Title */}
+                            <div className="sm:col-span-6 col-span-2">
+                                <label
+                                    htmlFor="title"
+                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                >
+                                    Professional Title <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    id="Professional Title"
+                                    name="professionalTitle"
+                                    type="text"
+                                    value={formData.professionalTitle}
+                                    // onChange={(e) =>
+                                    //   setFormData((prevData) => ({
+                                    //     ...prevData,
+                                    //     professionalTitle: e.target.value,
+                                    //   }))
+                                    // }
+                                    onChange={(e) => {
+                                        setFormData((prevData) => ({
+                                            ...prevData,
+                                            professionalTitle: e.target.value,
+                                        }));
+                                        // Clear error when user starts typing
+                                        if (e.target.value.length >= 50) {
+                                            setErrors((prev) => ({ ...prev, professionalTitle: "" }));
+                                        }
+                                    }}
+                                    // onBlur={(e) => {
+                                    //   const value = e.target.value.trim();
+                                    //   if (!value) {
+                                    //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title is required' }));
+                                    //   } else if (value.length < 50) {
+                                    //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title must be at least 50 characters' }));
+                                    //   } else if (value.length > 100) {
+                                    //     setErrors(prev => ({ ...prev, professionalTitle: 'Professional title cannot exceed 100 characters' }));
+                                    //   } else {
+                                    //     setErrors(prev => ({ ...prev, professionalTitle: '' }));
+                                    //   }
+                                    // }}
+                                    className="block w-full px-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:ring-2  sm:text-sm"
+                                    placeholder="Senior Software Engineer"
+                                />
+                                <div className="flex justify-between ">
+                                    {errors.professionalTitle ? (
+                                        <p className="text-sm text-red-600">
+                                            {errors.professionalTitle}
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-gray-500">Min 50 characters</p>
+                                    )}
+                                    {formData.professionalTitle?.length > 0 && (
+                                        <p
+                                            className={`text-xs ${formData.professionalTitle.length < 50 ||
+                                                errors.professionalTitle
+                                                ? "text-red-500"
+                                                : "text-gray-500"
+                                                }`}
+                                        >
+                                            {formData.professionalTitle.length}/100
+                                        </p>
+                                    )}
+                                </div>
+                                {/* {errors.title && (
                   <p className="mt-1.5 text-sm text-red-600">{errors.title.message}</p>
                 )} */}
-            </div>
+                            </div>
 
-            {/* Professional Bio */}
-            <div className="sm:col-span-6 col-span-2">
-              <label
-                htmlFor="bio"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Professional Bio <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <textarea
-                  id="bio"
-                  rows="5"
-                  value={formData.bio}
-                  // onChange={handleBioChange}
-                  onChange={(e) => {
-                    handleBioChange(e);
-                    // Clear error when user starts typing
-                    // if (e.target.value.length >= 150) {
-                    //   setErrors(prev => ({ ...prev, bio: '' }));
-                    // }
-                  }}
-                  // onBlur={(e) => {
-                  //   const value = e.target.value.trim();
-                  //   if (!value) {
-                  //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
-                  //   } else if (value.length < 150) {
-                  //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
-                  //   } else {
-                  //     setErrors(prev => ({ ...prev, bio: '' }));
-                  //   }
-                  // }}
-                  className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2  sm:text-sm `}
-                  // ${errors.bio ? 'border-red-500' : 'border-gray-300'
-                  //   }
-                  placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
-                  minLength={150}
-                  maxLength={500}
-                ></textarea>
-                {bioLength > 0 && (
-                  <p
-                    className={`absolute -bottom-6 right-0 text-xs ${
-                      bioLength < 150 || errors.bio
-                        ? "text-red-500"
-                        : bioLength > 450
-                        ? "text-yellow-500"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {bioLength}/500
-                  </p>
-                )}
-              </div>
-              <div className="flex justify-between ">
-                {errors.bio ? (
-                  <p className="text-sm text-red-600">{errors.bio}</p>
-                ) : (
-                  <p className="text-xs text-gray-500">Min 150 characters</p>
-                )}
-              </div>
-            </div>
-          </div>
-          {/* </div> */}
+                            {/* Professional Bio */}
+                            <div className="sm:col-span-6 col-span-2">
+                                <label
+                                    htmlFor="bio"
+                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                >
+                                    Professional Bio <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <textarea
+                                        id="bio"
+                                        rows="5"
+                                        value={formData.bio}
+                                        // onChange={handleBioChange}
+                                        onChange={(e) => {
+                                            handleBioChange(e);
+                                            // Clear error when user starts typing
+                                            // if (e.target.value.length >= 150) {
+                                            //   setErrors(prev => ({ ...prev, bio: '' }));
+                                            // }
+                                        }}
+                                        // onBlur={(e) => {
+                                        //   const value = e.target.value.trim();
+                                        //   if (!value) {
+                                        //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
+                                        //   } else if (value.length < 150) {
+                                        //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
+                                        //   } else {
+                                        //     setErrors(prev => ({ ...prev, bio: '' }));
+                                        //   }
+                                        // }}
+                                        className={`block w-full px-3 py-2.5 text-gray-900 border rounded-lg shadow-sm focus:ring-2  sm:text-sm `}
+                                        // ${errors.bio ? 'border-red-500' : 'border-gray-300'
+                                        //   }
+                                        placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
+                                        minLength={150}
+                                        maxLength={500}
+                                    ></textarea>
+                                    {bioLength > 0 && (
+                                        <p
+                                            className={`absolute -bottom-6 right-0 text-xs ${bioLength < 150 || errors.bio
+                                                ? "text-red-500"
+                                                : bioLength > 450
+                                                    ? "text-yellow-500"
+                                                    : "text-gray-500"
+                                                }`}
+                                        >
+                                            {bioLength}/500
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex justify-between ">
+                                    {errors.bio ? (
+                                        <p className="text-sm text-red-600">{errors.bio}</p>
+                                    ) : (
+                                        <p className="text-xs text-gray-500">Min 150 characters</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
 
-          <div className="flex justify-end space-x-3  ">
-            <button
-              type="button"
-              onClick={handleCloseModal}
-              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              onClick={handleSave}
-              className="px-4 py-2 bg-custom-blue text-white rounded-lg "
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
-      </div>
-    </SidebarPopup>
-    // v1.0.2 ----------------------------------------------------------------->
-  );
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                type="button"
+                                onClick={handleCloseModal}
+                                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-custom-blue text-white rounded-lg"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </SidebarPopup>
+    );
 };
 
 export default EditInterviewDetails;

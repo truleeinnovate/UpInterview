@@ -281,12 +281,12 @@ const getInterviewers = async (req, res) => {
     if (!mongoose.isValidObjectId(tenantId)) {
       return res.status(400).json({ error: "Invalid Tenant ID format" });
     }
-  
+
     // Fetch external interviewers
     const externalUsers = await Users.find({ isFreelancer: true }).lean();
     // console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
 
-// <------------------------------- v1.0.0 
+// <------------------------------- v1.0.0
     const internalRoles = await RolesPermissionObject.find({
       roleType: 'organization',
       // tenantId,
@@ -298,7 +298,7 @@ const getInterviewers = async (req, res) => {
     // Fetch internal interviewers
     const internalUsers = await Users.find({
       roleId: internalRoleIds,
-      // <------------------------------- v1.0.0 
+      // <------------------------------- v1.0.0
       tenantId,
       // ------------------------------ v1.0.0 >
     }).populate({ path: 'roleId', select: 'label' }).lean();
@@ -527,7 +527,7 @@ const getSuperAdminUsers = async (req, res) => {
     const internalRoles = await RolesPermissionObject.find({ roleType: 'internal' })
       .lean()
       .select('_id label roleName roleType');
-    
+
     console.log(`Total internal roles found: ${internalRoles.length}`, {
       roles: internalRoles.map(role => ({
         _id: role._id.toString(),
@@ -806,8 +806,8 @@ const getUniqueUserByOwnerId = async (req, res) => {
       preferredDuration: contact.preferredDuration || "",
       availability: contact.availability || [],
       dateOfBirth: contact.dateOfBirth || '',
-      expectedRatePerMockInterview: contact.expectedRatePerMockInterview || ''
-
+      expectedRatePerMockInterview: contact.expectedRatePerMockInterview || '',
+      rates: contact.rates || null
     };
 
     res.status(200).json(combinedUser);
