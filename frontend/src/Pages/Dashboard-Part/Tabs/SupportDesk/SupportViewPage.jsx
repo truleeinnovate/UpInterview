@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - disabled outer scrollbar using custom hook
 // v1.0.1 - Venkatesh - ticket code and status in align center
 // v1.0.2 - Ashraf - Added subject field
+// v1.0.3 - Ashok  - Fixed responsive issues
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
@@ -74,7 +75,6 @@ const SupportViewPage = () => {
     <div
     // className={`${isFullScreen ? "min-h-screen" : "h-full"} flex flex-col`}
     >
-
       {/* <div className="p-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
@@ -111,38 +111,35 @@ const SupportViewPage = () => {
       <div className="flex items-center ">
         <div className="flex border-b border-gray-200 ">
           <button
-            className={`py-3 px-4 font-medium flex items-center gap-2 ${activeTab === "details"
+            className={`py-3 px-4 font-medium flex items-center gap-2 ${
+              activeTab === "details"
                 ? "text-custom-blue border-b-2 border-custom-blue"
                 : "text-gray-500 hover:text-gray-700"
-              }`}
+            }`}
             onClick={() => setActiveTab("details")}
           >
             <FaInfoCircle className="w-4 h-4" />
             Details
           </button>
           <button
-            className={`py-3 px-4 font-medium flex items-center gap-2 ${activeTab === "activity"
+            className={`py-3 px-4 font-medium flex items-center gap-2 ${
+              activeTab === "activity"
                 ? "text-custom-blue border-b-2 border-custom-blue"
                 : "text-gray-500 hover:text-gray-700"
-              }`}
+            }`}
             onClick={() => setActiveTab("activity")}
           >
             <FaHistory className="w-4 h-4" />
             Activity
           </button>
         </div>
-
-
       </div>
-
 
       {/* <-------v1.0.1--------------Ticket Code and Status */}
       {/* Tab Content */}
-      {activeTab === "details" ?
-
+      {activeTab === "details" ? (
         <div className="sm:px-0 p-6">
           <div className="flex items-center justify-center gap-2 mb-4">
-
             <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
               <FaTicketAlt className="w-8 h-8" />
             </div>
@@ -150,12 +147,19 @@ const SupportViewPage = () => {
               <h3 className="text-2xl font-bold text-gray-900">
                 {ticketData?.ticketCode}
               </h3>
-              <StatusBadge status={ticketData?.status} text={ticketData?.status ? ticketData?.status.charAt(0).toUpperCase() + ticketData?.status.slice(1) : "Not Provided"} />{/*common status code add by Venkatesh*/}
+              <StatusBadge
+                status={ticketData?.status}
+                text={
+                  ticketData?.status
+                    ? ticketData?.status.charAt(0).toUpperCase() +
+                      ticketData?.status.slice(1)
+                    : "Not Provided"
+                }
+              />
+              {/*common status code add by Venkatesh*/}
               {/*-------v1.0.1-------------->*/}
             </div>
           </div>
-
-
 
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
             <div className="flex justify-between items-center mb-4">
@@ -241,7 +245,7 @@ const SupportViewPage = () => {
 
           {ticketData.resolution && (
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-4">
-              <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4" >
+              <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
                 Resolution
               </h4>
               <div className="flex items-start gap-3">
@@ -268,9 +272,16 @@ const SupportViewPage = () => {
                 </div>
 
                 <div className="flex-1">
+                  {/* v1.0.3 <----------------------------------------------- */}
                   <p className="text-gray-700">
                     {ticketData?.attachment?.filename}
+                    {ticketData?.attachment?.filename
+                      ? ticketData?.attachment?.filename.length > 12
+                        ? ticketData?.attachment?.filename?.slice(0, 12) + "..."
+                        : ticketData?.attachment?.filename
+                      : "N/A"}
                   </p>
+                  {/* v1.0.3 -----------------------------------------------> */}
                 </div>
 
                 {ticketData?.attachment?.path && (
@@ -317,23 +328,20 @@ const SupportViewPage = () => {
                     {ticketData?.statusHistory?.[0]?.user
                       ?.charAt(0)
                       .toUpperCase() +
-                      ticketData?.statusHistory?.[0]?.user.slice(1) || "Unknown"}
+                      ticketData?.statusHistory?.[0]?.user.slice(1) ||
+                      "Unknown"}
                     , {formatDate(ticketData?.updatedAt)}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-
-
         </div>
-
-        : <div className="sm:px-0 p-4">
+      ) : (
+        <div className="sm:px-0 p-4">
           <Activity parentId={ticketData?._id} />
         </div>
-      }
-
-
+      )}
     </div>
   );
 

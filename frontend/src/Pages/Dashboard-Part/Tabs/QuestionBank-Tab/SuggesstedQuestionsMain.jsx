@@ -6,6 +6,7 @@
 // v1.0.3 ----Venkatesh---add questions lengthn for pagination
 // v1.0.4 ----Venkatesh---add new filter like technology and category
 // v1.0.5 - Ashok - Improved responsiveness
+// v1.0.6 - Ashok - Fixed alignment issues
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
@@ -65,7 +66,11 @@ function HeaderBar({
         <div className="w-48 flex-shrink-0">
           <DropdownSelect
             isSearchable={false}
-            value={dropdownValue ? { value: dropdownValue, label: dropdownValue } : null}
+            value={
+              dropdownValue
+                ? { value: dropdownValue, label: dropdownValue }
+                : null
+            }
             onChange={(opt) => setDropdownValue(opt?.value || "")}
             options={[
               { value: "Interview Questions", label: "Interview Questions" },
@@ -1050,7 +1055,8 @@ const SuggestedQuestionsComponent = ({
               ...categoryFilterItems,
               ...technologyFilterItems,
             ].length > 0 && (
-              <div className="flex items-center flex-wrap px-4 pt-2 mb-3">
+              // v1.0.6 <----------------------------------------------------------------------
+              <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
                 <h3 className="font-medium text-gray-700 text-sm">
                   Filters applied:
                 </h3>
@@ -1079,6 +1085,7 @@ const SuggestedQuestionsComponent = ({
                   ))}
                 </ul>
               </div>
+              // v1.0.6 ---------------------------------------------------------------------->
             )}
             <ul className="flex flex-col gap-4 pr-2">
               {paginatedData.length > 0 ? (
@@ -1088,11 +1095,13 @@ const SuggestedQuestionsComponent = ({
                     className="border border-gray-200 rounded-lg h-full shadow-sm hover:shadow-md transition-shadow text-sm"
                   >
                     <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                      <div className="sm:w-[50%] md:w-[58%] w-[80%]">
-                        <div className="flex items-center justify-center rounded-md bg-custom-blue/80 px-3 py-1 text-white text-sm transition-colors w-24">
+                      {/* v1.0.6 <---------------------------------------------------------------------------- */}
+                      <div className="flex items-start justify-start sm:w-[50%] md:w-[58%] w-[80%]">
+                        <div className="flex items-center justify-center rounded-md bg-custom-blue/80 px-3 py-1 text-white text-sm transition-colors">
                           <p className="font-medium">{item.category}</p>
                         </div>
                       </div>
+                      {/* v1.0.6 ----------------------------------------------------------------------------> */}
                       <div
                         className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${
                           type === "interviewerSection" ||

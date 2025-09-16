@@ -1,4 +1,6 @@
 // v1.0.0 - Ashok - Reduced size of icons and added description
+// v1.0.1 - Ashok - Fixed description of Category
+
 import React, { useEffect, useState } from "react";
 import {
   Building2,
@@ -68,13 +70,15 @@ const masterItems = [
     description:
       "Organizations where individuals have worked or are currently employed.",
   },
+  // v1.0.1 <----------------------------------------------------------
   {
     key: "category",
     label: "Category",
     icon: <Tag />,
     description:
-      "Organizations where individuals have worked or are currently employed.",
+      "Groups that classify related entities by type or domain.",
   },
+  // v1.0.1 ---------------------------------------------------------->
 ];
 // v1.0.0 <-------------------------------------------------------------->
 

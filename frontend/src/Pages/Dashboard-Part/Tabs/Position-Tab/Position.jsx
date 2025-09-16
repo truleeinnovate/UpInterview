@@ -3,11 +3,19 @@
 // v1.0.2  -  Venkatesh   -  added status change functionality
 // v1.0.3  -  Venkatesh   -  added filters functionality for location, tech, company, experience, salary, created within days, updated within days
 // v1.0.4  -  Ashok   -  Improved responsiveness
+// v1.0.5  -  Ashok   -  changed kanban and Added delete and change status buttons for Kanban
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, Pencil, ChevronUp, ChevronDown, Trash } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+  Trash,
+  Repeat,
+} from "lucide-react";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
@@ -22,23 +30,30 @@ import { usePermissions } from "../../../../Context/PermissionsContext";
 import { useMediaQuery } from "react-responsive";
 // v1.0.2 ------------------------------------------------------>
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
-import { notify } from "../../../../services/toastService";//<----v1.02-----
+import { notify } from "../../../../services/toastService"; //<----v1.02-----
 import { Button } from "../CommonCode-AllTabs/ui/button";
 import { createPortal } from "react-dom";
 import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal";
+import { format } from "date-fns";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
-
 const capitalizeFirstLetter = (string) => {
   if (!string) return "";
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
+
 const PositionTab = () => {
   // <---------------------- v1.0.0
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
-  const { locations, skills, companies } = useMasterData();//<-----v1.03-----
-  const { positionData, isLoading, addOrUpdatePosition,deletePositionMutation, isMutationLoading } = usePositions();//<----v1.02-----
+  const { locations, skills, companies } = useMasterData(); //<-----v1.03-----
+  const {
+    positionData,
+    isLoading,
+    addOrUpdatePosition,
+    deletePositionMutation,
+    isMutationLoading,
+  } = usePositions(); //<----v1.02-----
   //console.log("pos",positionData);
   const navigate = useNavigate();
   const location = useLocation();
@@ -89,30 +104,28 @@ const PositionTab = () => {
   const [statusValue, setStatusValue] = useState("draft");
   //----v1.02----->
 
-
-    
-    //  Ranjith added delete Candidate functionality 
+  //  Ranjith added delete Candidate functionality
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deletePosition, setDeletePosition] = useState(null);
 
-
-    const handleDeletePosition = async () => {
-      try {
-        // console.log("deletePosition", deletePosition);
-        let res = await deletePositionMutation(deletePosition?._id || deletePosition?.id || 'N/A');
-        // console.log("res deleteCandidateData", res);
-        if (res.status === "success") {
-          setShowDeleteConfirmModal(false);
-          notify.success("Position Deleted successfully");
-        }
-  
-      } catch (error) {
-        console.error("Error Deleting Round:", error);
-        notify.error("Failed to Delete Round");
+  const handleDeletePosition = async () => {
+    try {
+      // console.log("deletePosition", deletePosition);
+      let res = await deletePositionMutation(
+        deletePosition?._id || deletePosition?.id || "N/A"
+      );
+      // console.log("res deleteCandidateData", res);
+      if (res.status === "success") {
+        setShowDeleteConfirmModal(false);
+        notify.success("Position Deleted successfully");
       }
-    };
-      
-    //  Ranjith added delete Candidate functionality 
+    } catch (error) {
+      console.error("Error Deleting Round:", error);
+      notify.error("Failed to Delete Round");
+    }
+  };
+
+  //  Ranjith added delete Candidate functionality
 
   // Memoize unique locations from master data
   const uniqueLocations = useMemo(() => {
@@ -126,9 +139,7 @@ const PositionTab = () => {
   // Memoize unique company names from master data
   const uniqueCompanyNames = useMemo(() => {
     if (!Array.isArray(companies)) return [];
-    return [
-      ...new Set(companies.map((c) => c?.CompanyName).filter(Boolean)),
-    ];
+    return [...new Set(companies.map((c) => c?.CompanyName).filter(Boolean))];
   }, [companies]);
   //-----v1.03----->
 
@@ -140,7 +151,7 @@ const PositionTab = () => {
         position.title,
         position.companyname,
         position.Location,
-        position.positionCode
+        position.positionCode,
       ].filter((field) => field !== null && field !== undefined);
 
       const matchesLocation =
@@ -165,7 +176,8 @@ const PositionTab = () => {
       const threshold = Number(selectedFilters.salaryMin) || 0;
       const minSal = parseFloat(position.minSalary) || 0;
       const maxSal = parseFloat(position.maxSalary) || 0;
-      const matchesSalary = threshold === 0 || maxSal >= threshold || minSal >= threshold;
+      const matchesSalary =
+        threshold === 0 || maxSal >= threshold || minSal >= threshold;
 
       // Created date preset filter
       let matchesCreatedDate = true;
@@ -232,7 +244,8 @@ const PositionTab = () => {
       //<-----v1.03-----
       setSelectedCompany(selectedFilters.company || []);
       setSalaryMin(
-        selectedFilters.salaryMin !== undefined && selectedFilters.salaryMin !== null
+        selectedFilters.salaryMin !== undefined &&
+          selectedFilters.salaryMin !== null
           ? String(selectedFilters.salaryMin)
           : ""
       );
@@ -332,7 +345,7 @@ const PositionTab = () => {
         filters.company.length > 0 ||
         (filters.salaryMin && filters.salaryMin > 0) ||
         !!filters.createdDate
-        //-----v1.03----->
+      //-----v1.03----->
     );
     setFilterPopupOpen(false);
   };
@@ -396,7 +409,9 @@ const PositionTab = () => {
 
     if (["closed", "cancelled"].includes(newStatus)) {
       const confirmed = window.confirm(
-        `Are you sure you want to mark this position as ${capitalizeFirstLetter(newStatus)}?`
+        `Are you sure you want to mark this position as ${capitalizeFirstLetter(
+          newStatus
+        )}?`
       );
       if (!confirmed) return;
     }
@@ -504,20 +519,19 @@ const PositionTab = () => {
         </div>
       ),
     },
-      {
-        key: "status",
-        header: "Status",
-        render: (value, row) => (
-          <StatusBadge status={capitalizeFirstLetter(value)} />
-        ),
-      },
-      {
-        key:"createdAt",
-        header:"Created At",
-        render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
-
-      }
-    ];
+    {
+      key: "status",
+      header: "Status",
+      render: (value, row) => (
+        <StatusBadge status={capitalizeFirstLetter(value)} />
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Created At",
+      render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
+    },
+  ];
 
   const tableActions = [
     ...(effectivePermissions.Positions?.View
@@ -532,14 +546,14 @@ const PositionTab = () => {
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-        //<----v1.02-----
+          //<----v1.02-----
           {
             key: "change_status",
             label: "Change Status",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            icon: <Repeat className="w-4 h-4 text-green-600" />,
             onClick: (row) => openStatusModal(row),
           },
-        //----v1.02----->
+          //----v1.02----->
           {
             key: "edit",
             label: "Edit",
@@ -548,20 +562,138 @@ const PositionTab = () => {
           },
         ]
       : []),
-      ...(effectivePermissions.Positions?.Delete
+    ...(effectivePermissions.Positions?.Delete
       ? [
           {
             key: "delete",
             label: "Delete",
             icon: <Trash className="w-4 h-4 text-red-600" />,
             onClick: (row) => {
-              setShowDeleteConfirmModal(true)
-              setDeletePosition(row)
-            }
+              setShowDeleteConfirmModal(true);
+              setDeletePosition(row);
+            },
           },
         ]
       : []),
   ];
+  // v1.0.5 <----------------------------------------------------------------------------------
+  const kanbanColumns = [
+    {
+      key: "companyname",
+      header: "Company",
+    },
+    {
+      key: "experience",
+      header: "Experience",
+      render: (_, item) => {
+        if (item?.minexperience && item?.maxexperience) {
+          return `${item.minexperience} - ${item.maxexperience} years`;
+        }
+        return "N/A";
+      },
+    },
+    {
+      key: "Location",
+      header: "Location",
+      render: (value) => value || "N/A",
+    },
+    {
+      key: "skills",
+      header: "Skills",
+      render: (skills) =>
+        skills && skills.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {skills?.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {skills?.length > 0 ? (
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    {skills[0].skill?.length > 12
+                      ? skills[0].skill.slice(0, 12) + "..."
+                      : skills[0].skill}
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-xs">No Skills</span>
+                )}
+                {skills?.length > 1 && (
+                  <span className="text-gray-500 text-xs">
+                    +{skills.length - 1} more
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          "N/A"
+        ),
+    },
+  ];
+
+  const actions = [
+    ...(effectivePermissions.Positions?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            onClick: (row) => handleView(row),
+          },
+        ]
+      : []),
+
+    ...(effectivePermissions.Positions?.Edit
+      ? [
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Repeat className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+        ]
+      : []),
+    ...(effectivePermissions.Positions?.Edit
+      ? [
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => handleEdit(row),
+          },
+        ]
+      : []),
+    ...(effectivePermissions.Positions?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (row) => {
+              setShowDeleteConfirmModal(true);
+              setDeletePosition(row);
+            },
+          },
+        ]
+      : []),
+  ];
+
+  // Render Actions for Kanban
+  const renderKanbanActions = (item) => (
+    <div className="flex items-center gap-1">
+      {actions.map((action) => (
+        <button
+          key={action.key}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick(item);
+          }}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
+    </div>
+  );
+  // v1.0.5 ---------------------------------------------------------------------------------->
 
   if (showAddForm) {
     return (
@@ -624,13 +756,20 @@ const PositionTab = () => {
                 </div>
               ) : (
                 <div className="w-full">
+                  {/* v1.0.5 <------------------------------------------------------------ */}
                   <PositionKanban
-                    positions={currentFilteredRows}
                     loading={isLoading}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    effectivePermissions={effectivePermissions} // Pass permissions
+                    data={currentFilteredRows.map((position) => ({
+                      ...position,
+                      id: position?._id,
+                      title: position?.positionCode || "N/A",
+                      subtitle: position?.title || "N/A",
+                    }))}
+                    columns={kanbanColumns}
+                    renderActions={renderKanbanActions}
+                    emptyState="No positions found."
                   />
+                  {/* v1.0.5 ------------------------------------------------------------> */}
                 </div>
               )}
               <FilterPopup
@@ -647,9 +786,7 @@ const PositionTab = () => {
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsCompanyOpen(!isCompanyOpen)}
                     >
-                      <span className="font-medium text-gray-700">
-                        Company
-                      </span>
+                      <span className="font-medium text-gray-700">Company</span>
                       {isCompanyOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
@@ -854,7 +991,9 @@ const PositionTab = () => {
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsDatesOpen(!isDatesOpen)}
                     >
-                      <span className="font-medium text-gray-700">Created Date</span>
+                      <span className="font-medium text-gray-700">
+                        Created Date
+                      </span>
                       {isDatesOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
@@ -921,12 +1060,13 @@ const PositionTab = () => {
           <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-4">
             <h3 className="text-sm font-semibold mb-2">Change Status</h3>
             <div className="mb-4">
+
             <DropdownSelect
             value={statusOptions.find((opt) => opt.value === statusValue)} // match current selection
             onChange={(selected) => setStatusValue(selected.value)} // update state with value
             options={statusOptions}
             />
-          
+      
             </div>
             <div className="flex justify-end gap-2">
               <button
@@ -939,7 +1079,10 @@ const PositionTab = () => {
               <button
                 type="button"
                 onClick={confirmStatusUpdate}
-                disabled={isMutationLoading || (statusTargetRow && updatingStatusId === statusTargetRow._id)}
+                disabled={
+                  isMutationLoading ||
+                  (statusTargetRow && updatingStatusId === statusTargetRow._id)
+                }
                 className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
               >
                 Update
@@ -950,16 +1093,14 @@ const PositionTab = () => {
       )}
       {/*----v1.02---->*/}
 
-{/* Ranjith added deleetd functionality  */}
-<DeleteConfirmModal 
-    isOpen={showDeleteConfirmModal}
-    onClose={() => setShowDeleteConfirmModal(false)}
-    onConfirm={handleDeletePosition}
-    title="Position"
-    entityName={deletePosition?.title}
-  />
-
-
+      {/* Ranjith added deleetd functionality  */}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleDeletePosition}
+        title="Position"
+        entityName={deletePosition?.title}
+      />
     </div>
   );
 };
