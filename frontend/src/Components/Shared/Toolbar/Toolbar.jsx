@@ -3,7 +3,8 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Tooltip } from '@mantine/core';
+import Tooltip from '@mui/material/Tooltip';
+
 import { ReactComponent as IoIosArrowBack } from '../../../icons/IoIosArrowBack.svg';
 import { ReactComponent as IoIosArrowForward } from '../../../icons/IoIosArrowForward.svg';
 import { ReactComponent as TbLayoutGridRemove } from '../../../icons/TbLayoutGridRemove.svg';

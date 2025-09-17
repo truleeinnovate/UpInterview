@@ -5,7 +5,6 @@ import { config } from '../../../config.js';
 import toast from "react-hot-toast";
 import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js';
 import Cookies from "js-cookie";
-import LoadingButton from "../../../Components/LoadingButton.jsx";
 import { useSubscription } from '../../../apiHooks/useSubscription.js';
 
 const SubscriptionPlan = () => {
@@ -67,6 +66,7 @@ const SubscriptionPlan = () => {
       return;
     }
     const totalAmount = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+    const isFreePlan = (/free/i.test(String(plan?.name)) || ((plan?.monthlyPrice || 0) === 0 && (plan?.annualPrice || 0) === 0));
 
     const payload = {
       planDetails: {
@@ -83,7 +83,7 @@ const SubscriptionPlan = () => {
         membershipType: isAnnual ? "annual" : "monthly",
       },
       totalAmount,
-      status: user.userType === "individual" && plan.name === "Base" ? "active" : "pending",
+      status: user.userType === "individual" && plan.name === "Free" ? "active" : "pending",
     };
     console.log("payload ----", payload);
     try {
@@ -95,19 +95,21 @@ const SubscriptionPlan = () => {
         subscriptionResponse
       );
       console.log(organization, plan.name, "organization");
-      if ((organization === "false" || !organization) && plan.name === "Base") {
-        await axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
-          ownerId: user.ownerId,
-          tenantId: user.tenantId,
-        });
+      if (user.userType === "individual" && isFreePlan) {
+        // Fire-and-forget emails; do not block navigation
+        axios.post(`${config.REACT_APP_API_URL}/emails/subscription/free`, {
+          tenantId: tenantId,
+          ownerId: ownerId,
+        }).catch((err) => console.error('Email error (free):', err));
 
         axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
               tenantId: tenantId,
               ownerId: ownerId,
-        }).catch((err) => console.error('Email error:', err));
+        }).catch((err) => console.error('Email error (signup):', err));
 
-        // If upgrading, navigate to a specific page; otherwise, go to home
-        navigate(isUpgrading ? "/SubscriptionDetails" : "/home");
+        // Navigate immediately to home for Free plan
+        console.log("Navigating to /home after Free plan activation");
+        navigate("/home");
       } else {
         navigate("/payment-details", {
           state: {
@@ -175,11 +177,11 @@ const SubscriptionPlan = () => {
         </div>
 
         {/* Plans Section */}
-        <div className="grid grid-cols-3 sm:grid-cols-1 sm:space-y-7 gap-4 sm:mb-5">
+        <div className="grid grid-cols-3 sm:grid-cols-1 gap-6 items-stretch sm:mb-5">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 ${isHighlighted(plan)
+              className={`shadow-lg rounded-3xl relative transition-transform duration-300 p-5 h-full flex flex-col ${isHighlighted(plan)
                   ? "-translate-y-2  md:-translate-y-4 lg:-translate-y-6 xl:-translate-y-6 2xl:-translate-y-6 z-10 bg-[#217989] text-white transform scale-[1.02]"
                   : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
                 }`}
@@ -187,6 +189,7 @@ const SubscriptionPlan = () => {
               onMouseLeave={() => setHoveredPlan(null)}
             >
               <div className="flex justify-between items-center">
+
                 <h5
                   className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
                     }`}
@@ -218,31 +221,34 @@ const SubscriptionPlan = () => {
                 ))}
               </ul>
               </div>
-              <p className="text-2xl sm:text-3xl md:text-4xl  font-bold mt-4">
-                <span className="text-lg sm:text-xl md:text-2xl">$</span>
-                {isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                <span className="text-lg sm:text-base md:text-lg font-medium"> /{isAnnual ? "annual" : "month"}</span>
-              </p>
-              <button
-              key={plan._id}
-                onClick={() => submitPlans(plan)}
-                isLoading={subscriptionData.subscriptionPlanId === plan.planId  && isSubmitting}
-                loadingText={subscriptionData.subscriptionPlanId === plan.planId  &&
-                   "Processing..."}
-                className={`w-full font-semibold py-2 mt-4 rounded-lg sm:text-xs
-                ${isHighlighted(plan) ? "bg-white text-custom-blue hover:text-custom-blue " : "text-white bg-custom-blue"}
-                ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
-                disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
-              >
-                {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
-                  ? "Subscribed"
-                  : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
-                    ? "Continue to Payment"
-                    : "Choose"}
-              </button>
+              <div className="mt-auto">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold mt-4">
+                  <span className="text-lg sm:text-xl md:text-2xl">$</span>
+                  {isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                  <span className="text-lg sm:text-base md:text-lg font-medium"> /{isAnnual ? "annual" : "month"}</span>
+                </p>
+                <button
+                  key={plan._id}
+                  onClick={() => submitPlans(plan)}
+                  isLoading={subscriptionData.subscriptionPlanId === plan.planId  && isSubmitting}
+                  loadingText={subscriptionData.subscriptionPlanId === plan.planId  &&
+                    "Processing..."}
+                  className={`w-full font-semibold h-11 py-2 mt-4 rounded-lg sm:text-xs
+                  ${isHighlighted(plan) ? "bg-white text-custom-blue hover:text-custom-blue " : "text-white bg-custom-blue"}
+                  ${subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active" ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"}
+                >
+                  {subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "active"
+                    ? "Subscribed"
+                    : subscriptionData.subscriptionPlanId === plan.planId && subscriptionData.status === "created"
+                      ? "Continue to Payment"
+                      : "Choose"}
+                </button>
+              </div>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );

@@ -103,24 +103,24 @@ const createSubscriptionControllers = async (req, res) => {
       });
     }
 
-    // Accept both 'pending' and 'created' statuses for new subscriptions
-    if (status === "pending" || status === "created" || (userDetails.userType === "individual" && (userDetails.membershipType === "monthly" || userDetails.membershipType === "annual"))) {
+    // Accept 'pending', 'created', and 'active' statuses for new subscriptions
+    if (status === "pending" || status === "created" || status === "active" || (userDetails.userType === "individual" && (userDetails.membershipType === "monthly" || userDetails.membershipType === "annual"))) {
       console.log(`Processing subscription with status: ${status}`);
 
+      // For active status (free plans), set invoice status to paid
+      const invoiceStatus = status === "active" ? "paid" : status;
 
       const invoice = await createInvoice(
         userDetails.tenantId,
         userDetails.ownerId,
-        plan.planName,
+        plan.planName || plan.name,
         planDetails.subscriptionPlanId,
         numericTotalAmount,
         userDetails,
-        status, // Pass the original status to maintain consistency
+        invoiceStatus,
         discount
       );
 
-      
-      
       const subscription = await createSubscriptionRecord(
         userDetails,
         planDetails,
@@ -131,9 +131,48 @@ const createSubscriptionControllers = async (req, res) => {
         status
       );
 
+      // Create Usage for active subscriptions (free plans)
+      if (status === "active" && plan.name === "Free") {
+        try {
+          const Usage = require('../models/Usage.js');
+          const features = plan.features || [];
+          
+          const usageAttributes = features
+            .filter(f => ['Assessments', 'Internal Interviewers', 'Outsource Interviewers'].includes(f?.name))
+            .map(f => ({
+              entitled: Number(f?.limit) || 0,
+              type: f?.name,
+              utilized: 0,
+              remaining: Number(f?.limit) || 0,
+            }));
+
+          // const endDate = new Date();
+          // if (userDetails.membershipType === 'annual') {
+          //   endDate.setFullYear(endDate.getFullYear() + 1);
+          // } else {
+          //   endDate.setMonth(endDate.getMonth() + 1);
+          // }
+
+          await Usage.findOneAndUpdate(
+            { tenantId: userDetails.tenantId, ownerId: userDetails.ownerId },
+            {
+              $setOnInsert: {
+                tenantId: userDetails.tenantId,
+                ownerId: userDetails.ownerId,
+                usageAttributes,
+                fromDate: new Date(),
+                toDate: null,
+              }
+            },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+          );
+        } catch (usageErr) {
+          console.warn('Usage creation failed:', usageErr?.message);
+        }
+      }
+
       console.log(`Created subscription with status: ${status}`);
       console.log({ invoiceId: invoice._id });
-
 
       return res.status(200).json({
         message: `Subscription successfully created with status: ${status}`,
@@ -144,7 +183,7 @@ const createSubscriptionControllers = async (req, res) => {
     
     // Provide more informative error for invalid status
     return res.status(400).json({ 
-      message: 'Invalid payment status. Allowed values are "pending" or "created".' 
+      message: 'Invalid payment status. Allowed values are "pending", "created", or "active".' 
     });
   } catch (error) {
     console.error('Error creating/updating subscription:', error);
@@ -197,7 +236,7 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
         invoice.status = status;
         invoice.planName = planDetails.planName;
         invoice.amountPaid = totalPaid
-        invoice.endDate = endDate;
+        invoice.endDate = endDate ? endDate : null;
         invoice.startDate = new Date();
         invoice.lineItems = {
           description: `${cardDetails.membershipType} Subscription Plan`,
@@ -221,7 +260,7 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
         const subscription = await CustomerSubscription.findOne({ ownerId: cardDetails.ownerId });
 
         if (subscription) {
-          subscription.endDate = endDate;
+          subscription.endDate = endDate ? endDate : null;
           subscription.receiptId = receipt._id;
           subscription.status = 'active';
           subscription.startDate = new Date();

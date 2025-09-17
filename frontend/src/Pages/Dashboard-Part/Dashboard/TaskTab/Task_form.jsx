@@ -51,9 +51,9 @@ const TaskForm = ({
   onClose,
   onTaskAdded,
   onDataAdded,
-  taskId, // Add taskId prop for editing
-  initialData, // Add initial data for pre-filling form
-}) => {
+  taskId = null, // Add taskId prop for editing
+  initialData = null, // Add initial data for pre-filling form
+} = {}) => {
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
 
@@ -764,11 +764,6 @@ const TaskForm = ({
     </SidebarPopup>
     // v1.0.3 ------------------------------------------------------------------------->
   );
-};
-
-TaskForm.defaultProps = {
-  taskId: null,
-  initialData: null,
 };
 
 export default TaskForm;
