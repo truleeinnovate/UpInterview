@@ -16,6 +16,7 @@ import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
 // import logo from "../../../../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 // v1.0.0 <---------------------------------------------------------------
 import { createPortal } from "react-dom";
+import Loading from "../../../../../Components/Loading.js";
 // v1.0.0 --------------------------------------------------------------->
 
 // Loading Skeleton for Subscription Card Details
@@ -107,6 +108,7 @@ const SubscriptionCardDetails = () => {
     userType,
     createSubscription,
     verifySubscriptionPayment,
+    refetchSubscription,
   } = useSubscription();
 
   const location = useLocation();
@@ -408,9 +410,39 @@ const SubscriptionCardDetails = () => {
                     verifyResponse.status === "success" ||
                     verifyResponse.message?.toLowerCase().includes("success")
                   ) {
-                    toast.success("Payment successfully completed!");
 
-                    // Navigate to success page
+                    // 1) Quick refetch to refresh cache immediately
+                    try {
+                      await refetchSubscription();
+                    } catch (e) {
+                      console.warn('Refetch subscription failed (non-blocking):', e?.message);
+                    }
+
+                    // 2) Wait for webhook completion (ACTIVE + receipt/invoice), up to 60s
+                    try {
+                      const timeoutMs = 60000; // max wait 60s
+                      const pollMs = 2000; // poll every 2s
+                      const start = Date.now();
+                      let isReady = false;
+                      while (Date.now() - start < timeoutMs) {
+                        const result = await refetchSubscription();
+                        const fresh = result?.data || result; // TanStack Query returns { data }
+                        const isActive = (fresh?.status || '').toLowerCase() === 'active';
+                        const hasDocs = !!(fresh?.receiptId || fresh?.invoiceId);
+                        if (isActive && hasDocs) {
+                          isReady = true;
+                          break;
+                        }
+                        await new Promise(r => setTimeout(r, pollMs));
+                      }
+                      if (!isReady) {
+                        console.warn('Webhook not confirmed within timeout. Proceeding to success page.');
+                      }
+                    } catch (e) {
+                      console.warn('Error while waiting for webhook completion (non-blocking):', e?.message);
+                    }
+                    setProcessing(false);
+                    // 3) Navigate to success page after webhook wait
                     navigate("/subscription-success", {
                       state: {
                         paymentId: response.razorpay_payment_id,
@@ -424,6 +456,8 @@ const SubscriptionCardDetails = () => {
                           : "/account-settings/subscription",
                       },
                     });
+
+                    toast.success("Payment successfully completed!");
 
                     axios
                       .post(
@@ -506,7 +540,7 @@ const SubscriptionCardDetails = () => {
       />
 
       {processing ? (
-        <SubscriptionCardDetailsSkeleton />
+        <Loading message="Processing your payment..." />
       ) : (
         // v1.0.2 <---------------------------------------------------------------------------------------------------
         <form
@@ -532,10 +566,10 @@ const SubscriptionCardDetails = () => {
           <div className="w-full flex sm:flex-col md:flex-col gap-6">
             <div className="w-9/12 sm:w-full md:w-full">
               <div className="bg-blue-50 p-4 mb-4 rounded-lg border border-blue-200">
-                <h3 className="text-lg font-medium text-blue-800 mb-2">
+                <h3 className="text-lg font-medium text-custom-blue mb-2">
                   Secure Payment
                 </h3>
-                <p className="text-blue-600">
+                <p className="text-custom-blue">
                   Your payment information will be securely collected by
                   Razorpay's payment form. No card details are stored on our
                   servers.
@@ -544,7 +578,7 @@ const SubscriptionCardDetails = () => {
                 <div className="mt-3 flex items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-blue-500 mr-2"
+                    className="h-5 w-5 text-custom-blue mr-2"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -556,7 +590,7 @@ const SubscriptionCardDetails = () => {
                       d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
-                  <span className="text-blue-600">
+                  <span className="text-custom-blue">
                     Your payment is protected with industry-standard encryption
                   </span>
                 </div>

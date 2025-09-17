@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, Typography, CircularProgress, Paper, } from '@mui/material';
+import { Box, Typography, CircularProgress, Paper} from '@mui/material';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
@@ -8,7 +8,7 @@ const SubscriptionSuccess = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { paymentId, subscriptionId, isUpgrading, planName, membershipType, nextRoute } = location.state || {};
-    const [secondsRemaining, setSecondsRemaining] = useState(60);
+    const [secondsRemaining, setSecondsRemaining] = useState(5);
 
     useEffect(() => {
         if (!paymentId || !subscriptionId) {
