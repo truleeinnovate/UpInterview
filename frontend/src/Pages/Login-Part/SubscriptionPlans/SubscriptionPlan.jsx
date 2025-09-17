@@ -7,6 +7,51 @@ import { decodeJwt } from '../../../utils/AuthCookieManager/jwtDecode.js';
 import Cookies from "js-cookie";
 import { useSubscription } from '../../../apiHooks/useSubscription.js';
 
+// Loading Skeleton for Subscription Plans
+const SubscriptionPlansSkeleton = () => {
+  return (
+    <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-10">
+      <div className="skeleton-animation">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          {[1, 2, 3].map((plan) => (
+            <div
+              key={plan}
+              className="shadow-lg rounded-3xl bg-white p-6"
+              style={{ minHeight: "420px" }}
+            >
+              {/* Plan header */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="h-8 bg-gray-200 rounded w-24"></div>
+                <div className="h-6 bg-gray-200 rounded w-16"></div>
+              </div>
+
+              {/* Plan features */}
+              <div className="flex-grow mt-4 space-y-2">
+                {[1, 2, 3, 4, 5].map((feature) => (
+                  <div key={feature} className="flex items-start">
+                    <div className="h-3 bg-gray-200 rounded w-2 mr-2 mt-1"></div>
+                    <div className="h-3 bg-gray-200 rounded w-32"></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Plan price */}
+              <div className="mt-6">
+                <div className="h-8 bg-gray-200 rounded w-24"></div>
+              </div>
+
+              {/* Plan button */}
+              <div className="mt-4">
+                <div className="h-10 bg-gray-200 rounded w-full"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const SubscriptionPlan = () => {
   const authToken = Cookies.get("authToken") || null;
   const [tokenPayload, setTokenPayload] = useState({});
@@ -15,7 +60,8 @@ const SubscriptionPlan = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
-  const { plans, subscriptionData, createCustomerSubscription } = useSubscription();
+  const { plans, subscriptionData, createCustomerSubscription, isSubscriptionLoading, isPlansLoading } = useSubscription();
+  const loading = isSubscriptionLoading || isPlansLoading;
   //console.log("plans ----", plans);
   //console.log("subscriptionData ----", subscriptionData);
 
@@ -177,6 +223,9 @@ const SubscriptionPlan = () => {
         </div>
 
         {/* Plans Section */}
+        {loading ? (
+          <SubscriptionPlansSkeleton />
+        ) : (
         <div className="grid grid-cols-3 sm:grid-cols-1 gap-6 items-stretch sm:mb-5">
           {plans.map((plan) => (
             <div
@@ -248,6 +297,7 @@ const SubscriptionPlan = () => {
             </div>
           ))}
         </div>
+        )}
 
       </div>
     </div>
