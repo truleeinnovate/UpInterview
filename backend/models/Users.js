@@ -22,7 +22,7 @@ const mongoose = require('mongoose');
 const UsersSchema = new mongoose.Schema({
     firstName: { type: String },
     lastName: { type: String },
-    email: { type: String },
+    email: { type: String, index: true },
     newEmail: { type: String }, //only when user change email
     password: { type: String, select: true },
     isFreelancer: String,

@@ -308,43 +308,27 @@
   //   }
   // };
   
+
+
   const loginOrganization = async (req, res) => {
     try {
-      console.log("[loginOrganization] Login request received");
-      console.log("[loginOrganization] Request body:", req.body);
+      // logger.log("[loginOrganization] Login request received");
   
       let { email, password } = req.body;
       email = email?.trim().toLowerCase();
       password = password?.trim();
   
-      console.log("[loginOrganization] Processed credentials:", {
-        email: email ? "***" : "missing",
-        password: password ? "***" : "missing",
-      });
-  
       if (!email || !password) {
-        console.log("[loginOrganization] Missing email or password");
-        return res
-          .status(400)
-          .json({ success: false, message: "Email and password are required" });
+        return res.status(400).json({ success: false, message: "Email and password are required" });
       }
   
-      console.log("[loginOrganization] Looking up user by email:", email);
-      const user = await Users.findOne({ email }).select("+password");
+      // ✅ Use lean() for performance (plain JS object, faster than Mongoose doc)
+      const user = await Users.findOne({ email }).select("+password").lean();
       if (!user) {
-        console.log("[loginOrganization] User not found for email:", email);
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid email or password" });
+        return res.status(400).json({ success: false, message: "Invalid email or password" });
       }
-  
-      console.log("[loginOrganization] User found:", {
-        userId: user._id,
-        isEmailVerified: user.isEmailVerified,
-      });
   
       if (!user.isEmailVerified) {
-        console.log("[loginOrganization] Email not verified for user:", user._id);
         return res.status(403).json({
           success: false,
           message: "Email not verified",
@@ -352,42 +336,30 @@
         });
       }
   
-      // Check user role
-      let roleName = null;
-      let roleType = null;
-      if (user.roleId) {
-        console.log("[loginOrganization] Looking up role for user:", user.roleId);
-        const role = await RolesPermissionObject.findById(user.roleId);
-        roleName = role?.roleName;
-        roleType = role?.roleType;
-        console.log("[loginOrganization] Role found:", { roleName, roleType });
-      }
+      // ✅ Run role + tenant + contact lookup in parallel (non-blocking)
+      const [role, organization, contact] = await Promise.all([
+        user.roleId ? RolesPermissionObject.findById(user.roleId).lean() : null,
+        user.tenantId ? Tenant.findById(user.tenantId).lean() : null,
+        Contacts.findOne({ ownerId: user._id }).lean()
+      ]);
   
-      console.log("[loginOrganization] Verifying password...");
+      // Role details
+      const roleName = role?.roleName || null;
+      const roleType = role?.roleType || null;
+  
+      // Verify password (bcrypt cost factor tuned)
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        console.log("[loginOrganization] Invalid password for user:", user._id);
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid email or password" });
+        return res.status(400).json({ success: false, message: "Invalid email or password" });
       }
-      console.log("[loginOrganization] Password verified successfully");
   
-      // For internal roleType (super admin)
+      // Internal (super admin) login
       if (roleType === "internal") {
-        console.log("[loginOrganization] Processing internal user login");
         const payload = {
           impersonatedUserId: user._id.toString(),
-          // role: 'superadmin',
           timestamp: new Date().toISOString(),
         };
         const impersonationToken = generateToken(payload, { expiresIn: "7h" });
-  
-        // Note: Impersonation token will be set by frontend using setAuthCookies()
-        // Backend only returns the token in response, frontend handles cookie setting
-        console.log(
-          "[loginOrganization] Impersonation token generated, will be set by frontend"
-        );
   
         return res.status(200).json({
           success: true,
@@ -400,37 +372,16 @@
         });
       }
   
-      // For non-internal users, proceed with tenant checks
-      console.log(
-        "[loginOrganization] Processing regular user login, checking tenant:",
-        user.tenantId
-      );
-      const organization = await Tenant.findOne({ _id: user.tenantId });
+      // Tenant check
       if (!organization || organization.status === "inactive") {
-        console.log("[loginOrganization] Organization not found or inactive:", {
-          found: !!organization,
-          status: organization?.status,
-        });
         return res.status(403).json({
           success: false,
           message: "Account not active",
           status: organization?.status || "not found",
         });
       }
-      console.log("[loginOrganization] Organization found and active:", {
-        orgId: organization._id,
-        status: organization.status,
-      });
   
-      // Fetch contactId where ownerId matches user._id
-      const contact = await Contacts.findOne({ ownerId: user._id });
-      const contactEmailFromOrg = contact?.email || null;
-      console.log("[loginOrganization] Contact found:", {
-        contactId: contact?._id,
-        email: contactEmailFromOrg,
-      });
-  
-      // Generate JWT for non-internal users
+      // JWT for normal users
       const payload = {
         userId: user._id.toString(),
         tenantId: user.tenantId.toString(),
@@ -438,12 +389,6 @@
         timestamp: new Date().toISOString(),
       };
       const authToken = generateToken(payload, { expiresIn: "7h" });
-  
-      // Note: Auth token will be set by frontend using setAuthCookies()
-      // Backend only returns the token in response, frontend handles cookie setting
-      console.log(
-        "[loginOrganization] Auth token generated, will be set by frontend"
-      );
   
       const responseData = {
         success: true,
@@ -453,7 +398,7 @@
         authToken,
         isProfileCompleted: user?.isProfileCompleted,
         roleName,
-        contactEmailFromOrg,
+        contactEmailFromOrg: contact?.email || null,
         isEmailVerified: user.isEmailVerified,
         status: organization.status,
         subdomain: organization.subdomain || null,
@@ -461,20 +406,183 @@
         subdomainStatus: organization.subdomainStatus || null,
       };
   
-      console.log("[loginOrganization] Sending successful response:", {
-        success: responseData.success,
-        ownerId: responseData.ownerId,
-        tenantId: responseData.tenantId,
-        status: responseData.status,
-        isProfileCompleted: responseData.isProfileCompleted,
-      });
-  
       res.status(200).json(responseData);
     } catch (error) {
-      console.error("[loginOrganization] Error during login:", error);
+      // logger.error("[loginOrganization] Error during login:", error);
       res.status(500).json({ success: false, message: "Internal server error" });
     }
   };
+  
+
+
+
+  // const loginOrganization = async (req, res) => {
+  //   try {
+  //     // console.log("[loginOrganization] Login request received");
+  //     // console.log("[loginOrganization] Request body:", req.body);
+  
+  //     let { email, password } = req.body;
+  //     email = email?.trim().toLowerCase();
+  //     password = password?.trim();
+  
+  //     // console.log("[loginOrganization] Processed credentials:", {
+  //     //   email: email ? "***" : "missing",
+  //     //   password: password ? "***" : "missing",
+  //     // });
+  
+  //     if (!email || !password) {
+  //       // console.log("[loginOrganization] Missing email or password");
+  //       return res
+  //         .status(400)
+  //         .json({ success: false, message: "Email and password are required" });
+  //     }
+  
+  //     // console.log("[loginOrganization] Looking up user by email:", email);
+  //     const user = await Users.findOne({ email }).select("+password").lean();
+  //     if (!user) {
+  //       // console.log("[loginOrganization] User not found for email:", email);
+  //       return res
+  //         .status(400)
+  //         .json({ success: false, message: "Invalid email or password" });
+  //     }
+  
+  //     // console.log("[loginOrganization] User found:", {
+  //     //   userId: user._id,
+  //     //   isEmailVerified: user.isEmailVerified,
+  //     // });
+  
+  //     if (!user.isEmailVerified) {
+  //       // console.log("[loginOrganization] Email not verified for user:", user._id);
+  //       return res.status(403).json({
+  //         success: false,
+  //         message: "Email not verified",
+  //         isEmailVerified: false,
+  //       });
+  //     }
+  
+  //     // Check user role
+  //     let roleName = null;
+  //     let roleType = null;
+  //     if (user.roleId) {
+  //       // console.log("[loginOrganization] Looking up role for user:", user.roleId);
+  //       const role = await RolesPermissionObject.findById(user.roleId);
+  //       roleName = role?.roleName;
+  //       roleType = role?.roleType;
+  //       // console.log("[loginOrganization] Role found:", { roleName, roleType });
+  //     }
+  
+  //     // console.log("[loginOrganization] Verifying password...");
+  //     const isPasswordValid = await bcrypt.compare(password, user.password);
+  //     if (!isPasswordValid) {
+  //       console.log("[loginOrganization] Invalid password for user:", user._id);
+  //       return res
+  //         .status(400)
+  //         .json({ success: false, message: "Invalid email or password" });
+  //     }
+  //     console.log("[loginOrganization] Password verified successfully");
+  
+  //     // For internal roleType (super admin)
+  //     if (roleType === "internal") {
+  //       console.log("[loginOrganization] Processing internal user login");
+  //       const payload = {
+  //         impersonatedUserId: user._id.toString(),
+  //         // role: 'superadmin',
+  //         timestamp: new Date().toISOString(),
+  //       };
+  //       const impersonationToken = generateToken(payload, { expiresIn: "7h" });
+  
+  //       // Note: Impersonation token will be set by frontend using setAuthCookies()
+  //       // Backend only returns the token in response, frontend handles cookie setting
+  //       console.log(
+  //         "[loginOrganization] Impersonation token generated, will be set by frontend"
+  //       );
+  
+  //       return res.status(200).json({
+  //         success: true,
+  //         message: "Login successful",
+  //         impersonatedUserId: user._id.toString(),
+  //         impersonationToken,
+  //         roleType,
+  //         isEmailVerified: user.isEmailVerified,
+  //         redirect: "/admin-dashboard",
+  //       });
+  //     }
+  
+  //     // For non-internal users, proceed with tenant checks
+  //     console.log(
+  //       "[loginOrganization] Processing regular user login, checking tenant:",
+  //       user.tenantId
+  //     );
+  //     const organization = await Tenant.findOne({ _id: user.tenantId });
+  //     if (!organization || organization.status === "inactive") {
+  //       console.log("[loginOrganization] Organization not found or inactive:", {
+  //         found: !!organization,
+  //         status: organization?.status,
+  //       });
+  //       return res.status(403).json({
+  //         success: false,
+  //         message: "Account not active",
+  //         status: organization?.status || "not found",
+  //       });
+  //     }
+  //     console.log("[loginOrganization] Organization found and active:", {
+  //       orgId: organization._id,
+  //       status: organization.status,
+  //     });
+  
+  //     // Fetch contactId where ownerId matches user._id
+  //     const contact = await Contacts.findOne({ ownerId: user._id });
+  //     const contactEmailFromOrg = contact?.email || null;
+  //     console.log("[loginOrganization] Contact found:", {
+  //       contactId: contact?._id,
+  //       email: contactEmailFromOrg,
+  //     });
+  
+  //     // Generate JWT for non-internal users
+  //     const payload = {
+  //       userId: user._id.toString(),
+  //       tenantId: user.tenantId.toString(),
+  //       organization: true,
+  //       timestamp: new Date().toISOString(),
+  //     };
+  //     const authToken = generateToken(payload, { expiresIn: "7h" });
+  
+  //     // Note: Auth token will be set by frontend using setAuthCookies()
+  //     // Backend only returns the token in response, frontend handles cookie setting
+  //     console.log(
+  //       "[loginOrganization] Auth token generated, will be set by frontend"
+  //     );
+  
+  //     const responseData = {
+  //       success: true,
+  //       message: "Login successful",
+  //       ownerId: user._id.toString(),
+  //       tenantId: user.tenantId.toString(),
+  //       authToken,
+  //       isProfileCompleted: user?.isProfileCompleted,
+  //       roleName,
+  //       contactEmailFromOrg,
+  //       isEmailVerified: user.isEmailVerified,
+  //       status: organization.status,
+  //       subdomain: organization.subdomain || null,
+  //       fullDomain: organization.fullDomain || null,
+  //       subdomainStatus: organization.subdomainStatus || null,
+  //     };
+  
+  //     // console.log("[loginOrganization] Sending successful response:", {
+  //     //   success: responseData.success,
+  //     //   ownerId: responseData.ownerId,
+  //     //   tenantId: responseData.tenantId,
+  //     //   status: responseData.status,
+  //     //   isProfileCompleted: responseData.isProfileCompleted,
+  //     // });
+  
+  //     res.status(200).json(responseData);
+  //   } catch (error) {
+  //     console.error("[loginOrganization] Error during login:", error);
+  //     res.status(500).json({ success: false, message: "Internal server error" });
+  //   }
+  // };
   
   const getRolesByTenant = async (req, res) => {
     try {
