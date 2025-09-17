@@ -386,13 +386,13 @@ const verifyPayment = async (req, res) => {
             //console.log('Updating existing subscription records for payment:', razorpay_payment_id);
 
             // Get subscription plan details
-            //console.log('Looking up subscription plan with ID:', planId);
+            console.log('Looking up subscription plan with ID:', planId);
 
             if (!subPlan) {
                 console.warn(`Subscription plan not found with ID: ${planId}`);
                 return res.status(404).json({ error: 'Subscription plan not found' });
             }
-            //console.log('Found subscription plan:', subPlan.name);
+            console.log('Found subscription plan:', subPlan.name);
 
             // Calculate billing dates
             const startDate = new Date();
@@ -415,7 +415,7 @@ const verifyPayment = async (req, res) => {
                 try {
                     invoice = await Invoicemodels.findById(invoiceId);
                     if (invoice) {
-                        //console.log('Found existing invoice:', invoice._id);
+                        console.log('Found existing invoice:', invoice._id);
                     } else {
                         console.warn(`No existing invoice found with ID: ${invoiceId}`);
                     }
@@ -628,7 +628,7 @@ const verifyPayment = async (req, res) => {
                     const wallet = await WalletTopup.findOne({ ownerId });
 
                     if (wallet) {
-                        //console.log('Found existing wallet:', wallet._id);
+                        console.log('Found existing wallet:', wallet._id);
 
                         // Update wallet status from pending to completed
                         let updatedTransaction = false;
@@ -662,7 +662,7 @@ const verifyPayment = async (req, res) => {
                         }
 
                         await wallet.save();
-                        //console.log('Wallet updated successfully');
+                        console.log('Wallet updated successfully');
                     }
                 }
 
@@ -671,7 +671,7 @@ const verifyPayment = async (req, res) => {
 
             }
 
-           // console.log('Payment verification completed, all records updated');
+           console.log('Payment verification completed, all records updated');
         } catch (error) {
             console.error('Error updating subscription records:', error);
             // Don't fail the payment verification if record updates fail
@@ -779,7 +779,7 @@ const handleWebhook = async (req, res) => {
 
         // We'll process all webhooks, regardless of signature verification
 
-        //console.log('Full webhook body:', JSON.stringify(req.body).substring(0, 200) + '...');
+        console.log('Full webhook body:', JSON.stringify(req.body).substring(0, 200) + '...');
 
         // Extract payment entity - handle different event types
         let payload;
@@ -817,7 +817,7 @@ const handleWebhook = async (req, res) => {
         } else if (event === 'subscription.updated' && payload) {
             await handleSubscriptionUpdated(payload);
         } else {
-           // console.log('Unhandled webhook event:', event);
+           console.log('Unhandled webhook event:', event);
         }
 
         res.status(200).json({ received: true });
@@ -949,7 +949,7 @@ const handleWebhook = async (req, res) => {
 
 const handleSubscriptionAuthenticated = async (subscription) => {
     try {
-        //console.log('Handling subscription.authenticated event');
+        console.log('Handling subscription.authenticated event');
 
         // Extract key subscription data
         const subscriptionId = subscription.id;
@@ -1018,7 +1018,7 @@ const handleSubscriptionAuthenticated = async (subscription) => {
 // Handle subscription.activated event
 const handleSubscriptionActivated = async (subscription) => {
     try {
-        //console.log('Handling subscription.activated event');
+        console.log('Handling subscription.activated event');
 
         // Extract key subscription data
         const subscriptionId = subscription.id;
@@ -1048,7 +1048,7 @@ const handleSubscriptionActivated = async (subscription) => {
             return;
         }
 
-       // console.log(`Updating subscription for user ${ownerId} with activated Razorpay subscription ID ${subscriptionId}`);
+       console.log(`Updating subscription for user ${ownerId} with activated Razorpay subscription ID ${subscriptionId}`);
 
         // Find the customer subscription in database
         const existingSubscription = await CustomerSubscription.findOne({
@@ -1095,10 +1095,10 @@ const handleSubscriptionActivated = async (subscription) => {
             });
 
             await newSubscription.save();
-            //console.log('Created new active subscription record');
+            console.log('Created new active subscription record');
         }
 
-        //console.log(`Updated subscription status for user ${ownerId} to active`);
+        console.log(`Updated subscription status for user ${ownerId} to active`);
     } catch (error) {
         console.error('Error in handleSubscriptionActivated:', error);
     }
@@ -1175,12 +1175,12 @@ const handlePaymentFailed = async (payment) => {
         });
 
         await failedPayment.save();
-        //console.log('Created failed payment record:', failedPayment._id);
+        console.log('Created failed payment record:', failedPayment._id);
 
         // Update subscription status if multiple failures
         if (payment.attempt > 2) { // After 3 failures, update status
             customerSubscription.status = SUBSCRIPTION_STATUSES.FAILED; // Using constants for consistency
-            //console.log(`Payment has failed ${payment.attempt} times, marking subscription as ${SUBSCRIPTION_STATUSES.FAILED}`);
+            console.log(`Payment has failed ${payment.attempt} times, marking subscription as ${SUBSCRIPTION_STATUSES.FAILED}`);
 
             // Here you would add code to send a notification email
             // Example: await sendEmail(customerSubscription.ownerId, 'Payment Failed', 'Your subscription payment has failed...');
@@ -1203,7 +1203,7 @@ const handlePaymentFailed = async (payment) => {
 // Handle subscription.halted event
 const handleSubscriptionHalted = async (subscription) => {
     try {
-        //console.log('Processing subscription halted event for:', subscription.id);
+        console.log('Processing subscription halted event for:', subscription.id);
 
         // Find our subscription record
         const customerSubscription = await CustomerSubscription.findOne({
@@ -1232,7 +1232,7 @@ const handleSubscriptionHalted = async (subscription) => {
 // Handle subscription.cancelled event from Razorpay webhooks
 const handleSubscriptionCancelled = async (subscription) => {
     try {
-        //console.log('Processing in razorpay subscription cancelled webhook for:', subscription.id);
+        console.log('Processing in razorpay subscription cancelled webhook for:', subscription.id);
 
         // Find the subscription in our database
         const customerSubscription = await CustomerSubscription.findOne({
@@ -1244,7 +1244,7 @@ const handleSubscriptionCancelled = async (subscription) => {
             return;
         }
 
-        //console.log('Found subscription in database, updating status to cancelled');
+        console.log('Found subscription in database, updating status to cancelled');
 
         // Update the subscription status
         customerSubscription.subscriptionPlanId = null;
@@ -1277,7 +1277,7 @@ const handleSubscriptionCancelled = async (subscription) => {
 // Handle subscription.updated event from Razorpay webhooks
 const handleSubscriptionUpdated = async (subscription) => {
     try {
-        //console.log('Processing in razorpay subscription updated webhook for:', subscription.id);
+        console.log('Processing in razorpay subscription updated webhook for:', subscription.id);
 
         // Find the subscription in our database
         const customerSubscription = await CustomerSubscription.findOne({
@@ -1333,7 +1333,7 @@ const handleSubscriptionUpdated = async (subscription) => {
                     // Check with case insensitivity
                     if ((monthlyId && monthlyId.toLowerCase() === razorpayPlanId.toLowerCase()) ||
                         (annualId && annualId.toLowerCase() === razorpayPlanId.toLowerCase())) {
-                       // console.log('Found match with case-insensitive comparison:', plan.name);
+                        console.log('Found match with case-insensitive comparison:', plan.name);
                         newPlan = plan;
                         break;
                     }
@@ -1355,7 +1355,7 @@ const handleSubscriptionUpdated = async (subscription) => {
             return;
         }
 
-        //console.log('Found matching plan:', newPlan.name);
+        console.log('Found matching plan:', newPlan.name);
 
         // Determine membership type from Razorpay's plan_id
         // First determine if it's a monthly or annual plan by checking which one matches
@@ -1389,13 +1389,13 @@ const handleSubscriptionUpdated = async (subscription) => {
             } else {
                 // If structure exists but no match, use fallback
                 membershipType = subscription.period === 'yearly' ? 'annual' : 'monthly';
-               // console.log('Using fallback period method to determine plan type:', membershipType);
+                console.log('Using fallback period method to determine plan type:', membershipType);
             }
         } else {
             // If razorpayPlanIds doesn't exist or isn't structured as expected
            // console.log('Plan does not have expected razorpayPlanIds structure, using fallback');
             membershipType = subscription.period === 'yearly' ? 'annual' : 'monthly';
-           // console.log('Using fallback method to determine plan type:', membershipType);
+            console.log('Using fallback method to determine plan type:', membershipType);
         }
 
         // Finally, check the period directly from Razorpay as ultimate fallback
@@ -1426,7 +1426,7 @@ const handleSubscriptionUpdated = async (subscription) => {
                 } else {
                     updatedTotalAmount = updatedPrice - annualPricing.discount;
                 }
-               // console.log('Annual pricing found:', { price: updatedPrice, totalAmount: updatedTotalAmount });
+                console.log('Annual pricing found:', { price: updatedPrice, totalAmount: updatedTotalAmount });
             }
         } else {
             const monthlyPricing = newPlan.pricing.find(p => p.billingCycle === 'monthly');
@@ -1438,7 +1438,7 @@ const handleSubscriptionUpdated = async (subscription) => {
                 } else {
                     updatedTotalAmount = updatedPrice - monthlyPricing.discount;
                 }
-               // console.log('Monthly pricing found:', { price: updatedPrice, totalAmount: updatedTotalAmount });
+               console.log('Monthly pricing found:', { price: updatedPrice, totalAmount: updatedTotalAmount });
             }
         }
 
@@ -1457,7 +1457,7 @@ const handleSubscriptionUpdated = async (subscription) => {
 
         await customerSubscription.save();
 
-       // console.log('Updated subscription with new plan details:', newPlan.name);
+        console.log('Updated subscription with new plan details:', newPlan.name);
 
         // Find the existing invoice that was created during the subscription update API call
         const Invoice = require('../models/Invoicemodels');
@@ -1468,7 +1468,7 @@ const handleSubscriptionUpdated = async (subscription) => {
             return;
         }
 
-        //console.log('Found existing invoice to update:', existingInvoice._id);
+        console.log('Found existing invoice to update:', existingInvoice._id);
 
         // Update the invoice with plan information only; do not mark as paid here
         // Payment application happens on subscription.charged webhook
@@ -1514,8 +1514,8 @@ const handleSubscriptionCharged = async (subscription) => {
         //     calculateEndDate: typeof calculateEndDate === 'function'
         // });
 
-        //console.log('Processing subscription charged event for:', subscription.id);
-        //console.log('Subscription details:', JSON.stringify(subscription, null, 2));
+        console.log('Processing subscription charged event for:', subscription.id);
+        console.log('Subscription details:', JSON.stringify(subscription, null, 2));
 
         // Enhanced robustness: Try different ways to get the subscription ID
         const subscriptionId = subscription.id ||
@@ -1528,7 +1528,7 @@ const handleSubscriptionCharged = async (subscription) => {
             return;
         }
 
-        //console.log('Using extracted subscription ID:', subscriptionId);
+        console.log('Using extracted subscription ID:', subscriptionId);
 
         // Find our subscription record using the Razorpay subscription ID
         const customerSubscription = await CustomerSubscription.findOne({
@@ -1541,7 +1541,7 @@ const handleSubscriptionCharged = async (subscription) => {
             if (subscription.notes && subscription.notes.subscriptionId) {
                 const subscriptionByNotes = await CustomerSubscription.findById(subscription.notes.subscriptionId);
                 if (subscriptionByNotes) {
-                    //console.log('Found subscription by notes field:', subscriptionByNotes._id);
+                    console.log('Found subscription by notes field:', subscriptionByNotes._id);
                     // Update with the correct Razorpay ID for future reference
                     subscriptionByNotes.razorpaySubscriptionId = subscriptionId;
                     await subscriptionByNotes.save();
@@ -1552,8 +1552,8 @@ const handleSubscriptionCharged = async (subscription) => {
             return;
         }
 
-        // console.log('Found subscription record:', customerSubscription._id);
-        // console.log('Subscription status:', customerSubscription.status);
+        console.log('Found subscription record:', customerSubscription._id);
+        console.log('Subscription status:', customerSubscription.status);
         // console.log('Next billing date:', customerSubscription.nextBillingDate);
         // console.log('Billing cycle:', customerSubscription.selectedBillingCycle);
 
@@ -1572,11 +1572,11 @@ const handleSubscriptionCharged = async (subscription) => {
 
             // If this is the full webhook payload and contains payment information
             if (subscription.contains && subscription.contains.includes('payment')) {
-                // console.log('Webhook contains payment information');
+                console.log('Webhook contains payment information');
                 // The payment ID might be in a payment object
                 if (subscription.payment && subscription.payment.id) {
                     paymentId = subscription.payment.id;
-                    // console.log('Found payment ID in subscription.payment.id:', paymentId);
+                    console.log('Found payment ID in subscription.payment.id:', paymentId);
                 }
             }
         }
@@ -1591,13 +1591,13 @@ const handleSubscriptionCharged = async (subscription) => {
         // Fallback: If still no paymentId, fetch latest payment for this subscription from Razorpay API
         if (!paymentId) {
             try {
-                // console.log('Attempting to fetch latest payment for subscription via Razorpay API');
+                console.log('Attempting to fetch latest payment for subscription via Razorpay API');
                 // Use payments API with subscription_id filter
                 const paymentsList = await razorpay.payments.all({ subscription_id: subscriptionId, count: 1 });
                 const latestPayment = paymentsList?.items?.[0];
                 if (latestPayment?.id) {
                     paymentId = latestPayment.id;
-                    // console.log('Fetched latest payment ID from Razorpay API:', paymentId);
+                    console.log('Fetched latest payment ID from Razorpay API:', paymentId);
                 } else {
                     console.log('No payments found for this subscription via API');
                 }
@@ -1628,7 +1628,7 @@ const handleSubscriptionCharged = async (subscription) => {
                 const pricing = plan.pricing.find(p => p.billingCycle === customerSubscription.selectedBillingCycle);
                 if (pricing) {
                     amount = pricing.price;
-                    // console.log('Using price from plan pricing:', amount);
+                    console.log('Using price from plan pricing:', amount);
                 }
             }
         }
@@ -1638,14 +1638,14 @@ const handleSubscriptionCharged = async (subscription) => {
             console.warn('Invalid amount detected, using subscription amount from customer record');
             // Try to get a realistic amount from the subscription record
             amount = customerSubscription.totalAmount || customerSubscription.amount || 499;
-            // console.log('Using fallback amount:', amount);
+            console.log('Using fallback amount:', amount);
         }
 
-        // console.log('Processing payment:', {
-        //     paymentId: paymentId || 'unknown',
-        //     amount: amount,
-        //     status: subscription.status
-        // });
+        console.log('Processing payment:', {
+            paymentId: paymentId || 'unknown',
+            amount: amount,
+            status: subscription.status
+        });
 
         // Get the subscription plan details for the invoice
         // console.log('Looking up subscription plan with ID:', subscription.notes?.planId);
@@ -1657,10 +1657,10 @@ const handleSubscriptionCharged = async (subscription) => {
         // Try multiple possible plan ID fields
         //let planId = subscription.notes?.planId || customerSubscription?.subscriptionPlanId;
         let planId = subscription.notes?.planId;
-        //console.log('Using plan ID for lookup:', planId);
+        console.log('Using plan ID for lookup:', planId);
 
         const subscriptionPlan = await SubscriptionPlan.findById(planId);
-        //console.log('Found subscription plan:', subscriptionPlan ? 'Yes' : 'No');
+        console.log('Found subscription plan:', subscriptionPlan ? 'Yes' : 'No');
 
         if (subscriptionPlan) {
             console.log('Plan details:', {
@@ -1678,19 +1678,19 @@ const handleSubscriptionCharged = async (subscription) => {
             customerSubscription.planName ||
             'Subscription Plan';
 
-        // console.log('Using plan name for invoice:', planName);
-        // console.log('Creating invoice with amount:', amount);
+        console.log('Using plan name for invoice:', planName);
+        console.log('Creating invoice with amount:', amount);
 
         // Calculate the next billing date to use as end date
         // Using existing variables instead of redeclaring them
         let billingEndDate = calculateEndDate(customerSubscription.selectedBillingCycle);
 
         // Find existing invoice for this subscription
-       // console.log('Looking for existing invoice for subscription:', customerSubscription._id);
+       console.log('Looking for existing invoice for subscription:', customerSubscription._id);
         let invoice = await Invoicemodels.findOne({ _id: customerSubscription.invoiceId });
 
         if (invoice) {
-            //console.log('Found existing invoice:', invoice._id);
+            console.log('Found existing invoice:', invoice._id);
 
             // Update the existing invoice
             invoice.status = 'charged';
@@ -1704,9 +1704,9 @@ const handleSubscriptionCharged = async (subscription) => {
             invoice.dueDate = billingEndDate;
 
             await invoice.save();
-           // console.log('Updated existing invoice:', invoice._id);
+           console.log('Updated existing invoice:', invoice._id);
         } else {
-           // console.log('No existing invoice found, creating new one');
+           console.log('No existing invoice found, creating new one');
 
             // Create a simple invoice directly without complex calculations
             invoice = new Invoicemodels({
@@ -1732,18 +1732,18 @@ const handleSubscriptionCharged = async (subscription) => {
             });
 
             await invoice.save();
-           // console.log('Created new invoice as fallback:', invoice._id);
+           console.log('Created new invoice as fallback:', invoice._id);
         }
 
-       // console.log('Creating receipt with amount:', amount);
+       console.log('Creating receipt with amount:', amount);
 
         // Check if we have a valid payment ID to use as transaction ID
         if (!paymentId) {
             console.error('Missing payment ID - cannot create receipt without a valid transaction ID');
-           // console.log('Skipping receipt creation until a valid payment ID is available');
+           console.log('Skipping receipt creation until a valid payment ID is available');
             return; // Exit the function early if we don't have a valid payment ID
         }
-       // console.log('Using payment ID as transaction ID for receipt:', paymentId);
+       console.log('Using payment ID as transaction ID for receipt:', paymentId);
 
         // Fetch payment details to update payment method/card info for recurring payments
         try {
@@ -1786,7 +1786,7 @@ const handleSubscriptionCharged = async (subscription) => {
                             isDefault: true
                         });
                         await paymentCard.save();
-                      //  console.log('Saved new payment card from subscription.charged');
+                      console.log('Saved new payment card from subscription.charged');
                     } else {
                         console.log('No token present; skipping new PaymentCard creation to satisfy schema');
                     }
@@ -1823,7 +1823,7 @@ const handleSubscriptionCharged = async (subscription) => {
                     paymentCard.lastPaymentDate = new Date();
                     paymentCard.lastPaymentId = paymentId;
                     await paymentCard.save();
-                   // console.log('Updated payment card from subscription.charged');
+                   console.log('Updated payment card from subscription.charged');
                 }
             } else {
                 console.log('No card/token details available in fetched payment for subscription.charged');
@@ -1860,7 +1860,7 @@ const handleSubscriptionCharged = async (subscription) => {
         });
 
         await receipt.save();
-       // console.log('Receipt created successfully:', receipt._id);
+       console.log('Receipt created successfully:', receipt._id);
 
         // Use the billing end date we already calculated
         // This avoids redeclaring variables
@@ -1871,7 +1871,7 @@ const handleSubscriptionCharged = async (subscription) => {
         let payment = await Payment.findOne({ razorpayPaymentId: paymentId });
 
         if (payment) {
-            // console.log('Found existing payment record:', payment._id);
+            console.log('Found existing payment record:', payment._id);
 
             // Update the existing payment record
             payment.status = 'charged';
@@ -1886,7 +1886,7 @@ const handleSubscriptionCharged = async (subscription) => {
             };
 
             await payment.save();
-          //  console.log('Payment record updated:', payment._id);
+           console.log('Payment record updated:', payment._id);
         }
 
         // Get the new end date from subscription or use our calculated billing end date
@@ -1913,7 +1913,7 @@ const handleSubscriptionCharged = async (subscription) => {
         // create usage
 
         const features = subscriptionPlan.features;
-       // console.log('features:',features);
+        console.log('features:',features);
 
         const tenant = await Tenant.findById(customerSubscription.tenantId);
             tenant.status = 'active';
@@ -1974,6 +1974,7 @@ const handleSubscriptionCharged = async (subscription) => {
             activeUsage.toDate = newEndDate;
             await activeUsage.save();
         }
+        console.log("usage updated-----successfully")
 
         // Build usageAttributes payload (reset utilization for new period)
         // const now = new Date();
@@ -2018,8 +2019,8 @@ const handleSubscriptionCharged = async (subscription) => {
         //     console.error('Error upserting usage data:', error);
         // }
 
-        // console.log('Successfully processed subscription payment:', paymentId);
-        // console.log('Next billing date set to:', newEndDate);
+        console.log('Successfully processed subscription payment:', paymentId);
+        console.log('Next billing date set to:', newEndDate);
 
         // You can add notification logic here to inform the user about the successful payment
 
@@ -2045,7 +2046,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
             const userEmail = userProfile?.email || '';
 
             if (!userEmail) {
-               // console.log('No email provided in user profile, will create new customer');
+                console.log('No email provided in user profile, will create new customer');
             } else {
                // console.log('Looking for existing customer with email:', userEmail);
 
@@ -2061,10 +2062,10 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
                         const existingRazorpayCustomer = await razorpay.customers.fetch(existingPayment.razorpayCustomerId);
 
                         if (existingRazorpayCustomer.email === userEmail) {
-                          //  console.log('Found existing customer ID with matching email:', existingPayment.razorpayCustomerId);
+                            console.log('Found existing customer ID with matching email:', existingPayment.razorpayCustomerId);
                             return existingPayment.razorpayCustomerId;
                         } else {
-                          //  console.log(`Email mismatch: Found ${existingRazorpayCustomer.email} but user provided ${userEmail}`);
+                          console.log(`Email mismatch: Found ${existingRazorpayCustomer.email} but user provided ${userEmail}`);
                           //  console.log('Creating new customer with correct email');
                             // Will continue to create a new customer
                         }
@@ -2088,11 +2089,11 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
                             const existingRazorpayCustomer = await razorpay.customers.fetch(cardWithCustomer.razorpayCustomerId);
 
                             if (existingRazorpayCustomer.email === userEmail) {
-                               // console.log('Found existing customer ID in card records with matching email:', cardWithCustomer.razorpayCustomerId);
+                               console.log('Found existing customer ID in card records with matching email:', cardWithCustomer.razorpayCustomerId);
                                 return cardWithCustomer.razorpayCustomerId;
                             } else {
-                              //  console.log(`Email mismatch: Found ${existingRazorpayCustomer.email} but user provided ${userEmail}`);
-                              //  console.log('Creating new customer with correct email');
+                              console.log(`Email mismatch: Found ${existingRazorpayCustomer.email} but user provided ${userEmail}`);
+                              console.log('Creating new customer with correct email');
                                 // Will continue to create a new customer
                             }
                         } catch (razorpayError) {
@@ -2165,7 +2166,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
         // Create the customer in Razorpay
         const customer = await razorpay.customers.create(customerData);
 
-      //  console.log('Successfully created Razorpay customer:', customer.id);
+        console.log('Successfully created Razorpay customer:', customer.id);
 
         // Store the customer ID in relevant records
         try {
@@ -2188,7 +2189,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
                 });
                 if (updatedAny) {
                     await cardDetails.save();
-                   // console.log('Updated card subdocuments with customer ID');
+                   console.log('Updated card subdocuments with customer ID');
                 }
             }
         } catch (updateError) {
@@ -2219,7 +2220,8 @@ const getOrCreateSubscriptionPlan = async (planDetails, membershipType) => {
             try {
                 // Verify the plan exists in Razorpay
                 const existingPlan = await razorpay.plans.fetch(existingPlanId);
-              //  console.log('Successfully retrieved existing plan from Razorpay:', existingPlan.id);
+
+                console.log('Successfully retrieved existing plan from Razorpay:', existingPlan.id);
                 return existingPlan;
             } catch (fetchError) {
                 console.error(`Error fetching existing plan ${existingPlanId}:`, fetchError);
@@ -2306,7 +2308,7 @@ const createRecurringSubscription = async (req, res) => {
                        // console.log('Found existing customer with matching email:', existingCustomer.id);
                         customerId = existingCustomer.id; // Return the customer ID with matching email
                     } else {
-                       // console.log('Could not find existing customer with email:', userProfile.email);
+                       console.log('Could not find existing customer with email:', userProfile.email);
                        // console.log('Will create a new customer with the correct email');
                         // Continue to create a new customer with the correct email
                         // No error returned here, we'll just create a new customer
@@ -2507,7 +2509,7 @@ try {
                 const featureList = Array.isArray(plandata?.features)
                     ? plandata.features.map(feature => ({
                         name: feature.name,
-                        limit: feature.limit,
+                        limit: feature.limit === "unlimited" ? -1 : Number(feature.limit) || 0,
                         description: feature.description
                     }))
                     : [];
@@ -2556,7 +2558,7 @@ try {
                 if (plandata && plandata.features) {
                     existingSubscription.features = plandata.features.map(feature => ({
                         name: feature.name,
-                        limit: feature.limit,
+                        limit: feature.limit === "unlimited" ? -1 : Number(feature.limit) || 0,
                         description: feature.description
                     }));
                 }

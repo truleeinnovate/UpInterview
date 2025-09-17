@@ -167,9 +167,9 @@ const Usage = () => {
           {usage?.period?.fromDate || usage?.period?.toDate
             ? `${new Date(
                 usage?.period?.fromDate
-              )?.toLocaleDateString()} to ${new Date(
+              )?.toLocaleDateString()} to ${usage?.period?.toDate ? new Date(
                 usage?.period?.toDate
-              )?.toLocaleDateString()}`
+              )?.toLocaleDateString() : "N/A"}`
             : //             `${usage?.period?.fromDate ? new Date(usage.period.fromDate).toLocaleDateString() : '—'} to ${usage?.period?.toDate ? new Date(usage.period.toDate).toLocaleDateString() : '—'}`
 
               error || "—"}

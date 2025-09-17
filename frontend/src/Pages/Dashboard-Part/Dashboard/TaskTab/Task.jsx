@@ -575,7 +575,7 @@ const Task = () => {
                 <TaskKanban
                   data={currentFilteredRows.map((task) => ({
                     ...task,
-                    id: task.id,
+                    id: task._id || task.id,
                     title:
                       task.title.charAt(0).toUpperCase() + task.title.slice(1),
                     Email:

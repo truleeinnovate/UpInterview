@@ -120,10 +120,10 @@ const updateSubscriptionPlan = async (req, res) => {
         const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
         let nextNumber = 1;
         if (lastInvoice && lastInvoice.invoiceCode) {
-          const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+          const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
           if (match) nextNumber = parseInt(match[1], 10) + 1;
         }
-        const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+        const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
 
         const newInvoice = new Invoice({
           tenantId: tenantId || customerSubscription.tenantId,
@@ -186,10 +186,10 @@ const updateSubscriptionPlan = async (req, res) => {
         const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
         let nextNumber = 1;
         if (lastInvoice && lastInvoice.invoiceCode) {
-          const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+          const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
           if (match) nextNumber = parseInt(match[1], 10) + 1;
         }
-        const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+        const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
 
         const newInvoice = new Invoice({
           tenantId: tenantId || customerSubscription.tenantId,
@@ -327,10 +327,10 @@ const updateSubscriptionPlan = async (req, res) => {
       const lastInvoice = await Invoice.findOne({}).sort({ _id: -1 }).select('invoiceCode').lean();
       let nextNumber = 1;
       if (lastInvoice && lastInvoice.invoiceCode) {
-        const match = lastInvoice.invoiceCode.match(/INV-(\d+)/);
+        const match = lastInvoice.invoiceCode.match(/INVC-(\d+)/);
         if (match) nextNumber = parseInt(match[1], 10) + 1;
       }
-      const invoiceCode = `INV-${String(nextNumber).padStart(5, '0')}`;
+      const invoiceCode = `INVC-${String(nextNumber).padStart(5, '0')}`;
 
       const newInvoice = new Invoice({
         tenantId: tenantId,

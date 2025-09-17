@@ -104,8 +104,14 @@ const TaskKanban = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        {(columns.length > 0 ? columns : [{ key: 'all', header: 'All Tasks' }]).map((column) => (
-          <div key={column.key} className="mb-6">
+        {(columns.length > 0 ? columns : [{ key: 'all', header: 'All Tasks' }]).map((column, colIdx) => (
+          <motion.div 
+            key={`${column.key}-${colIdx}`} 
+            className="mb-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: colIdx * 0.1 }}
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800 truncate">{column.header}</h3>
               <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
@@ -158,21 +164,21 @@ const TaskKanban = ({
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5 text-gray-600 truncate">
-                      <span className="truncate text-gray-600 font-medium">Assigned To:</span>
+                      <div key={`${item.id}-assigned`} className="flex items-center gap-1.5 text-gray-600 truncate">
+                        <span className="truncate text-gray-600 font-medium">Assigned To:</span>
                         <span className="truncate">{item.Email || 'N/A'}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-gray-600 truncate">
+                      <div key={`${item.id}-related`} className="flex items-center gap-1.5 text-gray-600 truncate">
                         <span className="truncate text-gray-600 font-medium">Related To:</span>
                         <span className="truncate">{item.Phone || 'N/A'}</span>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5 text-gray-600 truncate">
+                      <div key={`${item.id}-priority`} className="flex items-center gap-1.5 text-gray-600 truncate">
                         <span className="truncate text-gray-600 font-medium">Priority:</span>
                         <span className="truncate">{item.HigherQualification || 'N/A'}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-gray-600 truncate">
+                      <div key={`${item.id}-status`} className="flex items-center gap-1.5 text-gray-600 truncate">
                         <span className="truncate text-gray-600 font-medium">Status:</span>
                         <span className="truncate">{item.UniversityCollege || 'N/A'}</span>
                       </div>
@@ -191,7 +197,7 @@ const TaskKanban = ({
                 </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         ))}
       </motion.div>
     </DndContext>

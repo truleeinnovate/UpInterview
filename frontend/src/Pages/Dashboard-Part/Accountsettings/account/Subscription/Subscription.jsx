@@ -104,6 +104,7 @@ const Subscription = () => {
     isMutationLoading,
     updateSubscriptionPlan,
     cancelSubscription,
+    createCustomerSubscription,
     ownerId,
     tenantId,
     organization,
@@ -178,19 +179,48 @@ const Subscription = () => {
   const submitPlans = async (plan) => {
     setLoadingPlanId(plan.planId);
     try {
+      const viewingCycle = isAnnual ? "annual" : "monthly";
+      const selectedPrice = getPlanPrice(plan, viewingCycle);
+      const isFreePlan = Number(selectedPrice) === 0;
+
       if (
         subscriptionData.subscriptionPlanId === plan.planId &&
-        subscriptionData.selectedBillingCycle ===
-          (isAnnual ? "annual" : "monthly") &&
+        subscriptionData.selectedBillingCycle === viewingCycle &&
         subscriptionData.status === "active"
       ) {
         return; // Already subscribed to this plan
       }
 
+      // Handle Free Plan - Create/Update directly with active status
+      if (isFreePlan) {
+        const payload = {
+          planDetails: {
+            subscriptionPlanId: plan.planId,
+            monthlyPrice: plan.monthlyPrice,
+            annualPrice: plan.annualPrice,
+            monthDiscount: plan.monthlyDiscount || 0,
+            annualDiscount: plan.annualDiscount || 0,
+          },
+          userDetails: {
+            tenantId,
+            ownerId,
+            membershipType: viewingCycle,
+            userType,
+          },
+          status: "active", // Set to active for free plans
+          totalAmount: 0,
+        };
+        
+        await createCustomerSubscription(payload);
+        toast.success("Free plan activated successfully!");
+        await refetchSubscription();
+        await refetchPlans();
+        return;
+      }
+
       if (
         subscriptionData.subscriptionPlanId === plan.planId &&
-        subscriptionData.selectedBillingCycle ===
-          (isAnnual ? "annual" : "monthly") &&
+        subscriptionData.selectedBillingCycle === viewingCycle &&
         subscriptionData.status === "created"
       ) {
         // Continue to payment for existing subscription
@@ -198,10 +228,27 @@ const Subscription = () => {
           state: {
             plan: {
               ...plan,
-              billingCycle: isAnnual ? "annual" : "monthly",
+              billingCycle: viewingCycle,
               user: user,
               invoiceId: subscriptionData.invoiceId,
-              razorpayPlanIds: subscriptionData.razorpayPlanId,
+              razorpayPlanIds: plan.razorpayPlanIds,
+            },
+            isUpgrading: false,
+          },
+        });
+        return;
+      }
+
+      // If there's no active Razorpay subscription (e.g. on Free plan), create a new subscription
+      const hasRazorpaySubscription = Boolean(subscriptionData?.razorpaySubscriptionId);
+      if (!hasRazorpaySubscription) {
+        navigate("/account-settings/subscription/card-details", {
+          state: {
+            plan: {
+              ...plan,
+              billingCycle: viewingCycle,
+              user: user,
+              razorpayPlanIds: plan.razorpayPlanIds,
             },
             isUpgrading: false,
           },
@@ -285,7 +332,7 @@ const Subscription = () => {
             billingCycle: isAnnual ? "annual" : "monthly",
             user: user,
             invoiceId: subscriptionData.invoiceId,
-            razorpayPlanIds: subscriptionData.razorpayPlanId,
+            razorpayPlanIds: plan.razorpayPlanIds,
           },
           isUpgrading: false,
         },
@@ -319,8 +366,8 @@ const Subscription = () => {
             {!loading &&
               subscriptionData &&
               subscriptionData.status === "active" &&
-              (organization !== "false" ||
-                subscriptionData.planName !== "Base") && (
+              subscriptionData.planName !== "Free" &&
+              subscriptionData?.razorpaySubscriptionId && (
                 <button
                   onClick={() => setShowCancelModal(true)}
                   className={`bg-custom-blue hover:bg-custom-blue/80 py-2 px-4 rounded-lg text-white`}

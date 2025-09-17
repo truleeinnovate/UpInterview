@@ -19,7 +19,7 @@ const createSubscriptionRecord = async (userDetails, planDetails, pricing, disco
   if (planData && planData.features) {
     features = planData.features.map(feature => ({
       name: feature.name,
-      limit: feature.limit,
+      limit: feature.limit === "unlimited" ? -1 : Number(feature.limit) || 0,
       description: feature.description
   }));
   }
@@ -83,7 +83,10 @@ const  createInvoice = async (
     throw new Error('Invalid type value');
   }
 
-  
+  // For subscription invoices that are immediately paid (e.g., Free plan), compute endDate now
+  const computedEndDate = (type === 'subscription' && status === 'paid')
+    ? calculateEndDate(membershipType === 'annual' ? 'annual' : 'monthly')
+    : null;
 
   // Generate invoice code like INVC-00001
   const lastInvoice = await Invoicemodels.findOne({tenantId: tenantId })
@@ -121,14 +124,14 @@ const  createInvoice = async (
     tenantId: tenantId,
     ownerId: ownerId,
     planName: planName,
-    subscriptionId: planId,
+    planId: planId,
     type: type,
     totalAmount: finalAmount,
     status: status,
     dueDate: null,
     amountPaid : type === "wallet" ? totalAmount : 0,
     startDate: new Date(),
-    endDate:  null,
+    endDate:  computedEndDate,
     lineItems: [{
       description: membershipType ? `${membershipType} - Start Date: ${currentMonth}` : type,
       amount: finalAmount,

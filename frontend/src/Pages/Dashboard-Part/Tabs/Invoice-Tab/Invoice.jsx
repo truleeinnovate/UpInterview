@@ -301,7 +301,7 @@ const InvoiceTab = () => {
     {
       key: "amount",
       header: "Amount",
-      render: (value) => (value && value.total ? `₹${value.total}` : "N/A"),
+      render: (value) => (value && value.total ? `₹${value.total}` : 0),
     },
     {
       key: "status",
