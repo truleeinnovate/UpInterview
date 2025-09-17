@@ -91,9 +91,9 @@ const InterviewDetails = ({
     }, [yearsOfExperience, expYears, setInterviewDetailsData]);
 
     // For backward compatibility with old UI
-    const showJuniorLevel = expYears >= 0; // Always show junior level
-    const showMidLevel = expYears >= 3; // Show mid-level if 3+ years
-    const showSeniorLevel = expYears >= 6; // Show senior level only if more than 6 years (7+)
+    const showJuniorLevel = expYears <= 3; // Always show junior level
+    const showMidLevel = expYears > 3 && expYears <= 6; // Show mid-level if 3+ years
+    const showSeniorLevel = expYears > 6; // Show senior level only if more than 6 years (7+)
     const {
         skills,
         loadSkills,
@@ -247,12 +247,12 @@ const InterviewDetails = ({
                         junior: {
                             usd: juniorRange.usd.min || 0,
                             inr: juniorRange.inr.min || 0,
-                            isVisible: true
+                            isVisible: expYears <= 3
                         },
                         mid: {
                             usd: midRange.usd.min || 0,
                             inr: midRange.inr.min || 0,
-                            isVisible: expYears >= 3
+                            isVisible: expYears > 3 && expYears <= 6
                         },
                         senior: {
                             usd: seniorRange.usd.min || 0,
@@ -941,12 +941,13 @@ useEffect(() => {
                             )}
                         </div>
                         <p className="mt-2 text-xs text-gray-500">
-                            {expYears > 0 ? (
+                            {expYears <= 3 ? (
                                 `Based on your ${expYears} years of experience, we're showing the most relevant experience levels.`
                             ) : (
                                 'Set competitive rates based on candidate experience levels.'
                             )}
-                            {expYears === 6 && <span className="block mt-1">For Senior Level (7+ years), please select 7 or more years of experience.</span>}
+                            {expYears > 3 && expYears <= 6 && <span className="block mt-1">For Mid Level (4-6 years), please select 4 or more years of experience.</span>}
+                            {expYears > 6 && <span className="block mt-1">For Senior Level (7+ years), please select 7 or more years of experience.</span>}
                         </p>
                     </div>
 

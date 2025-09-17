@@ -2165,8 +2165,8 @@ const EditInterviewDetails = ({
                     Technology: [selectedValue],
                     rates: {
                         ...prev.rates,
-                        junior: { ...prev.rates.junior, isVisible: true },
-                        mid: { ...prev.rates.mid, isVisible: userExpYears >= 3 },
+                        junior: { ...prev.rates.junior, isVisible: userExpYears <= 3 },
+                        mid: { ...prev.rates.mid, isVisible: userExpYears > 3 && userExpYears <= 6 },
                         senior: { ...prev.rates.senior, isVisible: userExpYears > 6 }
                     }
                 };
