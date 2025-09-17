@@ -76,19 +76,19 @@ const InterviewDetails = ({
             rates: {
                 junior: {
                     ...prev.rates?.junior,
-                    isVisible: true // Always show junior level
+                    isVisible: expYears <= 3 // show junior level if 3 years or less
                 },
                 mid: {
                     ...prev.rates?.mid,
-                    isVisible: expYears >= 3 // Show mid-level if 3+ years
+                    isVisible: expYears > 3 && expYears <= 6 // show mid level if more than 3 years and less than or equal to 6 years
                 },
                 senior: {
                     ...prev.rates?.senior,
-                    isVisible: expYears > 6 // Show senior level if 7+ years
+                    isVisible: expYears > 6 // show senior level if more than 6 years
                 }
             }
         }));
-    }, [yearsOfExperience, expYears]);
+    }, [yearsOfExperience, expYears, setInterviewDetailsData]);
 
     // For backward compatibility with old UI
     const showJuniorLevel = expYears >= 0; // Always show junior level
@@ -176,42 +176,141 @@ const InterviewDetails = ({
 
     const bioLength = interviewDetailsData.bio?.length || 0;
 
+    // uncomment this if any issue with handleTechnologyChange
+    // const handleTechnologyChange = (event) => {
+    //     const selectedValue = event.target.value;
+    //     if (selectedValue) {
+    //         fetchRateCards(selectedValue);
+
+    //         // Check if the technology is already selected
+    //         const isAlreadySelected = selectedTechnologyies.some(
+    //             tech => tech.TechnologyMasterName === selectedValue
+    //         );
+
+    //         if (!isAlreadySelected) {
+    //             const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
+    //                 _id: Math.random().toString(36).substr(2, 9),
+    //                 TechnologyMasterName: selectedValue
+    //             };
+
+    //             const newTechnologies = [...selectedTechnologyies, technology];
+    //             setSelectedTechnologyies(newTechnologies);
+
+    //             setInterviewDetailsData(prev => ({
+    //                 ...prev,
+    //                 technologies: newTechnologies.map(t => t.TechnologyMasterName),
+    //             }));
+
+    //             setErrors(prev => ({ ...prev, technologies: '' }));
+    //         }
+    //     } else {
+    //         setSelectedTechnologyies([]);
+    //         setInterviewDetailsData(prev => ({
+    //             ...prev,
+    //             technologies: []
+    //         }));
+    //         setErrors(prev => ({ ...prev, technologies: 'Please select a technology' }));
+    //     }
+    // };
+
     // Handle technology selection
     const handleTechnologyChange = (event) => {
         const selectedValue = event.target.value;
+        console.log('handleTechnologyChange called with:', selectedValue);
+
         if (selectedValue) {
+            console.log('Selected value:', selectedValue);
             fetchRateCards(selectedValue);
 
-            // Check if the technology is already selected
-            const isAlreadySelected = selectedTechnologyies.some(
-                tech => tech.TechnologyMasterName === selectedValue
-            );
+            // Find the technology object
+            const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
+                _id: Math.random().toString(36).substr(2, 9),
+                TechnologyMasterName: selectedValue
+            };
+            console.log('Found technology:', technology);
 
-            if (!isAlreadySelected) {
-                const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
-                    _id: Math.random().toString(36).substr(2, 9),
-                    TechnologyMasterName: selectedValue
-                };
+            // Update selectedTechnologyies with the new selection (single selection)
+            setSelectedTechnologyies([technology]);
+            console.log('Updated selectedTechnologyies:', [technology]);
 
-                const newTechnologies = [...selectedTechnologyies, technology];
-                setSelectedTechnologyies(newTechnologies);
+            // Update interviewDetailsData with new rates based on backend ranges
+            setInterviewDetailsData(prev => {
+                // Get rate ranges for the selected technology
+                const juniorRange = getRateRanges('Junior') || { usd: { min: 0 }, inr: { min: 0 } };
+                const midRange = getRateRanges('Mid-Level') || { usd: { min: 0 }, inr: { min: 0 } };
+                const seniorRange = getRateRanges('Senior') || { usd: { min: 0 }, inr: { min: 0 } };
 
-                setInterviewDetailsData(prev => ({
+                const newFormData = {
                     ...prev,
-                    technologies: newTechnologies.map(t => t.TechnologyMasterName),
-                }));
+                    technologies: [selectedValue],
+                    rates: {
+                        junior: {
+                            usd: juniorRange.usd.min || 0,
+                            inr: juniorRange.inr.min || 0,
+                            isVisible: true
+                        },
+                        mid: {
+                            usd: midRange.usd.min || 0,
+                            inr: midRange.inr.min || 0,
+                            isVisible: expYears >= 3
+                        },
+                        senior: {
+                            usd: seniorRange.usd.min || 0,
+                            inr: seniorRange.inr.min || 0,
+                            isVisible: expYears > 6
+                        }
+                    }
+                };
+                console.log('Updated interviewDetailsData:', newFormData);
+                return newFormData;
+            });
 
-                setErrors(prev => ({ ...prev, technologies: '' }));
-            }
+            // Clear technology error
+            setErrors(prev => {
+                const newErrors = {
+                    ...prev,
+                    technologies: '',
+                    junior_usd: '',
+                    junior_inr: '',
+                    mid_usd: '',
+                    mid_inr: '',
+                    senior_usd: '',
+                    senior_inr: ''
+                };
+                console.log('Updated errors:', newErrors);
+                return newErrors;
+            });
         } else {
+            console.log('No value selected, clearing selection');
+            // Clear selection if no value is selected
             setSelectedTechnologyies([]);
-            setInterviewDetailsData(prev => ({
-                ...prev,
-                technologies: []
-            }));
-            setErrors(prev => ({ ...prev, technologies: 'Please select a technology' }));
+            setInterviewDetailsData(prev => {
+                const newFormData = {
+                    ...prev,
+                    technologies: [],
+                    rates: {
+                        junior: { usd: 0, inr: 0, isVisible: false },
+                        mid: { usd: 0, inr: 0, isVisible: false },
+                        senior: { usd: 0, inr: 0, isVisible: false }
+                    }
+                };
+                console.log('Cleared interviewDetailsData:', newFormData);
+                return newFormData;
+            });
+            setErrors(prev => {
+                const newErrors = { ...prev, technologies: 'Please select a technology' };
+                console.log('Updated errors:', newErrors);
+                return newErrors;
+            });
         }
     };
+
+    // Add this useEffect to log state changes
+useEffect(() => {
+    console.log('selectedTechnologyies state:', selectedTechnologyies);
+    console.log('interviewDetailsData.technologies state:', interviewDetailsData.technologies);
+    console.log('errors state:', errors);
+}, [selectedTechnologyies, interviewDetailsData.technologies, errors]);
 
     const handleRemoveSkill = (index) => {
         const updatedSkills = selectedSkills.filter((_, i) => i !== index);
