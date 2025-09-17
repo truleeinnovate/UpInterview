@@ -80,7 +80,7 @@ const InterviewDetails = ({
                 },
                 mid: {
                     ...prev.rates?.mid,
-                    isVisible: expYears > 3 && expYears <= 6 // show mid level if more than 3 years and less than or equal to 6 years
+                    isVisible: expYears > 3 && expYears <= 6 // show mid level if more than 3 years and less than 6 years
                 },
                 senior: {
                     ...prev.rates?.senior,
@@ -91,9 +91,10 @@ const InterviewDetails = ({
     }, [yearsOfExperience, expYears, setInterviewDetailsData]);
 
     // For backward compatibility with old UI
-    const showJuniorLevel = expYears <= 3; // Always show junior level
-    const showMidLevel = expYears > 3 && expYears <= 6; // Show mid-level if 3+ years
+    const showJuniorLevel = expYears >= 0; // Always show junior level
+    const showMidLevel = expYears >= 4; // Show mid-level if 3+ years
     const showSeniorLevel = expYears > 6; // Show senior level only if more than 6 years (7+)
+
     const {
         skills,
         loadSkills,
@@ -247,12 +248,12 @@ const InterviewDetails = ({
                         junior: {
                             usd: juniorRange.usd.min || 0,
                             inr: juniorRange.inr.min || 0,
-                            isVisible: expYears <= 3
+                            isVisible: true
                         },
                         mid: {
                             usd: midRange.usd.min || 0,
                             inr: midRange.inr.min || 0,
-                            isVisible: expYears > 3 && expYears <= 6
+                            isVisible: expYears >= 4
                         },
                         senior: {
                             usd: seniorRange.usd.min || 0,
@@ -306,11 +307,11 @@ const InterviewDetails = ({
     };
 
     // Add this useEffect to log state changes
-useEffect(() => {
-    console.log('selectedTechnologyies state:', selectedTechnologyies);
-    console.log('interviewDetailsData.technologies state:', interviewDetailsData.technologies);
-    console.log('errors state:', errors);
-}, [selectedTechnologyies, interviewDetailsData.technologies, errors]);
+    useEffect(() => {
+        console.log('selectedTechnologyies state:', selectedTechnologyies);
+        console.log('interviewDetailsData.technologies state:', interviewDetailsData.technologies);
+        console.log('errors state:', errors);
+    }, [selectedTechnologyies, interviewDetailsData.technologies, errors]);
 
     const handleRemoveSkill = (index) => {
         const updatedSkills = selectedSkills.filter((_, i) => i !== index);
@@ -941,13 +942,15 @@ useEffect(() => {
                             )}
                         </div>
                         <p className="mt-2 text-xs text-gray-500">
-                            {expYears <= 3 ? (
-                                `Based on your ${expYears} years of experience, we're showing the most relevant experience levels.`
-                            ) : (
-                                'Set competitive rates based on candidate experience levels.'
+                            {expYears > 0 && expYears <= 3 && (
+                                `With your ${expYears} year${expYears > 1 ? 's' : ''} of experience, we'll match you with junior-level candidates.`
                             )}
-                            {expYears > 3 && expYears <= 6 && <span className="block mt-1">For Mid Level (4-6 years), please select 4 or more years of experience.</span>}
-                            {expYears > 6 && <span className="block mt-1">For Senior Level (7+ years), please select 7 or more years of experience.</span>}
+                            {expYears > 3 && expYears <= 6 && (
+                                'You can set rates for both junior and mid-level candidates based on your experience.'
+                            )}
+                            {expYears > 6 && (
+                                'Your extensive experience qualifies you to interview candidates at all levels: junior, mid-level, and senior.'
+                            )}
                         </p>
                     </div>
 
@@ -1213,8 +1216,8 @@ useEffect(() => {
                             )}
                             {interviewDetailsData.professionalTitle?.length > 0 && (
                                 <p className={`text-xs ${interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle
-                                        ? 'text-red-500'
-                                        : 'text-gray-500'
+                                    ? 'text-red-500'
+                                    : 'text-gray-500'
                                     }`}>
                                     {interviewDetailsData.professionalTitle.length}/100
                                 </p>
@@ -1260,10 +1263,10 @@ useEffect(() => {
                             )}
                             {interviewDetailsData.bio?.length > 0 && (
                                 <p className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
-                                        ? 'text-red-500'
-                                        : interviewDetailsData.bio.length > 450
-                                            ? 'text-yellow-500'
-                                            : 'text-gray-500'
+                                    ? 'text-red-500'
+                                    : interviewDetailsData.bio.length > 450
+                                        ? 'text-yellow-500'
+                                        : 'text-gray-500'
                                     }`}>
                                     {interviewDetailsData.bio.length}/500
                                 </p>

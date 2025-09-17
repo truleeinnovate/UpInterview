@@ -1557,12 +1557,12 @@ const EditInterviewDetails = ({
     const queryClient = useQueryClient();
 
     // Get years of experience from user profile or props
-    const userExpYears = parseInt(userProfile?.yearsOfExperience || yearsOfExperience || 0, 10);
+    const expYears = parseInt(userProfile?.yearsOfExperience || yearsOfExperience || 0, 10);
 
-    // Set up rate visibility based on years of experience
-    const showJuniorLevel = true; // Always show junior level
-    const showMidLevel = userExpYears >= 3; // Show mid-level if 3+ years
-    const showSeniorLevel = userExpYears >= 6; // Show senior level if 6+ years
+    // For backward compatibility with old UI
+    const showJuniorLevel = expYears >= 0; // Always show junior level
+    const showMidLevel = expYears >= 4; // Show mid-level if 3+ years
+    const showSeniorLevel = expYears > 6; // Show senior level only if more than 6 years (7+)
 
     const {
         skills,
@@ -2164,10 +2164,18 @@ const EditInterviewDetails = ({
                     ...prev,
                     Technology: [selectedValue],
                     rates: {
-                        ...prev.rates,
-                        junior: { ...prev.rates.junior, isVisible: userExpYears <= 3 },
-                        mid: { ...prev.rates.mid, isVisible: userExpYears > 3 && userExpYears <= 6 },
-                        senior: { ...prev.rates.senior, isVisible: userExpYears > 6 }
+                        junior: {
+                            ...prev.rates?.junior,
+                            isVisible: expYears <= 3 // show junior level if 3 years or less
+                        },
+                        mid: {
+                            ...prev.rates?.mid,
+                            isVisible: expYears > 3 && expYears <= 6 // show mid level if more than 3 years and less than 6 years
+                        },
+                        senior: {
+                            ...prev.rates?.senior,
+                            isVisible: expYears > 6 // show senior level if more than 6 years
+                        }
                     }
                 };
                 console.log('Updated formData:', newFormData);
@@ -2262,7 +2270,7 @@ const EditInterviewDetails = ({
                     <div className="grid grid-cols-1 gap-4">
                         {/* Technology Selection */}
                         <div className="space-y-4">
-                        <DropdownWithSearchField
+                            <DropdownWithSearchField
                                 value={selectedCandidates[0]?.TechnologyMasterName || ''}
                                 options={services.map(tech => ({
                                     value: tech.TechnologyMasterName,
