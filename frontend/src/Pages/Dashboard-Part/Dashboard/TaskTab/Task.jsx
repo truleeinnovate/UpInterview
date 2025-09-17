@@ -3,6 +3,7 @@
 // v1.0.2 - Venkatesh - added new filters priority, status, due date, created date and assigned to(only shown in organization)
 // v1.0.3 - Ashok - Improved responsiveness and modified clickable id
 // v1.0.4 - Ashok - Fixed style issue
+// v1.0.5 - Ashok - Fixed table view in small screens and added delete button for kanban
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -87,7 +88,7 @@ const Task = () => {
       console.log("Deleting task with ID:", deleteTask?._id);
       let res = await deleteTaskMutation.mutateAsync(deleteTask?._id);
       console.log("Delete response:", res);
-      
+
       if (res && res.success) {
         setShowDeleteConfirmModal(false);
         notify.success("Task deleted successfully");
@@ -97,7 +98,7 @@ const Task = () => {
     } catch (error) {
       console.error("Error Deleting Task:", error);
       console.error("Error response:", error.response);
-      
+
       if (error.response?.data?.message) {
         notify.error(error.response.data.message);
       } else {
@@ -426,14 +427,24 @@ const Task = () => {
 
   // Render actions for Kanban cards
   const renderKanbanActions = (task) => (
-    <div className="flex space-x-2">
+    // v1.0.5 <-------------------------------------------------------------
+    <div className="flex items-center gap-4">
       <button onClick={() => handleTaskClick(task)}>
         <Eye className="w-4 h-4 text-custom-blue" />
       </button>
       <button onClick={() => handleEditTask(task._id)}>
         <Pencil className="w-4 h-4 text-green-600" />
       </button>
+      <button
+        onClick={() => {
+          setShowDeleteConfirmModal(true);
+          setDeleteTask(task);
+        }}
+      >
+        <Trash className="w-4 h-4 text-red-600" />
+      </button>
     </div>
+    // v1.0.5 ------------------------------------------------------------->
   );
 
   // Table Columns Configuration
@@ -508,9 +519,9 @@ const Task = () => {
       label: "Delete",
       icon: <Trash className="w-4 h-4 text-red-600" />,
       onClick: (row) => {
-        setShowDeleteConfirmModal(true)
-        setDeleteTask(row)
-      }
+        setShowDeleteConfirmModal(true);
+        setDeleteTask(row);
+      },
     },
   ];
 
@@ -559,7 +570,9 @@ const Task = () => {
         <motion.div className="bg-white">
           <div className="relative w-full">
             {view === "table" ? (
-              <div className="w-full">
+              // v1.0.5 <---------------------------------------------------------------------------------------------------
+              <div className="w-full sm:mt-10 overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                {/* v1.0.5 <--------------------------------------------------------------------------------------------------- */}
                 <TableView
                   data={currentFilteredRows}
                   columns={tableColumns}
@@ -571,7 +584,7 @@ const Task = () => {
             ) : (
               // v1.0.4 <--------------------------------
               <div className="w-full sm:mt-8">
-              {/* v1.0.4 <-------------------------------- */}
+                {/* v1.0.4 <-------------------------------- */}
                 <TaskKanban
                   data={currentFilteredRows.map((task) => ({
                     ...task,
@@ -580,7 +593,7 @@ const Task = () => {
                       task.title.charAt(0).toUpperCase() + task.title.slice(1),
                     Email:
                       task.assignedTo.charAt(0).toUpperCase() +
-                      task.assignedTo.slice(1) || "None",
+                        task.assignedTo.slice(1) || "None",
                     Phone: task.relatedTo?.objectName || "N/A",
                     HigherQualification: task.priority || "N/A",
                     UniversityCollege: task.status || "N/A",
@@ -779,10 +792,11 @@ const Task = () => {
                               </div>
                               <ul className="max-h-48 overflow-y-auto py-1">
                                 <li
-                                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${selectedAssignedUserId === ""
+                                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${
+                                    selectedAssignedUserId === ""
                                       ? "text-custom-blue font-medium"
                                       : "text-gray-700"
-                                    }`}
+                                  }`}
                                   onClick={() => {
                                     handleAssignedUserChange("");
                                     setIsAssignedDropdownOpen(false);
@@ -793,17 +807,19 @@ const Task = () => {
                                 {filteredAssignedUsers.length > 0 ? (
                                   filteredAssignedUsers.map((user) => {
                                     const name =
-                                      `${user.firstName || ""} ${user.lastName || ""
-                                        }`.trim() || user.email;
+                                      `${user.firstName || ""} ${
+                                        user.lastName || ""
+                                      }`.trim() || user.email;
                                     const isSelected =
                                       selectedAssignedUserId === user._id;
                                     return (
                                       <li
                                         key={user._id}
-                                        className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${isSelected
+                                        className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${
+                                          isSelected
                                             ? "text-custom-blue font-medium"
                                             : "text-gray-700"
-                                          }`}
+                                        }`}
                                         onClick={() => {
                                           handleAssignedUserChange(user._id);
                                           setIsAssignedDropdownOpen(false);

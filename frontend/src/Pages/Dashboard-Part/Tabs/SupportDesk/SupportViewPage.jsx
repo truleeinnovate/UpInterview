@@ -2,6 +2,7 @@
 // v1.0.1 - Venkatesh - ticket code and status in align center
 // v1.0.2 - Ashraf - Added subject field
 // v1.0.3 - Ashok  - Fixed responsive issues
+// v1.0.4 - Ashok  - Fixed issues
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback } from "react";
@@ -144,7 +145,9 @@ const SupportViewPage = () => {
               <FaTicketAlt className="w-8 h-8" />
             </div>
             <div className="items-center text-center">
-              <h3 className="text-2xl font-bold text-gray-900">
+              {/* v1.0.4 <---------------------------------------------------------------- */}
+              <h3 className="sm:text-xl md:text-xl lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-gray-900">
+              {/* v1.0.4 ----------------------------------------------------------------> */}
                 {ticketData?.ticketCode}
               </h3>
               <StatusBadge
@@ -263,7 +266,7 @@ const SupportViewPage = () => {
 
           {ticketData?.attachment && (
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
+              <h4 className="mb-4 sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
                 Attachments
               </h4>
               <div className="flex items-center gap-3">
@@ -273,14 +276,39 @@ const SupportViewPage = () => {
 
                 <div className="flex-1">
                   {/* v1.0.3 <----------------------------------------------- */}
-                  <p className="text-gray-700">
+                  {/* v1.0.4 <----------------------------------------------- */}
+                  {/* <p className="text-gray-700">
                     {ticketData?.attachment?.filename}
                     {ticketData?.attachment?.filename
                       ? ticketData?.attachment?.filename.length > 12
                         ? ticketData?.attachment?.filename?.slice(0, 12) + "..."
                         : ticketData?.attachment?.filename
                       : "N/A"}
+                  </p> */}
+                  {/* <p className="text-gray-700">
+                    {ticketData?.attachment?.filename
+                      ? ticketData.attachment.filename.length > 16
+                        ? ticketData.attachment.filename.slice(0, 16) + "..."
+                        : ticketData.attachment.filename
+                      : "N/A"}
+                  </p> */}
+
+                  <p className="text-gray-700 lg:hidden xl:hidden 2xl:hidden">
+                    {ticketData?.attachment?.filename
+                      ? ticketData.attachment.filename.length > 16
+                        ? ticketData.attachment.filename.slice(0, 16) + "..."
+                        : ticketData.attachment.filename
+                      : "N/A"}
                   </p>
+                  <p className="text-gray-700 hidden lg:inline xl:inline 2xl:inline">
+                    {ticketData?.attachment?.filename
+                      ? ticketData.attachment.filename.length > 46
+                        ? ticketData.attachment.filename.slice(0, 46) + "..."
+                        : ticketData.attachment.filename
+                      : "N/A"}
+                  </p>
+
+                  {/* v1.0.4 -----------------------------------------------> */}
                   {/* v1.0.3 -----------------------------------------------> */}
                 </div>
 

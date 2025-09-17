@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Fixed dropdown alignment issues
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
@@ -91,27 +92,35 @@ const TaskList = () => {
       </div>
 
       {/* Filters */}
+      {/* v1.0.1 <--------------------------------------------------- */}
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="flex items-center gap-2">
           <Filter size={24} className="text-gray-400" />
-          <div className="min-w-[160px]">
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="sm:min-w-[144px] min-w-[160px]">
             <DropdownSelect
               options={timeOptionsRS}
-              value={timeOptionsRS.find((opt) => opt.value === selectedTimeFilter)}
+              value={timeOptionsRS.find(
+                (opt) => opt.value === selectedTimeFilter
+              )}
               onChange={(opt) => setSelectedTimeFilter(opt?.value || "all")}
               placeholder="All Time"
             />
           </div>
-        </div>
-        <div className="min-w-[160px]">
-          <DropdownSelect
-            options={statusOptionsRS}
-            value={statusOptionsRS.find((opt) => opt.value === selectedStatusFilter)}
-            onChange={(opt) => setSelectedStatusFilter(opt?.value || "all")}
-            placeholder="All Status"
-          />
+          <div className="sm:min-w-[140px] min-w-[160px]">
+            <DropdownSelect
+              options={statusOptionsRS}
+              value={statusOptionsRS.find(
+                (opt) => opt.value === selectedStatusFilter
+              )}
+              onChange={(opt) => setSelectedStatusFilter(opt?.value || "all")}
+              placeholder="All Status"
+            />
+          </div>
         </div>
       </div>
+      {/* v1.0.1 ---------------------------------------------------> */}
 
       <div className="space-y-3 overflow-y-auto max-h-[400px] pr-2">
         {isLoading ? (

@@ -4,6 +4,7 @@
 // v1.0.3  -  Venkatesh   -  added filters functionality for location, tech, company, experience, salary, created within days, updated within days
 // v1.0.4  -  Ashok   -  Improved responsiveness
 // v1.0.5  -  Ashok   -  changed kanban and Added delete and change status buttons for Kanban
+// v1.0.6  -  Fixed   - Fixed alignment style issues at table
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -40,7 +41,6 @@ const capitalizeFirstLetter = (string) => {
   if (!string) return "";
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
-
 
 const PositionTab = () => {
   // <---------------------- v1.0.0
@@ -740,12 +740,16 @@ const PositionTab = () => {
           </div>
         </main>
       </div>
-      <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+      {/* v1.0.6 <-------------------------------------------------------------------------------------- */}
+      <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {/* v1.0.6 --------------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">
             <div className="relative w-full">
               {view === "table" ? (
-                <div className="w-full">
+                // v1.0.6 <----------------------------------------------------------------------------------------------------------------------------
+                <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                  {/* v1.0.6 <---------------------------------------------------------------------------------------------------------------------------- */}
                   <TableView
                     data={currentFilteredRows}
                     columns={tableColumns}
@@ -1060,13 +1064,11 @@ const PositionTab = () => {
           <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-4">
             <h3 className="text-sm font-semibold mb-2">Change Status</h3>
             <div className="mb-4">
-
-            <DropdownSelect
-            value={statusOptions.find((opt) => opt.value === statusValue)} // match current selection
-            onChange={(selected) => setStatusValue(selected.value)} // update state with value
-            options={statusOptions}
-            />
-      
+              <DropdownSelect
+                value={statusOptions.find((opt) => opt.value === statusValue)} // match current selection
+                onChange={(selected) => setStatusValue(selected.value)} // update state with value
+                options={statusOptions}
+              />
             </div>
             <div className="flex justify-end gap-2">
               <button
