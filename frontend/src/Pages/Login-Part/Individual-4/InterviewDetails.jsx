@@ -76,24 +76,25 @@ const InterviewDetails = ({
             rates: {
                 junior: {
                     ...prev.rates?.junior,
-                    isVisible: true // Always show junior level
+                    isVisible: expYears <= 3 // show junior level if 3 years or less
                 },
                 mid: {
                     ...prev.rates?.mid,
-                    isVisible: expYears >= 3 // Show mid-level if 3+ years
+                    isVisible: expYears > 3 && expYears <= 6 // show mid level if more than 3 years and less than 6 years
                 },
                 senior: {
                     ...prev.rates?.senior,
-                    isVisible: expYears > 6 // Show senior level if 7+ years
+                    isVisible: expYears > 6 // show senior level if more than 6 years
                 }
             }
         }));
-    }, [yearsOfExperience, expYears]);
+    }, [yearsOfExperience, expYears, setInterviewDetailsData]);
 
     // For backward compatibility with old UI
     const showJuniorLevel = expYears >= 0; // Always show junior level
-    const showMidLevel = expYears >= 3; // Show mid-level if 3+ years
-    const showSeniorLevel = expYears >= 6; // Show senior level only if more than 6 years (7+)
+    const showMidLevel = expYears >= 4; // Show mid-level if 3+ years
+    const showSeniorLevel = expYears > 6; // Show senior level only if more than 6 years (7+)
+
     const {
         skills,
         loadSkills,
@@ -176,42 +177,141 @@ const InterviewDetails = ({
 
     const bioLength = interviewDetailsData.bio?.length || 0;
 
+    // uncomment this if any issue with handleTechnologyChange
+    // const handleTechnologyChange = (event) => {
+    //     const selectedValue = event.target.value;
+    //     if (selectedValue) {
+    //         fetchRateCards(selectedValue);
+
+    //         // Check if the technology is already selected
+    //         const isAlreadySelected = selectedTechnologyies.some(
+    //             tech => tech.TechnologyMasterName === selectedValue
+    //         );
+
+    //         if (!isAlreadySelected) {
+    //             const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
+    //                 _id: Math.random().toString(36).substr(2, 9),
+    //                 TechnologyMasterName: selectedValue
+    //             };
+
+    //             const newTechnologies = [...selectedTechnologyies, technology];
+    //             setSelectedTechnologyies(newTechnologies);
+
+    //             setInterviewDetailsData(prev => ({
+    //                 ...prev,
+    //                 technologies: newTechnologies.map(t => t.TechnologyMasterName),
+    //             }));
+
+    //             setErrors(prev => ({ ...prev, technologies: '' }));
+    //         }
+    //     } else {
+    //         setSelectedTechnologyies([]);
+    //         setInterviewDetailsData(prev => ({
+    //             ...prev,
+    //             technologies: []
+    //         }));
+    //         setErrors(prev => ({ ...prev, technologies: 'Please select a technology' }));
+    //     }
+    // };
+
     // Handle technology selection
     const handleTechnologyChange = (event) => {
         const selectedValue = event.target.value;
+        console.log('handleTechnologyChange called with:', selectedValue);
+
         if (selectedValue) {
+            console.log('Selected value:', selectedValue);
             fetchRateCards(selectedValue);
 
-            // Check if the technology is already selected
-            const isAlreadySelected = selectedTechnologyies.some(
-                tech => tech.TechnologyMasterName === selectedValue
-            );
+            // Find the technology object
+            const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
+                _id: Math.random().toString(36).substr(2, 9),
+                TechnologyMasterName: selectedValue
+            };
+            console.log('Found technology:', technology);
 
-            if (!isAlreadySelected) {
-                const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
-                    _id: Math.random().toString(36).substr(2, 9),
-                    TechnologyMasterName: selectedValue
-                };
+            // Update selectedTechnologyies with the new selection (single selection)
+            setSelectedTechnologyies([technology]);
+            console.log('Updated selectedTechnologyies:', [technology]);
 
-                const newTechnologies = [...selectedTechnologyies, technology];
-                setSelectedTechnologyies(newTechnologies);
+            // Update interviewDetailsData with new rates based on backend ranges
+            setInterviewDetailsData(prev => {
+                // Get rate ranges for the selected technology
+                const juniorRange = getRateRanges('Junior') || { usd: { min: 0 }, inr: { min: 0 } };
+                const midRange = getRateRanges('Mid-Level') || { usd: { min: 0 }, inr: { min: 0 } };
+                const seniorRange = getRateRanges('Senior') || { usd: { min: 0 }, inr: { min: 0 } };
 
-                setInterviewDetailsData(prev => ({
+                const newFormData = {
                     ...prev,
-                    technologies: newTechnologies.map(t => t.TechnologyMasterName),
-                }));
+                    technologies: [selectedValue],
+                    rates: {
+                        junior: {
+                            usd: juniorRange.usd.min || 0,
+                            inr: juniorRange.inr.min || 0,
+                            isVisible: true
+                        },
+                        mid: {
+                            usd: midRange.usd.min || 0,
+                            inr: midRange.inr.min || 0,
+                            isVisible: expYears >= 4
+                        },
+                        senior: {
+                            usd: seniorRange.usd.min || 0,
+                            inr: seniorRange.inr.min || 0,
+                            isVisible: expYears > 6
+                        }
+                    }
+                };
+                console.log('Updated interviewDetailsData:', newFormData);
+                return newFormData;
+            });
 
-                setErrors(prev => ({ ...prev, technologies: '' }));
-            }
+            // Clear technology error
+            setErrors(prev => {
+                const newErrors = {
+                    ...prev,
+                    technologies: '',
+                    junior_usd: '',
+                    junior_inr: '',
+                    mid_usd: '',
+                    mid_inr: '',
+                    senior_usd: '',
+                    senior_inr: ''
+                };
+                console.log('Updated errors:', newErrors);
+                return newErrors;
+            });
         } else {
+            console.log('No value selected, clearing selection');
+            // Clear selection if no value is selected
             setSelectedTechnologyies([]);
-            setInterviewDetailsData(prev => ({
-                ...prev,
-                technologies: []
-            }));
-            setErrors(prev => ({ ...prev, technologies: 'Please select a technology' }));
+            setInterviewDetailsData(prev => {
+                const newFormData = {
+                    ...prev,
+                    technologies: [],
+                    rates: {
+                        junior: { usd: 0, inr: 0, isVisible: false },
+                        mid: { usd: 0, inr: 0, isVisible: false },
+                        senior: { usd: 0, inr: 0, isVisible: false }
+                    }
+                };
+                console.log('Cleared interviewDetailsData:', newFormData);
+                return newFormData;
+            });
+            setErrors(prev => {
+                const newErrors = { ...prev, technologies: 'Please select a technology' };
+                console.log('Updated errors:', newErrors);
+                return newErrors;
+            });
         }
     };
+
+    // Add this useEffect to log state changes
+    useEffect(() => {
+        console.log('selectedTechnologyies state:', selectedTechnologyies);
+        console.log('interviewDetailsData.technologies state:', interviewDetailsData.technologies);
+        console.log('errors state:', errors);
+    }, [selectedTechnologyies, interviewDetailsData.technologies, errors]);
 
     const handleRemoveSkill = (index) => {
         const updatedSkills = selectedSkills.filter((_, i) => i !== index);
@@ -842,12 +942,15 @@ const InterviewDetails = ({
                             )}
                         </div>
                         <p className="mt-2 text-xs text-gray-500">
-                            {expYears > 0 ? (
-                                `Based on your ${expYears} years of experience, we're showing the most relevant experience levels.`
-                            ) : (
-                                'Set competitive rates based on candidate experience levels.'
+                            {expYears > 0 && expYears <= 3 && (
+                                `With your ${expYears} year${expYears > 1 ? 's' : ''} of experience, we'll match you with junior-level candidates.`
                             )}
-                            {expYears === 6 && <span className="block mt-1">For Senior Level (7+ years), please select 7 or more years of experience.</span>}
+                            {expYears > 3 && expYears <= 6 && (
+                                'You can set rates for both junior and mid-level candidates based on your experience.'
+                            )}
+                            {expYears > 6 && (
+                                'Your extensive experience qualifies you to interview candidates at all levels: junior, mid-level, and senior.'
+                            )}
                         </p>
                     </div>
 
@@ -1113,8 +1216,8 @@ const InterviewDetails = ({
                             )}
                             {interviewDetailsData.professionalTitle?.length > 0 && (
                                 <p className={`text-xs ${interviewDetailsData.professionalTitle.length < 50 || errors.professionalTitle
-                                        ? 'text-red-500'
-                                        : 'text-gray-500'
+                                    ? 'text-red-500'
+                                    : 'text-gray-500'
                                     }`}>
                                     {interviewDetailsData.professionalTitle.length}/100
                                 </p>
@@ -1160,10 +1263,10 @@ const InterviewDetails = ({
                             )}
                             {interviewDetailsData.bio?.length > 0 && (
                                 <p className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
-                                        ? 'text-red-500'
-                                        : interviewDetailsData.bio.length > 450
-                                            ? 'text-yellow-500'
-                                            : 'text-gray-500'
+                                    ? 'text-red-500'
+                                    : interviewDetailsData.bio.length > 450
+                                        ? 'text-yellow-500'
+                                        : 'text-gray-500'
                                     }`}>
                                     {interviewDetailsData.bio.length}/500
                                 </p>

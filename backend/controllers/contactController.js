@@ -447,10 +447,10 @@ const updateContactsDetails = async (req, res) => {
       // Ensure rates object has proper structure
       const defaultRate = { usd: 0, inr: 0, isVisible: false };
       const levels = ['junior', 'mid', 'senior'];
-      
+
       // Initialize rates object if not present
       if (!contactData.rates) contactData.rates = {};
-      
+
       // Process each level
       levels.forEach(level => {
         if (!contactData.rates[level]) {
@@ -464,15 +464,15 @@ const updateContactsDetails = async (req, res) => {
           };
         }
       });
-      
+
       // Set visibility based on years of experience if not explicitly set
       const expYears = parseInt(yearsOfExperience || contactData.yearsOfExperience || 0, 10);
-      
+
       if (contactData.rates.junior.isVisible === undefined) {
-        contactData.rates.junior.isVisible = expYears >= 0; // Always show junior
+        contactData.rates.junior.isVisible = expYears <= 3; // Always show junior
       }
       if (contactData.rates.mid.isVisible === undefined) {
-        contactData.rates.mid.isVisible = expYears >= 3; // Show mid if 3+ years
+        contactData.rates.mid.isVisible = expYears > 3 && expYears <= 6; // Show mid if 3+ years
       }
       if (contactData.rates.senior.isVisible === undefined) {
         contactData.rates.senior.isVisible = expYears > 6; // Show senior if 7+ years
