@@ -29,6 +29,7 @@ const TenantSchema = new mongoose.Schema(
         "draft",
       ],
       default: "draft",
+      index: true
     },
     //need to add boolean value for individaul pages wich page is submitted
 

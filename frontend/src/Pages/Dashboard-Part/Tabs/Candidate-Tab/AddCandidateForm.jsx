@@ -47,6 +47,7 @@ import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
 import InputField from "../../../../Components/FormFields/InputField";
+import { logger } from "../../../../utils/logger";
 
 // v1.0.3 ----------------------------------------------------------------->
 
@@ -99,6 +100,9 @@ const AddCandidateForm = ({
 
   console.log("isCurrentRolesFetching", isCurrentRolesFetching);
 
+  logger.log("qualifications", qualifications); 
+
+  logger.log("qualifications", currentRoles); 
 
   console.log("qualifications", qualifications);
 

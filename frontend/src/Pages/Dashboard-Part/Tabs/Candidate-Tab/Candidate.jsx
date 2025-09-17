@@ -34,6 +34,7 @@ import { notify } from "../../../../services/toastService.js";
 import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal.jsx";
 // v1.0.6 <-------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
+import { logger } from "../../../../utils/logger.js";
 // v1.0.6 ------------------------------------------------------------------->
 
 function Candidate({
@@ -324,6 +325,8 @@ function Candidate({
   const dataToUse = isAssessmentView ? candidates : candidateData;
 
   console.log("dataToUse", dataToUse);
+
+  logger.log("dataToUse", dataToUse);
 
   const handleApplyFilters = () => {
     const filters = {

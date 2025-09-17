@@ -205,7 +205,7 @@ const ContactsSchema = new mongoose.Schema(
       { type: mongoose.Schema.Types.ObjectId, ref: "InterviewAvailability" },
     ],
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users", index: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     completionStatus: {
