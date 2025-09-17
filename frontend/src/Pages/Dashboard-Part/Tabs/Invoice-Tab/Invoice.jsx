@@ -1,5 +1,7 @@
 // v1.0.0  - mansoor - center the loading in vertically it is horizontally center previously itself
 // v1.0.1  - Ashok   - modified in the table columns as clicking invoice ID can open view details popup
+// v1.0.2  - Ashok   - fixed style issues
+
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FileText, ChevronDown, ChevronUp } from "lucide-react";
 import axios from "axios";
@@ -49,7 +51,7 @@ const InvoiceTableSkeleton = () => {
 const InvoiceKanbanSkeleton = () => {
   return (
     <div className="w-full px-6">
-      <div className="skeleton-animation">
+      <div className="shimmer">
         <div className="grid grid-cols-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((card) => (
             <div
@@ -281,17 +283,19 @@ const InvoiceTab = () => {
     {
       key: "invoiceNumber",
       header: "Invoice Number",
-    //   v1.0.1 <-------------------------------------------------------------------------
-    //   render: (value) => value || "N/A",
-    render: (value, row) => (
-      <button
-        className="text-custom-blue font-semibold hover:cursor-pointer"
-        onClick={() => navigate(`details/${row.id}`, { state: { invoiceData: row } })}
-      >
-        {value || "N/A"}
-      </button>
-    ),
-    //   v1.0.1 ------------------------------------------------------------------------->
+      //   v1.0.1 <-------------------------------------------------------------------------
+      //   render: (value) => value || "N/A",
+      render: (value, row) => (
+        <button
+          className="text-custom-blue font-semibold hover:cursor-pointer"
+          onClick={() =>
+            navigate(`details/${row.id}`, { state: { invoiceData: row } })
+          }
+        >
+          {value || "N/A"}
+        </button>
+      ),
+      //   v1.0.1 ------------------------------------------------------------------------->
     },
     {
       key: "plan",
@@ -401,7 +405,9 @@ const InvoiceTab = () => {
   return (
     <div className="w-full min-h-screen border-0">
       <div className="fixed top-16 left-0 right-0">
-        <main className="px-6 sm:mt-20 md:mt-24">
+        {/* v1.0.4 <------------------------------------------------- */}
+        <main className="px-6 sm:mt-8 md:mt-8">
+          {/* v1.0.4 <------------------------------------------------- */}
           <div className="sm:px-0">
             <motion.div
               className="flex justify-between items-center py-4"
@@ -438,7 +444,11 @@ const InvoiceTab = () => {
             viewMode === "table" ? (
               <InvoiceTableSkeleton />
             ) : (
-              <InvoiceKanbanSkeleton />
+              // v1.0.3 <---------------------------------------------------
+              <div className="sm:mt-[670px] mt-40 xl:mt-0 2xl:mt-0">
+                <InvoiceKanbanSkeleton />
+              </div>
+              // v1.0.3 --------------------------------------------------->
             )
           ) : (
             <motion.div className="w-full">

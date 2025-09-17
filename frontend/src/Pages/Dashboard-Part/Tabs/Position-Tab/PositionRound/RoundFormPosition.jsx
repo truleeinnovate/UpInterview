@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Added scroll to first error
 // v1.0.1 - Ashok - Improved responsiveness and disabled outer scrollbar
+// v1.0.2 - Ashok - Fixed alignment issues
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -1512,7 +1513,9 @@ function RoundFormPosition() {
                                             : ""
                                         }`
                                       : "Outsourced Interviewers"}{" "}
-                                    Selected
+                                      {/* v1.0.2 <------------------------------------------------ */}
+                                    <span className="sm:hidden inline">Selected</span>
+                                      {/* v1.0.2 ------------------------------------------------> */}
                                     {isInternalSelected && (
                                       <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
                                         Internal
@@ -1526,21 +1529,23 @@ function RoundFormPosition() {
                                   </span>
                                 </div>
                                 {(isExternalSelected || isInternalSelected) && (
+                                  // v1.0.2 <--------------------------------------------------------------
                                   <button
                                     type="button"
                                     onClick={handleClearAllInterviewers}
                                     className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                   >
                                     <Trash2 className="h-3 w-3 mr-1" />
-                                    Clear All
+                                    <span className="sm:hidden md:hidden inline">Clear All</span>
                                   </button>
+                                  // v1.0.2 -------------------------------------------------------------->
                                 )}
                               </div>
 
                               {/* Internal Interviewers */}
                               {isInternalSelected &&
                                 formData.interviewers.length > 0 && (
-                                  <section className="mb-4 w-full">
+                                  <section className="mb-4 mt-2 w-full">
                                     <h4 className="text-sm font-semibold text-gray-600 mb-3">
                                       {formData.interviewerViewType === "groups"
                                         ? "Interviewer Groups "
