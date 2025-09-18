@@ -241,7 +241,9 @@ const CombinedNavbar = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = async () => {
-    closeAllDropdowns();
+    // closeAllDropdowns();
+    // Show loading immediately
+    setIsLoading(true);
     // <---------------------- v1.0.2
     await smartLogout(navigate, setIsLoading, effectivePermissions_RoleName);
     // ---------------------- v1.0.2 >
