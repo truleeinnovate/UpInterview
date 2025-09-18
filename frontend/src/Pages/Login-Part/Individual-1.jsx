@@ -32,7 +32,7 @@ const Login = () => {
                             team. Schedule technical interviews instantly without waiting for your
                             team's availability.
                         </p>
-                        <div className="flex flex-row sm:flex-col gap-4 sm:gap-6 md:gap-6 lg:gap-6 xl:gap-6 2xl:gap-6 justify-center">
+                        {/* <div className="flex flex-row sm:flex-col gap-4 sm:gap-6 md:gap-6 lg:gap-6 xl:gap-6 2xl:gap-6 justify-center">
                             <button
                                 onClick={handleIndividualLogin}
                                 className="bg-custom-blue text-white text-sm sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-medium px-6 sm:px-8 md:px-8 lg:px-8 xl:px-8 2xl:px-8 py-3 sm:py-4 md:py-4 lg:py-4 xl:py-4 2xl:py-4 rounded-lg hover:bg-custom-blue/90 transition-all duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-custom-blue focus:ring-opacity-50"
@@ -47,7 +47,7 @@ const Login = () => {
                             >
                                 Get Started - Organization
                             </button>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Value Proposition Cards */}
@@ -69,7 +69,7 @@ const Login = () => {
                                 </svg>
                             </div>
                             <h3 className="text-lg sm:text-xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6">
-                                For Expert Interviewers
+                                For Individual
                             </h3>
                             <p className="text-md text-gray-600 mb-6 sm:mb-8 md:mb-8 lg:mb-8 xl:mb-8 2xl:mb-8 leading-relaxed">
                                 Join our network of skilled freelance interviewers. Monetize your
@@ -138,7 +138,7 @@ const Login = () => {
                                 onClick={handleIndividualLogin}
                                 className="w-full bg-custom-blue text-white text-base sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-medium py-3 sm:py-4 md:py-4 lg:py-4 xl:py-4 2xl:py-4 rounded-lg hover:bg-custom-blue/90 transition-all duration-300 transform hover:scale-105 shadow-lg"
                             >
-                                Start Interviewing Today
+                                Login
                             </button>
                         </div>
                         <div className="bg-white rounded-xl p-6 sm:p-8 md:p-8 lg:p-8 xl:p-8 2xl:p-8 shadow-lg border-l-4 border-custom-blue hover:shadow-2xl transition-all duration-300">
@@ -158,7 +158,7 @@ const Login = () => {
                                 </svg>
                             </div>
                             <h3 className="text-lg sm:text-xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6">
-                                For Organizations
+                                For Organization
                             </h3>
                             <p className="text-md text-gray-600 mb-6 sm:mb-8 md:mb-8 lg:mb-8 xl:mb-8 2xl:mb-8 leading-relaxed">
                                 Scale your hiring without delays. Access our network of expert
@@ -227,13 +227,13 @@ const Login = () => {
                                 onClick={handleOrganizationLogin}
                                 className="w-full bg-custom-blue text-white text-base sm:text-lg md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-medium py-3 sm:py-4 md:py-4 lg:py-4 xl:py-4 2xl:py-4 rounded-lg hover:bg-custom-blue/90 transition-all duration-300 transform hover:scale-105 shadow-lg"
                             >
-                                Transform Your Hiring
+                                Login
                             </button>
                         </div>
                     </div>
 
                     {/* How It Works Section */}
-                    <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 lg:p-12 xl:p-12 2xl:p-12 mb-12 sm:mb-16 md:mb-20 lg:mb-20 xl:mb-20 2xl:mb-20 shadow-lg border border-gray-100">
+                    {/* <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 lg:p-12 xl:p-12 2xl:p-12 mb-12 sm:mb-16 md:mb-20 lg:mb-20 xl:mb-20 2xl:mb-20 shadow-lg border border-gray-100">
                         <div className="text-center mb-12 sm:mb-14 md:mb-16 lg:mb-16 xl:mb-16 2xl:mb-16">
                             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6">
                                 How It Works
@@ -280,10 +280,10 @@ const Login = () => {
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Stats Section */}
-                    <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-6 sm:gap-8 md:gap-8 lg:gap-8 xl:gap-8 2xl:gap-8 text-center mb-12 sm:mb-16 md:mb-20 lg:mb-20 xl:mb-20 2xl:mb-20">
+                    {/* <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-6 sm:gap-8 md:gap-8 lg:gap-8 xl:gap-8 2xl:gap-8 text-center mb-12 sm:mb-16 md:mb-20 lg:mb-20 xl:mb-20 2xl:mb-20">
                         <div className="bg-white rounded-2xl p-6 sm:p-8 md:p-8 lg:p-8 xl:p-8 2xl:p-8 shadow-lg border border-gray-100">
                             <div className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold text-custom-blue mb-2">
                                 500+
@@ -316,10 +316,10 @@ const Login = () => {
                                 Companies Trust Us
                             </div>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* CTA Section */}
-                    <div className="bg-custom-blue rounded-3xl p-8 sm:p-10 md:p-12 lg:p-12 xl:p-12 2xl:p-12 text-center text-white">
+                    {/* <div className="bg-custom-blue rounded-3xl p-8 sm:p-10 md:p-12 lg:p-12 xl:p-12 2xl:p-12 text-center text-white">
                         <h2 className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-3xl font-bold mb-4 sm:mb-6 md:mb-6 lg:mb-6 xl:mb-6 2xl:mb-6">
                             Ready to Accelerate Your Hiring?
                         </h2>
@@ -341,7 +341,7 @@ const Login = () => {
                                 Become an Interviewer
                             </button>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </Layout>
