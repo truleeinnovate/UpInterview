@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Added status badge common code
 // v1.0.1  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.2  -  Ashok   -  Improved responsiveness
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -234,7 +235,9 @@ const InterviewTemplates = () => {
   return (
     <div className="bg-background min-h-screen">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
-        <main className="px-6">
+        {/* v1.0.2 <--------------------------------------------------------------------- */}
+        <main className="sm:px-4 px-6">
+          {/* v1.0.2 ---------------------------------------------------------------------> */}
           <div className="sm:px-0">
             <Header
               title="Interview Templates"
@@ -261,7 +264,7 @@ const InterviewTemplates = () => {
           </div>
         </main>
       </div>
-      <main className="fixed top-48 left-0 right-0 bg-background">
+      <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {view === "kanban" ? (
@@ -273,14 +276,18 @@ const InterviewTemplates = () => {
                 onEdit={handleEdit}
               />
             ) : (
-              <TableView
-                data={paginatedTemplates}
-                columns={tableColumns}
-                actions={tableActions}
-                loading={isLoading}
-                emptyState="No Templates Found."
-                className="table-fixed w-full"
-              />
+              // v1.0.2 <--------------------------------------------------------------------------------
+              <div className="overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                <TableView
+                  data={paginatedTemplates}
+                  columns={tableColumns}
+                  actions={tableActions}
+                  loading={isLoading}
+                  emptyState="No Templates Found."
+                  className="table-fixed w-full"
+                />
+              </div>
+              // v1.0.2 -------------------------------------------------------------------------------->
             )}
             <FilterPopup
               isOpen={isFilterPopupOpen}

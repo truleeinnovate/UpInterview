@@ -8,6 +8,7 @@
    lets you render a React component into a different part of the DOM
    outside its parent hierarchy.
 */
+// v1.0.3 - Ashok - Improved responsiveness
 
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
@@ -164,7 +165,9 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
           !hideHeader && "shadow-md"
         } overflow-hidden ${isActive ? "ring-2 ring-custom-blue" : ""}`}
       >
-        <div className="p-5">
+        {/* v1.0.0 <----------------------- */}
+        <div className="sm:p-4 p-5">
+        {/* v1.0.0 -----------------------> */}
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-4">
             {/* Left Column */}
             <div>
@@ -618,7 +621,7 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
             className="flex items-center"
           >
             <Edit className="h-4 w-4 mr-1" />
-            Edit Round
+            Edit <span className="sm:hidden inline">Round</span>
           </Button>
           <Button
             variant="destructive"
@@ -627,7 +630,7 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
             className="flex items-center"
           >
             <XCircle className="h-4 w-4 mr-1" />
-            Delete Round
+            Delete <span className="sm:hidden inline">Round</span>
           </Button>
         </div>
       </div>
@@ -662,8 +665,9 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
             className="fixed top-0 left-0 w-screen h-screen z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
             style={{ pointerEvents: "auto" }}
           >
-            <div className="bg-white p-5 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold mb-3">
+            {/* v1.0.0 <------------------------------------------------ */}
+            <div className="bg-white p-5 rounded-lg shadow-md m-4">
+              <h3 className="text-lg font-semibold mb-6">
                 Are you sure you want to delete this round?
               </h3>
               <div className="flex justify-end space-x-3">
@@ -678,10 +682,10 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
                 </Button>
               </div>
             </div>
+            {/* v1.0.0 <------------------------------------------------ */}
           </div>,
           document.body
-        )
-      }
+        )}
       {/* v1.0.2 ---------------------------------------------------> */}
     </>
   );

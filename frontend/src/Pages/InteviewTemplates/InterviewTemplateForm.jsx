@@ -3,6 +3,8 @@
 // v1.0.2  -  Ashok   -  disabled outer scrollbar for the form
 // v1.0.3  -  Ashok   -  added scroll to first error functionality
 // v1.0.3  -  Ashok   -  Removed border left and set outline as none
+// v1.0.4  -  Ashok   -  Improved responsiveness and added common code to popup
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
@@ -20,6 +22,10 @@ import { useScrollLock } from "../../apiHooks/scrollHook/useScrollLock";
 // v1.0.3 <----------------------------------------------------------------------------
 import { scrollToFirstError } from "../../utils/ScrollToFirstError/scrollToFirstError";
 // v1.0.3 ----------------------------------------------------------------------------->
+// v1.0.4 <----------------------------------------------------------------------------
+import SidebarPopup from "../../Components/Shared/SidebarPopup/SidebarPopup";
+// v1.0.4 ---------------------------------------------------------------------------->
+
 const InterviewSlideover = ({ mode }) => {
   const { templatesData, saveTemplate, isMutationLoading } =
     useInterviewTemplates();
@@ -288,250 +294,210 @@ const InterviewSlideover = ({ mode }) => {
     // }
   };
 
-  const modalClass = classNames(
-    // v1.0.3 <------------------------------------------------
-    "fixed bg-white shadow-2xl z-50 outline-none",
-    // v1.0.3 ------------------------------------------------>
-    {
-      // 'overflow-y-auto': true,
-      "inset-0": isFullScreen,
-      "inset-y-0 right-0 w-full lg:w-1/3 xl:w-1/3 2xl:w-1/3": !isFullScreen,
-    }
-  );
-
   return (
-    <Modal
-      isOpen={true}
-      className={modalClass}
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
+    // v1.0.4 <----------------------------------------------------------------------------------
+    <SidebarPopup
+      title={isEditMode ? "Edit Template" : "New Template"}
+      onClose={onClose}
     >
-      <div
-        className={classNames("h-screen", {
-          "max-w-6xl mx-auto px-6": isFullScreen,
-        })}
-      >
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-custom-blue">
-              {isEditMode ? "Edit Template" : "New Template"}
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-              >
-                {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <Expand className="w-5 h-5 text-gray-500" />
+      <div className="sm:p-0 p-6">
+        <form
+          key={formKey}
+          id="new-template-form"
+          onSubmit={handleSubmit}
+          className="flex-1 flex flex-col h-[calc(100vh-100px)]"
+        >
+          <div className="flex-1">
+            <div className="space-y-6 pt-6 pb-5">
+              <div>
+                <label
+                  htmlFor="templateTitle"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  // v1.0.3 <---------------------------------------------------
+                  ref={fieldRefs.name}
+                  // v1.0.3 --------------------------------------------------->
+                  type="text"
+                  id="templateTitle"
+                  name="templateTitle"
+                  placeholder="e.g., Senior Frontend Developer"
+                  value={newTemplate.templateTitle}
+                  onChange={handleTitleChange}
+                  onBlur={() => handleBlur("templateTitle")}
+                  className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
+                    touched.name && errors.name
+                      ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                  } focus:outline-none focus:ring-1`}
+                  autoComplete="off"
+                />
+                {touched.name && errors.name && (
+                  <p className="mt-1 text-sm text-red-500">{errors.name}</p>
                 )}
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="label"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Label <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="label"
+                  name="label"
+                  placeholder="Senior_Frontend_Developer"
+                  value={newTemplate.label}
+                  readOnly
+                  onFocus={() => handleBlur("label")}
+                  className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
+                    touched.label && errors.label
+                      ? "border-red-500"
+                      : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                  } focus:outline-none focus:ring-1`}
+                />
+                {touched.label && errors.label && (
+                  <p className="mt-1 text-sm text-red-500">{errors.label}</p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  {/* <------ v1.0.0 */}
+                  Description
+                  {/* v1.0.0 ------> */}
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  // <------ v1.0.0
+                  placeholder="Describe the purpose and structure of this interview template."
+                  // v1.0.0 ------>
+                  value={newTemplate.description}
+                  onChange={handleDescriptionChange}
+                  onBlur={() => handleBlur("description")}
+                  rows={4}
+                  maxLength={300}
+                  // <------ v1.0.0
+                  className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500`}
+                  // v1.0.0 ------>
+                />
+                {/* {touched.description && errors.description && (
+                    <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+                )} */}
+                <div className="flex justify-between items-center">
+                  {/* <------ v1.0.0 */}
+                  <p></p>
+                  {/* <span className="text-sm text-gray-500">
+                      {errors.description ? (
+                          <p className="text-red-500 text-sm ">{errors.description}</p>
+                      ) : newTemplate.description.length > 0 && newTemplate.description.length < 20 ? (
+                          <p className="text-gray-500 text-sm">
+                              Minimum {20 - newTemplate.description.length} more characters needed
+                          </p>
+                      ) : null}
+                  </span> */}
+                  {/* v1.0.0 ------> */}
+                  <p className="text-sm text-gray-500">
+                    {newTemplate.description.length}/20
+                  </p>
+                </div>
+              </div>
+
+              {/* <div>
+                <label className="block text-sm font-medium text-gray-700">
+                    Template Status
+                </label>
+                <div className="flex items-center mt-1">
+                    <Switch
+                        checked={newTemplate.status === 'active'}
+                        onChange={(checked) => {
+                            setNewTemplate(prev => ({
+                                ...prev,
+                                status: checked ? 'active' : 'inactive'
+                            }));
+                        }}
+                        onColor="#98e6e6"
+                        offColor="#ccc"
+                        handleDiameter={20}
+                        height={20}
+                        width={45}
+                        onHandleColor="#227a8a"
+                        offHandleColor="#9CA3AF"
+                        checkedIcon={false}
+                        uncheckedIcon={false}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                        {newTemplate.status}
+                    </span>
+                </div>
+            </div> */}
             </div>
           </div>
 
-          <form
-            key={formKey}
-            id="new-template-form"
-            onSubmit={handleSubmit}
-            className="flex-1 flex flex-col h-[calc(100vh-100px)]"
-          >
-            <div className="px-2 sm:px-6 flex-1">
-              <div className="space-y-6 pt-6 pb-5">
-                <div>
-                  <label
-                    htmlFor="templateTitle"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    // v1.0.3 <---------------------------------------------------
-                    ref={fieldRefs.name}
-                    // v1.0.3 --------------------------------------------------->
-                    type="text"
-                    id="templateTitle"
-                    name="templateTitle"
-                    placeholder="e.g., Senior Frontend Developer"
-                    value={newTemplate.templateTitle}
-                    onChange={handleTitleChange}
-                    onBlur={() => handleBlur("templateTitle")}
-                    className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
-                      touched.name && errors.name
-                        ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                        : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
-                    } focus:outline-none focus:ring-1`}
-                    autoComplete="off"
-                  />
-                  {touched.name && errors.name && (
-                    <p className="mt-1 text-sm text-red-500">{errors.name}</p>
-                  )}
-                </div>
+          <div className="flex-shrink-0 px-4 py-4 flex justify-end items-end gap-3">
+            {/* <------ v1.0.0 */}
+            {/* <button
+                type="button"
+                onClick={onClose}
+                className="py-2.5 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+                Cancel
+            </button> */}
+            {/* v1.0.0 ------> */}
+            {/* <button
+                type="submit"
+                form="new-template-form"
+                className="inline-flex justify-center py-2.5 px-4 rounded-xl text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80"
+            >
+                {isEditMode ? 'Update' : 'Create'}
+            </button> */}
 
-                <div>
-                  <label
-                    htmlFor="label"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Label <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="label"
-                    name="label"
-                    placeholder="Senior_Frontend_Developer"
-                    value={newTemplate.label}
-                    readOnly
-                    onFocus={() => handleBlur("label")}
-                    className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
-                      touched.label && errors.label
-                        ? "border-red-500"
-                        : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
-                    } focus:outline-none focus:ring-1`}
-                  />
-                  {touched.label && errors.label && (
-                    <p className="mt-1 text-sm text-red-500">{errors.label}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="description"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {/* <------ v1.0.0 */}
-                    Description
-                    {/* v1.0.0 ------> */}
-                  </label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    // <------ v1.0.0
-                    placeholder="Describe the purpose and structure of this interview template."
-                    // v1.0.0 ------>
-                    value={newTemplate.description}
-                    onChange={handleDescriptionChange}
-                    onBlur={() => handleBlur("description")}
-                    rows={4}
-                    maxLength={300}
-                    // <------ v1.0.0
-                    className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500`}
-                    // v1.0.0 ------>
-                  />
-                  {/* {touched.description && errors.description && (
-                                        <p className="mt-1 text-sm text-red-500">{errors.description}</p>
-                                    )} */}
-                  <div className="flex justify-between items-center">
-                    {/* <------ v1.0.0 */}
-                    <p></p>
-                    {/* <span className="text-sm text-gray-500">
-                                            {errors.description ? (
-                                                <p className="text-red-500 text-sm ">{errors.description}</p>
-                                            ) : newTemplate.description.length > 0 && newTemplate.description.length < 20 ? (
-                                                <p className="text-gray-500 text-sm">
-                                                    Minimum {20 - newTemplate.description.length} more characters needed
-                                                </p>
-                                            ) : null}
-                                        </span> */}
-                    {/* v1.0.0 ------> */}
-                    <p className="text-sm text-gray-500">
-                      {newTemplate.description.length}/20
-                    </p>
-                  </div>
-                </div>
-
-                {/* <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Template Status
-                                    </label>
-                                    <div className="flex items-center mt-1">
-                                        <Switch
-                                            checked={newTemplate.status === 'active'}
-                                            onChange={(checked) => {
-                                                setNewTemplate(prev => ({
-                                                    ...prev,
-                                                    status: checked ? 'active' : 'inactive'
-                                                }));
-                                            }}
-                                            onColor="#98e6e6"
-                                            offColor="#ccc"
-                                            handleDiameter={20}
-                                            height={20}
-                                            width={45}
-                                            onHandleColor="#227a8a"
-                                            offHandleColor="#9CA3AF"
-                                            checkedIcon={false}
-                                            uncheckedIcon={false}
-                                        />
-                                        <span className="ml-2 text-sm text-gray-700">
-                                            {newTemplate.status}
-                                        </span>
-                                    </div>
-                                </div> */}
-              </div>
-            </div>
-
-            <div className="flex-shrink-0 px-4 py-4 flex justify-end items-end gap-3">
-              {/* <------ v1.0.0 */}
-              {/* <button
-                                type="button"
-                                onClick={onClose}
-                                className="py-2.5 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button> */}
-              {/* v1.0.0 ------> */}
-              {/* <button
-                                type="submit"
-                                form="new-template-form"
-                                className="inline-flex justify-center py-2.5 px-4 rounded-xl text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80"
-                            >
-                                {isEditMode ? 'Update' : 'Create'}
-                            </button> */}
-
-              {/* {!isEditMode &&
-                            <button
-                                type="button"
-                                onClick={handleAddRound}
-                                // onClick={handleSubmit}
-                                className="inline-flex justify-center py-2.5 px-4 rounded-xl text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80"
-                            // isLoading={isMutationLoading}
-                            // loadingText={isEditing ? "Updating..." : "Saving..."}
-                            >
-                                Add new Round
-                                {isEditing ? "Update Interview" : "Create Interview"}
-                            </button>
-                            } */}
-
-              <LoadingButton
-                onClick={handleSubmit}
-                // ------------------------------ v1.0.1 >
-                isLoading={isMutationLoading && activeButton === "save"}
-                loadingText={id ? "Updating..." : "Saving..."}
+            {/* {!isEditMode &&
+              <button
+                  type="button"
+                  onClick={handleAddRound}
+                  // onClick={handleSubmit}
+                  className="inline-flex justify-center py-2.5 px-4 rounded-xl text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80"
+              // isLoading={isMutationLoading}
+              // loadingText={isEditing ? "Updating..." : "Saving..."}
               >
-                {isEditMode ? "Update" : "Save"}
-              </LoadingButton>
+                  Add new Round
+                  {isEditing ? "Update Interview" : "Create Interview"}
+              </button>
+            } */}
 
-              {!isEditMode && (
-                <LoadingButton
-                  onClick={(e) => handleSubmit(e, true)}
-                  isLoading={isMutationLoading && activeButton === "add"}
-                  loadingText="Adding..."
-                >
-                  {/* ------------------------------ v1.0.1 > */}
-                  <FaPlus className="w-5 h-5 mr-1" /> Add Round
-                </LoadingButton>
-              )}
-            </div>
-          </form>
-        </div>
+            <LoadingButton
+              onClick={handleSubmit}
+              // ------------------------------ v1.0.1 >
+              isLoading={isMutationLoading && activeButton === "save"}
+              loadingText={id ? "Updating..." : "Saving..."}
+            >
+              {isEditMode ? "Update" : "Save"}
+            </LoadingButton>
+
+            {!isEditMode && (
+              <LoadingButton
+                onClick={(e) => handleSubmit(e, true)}
+                isLoading={isMutationLoading && activeButton === "add"}
+                loadingText="Adding..."
+              >
+                {/* ------------------------------ v1.0.1 > */}
+                <FaPlus className="w-5 h-5 mr-1" /> Add Round
+              </LoadingButton>
+            )}
+          </div>
+        </form>
       </div>
-    </Modal>
+    </SidebarPopup>
+    // v1.0.4 ---------------------------------------------------------------------------------->
   );
 };
 
