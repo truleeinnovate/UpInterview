@@ -3,39 +3,27 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 // Set token to expire in 2 hours - we'll handle session timeout on the frontend
-const TOKEN_EXPIRATION = '2h';
+// const TOKEN_EXPIRATION = '2h'; // Disabled expiration
 // Refresh window set to 30 seconds before frontend timeout
-const REFRESH_WINDOW = 30 * 1000;
+// const REFRESH_WINDOW = 30 * 1000; // Disabled expiration-based refresh window
 
 function generateToken(payload) {
   // console.log('JWT_SECRET:', process.env.JWT_SECRET);
   // if (!process.env.JWT_SECRET) {
   //   throw new Error('JWT_SECRET is not defined');
   // }
-  return jwt.sign(payload, process.env.JWT_SECRET, { 
-    expiresIn: TOKEN_EXPIRATION 
-  });
+  // return jwt.sign(payload, process.env.JWT_SECRET, { 
+  //   expiresIn: TOKEN_EXPIRATION 
+  // });
+  // Expiration disabled: issue token without expiresIn
+  return jwt.sign(payload, process.env.JWT_SECRET);
 }
 
 // Function to refresh token if it's within the refresh window
 function refreshTokenIfNeeded(token) {
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
-    const now = Math.floor(Date.now() / 1000);
-    const expiresAt = decoded.exp;
-    
-    // Always refresh the token if it's still valid
-    // This ensures the token stays fresh as long as the user is active
-    if (expiresAt > now) {
-      const { iat, exp, ...payload } = decoded;
-      return generateToken(payload);
-    }
-    
-    return null; // No refresh needed
-  } catch (error) {
-    console.error('Error refreshing token:', error);
-    return null;
-  }
+  // Expiration-based refresh is disabled.
+  // Keeping this function for compatibility; it no longer performs refresh logic.
+  return null;
 }
 
 const verifyToken = (token) => {
@@ -57,10 +45,15 @@ const verifyToken = (token) => {
 
 
 const generateEmailVerificationToken = (email, userId) => {
+  // return jwt.sign(
+  //   { email, userId },
+  //   process.env.JWT_SECRET,
+  //   { expiresIn: '24h' }
+  // );
+  // Expiration disabled for email verification token
   return jwt.sign(
     { email, userId },
-    process.env.JWT_SECRET,
-    { expiresIn: '24h' }
+    process.env.JWT_SECRET
   );
 };
 

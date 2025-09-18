@@ -529,7 +529,7 @@ const MainAppRoutes = ({
       {showLogo && <Logo />}
       <div>
         <SessionExpiration />
-        {sessionExpired ? null : (
+        
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -1330,8 +1330,7 @@ const MainAppRoutes = ({
               {/* v1.0.9 ---------------------------------------------------------------------> */}
             </Route>
           </Routes>
-        )}
-      </div>
+        </div>
     </>
   );
 };
@@ -1479,7 +1478,7 @@ const App = () => {
           <PermissionsProvider>
             <UserDataLoader>
               <ToastProvider />
-              <MainAppRoutes
+              <MainAppRoutes 
                 location={location}
                 organization={organization}
                 sessionExpired={sessionExpired}
