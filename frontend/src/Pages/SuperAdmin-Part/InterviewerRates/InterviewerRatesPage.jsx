@@ -1,6 +1,6 @@
 // v1.0.0 - Ashok - Changed styles to improve UI
 // v1.0.1 - Ashok - Changed category options from static to dynamic
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Tab } from "../../../Components/SuperAdminComponents/common/Tab";
 import {
   AiOutlineTable,
@@ -9,7 +9,7 @@ import {
   AiOutlineFilter,
   AiOutlineExport,
 } from "react-icons/ai";
-import { Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus } from "lucide-react";
 import RatesTableView from "../../../Pages/SuperAdmin-Part/InterviewerRates/RatesTableView";
 import RatesKanbanView from "../../../Pages/SuperAdmin-Part/InterviewerRates/RatesKanbanView";
 import RateCardModal from "../../../Pages/SuperAdmin-Part/InterviewerRates/RateCardModal";
@@ -18,89 +18,8 @@ import { Button } from "../../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/ui
 // <-------------------------------------------------------------------------------------
 import { useMasterData } from "../../../apiHooks/useMasterData";
 // ------------------------------------------------------------------------------------->
+import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
 
-// v1.0.1 <----------------------------------------------------------------------------------
-// v1.0.0 <--------------------------------------------------------------------
-function CategoryDropdown({ technologies, filterCategory, setFilterCategory }) {
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Extract unique categories from technologies
-  const categoryOptions = useMemo(() => {
-    return [...new Set((technologies || []).map((t) => t.Category))];
-  }, [technologies]);
-
-  const handleSelect = (value) => {
-    setFilterCategory(value);
-    setOpen(false);
-  };
-
-  // Close when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [open]);
-
-  return (
-    <div ref={dropdownRef} className="relative inline-block w-56">
-      {/* Trigger */}
-      <div
-        className="flex justify-between items-center px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-teal-500"
-        onClick={() => setOpen((prev) => !prev)}
-      >
-        <span className="text-sm text-gray-700 truncate">
-          {filterCategory === "all" ? "All Categories" : filterCategory}
-        </span>
-        {open ? (
-          <ChevronUp className="h-4 w-4 text-gray-500" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
-        )}
-      </div>
-
-      {/* Dropdown list */}
-      {open && (
-        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          <div
-            className={`px-3 py-2 text-sm cursor-pointer hover:bg-teal-50 hover:text-custom-blue ${
-              filterCategory === "all" ? "bg-teal-100 text-custom-blue" : ""
-            }`}
-            onClick={() => handleSelect("all")}
-          >
-            All Categories
-          </div>
-          {categoryOptions.map((category) => (
-            <div
-              key={category}
-              className={`px-3 py-2 text-sm cursor-pointer hover:bg-teal-50 hover:text-custom-blue ${
-                filterCategory === category
-                  ? "bg-teal-100 text-custom-blue font-medium"
-                  : ""
-              }`}
-              onClick={() => handleSelect(category)}
-            >
-              {category}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-// v1.0.0 -------------------------------------------------------------------->
 // v1.0.1 ---------------------------------------------------------------------------------->
 
 function InterviewerRatesPage() {
@@ -109,7 +28,7 @@ function InterviewerRatesPage() {
   }, []);
 
   // v1.0.1 <----------------------------------------------
-  const { technologies } = useMasterData();
+  const { technologies, loadTechnologies, isTechnologiesFetching } = useMasterData();
   // v1.0.1 ---------------------------------------------->
 
   const [activeView, setActiveView] = useState("table");
@@ -121,13 +40,38 @@ function InterviewerRatesPage() {
 
   useScrollLock(showRateCardModal);
 
-  const categories = [
-    "Software Development",
-    "Data & AI",
-    "DevOps & Cloud",
-    "QA & Testing",
-    "Specialized Skills",
-  ];
+  // Ensure technologies are available early so the select has options
+  useEffect(() => {
+    if (!technologies || technologies.length === 0) {
+      loadTechnologies();
+    }
+  }, [technologies, loadTechnologies]);
+
+  // Build category select options from master data technologies
+  const uniqueCategories = useMemo(() => {
+    return [
+      ...new Set(
+        (technologies || [])
+          .map((t) => t?.Category ?? t?.category)
+          .filter((c) => typeof c === "string" && c.trim().length > 0)
+      ),
+    ];
+  }, [technologies]);
+
+  const categorySelectOptions = useMemo(
+    () => [
+      { value: "all", label: "All Categories" },
+      ...uniqueCategories.map((c) => ({ value: c, label: c })),
+    ],
+    [uniqueCategories]
+  );
+
+  const selectedCategoryOption = useMemo(
+    () =>
+      categorySelectOptions.find((opt) => opt.value === filterCategory) ||
+      categorySelectOptions[0],
+    [categorySelectOptions, filterCategory]
+  );
 
   const handleCreateRateCard = () => {
     setSelectedRateCard(null);
@@ -160,32 +104,17 @@ function InterviewerRatesPage() {
           Interviewer Rates
         </h1>
         <div className="flex space-x-2 mr-4">
-          {/* v1.0.0 <----------------------------------------------------------------------------- */}
-          {/* <div className="flex rounded-lg border border-gray-300 p-1 bg-white">
-            <select
-              className="focus:ring-teal-500 focus:border-teal-500 block sm:text-sm border-gray-300 rounded-md outline-none"
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-            >
-              <option value="all">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div> */}
-          {/* v1.0.1 <----------------------------------------------- */}
-          <CategoryDropdown
-            technologies={technologies}
-            filterCategory={filterCategory}
-            setFilterCategory={setFilterCategory}
-            // v1.0.1 <-------------------------------------------------
-          />
-          {/* <button className="flex items-center p-2 rounded-md bg-gray-300">
-            <AiOutlineFilter className="mr-2" />
-            Filter
-          </button> */}
+          <div className="w-56">
+            <DropdownSelect
+              options={categorySelectOptions}
+              value={selectedCategoryOption}
+              onChange={(opt) => setFilterCategory(opt?.value || "all")}
+              placeholder="All Categories"
+              menuPortalTarget={document.body}
+              onMenuOpen={loadTechnologies}
+              isLoading={isTechnologiesFetching}
+            />
+          </div>
           <Button
             size="sm"
             className="bg-gray-200 hover:bg-gray-300 text-gray-600  transition-colors"

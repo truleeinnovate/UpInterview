@@ -12,9 +12,10 @@ const DropdownWithSearchField = ({
   setIsCustomName = undefined,
   containerRef,
   disabled = false,
-  label = "DropdownWithSearchField",
+  label,
   required = false,
   onMenuOpen,
+  isMulti = false,
   loading = false,
 }) => {
   // Merge react-select components to include our custom loading indicator when loading
@@ -42,9 +43,11 @@ const DropdownWithSearchField = ({
   }
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
       {!isCustomName ? (
         <div ref={containerRef}>
           <DropdownSelect
@@ -52,8 +55,20 @@ const DropdownWithSearchField = ({
             isSearchable
             components={componentsMap}
             filterOption={preserveStickyOptionFilter()}
-            value={options.find((o) => o.value === value) || null}
+            isMulti={isMulti}
+            value={
+              isMulti
+                ? (Array.isArray(value)
+                    ? options.filter((o) => value.includes(o.value))
+                    : [])
+                : (options.find((o) => o.value === value) || null)
+            }
             onChange={(opt) => {
+              if (isMulti) {
+                const vals = Array.isArray(opt) ? opt.map((o) => o.value) : [];
+                onChange({ target: { name: name, value: vals } });
+                return;
+              }
               if (opt?.value === "__other__") {
                 if (typeof setIsCustomName === "function") {
                   setIsCustomName(true);
@@ -67,7 +82,7 @@ const DropdownWithSearchField = ({
               }
             }}
             placeholder={`Select a ${label}`}
-            disabled={disabled}
+            isDisabled={disabled}
             hasError={!!error}
             classNamePrefix="rs"
             onMenuOpen={onMenuOpen}
