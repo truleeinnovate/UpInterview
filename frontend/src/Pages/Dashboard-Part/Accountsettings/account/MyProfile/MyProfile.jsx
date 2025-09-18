@@ -13,7 +13,7 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
-import { useUserProfile } from "../../../../../apiHooks/useUsers";
+import { useUserProfile, useSingleContact } from "../../../../../apiHooks/useUsers";
 
 // Loading Skeleton for Basic Details
 const BasicDetailsSkeleton = () => {
@@ -161,10 +161,10 @@ const MyProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { singlecontact } = useCustomContext();
+  const { singleContact, isLoading: singleContactLoading } = useSingleContact();
   const { userProfile, isLoading: userProfileLoading } = useUserProfile();
 
-  // console.log("singlecontact", singlecontact);
+  // console.log("singleContact", singleContact);
 
   const { effectivePermissions, superAdminPermissions } = usePermissions();
 
@@ -202,7 +202,8 @@ const MyProfile = () => {
   useEffect(() => {
     const fetchData = () => {
       try {
-        const contact = singlecontact[0];
+        // singleContact is now a single object, not an array
+        const contact = singleContact;
 
         if (contact) {
           const role = contact?.ownerId?.roleId?.roleName || "";
@@ -218,10 +219,10 @@ const MyProfile = () => {
       }
     };
 
-    if (userId) {
+    if (userId && singleContact !== null) {
       fetchData();
     }
-  }, [userId, singlecontact]);
+  }, [userId, singleContact]);
 
   const activeTab = subtab || "basic";
 

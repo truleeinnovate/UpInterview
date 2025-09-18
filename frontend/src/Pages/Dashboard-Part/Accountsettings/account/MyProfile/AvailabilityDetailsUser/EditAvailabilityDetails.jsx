@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from "react";
 import TimezoneSelect from "react-timezone-select"; // Make sure to install this package
+import { selectBaseStyles } from "../../../../../../Components/Dropdowns/DropdownSelect";
 import DatePicker from "react-datepicker";
 // import "react-datepicker/dist/react-datepicker.css";
 import "react-datepicker/dist/react-datepicker.css";
@@ -350,6 +351,7 @@ const EditAvailabilityDetails = ({
                   value={formData.selectedTimezone}
                   onChange={handleTimezoneChange}
                   className="mt-1 text-sm"
+                  styles={selectBaseStyles(errors.TimeZone)}
                 />
                 {errors.TimeZone && (
                   <p className="text-red-500 text-sm mt-2">{errors.TimeZone}</p>
