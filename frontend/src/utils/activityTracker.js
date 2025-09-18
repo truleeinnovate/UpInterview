@@ -31,19 +31,19 @@
 // function resetActivityTimer() {
 //   // Clear any existing timer
 //   if (activityTimer) clearTimeout(activityTimer);
-  
+
 //   // Update last activity time
 //   lastActivityTime = Date.now();
-  
+
 //   // Set new timer
 //   activityTimer = setTimeout(() => {
 //     // Clear the auth token to force logout
 //     Cookies.remove('authToken', { path: '/' });
-    
+
 //     // Dispatch the userInactive event to trigger navigation
 //     const event = new Event('userInactive');
 //     window.dispatchEvent(event);
-    
+
 //     // Force a hard redirect to login page to ensure immediate navigation
 //     window.location.href = '/organization-login';
 //   }, INACTIVITY_TIMEOUT);
@@ -63,41 +63,41 @@
 //     'wheel', 'focus', 'input', 'change', 'drag', 'drop',
 //     'pointerdown', 'pointermove', 'pointerup'
 //   ];
-  
+
 //   // Add event listeners with throttling
 //   const throttledActivity = throttle(handleActivity, 1000);
-  
+
 //   // Add all event listeners
 //   events.forEach(event => {
 //     window.addEventListener(event, throttledActivity, { passive: true, capture: true });
 //   });
-  
+
 //   // Start the initial timer
 //   resetActivityTimer();
-  
+
 //   // Set up token refresh
 //   const setupTokenRefresh = () => {
 //     // Clear any existing refresh timer
 //     if (tokenRefreshTimer) clearInterval(tokenRefreshTimer);
-    
+
 //     // Set up periodic token refresh
 //     tokenRefreshTimer = setInterval(async () => {
 //       try {
 //         const token = Cookies.get('authToken');
 //         if (!token) return;
-        
+
 //         const response = await axios.post('/api/auth/refresh-token', { token });
-        
+
 //         if (response.data.token) {
 //           const expires = new Date();
 //           expires.setTime(expires.getTime() + (24 * 60 * 60 * 1000)); // 24 hours
-          
+
 //           Cookies.set('authToken', response.data.token, {
 //             expires,
 //             secure: process.env.NODE_ENV === 'production',
 //             sameSite: 'strict'
 //           });
-          
+
 //           console.log('Token refreshed successfully');
 //         }
 //       } catch (error) {
@@ -105,21 +105,21 @@
 //       }
 //     }, TOKEN_REFRESH_INTERVAL);
 //   };
-  
+
 //   // Start token refresh
 //   setupTokenRefresh();
-  
+
 //   console.log(`Activity tracking started - session will expire after ${INACTIVITY_TIMEOUT/1000} seconds of inactivity`);
 
 //   // Return cleanup function
 //   return () => {
 //     console.log('Cleaning up activity tracker');
-    
+
 //     // Clear all timers
 //     if (activityTimer) clearTimeout(activityTimer);
 //     if (countdownInterval) clearInterval(countdownInterval);
 //     if (tokenRefreshTimer) clearInterval(tokenRefreshTimer);
-    
+
 //     // Remove all event listeners
 //     const events = [
 //       'mousedown', 'mousemove', 'keydown', 'keypress', 'keyup',
@@ -127,14 +127,14 @@
 //       'wheel', 'focus', 'input', 'change', 'drag', 'drop',
 //       'pointerdown', 'pointermove', 'pointerup'
 //     ];
-    
+
 //     // Create a new throttled function to match the one used in addEventListener
 //     const throttledActivity = throttle(handleActivity, 1000);
-    
+
 //     events.forEach(event => {
 //       window.removeEventListener(event, throttledActivity, { passive: true, capture: true });
 //     });
-    
+
 //     console.log('Activity tracker cleanup complete');
 //   };
 // };
@@ -159,14 +159,14 @@
 //     if (response.data.token) {
 //       const expires = new Date();
 //       expires.setTime(expires.getTime() + (30 * 1000)); // 30 seconds from now
-      
+
 //       Cookies.set('authToken', response.data.token, {
 //         expires,
 //         sameSite: 'strict',
 //         secure: process.env.NODE_ENV === 'production',
 //         path: '/'
 //       });
-      
+
 //       return response.data.token;
 //     }
 //     return null;
@@ -182,7 +182,7 @@
 //   if (tokenRefreshTimer) {
 //     clearInterval(tokenRefreshTimer);
 //   }
-  
+
 //   // Set up new refresh interval
 //   tokenRefreshTimer = setInterval(() => {
 //     refreshAuthToken().catch(console.error);
@@ -196,13 +196,13 @@
 //     // Reset the cookie with a new expiration
 //     const expires = new Date();
 //     expires.setTime(expires.getTime() + (2 * 60 * 60 * 1000)); // 2 hours from now
-//     Cookies.set('authToken', authToken, { 
+//     Cookies.set('authToken', authToken, {
 //       expires,
 //       sameSite: 'strict',
 //       secure: process.env.NODE_ENV === 'production',
 //       path: '/'
 //     });
-    
+
 //     // Reset the refresh interval
 //     setupTokenRefresh();
 //   }
@@ -221,6 +221,7 @@ import { EventEmitter } from 'events';
 
 // Configuration
 const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours
+// const INACTIVITY_TIMEOUT = 60 * 1000; // 1 minute
 const WARNING_TIMEOUT = INACTIVITY_TIMEOUT - (5 * 1000); // Show warning 5 seconds before logout
 const CHECK_INTERVAL = 1000; // Check every minute
 
@@ -252,7 +253,7 @@ function resetTimers() {
   logoutTimer = setTimeout(logoutUser, INACTIVITY_TIMEOUT);
 
   // Log activity detected
-  // console.log('✅ Activity detected, timers reset.');
+//   console.log('✅ Activity detected, timers reset.');
 
   // Update UI to show session is active
   activityEvents.emit('activity');
@@ -260,7 +261,7 @@ function resetTimers() {
 
 // Show warning UI
 function showWarning() {
-  // console.log('⚠️ Session will expire soon.');
+  console.log('⚠️ Session will expire soon.');
   activityEvents.emit('warning', {
     message: 'Your session will expire due to inactivity soon.',
     remainingTime: 5 // here it's just 5 seconds for testing
@@ -268,14 +269,14 @@ function showWarning() {
 }
 // Logout user and show expiration UI
 function logoutUser() {
-  // console.log('⏰ Session expired due to inactivity.');
+//   console.log('⏰ Session expired due to inactivity.');
 
   // Clear all cookies except those needed for super admin
   Cookies.remove('authToken', { path: '/' });
-  
+
   // Emit logout event
   activityEvents.emit('logout');
-  
+
   // Force show expiration UI
   showExpirationUI();
 }

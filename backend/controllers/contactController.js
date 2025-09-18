@@ -432,8 +432,6 @@ const updateContactsDetails = async (req, res) => {
       });
     }
 
-
-
     const contactId = req.params.id;
     const { availability, yearsOfExperience, ...contactData } = req.body;
 
