@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashok   -  added scroll to first error functionality
 // v1.0.3  -  Ashok   - improved the code
 // v1.0.4  -  Ashok   - added scroll to top when Add new Round
+// v1.0.5  -  Ashok   - Improved responsiveness
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
@@ -870,7 +871,7 @@ function RoundFormTemplates() {
       ref={formRef}
     >
       {/*  v1.0.4 ----------------------------------------------------------------------->  */}
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+      <div className="max-w-7xl mx-auto py-6 sm:px-4 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
         <Breadcrumb items={breadcrumbItems} />
 
         <div className="bg-white rounded-lg shadow mt-4">
@@ -1030,8 +1031,9 @@ function RoundFormTemplates() {
                 )}
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
+            {/* v1.0.5 <---------------------------------------------------------------- */}
+            <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1 sm:mb-6">
+              {/* v1.0.5 ----------------------------------------------------------------> */}
               <div>
                 <label
                   htmlFor="sequence"
@@ -1371,6 +1373,7 @@ function RoundFormTemplates() {
 
             {formData.roundTitle !== "Assessment" && (
               <>
+                {/* v1.0.5 <-------------------------------------------------------- */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -1398,8 +1401,10 @@ function RoundFormTemplates() {
                               : ""
                           }
                         >
-                          <User className="h-4 w-4 mr-1 text-custom-blue" />
-                          Select Internal
+                          <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
+                          <span className="sm:hidden inline">
+                            Select Internal
+                          </span>
                         </Button>
                       ) : (
                         <Button
@@ -1426,8 +1431,10 @@ function RoundFormTemplates() {
                               : ""
                           }
                         >
-                          <User className="h-4 w-4 mr-1 text-custom-blue" />
-                          Select Internal
+                          <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
+                          <span className="sm:hidden inline">
+                            Select Internal
+                          </span>
                         </Button>
                       )}
 
@@ -1452,8 +1459,10 @@ function RoundFormTemplates() {
                             : ""
                         }
                       >
-                        <User className="h-4 w-4 mr-1 text-orange-600" />
-                        Select Outsourced
+                        <User className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
+                        <span className="sm:hidden inline">
+                          Select Outsourced
+                        </span>
                       </Button>
                     </div>
                   </div>
@@ -1481,7 +1490,7 @@ function RoundFormTemplates() {
                                       : ""
                                   }`
                                 : "Outsourced Interviewers"}{" "}
-                              Selected
+                              <span className="sm:hidden inline">Selected</span>
                               {formData.interviewerType === "Internal" && (
                                 <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
                                   Internal
@@ -1502,7 +1511,9 @@ function RoundFormTemplates() {
                               className="text-sm text-red-600 hover:text-red-800 flex items-center"
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
-                              Clear All
+                              <span className="sm:hidden inline">
+                                Clear All
+                              </span>
                             </button>
                           )}
                         </div>
@@ -1623,14 +1634,10 @@ function RoundFormTemplates() {
                             <h4 className="text-xs font-medium text-gray-500 mb-2">
                               Outsourced Interviewers
                             </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {/* {formData.interviewers.map((interviewer, index) => ( */}
-                              <div
-                                // key={index}
-                                className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
-                              >
-                                <div className="flex items-center">
-                                  <span className="ml-2 text-sm text-orange-800 truncate">
+                            <div className="grid grid-cols-1 sm:grid-cols-1 gap-2">
+                              <div className="w-full flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
+                                <div className="flex items-center truncate">
+                                  <span className="ml-2 text-sm text-orange-800">
                                     Outsourced will be selected at interview
                                     schedule time.
                                   </span>
@@ -1644,7 +1651,6 @@ function RoundFormTemplates() {
                                   <X className="h-4 w-4" />
                                 </button>
                               </div>
-                              {/* ))} */}
                             </div>
                           </div>
                         )}
@@ -1764,6 +1770,7 @@ function RoundFormTemplates() {
                   </div>
                   {/* v.0.3 -----------------------------------------------------------------------------------------------------> */}
                 </div>
+                {/* v1.0.5 --------------------------------------------------------> */}
               </>
             )}
 
@@ -1840,7 +1847,8 @@ function RoundFormTemplates() {
               {/*  v1.0.3 --------------------------------------------------------------------------------------------------------------> */}
             </div>
 
-            <div className="flex justify-end gap-4 p-6  rounded-b-lg">
+            {/* v1.0.5 <------------------------------------------------------------------------- */}
+            <div className="flex justify-end gap-4 my-6  rounded-b-lg">
               <Button
                 // v1.0.2 <------------------------------------------------------------------
                 className="border border-custom-blue"
@@ -1856,7 +1864,17 @@ function RoundFormTemplates() {
                 isLoading={isMutationLoading && activeButton === "save"}
                 loadingText={id ? "Updating..." : "Saving..."}
               >
-                {roundId ? "Update Round" : "Save Round"}
+                {roundId ? (
+                  <span>
+                    Update
+                    <span className="sm:hidden inline">Round</span>
+                  </span>
+                ) : (
+                  <span>
+                    Save
+                    <span className="sm:hidden inline">Round</span>
+                  </span>
+                )}
               </LoadingButton>
               {/* ------------------------------ v1.0.1 > */}
               {!roundId && (
@@ -1866,11 +1884,13 @@ function RoundFormTemplates() {
                   loadingText="Adding..."
                   variant="outline"
                 >
-                  <FaPlus className="w-5 h-5 mr-1" /> Add New Round
+                  <FaPlus className="w-5 h-5 mr-1" /> Add{" "}
+                  <span className="sm:hidden inline">New Round</span>
                 </LoadingButton>
               )}
               {/* ------------------------------ v1.0.1 > */}
             </div>
+            {/* v1.0.5 -------------------------------------------------------------------------> */}
             {errors.submit && (
               <p className="text-red-500 text-sm mt-4 text-center">
                 {errors.submit}

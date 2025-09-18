@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Added scroll to first error
 // v1.0.1 - Ashok - Improved responsiveness and disabled outer scrollbar
 // v1.0.2 - Ashok - Fixed alignment issues
+// v1.0.3 - Ashok - Fixed issue
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -723,7 +724,9 @@ function RoundFormPosition() {
     ) {
       // For groups, send string IDs only
       formattedInterviewers = formData.interviewers.flatMap((group) =>
-        (group.userIds || []).filter((uid) => typeof uid === "string" || typeof uid === "number").map((uid) => String(uid))
+        (group.userIds || [])
+          .filter((uid) => typeof uid === "string" || typeof uid === "number")
+          .map((uid) => String(uid))
       );
     } else {
       // For individuals, support both contactId (non-org) and _id (org) shapes; fallback to id
@@ -732,7 +735,8 @@ function RoundFormPosition() {
           const rawId = organization
             ? interviewer?._id
             : interviewer?.contactId ?? interviewer?._id ?? interviewer?.id;
-          if (typeof rawId === "string" || typeof rawId === "number") return String(rawId);
+          if (typeof rawId === "string" || typeof rawId === "number")
+            return String(rawId);
           return null;
         })
         .filter(Boolean);
@@ -784,44 +788,48 @@ function RoundFormPosition() {
           }),
       instructions: formData.instructions,
       interviewerType:
-      formData.roundTitle === "Assessment" ? undefined : formData.interviewerType || undefined,
-     
-    
+        formData.roundTitle === "Assessment"
+          ? undefined
+          : formData.interviewerType || undefined,
+
       // interviewerViewType:
       //   formData.roundTitle === "Assessment"
       //     ? ""
       //     : formData.interviewerViewType,
     };
     // console.log("formData.duration", formData.duration);
-  
 
     console.log("round data", roundData);
 
     try {
       // Include roundId only if editing
       const payload = isEditing
-        ? { positionId, round: roundData,  tenantId, ownerId, roundId }
-        : { positionId, round: roundData,tenantId, ownerId,  };
+        ? { positionId, round: roundData, tenantId, ownerId, roundId }
+        : { positionId, round: roundData, tenantId, ownerId };
 
       console.log("roundData after roundData", payload);
-      const response  = await addRounds(payload);
+      const response = await addRounds(payload);
 
-         console.log("response", response);
-            if (response.status === "Created Round successfully") {
-              notify.success("Round added successfully");
-            } else if (response.status === "no_changes" || response.status === "Updated Round successfully") {
-              notify.success("Round Updated successfully");
-            }else {
-              // Handle cases where the API returns a non-success status
-              throw new Error(response.message || "Failed to save round");
-            }
+      console.log("response", response);
+      if (response.status === "Created Round successfully") {
+        notify.success("Round added successfully");
+      } else if (
+        response.status === "no_changes" ||
+        response.status === "Updated Round successfully"
+      ) {
+        notify.success("Round Updated successfully");
+      } else {
+        // Handle cases where the API returns a non-success status
+        throw new Error(response.message || "Failed to save round");
+      }
 
       navigate(`/position/view-details/${positionId}`);
     } catch (err) {
       console.log("err", err);
-        // Show error toast
-    notify.error(err.response?.data?.message || err.message || "Failed to save round");
-    
+      // Show error toast
+      notify.error(
+        err.response?.data?.message || err.message || "Failed to save round"
+      );
 
       if (err.response?.data?.errors) {
         // Backend returns { errors: { field: "message" } }
@@ -1004,7 +1012,11 @@ function RoundFormPosition() {
                         label="Round Title"
                         required
                         name="roundTitle"
-                        value={isCustomRoundTitle ? formData.customRoundTitle : formData.roundTitle}
+                        value={
+                          isCustomRoundTitle
+                            ? formData.customRoundTitle
+                            : formData.roundTitle
+                        }
                         options={[
                           { value: "Assessment", label: "Assessment" },
                           { value: "Technical", label: "Technical" },
@@ -1020,7 +1032,13 @@ function RoundFormPosition() {
                     </div>
 
                     <div>
-                      <div className={formData.roundTitle === "Assessment" ? "pointer-events-none opacity-60" : undefined}>
+                      <div
+                        className={
+                          formData.roundTitle === "Assessment"
+                            ? "pointer-events-none opacity-60"
+                            : undefined
+                        }
+                      >
                         <DropdownWithSearchField
                           containerRef={fieldRefs.interviewMode}
                           label="Interview Mode"
@@ -1419,7 +1437,11 @@ function RoundFormPosition() {
                                 }
                               >
                                 <User className="h-4 w-4 mr-1 text-custom-blue" />
-                                Select Internal
+                                {/* v1.0.3 <------------------------------------ */}
+                                <span className="sm:hidden inline">
+                                  Select Internal
+                                </span>
+                                {/* v1.0.3 ------------------------------------> */}
                               </Button>
                             ) : (
                               <Button
@@ -1500,8 +1522,9 @@ function RoundFormPosition() {
                             </p>
                           ) : (
                             <div>
+                              {/* v1.0.3 <--------------------------------------------- */}
                               <div className="flex items-center justify-between ">
-                                <div className="flex items-center">
+                                <div className="flex items-center mb-3">
                                   <Users className="h-4 w-4 text-gray-500 mr-2" />
                                   <span className="text-sm text-gray-700">
                                     {isInternalSelected
@@ -1513,16 +1536,18 @@ function RoundFormPosition() {
                                             : ""
                                         }`
                                       : "Outsourced Interviewers"}{" "}
-                                      {/* v1.0.2 <------------------------------------------------ */}
-                                    <span className="sm:hidden inline">Selected</span>
-                                      {/* v1.0.2 ------------------------------------------------> */}
+                                    {/* v1.0.2 <------------------------------------------------ */}
+                                    <span className="sm:hidden inline">
+                                      Selected
+                                    </span>
+                                    {/* v1.0.2 ------------------------------------------------> */}
                                     {isInternalSelected && (
-                                      <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                      <span className="sm:ml-0 ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
                                         Internal
                                       </span>
                                     )}
                                     {isExternalSelected && (
-                                      <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
+                                      <span className="sm:ml-0 ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
                                         Outsourced
                                       </span>
                                     )}
@@ -1536,12 +1561,14 @@ function RoundFormPosition() {
                                     className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                   >
                                     <Trash2 className="h-3 w-3 mr-1" />
-                                    <span className="sm:hidden md:hidden inline">Clear All</span>
+                                    <span className="sm:hidden md:hidden inline">
+                                      Clear All
+                                    </span>
                                   </button>
                                   // v1.0.2 -------------------------------------------------------------->
                                 )}
                               </div>
-
+                              {/* v1.0.3 ---------------------------------------------> */}
                               {/* Internal Interviewers */}
                               {isInternalSelected &&
                                 formData.interviewers.length > 0 && (
@@ -1753,16 +1780,17 @@ function RoundFormPosition() {
                               )} */}
 
                               {/* External Interviewers */}
+                              {/* v1.0.3 <-------------------------------------------------------- */}
                               {isExternalSelected && (
                                 <div>
                                   <h4 className="text-xs font-medium text-gray-500 mb-1">
                                     Outsourced Interviewers
                                   </h4>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  <div className="grid grid-cols-1 sm:grid-cols-1 gap-2">
                                     {/* {externalInterviewers.map((interviewer) => ( */}
                                     <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2">
-                                      <div className="flex items-center">
-                                        <span className="ml-2 text-sm text-orange-800 truncate">
+                                      <div className="flex items-center truncate">
+                                        <span className="ml-2 sm:text-xs text-sm text-orange-800">
                                           Outsourced will be selected at
                                           interview schdedule time. (Outsourced)
                                         </span>
@@ -1780,6 +1808,7 @@ function RoundFormPosition() {
                                   </div>
                                 </div>
                               )}
+                              {/* v1.0.3 --------------------------------------------------------> */}
                             </div>
                           )}
                         </div>

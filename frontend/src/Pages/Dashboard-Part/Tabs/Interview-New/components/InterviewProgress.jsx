@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+
 import React from "react";
 // import PropTypes from 'prop-types';
 import { CheckCircle, Clock, XCircle, Circle, ThumbsDown } from "lucide-react";
@@ -78,12 +79,14 @@ const InterviewProgress = ({
                   <span className="flex items-center justify-center text-xs w-6 h-6 rounded-full bg-white border border-gray-200 sm:mr-0 mr-2">
                     {index + 1}
                   </span>
-                  <div className="sm:hidden inline mr-2">
+                  {/* v1.0.0 <------------------------------------------- */}
+                  <div className="ml-2 mr-2">
                     {getStatusIcon(round)}
                   </div>
-                  <span className="sm:hidden inline text-sm font-medium">
+                  <span className="text-sm font-medium mr-2">
                     {round.roundTitle}
                   </span>
+                  {/* v1.0.0 -------------------------------------------> */}
                 </div>
               </button>
 

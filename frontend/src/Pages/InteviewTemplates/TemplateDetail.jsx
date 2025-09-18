@@ -2,6 +2,8 @@
 /* v1.0.1  -  Ashok    -  when the view mode is vertical deleting all the rounds and remaining is one
    in that case view should be vertical fixed
 */
+// v1.0.2  -  Ashok    - Improved responsiveness
+
 import { useState, useEffect } from "react";
 import {
   Plus,
@@ -202,6 +204,7 @@ const TemplateDetail = () => {
   console.log("template", template, template?.status);
 
   return (
+    // v1.0.2 <----------------------------------------------------------------------------------
     //  <----------v1.0.0
     <div
       className="fixed inset-0 bg-white z-40 overflow-y-auto"
@@ -209,19 +212,19 @@ const TemplateDetail = () => {
     >
       {/* v1.0.0 ----------------> */}
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-6xl sm:max-w-5xl md:max-w-4xl lg:max-w-5xl mx-auto py-6">
+        <div className="max-w-6xl sm:max-w-5xl md:max-w-4xl lg:max-w-5xl mx-auto py-6 sm:px-4 md:px-6 lg:px-6">
           {/* Header */}
           <div className="flex flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
             <button
               onClick={() => navigate("/interview-templates")}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
-              <ArrowLeft className="h-5 w-5 mr-2" />
+              <ArrowLeft className="sm:h-4 h-5 ms:w-4 w-5 mr-2" />
               <span className="text-sm sm:text-base">Back to Templates</span>
             </button>
             {/* <div className="flex items-center gap-3">
               <button
-            onClick={() => navigate(`edit/${template._id}`)}
+                onClick={() => navigate(`edit/${template._id}`)}
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 text-custom-blue bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors duration-200 text-sm sm:text-base"
               >
                 <Edit2 className="h-4 w-4" />
@@ -232,7 +235,6 @@ const TemplateDetail = () => {
 
           <Breadcrumb items={breadcrumbItems} />
           {/* <div>
-
                {template.rounds?.length === 0 &&
                   <div className='flex justify-end'>
                     <div className=' w-full  flex-col items-center flex gap-2 bg-slate-100 justify-center mt-2 pt-1 pb-1'>
@@ -240,16 +242,15 @@ const TemplateDetail = () => {
                     <span className='bg-amber-50 text-amber-700 text-xs px-2 py-1 rounded-md border-amber-200/60'>
                      Note: Not Recomnded Due to no Rounds
                     </span>
-</div>
+                    </div>
                   </div>
                 }
-          </div> */}
-
+              </div> */}
           {template.status === "draft" && (
             // && template.rounds?.length === 0
             <div className="mb-1 sm:mb-4 rounded-xl border mt-2 border-yellow-300 bg-yellow-50 p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-start sm:items-center gap-3">
+                <div className="flex items-start gap-3">
                   <span className="inline-flex items-center justify-center w-4 h-5 rounded-full  text-yellow-700">
                     ⚠️
                   </span>
@@ -272,7 +273,7 @@ const TemplateDetail = () => {
             <div className="flex sm:flex-col flex-row sm:items-start justify-between gap-4 sm:gap-0">
               <div className="flex-1">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl mb-2 leading-6 font-medium text-gray-900">
                     Interview Details
                   </h3>
                   <div className="flex items-center gap-2">
@@ -311,13 +312,14 @@ const TemplateDetail = () => {
                   </div>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl font-semibold bg-gradient-to-r from-custom-blue to-custom-blue/80 bg-clip-text text-transparent mb-2 sm:mb-3">
+                <h1 className="sm:text-md md:text-md lg:text-md xl:text-lg 2xl:text-lg text-lg font-semibold bg-gradient-to-r from-custom-blue to-custom-blue/80 bg-clip-text text-transparent mb-2 sm:mb-3">
                   {template.templateName.charAt(0).toUpperCase() +
                     template.templateName.slice(1)}
                 </h1>
-                <p className="text-gray-600 mb-4 sm:mb-6 text-base sm:text-lg">
+                <p className="text-sm text-gray-600 mb-4 break-all whitespace-normal">
                   {template.description}
                 </p>
+
                 <div className="grid sm:grid-cols-1 grid-cols-2 gap-3 sm:gap-6">
                   <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
                     <Calendar className="h-5 w-5 text-custom-blue" />
@@ -347,11 +349,12 @@ const TemplateDetail = () => {
           {/* Interview Rounds Section */}
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 md:p-8">
             <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+              <h2 className="sm:text-md md:text-md lg:text-md xl:text-xl 2xl:text-xl font-semibold text-gray-900">
                 Interview Rounds
               </h2>
               <div className="flex items-center gap-2">
                 {template.rounds?.length !== 0 && (
+                  // v1.0.5 <-------------------------------------------------------------------------
                   <div className="flex space-x-2">
                     {/* v1.0.1 <------------------------------------------------------------------------------------ */}
                     {template?.rounds?.length > 1 && (
@@ -371,13 +374,18 @@ const TemplateDetail = () => {
                       >
                         {roundsViewMode === "vertical" ? (
                           <>
-                            <LayoutGrid className="h-4 w-4 mr-1" />
-                            Horizontal View
+                            <LayoutGrid className="h-4 w-4 sm:mr-0 mr-1" />
+                            <span className="sm:hidden inline">
+                              Horizontal View
+                            </span>
                           </>
                         ) : (
                           <>
-                            <LayoutList className="h-4 w-4 mr-1" />
-                            Vertical View
+                            <LayoutList className="h-4 w-4 sm:mr-0 mr-1" />
+
+                            <span className="sm:hidden inline">
+                              Vertical View
+                            </span>
                           </>
                         )}
                       </button>
@@ -387,10 +395,12 @@ const TemplateDetail = () => {
                       onClick={handleAddRound}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                     >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Round
+                      <Plus className="h-4 w-4 sm:mr-0 mr-1" />
+
+                      <span className="sm:hidden inline">Add Round</span>
                     </button>
                   </div>
+                  // v1.0.5 ------------------------------------------------------------------------->
                 )}
               </div>
             </div>
@@ -434,6 +444,7 @@ const TemplateDetail = () => {
 
       <Outlet />
     </div>
+    // v1.0.2 ---------------------------------------------------------------------------------->
   );
 };
 
