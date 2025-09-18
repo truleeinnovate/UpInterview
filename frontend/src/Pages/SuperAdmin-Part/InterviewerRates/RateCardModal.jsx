@@ -6,7 +6,7 @@
 // v1.0.3 - Ashok - changed dropdowns data from static to dynamic and disabled buttons based on mode
 import { useState, useEffect, useRef } from "react";
 import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
-import { Minimize, Expand, X, ChevronDown } from "lucide-react";
+import { Minimize, Expand, X } from "lucide-react";
 // v1.0.0 <--------------------------------------
 import axios from "axios";
 import { config } from "../../../config";
@@ -15,168 +15,13 @@ import toast from "react-hot-toast";
 // v1.0.1 <-------------------------------------------------------
 import { useMasterData } from "../../../apiHooks/useMasterData";
 import { ReactComponent as FaEdit } from "../../../icons/FaEdit.svg";
+import DropdownWithSearchField from "../../../Components/FormFields/DropdownWithSearchField";
+import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
 // v1.0.1 ------------------------------------------------------->
 
 // v1.0.3 <-------------------------------------------------------------------------------
 // v1.0.2 <----------------------------------------------------------------------------
 // v1.0.1 <--------------------------------------------------------------------
-function SearchableDropdown({
-  label,
-  options,
-  value,
-  onChange,
-  disabled,
-  multiple = false,
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const dropdownRef = useRef(null);
-
-  // Normalize value to array if multiple
-  const selectedValues = multiple ? value || [] : value;
-
-  const filteredOptions = (options || []).filter(
-    (opt) =>
-      opt?.name &&
-      opt.name.toLowerCase().includes(search.toLowerCase()) &&
-      (!multiple || !selectedValues.includes(opt.name)) // hide already selected
-  );
-
-  const handleSelect = (val) => {
-    if (multiple) {
-      onChange([...selectedValues, val]);
-      setIsOpen(false);
-    } else {
-      onChange(val);
-      setIsOpen(false);
-    }
-    setSearch("");
-  };
-
-  const handleRemove = (val) => {
-    if (multiple) {
-      onChange(selectedValues.filter((item) => item !== val));
-    }
-  };
-
-  // Close when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
-
-  return (
-    <div ref={dropdownRef} className="relative w-full">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label} <span className="text-red-500">*</span>
-        </label>
-      )}
-
-      {/* Dropdown Input */}
-      <div
-        className={`flex items-center justify-between border border-gray-300 rounded-md px-3 py-2 bg-white cursor-pointer ${
-          disabled ? "bg-gray-100 cursor-not-allowed" : ""
-        }`}
-        onClick={() => !disabled && setIsOpen((prev) => !prev)}
-      >
-        <span className="text-sm text-gray-700">
-          {multiple
-            ? selectedValues.length > 0
-              ? `${selectedValues.length} selected`
-              : `Select ${label}`
-            : selectedValues || `Select ${label}`}
-        </span>
-        <ChevronDown size={16} className="text-gray-500" />
-      </div>
-
-      {/* Dropdown List */}
-      {isOpen && !disabled && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-          {/* Search input */}
-          <div className="p-2">
-            <input
-              type="text"
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md outline-none"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoFocus
-            />
-          </div>
-
-          {/* Options */}
-          <ul>
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt) => (
-                <li
-                  key={opt._id}
-                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleSelect(opt.name)}
-                >
-                  {opt.name}
-                </li>
-              ))
-            ) : (
-              <li className="px-3 py-2 text-sm text-gray-400">
-                No results found
-              </li>
-            )}
-          </ul>
-        </div>
-      )}
-
-      {/* Selected Chips for multiple */}
-      {multiple && selectedValues.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {selectedValues.map((val) => (
-            <div
-              key={val}
-              className="flex items-center gap-1 bg-custom-blue/20 text-custom-blue text-sm px-3 py-1 rounded-full"
-            >
-              <span className="">{val}</span>
-              {/* v1.0.4 <----------------------------------------- */}
-              {/* <button
-                type="button"
-                onClick={() => handleRemove(val)}
-                className="hover:text-red-600"
-                disabled={disabled}
-              >
-                <X size={14} />
-              </button> */}
-              <button
-                type="button"
-                onClick={() => handleRemove(val)}
-                className={`hover:text-red-600 ${
-                  disabled ? "cursor-not-allowed opacity-50" : ""
-                }`}
-                disabled={disabled}
-              >
-                <X size={14} />
-              </button>
-              {/* v1.0.4 -----------------------------------------> */}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-// v1.0.1 -------------------------------------------------------------------->
-// v1.0.2 --------------------------------------------------------------------------->
-// v1.0.3 ------------------------------------------------------------------------------->
-
-// v1.0.0 <-------------------------------------------------------
 function RateCardModal({ rateCard, onClose, mode = "create" }) {
   // v1.0.0 <-------------------------------------------------------
   const [isExpanded, setIsExpanded] = useState(false);
@@ -429,14 +274,20 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   // v1.0.4 <----------------------------------------------------------------------
   // Filtered technologies based on selected category
   const filteredTechnologies = (technologies || []).filter(
-    (t) => t.Category === formData.category
+    (t) => (t.Category ?? t.category) === formData.category
   );
 
-  // Get unique categories from technologies
+  // Get unique categories from technologies (support both key casings)
   const filteredCategories = [
-    ...new Set((technologies || []).map((t) => t.Category)),
+    ...new Set((technologies || []).map((t) => t.Category ?? t.category).filter(Boolean)),
   ];
   // v1.0.4 ---------------------------------------------------------------------->
+
+  // Currency options for react-select
+  const currencyOptions = [
+    { value: "INR", label: "INR (₹)" },
+    { value: "USD", label: "USD ($)" },
+  ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
@@ -518,67 +369,28 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
               {/* v1.0.2 <---------------------------------------------------------------------------------- */}
               {/* v1.0.1 <------------------------------------------------------------------------------ */}
               <div className="flex flex-col">
-                {/*  v1.0.0 <------------------------------------------------------------------ */}
-                {/*  v1.0.4 <------------------------------------------------------------------ */}
-                {/* <SearchableDropdown
+                <DropdownWithSearchField
                   label="Category"
-                  options={categories.map((c) => ({
-                    _id: c,
-                    name: c,
-                  }))}
+                  name="category"
+                  options={filteredCategories.map((c) => ({ value: c, label: c }))}
                   value={formData.category}
-                  onChange={(val) => handleInputChange("category", val)}
-                  disabled={currentMode === "view"}
-                /> */}
-                <SearchableDropdown
-                  label="Category"
-                  options={filteredCategories.map((c) => ({ _id: c, name: c }))}
-                  value={formData.category}
-                  onChange={(val) => handleInputChange("category", val)}
+                  onChange={(e) => handleInputChange("category", e.target.value)}
                   disabled={currentMode === "view"}
                 />
-
-                {/*  v1.0.4 --------------------------------------------------------------------> */}
-                {/*  v1.0.0 --------------------------------------------------------------------> */}
               </div>
-              {/* v1.0.1 <------------------------------------------------------------------------------ */}
-              {/* v1.0.2 <---------------------------------------------------------------------------------- */}
-
-              {/* v1.0.2 <-------------------------------------------------------------------------- */}
-              {/* v1.0.1 <-------------------------------------------------------------------------- */}
               <div className="flex flex-col">
-                {/*  v1.0.0 <------------------------------------------------------------------ */}
-                {/*  v1.0.4 <------------------------------------------------------------------ */}
-                {/* <SearchableDropdown
+                
+                <DropdownWithSearchField
                   label="Technology / Role"
-                  options={technologies || []}
-                  value={formData.technology}
-                  onChange={(val) => handleInputChange("technology", val)}
-                  disabled={currentMode === "view"}
-                /> */}
-                {/* <SearchableDropdown
-                  label="Technology / Role"
-                  options={(technologies || []).map((t) => ({
-                    _id: t._id,
-                    name: t.TechnologyMasterName, // 👈 map correctly
-                  }))}
-                  value={formData.technology}
-                  onChange={(val) => handleInputChange("technology", val)}
-                  disabled={currentMode === "view"}
-                  // v1.0.3 <----------------------------------------
-                  multiple={true}
-                  // v1.0.3 --------------------------------------->
-                /> */}
-                <SearchableDropdown
-                  label="Technology / Role"
+                  name="technology"
                   options={filteredTechnologies.map((t) => ({
-                    _id: t._id,
-                    name: t.TechnologyMasterName, // 👈 correct mapping
+                    value: t.TechnologyMasterName,
+                    label: t.TechnologyMasterName,
                   }))}
                   value={formData.technology}
-                  onChange={(val) => handleInputChange("technology", val)}
+                  onChange={(e) => handleInputChange("technology", e.target.value)}
                   disabled={currentMode === "view"}
-                  multiple={true}
+                  isMulti
                 />
 
                 {/*  v1.0.4 --------------------------------------------------------------------> */}
@@ -599,19 +411,13 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Default Currency
                 </label>
-                {/*  v1.0.0 <-------------------------------------------------------------------- */}
-                <select
-                  className="text-sm border border-gray-300 rounded-md px-3 py-2 outline-none"
-                  value={formData.defaultCurrency}
-                  onChange={(e) =>
-                    handleInputChange("defaultCurrency", e.target.value)
-                  }
-                  disabled={currentMode === "view"}
-                >
-                  <option value="INR">INR (₹)</option>
-                  <option value="USD">USD ($)</option>
-                </select>
-                {/*  v1.0.0 --------------------------------------------------------------------> */}
+                <DropdownSelect
+                  options={currencyOptions}
+                  value={currencyOptions.find((opt) => opt.value === formData.defaultCurrency) || null}
+                  onChange={(opt) => handleInputChange("defaultCurrency", opt?.value || "INR")}
+                  placeholder="Select currency"
+                  isDisabled={currentMode === "view"}
+                />
               </div>
               {/*  v1.0.1 ---------------------------------------------------------------------------> */}
 
