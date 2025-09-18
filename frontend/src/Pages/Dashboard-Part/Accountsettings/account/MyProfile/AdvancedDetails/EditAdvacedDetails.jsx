@@ -2,8 +2,8 @@
 // v1.0.1 - Ashok - Removed border left and set outline as none
 // v1.0.2 - Ashok - Improved responsiveness and Added common code to popup
 
-import React, { useEffect, useRef, useState } from "react";
-import { Expand, Minimize, Search, X, ChevronDown } from "lucide-react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
+// removed unused lucide-react icons after refactor to shared components
 import classNames from "classnames";
 import Modal from "react-modal";
 // import { useCustomContext } from "../../../../../../Context/Contextfetch";
@@ -30,6 +30,9 @@ import { uploadFile } from "../../../../../../apiHooks/imageApis";
 import Loading from "../../../../../../Components/Loading";
 import { notify } from "../../../../../../services/toastService";
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+// Shared form fields
+import { InputField, DropdownWithSearchField } from "../../../../../../Components/FormFields";
+import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 // Skills.svg
 
 Modal.setAppElement("#root");
@@ -50,8 +53,14 @@ const EditAdvacedDetails = ({
   const {
     // skills,
     locations,
+    isLocationsFetching,
+    loadLocations,
+    isIndustriesFetching,
+    loadIndustries,
     industries,
     currentRoles,
+    loadCurrentRoles,
+    isCurrentRolesFetching
   } = useMasterData();
 
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -71,13 +80,7 @@ const EditAdvacedDetails = ({
   const updateContactDetail = useUpdateContactDetail();
   const queryClient = useQueryClient();
 
-  // Dropdown states
-  const [showDropdownIndustry, setShowDropdownIndustry] = useState(false);
-  const [showDropdownLocation, setShowDropdownLocation] = useState(false);
-  const [showDropdownCurrentRole, setShowDropdownCurrentRole] = useState(false);
-  const [searchTermIndustry, setSearchTermIndustry] = useState("");
-  const [searchTermLocation, setSearchTermLocation] = useState("");
-  const [searchTermCurrentRole, setSearchTermCurrentRole] = useState("");
+  // Errors and form state
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     currentRole: "",
@@ -87,17 +90,7 @@ const EditAdvacedDetails = ({
     // coverLetterdescription: "",
   });
 
-  // const [resumeName, setResumeName] = useState("");
-  // const [coverLetterName, setCoverLetterName] = useState("");
-
-  // const [resume, setResume] = useState(null);
-  // const [coverLetter, setCoverLetter] = useState(null);
-
-  // const [isResumeRemoved, setIsResumeRemoved] = useState(false);
-  // const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
-
-  // const [resumeError, setResumeError] = useState("");
-  // const [coverLetterError, setCoverLetterError] = useState("");
+  
   const [loading, setLoading] = useState(false);
 
   // console.log("userId AdvacedDetails", from);
@@ -125,55 +118,8 @@ const EditAdvacedDetails = ({
     }
   }, [resolvedId, userProfile?._id]);
 
-  // Handle file upload
-  // const handleFileUpload = async (e, type) => {
-  //   const file = e.target.files[0];
-
-  //   if (file) {
-  //     // Set the file name based on the type (Resume or CoverLetter)
-  //     if (type === "resume") {
-  //       const error = await validateFile(file, "resume");
-  //       if (error) {
-  //         setResumeError(error);
-  //         return;
-  //       }
-  //       setResumeError("");
-  //       setResume(file);
-  //       setResumeName(file.name);
-  //     } else if (type === "coverLetter") {
-  //       const error = await validateFile(file, "resume");
-  //       if (error) {
-  //         setCoverLetterError(error);
-  //         return;
-  //       }
-  //       setCoverLetter(file);
-  //       setCoverLetterError("");
-  //       setCoverLetterName(file.name);
-  //     }
-  //   }
-  // };
-
-  // Handle file removal
-  // const handleRemoveFile = (type) => {
-  //   if (type === "resume") {
-  //     if (resumeInputRef.current) {
-  //       resumeInputRef.current.value = "";
-  //     }
-  //     setIsResumeRemoved(true);
-  //     setResume(null);
-  //     setResumeName("");
-  //   } else if (type === "coverLetter") {
-  //     if (coverLetterInputRef.current) {
-  //       coverLetterInputRef.current.value = "";
-  //     }
-  //     setIsCoverLetterRemoved(true);
-  //     setCoverLetter(null);
-  //     setCoverLetterName("");
-  //   }
-  // };
-
-  // const resumeInputRef = useRef(null);
-  // const coverLetterInputRef = useRef(null);
+  
+  
 
   // Handle input changes for text fields
   const handleInputChange = (e) => {
@@ -209,6 +155,8 @@ const EditAdvacedDetails = ({
     setErrors(validationErrors);
 
     if (!isEmptyObject(validationErrors)) {
+      // Scroll to first error for better UX
+      scrollToFirstError(validationErrors, fieldRefs);
       return; // Don't submit if there are validation errors
     }
     const cleanFormData = {
@@ -218,37 +166,19 @@ const EditAdvacedDetails = ({
       location: formData.location?.trim() || "",
       // coverLetterdescription: formData.coverLetterdescription?.trim() || "",
       // skills: formData.skills
-      id: formData._id,
+      id: formData.id,
     };
 
-    // console.log("cleanFormData", cleanFormData);
-
-    // validateAdvancedForm
+    
     try {
-      // const response = await axios.patch(
-      //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-      //   cleanFormData
-      // );
+      
 
       const response = await updateContactDetail.mutateAsync({
         resolvedId,
         data: cleanFormData,
       });
 
-      // resume update or delete
-      const contactId = userProfile.contactId;
-      // if (isResumeRemoved && !resume) {
-      //   await uploadFile(null, "resume", "contact", contactId);
-      // } else if (resume instanceof File) {
-      //   await uploadFile(resume, "resume", "contact", contactId);
-      // }
-
-      // cover letter update or delete
-      // if (isCoverLetterRemoved && !coverLetter) {
-      //   await uploadFile(null, "coverLetter", "contact", contactId);
-      // } else if (coverLetter instanceof File) {
-      //   await uploadFile(coverLetter, "coverLetter", "contact", contactId);
-      // }
+      
 
       await queryClient.invalidateQueries(["userProfile", resolvedId]);
 
@@ -296,56 +226,59 @@ const EditAdvacedDetails = ({
     }
   );
 
-  // Dropdown handlers
-  const handleIndustrySelect = (industry) => {
-    setFormData((prev) => ({
-      ...prev,
-      industry: industry?.IndustryName || "",
-    }));
-    setShowDropdownIndustry(false);
-    setSearchTermIndustry("");
-    setErrors((prev) => ({ ...prev, industry: "" }));
+  // Refs for error scrolling
+  const experienceRef = useRef(null);
+  const fieldRefs = {
+    currentRole: useRef(null),
+    industry: useRef(null),
+    experience: experienceRef,
+    yearsOfExperience: experienceRef,
+    location: useRef(null),
   };
 
-  const handleLocationSelect = (location) => {
-    setFormData((prev) => ({ ...prev, location: location.LocationName || "" }));
-    setShowDropdownLocation(false);
-    setSearchTermLocation("");
-    setErrors((prev) => ({ ...prev, location: "" }));
-  };
+  // Shared dropdown options
+  const industryOptions = useMemo(() => (
+    Array.isArray(industries)
+      ? industries.map((i) => ({ value: i.IndustryName, label: i.IndustryName }))
+      : []
+  ), [industries]);
 
-  const handleRoleSelect = (role) => {
-    setFormData((prev) => ({ ...prev, currentRole: role.RoleName || "" }));
-    setShowDropdownCurrentRole(false);
-    setSearchTermCurrentRole("");
-    setErrors((prev) => ({ ...prev, currentRole: "" }));
-  };
+  const locationOptions = useMemo(() => (
+    Array.isArray(locations)
+      ? locations.map((l) => ({ value: l.LocationName, label: l.LocationName }))
+      : []
+  ), [locations]);
 
-  const toggleCurrentRole = () =>
-    setShowDropdownCurrentRole(!showDropdownCurrentRole);
-  // Filter dropdown options
-  const filteredIndustries = Array.isArray(industries)
-    ? industries.filter((industry) =>
-        industry?.IndustryName?.toLowerCase()?.includes(
-          searchTermIndustry.toLowerCase() || ""
-        )
-      )
-    : [];
-  const filteredLocations = Array.isArray(locations)
-    ? locations.filter((location) =>
-        location?.LocationName?.toLowerCase()?.includes(
-          searchTermLocation.toLowerCase() || ""
-        )
-      )
-    : [];
+  const currentRoleOptions = useMemo(() => (
+    Array.isArray(currentRoles)
+      ? currentRoles.map((r) => ({ value: r.RoleName, label: r.RoleName }))
+      : []
+  ), [currentRoles]);
 
-  const filteredCurrentRoles = Array.isArray(currentRoles)
-    ? currentRoles.filter((role) =>
-        role?.RoleName?.toLowerCase()?.includes(
-          searchTermCurrentRole.toLowerCase() || ""
-        )
-      )
-    : [];
+  // Ensure current values are visible even if not in the fetched lists yet
+  const industryOptionsWithCurrent = useMemo(() => {
+    const v = formData.industry;
+    if (!v) return industryOptions;
+    return industryOptions.some((o) => o.value === v)
+      ? industryOptions
+      : [{ value: v, label: v }, ...industryOptions];
+  }, [industryOptions, formData.industry]);
+
+  const locationOptionsWithCurrent = useMemo(() => {
+    const v = formData.location;
+    if (!v) return locationOptions;
+    return locationOptions.some((o) => o.value === v)
+      ? locationOptions
+      : [{ value: v, label: v }, ...locationOptions];
+  }, [locationOptions, formData.location]);
+
+  const currentRoleOptionsWithCurrent = useMemo(() => {
+    const v = formData.currentRole;
+    if (!v) return currentRoleOptions;
+    return currentRoleOptions.some((o) => o.value === v)
+      ? currentRoleOptions
+      : [{ value: v, label: v }, ...currentRoleOptions];
+  }, [currentRoleOptions, formData.currentRole]);
 
   // Handle input changes for text fields
   // const handleInputChangesSearch = (e) => {
@@ -358,360 +291,86 @@ const EditAdvacedDetails = ({
     // v1.0.1 <----------------------------------------------------------------
     <SidebarPopup title="Edit Advanced Details" onClose={handleCloseModal}>
       {loading && <Loading message="Loading..." />}
-      <div className="sm:p-0 p-6">
-        <form className="space-y-6">
-          <div className=" grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
+      <div className="flex flex-col justify-between h-full sm:p-0 p-6">
+        <form className="h-full space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
             <div className="flex flex-col">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Current Role <span className="text-red-500">*</span>
-              </label>
-
-              <div className="relative">
-                <input
-                  name="currentRole"
-                  type="text"
-                  id="CurrentRole"
-                  value={formData.currentRole}
-                  onClick={toggleCurrentRole}
-                  placeholder="Senior Software Engineer"
-                  autoComplete="off"
-                  className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
-                  readOnly
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                  <ChevronDown
-                    className="text-lg"
-                    onClick={toggleCurrentRole}
-                  />
-                </div>
-                {showDropdownCurrentRole && (
-                  <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-                    <div className="border-b">
-                      <div className="flex items-center border rounded px-2 py-1 m-2">
-                        <Search className="absolute ml-1 text-gray-500" />
-                        <input
-                          type="text"
-                          placeholder="Search Current Role"
-                          value={searchTermCurrentRole}
-                          onChange={(e) =>
-                            setSearchTermCurrentRole(e.target.value)
-                          }
-                          className="pl-8 focus:border-black focus:outline-none w-full"
-                        />
-                      </div>
-                    </div>
-                    {filteredCurrentRoles.length > 0 ? (
-                      filteredCurrentRoles.map((role) => (
-                        <div
-                          key={role._id}
-                          onClick={() => handleRoleSelect(role)}
-                          className="cursor-pointer hover:bg-gray-200 p-2"
-                        >
-                          {role?.RoleName}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-2 text-gray-500">No roles found</div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {errors.currentRole && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.currentRole}
-                </p>
-              )}
+              <DropdownWithSearchField
+                value={formData.currentRole}
+                options={currentRoleOptionsWithCurrent}
+                name="currentRole"
+                onChange={handleInputChange}
+                error={errors.currentRole}
+                containerRef={fieldRefs.currentRole}
+                label="Current Role"
+                required
+                onMenuOpen={loadCurrentRoles}
+                loading={isCurrentRolesFetching}
+              />
             </div>
 
             <div className="flex flex-col">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Industry <span className="text-red-500">*</span>
-              </label>
-
-              <div className="relative">
-                <input
-                  name="industry"
-                  type="text"
-                  id="Industry"
-                  value={formData.industry}
-                  placeholder="Information Technology"
-                  autoComplete="off"
-                  onClick={() => setShowDropdownIndustry(!showDropdownIndustry)}
-                  className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
-                  readOnly
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                  <ChevronDown
-                    className="text-lg"
-                    onClick={() =>
-                      setShowDropdownIndustry(!showDropdownIndustry)
-                    }
-                  />
-                </div>
-                {showDropdownIndustry && (
-                  <div className="absolute bg-white border border-gray-300 w-full mt-1 max-h-60 overflow-y-auto z-10 text-xs">
-                    <div className="border-b">
-                      <div className="flex items-center border rounded px-2 py-1 m-2">
-                        <Search className="absolute ml-1 text-gray-500" />
-                        <input
-                          type="text"
-                          placeholder="Search Industry"
-                          value={searchTermIndustry}
-                          onChange={(e) =>
-                            setSearchTermIndustry(e.target.value)
-                          }
-                          className="pl-8 focus:border-black focus:outline-none w-full"
-                        />
-                      </div>
-                    </div>
-                    {filteredIndustries.length > 0 ? (
-                      filteredIndustries.map((industry) => (
-                        <div
-                          key={industry._id}
-                          onClick={() => handleIndustrySelect(industry)}
-                          className="cursor-pointer hover:bg-gray-200 p-2"
-                        >
-                          {industry.IndustryName}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-2 text-gray-500">
-                        No industries found
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {errors.industry && (
-                <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
-              )}
+              <DropdownWithSearchField
+                value={formData.industry}
+                options={industryOptionsWithCurrent}
+                name="industry"
+                onChange={handleInputChange}
+                error={errors.industry}
+                containerRef={fieldRefs.industry}
+                label="Industry"
+                required
+                onMenuOpen={loadIndustries}
+                loading={isIndustriesFetching}
+              />
             </div>
 
             <div className="flex flex-col">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Years of Experience <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="experience"
-                placeholder="Years of Experience"
+              <InputField
                 value={formData.experience}
                 onChange={handleInputChange}
-                className="w-full  p-1.5 border border-gray-300 rounded-lg focus:ring-2 "
+                inputRef={fieldRefs.experience}
+                error={errors.yearsOfExperience}
+                label="Years of Experience"
+                name="experience"
+                required
               />
-              {errors.yearsOfExperience && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.yearsOfExperience}
-                </p>
-              )}
             </div>
 
             <div className="flex flex-col">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Location <span className="text-red-500">*</span>
-              </label>
-
-              <div className="relative">
-                <input
-                  name="location"
-                  type="text"
-                  id="Location"
-                  value={formData.location}
-                  placeholder="Delhi, India"
-                  autoComplete="off"
-                  onClick={() => setShowDropdownLocation(!showDropdownLocation)}
-                  className={`block focus:outline-none border w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400`}
-                  readOnly
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-                  <ChevronDown
-                    className="text-lg"
-                    onClick={() =>
-                      setShowDropdownLocation(!showDropdownLocation)
-                    }
-                  />
-                </div>
-                {showDropdownLocation && (
-                  <div className="absolute bg-white border border-gray-300 w-full text-xs mt-1 max-h-60 overflow-y-auto z-10">
-                    <div className="border-b">
-                      <div className="flex items-center border rounded px-2 py-1 m-2">
-                        <Search className="absolute ml-1 text-gray-500" />
-                        <input
-                          type="text"
-                          placeholder="Search Location"
-                          value={searchTermLocation}
-                          onChange={(e) =>
-                            setSearchTermLocation(e.target.value)
-                          }
-                          className="pl-8 focus:border-black focus:outline-none w-full"
-                        />
-                      </div>
-                    </div>
-                    {filteredLocations.length > 0 ? (
-                      filteredLocations.map((location) => (
-                        <div
-                          key={location?._id}
-                          onClick={() => handleLocationSelect(location)}
-                          className="cursor-pointer hover:bg-gray-200 p-2"
-                        >
-                          {location?.LocationName || ""}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-2 text-gray-500">
-                        No locations found
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {errors.location && (
-                <p className="text-red-500 text-sm mt-1">{errors.location}</p>
-              )}
+              <DropdownWithSearchField
+                value={formData.location}
+                options={locationOptionsWithCurrent}
+                name="location"
+                onChange={handleInputChange}
+                error={errors.location}
+                containerRef={fieldRefs.location}
+                label="Location"
+                required
+                onMenuOpen={loadLocations}
+                loading={isLocationsFetching}
+              />
             </div>
 
-            {/* Resume Upload */}
-            {/* <div className="flex flex-col">
-                <label
-                  htmlFor="resume"
-                  className="block text-sm font-medium text-gray-900 mb-1"
-                >
-                  Resume
-                </label>
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <input
-                      ref={resumeInputRef}
-                      type="file"
-                      name="resume"
-                      id="resume"
-                      accept="application/pdf" // Restrict to PDF files
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={(e) => handleFileUpload(e, "resume")}
-                    />
-                    <button
-                      type="button"
-                      className="bg-custom-blue text-white text-center text-sm sm:text-xs p-2 rounded cursor-pointer"
-                      onClick={() => resumeInputRef.current.click()}
-                    >
-                      {resumeName ? "Uploaded" : "Upload Resume"}
-                    </button>
-                  </div>
-                  <span className="text-sm text-gray-400">
-                    PDF only, 4MB max
-                  </span>
-                </div>
-                {resumeName && (
-                  <div className="mt-2  inline-flex w-[70%] justify-between items-center gap-2 border p-1 rounded">
-                    <span className="text-gray-600 text-sm truncate">
-                      {resumeName}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile("resume")}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <span className="text-xl">×</span>
-                    </button>
-                  </div>
-                )}
-                <span className="text-sm text-red-500 mt-1">{resumeError}</span>
-              </div> */}
-
-            {/* Cover Letter Upload */}
-            {/* <div className="flex flex-col">
-                <label
-                  htmlFor="coverLetter"
-                  className="block text-sm font-medium text-gray-900 mb-1"
-                >
-                  Cover Letter
-                </label>
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <input
-                      ref={coverLetterInputRef}
-                      type="file"
-                      name="coverLetter"
-                      id="coverLetter"
-                      accept="application/pdf" // Restrict to PDF files
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={(e) => handleFileUpload(e, "coverLetter")}
-                    />
-                    <button
-                      type="button"
-                      className="bg-custom-blue text-white text-center p-2 text-sm sm:text-xs rounded cursor-pointer"
-                      onClick={() => coverLetterInputRef.current.click()}
-                    >
-                      {coverLetterName ? "Uploaded" : "Upload Cover Letter"}
-                    </button>
-                  </div>
-                  <span className="text-sm text-gray-400">
-                    PDF only, 4MB max
-                  </span>
-                </div>
-                {coverLetterName && (
-                  <div className="mt-2  inline-flex w-[70%] justify-between items-center gap-2 border p-1 rounded">
-                    <span className="text-gray-600 text-sm truncate">
-                      {coverLetterName}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile("coverLetter")}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <span className="text-xl">×</span>
-                    </button>
-                  </div>
-                )}
-                <span className="text-sm text-red-500 mt-1">
-                  {coverLetterError}
-                </span>
-              </div> */}
-          </div>
-
-          {/* <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cover Letter Description{" "}
-              </label>
-              <textarea
-                name="coverLetterdescription"
-                value={formData.coverLetterdescription}
-                placeholder="Please provide a brief description of your cover letter, including any relevant job titles, companies, or accomplishments."
-                onChange={handleInputChange}
-                autoComplete="off"
-                rows={5}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
-              />
-              {errors.coverLetterdescription && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.coverLetterdescription}
-                </p>
-              )}
-              <p className="text-gray-600 text-sm sm:text-xs float-right mt-0.5">
-                {formData.coverLetterdescription.length}/500
-              </p>
-            </div> */}
-
-          <div className="flex justify-end space-x-3 mr-2 ">
-            <button
-              type="button"
-              onClick={
-                handleCloseModal
-                // () => navigate('/account-settings/my-profile/advanced')
-              }
-              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              onClick={handleSave}
-              className="px-4 py-2 bg-custom-blue text-white rounded-lg "
-            >
-              Save Changes
-            </button>
           </div>
         </form>
+        <div className="sticky bottom-0 bg-white pt-3">
+            <div className="flex justify-end gap-3 pt-3 mr-2">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                onClick={handleSave}
+                className="px-4 py-2 bg-custom-blue text-white rounded-lg"
+              >
+                Save Changes
+              </button>
+            </div>
+        </div>
       </div>
     </SidebarPopup>
     // v1.0.1 ---------------------------------------------------------------->

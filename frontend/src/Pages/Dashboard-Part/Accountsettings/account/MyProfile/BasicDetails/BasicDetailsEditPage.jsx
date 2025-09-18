@@ -1,14 +1,8 @@
 // v1.0.0 - Ashok - Removed form border left and set outline none
 // v1.0.1 - Ashok - Improved responsiveness and added common code to popup
 
-import React, { useEffect, useState, useRef } from "react";
-import { Expand, Minimize, X, ChevronDown, Camera, Trash } from "lucide-react";
-
-import classNames from "classnames";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import Modal from "react-modal";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { format, parse } from "date-fns";
 import axios from "axios";
 import {
   isEmptyObject,
@@ -41,6 +35,15 @@ import { notify } from "../../../../../../services/toastService.js";
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import { formatDateOfBirth } from "./BasicDetails.jsx";
 // v1.0.1 ---------------------------------------------------------------------------------------->
+// Shared form fields
+import {
+  InputField,
+  EmailField,
+  PhoneField,
+  DropdownWithSearchField,
+  DateOfBirthField,
+  ProfilePhotoUpload,
+} from "../../../../../../Components/FormFields";
 Modal.setAppElement("#root");
 
 const BasicDetailsEditPage = ({
@@ -66,7 +69,7 @@ const BasicDetailsEditPage = ({
   const updateContactDetail = useUpdateContactDetail();
 
   const [formData, setFormData] = useState({});
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  // const [isFullScreen, setIsFullScreen] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -75,9 +78,7 @@ const BasicDetailsEditPage = ({
   const { userProfile, isLoading, isError, error } = useUserProfile(resolvedId);
   // Role dropdown state
   const [currentRole, setCurrentRole] = useState([]);
-  const [searchTermRole, setSearchTermRole] = useState("");
-  const [selectedCurrentRole, setSelectedCurrentRole] = useState("");
-  const [showDropdownRole, setShowDropdownRole] = useState(false);
+
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
 
   const [file, setFile] = useState(null);
@@ -159,7 +160,6 @@ const BasicDetailsEditPage = ({
     });
 
     setFilePreview(userProfile?.imageData?.path);
-    setSelectedCurrentRole(userProfile?.roleLabel);
     setSelectedCurrentRoleId(userProfile?.roleId || "");
 
     setOriginalEmail(userProfile.email || "");
@@ -179,9 +179,7 @@ const BasicDetailsEditPage = ({
     setErrors({});
   }, [resolvedId, userProfile]);
 
-  const toggleDropdownRole = () => {
-    setShowDropdownRole((prev) => !prev);
-  };
+  // Old custom dropdown handlers removed after switching to common field
 
   // Role selection
   // const handleRoleSelect = (role) => {
@@ -192,18 +190,9 @@ const BasicDetailsEditPage = ({
   //   setErrors((prev) => ({ ...prev, roleId: "" }));
   // };
 
-  // Update handleRoleSelect to set both label and ID
-  const handleRoleSelect = (role) => {
-    setSelectedCurrentRole(role.label);
-    setSelectedCurrentRoleId(role._id); // Set the role ID
-    setShowDropdownRole(false);
-    setErrors((prev) => ({ ...prev, roleId: "" }));
-  };
+  // Update role selection via common dropdown
 
-  // Filter roles based on search
-  const filteredCurrentRoles = currentRole.filter((role) =>
-    role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
-  );
+  // No manual filtering. Using searchable common dropdown
 
   const handleDateChange = (date) => {
     if (!date) {
@@ -216,7 +205,51 @@ const BasicDetailsEditPage = ({
     setFormData((prevData) => ({ ...prevData, dateOfBirth: formattedDate }));
     setStartDate(date);
   };
- 
+  
+  // Options and handlers for common fields
+  const genderOptions = [
+    { value: "Male", label: "Male" },
+    { value: "Female", label: "Female" },
+  ];
+  const roleOptions = (currentRole || []).map((r) => ({ value: r._id, label: r.label }));
+
+  // Ensure the current role id is present in options so the value shows even if
+  // the fetched roles list doesn't include it yet or is filtered
+  const roleOptionsWithCurrent = useMemo(() => {
+    const currentVal = selectedCurrentRoleId || formData.roleId || "";
+    if (!currentVal) return roleOptions;
+    const exists = roleOptions.some((o) => o.value === currentVal);
+    if (exists) return roleOptions;
+    const currentLabel = formData.roleLabel || userProfile?.roleLabel || "Current Role";
+    return [{ value: currentVal, label: currentLabel }, ...roleOptions];
+  }, [roleOptions, selectedCurrentRoleId, formData.roleId, formData.roleLabel, userProfile?.roleLabel]);
+
+  // Backfill selectedCurrentRoleId once profile data arrives
+  useEffect(() => {
+    if (!selectedCurrentRoleId && formData.roleId) {
+      setSelectedCurrentRoleId(formData.roleId);
+    }
+  }, [selectedCurrentRoleId, formData.roleId]);
+
+  const handleRoleDropdownChange = (e) => {
+    const val = e.target.value;
+    setSelectedCurrentRoleId(val);
+    // Sync into formData so validations and submission see it
+    setFormData((prev) => ({ ...prev, roleId: val, roleLabel: roleOptions.find((o) => o.value === val)?.label || "" }));
+    setErrors((prev) => ({ ...prev, roleId: "" }));
+  };
+
+  const handleEmailChangeWrapper = (e) => {
+    handleInputChange({ target: { name: "email", value: e.target.value } });
+  };
+
+  const handlePhoneChangeWrapper = (e) => {
+    handleInputChange({ target: { name: "phone", value: e.target.value } });
+  };
+
+  const handleCountryCodeChangeWrapper = (e) => {
+    handleInputChange({ target: { name: "countryCode", value: e.target.value } });
+  };
 
   const checkProfileIdExists = useCallback(async (profileId) => {
     if (!profileId) return false;
@@ -325,6 +358,7 @@ const BasicDetailsEditPage = ({
     firstName: useRef(null),
     lastName: useRef(null),
     phone: useRef(null),
+    countryCode: useRef(null),
     profileId: useRef(null),
     roleLabel: useRef(null),
     roleId: useRef(null),
@@ -630,341 +664,129 @@ const BasicDetailsEditPage = ({
             <p className="text-red-500 text-sm mb-4">{errors.form}</p>
           )}
 
-          <div className="flex flex-col justify-center items-center mb-4">
-            <div className="relative">
-              <div
-                className="relative group sm:w-[120px] sm:h-[120px] w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
-                onClick={() => !isLoading && fileInputRef.current?.click()}
-              >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="hidden"
-                  disabled={isLoading}
-                />
-
-                {filePreview ? (
-                  <img
-                    src={filePreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 pointer-events-none">
-                    <Camera className="sm:text-2xl text-4xl text-gray-400" />
-                    <span className="text-sm text-gray-500 mt-2">
-                      Upload Photo
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                  {/* Icon placeholder */}
-                </div>
-              </div>
-
-              {/* Delete button outside the circle */}
-              {filePreview && (
-                <button
-                  title="Remove Image"
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent triggering file input
-                    handleDeleteImage();
-                  }}
-                  className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                  disabled={isLoading}
-                >
-                  {/* Icon placeholder */}
-                  <Trash className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-            <div className="mt-2 text-center">
-              <p className="text-xs text-gray-500 text-center mb-1">
-                File must be less than 100KB (200 x 200 recommended)
-              </p>
-              <p className="text-red-500 text-sm mb-4 font-medium text-center">
-                {fileError}
-              </p>
-            </div>
+          <div className="flex justify-center items-center mb-4">
+            <ProfilePhotoUpload
+              imageInputRef={fileInputRef}
+              imagePreview={filePreview}
+              selectedImage={userProfile?.imageData}
+              fileError={fileError}
+              onImageChange={handleFileChange}
+              onRemoveImage={handleDeleteImage}
+              label="Profile Photo"
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  ref={fieldRefs.email}
-                  value={formData.email || ""}
-                  onChange={handleInputChange}
-                  onBlur={() =>
-                    formData.email !== originalEmail &&
-                    handleEmailValidation(formData.email)
-                  }
-                  disabled={from !== "users"}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.email ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {isCheckingEmail && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  </div>
-                )}
-              </div>
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                First Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                placeholder="First Name"
-                ref={fieldRefs.firstName}
-                value={formData.firstName || ""}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                  errors.firstName ? "border-red-500" : "border-gray-300"
-                }`}
+            <div className="relative">
+              <EmailField
+                value={formData.email || ""}
+                onChange={handleEmailChangeWrapper}
+                inputRef={fieldRefs.email}
+                error={errors.email}
+                label="Email"
+                required
+                disabled={from !== "users"}
               />
-              {errors.firstName && (
-                <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+              {isCheckingEmail && (
+                <div className="absolute inset-y-0 right-2 top-6 flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                </div>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Last Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                placeholder="Last Name"
-                ref={fieldRefs.lastName}
-                value={formData.lastName || ""}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                  errors.lastName ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.lastName && (
-                <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-              )}
-            </div>
+            <InputField
+              value={formData.firstName || ""}
+              onChange={handleInputChange}
+              inputRef={fieldRefs.firstName}
+              error={errors.firstName}
+              label="First Name"
+              name="firstName"
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date Of Birth
-              </label>
-              <DatePicker
-                selected={startDate}
-                onChange={handleDateChange}
-                // dateFormat="dd-MM-yyyy"
-                dateFormat="MMMM d, yyyy"
-                placeholderText="Select Date of Birth"
-                maxDate={new Date()}
-                showYearDropdown
-                showMonthDropdown
-                dropdownMode="select"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
-                wrapperClassName="w-full"
-                customInput={
-                  <input
-                    type="text"
-                    readOnly
-                    className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 placeholder-gray-400 border border-gray-300 focus:outline-none sm:text-sm"
-                    placeholder="MM/DD/YYYY" // Fallback placeholder
-                  />
-                }
-                onChangeRaw={(e) => e.preventDefault()}
-                // customInput={<input readOnly />}
-              />
-            </div>
+            <InputField
+              value={formData.lastName || ""}
+              onChange={handleInputChange}
+              inputRef={fieldRefs.lastName}
+              error={errors.lastName}
+              label="Last Name"
+              name="lastName"
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Profile ID <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="profileId"
-                placeholder="Profile ID"
-                ref={fieldRefs.profileId}
-                // disabled={from === 'users'}
-                value={formData.profileId || ""}
-                onChange={handleInputChange}
-                onBlur={() =>
-                  formData.profileId !== originalProfileId &&
-                  handleProfileIdValidation(formData.profileId)
-                }
-                // onBlur={() => handleProfileIdValidation(formData.profileId)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                  errors.profileId ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.profileId && (
-                <p className="text-red-500 text-sm mt-1">{errors.profileId}</p>
-              )}
-            </div>
+            <DateOfBirthField
+              selectedDate={startDate}
+              onChange={handleDateChange}
+              label="Date of Birth"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Gender
-              </label>
-              <select
-                name="gender"
-                value={formData.gender || ""}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-            </div>
+            <InputField
+              value={formData.profileId || ""}
+              onChange={handleInputChange}
+              onBlur={() =>
+                formData.profileId !== originalProfileId &&
+                handleProfileIdValidation(formData.profileId)
+              }
+              inputRef={fieldRefs.profileId}
+              error={errors.profileId}
+              label="Profile ID"
+              name="profileId"
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
-                <select
-                  name="countryCode"
-                  placeholder="Country Code"
-                  value={formData.countryCode || "+91"}
-                  onChange={handleInputChange}
-                  className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
-                >
-                  <option value="+91">+91</option>
-                  <option value="+1">+1</option>
-                  <option value="+44">+44</option>
-                  <option value="+61">+61</option>
-                  <option value="+971">+971</option>
-                  <option value="+60">+60</option>
-                </select>
-                <input
-                  type="text"
-                  name="phone"
-                  placeholder="Phone"
-                  ref={fieldRefs.phone}
-                  value={formData.phone || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                    errors.phone ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-              </div>
-              {errors.phone && (
-                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-              )}
-            </div>
+            <DropdownWithSearchField
+              value={formData.gender || ""}
+              options={genderOptions}
+              name="gender"
+              onChange={handleInputChange}
+              error={errors.gender}
+              containerRef={fieldRefs.gender}
+              label="Gender"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                LinkedIn <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="linkedinUrl"
-                placeholder="LinkedIn URL"
-                ref={fieldRefs.linkedinUrl}
-                value={formData.linkedinUrl || ""}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-custom-blue ${
-                  errors.linkedinUrl ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.linkedinUrl && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.linkedinUrl}
-                </p>
-              )}
-            </div>
+            <PhoneField
+              countryCodeValue={formData.countryCode || "+91"}
+              onCountryCodeChange={handleCountryCodeChangeWrapper}
+              countryCodeError={errors.countryCode}
+              countryCodeRef={fieldRefs.countryCode}
+              phoneValue={formData.phone || ""}
+              onPhoneChange={handlePhoneChangeWrapper}
+              phoneError={errors.phone}
+              phoneRef={fieldRefs.phone}
+              label="Phone"
+              required
+            />
 
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Role <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  readOnly
-                  value={selectedCurrentRole}
-                  ref={fieldRefs.roleId}
-                  onClick={toggleDropdownRole}
-                  className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                    errors.roleId ? "border-red-500" : "border-gray-300"
-                  } focus:border-custom-blue cursor-pointer ${
-                    isLoading ? "opacity-50" : ""
-                  }`}
-                  disabled={from !== "users"}
-                  // disabled={isLoading}
-                />
-                <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
-                {showDropdownRole && (
-                  <div className="absolute z-50 text-sm mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-                    <div className="p-2 border-b">
-                      <input
-                        type="text"
-                        placeholder="Search roles..."
-                        value={searchTermRole}
-                        onChange={(e) => setSearchTermRole(e.target.value)}
-                        className="w-full px-2 py-1 border rounded"
-                        disabled={isLoading}
-                      />
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      {filteredCurrentRoles.map((role) => (
-                        <div
-                          key={role._id}
-                          onClick={() => handleRoleSelect(role)}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                        >
-                          {role.label}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              {errors.roleId && (
-                <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>
-              )}
-            </div>
+            <InputField
+              value={formData.linkedinUrl || ""}
+              onChange={handleInputChange}
+              inputRef={fieldRefs.linkedinUrl}
+              error={errors.linkedinUrl}
+              label="LinkedIn"
+              name="linkedinUrl"
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Portfolio URL
-              </label>
-              <input
-                type="text"
-                name="portfolioUrl"
-                placeholder="Portfolio URL"
-                ref={fieldRefs.portfolioUrl}
-                value={formData.portfolioUrl || ""}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-blue"
-              />
-              {errors.portfolioUrl && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.portfolioUrl}
-                </p>
-              )}
-            </div>
+            <DropdownWithSearchField
+              value={selectedCurrentRoleId || ""}
+              options={roleOptionsWithCurrent}
+              name="roleId"
+              onChange={handleRoleDropdownChange}
+              error={errors.roleId}
+              containerRef={fieldRefs.roleId}
+              label="Role"
+              required
+              disabled={from !== "users"}
+              loading={isLoading}
+            />
+
+            <InputField
+              value={formData.portfolioUrl || ""}
+              onChange={handleInputChange}
+              inputRef={fieldRefs.portfolioUrl}
+              error={errors.portfolioUrl}
+              label="Portfolio URL"
+              name="portfolioUrl"
+            />
           </div>
 
           <div className="flex justify-end space-x-3">

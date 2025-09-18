@@ -3,10 +3,11 @@ import React from "react";
 const InputField = ({
   value,
   onChange,
+  onBlur,
   name,
   inputRef,
   error,
-  label = "Last Name",
+  label,
   required = false,
   type = "text",
   id,
@@ -23,9 +24,10 @@ const InputField = ({
   const computedId = id || name;
   return (
     <div>
-      <label htmlFor={computedId} className="block text-sm font-medium text-gray-700 mb-1">
+      {label && (<label htmlFor={computedId} className="block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
+      )}
       <input
         ref={inputRef}
         type={type}
@@ -33,6 +35,7 @@ const InputField = ({
         name={name}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         disabled={disabled}
         readOnly={readOnly}
         required={required}
