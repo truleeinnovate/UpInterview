@@ -66,8 +66,7 @@ const InterviewForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { positionData, isLoading: positionsLoading } = usePositions();
-  const { templatesData, isLoading: templatesLoading } =
-    useInterviewTemplates();
+  const { templatesData, isLoading: templatesLoading } = useInterviewTemplates();
   const { interviewData, isMutationLoading, createInterview } = useInterviews();
   const { candidateData, isLoading: candidatesLoading } = useCandidates();
 
@@ -381,7 +380,7 @@ const InterviewForm = () => {
                       options={
                         templatesData?.map((template) => ({
                           value: template._id,
-                          label: template.name,
+                          label: template.templateName,
                         })) || []
                       }
                       onChange={(e) => {
