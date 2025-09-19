@@ -38,6 +38,29 @@ const ProtectedRoute = ({ children }) => {
     // <---------------------------- v1.0.0
 
     useEffect(() => {
+        // If the session expiration modal was active and the user refreshed,
+        // redirect them to the appropriate login page with returnUrl
+        try {
+            const expiredFlag = sessionStorage.getItem('sessionExpired');
+            if (expiredFlag === 'true') {
+                const loginType = sessionStorage.getItem('sessionExpiredLoginType') || 'organization';
+                const returnUrl = sessionStorage.getItem('sessionExpiredReturnUrl') || (window.location.pathname + window.location.search + window.location.hash);
+                // Clear flags to avoid loops
+                sessionStorage.removeItem('sessionExpired');
+                sessionStorage.removeItem('sessionExpiredLoginType');
+                sessionStorage.removeItem('sessionExpiredReturnUrl');
+
+                if (loginType === 'individual') {
+                    navigate(`/individual-login?returnUrl=${encodeURIComponent(returnUrl)}`);
+                } else {
+                    navigate(`/organization-login?returnUrl=${encodeURIComponent(returnUrl)}`);
+                }
+                return; // prevent further checks in this effect run
+            }
+        } catch (e) {
+            // ignore
+        }
+
         // Start activity tracking
         const cleanupActivityTracker = startActivityTracking();
 
