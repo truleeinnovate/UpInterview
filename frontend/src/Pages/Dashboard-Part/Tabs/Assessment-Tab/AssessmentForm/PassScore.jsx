@@ -1,7 +1,9 @@
 // v1.0.0  -  Ashraf  - forwarderror solved
 import React, { useState, useEffect, useMemo, useRef, forwardRef } from "react";
-import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { validatePassScoreData } from "../../../../../utils/passScoreValidation";
+// Common Form Field Components
+import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
+import InputField from "../../../../../Components/FormFields/InputField.jsx";
   // <---------------------- v1.0.0
 
 const PassScore = forwardRef(({
@@ -27,8 +29,6 @@ const PassScore = forwardRef(({
   const [localPassScore, setLocalPassScore] = useState(initialPassScore || "");
   const [localTotalScores, setLocalTotalScores] = useState(initialTotalScores || {});
   const [localPassScores, setLocalPassScores] = useState(initialPassScores || {});
-  const [showDropdownScore, setShowDropdownScore] = useState(false);
-  const [showDropdownPassScoreBy, setShowDropdownPassScoreBy] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
@@ -88,19 +88,9 @@ const PassScore = forwardRef(({
     onClose();
   };
 
-  const toggleDropdownScore = () => {
-    setShowDropdownScore(!showDropdownScore);
-    setTouched((prev) => ({ ...prev, selectedScore: true }));
-  };
-
-  const toggleDropdownPassScoreBy = () => {
-    setShowDropdownPassScoreBy(!showDropdownPassScoreBy);
-    setTouched((prev) => ({ ...prev, selectedPassScoreBy: true }));
-  };
 
   const handleScoreSelect = (score) => {
     setSelectedScore(score);
-    setShowDropdownScore(false);
     setTouched((prev) => ({ ...prev, selectedScore: true }));
     setErrors((prev) => {
       const { selectedScore, ...rest } = prev;
@@ -110,7 +100,6 @@ const PassScore = forwardRef(({
 
   const handlePassScoreBySelect = (score) => {
     setSelectedPassScoreBy(score);
-    setShowDropdownPassScoreBy(false);
     setTouched((prev) => ({ ...prev, selectedPassScoreBy: true }));
     setErrors((prev) => {
       const { selectedPassScoreBy, ...rest } = prev;
@@ -302,88 +291,53 @@ const PassScore = forwardRef(({
           <form onSubmit={handleSave} className="space-y-6">
             {/* Pass Score Type */}
             <div className="flex items-start gap-6">
-              <label htmlFor="Passscore" className="w-40 text-sm font-medium text-gray-700 pt-2">
-                Pass Score Type<span className="text-red-500 ml-1">*</span>
-              </label>
+              <div className="w-40 pt-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Pass Score Type<span className="text-red-500 ml-1">*</span>
+                </label>
+              </div>
               <div className="flex-1">
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="Passscore"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    value={selectedScore}
-                    onClick={toggleDropdownScore}
-                    readOnly
-                    ref={scoreInputRef}
-                  />
-                  <MdArrowDropDown
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer h-5 w-5"
-                    onClick={toggleDropdownScore}
-                  />
-                </div>
-                {showDropdownScore && (
-                  <div
-                    className="absolute z-10 mt-1 rounded-md bg-white shadow-lg border border-gray-200"
-                    style={{ width: scoreInputRef.current?.offsetWidth }}
-                  >
-                    {score.map((score) => (
-                      <div
-                        key={score}
-                        className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm"
-                        onClick={() => handleScoreSelect(score)}
-                      >
-                        {score}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {touched.selectedScore && errors.selectedScore && (
-                  <p className="mt-1 text-sm text-red-600">{errors.selectedScore}</p>
-                )}
+                <DropdownWithSearchField
+                  ref={scoreInputRef}
+                  name="Passscore"
+                  value={selectedScore}
+                  options={score.map((s) => ({
+                    value: s,
+                    label: s,
+                  }))}
+                  onChange={(e) => {
+                    handleScoreSelect(e.target.value);
+                    setTouched((prev) => ({ ...prev, selectedScore: true }));
+                  }}
+                  error={touched.selectedScore && errors.selectedScore}
+                  required
+                />
               </div>
             </div>
 
             {/* Pass Score By */}
             <div className="flex items-start gap-6">
-              <label htmlFor="Passscoreby" className="w-40 text-sm font-medium text-gray-700 pt-2">
-                Pass Score By<span className="text-red-500 ml-1">*</span>
-              </label>
+              <div className="w-40 pt-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Pass Score By<span className="text-red-500 ml-1">*</span>
+                </label>
+              </div>
               <div className="flex-1">
-                <div className="relative">
-                  <input
-                    name="passscoreby"
-                    type="text"
-                    id="Passscoreby"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    value={selectedPassScoreBy}
-                    onClick={toggleDropdownPassScoreBy}
-                    readOnly
-                    ref={passScoreByInputRef}
-                  />
-                  <MdArrowDropDown
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer h-5 w-5"
-                    onClick={toggleDropdownPassScoreBy}
-                  />
-                </div>
-                {showDropdownPassScoreBy && (
-                  <div
-                    className="absolute z-10 mt-1 rounded-md bg-white shadow-lg border border-gray-200"
-                    style={{ width: passScoreByInputRef.current?.offsetWidth }}
-                  >
-                    {passScoreBy.map((passScoreBy) => (
-                      <div
-                        key={passScoreBy}
-                        className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm"
-                        onClick={() => handlePassScoreBySelect(passScoreBy)}
-                      >
-                        {passScoreBy}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {touched.selectedPassScoreBy && errors.selectedPassScoreBy && (
-                  <p className="mt-1 text-sm text-red-600">{errors.selectedPassScoreBy}</p>
-                )}
+                <DropdownWithSearchField
+                  ref={passScoreByInputRef}
+                  name="Passscoreby"
+                  value={selectedPassScoreBy}
+                  options={passScoreBy.map((p) => ({
+                    value: p,
+                    label: p,
+                  }))}
+                  onChange={(e) => {
+                    handlePassScoreBySelect(e.target.value);
+                    setTouched((prev) => ({ ...prev, selectedPassScoreBy: true }));
+                  }}
+                  error={touched.selectedPassScoreBy && errors.selectedPassScoreBy}
+                  required
+                />
               </div>
             </div>
 
@@ -391,52 +345,44 @@ const PassScore = forwardRef(({
             {selectedPassScoreBy === "Overall" && (
               <>
                 <div className="flex items-start gap-6">
-                  <label htmlFor="totalScore" className="w-40 text-sm font-medium text-gray-700 pt-2">
-                    Total Score <span className="text-red-500 ml-1">*</span>
-                  </label>
+                  <div className="w-40 pt-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Total Score <span className="text-red-500 ml-1">*</span>
+                    </label>
+                  </div>
                   <div className="flex-1">
-                    <div className="relative flex items-center">
-                      <input
-                        type="number"
-                        id="totalScore"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        value={localTotalScore}
-                        onChange={(e) => handleOverallTotalScoreChange(e.target.value)}
-                        required
-                        min="1"
-                      />
-                      {selectedScore === "Percentage" && (
-                        <span className="absolute right-7 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
-                      )}
-                    </div>
-                    {touched.totalScore && errors.totalScore && (
-                      <p className="mt-1 text-sm text-red-600">{errors.totalScore}</p>
-                    )}
+                    <InputField
+                      type="number"
+                      id="totalScore"
+                      name="totalScore"
+                      value={localTotalScore}
+                      onChange={(e) => handleOverallTotalScoreChange(e.target.value)}
+                      error={touched.totalScore && errors.totalScore}
+                      required
+                      min={1}
+                      suffix={selectedScore === "Percentage" ? "%" : ""}
+                    />
                   </div>
                 </div>
                 <div className="flex items-start gap-6">
-                  <label htmlFor="passScore" className="w-40 text-sm font-medium text-gray-700 pt-2">
-                    Pass Score <span className="text-red-500 ml-1">*</span>
-                  </label>
+                  <div className="w-40 pt-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Pass Score <span className="text-red-500 ml-1">*</span>
+                    </label>
+                  </div>
                   <div className="flex-1">
-                    <div className="relative flex items-center">
-                      <input
-                        type="number"
-                        id="passScore"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        value={localPassScore}
-                        onChange={(e) => handleOverallPassScoreChange(e.target.value)}
-                        required
-                        min="1"
-                        max={selectedScore === "Percentage" ? "100" : localTotalScore || undefined}
-                      />
-                      {selectedScore === "Percentage" && (
-                        <span className="absolute right-7 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
-                      )}
-                    </div>
-                    {touched.passScore && errors.passScore && (
-                      <p className="mt-1 text-sm text-red-600">{errors.passScore}</p>
-                    )}
+                    <InputField
+                      type="number"
+                      id="passScore"
+                      name="passScore"
+                      value={localPassScore}
+                      onChange={(e) => handleOverallPassScoreChange(e.target.value)}
+                      error={touched.passScore && errors.passScore}
+                      required
+                      min={1}
+                      max={selectedScore === "Percentage" ? 100 : Number(localTotalScore) || undefined}
+                      suffix={selectedScore === "Percentage" ? "%" : ""}
+                    />
                   </div>
                 </div>
               </>
@@ -462,42 +408,30 @@ const PassScore = forwardRef(({
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{sectionName}</td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{questions.length}</td>
                           <td className="px-4 py-3 text-sm text-gray-500">
-                            <div className="flex flex-col">
-                              <div className="flex items-center">
-                                <input
-                                  type="number"
-                                  value={localTotalScores[sectionName] || ""}
-                                  onChange={(e) => handleTotalScoreChange(sectionName, e.target.value)}
-                                  className="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                  min="1"
-                                />
-                                {selectedScore === "Percentage" && (
-                                  <span className="ml-2 text-gray-500 text-sm">%</span>
-                                )}
-                              </div>
-                              {touched[`totalScore_${sectionName}`] && errors[sectionName] && (
-                                <p className="mt-1 text-xs text-red-600 max-w-[120px]">{errors[sectionName]}</p>
-                              )}
+                            <div className="w-24">
+                              <InputField
+                                type="number"
+                                value={localTotalScores[sectionName] || ""}
+                                onChange={(e) => handleTotalScoreChange(sectionName, e.target.value)}
+                                min={1}
+                                suffix={selectedScore === "Percentage" ? "%" : ""}
+                                error={touched[`totalScore_${sectionName}`] && errors[sectionName]}
+                                compact
+                              />
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-500">
-                            <div className="flex flex-col">
-                              <div className="flex items-center">
-                                <input
-                                  type="number"
-                                  value={localPassScores[sectionName] || ""}
-                                  onChange={(e) => handlePassScoreChange(sectionName, e.target.value)}
-                                  className="w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                  min="1"
-                                  max={selectedScore === "Percentage" ? "100" : localTotalScores[sectionName] || undefined}
-                                />
-                                {selectedScore === "Percentage" && (
-                                  <span className="ml-2 text-gray-500 text-sm">%</span>
-                                )}
-                              </div>
-                              {touched[`passScore_${sectionName}`] && errors[sectionName] && (
-                                <p className="mt-1 text-xs text-red-600 max-w-[120px]">{errors[sectionName]}</p>
-                              )}
+                            <div className="w-24">
+                              <InputField
+                                type="number"
+                                value={localPassScores[sectionName] || ""}
+                                onChange={(e) => handlePassScoreChange(sectionName, e.target.value)}
+                                min={1}
+                                max={selectedScore === "Percentage" ? 100 : Number(localTotalScores[sectionName]) || undefined}
+                                suffix={selectedScore === "Percentage" ? "%" : ""}
+                                error={touched[`passScore_${sectionName}`] && errors[sectionName]}
+                                compact
+                              />
                             </div>
                           </td>
                         </tr>

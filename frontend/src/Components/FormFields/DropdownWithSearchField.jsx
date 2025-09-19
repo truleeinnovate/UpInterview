@@ -6,6 +6,7 @@ const DropdownWithSearchField = ({
   value,
   options,
   name,
+  placeholder,
   onChange,
   error,
   isCustomName = false,
@@ -84,7 +85,7 @@ const DropdownWithSearchField = ({
                 onChange({ target: { name: name, value: opt?.value || "" } });
               }
             }}
-            placeholder={`Select a ${label}`}
+            placeholder={placeholder ? placeholder : `Select a ${label}`}
             isDisabled={disabled}
             hasError={!!error}
             classNamePrefix="rs"

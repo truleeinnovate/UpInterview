@@ -11,7 +11,6 @@ import { IoMdClose } from "react-icons/io";
 import { FiX } from "react-icons/fi";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
-import { ReactComponent as MdArrowDropDown } from "../../../../icons/MdArrowDropDown.svg";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import { config } from "../../../../config.js";
 import { useCandidates } from "../../../../apiHooks/useCandidates";
@@ -27,6 +26,8 @@ import { useQueryClient } from "@tanstack/react-query";
 // v1.0.5 <--------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.5 -------------------------------------------------------------------------->
+// Common Form Field Components
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField.jsx";
 
 const ShareAssessment = ({
   isOpen,
@@ -520,112 +521,29 @@ const ShareAssessment = ({
               {/* Assessment Template Selection */}
               {fromscheduleAssessment ? (
                 <div className="mb-6">
-                  <label
-                    htmlFor="Assessment"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Assessment Template <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative" ref={assessmentDropdownRef}>
-                    <div
-                      className={`flex items-center border rounded-lg px-3 py-2 ${
-                        errors.Assessment ? "border-red-500" : "border-gray-300"
-                      } focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors`}
-                      onClick={() => setShowDropdownAssessment(true)}
-                    >
-                      <input
-                        ref={assessmentInputRef}
-                        type="text"
-                        className="flex-grow outline-none text-sm bg-transparent"
-                        value={assessmentInput}
-                        onChange={handleAssessmentInputChange}
-                        onFocus={() => {
-                          setShowDropdownAssessment(true);
-                          if (!assessmentInput) {
-                            // LAZY LOADING: Filter assessments with sections using cached data
-                            const filterAssessmentsWithSections = async () => {
-                              const filteredAssessmentsWithSections = [];
-
-                              for (const assessment of assessmentData) {
-                                const sectionCount =
-                                  assessmentSections[assessment._id] ?? 0;
-                                if (sectionCount > 0) {
-                                  filteredAssessmentsWithSections.push(
-                                    assessment
-                                  );
-                                } else if (
-                                  sectionsCache[assessment._id] === undefined &&
-                                  !sectionsLoading[assessment._id]
-                                ) {
-                                  // Fetch sections if not cached
-                                  const result = await fetchAssessmentSections(
-                                    assessment._id
-                                  );
-                                  if (result.sections > 0) {
-                                    filteredAssessmentsWithSections.push(
-                                      assessment
-                                    );
-                                  }
-                                }
-                              }
-
-                              setFilteredAssessments(
-                                filteredAssessmentsWithSections
-                              );
-                            };
-
-                            filterAssessmentsWithSections();
-                          }
-                        }}
-                        placeholder="Search assessment templates..."
-                        autoComplete="off"
-                      />
-                      <MdArrowDropDown
-                        onClick={handleAssessmentDropdownToggle}
-                        className={`text-gray-500 hover:text-gray-700 cursor-pointer transition-transform ${
-                          showDropdownAssessment ? "transform rotate-180" : ""
-                        }`}
-                      />
-                    </div>
-
-                    {errors.Assessment && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.Assessment}
-                      </p>
-                    )}
-
-                    {showDropdownAssessment && (
-                      <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
-                        <div className="sticky top-0 p-2 border-b border-gray-200 bg-gray-50">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Available Assessment Templates (
-                            {filteredAssessments.length})
-                          </p>
-                        </div>
-                        <ul className="divide-y divide-gray-100">
-                          {filteredAssessments.length > 0 ? (
-                            filteredAssessments.map((assessment) => (
-                              <li
-                                key={assessment._id}
-                                className="px-4 py-2 hover:bg-gray-50 cursor-pointer"
-                                onClick={() =>
-                                  handleAssessmentSelect(assessment)
-                                }
-                              >
-                                <span className="text-sm font-medium text-gray-900">
-                                  {assessment.AssessmentTitle}
-                                </span>
-                              </li>
-                            ))
-                          ) : (
-                            <li className="px-4 py-2 text-sm text-gray-500">
-                              No matching assessment templates found
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                  <DropdownWithSearchField
+                    containerRef={assessmentDropdownRef}
+                    label="Assessment Template"
+                    required
+                    name="Assessment"
+                    value={selectedAssessment?._id || ""}
+                    options={assessmentData?.map((assessment) => ({
+                      value: assessment._id,
+                      label: assessment.AssessmentTitle,
+                    })) || []}
+                    onChange={(e) => {
+                      const assessmentId = e?.target?.value;
+                      if (assessmentId) {
+                        const assessment = assessmentData.find(a => a._id === assessmentId);
+                        if (assessment) {
+                          handleAssessmentSelect(assessment);
+                        }
+                      }
+                    }}
+                    error={errors.Assessment}
+                    placeholder="Search assessment templates..."
+                    isSearchable={true}
+                  />
                 </div>
               ) : (
                 <p className="font-semibold mb-2">
@@ -653,116 +571,70 @@ const ShareAssessment = ({
                   </button>
                 </div>
 
-                <div className="relative" ref={dropdownRef}>
-                  <div
-                    className={`flex items-center border rounded-lg px-3 py-2 ${
-                      errors.Candidate ? "border-red-500" : "border-gray-300"
-                    } focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors`}
-                    onClick={() => setShowDropdownCandidate(true)}
-                  >
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      className="flex-grow outline-none text-sm bg-transparent"
-                      value={candidateInput}
-                      onChange={handleCandidateInputChange}
-                      onFocus={() => {
-                        setShowDropdownCandidate(true);
-                        if (!candidateInput) {
-                          // <---------------------- v1.0.1
-
-                          // Use already loaded candidate data
-                          setFilteredCandidates(candidateData || []);
-                        }
-                        // <---------------------- v1.0.1 >
-                      }}
-                      placeholder="Search by name or email..."
-                      autoComplete="off"
-                    />
-                    <div className="flex space-x-2">
-                      {selectedCandidates.length > 0 && (
-                        <button
-                          onClick={handleClearAllCandidates}
-                          className="text-gray-500 hover:text-gray-700 text-sm"
-                        >
-                          Clear all
-                        </button>
-                      )}
-                      <MdArrowDropDown
-                        onClick={handleDropdownToggle}
-                        className={`text-gray-500 hover:text-gray-700 cursor-pointer transition-transform ${
-                          showDropdownCandidate ? "transform rotate-180" : ""
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  {errors.Candidate && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.Candidate}
-                    </p>
-                  )}
-                  {/* v1.0.3 <------------------------------------------------------------------------------------------------------------------------- */}
-                  {showDropdownCandidate && (
-                    <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-44 overflow-auto">
-                      <div className="sticky top-0 p-2 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Available Candidates ({filteredCandidates.length})
-                        </p>
-                        {filteredCandidates.length > 0 && (
-                          <button
-                            onClick={handleSelectAllVisible}
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                          >
-                            Select All
-                          </button>
-                        )}
-                      </div>
-                      <ul className="divide-y divide-gray-100">
-                        {filteredCandidates.length > 0 ? (
-                          filteredCandidates.map((candidate) => {
-                            const isSelected = selectedCandidates.some(
-                              (selected) => selected._id === candidate._id
-                            );
-
-                            return (
-                              // <-------------------------------v1.0.3
-                              <li
-                                key={candidate._id}
-                                className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
-                                  isSelected ? "bg-blue-50" : ""
-                                }`}
-                                onClick={() => handleCandidateSelect(candidate)}
-                              >
-                                <div className="flex items-center">
-                                  <span className="text-sm font-medium text-gray-900">
-                                    {candidate.FirstName} {candidate.LastName}
-                                  </span>
-                                  {candidate.Email && (
-                                    <span className="ml-2 text-xs text-gray-500">
-                                      ({candidate.Email})
-                                    </span>
-                                  )}
-                                </div>
-                                {isSelected ? (
-                                  // <-------------------------------v1.0.3
-                                  <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full">
-                                    Selected
-                                  </span>
-                                ) : null}
-                              </li>
-                            );
-                          })
-                        ) : (
-                          <li className="px-4 py-2 text-sm text-gray-500">
-                            No matching candidates found
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                  {/* v1.0.3 <------------------------------------------------------------------------------------------------------------------------- */}
-                </div>
+                <DropdownWithSearchField
+                  containerRef={dropdownRef}
+                  name="Candidate"
+                  value={selectedCandidates.map(c => c._id)}
+                  options={[
+                    ...(candidateData?.map((candidate) => ({
+                      value: candidate._id,
+                      label: `${candidate.FirstName} ${candidate.LastName}`,
+                      subLabel: candidate.Email,
+                      data: candidate,
+                    })) || []),
+                    {
+                      value: "select_all",
+                      label: "Select All",
+                      isSticky: true,
+                      className: "text-blue-600 font-medium border-t",
+                    },
+                  ]}
+                  onChange={(e) => {
+                    const values = e?.target?.value || [];
+                    
+                    // Check if "Select All" was clicked
+                    if (values.includes("select_all")) {
+                      // If "select_all" was just added, select all candidates
+                      if (!selectedCandidates.map(c => c._id).includes("select_all")) {
+                        setSelectedCandidates(candidateData || []);
+                        // Note: The component won't actually select "select_all" in its value
+                        // We just use it as a trigger
+                        return;
+                      }
+                    }
+                    
+                    // Handle regular selection changes
+                    const currentIds = selectedCandidates.map(c => c._id);
+                    const newIds = values.filter(v => v !== "select_all");
+                    
+                    // Find which IDs were added or removed
+                    const addedIds = newIds.filter(id => !currentIds.includes(id));
+                    const removedIds = currentIds.filter(id => !newIds.includes(id));
+                    
+                    // Add new selections
+                    addedIds.forEach(id => {
+                      const candidate = candidateData.find(c => c._id === id);
+                      if (candidate) {
+                        setSelectedCandidates(prev => [...prev, candidate]);
+                      }
+                    });
+                    
+                    // Remove deselected items
+                    removedIds.forEach(id => {
+                      setSelectedCandidates(prev => prev.filter(c => c._id !== id));
+                    });
+                    
+                    // Clear error when selection is made
+                    if (newIds.length > 0) {
+                      setErrors({ ...errors, Candidate: "" });
+                    }
+                  }}
+                  error={errors.Candidate}
+                  placeholder="Search by name or email..."
+                  isSearchable={true}
+                  isMulti={true}
+                  loading={loading}
+                />
 
                 {selectedCandidates.length > 0 && (
                   <div className="mt-3">

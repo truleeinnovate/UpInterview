@@ -2,13 +2,14 @@
 // v1.0.1  -  Ashok   -  Added scroll to first error functionality
 
 import React, { useState, useEffect, useRef } from "react";
-import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
 import { ReactComponent as CgInfo } from "../../../../../icons/CgInfo.svg";
 import { ReactComponent as MdOutlineCancel } from "../../../../../icons/MdOutlineCancel.svg";
-import { ReactComponent as IoIosAddCircle } from "../../../../../icons/IoIosAddCircle.svg";
 import Switch from "react-switch";
 import DatePicker from "react-datepicker";
 import PositionForm from "../../Position-Tab/Position-Form";
+// Common Form Field Components
+import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
+import InputField from "../../../../../Components/FormFields/InputField.jsx";
 
 const BasicDetailsTab = ({
   isEditing,
@@ -83,7 +84,6 @@ const BasicDetailsTab = ({
 
   // Handle click outside dropdowns
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const handleClickOutside = (event) => {
       if (
         linkExpiryRef.current &&
@@ -105,32 +105,8 @@ const BasicDetailsTab = ({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Modified toggle functions to close other dropdowns
-  const modifiedToggleLinkExpiry = (e) => {
-    if (e) e.stopPropagation();
-    closeAllDropdowns("linkExpiry");
-    toggleLinkExpiryDropdown();
-  };
-
-  const modifiedTogglePosition = (e) => {
-    if (e) e.stopPropagation();
-    closeAllDropdowns("position");
-    setShowDropdownPosition(!showDropdownPosition);
-  };
-
-  const modifiedToggleDifficulty = (e) => {
-    if (e) e.stopPropagation();
-    closeAllDropdowns("difficulty");
-    setShowDropdownDifficulty(!showDropdownDifficulty);
-  };
-
-  const modifiedToggleDuration = (e) => {
-    if (e) e.stopPropagation();
-    closeAllDropdowns("duration");
-    toggleDropdownDuration();
-  };
 
   
 
@@ -165,101 +141,43 @@ const BasicDetailsTab = ({
           {/* Assessment Name and Type */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             <div>
-              {/* // <---------------------- v1.0.0 */}
-              <label
-                htmlFor="AssessmentTitle"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Assessment Template Name <span className="text-red-500">*</span>
-              </label>
-              {/* // <---------------------- v1.0.0 */}
-              <div className="mt-1">
-                <input
-                  // v1.0.1 <---------------------------------------------------------------------
-                  ref={fieldRefs.AssessmentTitle}
-                  type="text"
-                  name="AssessmentTitle"
-                  id="AssessmentTitle"
-                  maxLength={assessmentTitleLimit}
-                  value={formData?.AssessmentTitle}
-                  onChange={(e) =>
-                    handleInputChange("AssessmentTitle", e.target.value)
-                  }
-                  placeholder="Enter Assessment Name"
-                  autoComplete="off"
-                  // className={`block w-full border ${
-                  //   errors.AssessmentTitle
-                  //     ? "border-red-500"
-                  //     : "border-gray-300"
-                  // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                    border ${
-                      errors.AssessmentTitle
-                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-red-300"
-                    }
-                    focus:outline-gray-300
-                  `}
-                />
-                {/* v1.0.1 <---------------------------------------------------------------------- */}
-                {formData?.AssessmentTitle?.length >=
-                  assessmentTitleLimit * 0.75 && (
-                  <div className="text-right text-xs text-gray-500">
-                    {formData?.AssessmentTitle?.length}/{assessmentTitleLimit}
-                  </div>
-                )}
-                {errors.AssessmentTitle && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.AssessmentTitle}
-                  </p>
-                )}
-              </div>
+              <InputField
+                ref={fieldRefs.AssessmentTitle}
+                label="Assessment Template Name"
+                required
+                type="text"
+                name="AssessmentTitle"
+                id="AssessmentTitle"
+                maxLength={assessmentTitleLimit}
+                value={formData?.AssessmentTitle}
+                onChange={(e) =>
+                  handleInputChange("AssessmentTitle", e.target.value)
+                }
+                placeholder="Enter Assessment Name"
+                autoComplete="off"
+                error={errors.AssessmentTitle}
+                showCharCount={formData?.AssessmentTitle?.length >= assessmentTitleLimit * 0.75}
+              />
             </div>
 
             <div>
-              <label
-                htmlFor="NumberOfQuestions"
-                className="block text-sm font-medium text-gray-700"
-              >
-                No. of Questions <span className="text-red-500">*</span>
-              </label>
-              <div className="mt-1">
-                {/* v1.0.1 <----------------------------------------------------------------------------- */}
-                <input
-                  ref={fieldRefs.NumberOfQuestions}
-                  type="number"
-                  name="NumberOfQuestions"
-                  value={formData.NumberOfQuestions}
-                  onChange={handleChange}
-                  id="NumberOfQuestions"
-                  min="1"
-                  max="100"
-                  step="1"
-                  autoComplete="off"
-                  placeholder="Enter Number of Questions"
-                  // className={`block w-full border ${
-                  //   errors.NumberOfQuestions
-                  //     ? "border-red-500"
-                  //     : "border-gray-300"
-                  // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                    border ${
-                      errors.NumberOfQuestions
-                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-red-300"
-                    }
-                    focus:outline-gray-300
-                  `}
-                  onKeyDown={(e) => e.preventDefault()} // 👈 Prevent typing
-                />
-                {/* v1.0.1 -----------------------------------------------------------------------------> */}
-
-                {errors.NumberOfQuestions && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.NumberOfQuestions}
-                  </p>
-                )}
-              </div>
+              <InputField
+                ref={fieldRefs.NumberOfQuestions}
+                label="No. of Questions"
+                required
+                type="number"
+                name="NumberOfQuestions"
+                value={formData.NumberOfQuestions}
+                onChange={handleChange}
+                id="NumberOfQuestions"
+                min={1}
+                max={100}
+                step={1}
+                autoComplete="off"
+                placeholder="Enter Number of Questions"
+                error={errors.NumberOfQuestions}
+                onKeyDown={(e) => e.preventDefault()} // 👈 Prevent typing
+              />
             </div>
 
             {/* Assessment Type - Commented out for now */}
@@ -364,234 +282,94 @@ const BasicDetailsTab = ({
           {/* Position and Difficulty Level */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             {/* Position */}
-            <div className="mb-4" ref={positionRef}>
-              <div className="flex items-center">
-                <label
-                  htmlFor="position"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Position
-                </label>
-                <button
-                  type="button"
-                  onClick={handleIconClick}
-                  className="ml-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  aria-label="Position information"
-                >
-                  <CgInfo className="w-4 h-4" />
-                </button>
+            <div>
+              <div className="mb-1">
+                <DropdownWithSearchField
+                  containerRef={fieldRefs.Position}
+                  label="Position"
+                  name="Position"
+                  value={selectedPosition?._id || ""}
+                  options={[
+                    ...(positions?.map((position) => ({
+                      value: position._id,
+                      label: position.title,
+                    })) || []),
+                    {
+                      value: "add_new",
+                      label: "+ Add New Position",
+                      isSticky: true,
+                      className: "text-blue-600 font-medium hover:bg-blue-50",
+                    },
+                  ]}
+                  onChange={(e) => {
+                    const value = e?.target?.value || e?.value;
+                    if (value === "add_new") {
+                      handleAddNewPositionClick();
+                      setIsPositionModalOpen(true);
+                    } else if (value) {
+                      const position = positions.find((p) => p._id === value);
+                      if (position) {
+                        handlePositionSelect(position);
+                      }
+                    } else {
+                      // Clear selection
+                      setSelectedPosition("");
+                    }
+                  }}
+                  error={errors.Position}
+                  placeholder="Select Position"
+                />
                 {showMessage && (
-                  <div
-                    onClick={() => setShowMessage(false)}
-                    className="absolute mt-6 ml-0 max-w-xs bg-white text-gray-700 text-sm border border-gray-200 rounded-md p-2 shadow-lg z-10 cursor-pointer"
-                  >
-                    Depending on the position, we can offer sections with
-                    tailored questions.
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-1 relative">
-                <div
-                  className={`relative w-full cursor-default rounded-md border ${
-                    errors.Position ? "border-red-500" : "border-gray-300"
-                  } bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 ${
-                    errors.Position
-                      ? "focus:ring-red-500"
-                      : "focus:ring-blue-500"
-                  } sm:text-sm min-h-[42px] flex items-center`}
-                  onClick={modifiedTogglePosition}
-                  aria-haspopup="listbox"
-                  aria-expanded={showDropdownPosition}
-                >
-                  {selectedPosition?.title ? (
-                    <span className="flex items-center">
-                      <span className="inline-flex items-center bg-gray-100 rounded-full px-2.5 py-0.5 text-xs font-medium text-gray-800">
-                        {selectedPosition.title}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPosition("");
-                          }}
-                          className="ml-1.5 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 focus:outline-none"
-                          aria-label="Remove selection"
-                        >
-                          <span className="sr-only">Remove</span>
-                          <svg
-                            className="h-2.5 w-2.5"
-                            stroke="currentColor"
-                            fill="none"
-                            viewBox="0 0 8 8"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeWidth="1.5"
-                              d="M1 1l6 6m0-6L1 7"
-                            />
-                          </svg>
-                        </button>
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="text-gray-500">Select Position</span>
-                  )}
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <MdArrowDropDown
-                      className="h-5 w-5 text-gray-400"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </div>
-
-                {showDropdownPosition && (
-                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-60 overflow-auto focus:outline-none sm:text-sm">
-                    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-2">
-                      <p className="font-medium text-gray-700 text-sm">
-                        Recent Positions
-                      </p>
-                    </div>
-                    <ul>
-                      {positions.length === 0 ? (
-                        <div className="text-gray-500 py-2 px-4">
-                          No recent positions found
-                        </div>
-                      ) : (
-                        positions.map((position) => (
-                          <li
-                            key={position._id}
-                            className="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePositionSelect(position);
-                              setShowDropdownPosition(false);
-                            }}
-                          >
-                            <div className="flex items-center">
-                              <span className="ml-3 block truncate">
-                                {position.title}
-                              </span>
-                            </div>
-                          </li>
-                        ))
-                      )}
-                    </ul>
-                    <div className="border-t border-gray-200 px-4 py-2">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddNewPositionClick();
-                          setIsPositionModalOpen(true)
-                          setShowDropdownPosition(false);
-                        }}
-                        className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none"
-                      >
-                        <IoIosAddCircle className="mr-1.5 h-5 w-5" />
-                        Add New Position
-                      </button>
-                    </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    <button
+                      type="button"
+                      onClick={handleIconClick}
+                      className="inline-flex items-center text-gray-500 hover:text-gray-700"
+                    >
+                      <CgInfo className="w-3 h-3 mr-1" />
+                      Position will be part of the candidate profile
+                    </button>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Difficulty Level */}
-            <div ref={difficultyRef}>
-              <label
-                htmlFor="difficulty"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Difficulty Level <span className="text-red-500">*</span>
-              </label>
-              <div className="relative mt-1">
-                {/* v1.0.1 <---------------------------------------------------------------------- */}
-                <div
-                  ref={fieldRefs.DifficultyLevel}
-                  // className={`flex items-center border ${
-                  //   errors.DifficultyLevel
-                  //     ? "border-red-500"
-                  //     : "border-gray-300"
-                  // } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-                  className={`mt-1 flex items-center w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                    border ${
-                      errors.DifficultyLevel
-                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-red-300"
-                    }
-                    focus:outline-gray-300
-                  `}
-                  onClick={modifiedToggleDifficulty}
-                >
-                  {selectedDifficulty || (
-                    <span className="text-gray-400">
-                      Select Difficulty Level
-                    </span>
-                  )}
-                  <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
-                </div>
-                {showDropdownDifficulty && (
-                  <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300">
-                    {difficultyLevels.map((level) => (
-                      <div
-                        key={level}
-                        className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm"
-                        onClick={() => handleDifficultySelect(level)}
-                      >
-                        {level}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {errors.DifficultyLevel && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.DifficultyLevel}
-                  </p>
-                )}
-              </div>
-              {/* v1.0.1 <---------------------------------------------------------------------- */}
+            <div>
+              <DropdownWithSearchField
+                containerRef={fieldRefs.DifficultyLevel}
+                label="Difficulty Level"
+                required
+                name="difficulty"
+                value={selectedDifficulty || ""}
+                options={difficultyLevels.map((level) => ({
+                  value: level,
+                  label: level,
+                }))}
+                onChange={(e) => handleDifficultySelect(e.target.value)}
+                error={errors.DifficultyLevel}
+                placeholder="Select Difficulty Level"
+              />
             </div>
           </div>
 
           {/* Duration and Expiry Date */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
             {/* Duration */}
-            <div ref={durationRef}>
-              <label
-                htmlFor="duration"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Duration <span className="text-red-500">*</span>
-              </label>
-              <div className="relative mt-1">
-                <div
-                  className={`flex items-center border ${
-                    errors.Duration ? "border-red-500" : "border-gray-300"
-                  } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-                  onClick={modifiedToggleDuration}
-                >
-                  {selectedDuration || (
-                    <span className="text-gray-400">Select Duration</span>
-                  )}
-                  <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
-                </div>
-                {showDropdownDuration && (
-                  <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-36 overflow-y-auto">
-                    {durations.map((duration) => (
-                      <div
-                        key={duration}
-                        className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm"
-                        onClick={() => handleDurationSelect(duration)}
-                      >
-                        {duration}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {errors.Duration && (
-                  <p className="text-red-500 text-sm mt-1">{errors.Duration}</p>
-                )}
-              </div>
+            <div>
+              <DropdownWithSearchField
+                label="Duration"
+                required
+                name="duration"
+                value={selectedDuration || ""}
+                options={durations.map((duration) => ({
+                  value: duration,
+                  label: duration,
+                }))}
+                onChange={(e) => handleDurationSelect(e.target.value)}
+                error={errors.Duration}
+                placeholder="Select Duration"
+              />
             </div>
 
             {/* Expiry Date */}
@@ -623,55 +401,28 @@ const BasicDetailsTab = ({
 
           {/* Link Expiry Days */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
-            <div ref={linkExpiryRef}>
-              <label
-                htmlFor="linkExpiry"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Link Expiry (Days) <span className="text-red-500">*</span>
-              </label>
-              <div className="relative mt-1">
-                <div
-                  className={`flex items-center border ${
-                    errors.LinkExpiryDays ? "border-red-500" : "border-gray-300"
-                  } rounded-md shadow-sm py-2 px-3 min-h-[42px] cursor-pointer`}
-                  onClick={modifiedToggleLinkExpiry}
-                >
-                  {linkExpiryDays || (
-                    <span className="text-gray-400">Select days</span>
-                  )}
-                  <MdArrowDropDown className="ml-auto text-gray-500 text-lg" />
-                </div>
-                {showLinkExpiryDay && (
-                  <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-24 overflow-y-auto">
-                    {/* // <---------------------- v1.0.0 */}
-                    {Array.from({ length: 10 }, (_, index) => index + 1).map(
-                      (days) => (
-                        <div
-                          key={days}
-                          className="py-2 px-4 cursor-pointer hover:bg-gray-100 text-sm"
-                          onClick={() => {
-                            setLinkExpiryDays(days); // Update linkExpiryDays prop
-                            setFormData((prev) => ({
-                              ...prev,
-                              linkExpiryDays: days, // Update formData.linkExpiryDays
-                            }));
-                            toggleLinkExpiryDropdown(); // Close dropdown
-                          }}
-                        >
-                          {days}
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-                {/* // <---------------------- v1.0.0 */}
-                {errors.LinkExpiryDays && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.LinkExpiryDays}
-                  </p>
-                )}
-              </div>
+            <div>
+              <DropdownWithSearchField
+                containerRef={linkExpiryRef}
+                label="Link Expiry (Days)"
+                required
+                name="linkExpiry"
+                value={linkExpiryDays || ""}
+                options={Array.from({ length: 10 }, (_, index) => ({
+                  value: index + 1,
+                  label: `${index + 1}`,
+                }))}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  setLinkExpiryDays(value);
+                  setFormData((prev) => ({
+                    ...prev,
+                    linkExpiryDays: value,
+                  }));
+                }}
+                error={errors.LinkExpiryDays}
+                placeholder="Select days"
+              />
             </div>
             <div></div> {/* Empty div to maintain grid structure */}
           </div>
