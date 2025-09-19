@@ -3,14 +3,15 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import axios from 'axios';
 import { config } from '../config';
 import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
-import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import { decodeJwt, encodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
 const PermissionsContext = createContext();
 
 // Cache management functions
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+// const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const EFFECTIVE_PERMISSIONS_CACHE_KEY = 'permissions_effective';
 const SUPER_ADMIN_PERMISSIONS_CACHE_KEY = 'permissions_superAdmin';
+
 
 const getCachedPermissions = () => {
   try {
@@ -29,16 +30,13 @@ const getCachedPermissions = () => {
     }
 
     const cached = localStorage.getItem(cacheKey);
-    
     if (!cached) {
       return null;
     }
 
-    const { permissions, timestamp } = JSON.parse(cached);
-    const age = Date.now() - timestamp;
-
-    if (age > CACHE_DURATION) {
-      localStorage.removeItem(cacheKey);
+    // Use decodeJwt to decode the cached permissions
+    const permissions = decodeJwt(cached);
+    if (!permissions || Object.keys(permissions).length === 0) {
       return null;
     }
 
@@ -65,41 +63,42 @@ const cachePermissions = (permissions) => {
       return;
     }
 
-    const cacheData = {
-      permissions,
-      timestamp: Date.now()
-    };
+    // Encode permissions using encodeJwt
+    const encodedPermissions = encodeJwt(permissions);
+    if (!encodedPermissions) {
+      return;
+    }
 
-    localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+    localStorage.setItem(cacheKey, encodedPermissions);
   } catch (error) {
     console.warn('Error caching permissions:', error);
   }
 };
 
-const clearPermissionsCache = (userType = null) => {
-  try {
-    if (userType === 'effective') {
-      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-      // Also clear old cache key if it exists
-      localStorage.removeItem('effective_permissions');
-    } else if (userType === 'superAdmin') {
-      localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
-      // Also clear old cache key if it exists
-      localStorage.removeItem('super_admin_permissions');
-    } else {
-      // Clear all permission caches
-      localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
-      localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
-      // Also clear old cache keys
-      localStorage.removeItem('effective_permissions');
-      localStorage.removeItem('super_admin_permissions');
-      localStorage.removeItem('permissions_effective');
-      localStorage.removeItem('permissions_superAdmin');
-    }
-  } catch (error) {
-    console.warn('Error clearing permissions cache:', error);
-  }
-};
+// const clearPermissionsCache = (userType = null) => {
+//   try {
+//     if (userType === 'effective') {
+//       localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
+//       // Also clear old cache key if it exists
+//       localStorage.removeItem('effective_permissions');
+//     } else if (userType === 'superAdmin') {
+//       localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
+//       // Also clear old cache key if it exists
+//       localStorage.removeItem('super_admin_permissions');
+//     } else {
+//       // Clear all permission caches
+//       localStorage.removeItem(EFFECTIVE_PERMISSIONS_CACHE_KEY);
+//       localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
+//       // Also clear old cache keys
+//       localStorage.removeItem('effective_permissions');
+//       localStorage.removeItem('super_admin_permissions');
+//       localStorage.removeItem('permissions_effective');
+//       localStorage.removeItem('permissions_superAdmin');
+//     }
+//   } catch (error) {
+//     console.warn('Error clearing permissions cache:', error);
+//   }
+// };
 
 export const PermissionsProvider = ({ children }) => {
   const [permissionState, setPermissionState] = useState({
@@ -168,7 +167,7 @@ export const PermissionsProvider = ({ children }) => {
       // });
 
       const permissionData = response.data;
-      
+
       // console.log('[PermissionsContext] Permission data details:', {
       //   effectivePermissions: permissionData.effectivePermissions ? Object.keys(permissionData.effectivePermissions) : [],
       //   superAdminPermissions: permissionData.superAdminPermissions ? Object.keys(permissionData.superAdminPermissions) : [],
@@ -179,7 +178,7 @@ export const PermissionsProvider = ({ children }) => {
 
       // Separate permissions based on user type and cache appropriately
       let permissionsToCache;
-      
+
       if (userType === 'effective') {
         // For effective users, only cache effective permissions - no super admin or impersonation data
         permissionsToCache = {
@@ -188,22 +187,22 @@ export const PermissionsProvider = ({ children }) => {
           effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
           effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
           inheritedRoleIds: permissionData.inheritedRoleIds || [],
-              // <-------------------------------v1.0.0
+          // <-------------------------------v1.0.0
 
           superAdminPermissions: null, // <-- Always clear super admin permissions when logging in as user
           isImpersonating: false,
           impersonatedUser_roleType: null,
           impersonatedUser_roleName: null
         };
-        
+
         // Explicitly clear super admin permissions from cache when logging in as user (impersonation)
-        clearPermissionsCache('superAdmin');
- // ------------------------------v1.0.0 > 
+        // clearPermissionsCache('superAdmin');
+        // ------------------------------v1.0.0 > 
 
       } else if (userType === 'superAdmin') {
         // For super admin, cache super admin permissions - no effective permissions unless impersonating
         const isImpersonating = permissionData.isImpersonating || false;
-        
+
         permissionsToCache = {
           superAdminPermissions: permissionData.superAdminPermissions || {},
           isImpersonating: isImpersonating,
@@ -217,82 +216,96 @@ export const PermissionsProvider = ({ children }) => {
           impersonatedUser_roleName: isImpersonating ? permissionData.impersonatedUser_roleName : null
         };
       } else {
-        // Fallback - check what permissions are available and use accordingly
-        const hasEffectivePermissions = permissionData.effectivePermissions && Object.keys(permissionData.effectivePermissions).length > 0;
-        const hasSuperAdminPermissions = permissionData.superAdminPermissions && Object.keys(permissionData.superAdminPermissions).length > 0;
-        
-        if (hasEffectivePermissions && !hasSuperAdminPermissions) {
-          // Only effective permissions available
-          permissionsToCache = {
-            effectivePermissions: permissionData.effectivePermissions,
-            effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
-            effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
-            effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
-            inheritedRoleIds: permissionData.inheritedRoleIds || [],
-            superAdminPermissions: null,
-            isImpersonating: false,
-            impersonatedUser_roleType: null,
-            impersonatedUser_roleName: null
-          };
-        } else if (hasSuperAdminPermissions && !hasEffectivePermissions) {
-          // Only super admin permissions available
-          permissionsToCache = {
-            superAdminPermissions: permissionData.superAdminPermissions,
-            effectivePermissions: {},
-            effectivePermissions_RoleType: null,
-            effectivePermissions_RoleLevel: null,
-            effectivePermissions_RoleName: null,
-            inheritedRoleIds: [],
-            isImpersonating: false,
-            impersonatedUser_roleType: null,
-            impersonatedUser_roleName: null
-          };
-        } else if (hasEffectivePermissions && hasSuperAdminPermissions) {
-          // Both permissions available - determine if impersonating
-          const isImpersonating = permissionData.isImpersonating || false;
-          
-          if (isImpersonating) {
-            // User is impersonating, include both permission sets
-            permissionsToCache = {
-              effectivePermissions: permissionData.effectivePermissions,
-              superAdminPermissions: permissionData.superAdminPermissions,
-              effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
-              effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
-              effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
-              inheritedRoleIds: permissionData.inheritedRoleIds || [],
-              isImpersonating: true,
-              impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
-              impersonatedUser_roleName: permissionData.impersonatedUser_roleName
-            };
-          } else {
-            // Not impersonating, use super admin permissions only
-            permissionsToCache = {
-              superAdminPermissions: permissionData.superAdminPermissions,
-              effectivePermissions: {},
-              effectivePermissions_RoleType: null,
-              effectivePermissions_RoleLevel: null,
-              effectivePermissions_RoleName: null,
-              inheritedRoleIds: [],
-              isImpersonating: false,
-              impersonatedUser_roleType: null,
-              impersonatedUser_roleName: null
-            };
-          }
-        } else {
-          // No permissions available
-          permissionsToCache = {
-            effectivePermissions: {},
-            superAdminPermissions: {},
-            effectivePermissions_RoleType: null,
-            effectivePermissions_RoleLevel: null,
-            effectivePermissions_RoleName: null,
-            inheritedRoleIds: [],
-            isImpersonating: false,
-            impersonatedUser_roleType: null,
-            impersonatedUser_roleName: null
-          };
-        }
+        // No permissions available
+        permissionsToCache = {
+          effectivePermissions: {},
+          superAdminPermissions: {},
+          effectivePermissions_RoleType: null,
+          effectivePermissions_RoleLevel: null,
+          effectivePermissions_RoleName: null,
+          inheritedRoleIds: [],
+          isImpersonating: false,
+          impersonatedUser_roleType: null,
+          impersonatedUser_roleName: null
+        };
       }
+      // else {
+      //   // Fallback - check what permissions are available and use accordingly
+      //   const hasEffectivePermissions = permissionData.effectivePermissions && Object.keys(permissionData.effectivePermissions).length > 0;
+      //   const hasSuperAdminPermissions = permissionData.superAdminPermissions && Object.keys(permissionData.superAdminPermissions).length > 0;
+
+      //   if (hasEffectivePermissions && !hasSuperAdminPermissions) {
+      //     // Only effective permissions available
+      //     permissionsToCache = {
+      //       effectivePermissions: permissionData.effectivePermissions,
+      //       effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
+      //       effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
+      //       effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
+      //       inheritedRoleIds: permissionData.inheritedRoleIds || [],
+      //       superAdminPermissions: null,
+      //       isImpersonating: false,
+      //       impersonatedUser_roleType: null,
+      //       impersonatedUser_roleName: null
+      //     };
+      //   } else if (hasSuperAdminPermissions && !hasEffectivePermissions) {
+      //     // Only super admin permissions available
+      //     permissionsToCache = {
+      //       superAdminPermissions: permissionData.superAdminPermissions,
+      //       effectivePermissions: {},
+      //       effectivePermissions_RoleType: null,
+      //       effectivePermissions_RoleLevel: null,
+      //       effectivePermissions_RoleName: null,
+      //       inheritedRoleIds: [],
+      //       isImpersonating: false,
+      //       impersonatedUser_roleType: null,
+      //       impersonatedUser_roleName: null
+      //     };
+      //   } else if (hasEffectivePermissions && hasSuperAdminPermissions) {
+      //     // Both permissions available - determine if impersonating
+      //     const isImpersonating = permissionData.isImpersonating || false;
+
+      //     if (isImpersonating) {
+      //       // User is impersonating, include both permission sets
+      //       permissionsToCache = {
+      //         effectivePermissions: permissionData.effectivePermissions,
+      //         superAdminPermissions: permissionData.superAdminPermissions,
+      //         effectivePermissions_RoleType: permissionData.effectivePermissions_RoleType,
+      //         effectivePermissions_RoleLevel: permissionData.effectivePermissions_RoleLevel,
+      //         effectivePermissions_RoleName: permissionData.effectivePermissions_RoleName,
+      //         inheritedRoleIds: permissionData.inheritedRoleIds || [],
+      //         isImpersonating: true,
+      //         impersonatedUser_roleType: permissionData.impersonatedUser_roleType,
+      //         impersonatedUser_roleName: permissionData.impersonatedUser_roleName
+      //       };
+      //     } else {
+      //       // Not impersonating, use super admin permissions only
+      //       permissionsToCache = {
+      //         superAdminPermissions: permissionData.superAdminPermissions,
+      //         effectivePermissions: {},
+      //         effectivePermissions_RoleType: null,
+      //         effectivePermissions_RoleLevel: null,
+      //         effectivePermissions_RoleName: null,
+      //         inheritedRoleIds: [],
+      //         isImpersonating: false,
+      //         impersonatedUser_roleType: null,
+      //         impersonatedUser_roleName: null
+      //       };
+      //     }
+      //   } else {
+      //     // No permissions available
+      //     permissionsToCache = {
+      //       effectivePermissions: {},
+      //       superAdminPermissions: {},
+      //       effectivePermissions_RoleType: null,
+      //       effectivePermissions_RoleLevel: null,
+      //       effectivePermissions_RoleName: null,
+      //       inheritedRoleIds: [],
+      //       isImpersonating: false,
+      //       impersonatedUser_roleType: null,
+      //       impersonatedUser_roleName: null
+      //     };
+      //   }
+      // }
 
       // Cache the separated permissions
       cachePermissions(permissionsToCache);
@@ -315,7 +328,7 @@ export const PermissionsProvider = ({ children }) => {
       //     headers: error.config?.headers
       //   }
       // });
-      
+
       setPermissionState((prev) => ({
         ...prev,
         loading: false,
@@ -348,7 +361,7 @@ export const PermissionsProvider = ({ children }) => {
     // If we have any permissions data available, use it immediately
     const hasEffectiveData = effectivePermissions && Object.keys(effectivePermissions).length > 0;
     const hasSuperAdminData = superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
-    
+
     if (hasEffectiveData || hasSuperAdminData) {
       // Use available permissions even if not fully initialized
       if (superAdminPermissions && superAdminPermissions[objectName]) {
@@ -365,7 +378,7 @@ export const PermissionsProvider = ({ children }) => {
         return effectivePermissions[objectName][permissionType] ?? false;
       }
     }
-    
+
     // Only return false if we have no permissions data at all
     return false;
   }, [permissionState]);

@@ -5,6 +5,23 @@
  * @param {string} token - The JWT token to decode.
  * @returns {object|null} - The decoded payload or null if decoding fails.
  */
+export const encodeJwt = (data) => {
+  try {
+    if (!data) {
+      return null;
+    }
+    const jsonString = JSON.stringify(data);
+    const base64String = btoa(jsonString)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    return `.${base64String}.`;
+  } catch (error) {
+    console.error('Error encoding data:', error.message);
+    return null;
+  }
+};
+
 export const decodeJwt = (token) => {
   try {
     if (!token) {

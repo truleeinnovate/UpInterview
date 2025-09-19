@@ -219,8 +219,8 @@ import { EventEmitter } from 'events';
 // console.log('activityTracker.js loaded');
 
 // Configuration
-// const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours
-const INACTIVITY_TIMEOUT = 10 * 1000; // 1 minute
+const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours
+// const INACTIVITY_TIMEOUT = 10 * 1000; // 1 minute
 const WARNING_TIMEOUT = INACTIVITY_TIMEOUT - (5 * 1000); // Show warning 5 seconds before logout
 const CHECK_INTERVAL = 1000; // Check every minute
 
