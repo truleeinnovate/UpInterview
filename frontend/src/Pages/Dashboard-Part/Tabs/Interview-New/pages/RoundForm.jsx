@@ -16,6 +16,8 @@ import {
   Trash2,
   Clock,
   Calendar,
+  ChevronUp,
+  Info,
 } from "lucide-react";
 import { Button } from "../../CommonCode-AllTabs/ui/button.jsx";
 import axios from "axios";
@@ -24,7 +26,7 @@ import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import Cookies from "js-cookie";
 // import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from "../../../../../utils/interviewRoundValidation.js";
-import { Search, ChevronUp } from "lucide-react";
+import { Search } from "lucide-react";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../../config";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank.jsx";
@@ -40,6 +42,10 @@ import LoadingButton from "../../../../../Components/LoadingButton";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI.jsx";
 import { useQueryClient } from "@tanstack/react-query";
+import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
+import InputField from "../../../../../Components/FormFields/InputField.jsx";
+import DescriptionField from "../../../../../Components/FormFields/DescriptionField.jsx";
+import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -72,6 +78,7 @@ const formatDateTime = (date, showDate = true) => {
 };
 
 const RoundFormInterviews = () => {
+  // Add useScrollLock hook at the beginning
   const { interviewData, isMutationLoading, saveInterviewRound, updateRoundWithMeetingLinks } =
     useInterviews();
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
@@ -419,21 +426,42 @@ const RoundFormInterviews = () => {
     setRemovedQuestionIds((prev) => [...prev, questionId]);
   };
 
+  const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
+
+  const handleRoundTitleUnifiedChange = (e) => {
+    const value = e.target.value;
+
+    // If already in custom mode, treat changes as typing the custom title
+    if (isCustomRoundTitle) {
+      setCustomRoundTitle(value);
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
+    }
+
+    // DropdownWithSearchField sends an empty string when "Other" is chosen.
+    // Enter custom mode and keep roundTitle as "Other" for submission mapping.
+    if (value === "") {
+      setIsCustomRoundTitle(true);
+      setRoundTitle("Other");
+      setCustomRoundTitle("");
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
+    }
+
+    // Normal predefined selection
+    setRoundTitle(value);
+    setCustomRoundTitle("");
+    if (value === "Assessment") {
+      setInterviewMode("Virtual");
+    }
+    setErrors((prev) => ({ ...prev, roundTitle: "", interviewMode: "" }));
+  };
+
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
 
     if (selectedTitle === "Other") {
-      setRoundTitle("Other");
       setCustomRoundTitle("");
-      setInstructions("");
-      setInstructions("");
-      setInterviewMode("");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
-      setInterviewerGroupName("");
       setInterviewerViewType("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null)
@@ -1515,7 +1543,61 @@ const RoundFormInterviews = () => {
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
         <div className="px-4 sm:px-0">
-          <Breadcrumb items={breadcrumbItems} />
+          <div className="sm:mb-0 mb-4">
+            <Breadcrumb items={breadcrumbItems} />
+          </div>
+          
+          {/* Info Guide for Round Form */}
+          <InfoGuide
+            className="mt-4"
+            title="Interview Round Guidelines"
+            items={[
+              <>
+                <span className="font-medium">Round Types:</span> Choose from
+                predefined round types (Assessment, Technical, Final, HR
+                Interview) or create custom rounds
+              </>,
+              <>
+                <span className="font-medium">Assessment Rounds:</span> Select
+                assessment templates with pre-configured questions and scoring
+              </>,
+              <>
+                <span className="font-medium">Interview Rounds:</span> Build
+                custom interview rounds with specific questions and evaluation
+                criteria
+              </>,
+              <>
+                <span className="font-medium">Interviewer Selection:</span>{" "}
+                Choose between internal team members or outsourced interviewers
+              </>,
+              <>
+                <span className="font-medium">Question Management:</span> Add
+                questions from your question bank or create new ones on the fly
+              </>,
+              <>
+                <span className="font-medium">Custom Instructions:</span>{" "}
+                Provide detailed instructions for each round (minimum 50
+                characters)
+              </>,
+              <>
+                <span className="font-medium">Sequence Control:</span> Set the
+                order of rounds in your interview process
+              </>,
+              <>
+                <span className="font-medium">Duration Settings:</span> Define
+                time allocation for each interview round (30-120 minutes)
+              </>,
+              <>
+                <span className="font-medium">Interview Scheduling:</span> Schedule
+                interviews in advance or start them instantly
+              </>,
+              <>
+                <span className="font-medium">Real-time Validation:</span> Form
+                validation ensures all required fields are completed before
+                submission
+              </>,
+            ]}
+          />
 
           <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6">
@@ -1541,150 +1623,72 @@ const RoundFormInterviews = () => {
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
                     {/* Round Title */}
                     <div>
-                      <label
-                        htmlFor="roundTitle"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Round Title <span className="text-red-500">*</span>
-                      </label>
-                      {/* v1.0.1 <------------------------------------------------------------------------ */}
-                      {roundTitle === "Other" ? (
-                        <input
-                          ref={fieldRefs.roundTitle}
-                          type="text"
-                          id="roundTitle"
-                          name="roundTitle"
-                          value={customRoundTitle}
-                          onChange={(e) => {
-                            setCustomRoundTitle(e.target.value);
-                            setErrors({ ...errors, roundTitle: "" }); // Clear error on change
-                          }}
-                          onBlur={() => {
-                            if (!customRoundTitle.trim()) {
-                              setRoundTitle(""); // Reset if the input is left empty
-                            }
-                          }}
-                          // className={`mt-1 block w-full border ${
-                          //   errors.roundTitle
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${errors.roundTitle
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
-                          // required
-                          placeholder="Enter Custom Round Title"
-                        />
-                      ) : (
-                        <select
-                          ref={fieldRefs.roundTitle}
-                          id="roundTitle"
-                          name="roundTitle"
-                          value={roundTitle}
-                          onChange={(e) => {
-                            handleRoundTitleChange(e);
-                            setErrors({
-                              ...errors,
-                              roundTitle: "",
-                              interviewMode: "",
-                            }); // Clear error on change
-                          }}
-                          // className={`mt-1 block w-full border ${
-                          //   errors.roundTitle
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${errors.roundTitle
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
-                        // required
-                        >
-                          <option value="">Select Round Title</option>
-                          <option value="Assessment">Assessment</option>
-                          <option value="Technical">Technical</option>
-                          <option value="Final">Final</option>
-                          <option value="HR Interview">HR Interview</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      )}
-                      {errors.roundTitle && (
-                        <p className="mt-1 text-sm text-red-500">
-                          {errors.roundTitle}
-                        </p>
-                      )}
-                      {/* v1.0.1 ------------------------------------------------------------------------> */}
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.roundTitle}
+                        label="Round Title"
+                        required
+                        name="roundTitle"
+                        value={
+                          isCustomRoundTitle
+                            ? customRoundTitle
+                            : roundTitle
+                        }
+                        options={[
+                          { value: "Assessment", label: "Assessment" },
+                          { value: "Technical", label: "Technical" },
+                          { value: "Final", label: "Final" },
+                          { value: "HR Interview", label: "HR Interview" },
+                          { value: "__other__", label: "Other" },
+                        ]}
+                        isCustomName={isCustomRoundTitle}
+                        setIsCustomName={setIsCustomRoundTitle}
+                        onChange={handleRoundTitleUnifiedChange}
+                        error={errors.roundTitle}
+                      />
                     </div>
 
                     {/* Interview Mode */}
                     <div>
-                      <label
-                        htmlFor="mode"
-                        className="block text-sm font-medium text-gray-700"
+                      <div
+                        className={
+                          roundTitle === "Assessment"
+                            ? "pointer-events-none opacity-60"
+                            : undefined
+                        }
                       >
-                        Interview Mode <span className="text-red-500">*</span>
-                      </label>
-                      {/* v1.0.1 <-------------------------------------------------------------------------------- */}
-                      <select
-                        ref={fieldRefs.interviewMode}
-                        id="interviewMode"
-                        name="interviewMode"
-                        value={interviewMode}
-                        onChange={(e) => {
-                          setInterviewMode(e.target.value);
-                          setErrors({ ...errors, interviewMode: "" }); // Clear error on change
-                        }}
-                        // className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
-                        //   errors.interviewMode
-                        //     ? "border-red-500"
-                        //     : "border-gray-300"
-                        // } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.interviewMode
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                        // required
-                        disabled={roundTitle === "Assessment"}
-                      >
-                        <option value="">Select Interview Mode</option>
-                        <option value="Face to Face">Face to Face</option>
-                        <option value="Virtual">Virtual</option>
-                      </select>
-                      {errors.interviewMode && (
-                        <p className="mt-1 text-sm text-red-500">
-                          {errors.interviewMode}
-                        </p>
-                      )}
-                      {/* v1.0.1 --------------------------------------------------------------------------------> */}
+                        <DropdownWithSearchField
+                          containerRef={fieldRefs.interviewMode}
+                          label="Interview Mode"
+                          required
+                          disabled={roundTitle === "Assessment"}
+                          name="interviewMode"
+                          value={interviewMode}
+                          options={[
+                            { value: "Face to Face", label: "Face to Face" },
+                            { value: "Virtual", label: "Virtual" },
+                          ]}
+                          onChange={(e) => {
+                            setInterviewMode(e.target.value);
+                            setErrors({ ...errors, interviewMode: "" });
+                          }}
+                          error={errors.interviewMode}
+                        />
+                      </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
                     {/* Sequence */}
                     <div>
-                      <label
-                        htmlFor="sequence"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Sequence <span className="text-red-500">*</span>
-                      </label>
+                      
                       {/* v1.0.1 <------------------------------------------------------------------------------------- */}
-                      <input
-                        ref={fieldRefs.sequence}
+                      <InputField
+                        label="Sequence"
                         type="number"
                         id="sequence"
                         name="sequence"
-                        min="1"
+                        min={1}
+                        ref={fieldRefs.sequence}
                         value={sequence}
                         onChange={(e) => {
                           setSequence(parseInt(e.target.value));
@@ -1693,24 +1697,14 @@ const RoundFormInterviews = () => {
                         // className={`mt-1 block w-full border ${
                         //   errors.sequence ? "border-red-500" : "border-gray-300"
                         // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.sequence
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                      // required
+                        error={errors.sequence}
+                        required
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         The order in which this round appears in the interview
                         process
                       </p>
-                      {errors.sequence && (
-                        <p className="mt-1 text-sm text-red-500">
-                          {errors.sequence}
-                        </p>
-                      )}
+                      
                       {/* v1.0.1 ---------------------------------------------------------------------------------------> */}
                     </div>
 
@@ -1731,100 +1725,55 @@ const RoundFormInterviews = () => {
                     </div> */}
 
                     <div>
-                      <label
-                        htmlFor="duration"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Duration (Minutes)
-                      </label>
-                      <select
-                        id="duration"
+                      <DropdownWithSearchField
+                        label="Duration (Minutes)"
                         name="duration"
                         value={duration}
-                        onChange={(e) =>
+                        options={[
+                                  { value: 30, label: "30 min" },
+                                  { value: 45, label: "45 min" },
+                                  { value: 60, label: "60 min" },
+                                  { value: 90, label: "90 min" },
+                                  { value: 120, label: "120 min" },
+                                ]}
+                        onChange={(e) => {
                           setDuration(parseInt(e.target.value))
-                        }
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
-                      >
-                        <option value="30">30 min</option>
-                        <option value="60">60 min</option>
-                        <option value="90">90 min</option>
-                        <option value="120">120 min</option>
-                      </select>
+                          //clearError("duration")
+                          }}
+                        error={errors.duration}
+                      />
                     </div>
 
                     {roundTitle === "Assessment" && (
                       <>
                         <div>
-                          <label
-                            htmlFor="assessmentTemplate"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Assessment Template{" "}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          {/* v1.0.1 <--------------------------------------------------------------------- */}
-                          <div className="relative flex-1">
-                            <input
-                              ref={fieldRefs.assessmentTemplate}
-                              type="text"
-                              name="assessmentTemplate"
-                              id="assessmentTemplate"
-                              // className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${errors.assessmentTemplate
-                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                  : "border-gray-300 focus:ring-red-300"
-                                }
-                                focus:outline-gray-300
-                              `}
-                              placeholder="Enter Assessment Template Name"
-                              value={assessmentTemplate.assessmentName || ""}
-                              onChange={(e) => {
-                                setAssessmentTemplate((prev) => ({
-                                  ...prev,
-                                  assessmentId: prev.assessmentId, // Keep the existing assessmentId
-                                  assessmentName: e.target.value, // Update assessmentName
-                                }));
-
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  assessmentTemplate: "",
-                                })); // Clear only this error
-                              }}
-                              onClick={() => setShowDropdown(!showDropdown)}
-                            />
-                            <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none">
-                              <Search className="text-gray-600 text-lg" />
-                            </div>
-                            {showDropdown && (
-                              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                {assessmentData.length > 0 ? (
-                                  assessmentData.map((user, index) => (
-                                    <div
-                                      key={index}
-                                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                      onClick={() =>
-                                        handleAssessmentSelect(user)
-                                      }
-                                    >
-                                      {user.AssessmentTitle}
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div className="px-3 py-2 text-gray-500">
-                                    No Assessments Found
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          {errors.assessmentTemplate && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {errors.assessmentTemplate}
-                            </p>
-                          )}
-                          {/* v1.0.1 ---------------------------------------------------------------------> */}
+                          
+                          <DropdownWithSearchField
+                            containerRef={fieldRefs.assessmentTemplate}
+                            label="Assessment Template"
+                            required
+                            name="assessmentTemplate"
+                            value={assessmentTemplate.assessmentId || ""}
+                            options={(assessmentData || []).map((a) => ({
+                              value: a._id,
+                              label: a.AssessmentTitle,
+                            }))}
+                            onChange={(e) => {
+                              const id = e.target.value;
+                              const selected = (assessmentData || []).find((a) => a._id === id);
+                              if (selected) {
+                                handleAssessmentSelect(selected);
+                              } else {
+                                // cleared
+                                setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+                                setSelectedAssessmentData(null);
+                                setSectionQuestions({});
+                                setInterviewQuestionsList([]);
+                              }
+                              setErrors((prev) => ({ ...prev, assessmentTemplate: "" }));
+                            }}
+                            error={errors.assessmentTemplate}
+                          />
                         </div>
 
                         {/* assessment questions */}
@@ -2669,15 +2618,11 @@ const RoundFormInterviews = () => {
 
                   {/* instructions */}
                   <div>
-                    <label
-                      htmlFor="feedback"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Instructions
-                    </label>
-                    <textarea
-                      id="instructions"
+                    <DescriptionField
+                      inputRef={fieldRefs.instructions}
                       name="instructions"
+                      label="Instructions"
+                      id="instructions"
                       rows="10"
                       minLength={50}
                       maxLength={1000}
@@ -2685,12 +2630,8 @@ const RoundFormInterviews = () => {
                       value={instructions}
                       readOnly={roundTitle === "Assessment"}
                       onChange={(e) => setInstructions(e.target.value)}
-                      className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3   sm:text-sm h-64
-                  ${errors.instructions ? "border-red-400" : ""}
-                  `}
-                    // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="text-sm text-gray-500">
                       Add Instructions after the interview round is completed
                     </p>
                   </div>

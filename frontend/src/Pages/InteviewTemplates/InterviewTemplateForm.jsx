@@ -24,6 +24,8 @@ import { scrollToFirstError } from "../../utils/ScrollToFirstError/scrollToFirst
 // v1.0.3 ----------------------------------------------------------------------------->
 // v1.0.4 <----------------------------------------------------------------------------
 import SidebarPopup from "../../Components/Shared/SidebarPopup/SidebarPopup";
+import InputField from "../../Components/FormFields/InputField";
+import DescriptionField from "../../Components/FormFields/DescriptionField";
 // v1.0.4 ---------------------------------------------------------------------------->
 
 const InterviewSlideover = ({ mode }) => {
@@ -310,13 +312,8 @@ const InterviewSlideover = ({ mode }) => {
           <div className="flex-1">
             <div className="space-y-6 pt-6 pb-5">
               <div>
-                <label
-                  htmlFor="templateTitle"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Title <span className="text-red-500">*</span>
-                </label>
-                <input
+                <InputField
+                  label="Title"
                   // v1.0.3 <---------------------------------------------------
                   ref={fieldRefs.name}
                   // v1.0.3 --------------------------------------------------->
@@ -327,26 +324,15 @@ const InterviewSlideover = ({ mode }) => {
                   value={newTemplate.templateTitle}
                   onChange={handleTitleChange}
                   onBlur={() => handleBlur("templateTitle")}
-                  className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
-                    touched.name && errors.name
-                      ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
-                  } focus:outline-none focus:ring-1`}
                   autoComplete="off"
+                  error={errors.name}
+                  required
                 />
-                {touched.name && errors.name && (
-                  <p className="mt-1 text-sm text-red-500">{errors.name}</p>
-                )}
               </div>
 
               <div>
-                <label
-                  htmlFor="label"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Label <span className="text-red-500">*</span>
-                </label>
-                <input
+                <InputField
+                  label="Label"
                   type="text"
                   id="label"
                   name="label"
@@ -354,27 +340,14 @@ const InterviewSlideover = ({ mode }) => {
                   value={newTemplate.label}
                   readOnly
                   onFocus={() => handleBlur("label")}
-                  className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
-                    touched.label && errors.label
-                      ? "border-red-500"
-                      : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
-                  } focus:outline-none focus:ring-1`}
+                  error={errors.label}
+                  required
                 />
-                {touched.label && errors.label && (
-                  <p className="mt-1 text-sm text-red-500">{errors.label}</p>
-                )}
               </div>
 
               <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  {/* <------ v1.0.0 */}
-                  Description
-                  {/* v1.0.0 ------> */}
-                </label>
-                <textarea
+                <DescriptionField
+                  label="Description"
                   id="description"
                   name="description"
                   // <------ v1.0.0
@@ -385,30 +358,12 @@ const InterviewSlideover = ({ mode }) => {
                   onBlur={() => handleBlur("description")}
                   rows={4}
                   maxLength={300}
-                  // <------ v1.0.0
-                  className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500`}
-                  // v1.0.0 ------>
+                  
                 />
                 {/* {touched.description && errors.description && (
                     <p className="mt-1 text-sm text-red-500">{errors.description}</p>
                 )} */}
-                <div className="flex justify-between items-center">
-                  {/* <------ v1.0.0 */}
-                  <p></p>
-                  {/* <span className="text-sm text-gray-500">
-                      {errors.description ? (
-                          <p className="text-red-500 text-sm ">{errors.description}</p>
-                      ) : newTemplate.description.length > 0 && newTemplate.description.length < 20 ? (
-                          <p className="text-gray-500 text-sm">
-                              Minimum {20 - newTemplate.description.length} more characters needed
-                          </p>
-                      ) : null}
-                  </span> */}
-                  {/* v1.0.0 ------> */}
-                  <p className="text-sm text-gray-500">
-                    {newTemplate.description.length}/20
-                  </p>
-                </div>
+                
               </div>
 
               {/* <div>

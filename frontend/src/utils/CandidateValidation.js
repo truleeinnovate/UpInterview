@@ -77,12 +77,36 @@ const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
         formIsValid = false;
     }
 
-    if (entries.length === 0) {
-        newErrors.skills = getErrorMessage("skills", entries.length, entries, formData);
+    // Skills: ignore entirely empty rows; require at least one filled row
+    const filledEntries = (entries || []).filter(
+        (e) => (e?.skill && e.skill !== "") || (e?.experience && e.experience !== "") || (e?.expertise && e.expertise !== "")
+    );
+    
+    if (filledEntries.length === 0) {
+        newErrors.skills = getErrorMessage("skills", 0, entries, formData) || "At least one skill is required";
         formIsValid = false;
-    } else if (entries.some((entry) => !entry.skill || !entry.experience || !entry.expertise)) {
-        newErrors.skills = "All skills must have a value in the skill, experience and expertise fields";
-        formIsValid = false;
+    } else {
+        // Check each filled entry for missing fields
+        const invalidEntries = filledEntries.map((entry, index) => {
+            const missingFields = [];
+            if (!entry.skill) missingFields.push('skill');
+            if (!entry.experience) missingFields.push('experience');
+            if (!entry.expertise) missingFields.push('expertise');
+            
+            return missingFields.length > 0 
+                ? { index, missingFields }
+                : null;
+        }).filter(Boolean);
+
+        if (invalidEntries.length > 0) {
+            // Create a more helpful error message
+            const errorMessages = invalidEntries.map(({index, missingFields}) => 
+                `Row ${index + 1}: Please fill in ${missingFields.join(', ')}`
+            );
+            
+            newErrors.skills = errorMessages.join('; ');
+            formIsValid = false;
+        }
     }
 
     return { formIsValid, newErrors };
