@@ -441,7 +441,7 @@ const SubscriptionCardDetails = () => {
                     } catch (e) {
                       console.warn('Error while waiting for webhook completion (non-blocking):', e?.message);
                     }
-                    setProcessing(false);
+                    
                     // 3) Navigate to success page after webhook wait
                     navigate("/subscription-success", {
                       state: {
@@ -458,6 +458,7 @@ const SubscriptionCardDetails = () => {
                     });
 
                     toast.success("Payment successfully completed!");
+                    setProcessing(false);
 
                     axios
                       .post(
