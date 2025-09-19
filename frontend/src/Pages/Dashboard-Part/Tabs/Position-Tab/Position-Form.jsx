@@ -520,11 +520,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
       tenantId: orgId,
-      skills: entries.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
+      // Filter out empty skill rows - only include rows where at least one field has a value
+      skills: entries
+        .filter(entry => entry.skill || entry.experience || entry.expertise)
+        .map((entry) => ({
+          skill: entry.skill,
+          experience: entry.experience,
+          expertise: entry.expertise,
+        })),
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
       // templateId: dataToSubmit.template,
@@ -1206,13 +1209,16 @@ console.log("error", error);
                         ref={fieldRefs.skills}
                         entries={entries}
                         errors={errors}
-                        onAddSkill={(setEditingIndex) => {
+                        onAddSkill={(setEditingIndexCallback) => {
                           setEntries((prevEntries) => {
                             const newEntries = [
                               ...prevEntries,
                               { skill: "", experience: "", expertise: "" },
                             ];
-                            setEditingIndex(newEntries.length - 1);
+                            // Only set editing index if callback is provided
+                            if (setEditingIndexCallback && typeof setEditingIndexCallback === 'function') {
+                              setEditingIndexCallback(newEntries.length - 1);
+                            }
                             return newEntries;
                           });
                           setSelectedSkill("");
@@ -1233,6 +1239,21 @@ console.log("error", error);
                             )
                           );
                           setEntries(entries.filter((_, i) => i !== index));
+                        }}
+                        onUpdateEntry={(index, updatedEntry) => {
+                          const newEntries = [...entries];
+                          const oldSkill = newEntries[index]?.skill;
+                          newEntries[index] = updatedEntry;
+                          setEntries(newEntries);
+                          
+                          // Update allSelectedSkills if skill changed
+                          if (oldSkill !== updatedEntry.skill) {
+                            const newSelectedSkills = newEntries.map(e => e.skill).filter(Boolean);
+                            setAllSelectedSkills(newSelectedSkills);
+                          }
+                          
+                          // Update formData
+                          setFormData(prev => ({ ...prev, skills: newEntries }));
                         }}
                         setIsModalOpen={setIsModalOpen}
                         setEditingIndex={setEditingIndex}

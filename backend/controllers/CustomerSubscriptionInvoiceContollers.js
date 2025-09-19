@@ -6,6 +6,7 @@ const Tenant = require('../models/Tenant');
 
 const createSubscriptionRecord = async (userDetails, planDetails, pricing, discount, totalAmount,invoiceId,status,receiptId) => {
   console.log("userDetails ----", userDetails.ownerId);
+  console.log("status Tenat ----", status);
   const tenant = await Tenant.findOne({ ownerId: userDetails.ownerId });
         if(tenant){
           tenant.status =  status === 'active' ? 'active' : 'payment_pending';

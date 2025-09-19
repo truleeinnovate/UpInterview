@@ -6,6 +6,7 @@ const DropdownWithSearchField = ({
   value,
   options,
   name,
+  placeholder,
   onChange,
   error,
   isCustomName = false,
@@ -61,7 +62,9 @@ const DropdownWithSearchField = ({
                 ? (Array.isArray(value)
                     ? options.filter((o) => value.includes(o.value))
                     : [])
-                : (options.find((o) => o.value === value) || null)
+                : (value && typeof value === 'object' && value.value
+                    ? value
+                    : options.find((o) => o.value === value) || null)
             }
             onChange={(opt) => {
               if (isMulti) {
@@ -78,10 +81,11 @@ const DropdownWithSearchField = ({
                 if (typeof setIsCustomName === "function") {
                   setIsCustomName(false);
                 }
+                // Always pass event-like object with target containing name and value
                 onChange({ target: { name: name, value: opt?.value || "" } });
               }
             }}
-            placeholder={`Select a ${label}`}
+            placeholder={placeholder ? placeholder : `Select a ${label}`}
             isDisabled={disabled}
             hasError={!!error}
             classNamePrefix="rs"

@@ -1,11 +1,11 @@
 // ----- v1.0.0 ----- Venkatesh----improve dropdown styles and placeholder text in small devices shown in ellipsis and border border-gray-300 added
 // v1.0.1 - Ashok - added useForward ref to implement scroll to first error functionality
 // v1.0.2 - Ashok - added responsiveness
-import { useState, forwardRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { ReactComponent as FaTrash } from "../../../../icons/FaTrash.svg";
-import { ReactComponent as FaEdit } from "../../../../icons/FaEdit.svg";
+// Removed FaEdit import - not needed for always-editable rows
 import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
-import { ReactComponent as FaTimes } from "../../../../icons/FaTimes.svg";
+// Removed FaTimes import - not needed for always-editable rows
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 
 const SkillsField = forwardRef(
@@ -14,29 +14,22 @@ const SkillsField = forwardRef(
       entries,
       errors,
       onAddSkill,
-      onEditSkill,
+
       onDeleteSkill,
-      setEditingIndex,
-      editingIndex,
-      selectedSkill,
-      setSelectedSkill,
-      allSelectedSkills,
-      selectedExp,
-      setSelectedExp,
-      selectedLevel,
-      setSelectedLevel,
+      onUpdateEntry,  // New prop for updating entries
+      
       skills,
       expertiseOptions,
       experienceOptions,
-      isNextEnabled,
-      handleAddEntry,
+      
       onOpenSkills,
     },
     ref
   ) => {
     const [deleteIndex, setDeleteIndex] = useState(null);
+    const initializedRef = useRef(false);
 
-    const handleDelete = (index) => setDeleteIndex(index);
+    
 
     const confirmDelete = () => {
       if (deleteIndex !== null) {
@@ -47,28 +40,28 @@ const SkillsField = forwardRef(
 
     const cancelDelete = () => setDeleteIndex(null);
 
-    const handleEdit = (index) => {
-      const entry = entries[index];
-      setSelectedSkill(entry.skill || "");
-      setSelectedExp(entry.experience || "");
-      setSelectedLevel(entry.expertise || "");
-      setEditingIndex(index);
-      onEditSkill(index);
-    };
+    // Removed handleEdit - all rows are always editable now
 
     // Using shared DropdownSelect; no local input handler needed
 
-    const availableSkills = skills.filter(
-      (skill) =>
-        !allSelectedSkills.includes(skill.SkillName) ||
-        selectedSkill === skill.SkillName
-    );
-
-    // Map options for DropdownSelect (react-select format)
-    const availableSkillsOptions = availableSkills.map((s) => ({
-      value: s.SkillName,
-      label: s.SkillName,
-    }));
+    // Helper function to get available skills for a specific row
+    const getAvailableSkillsForRow = (rowIndex) => {
+      // Get all selected skills from OTHER rows (not the current row)
+      const otherSelectedSkills = entries
+        .filter((_, idx) => idx !== rowIndex) // Exclude current row
+        .map(e => e.skill)
+        .filter(Boolean); // Remove empty values
+      
+      // Return skills that are either:
+      // 1. Not selected in any other row, OR
+      // 2. Currently selected in this row (so it remains visible)
+      const currentRowSkill = entries[rowIndex]?.skill;
+      return skills.filter(
+        (skill) =>
+          !otherSelectedSkills.includes(skill.SkillName) ||
+          skill.SkillName === currentRowSkill
+      );
+    };
     const experienceOptionsRS = experienceOptions.map((e) => ({
       value: e,
       label: e,
@@ -78,28 +71,26 @@ const SkillsField = forwardRef(
       label: e,
     }));
 
-    const handleAddClick = () => {
-      onAddSkill(setEditingIndex);
-      setSelectedSkill("");
-      setSelectedExp("");
-      setSelectedLevel("");
+    // Function to add a new skill row
+    const handleAddSkillRow = () => {
+      if (entries.length < 10) { // Max 10 rows
+        onAddSkill(null); // Don't set editing index for new rows
+      }
     };
 
-    const handleCancelSelection = () => {
-      if (
-        editingIndex !== null &&
-        entries[editingIndex] &&
-        !entries[editingIndex].skill &&
-        !entries[editingIndex].experience &&
-        !entries[editingIndex].expertise
-      ) {
-        onDeleteSkill(editingIndex);
+    // Removed handleClearRow - not needed since we have delete functionality
+
+    // Auto-add three empty rows on first mount (no click needed)
+    useEffect(() => {
+      if (!initializedRef.current && entries.length === 0 && onAddSkill) {
+        // Add three blank rows without setting editing index
+        for (let i = 0; i < 3; i++) {
+          onAddSkill(null); // Pass null to avoid setting editing index
+        }
+        initializedRef.current = true;
       }
-      setSelectedSkill("");
-      setSelectedExp("");
-      setSelectedLevel("");
-      setEditingIndex(null);
-    };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
       <div ref={ref}>
@@ -112,18 +103,15 @@ const SkillsField = forwardRef(
               Skills Details <span className="text-red-500">*</span>
             </label>
           </div>
-          <button
-            type="button"
-            onClick={handleAddClick}
-            disabled={editingIndex !== null && entries.length > 0}
-            className={`flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded ${
-              editingIndex !== null && entries.length > 0
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
-          >
-            <FaPlus className="mr-1 w-5 h-5" /> Add Rows
-          </button>
+          {entries.length < 10 && (
+            <button
+              type="button"
+              onClick={handleAddSkillRow}
+              className="flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded hover:bg-custom-blue/80"
+            >
+              <FaPlus className="mr-1 w-5 h-5" /> Add Rows
+            </button>
+          )}
         </div>
 
         {errors.skills && (
@@ -136,19 +124,24 @@ const SkillsField = forwardRef(
               key={index}
               className="border p-2 rounded-lg bg-gray-100 w-full flex"
             >
-              {editingIndex === index || editingIndex === "all" ? (
+              
                 <>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 border border-gray-400 bg-white rounded w-full p-2 mr-3 gap-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2">
                     <div className="px-1">
                       <DropdownSelect
-                        options={availableSkillsOptions}
+                        options={getAvailableSkillsForRow(index).map((s) => ({
+                          value: s.SkillName,
+                          label: s.SkillName,
+                        }))}
                         isSearchable
                         value={
-                          availableSkillsOptions.find(
-                            (o) => o.value === selectedSkill
-                          ) || null
+                          entry.skill ? { value: entry.skill, label: entry.skill } : null
                         }
-                        onChange={(opt) => setSelectedSkill(opt?.value || "")}
+                        onChange={(opt) => {
+                          if (onUpdateEntry) {
+                            onUpdateEntry(index, { ...entry, skill: opt?.value || "" });
+                          }
+                        }}
                         placeholder="Select Skill"
                         classNamePrefix="rs"
                         onMenuOpen={onOpenSkills}
@@ -160,10 +153,14 @@ const SkillsField = forwardRef(
                         isSearchable={false}
                         value={
                           experienceOptionsRS.find(
-                            (o) => o.value === selectedExp
+                            (o) => o.value === entry.experience
                           ) || null
                         }
-                        onChange={(opt) => setSelectedExp(opt?.value || "")}
+                        onChange={(opt) => {
+                          if (onUpdateEntry) {
+                            onUpdateEntry(index, { ...entry, experience: opt?.value || "" });
+                          }
+                        }}
                         placeholder="Select Experience"
                         classNamePrefix="rs"
                       />
@@ -174,10 +171,14 @@ const SkillsField = forwardRef(
                         isSearchable={false}
                         value={
                           expertiseOptionsRS.find(
-                            (o) => o.value === selectedLevel
+                            (o) => o.value === entry.expertise
                           ) || null
                         }
-                        onChange={(opt) => setSelectedLevel(opt?.value || "")}
+                        onChange={(opt) => {
+                          if (onUpdateEntry) {
+                            onUpdateEntry(index, { ...entry, expertise: opt?.value || "" });
+                          }
+                        }}
                         placeholder="Select Expertise"
                         classNamePrefix="rs"
                       />
@@ -186,58 +187,20 @@ const SkillsField = forwardRef(
                   <div className="flex space-x-2">
                     <button
                       type="button"
-                      onClick={handleAddEntry}
-                      className={`text-green-600 hover:text-green-800 p-1 ${
-                        !isNextEnabled() ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      disabled={!isNextEnabled()}
-                      title="Add"
-                    >
-                      <FaPlus className="w-5 h-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleCancelSelection}
+                      onClick={() => {
+                        if (onDeleteSkill) {
+                          onDeleteSkill(index); // Delete only this specific row
+                        }
+                      }}
                       className="text-red-600 hover:text-red-800 p-1"
-                      title="Cancel"
+                      title="Delete Row"
                     >
-                      <FaTimes className="w-5 h-5" />
+                      <FaTrash className="w-5 h-5" />
                     </button>
                   </div>
                 </>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 border border-gray-400 bg-white rounded w-full mr-3">
-                    <div className="border-b lg:border-none xl:border-none 2xl:border-none border-gray-300 px-2 py-1 sm:text-start lg:text-center xl:text-center 2xl:text-center truncate">
-                      {entry.skill}
-                    </div>
-                    <div className="border-b lg:border-none xl:border-none 2xl:border-none border-gray-300 px-2 py-1 sm:text-start lg:text-center xl:text-center 2xl:text-center truncate">
-                      {entry.experience}
-                    </div>
-                    <div className="px-2 py-1 sm:text-start lg:text-center xl:text-center 2xl:text-center truncate">
-                      {entry.expertise}
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(index)}
-                      className="text-custom-blue text-md"
-                      title="Edit"
-                    >
-                      <FaEdit className="w-5 h-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(index)}
-                      className="text-md"
-                      title="Delete"
-                    >
-                      <FaTrash className="w-5 h-5" fill="red" />
-                    </button>
-                  </div>
-                </>
-              )}
+              
+              
             </div>
           ))}
         </div>

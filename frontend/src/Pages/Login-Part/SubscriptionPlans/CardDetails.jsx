@@ -353,7 +353,7 @@ const CardDetails = () => {
                                             console.warn('Error while waiting for webhook completion (non-blocking):', e?.message);
                                         }
 
-                                        setProcessing(false);
+                                        
                                         // 3) Navigate to success page only after webhook wait
                                         navigate('/subscription-success', {
                                             state: {
@@ -368,6 +368,7 @@ const CardDetails = () => {
                                         });
 
                                         toast.success("Payment successfully completed!");
+                                        setProcessing(false);
 
                                         axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
                                                     tenantId: tenantId,

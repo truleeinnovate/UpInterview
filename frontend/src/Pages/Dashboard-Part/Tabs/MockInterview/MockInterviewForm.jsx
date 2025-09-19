@@ -1263,13 +1263,16 @@ const MockSchedulelater = () => {
                         ref={fieldRefs.skills}
                         entries={entries}
                         errors={errors}
-                        onAddSkill={(setEditingIndex) => {
+                        onAddSkill={(setEditingIndexCallback) => {
                           setEntries((prevEntries) => {
                             const newEntries = [
                               ...prevEntries,
                               { skill: "", experience: "", expertise: "" },
                             ];
-                            setEditingIndex(newEntries.length - 1);
+                            // Only set editing index if callback is provided
+                            if (setEditingIndexCallback && typeof setEditingIndexCallback === 'function') {
+                              setEditingIndexCallback(newEntries.length - 1);
+                            }
                             return newEntries;
                           });
                           setSelectedSkill("");
@@ -1290,6 +1293,21 @@ const MockSchedulelater = () => {
                             )
                           );
                           setEntries(entries.filter((_, i) => i !== index));
+                        }}
+                        onUpdateEntry={(index, updatedEntry) => {
+                          const newEntries = [...entries];
+                          const oldSkill = newEntries[index]?.skill;
+                          newEntries[index] = updatedEntry;
+                          setEntries(newEntries);
+                          
+                          // Update allSelectedSkills if skill changed
+                          if (oldSkill !== updatedEntry.skill) {
+                            const newSelectedSkills = newEntries.map(e => e.skill).filter(Boolean);
+                            setAllSelectedSkills(newSelectedSkills);
+                          }
+                          
+                          // Update formData
+                          setFormData(prev => ({ ...prev, skills: newEntries }));
                         }}
                         setIsModalOpen={setIsModalOpen}
                         setEditingIndex={setEditingIndex}
