@@ -37,7 +37,6 @@ const ProtectedRoute = ({ children }) => {
     const { isInitialized } = usePermissions() || { isInitialized: false };
     // <---------------------------- v1.0.0
 
-
     useEffect(() => {
         // Start activity tracking
         const cleanupActivityTracker = startActivityTracking();

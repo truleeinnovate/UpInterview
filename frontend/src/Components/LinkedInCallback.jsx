@@ -152,7 +152,28 @@ const LinkedInCallback = () => {
         // console.log('🔍 Initial cookie state:', debugCookieState());
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        const returnUrl = urlParams.get('returnUrl'); // Extract returnUrl
+        // Extract returnUrl either directly from query or from OAuth state payload
+        let returnUrl = urlParams.get('returnUrl');
+        const stateParam = urlParams.get('state');
+        if (!returnUrl && stateParam) {
+          try {
+            // state was sent as encodeURIComponent(btoa(JSON.stringify(payload)))
+            const decoded = JSON.parse(atob(decodeURIComponent(stateParam)));
+            if (decoded && typeof decoded === 'object' && decoded.returnUrl) {
+              returnUrl = decoded.returnUrl;
+            }
+          } catch (e) {
+            // fallback attempt without decodeURIComponent if already decoded by browser
+            try {
+              const decoded = JSON.parse(atob(stateParam));
+              if (decoded && typeof decoded === 'object' && decoded.returnUrl) {
+                returnUrl = decoded.returnUrl;
+              }
+            } catch (err) {
+              // ignore malformed state
+            }
+          }
+        }
     
         if (!code) {
           throw new Error('No authorization code received from LinkedIn');
@@ -233,6 +254,13 @@ const LinkedInCallback = () => {
             } else {
               console.warn('Invalid returnUrl domain, proceeding with default navigation');
             }
+          } else if (returnUrl.startsWith('/')) {
+            // Support relative internal paths (e.g., /candidate/view-details/123)
+            const target = `${window.location.origin}${returnUrl}`;
+            console.log('Redirecting to relative returnUrl:', target);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            window.location.href = target;
+            return;
           } else {
             console.warn('Invalid returnUrl format, proceeding with default navigation');
           }
