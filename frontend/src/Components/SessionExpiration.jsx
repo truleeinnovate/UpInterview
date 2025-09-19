@@ -29,6 +29,24 @@ const SessionExpiration = () => {
         const handleLogout = () => {
             setShowWarning(false);
             setShowExpiration(true);
+            try {
+                // Persist a flag and metadata so a browser refresh can redirect to the right login
+                const authToken = AuthCookieManager.getAuthToken();
+                const impersonationToken = AuthCookieManager.getImpersonationToken();
+                let loginType = 'individual';
+                if (authToken) {
+                    const payload = decodeJwt(authToken);
+                    loginType = payload?.organization === true ? 'organization' : 'individual';
+                } else if (impersonationToken) {
+                    loginType = 'organization';
+                }
+                const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+                sessionStorage.setItem('sessionExpired', 'true');
+                sessionStorage.setItem('sessionExpiredLoginType', loginType);
+                sessionStorage.setItem('sessionExpiredReturnUrl', currentUrl);
+            } catch (e) {
+                // ignore
+            }
         };
 
         emitter.on('warning', handleWarning);
@@ -90,6 +108,12 @@ const SessionExpiration = () => {
 
         // Clear flag before leaving page
         window.sessionExpirationVisible = false;
+        // Also clear persistent flags to avoid stale state
+        try {
+            sessionStorage.removeItem('sessionExpired');
+            sessionStorage.removeItem('sessionExpiredLoginType');
+            sessionStorage.removeItem('sessionExpiredReturnUrl');
+        } catch (e) { }
 
         if (wasOrganizationUser) {
             // Org users: return back to the same place after login
