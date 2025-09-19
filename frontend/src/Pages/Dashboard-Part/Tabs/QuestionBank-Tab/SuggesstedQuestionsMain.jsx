@@ -7,11 +7,12 @@
 // v1.0.4 ----Venkatesh---add new filter like technology and category
 // v1.0.5 - Ashok - Improved responsiveness
 // v1.0.6 - Ashok - Fixed alignment issues
+// v1.0.7 - Ashok - Fixed responsive issues
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { Tooltip } from "@mui/material";
-import { ChevronUp, ChevronDown, Search, X } from "lucide-react";
+import { ChevronUp, ChevronDown, Search, X, Plus } from "lucide-react";
 import { ReactComponent as IoIosArrowBack } from "../../../../icons/IoIosArrowBack.svg";
 import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArrowForward.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
@@ -1029,7 +1030,7 @@ const SuggestedQuestionsComponent = ({
         <>
           {/* Content */}
           {/* v1.0.5 <----------------------------------------------------------------- */}
-          <div className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="flex-1 overflow-y-auto sm:px-2 px-5 py-4">
             {selectedSkills.length > 0 && (
               <ul className="flex gap-2 flex-wrap px-4 pb-2">
                 {selectedSkills.map((skill, index) => (
@@ -1102,8 +1103,9 @@ const SuggestedQuestionsComponent = ({
                         </div>
                       </div>
                       {/* v1.0.6 ----------------------------------------------------------------------------> */}
+                      {/* v1.0.7 <----------------------------------------------------------------------------------- */}
                       <div
-                        className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${
+                        className={`flex justify-center text-center p-2 sm:border-0 border-r border-l border-gray-200 ${
                           type === "interviewerSection" ||
                           type === "feedback" ||
                           type === "assessment"
@@ -1120,6 +1122,7 @@ const SuggestedQuestionsComponent = ({
                           {item.difficultyLevel}
                         </p>
                       </div>
+                      {/* v1.0.7 -----------------------------------------------------------------------------------> */}
                       {fromScheduleLater && (
                         <div className="flex justify-center text-center h-12 border-r border-gray-200">
                           <div className="flex items-center w-14 justify-center">
@@ -1175,18 +1178,19 @@ const SuggestedQuestionsComponent = ({
                           )}
                         </div>
                       )}
+                      {/* v1.0.7 <--------------------------------------------------------- */}
                       {type === "assessment" && (
                         <div className="w-[8%] flex justify-center">
                           {addedSections.some((s) =>
                             s.Questions.some((q) => q.questionId === item._id)
                           ) ? (
-                            <span className="text-green-600 font-medium py-1 px-1">
-                              ✓ Added
+                            <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
+                              ✓ <span className="sm:hidden inline">Added</span>
                             </span>
                           ) : (
                             <button
                               type="button"
-                              className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors ${
+                              className={`bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
                                 addedSections.reduce(
                                   (acc, s) => acc + s.Questions.length,
                                   0
@@ -1202,11 +1206,13 @@ const SuggestedQuestionsComponent = ({
                                 ) >= questionsLimit
                               }
                             >
-                              Add
+                              <span className="sm:hidden inline">Add</span>
+                              <Plus className="inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                             </button>
                           )}
                         </div>
                       )}
+                      {/* v1.0.7 ---------------------------------------------------------> */}
 
                       {!type && !fromScheduleLater && (
                         <div className="flex justify-center relative">

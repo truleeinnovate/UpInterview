@@ -3,6 +3,7 @@
    in that case view should be vertical fixed
 */
 // v1.0.2  -  Ashok    - Improved responsiveness
+// v1.0.3  -  Ashok    - Fixed issue
 
 import { useState, useEffect } from "react";
 import {
@@ -270,7 +271,10 @@ const TemplateDetail = () => {
           )}
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 mt-4">
-            <div className="flex sm:flex-col flex-row sm:items-start justify-between gap-4 sm:gap-0">
+            {/* v1.0.3 <-------------------------------------------------- */}
+            <div className="flex flex-row justify-between gap-4 sm:gap-0">
+            {/* v1.0.3 <-------------------------------------------------- */}
+            
               <div className="flex-1">
                 <div className="flex justify-between items-center">
                   <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl mb-2 leading-6 font-medium text-gray-900">
@@ -354,7 +358,7 @@ const TemplateDetail = () => {
               </h2>
               <div className="flex items-center gap-2">
                 {template.rounds?.length !== 0 && (
-                  // v1.0.5 <-------------------------------------------------------------------------
+                  // v1.0.2 <-------------------------------------------------------------------------
                   <div className="flex space-x-2">
                     {/* v1.0.1 <------------------------------------------------------------------------------------ */}
                     {template?.rounds?.length > 1 && (
@@ -400,7 +404,7 @@ const TemplateDetail = () => {
                       <span className="sm:hidden inline">Add Round</span>
                     </button>
                   </div>
-                  // v1.0.5 ------------------------------------------------------------------------->
+                  // v1.0.2 ------------------------------------------------------------------------->
                 )}
               </div>
             </div>

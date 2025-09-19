@@ -7,6 +7,8 @@
                          create new assessment popup has z-index issues 
 */
 // v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.7  -  Ashok   -  improved responsiveness
+
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -403,10 +405,12 @@ const Assessment = () => {
           </div>
         </main>
       </div>
-      <main className="fixed top-48 left-0 right-0 bg-background">
+      {/* v1.0.7 <----------------------------------------------------------------------------------- */}
+      <main className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "table" ? (
+              <div className="overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
               <TableView
                 data={currentFilteredRows}
                 columns={tableColumns}
@@ -417,6 +421,7 @@ const Assessment = () => {
                 // ------------------------------v1.0.4 >
                 className="table-fixed w-full"
               />
+              </div>
             ) : (
               <AssessmentKanban
                 assessments={currentFilteredRows}
@@ -509,6 +514,7 @@ const Assessment = () => {
           </motion.div>
         </div>
       </main>
+      {/* v1.0.7 -----------------------------------------------------------------------------------> */}
       {isShareOpen && (
         <ShareAssessment
           isOpen={isShareOpen}

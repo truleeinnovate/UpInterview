@@ -3,6 +3,7 @@
 //<---v1.0.2------venkatesh------default and enforce time to after 2 hours from now
 // v1.0.3 - Ashok - Improved responsiveness and used common code for popup
 // v1.0.4 - Ranjith -  added due date changes
+// v1.0.5 - Ranjith -  changed onclose function call
 
 import React, { useState, useEffect, useRef, useCallback } from "react"; //<---v1.0.2-----
 import Modal from "react-modal";
@@ -175,7 +176,8 @@ const TaskForm = ({
   // State for storing selections
   const [selectedCategoryRelatedTo, setSelectedCategoryRelatedTo] =
     useState("");
-  const [selectedOptionIdRelatedTo, setSelectedOptionIdRelatedTo] = useState("");
+  const [selectedOptionIdRelatedTo, setSelectedOptionIdRelatedTo] =
+    useState("");
 
   const [isModalOpen] = useState(false);
 
@@ -323,7 +325,9 @@ const TaskForm = ({
         ownerId,
         tenantId,
         // Ranjith v1.0.4
-        dueDate: scheduledDate ? formatForISOString(scheduledDate) : formData.dueDate,
+        dueDate: scheduledDate
+          ? formatForISOString(scheduledDate)
+          : formData.dueDate,
         // dueDate: dueDateISO,
         // Ranjith v1.0.4
         priority: selectedPriority,
@@ -345,22 +349,26 @@ const TaskForm = ({
       }
       console.log("Task saved successfully:", res);
 
-      if (res.status === "Created successfully" || res.status === "Task updated successfully" || res.status === "no_changes") {
-      
-      if (res?.status === "Created successfully"){
-        notify.success("Task created successfully");
-      }else if(res?.status === "Task updated successfully" || res?.status === "no_changes"){
-        notify.success("Task updated successfully");
-      }else{
-        notify.error("Failed to save task");
-      
-      }
-      setInterval(() => {
+      if (
+        res.status === "Created successfully" ||
+        res.status === "Task updated successfully" ||
+        res.status === "no_changes"
+      ) {
+        // v1.0.5 <----------------
         onTaskAdded();
         onClose();
-      }, 1000);
-   
-    }
+        // v1.0.5 ---------------->
+        if (res?.status === "Created successfully") {
+          notify.success("Task created successfully");
+        } else if (
+          res?.status === "Task updated successfully" ||
+          res?.status === "no_changes"
+        ) {
+          notify.success("Task updated successfully");
+        } else {
+          notify.error("Failed to save task");
+        }
+      }
     } catch (error) {
       console.error("Error saving task:", error);
 
@@ -576,8 +584,9 @@ const TaskForm = ({
                     options={(usersRes || []).map((user) => ({
                       value: user._id,
                       label:
-                        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-                        user.email,
+                        `${user.firstName || ""} ${
+                          user.lastName || ""
+                        }`.trim() || user.email,
                     }))}
                     onChange={(e) => {
                       const selectedUserId = e.target.value;
@@ -606,7 +615,9 @@ const TaskForm = ({
                     required
                     name="assignedTo"
                     value={formData.assignedTo}
-                    onChange={(e) => handleInputChange("assignedTo", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("assignedTo", e.target.value)
+                    }
                     error={errors.assignedTo}
                   />
                 </div>
@@ -622,7 +633,10 @@ const TaskForm = ({
                   required
                   name="priority"
                   value={selectedPriority}
-                  options={(priorities || []).map((p) => ({ value: p, label: p }))}
+                  options={(priorities || []).map((p) => ({
+                    value: p,
+                    label: p,
+                  }))}
                   onChange={(e) => {
                     const v = e.target.value;
                     setSelectedPriority(v);
@@ -641,7 +655,10 @@ const TaskForm = ({
                   required
                   name="status"
                   value={selectedStatus}
-                  options={(statuses || []).map((s) => ({ value: s, label: s }))}
+                  options={(statuses || []).map((s) => ({
+                    value: s,
+                    label: s,
+                  }))}
                   onChange={(e) => {
                     const v = e.target.value;
                     setSelectedStatus(v);
@@ -654,7 +671,6 @@ const TaskForm = ({
             </div>
             {/* Related To */}
             <div className="space-y-1">
-              
               <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                 <div className="w-full">
                   <DropdownWithSearchField
@@ -667,7 +683,9 @@ const TaskForm = ({
                       value: c,
                       label: c,
                     }))}
-                    onChange={(e) => handleCategorySelectRelatedTo(e.target.value)}
+                    onChange={(e) =>
+                      handleCategorySelectRelatedTo(e.target.value)
+                    }
                     error={errors.relatedToCategory}
                   />
                 </div>
@@ -684,7 +702,9 @@ const TaskForm = ({
                     }))}
                     onChange={(e) => {
                       const id = e.target.value;
-                      const opt = getOptionsForSelectedCategory().find((o) => o.id === id);
+                      const opt = getOptionsForSelectedCategory().find(
+                        (o) => o.id === id
+                      );
                       handleOptionSelectRelatedTo(opt?.name || "", id);
                     }}
                     error={errors.relatedToOption}
@@ -734,7 +754,9 @@ const TaskForm = ({
                 label="Comments"
                 name="comments"
                 value={formData.comments}
-                onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, comments: e.target.value })
+                }
                 error={errors.comments}
                 rows={5}
               />

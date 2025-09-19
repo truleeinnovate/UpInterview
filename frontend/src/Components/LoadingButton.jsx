@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - adding padding 9 5o 12  for loading state button
 // v1.0.1 - Ashok - Added responsiveness
+// v1.0.2 - Ashok - fixed responsiveness issues
+
 // LoadingButton.jsx
 import React from "react";
 
@@ -16,6 +18,7 @@ const LoadingButton = ({
       disabled={isLoading}
       // v1.0.0 <----------------------------------------------------------------------
       // v1.0.1 <---------------------------------------------------------------------------
+      // v1.0.2 <---------------------------------------------------------------------------
       className={`
         relative
         py-2
@@ -26,9 +29,10 @@ const LoadingButton = ({
         overflow-hidden
         flex items-center justify-center
         sm:text-sm md:text-sm
-        ${isLoading ? "cursor-wait px-12" : "px-6"}
+        ${isLoading ? "cursor-wait px-12" : "sm:px-4 px-6"}
         ${className}
       `}
+      // v1.0.2 --------------------------------------------------------------------------->
       // v1.0.0 ---------------------------------------------------------------------->
       // v1.0.1 --------------------------------------------------------------------------->
     >

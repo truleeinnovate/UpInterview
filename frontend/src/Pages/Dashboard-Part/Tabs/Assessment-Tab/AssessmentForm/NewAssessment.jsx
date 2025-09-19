@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashraf  -  assessment file name changed
 // v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 // v1.0.3  -  Ashok   -  Added scroll to first error functionality
+// v1.0.4  -  Ashok   - Improved responsiveness
 
 import React, {
   useState,
@@ -148,7 +149,7 @@ const NewAssessment = () => {
         (pos) => pos._id === assessment.Position
       );
       console.log("matchedPosition", matchedPosition);
-      console.log("Ass",assessment);
+      console.log("Ass", assessment);
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",
@@ -1289,11 +1290,12 @@ const NewAssessment = () => {
     const selectedCount = getSelectedQuestionsCount();
 
     return (
-      <div className="flex justify-between px-6 pt-6">
+      // v1.0.4 <----------------------------------------------------------------------------
+      <div className="flex justify-end sm:px-4 px-6 pt-6">
         {currentTab !== "Basicdetails" && (
           <button
             onClick={handleBack}
-            className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex justify-center mr-4 py-2 sm:px-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Back
           </button>
@@ -1313,10 +1315,10 @@ const NewAssessment = () => {
               {/* Always show Delete Selected if questions are selected */}
               {selectedCount > 0 && (
                 <button
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="truncate sm:text-sm sm:px-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                   onClick={() => openDeleteConfirmation("bulk", null, null)}
                 >
-                  Delete Selected ({selectedCount})
+                  Delete <span className="sm:hidden inline">Selected</span> ({selectedCount})
                 </button>
               )}
 
@@ -1341,7 +1343,14 @@ const NewAssessment = () => {
                     // ---------------------- v1.0.0 >
                     loadingText={id ? "Updating..." : "Saving..."}
                   >
-                    {isEditing ? "Update & Next" : "Save & Create Assessment"}
+                    {isEditing ? (
+                      <span>
+                        <span className="sm:hidden inline mr-1">Update &</span>
+                        Next
+                      </span>
+                    ) : (
+                      "Save & Create Assessment"
+                    )}
                   </LoadingButton>
                 </>
               ) : (
@@ -1383,25 +1392,34 @@ const NewAssessment = () => {
                   // <---------------------- v1.0.0
                   loadingText={id ? "Updating..." : "Saving..."}
                 >
-                  {isEditing ? "Update & Next" : "Save & Next"}
+                  {isEditing ? (
+                    <span>
+                      <span className="sm:hidden inline mr-1">Update &</span>
+                      Next
+                    </span>
+                  ) : (
+                    "Save & Next"
+                  )}
                 </LoadingButton>
               )}
             </>
           )}
         </div>
       </div>
+      // v1.0.4 ---------------------------------------------------------------------------->
     );
   };
 
   return (
+    // v1.0.4 <-------------------------------------------------------------------------------
     <div ref={formRef}>
       <div className="bg-gray-50">
-        <main className=" mx-auto py-4 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+        <main className="mx-auto py-4 sm:px-4 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg">
-              <div className="flex justify-between px-12 py-4 sm:px-6">
+              <div className="flex justify-between px-12 py-6 sm:px-4">
                 <div>
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  <h3 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl leading-6 font-medium text-gray-900">
                     {isEditing
                       ? "Edit Assessment Template"
                       : "Add New Assessment Template"}
@@ -1424,7 +1442,7 @@ const NewAssessment = () => {
 
               {/* Content */}
               <div>
-                <div className="py-5 sm:px-6">
+                <div className="py-5">
                   <div>
                     {/* basic details tab content */}
                     {activeTab === "Basicdetails" && (
@@ -1641,28 +1659,28 @@ const NewAssessment = () => {
                   />
                 )}
                 {sidebarOpen && (
-                  <div className={"fixed inset-0 bg-black bg-opacity-15 z-50"}>
-                    <div className="fixed inset-y-0 right-0 z-50 w-1/2 bg-white shadow-lg transition-transform duration-5000 transform">
-                      <PassScore
-                        formData={formData}
-                        setFormData={setFormData}
-                        addedSections={addedSections}
-                        setAddedSections={setAddedSections}
-                        onClose={() => setSidebarOpen(false)}
-                        onSave={handlePassScoreSave}
-                        onOutsideClick={handleOutsideClick}
-                        ref={sidebarRef}
-                        totalScore={totalScore}
-                        setTotalScore={setTotalScore}
-                        totalScores={totalScores}
-                        setTotalScores={setTotalScores}
-                        passScores={passScores}
-                        passScore={passScore}
-                        setPassScores={setPassScores}
-                        setPassScore={setPassScore}
-                      />
-                    </div>
+                  // v1.0.4 <----------------------------------------------------------------------
+                  <div>
+                    <PassScore
+                      formData={formData}
+                      setFormData={setFormData}
+                      addedSections={addedSections}
+                      setAddedSections={setAddedSections}
+                      onClose={() => setSidebarOpen(false)}
+                      onSave={handlePassScoreSave}
+                      onOutsideClick={handleOutsideClick}
+                      ref={sidebarRef}
+                      totalScore={totalScore}
+                      setTotalScore={setTotalScore}
+                      totalScores={totalScores}
+                      setTotalScores={setTotalScores}
+                      passScores={passScores}
+                      passScore={passScore}
+                      setPassScores={setPassScores}
+                      setPassScore={setPassScore}
+                    />
                   </div>
+                  // v1.0.4 ---------------------------------------------------------------------->
                 )}
                 {isQuestionLimitErrorPopupOpen && (
                   <ConfirmationPopup
@@ -1692,6 +1710,7 @@ const NewAssessment = () => {
         </main>
       </div>
     </div>
+    // v1.0.4 ------------------------------------------------------------------------------->
   );
 };
 

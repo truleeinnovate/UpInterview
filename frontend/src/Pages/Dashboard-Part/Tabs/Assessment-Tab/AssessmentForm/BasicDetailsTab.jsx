@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  assessment to assesment templates added in fileds
 // v1.0.1  -  Ashok   -  Added scroll to first error functionality
+// v1.0.2  -  Ashok   -  Improved responsiveness
 
 import React, { useState, useEffect, useRef } from "react";
 import { ReactComponent as MdArrowDropDown } from "../../../../../icons/MdArrowDropDown.svg";
@@ -152,12 +153,13 @@ const BasicDetailsTab = ({
   };
 
   return (
+    // v1.0.2 <------------------------------------------------------------------------------
     <div>
       <form>
         {/* // <---------------------- v1.0.0 */}
 
-        <div className="space-y-6 px-12">
-          <div className="font-semibold text-xl mb-5">
+        <div className="space-y-6 sm:px-6 px-12">
+          <div className="font-semibold sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg mb-5">
             Assessment Template Details:
           </div>
           {/* // <---------------------- v1.0.0 */}
@@ -359,7 +361,7 @@ const BasicDetailsTab = ({
             </div>
           </div>
 
-          <div className="font-semibold text-xl mb-5">Additional Details:</div>
+          <div className="font-semibold sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg mb-5">Additional Details:</div>
 
           {/* Position and Difficulty Level */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">
@@ -714,6 +716,7 @@ const BasicDetailsTab = ({
         </div>
       )}
     </div>
+    // v1.0.2 ------------------------------------------------------------------------------>
   );
 };
 

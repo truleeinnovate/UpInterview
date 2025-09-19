@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok   - improved the code
 // v1.0.4  -  Ashok   - added scroll to top when Add new Round
 // v1.0.5  -  Ashok   - Improved responsiveness
+// v1.0.6  -  Ashok   - Fixed responsiveness issues
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
@@ -1858,7 +1859,7 @@ function RoundFormTemplates() {
               >
                 Cancel
               </Button>
-
+              {/* v1.0.6 <---------------------------------------------------------- */}
               <LoadingButton
                 onClick={handleSubmit}
                 isLoading={isMutationLoading && activeButton === "save"}
@@ -1867,12 +1868,12 @@ function RoundFormTemplates() {
                 {roundId ? (
                   <span>
                     Update
-                    <span className="sm:hidden inline">Round</span>
+                    <span className="sm:hidden inline ml-1">Round</span>
                   </span>
                 ) : (
                   <span>
                     Save
-                    <span className="sm:hidden inline">Round</span>
+                    <span className="sm:hidden inline ml-1">Round</span>
                   </span>
                 )}
               </LoadingButton>
@@ -1884,10 +1885,11 @@ function RoundFormTemplates() {
                   loadingText="Adding..."
                   variant="outline"
                 >
-                  <FaPlus className="w-5 h-5 mr-1" /> Add{" "}
-                  <span className="sm:hidden inline">New Round</span>
+                  <FaPlus className="w-5 h-5 mr-1" /> Add
+                  <span className="sm:hidden inline ml-1">New Round</span>
                 </LoadingButton>
               )}
+              {/* v1.0.6 ----------------------------------------------------------> */}
               {/* ------------------------------ v1.0.1 > */}
             </div>
             {/* v1.0.5 -------------------------------------------------------------------------> */}
