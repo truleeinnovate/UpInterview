@@ -13,11 +13,14 @@ const SessionExpiration = () => {
 
         const handleWarning = ({ remainingTime }) => {
             setRemainingTime(remainingTime);
-            setShowWarning(true);
-            setShowExpiration(false);
+            // If expiration is already visible, do not override it with warning UI
+            setShowWarning((prev) => (showExpiration ? false : true));
+            if (!showExpiration) setShowExpiration(false);
         };
 
         const handleActivity = () => {
+            // Ignore activity while expiration modal is shown
+            if (showExpiration) return;
             setShowWarning(false);
             setShowExpiration(false);
         };
@@ -38,7 +41,23 @@ const SessionExpiration = () => {
             emitter.off('logout', handleLogout);
             emitter.off('showExpiration', () => setShowExpiration(true));
         };
-    }, []);
+    }, [showExpiration]);
+
+    // Manage global flag to prevent ProtectedRoute from redirecting while modal is visible
+    // useEffect(() => {
+    //     if (showExpiration) {
+    //         window.sessionExpirationVisible = true;
+    //         // Optional: prevent background scroll
+    //         const originalOverflow = document.body.style.overflow;
+    //         document.body.style.overflow = 'hidden';
+    //         return () => {
+    //             document.body.style.overflow = originalOverflow;
+    //             window.sessionExpirationVisible = false;
+    //         };
+    //     } else {
+    //         window.sessionExpirationVisible = false;
+    //     }
+    // }, [showExpiration]);
 
     const handleLogoutNow = async () => {
         try {
@@ -47,7 +66,10 @@ const SessionExpiration = () => {
             // ignore
         }
         // Hard redirect to ensure a fully clean state
-        window.location.href = '/organization-login';
+        const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+        // Clear flag before leaving page
+        window.sessionExpirationVisible = false;
+        window.location.href = `/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`;
     };
 
     if (showExpiration) {
@@ -59,12 +81,23 @@ const SessionExpiration = () => {
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="session-expired-title"
+                    onClick={(e) => {
+                        // Prevent any click from dismissing the modal or reaching the app beneath
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }}
                 >
                     {/* Backdrop */}
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"></div>
 
                     {/* Dialog */}
-                    <div className="relative w-[90%] max-w-md rounded-lg bg-white p-6 shadow-xl">
+                    <div
+                        className="relative w-[90%] max-w-md rounded-lg bg-white p-6 shadow-xl"
+                        onClick={(e) => {
+                            // Also stop clicks inside the dialog from bubbling to parent overlay
+                            e.stopPropagation();
+                        }}
+                    >
                         <h2 id="session-expired-title" className="text-lg font-semibold text-gray-900">
                             Session Expired (401)
                         </h2>
