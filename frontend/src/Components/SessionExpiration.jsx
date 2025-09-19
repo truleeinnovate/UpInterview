@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getActivityEmitter } from '../utils/activityTracker';
 import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
+import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
 const SessionExpiration = () => {
     const [showWarning, setShowWarning] = useState(false);
@@ -60,16 +61,43 @@ const SessionExpiration = () => {
     // }, [showExpiration]);
 
     const handleLogoutNow = async () => {
+        // Determine prior login type before clearing auth
+        const authToken = AuthCookieManager.getAuthToken();
+        const impersonationToken = AuthCookieManager.getImpersonationToken();
+
+        let wasOrganizationUser = false; // default to individual=false
+        try {
+            if (authToken) {
+                const payload = decodeJwt(authToken);
+                // ProtectedRoute relies on payload.organization === true for org users
+                wasOrganizationUser = payload?.organization === true;
+            } else if (impersonationToken) {
+                // If only impersonation token exists, treat as admin/org context
+                wasOrganizationUser = true;
+            }
+        } catch (e) {
+            // if decoding fails, fallback handled below
+        }
+
+        // Capture current location for returnUrl (only for organization flow)
+        const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+
         try {
             await AuthCookieManager.clearAllAuth();
         } catch (e) {
             // ignore
         }
-        // Hard redirect to ensure a fully clean state
-        const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+
         // Clear flag before leaving page
         window.sessionExpirationVisible = false;
-        window.location.href = `/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`;
+
+        if (wasOrganizationUser) {
+            // Org users: return back to the same place after login
+            window.location.href = `/organization-login?returnUrl=${encodeURIComponent(currentUrl)}`;
+        } else {
+            // Individual users: carry returnUrl to individual login so it can be preserved through OAuth
+            window.location.href = `/individual-login?returnUrl=${encodeURIComponent(currentUrl)}`;
+        }
     };
 
     if (showExpiration) {
