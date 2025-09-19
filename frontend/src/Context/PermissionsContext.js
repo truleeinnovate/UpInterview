@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import axios from 'axios';
 import { config } from '../config';
 import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
-import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
+import { decodeJwt, encodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
 const PermissionsContext = createContext();
 
@@ -12,31 +12,6 @@ const PermissionsContext = createContext();
 const EFFECTIVE_PERMISSIONS_CACHE_KEY = 'permissions_effective';
 const SUPER_ADMIN_PERMISSIONS_CACHE_KEY = 'permissions_superAdmin';
 
-const encodePermissions = (permissions) => {
-  try {
-    // Convert permissions object to JSON string
-    const permissionsJson = JSON.stringify(permissions);
-    // Encode the JSON string to base64
-    const encodedPermissions = btoa(permissionsJson);
-    return encodedPermissions;
-  } catch (error) {
-    console.warn('Error encoding permissions:', error);
-    return null;
-  }
-};
-
-const decodePermissions = (encodedPermissions) => {
-  try {
-    // Decode the base64 string
-    const decodedPermissions = atob(encodedPermissions);
-    // Parse the decoded string back to JSON
-    const permissions = JSON.parse(decodedPermissions);
-    return permissions;
-  } catch (error) {
-    console.warn('Error decoding permissions:', error);
-    return null;
-  }
-};
 
 const getCachedPermissions = () => {
   try {
@@ -59,9 +34,9 @@ const getCachedPermissions = () => {
       return null;
     }
 
-    // Decode the cached permissions
-    const permissions = decodePermissions(cached);
-    if (!permissions) {
+    // Use decodeJwt to decode the cached permissions
+    const permissions = decodeJwt(cached);
+    if (!permissions || Object.keys(permissions).length === 0) {
       return null;
     }
 
@@ -88,8 +63,8 @@ const cachePermissions = (permissions) => {
       return;
     }
 
-    // Encode the permissions before caching
-    const encodedPermissions = encodePermissions(permissions);
+    // Encode permissions using encodeJwt
+    const encodedPermissions = encodeJwt(permissions);
     if (!encodedPermissions) {
       return;
     }
