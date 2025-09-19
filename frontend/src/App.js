@@ -41,10 +41,10 @@ import { DocumentsSection } from "./Pages/Dashboard-Part/Accountsettings/account
 import SessionExpiration from "./Components/SessionExpiration.jsx";
 import Loading from "./Components/Loading.js";
 import UserDataLoader from "./Components/UserDataLoader.jsx";
-import {
-  preloadPermissions,
-  hasValidCachedPermissions,
-} from "./utils/permissionPreloader";
+// import {
+//   preloadPermissions,
+//   hasValidCachedPermissions,
+// } from "./utils/permissionPreloader";
 import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upinterview-Individual";
 // import VideoCAllActionButtons from "./Pages/VideoCallActionButtons.jsx";
 import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
@@ -1390,71 +1390,71 @@ const App = () => {
   );
 
   // Preload permissions on app startup if user is authenticated
-  useEffect(() => {
-    if (authToken && !hasValidCachedPermissions()) {
-      // <--------------------- v1.0.0
-      preloadPermissions().catch(() => {});
-      // v1.0.0 --------------------->
-    }
+  // useEffect(() => {
+  //   if (authToken && !hasValidCachedPermissions()) {
+  //     // <--------------------- v1.0.0
+  //     preloadPermissions().catch(() => {});
+  //     // v1.0.0 --------------------->
+  //   }
 
-    // Sync user type with localStorage to ensure consistency
-    if (authToken) {
-      AuthCookieManager.syncUserType();
-    }
-    // <---------------------- v1.0.4
+  //   // Sync user type with localStorage to ensure consistency
+  //   if (authToken) {
+  //     AuthCookieManager.syncUserType();
+  //   }
+  //   // <---------------------- v1.0.4
 
-    // Initialize cross-tab authentication sync
-    const cleanupAuthListener = AuthCookieManager.setupCrossTabAuthListener();
+  //   // Initialize cross-tab authentication sync
+  //   const cleanupAuthListener = AuthCookieManager.setupCrossTabAuthListener();
 
-    // Check browser permissions and capabilities
-    const browserPermissions = AuthCookieManager.checkBrowserPermissions();
+  //   // Check browser permissions and capabilities
+  //   const browserPermissions = AuthCookieManager.checkBrowserPermissions();
 
-    // console.log('Browser permissions check:', browserPermissions);
+  //   // console.log('Browser permissions check:', browserPermissions);
 
-    // Detect new browser context
-    if (AuthCookieManager.isNewBrowserContext()) {
-      // console.log('New browser context detected - syncing auth state');
-      AuthCookieManager.syncAuthAcrossTabs();
-    }
+  //   // Detect new browser context
+  //   if (AuthCookieManager.isNewBrowserContext()) {
+  //     // console.log('New browser context detected - syncing auth state');
+  //     AuthCookieManager.syncAuthAcrossTabs();
+  //   }
 
-    // Request notification permission if not granted (only for authenticated users)
-    if (authToken && !browserPermissions.notifications) {
-      // Delay the permission request to avoid blocking the UI
-      setTimeout(async () => {
-        try {
-          await AuthCookieManager.requestNotificationPermission();
-        } catch (error) {
-          console.warn("Failed to request notification permission:", error);
-        }
-      }, 2000); // Wait 2 seconds after app loads
-    }
+  //   // Request notification permission if not granted (only for authenticated users)
+  //   if (authToken && !browserPermissions.notifications) {
+  //     // Delay the permission request to avoid blocking the UI
+  //     setTimeout(async () => {
+  //       try {
+  //         await AuthCookieManager.requestNotificationPermission();
+  //       } catch (error) {
+  //         console.warn("Failed to request notification permission:", error);
+  //       }
+  //     }, 2000); // Wait 2 seconds after app loads
+  //   }
 
-    // Listen for token expiration events
-    const handleTokenExpired = async (event) => {
-      // console.log('Token expired event received:', event.detail);
+  //   // Listen for token expiration events
+  //   const handleTokenExpired = async (event) => {
+  //     // console.log('Token expired event received:', event.detail);
 
-      // Use the dedicated token expiration handler
-      await AuthCookieManager.handleTokenExpiration();
-    };
+  //     // Use the dedicated token expiration handler
+  //     await AuthCookieManager.handleTokenExpiration();
+  //   };
 
-    window.addEventListener("tokenExpired", handleTokenExpired);
+  //   window.addEventListener("tokenExpired", handleTokenExpired);
 
-    // Start token validation if user is authenticated
-    let tokenValidationCleanup = null;
-    if (authToken) {
-      tokenValidationCleanup = AuthCookieManager.startTokenValidation();
-    }
+  //   // Start token validation if user is authenticated
+  //   let tokenValidationCleanup = null;
+  //   if (authToken) {
+  //     tokenValidationCleanup = AuthCookieManager.startTokenValidation();
+  //   }
 
-    return () => {
-      if (cleanupAuthListener) {
-        cleanupAuthListener();
-      }
-      if (tokenValidationCleanup) {
-        tokenValidationCleanup();
-      }
-      window.removeEventListener("tokenExpired", handleTokenExpired);
-    };
-  }, [authToken]); // Only run when authToken changes (login/logout)
+  //   return () => {
+  //     if (cleanupAuthListener) {
+  //       cleanupAuthListener();
+  //     }
+  //     if (tokenValidationCleanup) {
+  //       tokenValidationCleanup();
+  //     }
+  //     window.removeEventListener("tokenExpired", handleTokenExpired);
+  //   };
+  // }, [authToken]); // Only run when authToken changes (login/logout)
   // ---------------------- v1.0.4 >
 
   useEffect(() => {
