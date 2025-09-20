@@ -4,7 +4,7 @@
 // v1.0.3 - Ashok - Removed border left and set outline as none
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Camera, ChevronDown, X, Trash } from "lucide-react";
+import { Camera, X, Trash } from "lucide-react";
 import classNames from "classnames";
 import Modal from "react-modal";
 import Cookies from "js-cookie";
@@ -25,10 +25,11 @@ import {
 import Loading from "../../../../../Components/Loading.js";
 import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
+import {PhoneField, InputField, DropdownWithSearchField} from "../../../../../Components/FormFields";
 
 const UserForm = ({ mode }) => {
   // Fetch all roles and filter based on user type
-  const { data: allRoles, isLoading: rolesLoading } = useRolesQuery({
+  const { data: allRoles } = useRolesQuery({
     fetchAllRoles: true,
   });
   const userType = AuthCookieManager.getUserType();
@@ -95,11 +96,7 @@ const UserForm = ({ mode }) => {
   });
 
   // Role dropdown state
-  const [selectedCurrentRole, setSelectedCurrentRole] = useState("");
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
-  const [showDropdownRole, setShowDropdownRole] = useState(false);
-  const [currentRole, setCurrentRole] = useState([]);
-  const [searchTermRole, setSearchTermRole] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isFileRemoved, setIsFileRemoved] = useState(false);
   const [fileError, setFileError] = useState("");
@@ -121,7 +118,6 @@ const UserForm = ({ mode }) => {
     setFile(null);
     setFilePreview(null);
     setIsImageUploaded(false);
-    setSelectedCurrentRole("");
     setSelectedCurrentRoleId("");
     setErrors({});
   };
@@ -166,13 +162,6 @@ const UserForm = ({ mode }) => {
     }
   };
 
-  useEffect(() => {
-    if (organizationRoles && !rolesLoading) {
-      setCurrentRole(organizationRoles);
-    }
-    // ------------------------------ v1.0.0 >
-  }, [organizationRoles, userType, rolesLoading]);
-  // ------------------------------ v1.0.0 >
 
   // Initialize form data for edit mode
   useEffect(() => {
@@ -191,14 +180,6 @@ const UserForm = ({ mode }) => {
         contactId: initialUserData.contactId || "",
         userType,
       });
-      // Find the role to get its level for display
-      const selectedRole = organizationRoles?.find(
-        (role) => role._id === initialUserData.roleId
-      );
-      const roleDisplayText = selectedRole
-        ? `${selectedRole.label} (Level ${selectedRole.level ?? 0})`
-        : initialUserData.label || "";
-      setSelectedCurrentRole(roleDisplayText);
       setSelectedCurrentRoleId(initialUserData.roleId || "");
       setFilePreview(initialUserData?.imageData?.path);
     }
@@ -245,15 +226,6 @@ const UserForm = ({ mode }) => {
     fileInputRef.current?.click();
   };
 
-  // Role selection
-  const handleRoleSelect = (role) => {
-    console.log(`Selected role: ${role.label} (ID: ${role._id})`);
-    setSelectedCurrentRole(`${role.label} (Level ${role.level ?? 0})`);
-    setSelectedCurrentRoleId(role._id);
-    setUserData((prev) => ({ ...prev, roleId: role._id }));
-    setShowDropdownRole(false);
-    setErrors((prev) => ({ ...prev, roleId: "" }));
-  };
 
   const handlePhoneInput = (e) => {
     const value = e.target.value;
@@ -270,16 +242,6 @@ const UserForm = ({ mode }) => {
     setIsFullScreen((prev) => !prev);
   };
 
-  const toggleDropdownRole = () => {
-    setShowDropdownRole((prev) => !prev);
-  };
-
-  // Filter roles based on search and sort by level
-  const filteredCurrentRoles = currentRole
-    .filter((role) =>
-      role.label?.toLowerCase().includes(searchTermRole.toLowerCase())
-    )
-    .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
 
   //<-----v1.0.2------
   const fieldRefs = {
@@ -345,11 +307,6 @@ const UserForm = ({ mode }) => {
       "inset-y-0 right-0 w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
     }
   );
-
-  // Show loading state while roles are being fetched
-  // if (rolesLoading) {
-  //   return <Loading message="Loading roles..." />;
-  // }
 
   return (
     <Modal
@@ -457,13 +414,8 @@ const UserForm = ({ mode }) => {
                 <h1 className="font-medium text-lg">Personal Details:</h1>
               </div>
               <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  First Name
-                </label>
-                <input
+                <InputField
+                  label="First Name"
                   type="text"
                   name="firstName"
                   id="firstName"
@@ -471,26 +423,15 @@ const UserForm = ({ mode }) => {
                   ref={fieldRefs.firstName} //<-----v1.0.2------
                   value={userData.firstName}
                   onChange={handleChange}
-                  className={`w-full border rounded-md px-3 py-2 focus:outline-none border-gray-300 focus:border-custom-blue ${
-                    isLoading ? "opacity-50" : ""
-                  }`}
+                  error={errors.firstName}
                   disabled={isLoading}
                 />
-                {errors.firstName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.firstName}
-                  </p>
-                )}
               </div>
 
               <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Last Name <span className="text-red-500">*</span>
-                </label>
-                <input
+                
+                <InputField
+                  label="Last Name"
                   type="text"
                   name="lastName"
                   id="lastName"
@@ -498,25 +439,16 @@ const UserForm = ({ mode }) => {
                   ref={fieldRefs.lastName} //<-----v1.0.2------
                   value={userData.lastName}
                   onChange={handleChange}
-                  className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                    errors.lastName ? "border-red-500" : "border-gray-300"
-                  } focus:border-custom-blue ${isLoading ? "opacity-50" : ""}`}
+                  error={errors.lastName}
                   disabled={isLoading}
+                  required
                 />
-                {errors.lastName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-                )}
               </div>
 
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Work Email <span className="text-red-500">*</span>
-                </label>
                 <div className="relative">
-                  <input
+                  <InputField
+                    label="Work Email"
                     ref={emailInputRef || fieldRefs.email} //<-----v1.0.2------
                     name="email"
                     type="text"
@@ -524,149 +456,60 @@ const UserForm = ({ mode }) => {
                     value={userData.email}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                      errors.email ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
+                    error={isCheckingEmail ? "Checking email..." : errors.email}
                     placeholder="your.email@example.com"
                     autoComplete="email"
                     disabled={isLoading}
+                    required
                   />
-                  {isCheckingEmail && (
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                    </div>
-                  )}
+                  
                 </div>
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                )}
+              </div>
+              
+              <div>
+              <PhoneField
+                  countryCodeValue={userData.countryCode}
+                  onCountryCodeChange={(e) => {
+                    setUserData((prev) => ({ ...prev, countryCode: e.target.value }));
+                  }}
+                  countryCodeError={errors.countryCode}
+                  countryCodeRef={fieldRefs.countryCode}
+                  phoneValue={userData.phone}
+                  onPhoneChange={(e) => {
+                    const { value } = e.target;
+                    if (value.length <= 10) {
+                      setUserData((prev) => ({ ...prev, phone: value }));
+                      setErrors((prev) => ({ ...prev, phone: "" }));
+                    }
+                  }}
+                  phoneError={errors.phone}
+                  phoneRef={fieldRefs.phone}
+                  label="Phone"
+                  required={true}
+                />
               </div>
 
               <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Phone <span className="text-red-500">*</span>
-                </label>
-                <div className="flex">
-                  <select
-                    name="countryCode"
-                    value={userData.countryCode}
-                    ref={fieldRefs.countryCode} //<-----v1.0.2------
-                    placeholder="Country Code"
-                    onChange={handleCountryCodeChange}
-                    className={`border rounded-md px-1 py-2 text-xs focus:outline-none ${
-                      errors.phone ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue w-1/4 mr-2 ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
-                    disabled={isLoading}
-                  >
-                    <option value="+91">+91 (IN)</option>
-                    <option value="+1">+1 (US)</option>
-                    <option value="+44">+44 (UK)</option>
-                  </select>
-                  <input
-                    type="tel"
-                    name="phone"
-                    id="phone"
-                    ref={fieldRefs.phone} //<-----v1.0.2------
-                    value={userData.phone}
-                    placeholder="Enter Phone Number"
-                    onChange={handlePhoneInput}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                      errors.phone ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
-                    disabled={isLoading}
-                  />
-                </div>
-                {errors.phone && (
-                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Role <span className="text-red-500">*</span>
-                  {selectedCurrentRoleId && (
-                    <span className="ml-2 text-xs text-gray-500">
-                      (Select from dropdown below)
-                    </span>
-                  )}
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    readOnly
-                    ref={fieldRefs.roleId} //<-----v1.0.2------
-                    value={selectedCurrentRole}
-                    placeholder="Select Role"
-                    onClick={toggleDropdownRole}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none ${
-                      errors.roleId ? "border-red-500" : "border-gray-300"
-                    } focus:border-custom-blue cursor-pointer ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
-                    disabled={isLoading}
-                  />
-                  <ChevronDown className="absolute right-3 top-3 text-xl text-gray-500" />
-                  {showDropdownRole && (
-                    <div className="absolute z-50 text-sm mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-                      <div className="p-2 border-b">
-                        <input
-                          type="text"
-                          placeholder="Search roles..."
-                          value={searchTermRole}
-                          onChange={(e) => setSearchTermRole(e.target.value)}
-                          className="w-full px-2 py-1 border rounded"
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <div className="max-h-60 overflow-y-auto">
-                        {filteredCurrentRoles.length > 0 ? (
-                          filteredCurrentRoles.map((role) => (
-                            <div
-                              key={role._id}
-                              onClick={() => handleRoleSelect(role)}
-                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                            >
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <div className="font-medium">
-                                    {role.label}
-                                  </div>
-                                  {role.description && (
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      {role.description}
-                                    </div>
-                                  )}
-                                </div>
-                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                  Level {role.level ?? 0}
-                                </span>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="px-3 py-2 text-gray-500">
-                            No roles available
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {errors.roleId && (
-                  <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>
-                )}
+                <DropdownWithSearchField
+                  label="Role"
+                  name="roleId"
+                  value={selectedCurrentRoleId}
+                  options={organizationRoles.map(role => ({
+                    value: role._id,
+                    label: `${role.label} (Level ${role.level ?? 0})`
+                  }))}
+                  placeholder="Select Role"
+                  onChange={(e) => {
+                    const roleId = e.target.value;
+                    setSelectedCurrentRoleId(roleId);
+                    setUserData((prev) => ({ ...prev, roleId: roleId }));
+                    setErrors((prev) => ({ ...prev, roleId: "" }));
+                  }}
+                  error={errors.roleId}
+                  containerRef={fieldRefs.roleId}
+                  disabled={isLoading}
+                  required={true}
+                />
               </div>
             </div>
             {/* ------------------------------ v1.0.0 > */}

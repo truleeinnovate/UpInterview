@@ -18,6 +18,8 @@ import {
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError";
+import { DescriptionField, DropdownWithSearchField, InputField } from "../../../../../Components/FormFields";
+import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
 Modal.setAppElement("#root");
 const InterviewerGroupFormPopup = () => {
   const { id } = useParams();
@@ -277,29 +279,28 @@ const InterviewerGroupFormPopup = () => {
               <h3 className="text-lg font-medium mb-4">Group Information</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Group Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                  <InputField
+                    label="Group Name"
                     type="text"
+                    name="GroupName"
+                    id="GroupName"
                     placeholder="Enter Group Name"
                     ref={fieldRefs.name} //<-----v1.0.2------
                     value={formData.name}
+                    error={formErrors.name}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, name: e.target.value }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
+                    required
                   />
-                  {formErrors.name && (
-                    <p className="text-red-500 text-sm ">{formErrors.name}</p>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
+                  
+                  <DescriptionField
+                    label="Description"
+                    name="Description"
+                    id="Description"
                     placeholder="Write a description of the group"
                     ref={fieldRefs.description} //<-----v1.0.2------
                     value={formData.description}
@@ -309,21 +310,18 @@ const InterviewerGroupFormPopup = () => {
                         description: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
+                    error={formErrors.description}
                     rows={3}
+                    required
                   />
-                  {formErrors.description && (
-                    <p className="text-red-500 text-sm ">
-                      {formErrors.description}
-                    </p>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status <span className="text-red-500">*</span>
-                  </label>
-                  <select
+                  <DropdownWithSearchField
+                    label="Status"
+                    name="Status"
+                    id="Status"
+                    required
                     value={formData.status}
                     ref={fieldRefs.status} //<-----v1.0.2------
                     placeholder="Select Status"
@@ -333,11 +331,11 @@ const InterviewerGroupFormPopup = () => {
                         status: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 "
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                  options={[
+                    { value: "active", label: "Active" },
+                    { value: "inactive", label: "Inactive" },
+                  ]}
+                  />
                 </div>
               </div>
             </div>
