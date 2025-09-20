@@ -1,5 +1,5 @@
 // Logger utility for development vs production with production control
-const isDevelopment = process.env.REACT_NODE_ENV === 'production';
+const isDevelopment = process.env.REACT_NODE_ENV === 'development';
 
 // Global logging control
 let isProductionLoggingEnabled = false;

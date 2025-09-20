@@ -6,16 +6,24 @@ import axios from 'axios';
 import { config } from '../config';
 
 // Custom hook helper to create a disabled query (on-demand fetching)
-const useOnDemandQuery = (key, path, staleTime, retry) =>
+const useOnDemandQuery = (key, path, staleTime, retry,enabled = true) =>
   useQuery({
     queryKey: ['masterData', key],
     queryFn: async () => {
       const res = await axios.get(`${config.REACT_APP_API_URL}/${path}`);
       return res.data;
     },
-    enabled: false, // do NOT fetch on mount; fetch only when refetch() is called
+    // enabled, // false do NOT fetch on mount; fetch only when refetch() is called
     staleTime,
     retry,
+ // CHANGE 2: Added cacheTime for longer in-memory caching
+ cacheTime: 1000 * 60 * 60 * 2, // 2 hours cache time
+ // CHANGE 3: Added refetchOnMount and refetchOnWindowFocus settings
+ refetchOnMount: false, // Don't refetch on component mount if data exists
+ refetchOnWindowFocus: false, // Don't refetch when window gains focus
+ // CHANGE 4: Added networkMode for better offline handling
+ networkMode: 'online',
+
   });
 
 export const useMasterData = () => {
@@ -89,6 +97,26 @@ export const useMasterData = () => {
     ]);
   };
 
+   // CHANGE 9: Added new function for selective lazy loading (backward compatibility)
+   const ensureDataLoaded = async (dataType) => {
+    const queryMap = {
+      locations: locationsQ,
+      industries: industriesQ,
+      roles: rolesQ,
+      skills: skillsQ,
+      technologies: technologiesQ,
+      qualifications: qualificationsQ,
+      colleges: collegesQ,
+      companies: companiesQ,
+      category: categoryQ,
+    };
+
+    const query = queryMap[dataType];
+    if (query && !query.data && !query.isFetching) {
+      await query.refetch();
+    }
+  };
+
   return {
     // Backward-compatible shape
     masterData,
@@ -108,16 +136,28 @@ export const useMasterData = () => {
     companies: masterData.companies,
     category: masterData.category,
 
-    // On-demand loaders to be called on dropdown open
-    loadLocations: locationsQ.refetch,
-    loadIndustries: industriesQ.refetch,
-    loadCurrentRoles: rolesQ.refetch,
-    loadSkills: skillsQ.refetch,
-    loadTechnologies: technologiesQ.refetch,
-    loadQualifications: qualificationsQ.refetch,
-    loadColleges: collegesQ.refetch,
-    loadCompanies: companiesQ.refetch,
-    loadCategory: categoryQ.refetch,
+    // // On-demand loaders to be called on dropdown open
+    // loadLocations: locationsQ.refetch,
+    // loadIndustries: industriesQ.refetch,
+    // loadCurrentRoles: rolesQ.refetch,
+    // loadSkills: skillsQ.refetch,
+    // loadTechnologies: technologiesQ.refetch,
+    // loadQualifications: qualificationsQ.refetch,
+    // loadColleges: collegesQ.refetch,
+    // loadCompanies: companiesQ.refetch,
+    // loadCategory: categoryQ.refetch,
+
+     // CHANGE 10: Updated loader functions - now they just ensure data is available
+    // These will return immediately if data is already cached
+    loadLocations: () => ensureDataLoaded('locations'),
+    loadIndustries: () => ensureDataLoaded('industries'),
+    loadCurrentRoles: () => ensureDataLoaded('roles'),
+    loadSkills: () => ensureDataLoaded('skills'),
+    loadTechnologies: () => ensureDataLoaded('technologies'),
+    loadQualifications: () => ensureDataLoaded('qualifications'),
+    loadColleges: () => ensureDataLoaded('colleges'),
+    loadCompanies: () => ensureDataLoaded('companies'),
+    loadCategory: () => ensureDataLoaded('category'),
 
     // Per-entity loading flags for better UX (e.g., show loading spinners per dropdown)
     isLocationsFetching: locationsQ.isFetching,
@@ -129,5 +169,14 @@ export const useMasterData = () => {
     isCollegesFetching: collegesQ.isFetching,
     isCompaniesFetching: companiesQ.isFetching,
     isCategoryFetching: categoryQ.isFetching,
+
+
+     // CHANGE 11: Added new utility functions
+     isDataReady: !isMasterDataLoading && !isMasterDataError,
+     hasData: (dataType) => {
+       const data = masterData[dataType];
+       return Array.isArray(data) && data.length > 0;
+     },
+
   };
 };

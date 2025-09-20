@@ -996,16 +996,16 @@ const RoundFormInterviews = () => {
       };
 
       // console.log("Validating the round data");
-      const validationErrors = validateInterviewRoundData(roundData);
-      setErrors(validationErrors);
+      // const validationErrors = validateInterviewRoundData(roundData);
+      // setErrors(validationErrors);
 
 
-      console.log("Validation errors:", validationErrors);
-      if (Object.keys(validationErrors).length > 0) {
-        console.log("Validation errors found, stopping submission");
-        scrollToFirstError(validationErrors, fieldRefs);
-        return;
-      }
+      // console.log("Validation errors:", validationErrors);
+      // if (Object.keys(validationErrors).length > 0) {
+      //   console.log("Validation errors found, stopping submission");
+      //   scrollToFirstError(validationErrors, fieldRefs);
+      //   return;
+      // }
 
       // v1.0.1 --------------------------------------------------------------------------------->
 
@@ -1346,19 +1346,36 @@ const RoundFormInterviews = () => {
     } catch (err) {
       console.error("=== Form Submission Error ===");
       console.error("Error submitting the form:", err);
-      console.error("Error details:", {
-        message: err.message,
-        stack: err.stack,
-        response: err.response?.data
-      });
-
-      // Show error toast
-      toast.error('Failed to create interview round. Please try again.');
-
-      setErrors({
-        submit:
-          err instanceof Error ? err.message : "An unknown error occurred",
-      });
+      
+      // Handle validation errors from backend
+      // if (err.response && err.response.status === 400 && err.response.data.errors) {
+      //   const backendErrors = err.response.data.errors;
+      //   const formattedErrors = {};
+        
+      //   // Format backend errors to match frontend field names
+      //   Object.keys(backendErrors).forEach(field => {
+      //     // Remove "round." prefix from field names if present
+      //     const fieldName = field.replace('round.', '');
+      //     formattedErrors[fieldName] = backendErrors[field];
+      //   });
+        
+      //   console.log("Backend validation errors:", formattedErrors);
+      //   setErrors(formattedErrors);
+        
+      //   // Scroll to first error
+      //   scrollToFirstError(formattedErrors, fieldRefs);
+        
+      //   // Show error toast with specific validation messages
+      //   const firstError = Object.values(formattedErrors)[0];
+      //   toast.error(`Validation error: ${firstError}`);
+      // } else {
+        // Show generic error toast
+        toast.error('Failed to create interview round. Please try again.');
+        
+        setErrors({
+          submit: err instanceof Error ? err.message : "An unknown error occurred",
+        });
+      // }
     } finally {
       console.log("=== handleSubmit END ===");
       console.log("Form submission process completed");
@@ -1512,8 +1529,8 @@ const RoundFormInterviews = () => {
   // };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+    <div className="min-h-screen overflow-y-auto bg-gray-50">
+      <main className="max-w-7xl  mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
         <div className="px-4 sm:px-0">
           <Breadcrumb items={breadcrumbItems} />
 

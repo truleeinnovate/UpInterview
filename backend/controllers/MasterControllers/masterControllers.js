@@ -211,6 +211,7 @@ const createMaster = async (req, res) => {
 const getMasterById = async (req, res) => {
   try {
     const { type, id } = req.params;
+
     const Model = getModel(type);
 
     const doc = await Model.findById(id);

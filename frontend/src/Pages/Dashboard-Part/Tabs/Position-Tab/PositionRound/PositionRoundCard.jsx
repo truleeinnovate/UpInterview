@@ -339,7 +339,7 @@ const PositionRoundCard = ({
                         }{" "}
                         Interviewers{" "}
                       </h4>
-                      {/* <button
+                      <button
                         onClick={() => {
                           setShowInterviewers(!showInterviewers)
 
@@ -348,7 +348,7 @@ const PositionRoundCard = ({
                       >
                         {showInterviewers ? 'Hide' : 'Show'}
                         {showInterviewers ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
-                      </button> */}
+                      </button>
                     </div>
 
                     {/* {showInterviewers && round?.interviewers && ( */}

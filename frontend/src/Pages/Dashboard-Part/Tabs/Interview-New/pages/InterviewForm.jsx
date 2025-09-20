@@ -17,6 +17,7 @@ import AddCandidateForm from "../../Candidate-Tab/AddCandidateForm.jsx";
 import PositionForm from "../../Position-Tab/Position-Form.jsx";
 // v1.0.3 <-----------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+import { notify } from "../../../../../services/toastService.js";
 // v1.0.3 ----------------------------------------------------------->
 
 // Custom Dropdown Component
@@ -273,6 +274,8 @@ const InterviewForm = () => {
   };
   //  v1.0.1---------------------->
 
+  // console.log('candidateId', interviewData);
+
   const isEditing = !!id;
   const interview = isEditing
     ? interviewData.find((interview) => interview._id === id)
@@ -352,7 +355,7 @@ const InterviewForm = () => {
     if (e) e.preventDefault();
     setError(null);
 
-    // Reset errors
+    // // Reset errors
     setCandidateError("");
     setPositionError("");
 
@@ -390,19 +393,54 @@ const InterviewForm = () => {
         templateId,
         id, // interviewId
       });
+      console.log('result', result);
       // On success, navigate to rounds step and pass state
       const interviewId = result?._id || id;
       if (interviewId && templateId) {
-        navigate(`/interviews/${interviewId}`);
+        if(result.status === "no_changes" || result.status === "updated_successfully") {
+          navigate(`/interviews/${interviewId}`);
+          notify.success("Interview Updated successfully");
+        } else {
+          navigate(`/interviews/${interviewId}`);
+          notify.success("Interview created successfully");
+        }
       } else {
+        if(result.status === "no_changes" || result.status === "updated_successfully") {
         navigate(`/interviews/${interviewId}/rounds/new`, {
           state: { candidateId, from360 },
         });
+        notify.success("Interview updated successfully");
+      }else{
+        navigate(`/interviews/${interviewId}/rounds/new`, {
+          state: { candidateId, from360 },
+        });
+        notify.success("Interview created successfully");
       }
+    }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
+
+      if (err.response?.data) {
+        const { field, message } = err.response.data;
+        
+        
+        // Handle field-specific errors
+        if (field === "candidateId") {
+          setCandidateError(message);
+          hasError = true;
+        } else if (field === "positionId") {
+          setPositionError(message);
+          hasError = true;
+        }  else {
+          // Handle non-field specific errors
+          setError(message || "An unknown error occurred");
+          hasError = true;
+        }
+      } else {
+        setError("An unknown error occurred");
+        hasError = true;
+      }
+    
+  
     } finally {
     }
   };

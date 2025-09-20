@@ -9,6 +9,7 @@
 // v1.0.7  -  Ashok   -  Technology master controller as send all the fields in response
 // v1.0.8  -  Ashok   -  Added Question bank manager routes
 // v1.0.9  -  Ashok   -  Modified master data controllers
+//  v1.0.10 -  Ranjith   -  Added Ranjith for single user controllers
 
 require("dotenv").config();
 
@@ -30,7 +31,30 @@ app.use(cookieParser());
 // console.log('config.REACT_APP_REDIRECT_URI', config.REACT_APP_REDIRECT_URI);
 // console.log('config.REACT_APP_API_URL_FRONTEND', config.REACT_APP_API_URL_FRONTEND);
 
+
+
+
+// ✅ Import custom logger
+const logger = require("./utils/logger");
+
+
+
 const config = require("./config.js");
+
+
+// Use logger instead of console.log
+// logger.log('config.REACT_APP_CLIENT_ID', config.REACT_APP_CLIENT_ID);
+// logger.log('config.REACT_APP_CLIENT_SECRET', config.REACT_APP_CLIENT_SECRET);
+// logger.log('config.REACT_APP_REDIRECT_URI', config.REACT_APP_REDIRECT_URI);
+// logger.log('config.REACT_APP_API_URL_FRONTEND', config.REACT_APP_API_URL_FRONTEND);
+
+
+// logger.log(
+//   "from index config.REACT_APP_API_URL_FRONTEND",
+//   config.REACT_APP_API_URL_FRONTEND
+// );
+
+
 
 console.log(
   "from index config.REACT_APP_API_URL_FRONTEND",
@@ -58,14 +82,24 @@ const allowedOrigins = [
 // CORS middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  console.log(
-    "Request Method:",
-    req.method,
-    "Path:",
-    req.path,
-    "Origin:",
-    origin
-  );
+  // console.log(
+  //   "Request Method:",
+  //   req.method,
+  //   "Path:",
+  //   req.path,
+  //   "Origin:",
+  //   origin
+  // );
+
+  // logger.log(
+  //   "Request Method:",
+  //   req.method,
+  //   "Path:",
+  //   req.path,
+  //   "Origin:",
+  //   origin
+  // );
+
 
   const isAllowed = allowedOrigins.some(o =>
     typeof o === "string" ? o === origin : o.test(origin)
@@ -102,6 +136,8 @@ const handleOptions = (req, res) => {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.status(200).end();
 };
+
+
 
 // Add specific OPTIONS handlers for your routes
 app.options("/Organization/Login", handleOptions);
@@ -480,7 +516,7 @@ app.get("/skills", async (req, res) => {
     const skills = await Skills.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(skills);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -492,7 +528,7 @@ app.get("/locations", async (req, res) => {
     const LocationNames = await LocationMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(LocationNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -504,7 +540,7 @@ app.get("/industries", async (req, res) => {
     const IndustryNames = await Industry.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(IndustryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -516,7 +552,7 @@ app.get("/roles", async (req, res) => {
     const roles = await RoleMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(roles);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -530,7 +566,7 @@ app.get("/technology", async (req, res) => {
     const technology = await TechnologyMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(technology);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -544,7 +580,7 @@ app.get("/qualification", async (req, res) => {
     const higherqualifications = await HigherQualification.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(higherqualifications);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -556,7 +592,7 @@ app.get("/universitycollege", async (req, res) => {
     const universityCollegeNames = await University_CollegeName.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(universityCollegeNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -568,7 +604,7 @@ app.get("/company", async (req, res) => {
     const CompanyNames = await Company.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(CompanyNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -580,7 +616,7 @@ app.get("/category", async (req, res) => {
     const CategoryNames = await CategoryQuestionsMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(CategoryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -996,20 +1032,32 @@ app.use("/api/auth", authRoutes);
 // Ensures pushNotificationTaskController registers its cron schedule on server start
 require("./controllers/PushNotificationControllers/pushNotificationTaskController");
 
+
+// v1.0.10 <-------------------------------------------------------------------------- Ranjith>
 // in contextfetch for fetchUserProfile
 app.get("/auth/users/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await Users.findById(id);
+    const user = await Users.findById(id).lean();
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(user);
+
+    const contact = await Contacts.findOne({ ownerId: id }, "_id").lean(); 
+    // user.contactId = contact._id;
+
+
+    // res.json(user);
+    res.json({
+      ...user, // convert mongoose doc to plain object
+      contactId: contact ? contact._id : null, // attach contactId
+    });
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+// v1.0.10 <--------------------------------------------------------------------------Ranjith>
 
 // app.delete("/users/:id/image", async (req, res) => {
 //   try {
@@ -1361,6 +1409,7 @@ const {
   getTopSkills,
   getTopExternalInterviewers,
 } = require("./data/mockData.js");
+const { Contacts } = require("./models/Contacts.js");
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

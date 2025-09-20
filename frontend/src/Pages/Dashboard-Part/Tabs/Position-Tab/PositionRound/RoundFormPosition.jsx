@@ -44,9 +44,11 @@ function RoundFormPosition() {
     if (!name) return "";
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   };
+  console.log("userProfile", userProfile);
 
   const firstName = formatName(userProfile?.firstName);
   const lastName = formatName(userProfile?.lastName);
+  const contactId = userProfile?.contactId;
 
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { positionData, isMutationLoading, addRounds } = usePositions();
@@ -497,7 +499,7 @@ function RoundFormPosition() {
     if (organization === false) {
       // For non-organization users, set the current user as the interviewer
       const currentUser = {
-        _id: ownerId,
+        _id: contactId || ownerId,
         firstName: firstName,
         lastName: lastName,
         email: tokenPayload?.email || "",

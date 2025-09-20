@@ -10,7 +10,7 @@ import ScrollRestoration from "./utils/ScrollRestorationGlobal/ScrollRestoration
 import { logger, replaceConsoleLogs } from './utils/logger.js';
 
 
-replaceConsoleLogs()
+// replaceConsoleLogs()
 
 
 
