@@ -20,6 +20,8 @@ import { useCreateFeedback, useUpdateFeedback } from '../../apiHooks/useFeedback
 import { useScrollLock } from '../../apiHooks/scrollHook/useScrollLock.js';
 import toast from 'react-hot-toast';
 import { SchedulerViewMode } from './SchedulerViewMode.jsx';
+import DescriptionField from '../../Components/FormFields/DescriptionField.jsx';
+import DropdownSelect from '../../Components/Dropdowns/DropdownSelect.jsx';
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -1535,16 +1537,14 @@ const FeedbackForm = ({
                 {comments || "Not Provided"}
               </div>
             ) : (
-              <textarea
+              <DescriptionField
                 rows={4}
                 value={comments}
                 onChange={handleCommentsChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxLength={1000}
                 placeholder="Provide overall feedback about the candidate's performance..."
+                error={errors.comments}
               />
-            )}
-            {errors.comments && (
-              <p className="mt-1 text-sm text-red-600">{errors.comments}</p>
             )}
           </div>
 
@@ -1557,17 +1557,16 @@ const FeedbackForm = ({
                 {recommendation || "Not Provided"}
               </div>
             ) : (
-              <select
+              <DropdownSelect
                 value={recommendation}
                 onChange={(e) => setRecommendation(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {/* <option value="Strong Yes">Strong Yes</option> */}
-                <option value="Yes">Yes</option>
-                <option value="Maybe">Maybe</option>
-                <option value="No">No</option>
-                {/* <option value="Strong No">Strong No</option> */}
-              </select>
+                options={[
+                  { value: "Yes", label: "Yes" },
+                  { value: "Maybe", label: "Maybe" },
+                  { value: "No", label: "No" }
+                ]}
+                placeholder="Select Recommendation"
+              />
             )}
           </div>
           {isViewMode ?
