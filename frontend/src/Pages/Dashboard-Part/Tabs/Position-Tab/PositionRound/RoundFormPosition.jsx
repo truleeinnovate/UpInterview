@@ -1892,11 +1892,11 @@ function RoundFormPosition() {
                           {/* Question Popup */}
                           {isInterviewQuestionPopup && (
                             <div
-                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen"
                               onClick={() => setIsInterviewQuestionPopup(false)}
                             >
                               <div
-                                className="bg-white rounded-md w-[95%] h-[90%]"
+                                className="bg-white rounded-md w-[96%] max-h-[90vh] overflow-y-auto p-4"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <div className="py-3 px-4  flex items-center justify-between">
