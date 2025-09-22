@@ -4,19 +4,31 @@
 // v1.0.2 - Ashok - Improved responsiveness and added common code to popup
 
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { validateBankAccount } from "../../../../../utils/BankAccountValidation"; //<-----v1.0.0------
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError"; //<-----v1.0.0-----
+import { useUserProfile } from "../../../../../apiHooks/useUsers.js";
+import { useBankAccounts, useAddBankAccount, useVerifyBankAccount, useDeleteBankAccount } from "../../../../../apiHooks/useBankAccount";
+
 
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect.jsx";
+import LoadingButton from "../../../../../Components/LoadingButton.jsx";
 
-export function BankAccountsPopup({ onClose, onSave }) {
-  const navigate = useNavigate();
-  const [accounts, setAccounts] = useState([]);
+export function BankAccountsPopup({ onClose, onSelectAccount }) {
+  const { userProfile } = useUserProfile();
+  const ownerId = userProfile?.id;
+  const tenantId = userProfile?.tenantId;
+  
+  // API hooks
+  const { data: bankAccounts = [], isLoading: loadingAccounts, refetch } = useBankAccounts(ownerId);
+  const { mutate: addBankAccount, isLoading: addingAccount } = useAddBankAccount();
+  const { mutate: verifyBankAccount, isLoading: verifyingAccount } = useVerifyBankAccount();
+  const { mutate: deleteBankAccount, isLoading: deletingAccount } = useDeleteBankAccount();
+  
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [errors, setErrors] = useState({}); //<-----v1.0.0-----
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [newAccount, setNewAccount] = useState({
     accountName: "",
     accountNumber: "",
@@ -39,7 +51,7 @@ export function BankAccountsPopup({ onClose, onSave }) {
   };
   //-----v1.0.0----->
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     //<-----v1.0.0-----
@@ -53,28 +65,71 @@ export function BankAccountsPopup({ onClose, onSave }) {
     }
     //-----v1.0.0----->
 
-    // If validation passes, add the new account
-    const account = {
-      id: Date.now(),
-      ...newAccount,
-      confirmAccountNumber: undefined, // Don't store confirmation field
+    // Prepare data for backend
+    const bankAccountData = {
+      ownerId,
+      tenantId,
+      accountHolderName: newAccount.accountName,
+      bankName: newAccount.bankName,
+      accountType: newAccount.accountType,
+      accountNumber: newAccount.accountNumber,
+      routingNumber: newAccount.routingNumber,
+      ifscCode: newAccount.swiftCode, // Using SWIFT code field for IFSC in Indian context
+      swiftCode: newAccount.swiftCode,
+      isDefault: newAccount.isDefault,
     };
-    setAccounts([...accounts, account]);
-    setNewAccount({
-      accountName: "",
-      accountNumber: "",
-      confirmAccountNumber: "",
-      routingNumber: "",
-      bankName: "",
-      accountType: "checking",
-      swiftCode: "",
-      isDefault: false,
+
+    // Add the new account to database
+    addBankAccount(bankAccountData, {
+      onSuccess: () => {
+        // Reset form
+        setNewAccount({
+          accountName: "",
+          accountNumber: "",
+          confirmAccountNumber: "",
+          routingNumber: "",
+          bankName: "",
+          accountType: "checking",
+          swiftCode: "",
+          isDefault: false,
+        });
+        setIsAddingAccount(false);
+        setErrors({});
+        // Refetch accounts
+        refetch();
+      },
+      onError: (error) => {
+        console.error("Error adding bank account:", error);
+      }
     });
-    setIsAddingAccount(false);
   };
 
-  const handleRemoveAccount = (id) => {
-    setAccounts(accounts.filter((account) => account.id !== id));
+  const handleRemoveAccount = (accountId) => {
+    if (window.confirm("Are you sure you want to remove this bank account?")) {
+      deleteBankAccount(
+        { bankAccountId: accountId, ownerId },
+        {
+          onSuccess: () => {
+            refetch();
+          }
+        }
+      );
+    }
+  };
+
+  const handleVerifyAccount = (accountId) => {
+    verifyBankAccount(accountId, {
+      onSuccess: () => {
+        refetch();
+      }
+    });
+  };
+
+  const handleSelectAccount = (account) => {
+    setSelectedAccountId(account._id);
+    if (onSelectAccount) {
+      onSelectAccount(account);
+    }
   };
 
   const renderAccountForm = () => (
@@ -238,63 +293,119 @@ export function BankAccountsPopup({ onClose, onSave }) {
         >
           Cancel
         </button>
-        <button
+        <LoadingButton
           type="submit"
+          loading={addingAccount}
           className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
         >
-          Add Account
-        </button>
+          {addingAccount ? "Adding..." : "Add Account"}
+        </LoadingButton>
       </div>
     </form>
   );
 
-  const renderAccountsList = () => (
-    <div className="space-y-4">
-      {accounts.map((account) => (
-        <div key={account.id} className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="flex items-center space-x-2">
-                <h4 className="font-medium">{account.accountName}</h4>
-                {account.isDefault && (
-                  <span className="px-2 py-1 bg-blue-100 text-custom-blue rounded-full text-xs">
-                    Default
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500">{account.bankName}</p>
-              <p className="text-sm text-gray-500">
-                {account.accountType.charAt(0).toUpperCase() +
-                  account.accountType.slice(1)}{" "}
-                Account
-              </p>
-              <p className="text-sm text-gray-500">
-                ••••{account.accountNumber.slice(-4)}
-              </p>
-              <p className="text-sm text-gray-500">
-                {account.address.city}, {account.address.state}{" "}
-                {account.address.zipCode}
-              </p>
-            </div>
+  const renderAccountsList = () => {
+    if (loadingAccounts) {
+      return (
+        <div className="flex justify-center items-center py-8">
+          <div className="text-gray-500">Loading bank accounts...</div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {bankAccounts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p className="mb-4">No bank accounts added yet</p>
             <button
-              onClick={() => handleRemoveAccount(account.id)}
-              className="text-red-600 hover:text-red-800"
+              onClick={() => setIsAddingAccount(true)}
+              className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
             >
-              Remove
+              Add Your First Bank Account
             </button>
           </div>
-        </div>
-      ))}
-      <div className="flex justify-end items-center">
-        <button
-          onClick={() => setIsAddingAccount(true)}
-          className="w-44 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
-        >
-          Add Bank Account
-        </button>
+        ) : (
+          <>
+            {bankAccounts.map((account) => (
+              <div 
+                key={account._id} 
+                className={`bg-gray-50 p-4 rounded-lg border-2 transition-all ${
+                  selectedAccountId === account._id ? 'border-custom-blue' : 'border-transparent'
+                } ${account.canWithdraw?.() ? 'cursor-pointer hover:border-gray-300' : 'opacity-75'}`}
+                onClick={() => account.canWithdraw?.() && handleSelectAccount(account)}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h4 className="font-medium">{account.accountHolderName}</h4>
+                      {account.isDefault && (
+                        <span className="px-2 py-1 bg-blue-100 text-custom-blue rounded-full text-xs">
+                          Default
+                        </span>
+                      )}
+                      {account.isVerified ? (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                          Pending Verification
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mb-1">{account.bankName}</p>
+                    <p className="text-sm text-gray-500">
+                      {account.accountType?.charAt(0).toUpperCase() +
+                        account.accountType?.slice(1) || 'Checking'} Account
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {account.maskedAccountNumber || `••••${account.accountNumber?.slice(-4) || ''}`}
+                    </p>
+                    {account.ifscCode && (
+                      <p className="text-sm text-gray-500">IFSC: {account.ifscCode}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    {!account.isVerified && (
+                      <LoadingButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVerifyAccount(account._id);
+                        }}
+                        loading={verifyingAccount}
+                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                      >
+                        Verify
+                      </LoadingButton>
+                    )}
+                    <LoadingButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveAccount(account._id);
+                      }}
+                      loading={deletingAccount}
+                      className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                    >
+                      Remove
+                    </LoadingButton>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-end items-center">
+              <button
+                onClick={() => setIsAddingAccount(true)}
+                className="w-44 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
+              >
+                Add Bank Account
+              </button>
+            </div>
+          </>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
 
   // v1.0.2 <----------------------------------------------------------------------

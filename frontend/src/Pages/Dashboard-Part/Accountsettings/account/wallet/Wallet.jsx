@@ -9,6 +9,8 @@ import WalletBalancePopup from "./WalletBalancePopup";
 import WalletTransactionPopup from "./WalletTransactionPopup";
 import { WalletTopupPopup } from "./WalletTopupPopup";
 import { BankAccountsPopup } from "./BankAccountsPopup";
+import { WithdrawalModal } from "./WithdrawalModal";
+import { WithdrawalHistory } from "./WithdrawalHistory";
 import "./topupAnimation.css";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import { useWallet } from "../../../../../apiHooks/useWallet"; //<----v1.0.0-----
@@ -44,6 +46,8 @@ const Wallet = () => {
   const [viewingBalance, setViewingBalance] = useState(false);
   const [isTopupOpen, setIsTopupOpen] = useState(false);
   const [isBankAccountsOpen, setIsBankAccountsOpen] = useState(false);
+  const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
+  const [isWithdrawalHistoryOpen, setIsWithdrawalHistoryOpen] = useState(false);
   const [animateTopUp, setAnimateTopUp] = useState(true);
   const topUpButtonRef = useRef(null);
 
@@ -73,11 +77,6 @@ const Wallet = () => {
     } catch (error) {
       console.error("Error refreshing wallet data after topup:", error);
     }
-  };
-
-  const handleSaveBankAccounts = (accounts) => {
-    // In a real application, this would make an API call
-    console.log("Saving bank accounts:", accounts);
   };
 
   // Skeleton Loading Component for Wallet
@@ -225,6 +224,12 @@ const Wallet = () => {
           <div className="flex space-x-3">
             <button
               onClick={() => setIsBankAccountsOpen(true)}
+              className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg"
+            >
+              Bank Accounts
+            </button>
+            <button
+              onClick={() => setIsWithdrawalOpen(true)}
               className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg"
             >
               Withdraw
@@ -429,7 +434,26 @@ const Wallet = () => {
       {isBankAccountsOpen && (
         <BankAccountsPopup
           onClose={() => setIsBankAccountsOpen(false)}
-          onSave={handleSaveBankAccounts}
+          onSelectAccount={(account) => {
+            setIsBankAccountsOpen(false);
+            setIsWithdrawalOpen(true);
+          }}
+        />
+      )}
+
+      {isWithdrawalOpen && (
+        <WithdrawalModal
+          onClose={() => setIsWithdrawalOpen(false)}
+          onSuccess={() => {
+            refetch();
+            setIsWithdrawalHistoryOpen(true);
+          }}
+        />
+      )}
+
+      {isWithdrawalHistoryOpen && (
+        <WithdrawalHistory
+          onClose={() => setIsWithdrawalHistoryOpen(false)}
         />
       )}
       <Outlet />
