@@ -42,16 +42,39 @@ function InterviewList() {
     status: [],
     tech: [],
     experience: { min: "", max: "" },
+    interviewType: [],
+    interviewMode: [],
+    position: [],
+    company: [],
+    roundStatus: [],
+    interviewer: [],
+    createdDate: "", // '', 'last7', 'last30', 'last90'
+    interviewDate: { from: "", to: "" },
   });
-  const [isQualificationOpen, setIsQualificationOpen] = useState(false);
-  const [isSkillsToggleOpen, setIsSkillsToggleOpen] = useState(false);
-  const [isExperienceOpen, setIsExperienceOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
   const [experience, setExperience] = useState({ min: "", max: "" });
   const [expandedRows, setExpandedRows] = useState({});
   const filterIconRef = useRef(null);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isSkillsOpen, setIsSkillsOpen] = useState(false);
+  const [isExperienceOpen, setIsExperienceOpen] = useState(false);
+  const [isInterviewTypeOpen, setIsInterviewTypeOpen] = useState(false);
+  const [isInterviewModeOpen, setIsInterviewModeOpen] = useState(false);
+  const [isPositionOpen, setIsPositionOpen] = useState(false);
+  const [isCompanyOpen, setIsCompanyOpen] = useState(false);
+  const [isRoundStatusOpen, setIsRoundStatusOpen] = useState(false);
+  const [isInterviewerOpen, setIsInterviewerOpen] = useState(false);
+  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+  const [isInterviewDateOpen, setIsInterviewDateOpen] = useState(false);
+  const [selectedInterviewTypes, setSelectedInterviewTypes] = useState([]);
+  const [selectedInterviewModes, setSelectedInterviewModes] = useState([]);
+  const [selectedPositions, setSelectedPositions] = useState([]);
+  const [selectedCompanies, setSelectedCompanies] = useState([]);
+  const [selectedRoundStatuses, setSelectedRoundStatuses] = useState([]);
+  const [selectedInterviewers, setSelectedInterviewers] = useState([]);
+  const [createdDatePreset, setCreatedDatePreset] = useState("");
+  const [interviewDateRange, setInterviewDateRange] = useState({ from: "", to: "" });
 
   // Sync filter states when popup opens
   useEffect(() => {
@@ -59,9 +82,26 @@ function InterviewList() {
       setSelectedStatus(selectedFilters.status);
       setSelectedTech(selectedFilters.tech);
       setExperience(selectedFilters.experience);
-      setIsQualificationOpen(false);
-      setIsSkillsToggleOpen(false);
+      setSelectedInterviewTypes(selectedFilters.interviewType);
+      setSelectedInterviewModes(selectedFilters.interviewMode);
+      setSelectedPositions(selectedFilters.position);
+      setSelectedCompanies(selectedFilters.company);
+      setSelectedRoundStatuses(selectedFilters.roundStatus);
+      setSelectedInterviewers(selectedFilters.interviewer);
+      setCreatedDatePreset(selectedFilters.createdDate);
+      setInterviewDateRange(selectedFilters.interviewDate);
+      // Reset all open states
+      setIsStatusOpen(false);
+      setIsSkillsOpen(false);
       setIsExperienceOpen(false);
+      setIsInterviewTypeOpen(false);
+      setIsInterviewModeOpen(false);
+      setIsPositionOpen(false);
+      setIsCompanyOpen(false);
+      setIsRoundStatusOpen(false);
+      setIsInterviewerOpen(false);
+      setIsCreatedDateOpen(false);
+      setIsInterviewDateOpen(false);
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
@@ -96,7 +136,16 @@ function InterviewList() {
       filters.status.length > 0 ||
       filters.tech.length > 0 ||
       filters.experience.min ||
-      filters.experience.max
+      filters.experience.max ||
+      filters.interviewType.length > 0 ||
+      filters.interviewMode.length > 0 ||
+      filters.position.length > 0 ||
+      filters.company.length > 0 ||
+      filters.roundStatus.length > 0 ||
+      filters.interviewer.length > 0 ||
+      filters.createdDate ||
+      filters.interviewDate.from ||
+      filters.interviewDate.to
     );
     setCurrentPage(0);
   }, []);
@@ -123,15 +172,86 @@ function InterviewList() {
     }));
   };
 
+  const handleInterviewTypeToggle = (type) => {
+    setSelectedInterviewTypes((prev) =>
+      prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  const handleInterviewModeToggle = (mode) => {
+    setSelectedInterviewModes((prev) =>
+      prev.includes(mode)
+        ? prev.filter((m) => m !== mode)
+        : [...prev, mode]
+    );
+  };
+
+  const handlePositionToggle = (position) => {
+    setSelectedPositions((prev) =>
+      prev.includes(position)
+        ? prev.filter((p) => p !== position)
+        : [...prev, position]
+    );
+  };
+
+  const handleCompanyToggle = (company) => {
+    setSelectedCompanies((prev) =>
+      prev.includes(company)
+        ? prev.filter((c) => c !== company)
+        : [...prev, company]
+    );
+  };
+
+  const handleRoundStatusToggle = (status) => {
+    setSelectedRoundStatuses((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const handleInterviewerToggle = (interviewer) => {
+    setSelectedInterviewers((prev) =>
+      prev.includes(interviewer)
+        ? prev.filter((i) => i !== interviewer)
+        : [...prev, interviewer]
+    );
+  };
+
+  const handleInterviewDateChange = (e, type) => {
+    setInterviewDateRange((prev) => ({
+      ...prev,
+      [type]: e.target.value,
+    }));
+  };
+
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
       tech: [],
       experience: { min: "", max: "" },
+      interviewType: [],
+      interviewMode: [],
+      position: [],
+      company: [],
+      roundStatus: [],
+      interviewer: [],
+      createdDate: "",
+      interviewDate: { from: "", to: "" },
     };
     setSelectedStatus([]);
     setSelectedTech([]);
     setExperience(clearedFilters.experience);
+    setSelectedInterviewTypes([]);
+    setSelectedInterviewModes([]);
+    setSelectedPositions([]);
+    setSelectedCompanies([]);
+    setSelectedRoundStatuses([]);
+    setSelectedInterviewers([]);
+    setCreatedDatePreset("");
+    setInterviewDateRange({ from: "", to: "" });
     setSelectedFilters(clearedFilters);
     setCurrentPage(0);
     setIsFilterActive(false);
@@ -143,6 +263,14 @@ function InterviewList() {
       status: selectedStatus,
       tech: selectedTech,
       experience: { min: experience.min, max: experience.max },
+      interviewType: selectedInterviewTypes,
+      interviewMode: selectedInterviewModes,
+      position: selectedPositions,
+      company: selectedCompanies,
+      roundStatus: selectedRoundStatuses,
+      interviewer: selectedInterviewers,
+      createdDate: createdDatePreset,
+      interviewDate: interviewDateRange,
     };
     handleFilterChange(filters);
     setFilterPopupOpen(false);
@@ -183,7 +311,7 @@ function InterviewList() {
         interview.interviewTitle,
         interview.interviewType,
         interview.status,
-        interview.createdAt,
+        interview.interviewCode
       ].filter(Boolean);
 
       // v1.0.1 <---------------------------------------------------------------
@@ -229,8 +357,92 @@ function InterviewList() {
           interview.candidateId?.CurrentExperience <=
           Number(selectedFilters.experience.max));
 
+      // New filter matches
+      const matchesInterviewType =
+        selectedFilters.interviewType.length === 0 ||
+        selectedFilters.interviewType.includes(interview.interviewType);
+
+      const matchesInterviewMode =
+        selectedFilters.interviewMode.length === 0 ||
+        selectedFilters.interviewMode.includes(interview.interviewMode);
+
+      const matchesPosition =
+        selectedFilters.position.length === 0 ||
+        selectedFilters.position.includes(interview.positionId?.title);
+
+      const matchesCompany =
+        selectedFilters.company.length === 0 ||
+        selectedFilters.company.includes(interview.positionId?.companyname);
+
+      const matchesRoundStatus =
+        selectedFilters.roundStatus.length === 0 ||
+        interview.rounds?.some((round) =>
+          selectedFilters.roundStatus.includes(round.status)
+        );
+
+      const matchesInterviewer =
+        selectedFilters.interviewer.length === 0 ||
+        interview.rounds?.some((round) =>
+          round.interviewers?.some((interviewer) =>
+            selectedFilters.interviewer.includes(interviewer.name)
+          )
+        );
+
+      // Date filters
+      const matchesCreatedDate = () => {
+        if (!selectedFilters.createdDate) return true;
+        const createdAt = new Date(interview.createdAt);
+        const now = new Date();
+        const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+        
+        switch (selectedFilters.createdDate) {
+          case 'last7':
+            return daysDiff <= 7;
+          case 'last30':
+            return daysDiff <= 30;
+          case 'last90':
+            return daysDiff <= 90;
+          default:
+            return true;
+        }
+      };
+
+      const matchesInterviewDate = () => {
+        if (!selectedFilters.interviewDate.from && !selectedFilters.interviewDate.to) {
+          return true;
+        }
+        
+        const hasValidDate = interview.rounds?.some((round) => {
+          if (!round.dateTime) return false;
+          const roundDate = new Date(round.dateTime.split(' - ')[0]);
+          
+          if (selectedFilters.interviewDate.from && selectedFilters.interviewDate.to) {
+            return roundDate >= new Date(selectedFilters.interviewDate.from) &&
+                   roundDate <= new Date(selectedFilters.interviewDate.to);
+          } else if (selectedFilters.interviewDate.from) {
+            return roundDate >= new Date(selectedFilters.interviewDate.from);
+          } else if (selectedFilters.interviewDate.to) {
+            return roundDate <= new Date(selectedFilters.interviewDate.to);
+          }
+          return true;
+        });
+        
+        return hasValidDate;
+      };
+
       return (
-        matchesSearchQuery && matchesStatus && matchesTech && matchesExperience
+        matchesSearchQuery && 
+        matchesStatus && 
+        matchesTech && 
+        matchesExperience &&
+        matchesInterviewType &&
+        matchesInterviewMode &&
+        matchesPosition &&
+        matchesCompany &&
+        matchesRoundStatus &&
+        matchesInterviewer &&
+        matchesCreatedDate() &&
+        matchesInterviewDate()
       );
     });
   };
@@ -867,7 +1079,8 @@ function InterviewList() {
                 onClearAll={handleClearAll}
                 filterIconRef={filterIconRef}
               >
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                  {/* Status Filter */}
                   <div>
                     <div
                       className="flex justify-between items-center cursor-pointer"
@@ -882,7 +1095,7 @@ function InterviewList() {
                     </div>
                     {isStatusOpen && (
                       <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {["Draft", "Cancelled", "Completed"].map((status) => (
+                        {["Draft", "Active", "Completed", "Cancelled", "On Hold"].map((status) => (
                           <label
                             key={status}
                             className="flex items-center space-x-2"
@@ -891,11 +1104,383 @@ function InterviewList() {
                               type="checkbox"
                               checked={selectedStatus.includes(status)}
                               onChange={() => handleStatusToggle(status)}
-                              // v1.0.2 <---------------------------------------------------------------
                               className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                              // v1.0.2 --------------------------------------------------------------->
                             />
                             <span className="text-sm">{status}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Interview Type Filter */}
+                  {/* <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsInterviewTypeOpen(!isInterviewTypeOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Interview Type</span>
+                      {isInterviewTypeOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isInterviewTypeOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {["Technical", "HR", "Managerial", "Behavioral", "Panel", "Assignment"].map((type) => (
+                          <label
+                            key={type}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedInterviewTypes.includes(type)}
+                              onChange={() => handleInterviewTypeToggle(type)}
+                              className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">{type}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div> */}
+
+                  {/* Interview Mode Filter */}
+                  {/* <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsInterviewModeOpen(!isInterviewModeOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Interview Mode</span>
+                      {isInterviewModeOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isInterviewModeOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {["In-person", "Virtual", "Phone", "Video Call", "Hybrid"].map((mode) => (
+                          <label
+                            key={mode}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedInterviewModes.includes(mode)}
+                              onChange={() => handleInterviewModeToggle(mode)}
+                              className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">{mode}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div> */}
+
+                  {/* Skills Filter */}
+                  {/* <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsSkillsOpen(!isSkillsOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Skills</span>
+                      {isSkillsOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isSkillsOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {[
+                          "React", "Node.js", "JavaScript", "TypeScript",
+                          "Python", "Java", "C++", "Angular", "Vue.js",
+                          "MongoDB", "SQL", "AWS", "Docker", "Kubernetes"
+                        ].map((tech) => (
+                          <label
+                            key={tech}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedTech.includes(tech)}
+                              onChange={() => handleTechToggle(tech)}
+                              className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">{tech}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div> */}
+
+                  {/* Experience Filter */}
+                  {/* <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsExperienceOpen(!isExperienceOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Experience (Years)</span>
+                      {isExperienceOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isExperienceOpen && (
+                      <div className="mt-2 pl-3 space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            value={experience.min}
+                            onChange={(e) => handleExperienceChange(e, "min")}
+                            placeholder="Min"
+                            className="w-20 p-1 border rounded"
+                            min="0"
+                            max="15"
+                          />
+                          <span className="text-sm">to</span>
+                          <input
+                            type="number"
+                            value={experience.max}
+                            onChange={(e) => handleExperienceChange(e, "max")}
+                            placeholder="Max"
+                            className="w-20 p-1 border rounded"
+                            min="0"
+                            max="15"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div> */}
+
+                  {/* Round Status Filter */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsRoundStatusOpen(!isRoundStatusOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Round Status</span>
+                      {isRoundStatusOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isRoundStatusOpen && (
+                      <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                        {["Scheduled", "Completed", "Cancelled", "RequestSent", "Pending", "In Progress"].map((status) => (
+                          <label
+                            key={status}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedRoundStatuses.includes(status)}
+                              onChange={() => handleRoundStatusToggle(status)}
+                              className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">{status}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+
+                  {/* Interview Date Range Filter */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsInterviewDateOpen(!isInterviewDateOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Interview Date</span>
+                      {isInterviewDateOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isInterviewDateOpen && (
+                      <div className="mt-2 pl-3 space-y-2">
+                        <div className="space-y-2">
+                          <input
+                            type="date"
+                            value={interviewDateRange.from}
+                            onChange={(e) => handleInterviewDateChange(e, "from")}
+                            className="w-full p-1 border rounded text-sm"
+                            placeholder="From"
+                          />
+                          <input
+                            type="date"
+                            value={interviewDateRange.to}
+                            onChange={(e) => handleInterviewDateChange(e, "to")}
+                            className="w-full p-1 border rounded text-sm"
+                            placeholder="To"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Get unique positions and companies from data */}
+                  {(() => {
+                    const uniquePositions = [...new Set(
+                      interviewData?.map(i => i.positionId?.title).filter(Boolean) || []
+                    )];
+                    const uniqueCompanies = [...new Set(
+                      interviewData?.map(i => i.positionId?.companyname).filter(Boolean) || []
+                    )];
+                    const uniqueInterviewers = [...new Set(
+                      interviewData?.flatMap(i => 
+                        i.rounds?.flatMap(r => 
+                          r.interviewers?.map(int => int.name)
+                        ) || []
+                      ).filter(Boolean) || []
+                    )];
+
+                    return (
+                      <>
+                        {/* Position Filter */}
+                        {uniquePositions.length > 0 && (
+                          <div>
+                            <div
+                              className="flex justify-between items-center cursor-pointer"
+                              onClick={() => setIsPositionOpen(!isPositionOpen)}
+                            >
+                              <span className="font-medium text-gray-700">Position</span>
+                              {isPositionOpen ? (
+                                <ChevronUp className="text-xl text-gray-700" />
+                              ) : (
+                                <ChevronDown className="text-xl text-gray-700" />
+                              )}
+                            </div>
+                            {isPositionOpen && (
+                              <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                                {uniquePositions.map((position) => (
+                                  <label
+                                    key={position}
+                                    className="flex items-center space-x-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedPositions.includes(position)}
+                                      onChange={() => handlePositionToggle(position)}
+                                      className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                    />
+                                    <span className="text-sm">{position}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Company Filter */}
+                        {uniqueCompanies.length > 0 && (
+                          <div>
+                            <div
+                              className="flex justify-between items-center cursor-pointer"
+                              onClick={() => setIsCompanyOpen(!isCompanyOpen)}
+                            >
+                              <span className="font-medium text-gray-700">Company</span>
+                              {isCompanyOpen ? (
+                                <ChevronUp className="text-xl text-gray-700" />
+                              ) : (
+                                <ChevronDown className="text-xl text-gray-700" />
+                              )}
+                            </div>
+                            {isCompanyOpen && (
+                              <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                                {uniqueCompanies.map((company) => (
+                                  <label
+                                    key={company}
+                                    className="flex items-center space-x-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedCompanies.includes(company)}
+                                      onChange={() => handleCompanyToggle(company)}
+                                      className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                    />
+                                    <span className="text-sm">{company}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Interviewer Filter */}
+                        {uniqueInterviewers.length > 0 && (
+                          <div>
+                            <div
+                              className="flex justify-between items-center cursor-pointer"
+                              onClick={() => setIsInterviewerOpen(!isInterviewerOpen)}
+                            >
+                              <span className="font-medium text-gray-700">Interviewer</span>
+                              {isInterviewerOpen ? (
+                                <ChevronUp className="text-xl text-gray-700" />
+                              ) : (
+                                <ChevronDown className="text-xl text-gray-700" />
+                              )}
+                            </div>
+                            {isInterviewerOpen && (
+                              <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                                {uniqueInterviewers.map((interviewer) => (
+                                  <label
+                                    key={interviewer}
+                                    className="flex items-center space-x-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedInterviewers.includes(interviewer)}
+                                      onChange={() => handleInterviewerToggle(interviewer)}
+                                      className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                    />
+                                    <span className="text-sm">{interviewer}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+
+                  {/* Created Date Filter */}
+                  <div>
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
+                    >
+                      <span className="font-medium text-gray-700">Created Date</span>
+                      {isCreatedDateOpen ? (
+                        <ChevronUp className="text-xl text-gray-700" />
+                      ) : (
+                        <ChevronDown className="text-xl text-gray-700" />
+                      )}
+                    </div>
+                    {isCreatedDateOpen && (
+                      <div className="mt-2 pl-3 space-y-1">
+                        {[
+                          { value: "", label: "Any time" },
+                          { value: "last7", label: "Last 7 days" },
+                          { value: "last30", label: "Last 30 days" },
+                          { value: "last90", label: "Last 90 days" },
+                        ].map((option) => (
+                          <label key={option.value} className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              value={option.value}
+                              checked={createdDatePreset === option.value}
+                              onChange={(e) => setCreatedDatePreset(e.target.value)}
+                              className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                            />
+                            <span className="text-sm">{option.label}</span>
                           </label>
                         ))}
                       </div>

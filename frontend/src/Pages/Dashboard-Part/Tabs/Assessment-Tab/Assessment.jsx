@@ -27,6 +27,7 @@ import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeybo
 import { config } from "../../../../config.js";
 import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
+import { usePositions } from "../../../../apiHooks/usePositions";
 
 const Assessment = () => {
   // All hooks at the top
@@ -35,6 +36,7 @@ const Assessment = () => {
   const { assessmentData, isLoading, fetchAssessmentQuestions } =
     useAssessments();
   // <---------------------- v1.0.2 >
+  const { positionData } = usePositions();
   const navigate = useNavigate();
   const [assessmentSections, setAssessmentSections] = useState({});
   const [viewMode, setViewMode] = useState("table");
@@ -45,6 +47,11 @@ const Assessment = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     difficultyLevel: [],
     duration: [],
+    position: [],
+    sections: { min: "", max: "" },
+    questions: { min: "", max: "" },
+    totalScore: { min: "", max: "" },
+    createdDate: "" // '', 'last7', 'last30', 'last90'
   });
   const [isShareOpen, setIsShareOpen] = useState(false);
   const filterIconRef = useRef(null);
@@ -54,8 +61,18 @@ const Assessment = () => {
   // <---------------------- v1.0.0
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
   const [isDurationOpen, setIsDurationOpen] = useState(false);
+  const [isPositionOpen, setIsPositionOpen] = useState(false);
+  const [isSectionsOpen, setIsSectionsOpen] = useState(false);
+  const [isQuestionsOpen, setIsQuestionsOpen] = useState(false);
+  const [isTotalScoreOpen, setIsTotalScoreOpen] = useState(false);
+  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState([]);
   const [selectedDuration, setSelectedDuration] = useState([]);
+  const [selectedPositions, setSelectedPositions] = useState([]);
+  const [sectionsRange, setSectionsRange] = useState({ min: "", max: "" });
+  const [questionsRange, setQuestionsRange] = useState({ min: "", max: "" });
+  const [totalScoreRange, setTotalScoreRange] = useState({ min: "", max: "" });
+  const [createdDatePreset, setCreatedDatePreset] = useState("");
   // <---------------------- v1.0.0
   useEffect(() => {
     document.title = "Assessment Template";
@@ -66,6 +83,27 @@ const Assessment = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Sync filter states when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedDifficulty(selectedFilters.difficultyLevel);
+      setSelectedDuration(selectedFilters.duration);
+      setSelectedPositions(selectedFilters.position);
+      setSectionsRange(selectedFilters.sections);
+      setQuestionsRange(selectedFilters.questions);
+      setTotalScoreRange(selectedFilters.totalScore);
+      setCreatedDatePreset(selectedFilters.createdDate);
+      // Reset all open states
+      setIsDifficultyOpen(false);
+      setIsDurationOpen(false);
+      setIsPositionOpen(false);
+      setIsSectionsOpen(false);
+      setIsQuestionsOpen(false);
+      setIsTotalScoreOpen(false);
+      setIsCreatedDateOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
 
   useEffect(() => {
     // Only run if assessmentData is loaded and not empty
@@ -153,21 +191,49 @@ const Assessment = () => {
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
     setIsFilterActive(
-      filters.difficultyLevel.length > 0 || filters.duration.length > 0
+      filters.difficultyLevel.length > 0 || 
+      filters.duration.length > 0 ||
+      filters.position.length > 0 ||
+      filters.sections.min !== "" ||
+      filters.sections.max !== "" ||
+      filters.questions.min !== "" ||
+      filters.questions.max !== "" ||
+      filters.totalScore.min !== "" ||
+      filters.totalScore.max !== "" ||
+      filters.createdDate !== ""
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
   };
 
   const handleClearFilters = () => {
-    setSelectedFilters({ difficultyLevel: [], duration: [] });
+    const clearedFilters = {
+      difficultyLevel: [],
+      duration: [],
+      position: [],
+      sections: { min: "", max: "" },
+      questions: { min: "", max: "" },
+      totalScore: { min: "", max: "" },
+      createdDate: ""
+    };
+    setSelectedFilters(clearedFilters);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
     setCurrentPage(0);
     setIsDifficultyOpen(false);
     setIsDurationOpen(false);
+    setIsPositionOpen(false);
+    setIsSectionsOpen(false);
+    setIsQuestionsOpen(false);
+    setIsTotalScoreOpen(false);
+    setIsCreatedDateOpen(false);
     setSelectedDifficulty([]);
     setSelectedDuration([]);
+    setSelectedPositions([]);
+    setSectionsRange({ min: "", max: "" });
+    setQuestionsRange({ min: "", max: "" });
+    setTotalScoreRange({ min: "", max: "" });
+    setCreatedDatePreset("");
   };
 
   const handleFilterIconClick = () => {
@@ -176,18 +242,30 @@ const Assessment = () => {
     }
   };
 
+  // Helper function to normalize spaces for better search
+  const normalizeSpaces = (str) =>
+    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
+
   const FilteredData = () => {
     if (!Array.isArray(assessmentData)) return [];
     return assessmentData.filter((assessment) => {
+      // Enhanced search across multiple fields
+      const normalizedQuery = normalizeSpaces(searchQuery);
       const fieldsToSearch = [
+        assessment?.AssessmentCode,
         assessment?.AssessmentTitle,
         assessment?.Position,
+        assessment?.DifficultyLevel,
+        assessment?.Duration
       ].filter(Boolean);
 
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field?.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const matchesSearchQuery = 
+        searchQuery === "" ||
+        fieldsToSearch.some((field) =>
+          normalizeSpaces(field).includes(normalizedQuery)
+        );
 
+      // Existing filters
       const matchesDifficultyLevel =
         selectedFilters.difficultyLevel.length === 0 ||
         selectedFilters.difficultyLevel.includes(assessment?.DifficultyLevel);
@@ -196,7 +274,65 @@ const Assessment = () => {
         selectedFilters.duration.length === 0 ||
         selectedFilters.duration.includes(assessment?.Duration);
 
-      return matchesSearchQuery && matchesDifficultyLevel && matchesDuration;
+      // Position filter - match by ID
+      const matchesPosition =
+        selectedFilters.position.length === 0 ||
+        selectedFilters.position.includes(assessment?.Position);
+
+      // Sections range filter
+      const sectionsCount = assessmentSections[assessment._id] || 0;
+      const matchesSections =
+        (selectedFilters.sections.min === "" ||
+          sectionsCount >= Number(selectedFilters.sections.min)) &&
+        (selectedFilters.sections.max === "" ||
+          sectionsCount <= Number(selectedFilters.sections.max));
+
+      // Questions range filter
+      const questionsCount = assessment?.NumberOfQuestions || 0;
+      const matchesQuestions =
+        (selectedFilters.questions.min === "" ||
+          questionsCount >= Number(selectedFilters.questions.min)) &&
+        (selectedFilters.questions.max === "" ||
+          questionsCount <= Number(selectedFilters.questions.max));
+
+      // Total score range filter
+      const totalScore = assessment?.totalScore || 0;
+      const matchesTotalScore =
+        (selectedFilters.totalScore.min === "" ||
+          totalScore >= Number(selectedFilters.totalScore.min)) &&
+        (selectedFilters.totalScore.max === "" ||
+          totalScore <= Number(selectedFilters.totalScore.max));
+
+      // Created date filter
+      const matchesCreatedDate = () => {
+        if (!selectedFilters.createdDate) return true;
+        if (!assessment.createdAt) return false;
+        const createdAt = new Date(assessment.createdAt);
+        const now = new Date();
+        const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+        
+        switch (selectedFilters.createdDate) {
+          case 'last7':
+            return daysDiff <= 7;
+          case 'last30':
+            return daysDiff <= 30;
+          case 'last90':
+            return daysDiff <= 90;
+          default:
+            return true;
+        }
+      };
+
+      return (
+        matchesSearchQuery && 
+        matchesDifficultyLevel && 
+        matchesDuration &&
+        matchesPosition &&
+        matchesSections &&
+        matchesQuestions &&
+        matchesTotalScore &&
+        matchesCreatedDate()
+      );
     });
   };
   // <---------------------- v1.0.0
@@ -364,10 +500,31 @@ const Assessment = () => {
     );
   };
 
+  const handlePositionToggle = (positionId) => {
+    setSelectedPositions((prev) =>
+      prev.includes(positionId)
+        ? prev.filter((p) => p !== positionId)
+        : [...prev, positionId]
+    );
+  };
+
+  const handleRangeChange = (e, type, setter) => {
+    const value = e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || "");
+    setter((prev) => ({
+      ...prev,
+      [type]: value,
+    }));
+  };
+
   const handleApplyFilters = () => {
     handleFilterChange({
       difficultyLevel: selectedDifficulty,
       duration: selectedDuration,
+      position: selectedPositions,
+      sections: sectionsRange,
+      questions: questionsRange,
+      totalScore: totalScoreRange,
+      createdDate: createdDatePreset
     });
   };
 
@@ -435,7 +592,8 @@ const Assessment = () => {
               onClearAll={handleClearFilters}
               filterIconRef={filterIconRef}
             >
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {/* Difficulty Level Filter */}
                 <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
@@ -499,6 +657,206 @@ const Assessment = () => {
                             // v1.0.6 ------------------------------------------------------------>
                           />
                           <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sections Range Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsSectionsOpen(!isSectionsOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Number of Sections</span>
+                    {isSectionsOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isSectionsOpen && (
+                    <div className="mt-2 pl-3 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={sectionsRange.min}
+                          onChange={(e) => handleRangeChange(e, "min", setSectionsRange)}
+                          placeholder="Min"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                        />
+                        <span className="text-sm">to</span>
+                        <input
+                          type="number"
+                          value={sectionsRange.max}
+                          onChange={(e) => handleRangeChange(e, "max", setSectionsRange)}
+                          placeholder="Max"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Questions Range Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsQuestionsOpen(!isQuestionsOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Number of Questions</span>
+                    {isQuestionsOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isQuestionsOpen && (
+                    <div className="mt-2 pl-3 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={questionsRange.min}
+                          onChange={(e) => handleRangeChange(e, "min", setQuestionsRange)}
+                          placeholder="Min"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                        />
+                        <span className="text-sm">to</span>
+                        <input
+                          type="number"
+                          value={questionsRange.max}
+                          onChange={(e) => handleRangeChange(e, "max", setQuestionsRange)}
+                          placeholder="Max"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Total Score Range Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsTotalScoreOpen(!isTotalScoreOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Total Score</span>
+                    {isTotalScoreOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isTotalScoreOpen && (
+                    <div className="mt-2 pl-3 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={totalScoreRange.min}
+                          onChange={(e) => handleRangeChange(e, "min", setTotalScoreRange)}
+                          placeholder="Min"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                        />
+                        <span className="text-sm">to</span>
+                        <input
+                          type="number"
+                          value={totalScoreRange.max}
+                          onChange={(e) => handleRangeChange(e, "max", setTotalScoreRange)}
+                          placeholder="Max"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Dynamic Position Filter */}
+                {(() => {
+                  // Get unique position IDs from assessment data
+                  const uniquePositionIds = [...new Set(
+                    assessmentData?.map(a => a.Position).filter(Boolean) || []
+                  )];
+
+                  // Map position IDs to position objects with names
+                  const positions = uniquePositionIds
+                    .map(posId => positionData?.find(p => p._id === posId))
+                    .filter(Boolean)
+                    .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+
+                  return positions.length > 0 ? (
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsPositionOpen(!isPositionOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Position</span>
+                        {isPositionOpen ? (
+                          <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                        ) : (
+                          <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isPositionOpen && (
+                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                          {positions.map((position) => (
+                            <label
+                              key={position._id}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedPositions.includes(position._id)}
+                                onChange={() => handlePositionToggle(position._id)}
+                                className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">
+                                {position.title?.charAt(0).toUpperCase() + position.title?.slice(1) || 'Unknown'}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Created Date Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Created Date</span>
+                    {isCreatedDateOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isCreatedDateOpen && (
+                    <div className="mt-2 pl-3 space-y-1">
+                      {[
+                        { value: "", label: "Any time" },
+                        { value: "last7", label: "Last 7 days" },
+                        { value: "last30", label: "Last 30 days" },
+                        { value: "last90", label: "Last 90 days" },
+                      ].map((option) => (
+                        <label key={option.value} className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            value={option.value}
+                            checked={createdDatePreset === option.value}
+                            onChange={(e) => setCreatedDatePreset(e.target.value)}
+                            className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option.label}</span>
                         </label>
                       ))}
                     </div>
