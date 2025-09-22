@@ -65,7 +65,26 @@ const Feedback = () => {
   // ------------------------------v1.0.3 >
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [tempSelectedStatus, setTempSelectedStatus] = useState([]);
-  const [isStatusOpen, setIsStatusOpen] = useState(true);
+  const [selectedPositions, setSelectedPositions] = useState([]);
+  const [tempSelectedPositions, setTempSelectedPositions] = useState([]);
+  const [selectedModes, setSelectedModes] = useState([]);
+  const [tempSelectedModes, setTempSelectedModes] = useState([]);
+  const [selectedInterviewers, setSelectedInterviewers] = useState([]);
+  const [tempSelectedInterviewers, setTempSelectedInterviewers] = useState([]);
+  const [selectedRecommendations, setSelectedRecommendations] = useState([]);
+  const [tempSelectedRecommendations, setTempSelectedRecommendations] = useState([]);
+  const [selectedRating, setSelectedRating] = useState({ min: "", max: "" });
+  const [tempRatingRange, setTempRatingRange] = useState({ min: "", max: "" });
+  const [selectedInterviewDate, setSelectedInterviewDate] = useState("");
+  const [tempInterviewDatePreset, setTempInterviewDatePreset] = useState("");
+  
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isPositionOpen, setIsPositionOpen] = useState(false);
+  const [isModeOpen, setIsModeOpen] = useState(false);
+  const [isInterviewerOpen, setIsInterviewerOpen] = useState(false);
+  const [isRecommendationOpen, setIsRecommendationOpen] = useState(false);
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
+  const [isInterviewDateOpen, setIsInterviewDateOpen] = useState(false);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
   // ------------------------------v1.0.3 >
   // Use data from the hook
@@ -103,6 +122,27 @@ const Feedback = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Sync filter states when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setTempSelectedStatus(selectedStatus);
+      setTempSelectedPositions(selectedPositions);
+      setTempSelectedModes(selectedModes);
+      setTempSelectedInterviewers(selectedInterviewers);
+      setTempSelectedRecommendations(selectedRecommendations);
+      setTempRatingRange(selectedRating);
+      setTempInterviewDatePreset(selectedInterviewDate);
+      // Reset all open states
+      setIsStatusOpen(false);
+      setIsPositionOpen(false);
+      setIsModeOpen(false);
+      setIsInterviewerOpen(false);
+      setIsRecommendationOpen(false);
+      setIsRatingOpen(false);
+      setIsInterviewDateOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedStatus, selectedPositions, selectedModes, selectedInterviewers, selectedRecommendations, selectedRating, selectedInterviewDate]);
+
   const handleStatusToggle = (status) => {
     setTempSelectedStatus((prev) => {
       if (prev.includes(status)) {
@@ -112,25 +152,143 @@ const Feedback = () => {
     });
   };
 
+  const handlePositionToggle = (positionId) => {
+    setTempSelectedPositions((prev) => {
+      if (prev.includes(positionId)) {
+        return prev.filter((p) => p !== positionId);
+      }
+      return [...prev, positionId];
+    });
+  };
+
+  const handleModeToggle = (mode) => {
+    setTempSelectedModes((prev) => {
+      if (prev.includes(mode)) {
+        return prev.filter((m) => m !== mode);
+      }
+      return [...prev, mode];
+    });
+  };
+
+  const handleInterviewerToggle = (interviewerId) => {
+    setTempSelectedInterviewers((prev) => {
+      if (prev.includes(interviewerId)) {
+        return prev.filter((i) => i !== interviewerId);
+      }
+      return [...prev, interviewerId];
+    });
+  };
+
+  const handleRecommendationToggle = (recommendation) => {
+    setTempSelectedRecommendations((prev) => {
+      if (prev.includes(recommendation)) {
+        return prev.filter((r) => r !== recommendation);
+      }
+      return [...prev, recommendation];
+    });
+  };
+
+  const handleRatingChange = (e, type) => {
+    const value = e.target.value === "" ? "" : Math.min(5, Math.max(0, Number(e.target.value) || ""));
+    setTempRatingRange((prev) => ({
+      ...prev,
+      [type]: value,
+    }));
+  };
+
   const handleApplyFilters = () => {
     setSelectedStatus(tempSelectedStatus);
-    setIsFilterActive(true);
+    setSelectedPositions(tempSelectedPositions);
+    setSelectedModes(tempSelectedModes);
+    setSelectedInterviewers(tempSelectedInterviewers);
+    setSelectedRecommendations(tempSelectedRecommendations);
+    setSelectedRating(tempRatingRange);
+    setSelectedInterviewDate(tempInterviewDatePreset);
+    setIsFilterActive(
+      tempSelectedStatus.length > 0 ||
+      tempSelectedPositions.length > 0 ||
+      tempSelectedModes.length > 0 ||
+      tempSelectedInterviewers.length > 0 ||
+      tempSelectedRecommendations.length > 0 ||
+      tempRatingRange.min !== "" ||
+      tempRatingRange.max !== "" ||
+      tempInterviewDatePreset !== ""
+    );
     setFilterPopupOpen(false);
+    
     const filtered = feedbacks.filter((f) => {
-      // <------------------------v1.0.3
+      // Status filter
       const matchesStatus = tempSelectedStatus.length === 0 || tempSelectedStatus.includes(f.status || '');
+      
+      // Position filter
+      const matchesPosition = tempSelectedPositions.length === 0 || 
+        (f.positionId && tempSelectedPositions.includes(f.positionId._id));
+      
+      // Interview Mode filter
+      const matchesMode = tempSelectedModes.length === 0 || 
+        (f.interviewRoundId?.interviewMode && tempSelectedModes.includes(f.interviewRoundId.interviewMode));
+      
+      // Interviewer filter
+      const matchesInterviewer = tempSelectedInterviewers.length === 0 || 
+        (f.interviewerId && tempSelectedInterviewers.includes(f.interviewerId._id));
+      
+      // Recommendation filter
+      const matchesRecommendation = tempSelectedRecommendations.length === 0 || 
+        (f.overallImpression?.recommendation && tempSelectedRecommendations.includes(f.overallImpression.recommendation));
+      
+      // Rating range filter
+      const rating = f.overallImpression?.overallRating || 0;
+      const matchesRating =
+        (tempRatingRange.min === "" || rating >= Number(tempRatingRange.min)) &&
+        (tempRatingRange.max === "" || rating <= Number(tempRatingRange.max));
+      
+      // Interview date filter
+      const matchesInterviewDate = () => {
+        if (!tempInterviewDatePreset) return true;
+        if (!f.interviewRoundId?.dateTime) return false;
+        const interviewDate = new Date(f.interviewRoundId.dateTime.split(' ')[0]);
+        const now = new Date();
+        const daysDiff = Math.floor((now - interviewDate) / (1000 * 60 * 60 * 24));
+        
+        switch (tempInterviewDatePreset) {
+          case 'last7':
+            return daysDiff <= 7;
+          case 'last30':
+            return daysDiff <= 30;
+          case 'last90':
+            return daysDiff <= 90;
+          default:
+            return true;
+        }
+      };
+      
+      // Search filter
       const candidateName = f.candidateId ? `${f.candidateId.FirstName || ''} ${f.candidateId.LastName || ''}` : '';
       const positionTitle = f.positionId?.title || '';
-      const fields = [f._id, candidateName, positionTitle, f.status].filter(Boolean);
+      const fields = [f.feedbackCode, candidateName, positionTitle, f.status].filter(Boolean);
       const matchesSearch = fields.some((field) => field.toString().toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesStatus && matchesSearch;
+      
+      return matchesStatus && matchesPosition && matchesMode && matchesInterviewer && 
+             matchesRecommendation && matchesRating && matchesInterviewDate() && matchesSearch;
     });
     setFilteredFeedbacks(filtered);
   };
   // ------------------------------v1.0.3 >
   const handleClearFilters = () => {
     setSelectedStatus([]);
+    setSelectedPositions([]);
+    setSelectedModes([]);
+    setSelectedInterviewers([]);
+    setSelectedRecommendations([]);
+    setSelectedRating({ min: "", max: "" });
+    setSelectedInterviewDate("");
     setTempSelectedStatus([]);
+    setTempSelectedPositions([]);
+    setTempSelectedModes([]);
+    setTempSelectedInterviewers([]);
+    setTempSelectedRecommendations([]);
+    setTempRatingRange({ min: "", max: "" });
+    setTempInterviewDatePreset("");
     setIsFilterActive(false);
     setFilteredFeedbacks(feedbacks);
   };
@@ -139,15 +297,45 @@ const Feedback = () => {
     setFilterPopupOpen(!isFilterPopupOpen);
   };
 
+  // Helper function to normalize spaces for better search
+  const normalizeSpaces = (str) =>
+    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
+
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
+    const normalizedQuery = normalizeSpaces(e.target.value);
+    
     const filtered = feedbacks.filter((f) => {
-      // <------------------------v1.0.3
-      const candidateName = f.candidateId ? `${f.candidateId.FirstName || ''} ${f.candidateId.LastName || ''}` : '';
+      // Enhanced search across more fields
+      const candidateName = f.candidateId ? 
+        `${f.candidateId.FirstName || ''} ${f.candidateId.LastName || ''}` : '';
+      const candidateEmail = f.candidateId?.Email || '';
       const positionTitle = f.positionId?.title || '';
-      const fields = [f._id, candidateName, positionTitle, f.status].filter(Boolean);
-      const matchesSearch = fields.some((field) => field.toString().toLowerCase().includes(e.target.value.toLowerCase()));
+      const positionCompany = f.positionId?.companyname || '';
+      const positionLocation = f.positionId?.Location || '';
+      const interviewerName = f.interviewerId ? 
+        `${f.interviewerId.firstName || ''} ${f.interviewerId.lastName || ''}` : '';
+      const interviewMode = f.interviewRoundId?.interviewMode || '';
+      const recommendation = f.overallImpression?.recommendation || '';
+      
+      const fields = [
+        f.feedbackCode,
+        candidateName,
+        candidateEmail,
+        positionTitle,
+        positionCompany,
+        positionLocation,
+        interviewerName,
+        interviewMode,
+        f.status,
+        recommendation
+      ].filter(Boolean);
+      
+      const matchesSearch = e.target.value === "" ||
+        fields.some((field) => 
+          normalizeSpaces(field).includes(normalizedQuery)
+        );
       return matchesSearch;
     });
     setFilteredFeedbacks(filtered);
@@ -439,7 +627,8 @@ const Feedback = () => {
               onClearAll={handleClearFilters}
               filterIconRef={filterIconRef}
             >
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {/* Status Filter */}
                 <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
@@ -470,6 +659,272 @@ const Feedback = () => {
                     </div>
       )}
                 </div>
+
+                {/* Rating Range Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsRatingOpen(!isRatingOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Overall Rating</span>
+                    {isRatingOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isRatingOpen && (
+                    <div className="mt-2 pl-3 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={tempRatingRange.min}
+                          onChange={(e) => handleRatingChange(e, "min")}
+                          placeholder="Min (1)"
+                          className="w-20 p-1 border rounded"
+                          min="1"
+                          max="5"
+                        />
+                        <span className="text-sm">to</span>
+                        <input
+                          type="number"
+                          value={tempRatingRange.max}
+                          onChange={(e) => handleRatingChange(e, "max")}
+                          placeholder="Max (5)"
+                          className="w-20 p-1 border rounded"
+                          min="1"
+                          max="5"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Interview Date Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsInterviewDateOpen(!isInterviewDateOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Interview Date</span>
+                    {isInterviewDateOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isInterviewDateOpen && (
+                    <div className="mt-2 pl-3 space-y-1">
+                      {[
+                        { value: "", label: "Any time" },
+                        { value: "last7", label: "Last 7 days" },
+                        { value: "last30", label: "Last 30 days" },
+                        { value: "last90", label: "Last 90 days" },
+                      ].map((option) => (
+                        <label key={option.value} className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            value={option.value}
+                            checked={tempInterviewDatePreset === option.value}
+                            onChange={(e) => setTempInterviewDatePreset(e.target.value)}
+                            className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Dynamic Position Filter */}
+                {(() => {
+                  const positionMap = new Map();
+                  
+                  feedbacks?.forEach(feedback => {
+                    if (feedback.positionId && !positionMap.has(feedback.positionId._id)) {
+                      positionMap.set(feedback.positionId._id, {
+                        id: feedback.positionId._id,
+                        title: feedback.positionId.title || 'Unknown Position'
+                      });
+                    }
+                  });
+                  
+                  const positions = Array.from(positionMap.values())
+                    .sort((a, b) => a.title.localeCompare(b.title));
+
+                  return positions.length > 0 ? (
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsPositionOpen(!isPositionOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Position</span>
+                        {isPositionOpen ? (
+                          <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                        ) : (
+                          <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isPositionOpen && (
+                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                          {positions.map((position) => (
+                            <label
+                              key={position.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={tempSelectedPositions.includes(position.id)}
+                                onChange={() => handlePositionToggle(position.id)}
+                                className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">
+                                {position.title.charAt(0).toUpperCase() + position.title.slice(1)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Dynamic Interview Mode Filter */}
+                {(() => {
+                  const uniqueModes = [...new Set(
+                    feedbacks?.map(f => f.interviewRoundId?.interviewMode).filter(Boolean)
+                  )];
+
+                  return uniqueModes.length > 0 ? (
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsModeOpen(!isModeOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Interview Mode</span>
+                        {isModeOpen ? (
+                          <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                        ) : (
+                          <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isModeOpen && (
+                        <div className="mt-1 space-y-1 pl-3">
+                          {uniqueModes.map((mode) => (
+                            <label
+                              key={mode}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={tempSelectedModes.includes(mode)}
+                                onChange={() => handleModeToggle(mode)}
+                                className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">{mode}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Dynamic Recommendation Filter */}
+                {(() => {
+                  const uniqueRecommendations = [...new Set(
+                    feedbacks?.map(f => f.overallImpression?.recommendation).filter(Boolean)
+                  )];
+
+                  return uniqueRecommendations.length > 0 ? (
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsRecommendationOpen(!isRecommendationOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Recommendation</span>
+                        {isRecommendationOpen ? (
+                          <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                        ) : (
+                          <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isRecommendationOpen && (
+                        <div className="mt-1 space-y-1 pl-3">
+                          {uniqueRecommendations.map((recommendation) => (
+                            <label
+                              key={recommendation}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={tempSelectedRecommendations.includes(recommendation)}
+                                onChange={() => handleRecommendationToggle(recommendation)}
+                                className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">
+                                {recommendation.charAt(0).toUpperCase() + recommendation.slice(1)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Dynamic Interviewer Filter */}
+                {(() => {
+                  const interviewerMap = new Map();
+                  
+                  feedbacks?.forEach(feedback => {
+                    if (feedback.interviewRoundId?.interviewerType === "Internal" && 
+                        feedback.interviewerId && 
+                        !interviewerMap.has(feedback.interviewerId._id)) {
+                      interviewerMap.set(feedback.interviewerId._id, {
+                        id: feedback.interviewerId._id,
+                        name: `${feedback.interviewerId.firstName || ''} ${feedback.interviewerId.lastName || ''}`.trim() || 'Unknown'
+                      });
+                    }
+                  });
+                  
+                  const interviewers = Array.from(interviewerMap.values())
+                    .sort((a, b) => a.name.localeCompare(b.name));
+
+                  return interviewers.length > 0 ? (
+                    <div>
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setIsInterviewerOpen(!isInterviewerOpen)}
+                      >
+                        <span className="font-medium text-gray-700">Interviewer</span>
+                        {isInterviewerOpen ? (
+                          <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                        ) : (
+                          <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                        )}
+                      </div>
+                      {isInterviewerOpen && (
+                        <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                          {interviewers.map((interviewer) => (
+                            <label
+                              key={interviewer.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={tempSelectedInterviewers.includes(interviewer.id)}
+                                onChange={() => handleInterviewerToggle(interviewer.id)}
+                                className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                              />
+                              <span className="text-sm">{interviewer.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
               </div>
             </FilterPopup>
           </motion.div>
