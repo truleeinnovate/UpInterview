@@ -1,5 +1,6 @@
 // v1.0.0  -  Ashraf  -  assessment to assesment templates added in fileds
 // v1.0.1  -  Ashok   -  Added scroll to first error functionality
+// v1.0.2  -  Ashok   -  Improved responsiveness
 
 import React, { useState, useEffect, useRef } from "react";
 import { ReactComponent as CgInfo } from "../../../../../icons/CgInfo.svg";
@@ -71,8 +72,6 @@ const BasicDetailsTab = ({
 
   const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
 
-
-
   // Close all dropdowns except the one specified
   const closeAllDropdowns = (except = null) => {
     if (except !== "linkExpiry") setShowLinkExpiryDays(false);
@@ -108,8 +107,6 @@ const BasicDetailsTab = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  
-
   const handleModalBackdropClick = (e, modalType) => {
     if (e.target === e.currentTarget) {
       if (modalType === "position") {
@@ -128,12 +125,13 @@ const BasicDetailsTab = ({
   };
 
   return (
+    // v1.0.2 <------------------------------------------------------------------------------
     <div>
       <form>
         {/* // <---------------------- v1.0.0 */}
 
-        <div className="space-y-6 px-12">
-          <div className="font-semibold text-xl mb-5">
+        <div className="space-y-6 sm:px-0 px-12">
+          <div className="font-semibold sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg mb-5">
             Assessment Template Details:
           </div>
           {/* // <---------------------- v1.0.0 */}
@@ -156,7 +154,10 @@ const BasicDetailsTab = ({
                 placeholder="Enter Assessment Name"
                 autoComplete="off"
                 error={errors.AssessmentTitle}
-                showCharCount={formData?.AssessmentTitle?.length >= assessmentTitleLimit * 0.75}
+                showCharCount={
+                  formData?.AssessmentTitle?.length >=
+                  assessmentTitleLimit * 0.75
+                }
               />
             </div>
 
@@ -455,7 +456,7 @@ const BasicDetailsTab = ({
       {isPositionModalOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
-          onClick={(e) => handleModalBackdropClick(e, 'position')}
+          onClick={(e) => handleModalBackdropClick(e, "position")}
         >
           <PositionForm
             mode="new"
@@ -465,6 +466,7 @@ const BasicDetailsTab = ({
         </div>
       )}
     </div>
+    // v1.0.2 ------------------------------------------------------------------------------>
   );
 };
 

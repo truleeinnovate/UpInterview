@@ -7,6 +7,8 @@
                          create new assessment popup has z-index issues 
 */
 // v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.7  -  Ashok   -  improved responsiveness
+
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -51,7 +53,7 @@ const Assessment = () => {
     sections: { min: "", max: "" },
     questions: { min: "", max: "" },
     totalScore: { min: "", max: "" },
-    createdDate: "" // '', 'last7', 'last30', 'last90'
+    createdDate: "", // '', 'last7', 'last30', 'last90'
   });
   const [isShareOpen, setIsShareOpen] = useState(false);
   const filterIconRef = useRef(null);
@@ -191,16 +193,16 @@ const Assessment = () => {
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
     setIsFilterActive(
-      filters.difficultyLevel.length > 0 || 
-      filters.duration.length > 0 ||
-      filters.position.length > 0 ||
-      filters.sections.min !== "" ||
-      filters.sections.max !== "" ||
-      filters.questions.min !== "" ||
-      filters.questions.max !== "" ||
-      filters.totalScore.min !== "" ||
-      filters.totalScore.max !== "" ||
-      filters.createdDate !== ""
+      filters.difficultyLevel.length > 0 ||
+        filters.duration.length > 0 ||
+        filters.position.length > 0 ||
+        filters.sections.min !== "" ||
+        filters.sections.max !== "" ||
+        filters.questions.min !== "" ||
+        filters.questions.max !== "" ||
+        filters.totalScore.min !== "" ||
+        filters.totalScore.max !== "" ||
+        filters.createdDate !== ""
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -214,7 +216,7 @@ const Assessment = () => {
       sections: { min: "", max: "" },
       questions: { min: "", max: "" },
       totalScore: { min: "", max: "" },
-      createdDate: ""
+      createdDate: "",
     };
     setSelectedFilters(clearedFilters);
     setIsFilterActive(false);
@@ -256,10 +258,10 @@ const Assessment = () => {
         assessment?.AssessmentTitle,
         assessment?.Position,
         assessment?.DifficultyLevel,
-        assessment?.Duration
+        assessment?.Duration,
       ].filter(Boolean);
 
-      const matchesSearchQuery = 
+      const matchesSearchQuery =
         searchQuery === "" ||
         fieldsToSearch.some((field) =>
           normalizeSpaces(field).includes(normalizedQuery)
@@ -310,13 +312,13 @@ const Assessment = () => {
         const createdAt = new Date(assessment.createdAt);
         const now = new Date();
         const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-        
+
         switch (selectedFilters.createdDate) {
-          case 'last7':
+          case "last7":
             return daysDiff <= 7;
-          case 'last30':
+          case "last30":
             return daysDiff <= 30;
-          case 'last90':
+          case "last90":
             return daysDiff <= 90;
           default:
             return true;
@@ -324,8 +326,8 @@ const Assessment = () => {
       };
 
       return (
-        matchesSearchQuery && 
-        matchesDifficultyLevel && 
+        matchesSearchQuery &&
+        matchesDifficultyLevel &&
         matchesDuration &&
         matchesPosition &&
         matchesSections &&
@@ -478,11 +480,11 @@ const Assessment = () => {
       disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
     },
   ];
-// v1.0.5 <------------------------------------------------------------
+  // v1.0.5 <------------------------------------------------------------
   const difficultyOptions = ["Easy", "Medium", "Hard"];
   // const durationOptions = ["30 minutes", "60 minutes"];
   const durationOptions = ["30 Minutes", "60 Minutes"];
-// v1.0.5 ------------------------------------------------------------>
+  // v1.0.5 ------------------------------------------------------------>
 
   const handleDifficultyToggle = (option) => {
     setSelectedDifficulty((prev) =>
@@ -509,7 +511,8 @@ const Assessment = () => {
   };
 
   const handleRangeChange = (e, type, setter) => {
-    const value = e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || "");
+    const value =
+      e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || "");
     setter((prev) => ({
       ...prev,
       [type]: value,
@@ -524,7 +527,7 @@ const Assessment = () => {
       sections: sectionsRange,
       questions: questionsRange,
       totalScore: totalScoreRange,
-      createdDate: createdDatePreset
+      createdDate: createdDatePreset,
     });
   };
 
@@ -560,20 +563,23 @@ const Assessment = () => {
           </div>
         </main>
       </div>
-      <main className="fixed top-48 left-0 right-0 bg-background">
+      {/* v1.0.7 <----------------------------------------------------------------------------------- */}
+      <main className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "table" ? (
-              <TableView
-                data={currentFilteredRows}
-                columns={tableColumns}
-                actions={tableActions}
-                loading={isLoading}
-                // <-------------------------------v1.0.4
-                emptyState="No assessments templates found."
-                // ------------------------------v1.0.4 >
-                className="table-fixed w-full"
-              />
+              <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                <TableView
+                  data={currentFilteredRows}
+                  columns={tableColumns}
+                  actions={tableActions}
+                  loading={isLoading}
+                  // <-------------------------------v1.0.4
+                  emptyState="No assessments templates found."
+                  // ------------------------------v1.0.4 >
+                  className="table-fixed w-full"
+                />
+              </div>
             ) : (
               <AssessmentKanban
                 assessments={currentFilteredRows}
@@ -669,7 +675,9 @@ const Assessment = () => {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsSectionsOpen(!isSectionsOpen)}
                   >
-                    <span className="font-medium text-gray-700">Number of Sections</span>
+                    <span className="font-medium text-gray-700">
+                      Number of Sections
+                    </span>
                     {isSectionsOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -682,7 +690,9 @@ const Assessment = () => {
                         <input
                           type="number"
                           value={sectionsRange.min}
-                          onChange={(e) => handleRangeChange(e, "min", setSectionsRange)}
+                          onChange={(e) =>
+                            handleRangeChange(e, "min", setSectionsRange)
+                          }
                           placeholder="Min"
                           className="w-20 p-1 border rounded"
                           min="0"
@@ -691,7 +701,9 @@ const Assessment = () => {
                         <input
                           type="number"
                           value={sectionsRange.max}
-                          onChange={(e) => handleRangeChange(e, "max", setSectionsRange)}
+                          onChange={(e) =>
+                            handleRangeChange(e, "max", setSectionsRange)
+                          }
                           placeholder="Max"
                           className="w-20 p-1 border rounded"
                           min="0"
@@ -707,7 +719,9 @@ const Assessment = () => {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsQuestionsOpen(!isQuestionsOpen)}
                   >
-                    <span className="font-medium text-gray-700">Number of Questions</span>
+                    <span className="font-medium text-gray-700">
+                      Number of Questions
+                    </span>
                     {isQuestionsOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -720,7 +734,9 @@ const Assessment = () => {
                         <input
                           type="number"
                           value={questionsRange.min}
-                          onChange={(e) => handleRangeChange(e, "min", setQuestionsRange)}
+                          onChange={(e) =>
+                            handleRangeChange(e, "min", setQuestionsRange)
+                          }
                           placeholder="Min"
                           className="w-20 p-1 border rounded"
                           min="0"
@@ -729,7 +745,9 @@ const Assessment = () => {
                         <input
                           type="number"
                           value={questionsRange.max}
-                          onChange={(e) => handleRangeChange(e, "max", setQuestionsRange)}
+                          onChange={(e) =>
+                            handleRangeChange(e, "max", setQuestionsRange)
+                          }
                           placeholder="Max"
                           className="w-20 p-1 border rounded"
                           min="0"
@@ -745,7 +763,9 @@ const Assessment = () => {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsTotalScoreOpen(!isTotalScoreOpen)}
                   >
-                    <span className="font-medium text-gray-700">Total Score</span>
+                    <span className="font-medium text-gray-700">
+                      Total Score
+                    </span>
                     {isTotalScoreOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -758,7 +778,9 @@ const Assessment = () => {
                         <input
                           type="number"
                           value={totalScoreRange.min}
-                          onChange={(e) => handleRangeChange(e, "min", setTotalScoreRange)}
+                          onChange={(e) =>
+                            handleRangeChange(e, "min", setTotalScoreRange)
+                          }
                           placeholder="Min"
                           className="w-20 p-1 border rounded"
                           min="0"
@@ -767,7 +789,9 @@ const Assessment = () => {
                         <input
                           type="number"
                           value={totalScoreRange.max}
-                          onChange={(e) => handleRangeChange(e, "max", setTotalScoreRange)}
+                          onChange={(e) =>
+                            handleRangeChange(e, "max", setTotalScoreRange)
+                          }
                           placeholder="Max"
                           className="w-20 p-1 border rounded"
                           min="0"
@@ -780,15 +804,20 @@ const Assessment = () => {
                 {/* Dynamic Position Filter */}
                 {(() => {
                   // Get unique position IDs from assessment data
-                  const uniquePositionIds = [...new Set(
-                    assessmentData?.map(a => a.Position).filter(Boolean) || []
-                  )];
+                  const uniquePositionIds = [
+                    ...new Set(
+                      assessmentData?.map((a) => a.Position).filter(Boolean) ||
+                        []
+                    ),
+                  ];
 
                   // Map position IDs to position objects with names
                   const positions = uniquePositionIds
-                    .map(posId => positionData?.find(p => p._id === posId))
+                    .map((posId) => positionData?.find((p) => p._id === posId))
                     .filter(Boolean)
-                    .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                    .sort((a, b) =>
+                      (a.title || "").localeCompare(b.title || "")
+                    );
 
                   return positions.length > 0 ? (
                     <div>
@@ -796,7 +825,9 @@ const Assessment = () => {
                         className="flex justify-between items-center cursor-pointer"
                         onClick={() => setIsPositionOpen(!isPositionOpen)}
                       >
-                        <span className="font-medium text-gray-700">Position</span>
+                        <span className="font-medium text-gray-700">
+                          Position
+                        </span>
                         {isPositionOpen ? (
                           <MdKeyboardArrowUp className="text-xl text-gray-700" />
                         ) : (
@@ -812,12 +843,17 @@ const Assessment = () => {
                             >
                               <input
                                 type="checkbox"
-                                checked={selectedPositions.includes(position._id)}
-                                onChange={() => handlePositionToggle(position._id)}
+                                checked={selectedPositions.includes(
+                                  position._id
+                                )}
+                                onChange={() =>
+                                  handlePositionToggle(position._id)
+                                }
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
                               />
                               <span className="text-sm">
-                                {position.title?.charAt(0).toUpperCase() + position.title?.slice(1) || 'Unknown'}
+                                {position.title?.charAt(0).toUpperCase() +
+                                  position.title?.slice(1) || "Unknown"}
                               </span>
                             </label>
                           ))}
@@ -833,7 +869,9 @@ const Assessment = () => {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
                   >
-                    <span className="font-medium text-gray-700">Created Date</span>
+                    <span className="font-medium text-gray-700">
+                      Created Date
+                    </span>
                     {isCreatedDateOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
                     ) : (
@@ -848,12 +886,17 @@ const Assessment = () => {
                         { value: "last30", label: "Last 30 days" },
                         { value: "last90", label: "Last 90 days" },
                       ].map((option) => (
-                        <label key={option.value} className="flex items-center space-x-2">
+                        <label
+                          key={option.value}
+                          className="flex items-center space-x-2"
+                        >
                           <input
                             type="radio"
                             value={option.value}
                             checked={createdDatePreset === option.value}
-                            onChange={(e) => setCreatedDatePreset(e.target.value)}
+                            onChange={(e) =>
+                              setCreatedDatePreset(e.target.value)
+                            }
                             className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
                           />
                           <span className="text-sm">{option.label}</span>
@@ -867,6 +910,7 @@ const Assessment = () => {
           </motion.div>
         </div>
       </main>
+      {/* v1.0.7 -----------------------------------------------------------------------------------> */}
       {isShareOpen && (
         <ShareAssessment
           isOpen={isShareOpen}

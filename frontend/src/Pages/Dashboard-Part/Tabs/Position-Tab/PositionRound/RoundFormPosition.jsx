@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - Improved responsiveness and disabled outer scrollbar
 // v1.0.2 - Ashok - Fixed alignment issues
 // v1.0.3 - Ashok - Fixed issue
+// v1.0.4 - Ashok - Fixed responsiveness issues
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -1837,6 +1838,7 @@ function RoundFormPosition() {
                               + Add Question
                             </button>
                           </div>
+                          {/* v1.0.4 <--------------------------------------------------------------------------- */}
                           <div className="border border-gray-300 rounded-md p-4 max-h-60 overflow-y-auto">
                             {/* Display Added Questions */}
                             {formData.interviewQuestionsList.length > 0 ? (
@@ -1859,7 +1861,7 @@ function RoundFormPosition() {
                                             : "border-gray-300"
                                         }`}
                                       >
-                                        <span className="text-gray-900 font-medium">
+                                        <span className="sm:text-sm text-gray-900 font-medium">
                                           {qIndex + 1}. {questionText}
                                         </span>
                                         <button
@@ -1884,6 +1886,8 @@ function RoundFormPosition() {
                               </p>
                             )}
                           </div>
+                          {/* v1.0.4 <--------------------------------------------------------------------------- */}
+
                           {errors.questions && (
                             <p className="mt-1 text-xs text-red-500">
                               {errors.questions}
@@ -1891,12 +1895,13 @@ function RoundFormPosition() {
                           )}
                           {/* Question Popup */}
                           {isInterviewQuestionPopup && (
+                            // v1.0.4 <--------------------------------------------------------------
                             <div
-                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen"
                               onClick={() => setIsInterviewQuestionPopup(false)}
                             >
                               <div
-                                className="bg-white rounded-md w-[95%] h-[90%]"
+                                className="bg-white rounded-md w-[96%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <div className="py-3 px-4  flex items-center justify-between">
@@ -1928,6 +1933,7 @@ function RoundFormPosition() {
                                 )}
                               </div>
                             </div>
+                            // v1.0.4 -------------------------------------------------------------->
                           )}
                         </div>
                       </div>

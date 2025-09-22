@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import React from 'react';
 import { HiOutlineExclamationCircle } from 'react-icons/hi';
 
@@ -16,11 +18,12 @@ const ConfirmationPopup = ({
   if (!isOpen) return null;
 
   return (
+    // v1.0.0 <--------------------------------------------------------------------------------
     <div
       style={{ zIndex: "9999" }}
       className="fixed top-0 left-0 w-full h-full bg-gray-900 bg-opacity-50 flex justify-center items-center"
     >
-      <div className="absolute top-0 bg-white p-8 rounded-lg shadow-lg mt-16">
+      <div className="bg-white p-8 rounded-lg shadow-lg m-4">
         <div className="text-center">
           <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400" />
           <h3 className="mb-5 text-lg font-normal text-gray-500">{title}</h3>
@@ -53,6 +56,7 @@ const ConfirmationPopup = ({
         </div>
       </div>
     </div>
+    // v1.0.0 -------------------------------------------------------------------------------->
   );
 };
 
