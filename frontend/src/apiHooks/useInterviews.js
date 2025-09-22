@@ -72,10 +72,26 @@ export const useInterviews = (filters = {}) => {
         status: "Draft",
       };
 
-      const response = await axios.post(`${config.REACT_APP_API_URL}/interview`, {
-        ...interviewData,
-        interviewId: id
-      });
+      // const response = await axios.post(`${config.REACT_APP_API_URL}/interview`, {
+      //   ...interviewData,
+      //   interviewId: id
+      // });
+
+      let response;
+
+      if (id) {
+        // 🔹 PATCH call when interviewId exists (update)
+        response = await axios.patch(
+          `${config.REACT_APP_API_URL}/interview/${id}`,
+          interviewData
+        );
+      } else {
+        // 🔹 POST call when creating a new interview
+        response = await axios.post(
+          `${config.REACT_APP_API_URL}/interview`,
+          interviewData
+        );
+      }
 
       // Link candidate to position
       await axios.post(`${config.REACT_APP_API_URL}/candidateposition`, {
