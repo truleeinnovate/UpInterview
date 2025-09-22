@@ -3,7 +3,9 @@
 // v1.0.2  -  Ashraf  -  called sections function to load data fast
 // v1.0.3  -  Ashraf  -  removed already selected cant select logic because very new schedule we can select same candidate
 // v1.0.5  -  Ashok   -  z-index issue fixed and disabled outer scrollbar
-// v1.0.6  -  Ashok   -  popup z-index issues fixed and dynamically increased the height of the popup container 
+// v1.0.6  -  Ashok   -  popup z-index issues fixed and dynamically increased the height of the popup container
+// v1.0.7  -  Ashok   -  improved responsiveness
+
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { shareAssessmentAPI } from "./AssessmentShareAPI.jsx";
@@ -417,9 +419,8 @@ const ShareAssessment = ({
       return;
     }
 
-    console.log("selectedAssessment",
-      {
-        assessmentId: fromscheduleAssessment
+    console.log("selectedAssessment", {
+      assessmentId: fromscheduleAssessment
         ? selectedAssessment._id
         : assessment._id,
       selectedCandidates,
@@ -430,9 +431,7 @@ const ShareAssessment = ({
       organizationId,
       userId,
       queryClient,
-      }
-    );
-    
+    });
 
     setIsLoading(true);
     const result = await shareAssessmentAPI({
@@ -448,8 +447,7 @@ const ShareAssessment = ({
       userId,
       queryClient,
     });
-    console.log("assessment result",result);
-    
+    console.log("assessment result", result);
 
     if (result.success) {
       // React Query will handle data refresh automatically
@@ -464,15 +462,19 @@ const ShareAssessment = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center"
+      // v1.0.7 <-------------------------------------------------------------------------------------------
+      className="fixed inset-0 bg-black top-0 bg-opacity-30 z-50 flex items-center justify-center px-2"
+      // v1.0.7 ------------------------------------------------------------------------------------------->
       onClick={onCloseshare}
     >
       {/* v1.0.6 <----------------------------------------------------------------------------------- */}
       <div
-        className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] ${showDropdownCandidate ? "h-[466px]" : ""}`}
+        className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] ${
+          showDropdownCandidate ? "h-[466px]" : ""
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
-      {/* v1.0.6 -----------------------------------------------------------------------------------> */}
+        {/* v1.0.6 -----------------------------------------------------------------------------------> */}
         {isLoading && <Loading message="Sending emails..." />}
 
         {isSuccess && (
@@ -527,14 +529,18 @@ const ShareAssessment = ({
                     required
                     name="Assessment"
                     value={selectedAssessment?._id || ""}
-                    options={assessmentData?.map((assessment) => ({
-                      value: assessment._id,
-                      label: assessment.AssessmentTitle,
-                    })) || []}
+                    options={
+                      assessmentData?.map((assessment) => ({
+                        value: assessment._id,
+                        label: assessment.AssessmentTitle,
+                      })) || []
+                    }
                     onChange={(e) => {
                       const assessmentId = e?.target?.value;
                       if (assessmentId) {
-                        const assessment = assessmentData.find(a => a._id === assessmentId);
+                        const assessment = assessmentData.find(
+                          (a) => a._id === assessmentId
+                        );
                         if (assessment) {
                           handleAssessmentSelect(assessment);
                         }
@@ -574,7 +580,7 @@ const ShareAssessment = ({
                 <DropdownWithSearchField
                   containerRef={dropdownRef}
                   name="Candidate"
-                  value={selectedCandidates.map(c => c._id)}
+                  value={selectedCandidates.map((c) => c._id)}
                   options={[
                     ...(candidateData?.map((candidate) => ({
                       value: candidate._id,
@@ -591,39 +597,49 @@ const ShareAssessment = ({
                   ]}
                   onChange={(e) => {
                     const values = e?.target?.value || [];
-                    
+
                     // Check if "Select All" was clicked
                     if (values.includes("select_all")) {
                       // If "select_all" was just added, select all candidates
-                      if (!selectedCandidates.map(c => c._id).includes("select_all")) {
+                      if (
+                        !selectedCandidates
+                          .map((c) => c._id)
+                          .includes("select_all")
+                      ) {
                         setSelectedCandidates(candidateData || []);
                         // Note: The component won't actually select "select_all" in its value
                         // We just use it as a trigger
                         return;
                       }
                     }
-                    
+
                     // Handle regular selection changes
-                    const currentIds = selectedCandidates.map(c => c._id);
-                    const newIds = values.filter(v => v !== "select_all");
-                    
+                    const currentIds = selectedCandidates.map((c) => c._id);
+                    const newIds = values.filter((v) => v !== "select_all");
+
                     // Find which IDs were added or removed
-                    const addedIds = newIds.filter(id => !currentIds.includes(id));
-                    const removedIds = currentIds.filter(id => !newIds.includes(id));
-                    
+                    const addedIds = newIds.filter(
+                      (id) => !currentIds.includes(id)
+                    );
+                    const removedIds = currentIds.filter(
+                      (id) => !newIds.includes(id)
+                    );
+
                     // Add new selections
-                    addedIds.forEach(id => {
-                      const candidate = candidateData.find(c => c._id === id);
+                    addedIds.forEach((id) => {
+                      const candidate = candidateData.find((c) => c._id === id);
                       if (candidate) {
-                        setSelectedCandidates(prev => [...prev, candidate]);
+                        setSelectedCandidates((prev) => [...prev, candidate]);
                       }
                     });
-                    
+
                     // Remove deselected items
-                    removedIds.forEach(id => {
-                      setSelectedCandidates(prev => prev.filter(c => c._id !== id));
+                    removedIds.forEach((id) => {
+                      setSelectedCandidates((prev) =>
+                        prev.filter((c) => c._id !== id)
+                      );
                     });
-                    
+
                     // Clear error when selection is made
                     if (newIds.length > 0) {
                       setErrors({ ...errors, Candidate: "" });

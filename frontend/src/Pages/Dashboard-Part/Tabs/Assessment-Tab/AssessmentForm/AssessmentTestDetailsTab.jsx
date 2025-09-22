@@ -1,6 +1,8 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import React from "react";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const AssessmentTestDetailsTab = ({
   includePhone,
@@ -19,23 +21,23 @@ const AssessmentTestDetailsTab = ({
   setIsEditing,
 }) => {
   return (
-    <div className="px-12">
-      <h2 className="font-semibold text-xl mb-2">
+    // v1.0.0 <-------------------------------------------------------------------------
+    <div className="sm:px-2 px-12">
+      <h2 className="font-semibold sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg mb-2">
         Assessment Test Page Details:
       </h2>
-      <p className="mb-4">
+      <p className="mb-4 sm:text-sm">
         The selected candidate's details will be shown on the assessment test
         page.
       </p>
 
       <div className="mb-8">
-
         <div className="mb-4">
-          <div className="flex items-start">
+          <div className="flex sm:flex-col md:flex-col items-start">
             <label className="font-medium mb-2 w-36">
               Candidate Details: <span className="text-red-500">*</span>
             </label>
-            <div className="flex flex-wrap gap-4 mt-1 ml-8">
+            <div className="flex flex-wrap gap-4 mt-1 sm:ml-0 md:ml-0 ml-8">
               <p className="flex items-center">
                 <input type="checkbox" className="mr-2" checked disabled />
                 First Name
@@ -61,8 +63,8 @@ const AssessmentTestDetailsTab = ({
         </div>
 
         <div className="flex items-start mb-4">
-          <label className="font-medium mb-2 w-36"></label>
-          <div className="flex gap-4 mt-1 ml-8">
+          <label className="font-medium mb-2 w-36 sm:hidden md:hidden inline"></label>
+          <div className="flex gap-4 mt-1 ml-8 sm:ml-0 md:ml-0">
             <p className="flex items-center">
               <input
                 type="checkbox"
@@ -87,31 +89,34 @@ const AssessmentTestDetailsTab = ({
           </div>
         </div>
 
-        <div className="mb-4 flex items-start">
+        <div className="mb-6 flex sm:flex-col md:flex-col lg:flex-col items-start">
           <label className="font-medium mb-2 w-36">
             Instructions <span className="text-red-500">*</span>
           </label>
-          <div className="flex-grow relative ml-8">
+          <div className="flex-grow relative sm:ml-0 ml-8 sm:w-full md:w-full">
             <textarea
-              className="border focus:outline-none mb-5 p-2 w-full rounded-md text-sm pr-10"
+              className="border focus:outline-none mb-2 p-2 w-full rounded-md text-sm pr-10"
               rows="20"
               value={instructions}
               onChange={handleInstructionsChange}
               placeholder="Enter instructions here..."
               style={{ whiteSpace: "pre-wrap" }}
             ></textarea>
-            <div className="absolute bottom-1 right-1 text-right text-sm">
-              {instructions.length}/2000
+
+            <div className="flex items-center w-full">
+              {instructionError && (
+                <p className="text-red-500 sm:text-xs text-sm">
+                  {instructionError}
+                </p>
+              )}
+              <div className="text-sm ml-auto">{instructions.length}/2000</div>
             </div>
-            {instructionError && (
-              <p className="text-red-500 text-sm">{instructionError}</p>
-            )}
           </div>
         </div>
 
-        <div className="flex items-start">
+        <div className="flex sm:flex-col md:flex-col lg:flex-col items-start">
           <label className="font-medium mb-2 w-36">Additional Notes</label>
-          <div className="flex-grow relative ml-8">
+          <div className="flex-grow relative sm:ml-0 ml-8 sm:w-full md:w-full">
             <textarea
               className="border p-2 focus:outline-none mb-5 w-full rounded-md"
               rows="3"
@@ -152,6 +157,7 @@ const AssessmentTestDetailsTab = ({
         </div>
       </div> */}
     </div>
+    // v1.0.0 ------------------------------------------------------------------------->
   );
 };
 

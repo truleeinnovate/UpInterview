@@ -4,6 +4,8 @@
 // v1.0.3 - Ashok - changed to multiple option selection and added basic validations
 // v1.0.3 - Ashok - changed static data of Category and Technology / Role to dynamic data
 // v1.0.3 - Ashok - changed dropdowns data from static to dynamic and disabled buttons based on mode
+// v1.0.6 - Ashok - modified code as based number of technologies in selected category create number of rates
+
 import { useState, useEffect, useRef } from "react";
 import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
 import { Minimize, Expand, X } from "lucide-react";
@@ -227,49 +229,108 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   // v1.0.3 --------------------------------------------------------------->
 
   // v1.0.0 <------------------------------------------------------
+  // v1.0.6 <------------------------------------------------------------------------
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   console.log("Form data before submission:", formData);
+  //   // v1.0.3 <------------------------------------------------------------------
+  //   const errors = validateRateCard(formData);
+  //   if (Object.keys(errors).length > 0) {
+  //     // Show first error using toast
+  //     toast.error(Object.values(errors)[0]);
+  //     console.log("Validation errors:", errors);
+  //     return;
+  //   }
+  //   // v1.0.3 ------------------------------------------------------------------>
+
+  //   try {
+  //     let response;
+
+  //     if (formData._id) {
+  //       // Update existing card
+  //       response = await axios.put(
+  //         `${config.REACT_APP_API_URL}/rate-cards/${formData._id}`,
+  //         formData
+  //       );
+  //     } else {
+  //       // Create new card
+  //       response = await axios.post(
+  //         `${config.REACT_APP_API_URL}/rate-cards`,
+  //         formData
+  //       );
+  //     }
+
+  //     console.log("Form submitted successfully:", response.data);
+
+  //     // Close popup only if request was successful
+  //     if (response.status === 200 || response.status === 201) {
+  //       toast.success(response.data.message);
+  //       onClose();
+  //     }
+  //   } catch (error) {
+  //     toast.error(error.message);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     console.log("Form data before submission:", formData);
-    // v1.0.3 <------------------------------------------------------------------
+
     const errors = validateRateCard(formData);
     if (Object.keys(errors).length > 0) {
-      // Show first error using toast
       toast.error(Object.values(errors)[0]);
       console.log("Validation errors:", errors);
       return;
     }
-    // v1.0.3 ------------------------------------------------------------------>
 
     try {
       let response;
 
+      // Transform technologies into multiple objects
+      const payloads = formData.technology.map((tech) => ({
+        category: formData.category,
+        technology: tech,
+        levels: formData.levels,
+        discountMockInterview: formData.discountMockInterview,
+        defaultCurrency: formData.defaultCurrency,
+        isActive: formData.isActive,
+      }));
+
       if (formData._id) {
-        // Update existing card
+        // If editing, always update only one card
         response = await axios.put(
           `${config.REACT_APP_API_URL}/rate-cards/${formData._id}`,
-          formData
+          payloads[0]
         );
       } else {
-        // Create new card
-        response = await axios.post(
-          `${config.REACT_APP_API_URL}/rate-cards`,
-          formData
-        );
+        if (payloads.length === 1) {
+          // Single technology → single create
+          response = await axios.post(
+            `${config.REACT_APP_API_URL}/rate-cards`,
+            payloads[0]
+          );
+        } else {
+          // Multiple technologies → bulk create
+          response = await axios.post(
+            `${config.REACT_APP_API_URL}/rate-cards`,
+            { rateCards: payloads }
+          );
+        }
       }
 
       console.log("Form submitted successfully:", response.data);
 
-      // Close popup only if request was successful
       if (response.status === 200 || response.status === 201) {
-        toast.success(response.data.message);
+        toast.success(response.data.message || "Rate Cards saved successfully");
         onClose();
       }
     } catch (error) {
       toast.error(error.message);
     }
   };
-
+  // v1.0.6 ------------------------------------------------------------------------>
   // v1.0.0 ------------------------------------------------------>
   // v1.0.4 <----------------------------------------------------------------------
   // Filtered technologies based on selected category
@@ -279,7 +340,9 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
 
   // Get unique categories from technologies (support both key casings)
   const filteredCategories = [
-    ...new Set((technologies || []).map((t) => t.Category ?? t.category).filter(Boolean)),
+    ...new Set(
+      (technologies || []).map((t) => t.Category ?? t.category).filter(Boolean)
+    ),
   ];
   // v1.0.4 ---------------------------------------------------------------------->
 
@@ -372,14 +435,18 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 <DropdownWithSearchField
                   label="Category"
                   name="category"
-                  options={filteredCategories.map((c) => ({ value: c, label: c }))}
+                  options={filteredCategories.map((c) => ({
+                    value: c,
+                    label: c,
+                  }))}
                   value={formData.category}
-                  onChange={(e) => handleInputChange("category", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("category", e.target.value)
+                  }
                   disabled={currentMode === "view"}
                 />
               </div>
               <div className="flex flex-col">
-                
                 <DropdownWithSearchField
                   label="Technology / Role"
                   name="technology"
@@ -388,7 +455,9 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                     label: t.TechnologyMasterName,
                   }))}
                   value={formData.technology}
-                  onChange={(e) => handleInputChange("technology", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("technology", e.target.value)
+                  }
                   disabled={currentMode === "view"}
                   isMulti
                 />
@@ -413,8 +482,14 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 </label>
                 <DropdownSelect
                   options={currencyOptions}
-                  value={currencyOptions.find((opt) => opt.value === formData.defaultCurrency) || null}
-                  onChange={(opt) => handleInputChange("defaultCurrency", opt?.value || "INR")}
+                  value={
+                    currencyOptions.find(
+                      (opt) => opt.value === formData.defaultCurrency
+                    ) || null
+                  }
+                  onChange={(opt) =>
+                    handleInputChange("defaultCurrency", opt?.value || "INR")
+                  }
                   placeholder="Select currency"
                   isDisabled={currentMode === "view"}
                 />

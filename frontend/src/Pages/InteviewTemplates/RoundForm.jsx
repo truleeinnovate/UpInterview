@@ -4,6 +4,7 @@
 // v1.0.3  -  Ashok   - improved the code
 // v1.0.4  -  Ashok   - added scroll to top when Add new Round
 // v1.0.5  -  Ashok   - Improved responsiveness
+// v1.0.6  -  Ashok   - Fixed responsiveness issues
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
@@ -1540,6 +1541,7 @@ function RoundFormTemplates() {
                     )}
                   </div>
                   {/* v.0.3 <----------------------------------------------------------------------------------------------------- */}
+                  {/* v1.0.6 <--------------------------------------------------------------------- */}
                   <div className="mt-4" ref={fieldRefs.questions}>
                     <div className="py-3 mx-auto rounded-md">
                       {/* Header with Title and Add Button */}
@@ -1572,7 +1574,7 @@ function RoundFormTemplates() {
                                         : "border-gray-300"
                                     }`}
                                   >
-                                    <span className="text-gray-900 font-medium">
+                                    <span className="sm:text-sm text-gray-900 font-medium">
                                       {qIndex + 1}. {questionText}
                                     </span>
                                     <button
@@ -1600,12 +1602,13 @@ function RoundFormTemplates() {
 
                       {/* Question Popup */}
                       {isInterviewQuestionPopup && (
+                        // v1.0.6 <--------------------------------------------------------------------------------------------
                         <div
-                          className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                          className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen"
                           onClick={() => setIsInterviewQuestionPopup(false)}
                         >
                           <div
-                            className="bg-white rounded-md w-[95%] h-[90%]"
+                            className="bg-white rounded-md w-[98%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="py-3 px-4  flex items-center justify-between">
@@ -1634,12 +1637,14 @@ function RoundFormTemplates() {
                             )}
                           </div>
                         </div>
+                        // v1.0.6 -------------------------------------------------------------------------------------------->
                       )}
                     </div>
                     {errors.questions && (
                       <p className="text-red-500 text-sm">{errors.questions}</p>
                     )}
                   </div>
+                  {/* v1.0.6 ---------------------------------------------------------------------> */}
                   {/* v.0.3 -----------------------------------------------------------------------------------------------------> */}
                 </div>
                 {/* v1.0.5 --------------------------------------------------------> */}

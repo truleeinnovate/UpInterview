@@ -7,11 +7,12 @@
 // v1.0.4 ----Venkatesh---add new filter like technology and category
 // v1.0.5 - Ashok - Improved responsiveness
 // v1.0.6 - Ashok - Fixed alignment issues
+// v1.0.7 - Ashok - Fixed responsive issues
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { Tooltip } from "@mui/material";
-import { ChevronUp, ChevronDown, Search, X } from "lucide-react";
+import { ChevronUp, ChevronDown, Search, X, Plus } from "lucide-react";
 import { ReactComponent as IoIosArrowBack } from "../../../../icons/IoIosArrowBack.svg";
 import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArrowForward.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
@@ -1029,7 +1030,8 @@ const SuggestedQuestionsComponent = ({
         <>
           {/* Content */}
           {/* v1.0.5 <----------------------------------------------------------------- */}
-          <div className="flex-1 overflow-y-auto px-5 py-4">
+          {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
+          <div className="flex-1 overflow-y-auto sm:px-2 px-5 py-4">
             {selectedSkills.length > 0 && (
               <ul className="flex gap-2 flex-wrap px-4 pb-2">
                 {selectedSkills.map((skill, index) => (
@@ -1103,7 +1105,7 @@ const SuggestedQuestionsComponent = ({
                       </div>
                       {/* v1.0.6 ----------------------------------------------------------------------------> */}
                       <div
-                        className={`flex justify-center text-center p-2 border-r border-l border-gray-200 ${
+                        className={`flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${
                           type === "interviewerSection" ||
                           type === "feedback" ||
                           type === "assessment"
@@ -1121,7 +1123,7 @@ const SuggestedQuestionsComponent = ({
                         </p>
                       </div>
                       {fromScheduleLater && (
-                        <div className="flex justify-center text-center h-12 border-r border-gray-200">
+                        <div className="flex justify-center text-center h-12 sm:border-0 border-r border-gray-200">
                           <div className="flex items-center w-14 justify-center">
                             <button
                               onClick={() => {
@@ -1160,17 +1162,19 @@ const SuggestedQuestionsComponent = ({
                             <button
                               type="button"
                               onClick={() => onClickRemoveQuestion(item._id)}
-                              className="rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
+                              className="sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
                             >
-                              Remove
+                              <span className="sm:hidden inline">Remove</span>
+                              <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                             </button>
                           ) : (
                             <button
                               type="button"
-                              className="bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
+                              className="sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
                               onClick={() => onClickAddButton(item)}
                             >
-                              Add
+                              <span className="sm:hidden inline">Add</span>
+                              <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                             </button>
                           )}
                         </div>
@@ -1180,13 +1184,13 @@ const SuggestedQuestionsComponent = ({
                           {addedSections.some((s) =>
                             s.Questions.some((q) => q.questionId === item._id)
                           ) ? (
-                            <span className="text-green-600 font-medium py-1 px-1">
-                              ✓ Added
+                            <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
+                              ✓ <span className="sm:hidden inline">Added</span>
                             </span>
                           ) : (
                             <button
                               type="button"
-                              className={`bg-custom-blue w-[80%] py-1 px-1 text-white rounded-md transition-colors ${
+                              className={`sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
                                 addedSections.reduce(
                                   (acc, s) => acc + s.Questions.length,
                                   0
@@ -1202,7 +1206,8 @@ const SuggestedQuestionsComponent = ({
                                 ) >= questionsLimit
                               }
                             >
-                              Add
+                              <span className="sm:hidden inline">Add</span>
+                              <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                             </button>
                           )}
                         </div>
@@ -1234,10 +1239,10 @@ const SuggestedQuestionsComponent = ({
                     </div>
                     <div className="p-4 border-b">
                       <div className="flex items-start w-full pt-2 gap-2">
-                        <span className="font-semibold">
+                        <span className="sm:text-sm font-semibold">
                           {(currentPage - 1) * itemsPerPage + index + 1}.
                         </span>
-                        <p className="text-gray-700 break-words w-full">
+                        <p className="sm:text-sm text-gray-700 break-words w-full">
                           {item.questionText}
                         </p>
                       </div>
@@ -1269,16 +1274,16 @@ const SuggestedQuestionsComponent = ({
                     </div>
                     <div className="p-4">
                       <p className="text-sm break-words whitespace-pre-wrap">
-                        <span className="font-medium text-gray-700">
+                        <span className="sm:text-sm font-medium text-gray-700">
                           Answer:{" "}
                         </span>
-                        <span className="text-gray-600">
+                        <span className="sm:text-sm text-gray-600">
                           {item.questionType === "Programming"
                             ? renderSolutions(item.solutions)
                             : item.correctAnswer}
                         </span>
                       </p>
-                      <p className="font-medium pt-2">
+                      <p className="sm:text-sm font-medium pt-2">
                         Tags:{" "}
                         <span className="text-sm text-gray-600">
                           {Array.isArray(item.tags)
@@ -1307,10 +1312,10 @@ const SuggestedQuestionsComponent = ({
                       />
                     </svg>
                   </div>
-                  <h2 className="text-gray-700 font-semibold text-lg">
+                  <h2 className="sm:text-sm text-gray-700 font-semibold text-lg">
                     No Questions Found
                   </h2>
-                  <p className="text-gray-500">
+                  <p className="sm:text-sm text-gray-500">
                     Try again with different filter options
                   </p>
                 </div>
