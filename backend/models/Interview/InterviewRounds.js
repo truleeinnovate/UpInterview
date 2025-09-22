@@ -130,7 +130,12 @@ const interviewRoundSchema = new mongoose.Schema({
   instructions: String,
 
   // Current scheduled date/time
-  dateTime: { type: Date },
+  // dateTime: { type: Date },
+
+  
+  // Current scheduled date/time
+
+  dateTime: String,
 
   interviewerViewType: String,
   interviewerGroupName: String,

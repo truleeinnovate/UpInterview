@@ -1237,41 +1237,60 @@ const RoundFormInterviews = () => {
             setMeetingCreationProgress('Creating links...');
             // v1.0.3 ----------------------------------------------------------->
             // Import the meeting platform utility
-            const { createMeeting } = await import('../../../../../utils/meetingPlatforms.js');
+            // const { createMeeting } = await import('../../../../../utils/meetingPlatforms.js');
 
-            console.log("Selected interviewers for meeting creation:", selectedInterviewers);
+            // console.log("Selected interviewers for meeting creation:", selectedInterviewers);
 
-            // Create meeting using the platform utility
-            const meetingLink = await createMeeting(selectedMeetingPlatform, {
-              roundTitle,
-              instructions,
-              combinedDateTime,
-              duration,
-              selectedInterviewers: selectedInterviewers
-            }, (progress) => {
-              setMeetingCreationProgress(progress);
-            });
+            // // Create meeting using the platform utility
+            // const meetingLink = await createMeeting(selectedMeetingPlatform, {
+            //   roundTitle,
+            //   instructions,
+            //   combinedDateTime,
+            //   duration,
+            //   selectedInterviewers: selectedInterviewers
+            // }, (progress) => {
+            //   setMeetingCreationProgress(progress);
+            // });
 
-            // Persist meeting link on the round (avoid reassigning consts)
-            if (meetingLink) {
-              const updatedRoundData = {
-                ...roundData,
-                meetingId: meetingLink,
+            // // Persist meeting link on the round (avoid reassigning consts)
+            // if (meetingLink) {
+            //   const updatedRoundData = {
+            //     ...roundData,
+            //     meetingId: meetingLink,
+            //   };
+            //   const targetRoundId = response?.savedRound?._id || roundId;
+            //   const updatePayload = {
+            //     interviewId,
+            //     roundId: targetRoundId,
+            //     round: updatedRoundData,
+            //     ...(isEditing ? { questions: interviewQuestionsList } : {}),
+            //   };
+            //   const updateResponse = await saveInterviewRound(updatePayload);
+            //   console.log("Round updated with meeting link:", updateResponse);
+            // }
+
+            // console.log("Meeting created successfully:", meetingLink);
+            // console.log("Meeting link type:", typeof meetingLink);
+            // console.log("Meeting link value:", meetingLink);
+
+
+              //  Zoom meeting creation
+
+              const payload = {
+                topic: roundTitle,
+                duration: Number(duration),
+                userId: undefined,
+                start_time: startTime ? new Date(startTime).toISOString() : undefined
               };
-              const targetRoundId = response?.savedRound?._id || roundId;
-              const updatePayload = {
-                interviewId,
-                roundId: targetRoundId,
-                round: updatedRoundData,
-                ...(isEditing ? { questions: interviewQuestionsList } : {}),
-              };
-              const updateResponse = await saveInterviewRound(updatePayload);
-              console.log("Round updated with meeting link:", updateResponse);
-            }
+              const res = await fetch('http://localhost:5000/api/create-meeting', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const data = await res.json();
+              console.log(data);
 
-            console.log("Meeting created successfully:", meetingLink);
-            console.log("Meeting link type:", typeof meetingLink);
-            console.log("Meeting link value:", meetingLink);
+
 
             // Use the new utility to generate and save meeting URLs
             try {
@@ -1540,8 +1559,8 @@ const RoundFormInterviews = () => {
   // };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+    <div className="h-[calc(100vh-4rem)] overflow-y-auto bg-gray-50">
+      <main className="max-w-7xl overflow-y-auto mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
         <div className="px-4 sm:px-0">
           <div className="sm:mb-0 mb-4">
             <Breadcrumb items={breadcrumbItems} />

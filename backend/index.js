@@ -480,7 +480,7 @@ app.get("/skills", async (req, res) => {
     const skills = await Skills.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(skills);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -492,7 +492,7 @@ app.get("/locations", async (req, res) => {
     const LocationNames = await LocationMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(LocationNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -504,7 +504,7 @@ app.get("/industries", async (req, res) => {
     const IndustryNames = await Industry.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(IndustryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -516,7 +516,7 @@ app.get("/roles", async (req, res) => {
     const roles = await RoleMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(roles);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -530,7 +530,7 @@ app.get("/technology", async (req, res) => {
     const technology = await TechnologyMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(technology);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -544,7 +544,7 @@ app.get("/qualification", async (req, res) => {
     const higherqualifications = await HigherQualification.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(higherqualifications);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -556,7 +556,7 @@ app.get("/universitycollege", async (req, res) => {
     const universityCollegeNames = await University_CollegeName.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(universityCollegeNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -568,7 +568,7 @@ app.get("/company", async (req, res) => {
     const CompanyNames = await Company.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(CompanyNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -580,7 +580,7 @@ app.get("/category", async (req, res) => {
     const CategoryNames = await CategoryQuestionsMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(CategoryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -1519,3 +1519,70 @@ app.use("*", (req, res) => {
 });
 
 //  v1.0.4 ------------------------------------------------------------------------------>
+
+
+
+let cachedToken = null;
+let tokenExpiresAt = 0;
+
+// Get Zoom S2S token
+async function getS2SToken() {
+  if (cachedToken && Date.now() < tokenExpiresAt - 60000) return cachedToken;
+
+  const tokenUrl = 'https://zoom.us/oauth/token';
+  const auth = Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64');
+
+  const data = qs.stringify({
+    grant_type: 'account_credentials',
+    account_id: process.env.ZOOM_ACCOUNT_ID
+  });
+
+  const r = await axios.post(tokenUrl, data, {
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+
+  cachedToken = r.data.access_token;
+  tokenExpiresAt = Date.now() + (r.data.expires_in * 1000);
+  return cachedToken;
+}
+
+// Create meeting endpoint
+app.post('/api/create-meeting', async (req, res) => {
+  try {
+    const { topic, start_time, duration, timezone, userId, settings } = req.body;
+    const token = await getS2SToken();
+
+    const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
+    const type = start_time ? 2 : 1;
+
+    const body = {
+      topic: topic || 'Meeting from API',
+      type,
+      ...(start_time ? { start_time } : {}),
+      duration: duration || 60,
+      timezone: timezone || 'Asia/Kolkata',
+      settings: settings || { join_before_host: true, host_video: false, participant_video: false }
+    };
+
+    const create = await axios.post(
+      `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
+      body,
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+    );
+
+    console.log("create data ", create);
+
+    return res.json({
+      join_url: create.data.join_url,
+      start_url: create.data.start_url,
+      id: create.data.id,
+      password: create.data.password
+    });
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    return res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });
+  }
+});
