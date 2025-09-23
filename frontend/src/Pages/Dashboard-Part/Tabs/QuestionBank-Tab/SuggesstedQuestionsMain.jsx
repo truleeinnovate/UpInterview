@@ -75,7 +75,7 @@ function HeaderBar({
             onChange={(opt) => setDropdownValue(opt?.value || "")}
             options={[
               { value: "Interview Questions", label: "Interview Questions" },
-              { value: "Assignment Questions", label: "Assignment Questions" },
+              { value: "Assessment Questions", label: "Assessment Questions" },
             ]}
             placeholder="Select Question Type"
             menuPortalTarget={document.body}
@@ -952,7 +952,7 @@ const SuggestedQuestionsComponent = ({
               onChange={(opt) => setDropdownValue(opt?.value || "")}
               options={[
                 { value: "Interview Questions", label: "Interview Questions" },
-                { value: "Assignment Questions", label: "Assignment Questions" },
+                { value: "Assessment Questions", label: "Assessment Questions" },
               ]}
               placeholder="Select Question Type"
             />

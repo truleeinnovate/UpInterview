@@ -42,6 +42,7 @@ import DescriptionField from "../../../../../Components/FormFields/DescriptionFi
 
 function RoundFormPosition() {
   const { userProfile } = useCustomContext();
+  console.log("user---",userProfile);
   const formatName = (name) => {
     if (!name) return "";
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
@@ -49,6 +50,7 @@ function RoundFormPosition() {
 
   const firstName = formatName(userProfile?.firstName);
   const lastName = formatName(userProfile?.lastName);
+  const contactId = formatName(userProfile?.contactId);
 
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { positionData, isMutationLoading, addRounds } = usePositions();
@@ -499,7 +501,7 @@ function RoundFormPosition() {
     if (organization === false) {
       // For non-organization users, set the current user as the interviewer
       const currentUser = {
-        _id: ownerId,
+        _id: contactId,
         firstName: firstName,
         lastName: lastName,
         email: tokenPayload?.email || "",
