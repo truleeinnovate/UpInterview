@@ -4,6 +4,7 @@
 // v1.0.3  - Ashok - removed form left border and outline
 // v1.0.4  - Ashok - Improved responsiveness and added common popup in the place of modal
 // v1.0.5  - Ashok - Fixed issues regarding responsiveness
+// v1.0.6  - Ashok - Fixed responsiveness issues
 
 import Modal from "react-modal";
 import {
@@ -46,7 +47,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
   // const { id } = useParams();
   const params = useParams();
   // v1.0.2 <--------------------------------------------------------------------
-  useScrollLock(true);
+  // v1.0.6 <--------------------------------------------------------------------
+  // useScrollLock(true);
+  useScrollLock(!!candidateId);
+  // v1.0.6 -------------------------------------------------------------------->
   // v1.0.2 -------------------------------------------------------------------->
 
   const location = useLocation();
@@ -95,11 +99,12 @@ const CandidateDetails = ({ mode, candidateId }) => {
   // if (!candidate || loading) return <Loading />
   const content = (
     <div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {/* v1.0.5 <--------------------------------------------- */}
         {/* <div className="p-6"> */}
-        <div className="sm:p-0 p-6">
-          {/* v1.0.5 ---------------------------------------------> */}
+        {/* v1.0.6 <---------------------------------------------- */}
+        <div className="sm:p-0 p-6 mb-10">
+          {/* v1.0.6 ---------------------------------------------> */}
           <div className="flex justify-center items-center gap-4 mb-4">
             <div className="relative">
               {candidate?.ImageData ? (
@@ -167,7 +172,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                 {/* v1.0.5 <---------------------------------------------------------------- */}
                 {/* <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4"> */}
                 <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
-                {/* v1.0.5 ----------------------------------------------------------------> */}
+                  {/* v1.0.5 ----------------------------------------------------------------> */}
                   Personal Details
                 </h4>
                 <div className="space-y-4">
@@ -228,7 +233,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                 {/* v1.0.5 <-------------------------------------------------------- */}
                 {/* <h4 className="text-lg font-semibold text-gray-800 mb-4"> */}
                 <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
-                {/* v1.0.5 --------------------------------------------------------> */}
+                  {/* v1.0.5 --------------------------------------------------------> */}
                   Contact Information
                 </h4>
                 <div className="space-y-4">
@@ -258,7 +263,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
                 {/* v1.0.5 <----------------------------------------------------- */}
                 {/* <h4 className="text-lg font-semibold text-gray-800 mb-4"> */}
                 <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
-                {/* v1.0.5 -----------------------------------------------------> */}
+                  {/* v1.0.5 -----------------------------------------------------> */}
                   Professional Details
                 </h4>
                 <div className="space-y-4">
@@ -384,7 +389,7 @@ const CandidateDetails = ({ mode, candidateId }) => {
               {/* v1.0.5 <--------------------------------------------------------- */}
               {/* <h4 className="text-lg font-semibold text-gray-800 mb-4"> */}
               <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
-              {/* v1.0.5 ---------------------------------------------------------> */}
+                {/* v1.0.5 ---------------------------------------------------------> */}
                 Skills
               </h4>
               {/* v1.0.4 <---------------------------------------------------------------------------------------------------- */}
@@ -393,9 +398,10 @@ const CandidateDetails = ({ mode, candidateId }) => {
                   candidate.skills.map((skill, index) => (
                     <>
                       {/* <------v1.0.0 ------*/}
-                      <div 
-                         key={skill._id || `${skill.skill}-${index}`}  
-                      className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100">
+                      <div
+                        key={skill._id || `${skill.skill}-${index}`}
+                        className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100"
+                      >
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
                           <span className="truncate max-w-full">
                             {skill.skill}

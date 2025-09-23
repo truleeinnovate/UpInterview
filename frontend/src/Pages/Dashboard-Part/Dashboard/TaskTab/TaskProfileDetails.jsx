@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Improved responsiveness and changed common code for popup
 // v1.0.1 - Ashok - Fixed issues in responsiveness
+// v1.0.2 - Ashok - Fixed style issues
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +37,7 @@ const TaskProfileDetails = ({ task, onClosetask }) => {
       {/* v1.0.0 <----------------------------------------------------------------- */}
       {/* v1.0.1 <----------------------------------------------------------------- */}
       <SidebarPopup title="Task Profile Details" onClose={handleClose}>
-        <div className="sm:px-0 px-4">
+        <div className="sm:px-0 px-4 mb-14">
           {/* Tab Navigation */}
           <div className="flex border-b border-gray-200 mb-6">
             <button

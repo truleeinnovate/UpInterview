@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 // v1.0.3  -  Ashok   -  Added scroll to first error functionality
 // v1.0.4  -  Ashok   - Improved responsiveness
+// v1.0.5  -  Ashok   - Fixed responsive issues
 
 import React, {
   useState,
@@ -33,7 +34,7 @@ import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { usePositions } from "../../../../../apiHooks/usePositions";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { Button } from "@mui/material";
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 
 const NewAssessment = () => {
@@ -1291,7 +1292,9 @@ const NewAssessment = () => {
 
     return (
       // v1.0.4 <----------------------------------------------------------------------------
-      <div className="flex justify-end sm:px-4 px-6 pt-6">
+      // v1.0.5 <---------------------------------------------------------------------------
+      <div className="flex justify-end sm:px-0 px-6 pt-6">
+      {/* v1.0.5 --------------------------------------------------------------------------> */}
         {currentTab !== "Basicdetails" && (
           <button
             onClick={handleBack}
@@ -1314,13 +1317,16 @@ const NewAssessment = () => {
             <>
               {/* Always show Delete Selected if questions are selected */}
               {selectedCount > 0 && (
+                // v1.0.5 <---------------------------------------------------------------------------
                 <button
-                  className="truncate sm:text-sm sm:px-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="flex items-center truncate sm:text-sm sm:px-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                   onClick={() => openDeleteConfirmation("bulk", null, null)}
                 >
-                  Delete <span className="sm:hidden inline">Selected</span> (
+                  <Trash2 className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden text-red-500 mr-1" />
+                  <span className="sm:hidden inline">Delete Selected</span> (
                   {selectedCount})
                 </button>
+                // v1.0.5 --------------------------------------------------------------------------->
               )}
 
               {isPassScoreSubmitted ? (
@@ -1581,7 +1587,7 @@ const NewAssessment = () => {
 
                     {activeTab === "Candidates" && (
                       <>
-                      {/* v1.0.4 <------------------------------------------------------- */}
+                        {/* v1.0.4 <------------------------------------------------------- */}
                         <div className="sm:px-0 px-6 overflow-x-auto">
                           <AssessmentsTab
                             assessment={
@@ -1592,7 +1598,7 @@ const NewAssessment = () => {
                           />
                           <TabFooter currentTab="Candidates" />
                         </div>
-                      {/* v1.0.4 -------------------------------------------------------> */}
+                        {/* v1.0.4 -------------------------------------------------------> */}
                       </>
                     )}
                   </div>
