@@ -1000,11 +1000,20 @@ require("./controllers/PushNotificationControllers/pushNotificationTaskControlle
 app.get("/auth/users/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await Users.findById(id);
+    const user = await Users.findById(id).lean();
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(user);
+ 
+    const contact = await Contacts.findOne({ ownerId: id }, "_id").lean();
+    // user.contactId = contact._id;
+ 
+ 
+    // res.json(user);
+    res.json({
+      ...user, // convert mongoose doc to plain object
+      contactId: contact ? contact._id : null, // attach contactId
+    });
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -1361,6 +1370,7 @@ const {
   getTopSkills,
   getTopExternalInterviewers,
 } = require("./data/mockData.js");
+const { Contacts } = require("./models/Contacts.js");
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
