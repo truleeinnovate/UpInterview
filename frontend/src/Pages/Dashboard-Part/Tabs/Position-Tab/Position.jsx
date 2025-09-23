@@ -96,12 +96,12 @@ const PositionTab = () => {
   // v1.0.4 -------------------------------------------------------->
   //<----v1.02-----
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
-  const STATUS_OPTIONS = ["draft", "opened", "closed", "hold", "cancelled"];
+  const STATUS_OPTIONS = ["opened", "closed", "hold", "cancelled"];
 
   // Status change modal state
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [statusTargetRow, setStatusTargetRow] = useState(null);
-  const [statusValue, setStatusValue] = useState("draft");
+  const [statusValue, setStatusValue] = useState("opened");
   //----v1.02----->
 
   //  Ranjith added delete Candidate functionality
@@ -431,7 +431,7 @@ const PositionTab = () => {
   // Open/close modal and confirm update
   const openStatusModal = (row) => {
     setStatusTargetRow(row);
-    setStatusValue(row?.status || "draft");
+    setStatusValue(row?.status);
     setIsStatusModalOpen(true);
   };
 
