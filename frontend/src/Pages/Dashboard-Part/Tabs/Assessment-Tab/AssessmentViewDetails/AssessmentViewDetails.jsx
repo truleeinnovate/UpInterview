@@ -3,20 +3,22 @@
 // v1.0.2  -  Venkatesh  -  assessment questions tab first index is open by default
 // v1.0.3  -  Ashok  - Implemented scroll lock hook for conditionally disable outer scrollbar
 // v1.0.4  -  Ashraf  -  assessment view default expand true
-import { useState, useEffect } from 'react';
-import { Tab } from '@headlessui/react';
-import { Minimize, Expand, X } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+// v1.0.5  -  Ashok   -  Improved responsiveness
+
+import { useState, useEffect } from "react";
+import { Tab } from "@headlessui/react";
+import { Minimize, Expand, X } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
 // <---------------------- v1.0.0
-import AssessmentsTab from './AssessmentViewAssessmentTab.jsx';
+import AssessmentsTab from "./AssessmentViewAssessmentTab.jsx";
 // <---------------------- v1.0.0 >
-import AssessmentResultsTab from './AssessmentResultTab.jsx';
-import DetailsTab from './AssessmentDetailTab.jsx';
-import QuestionsTab from './AsseessmentQuestionsTab.jsx';
-import Activity from '../../../Tabs/CommonCode-AllTabs/Activity.jsx';
-import { useAssessments } from '../../../../../apiHooks/useAssessments.js';
+import AssessmentResultsTab from "./AssessmentResultTab.jsx";
+import DetailsTab from "./AssessmentDetailTab.jsx";
+import QuestionsTab from "./AsseessmentQuestionsTab.jsx";
+import Activity from "../../../Tabs/CommonCode-AllTabs/Activity.jsx";
+import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { Pencil } from "lucide-react";
-import { useScrollLock } from '../../../../../apiHooks/scrollHook/useScrollLock.js';
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 
 function AssessmentView() {
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
@@ -34,7 +36,6 @@ function AssessmentView() {
   // v1.0.3 <-------------------------------------------------------------------------
   useScrollLock(true); // This will lock the outer scrollbar when the form is open
   // v1.0.3 ------------------------------------------------------------------------->
-
 
   const toggleArrow1 = (index) => {
     setToggleStates((prevState) => {
@@ -64,13 +65,15 @@ function AssessmentView() {
           setToggleStates((prev) => {
             if (prev.length !== data.sections.length) {
               // <---------------------- v1.0.2------
-              return new Array(data.sections.length).fill(false).map((_, index) => index === 0);
+              return new Array(data.sections.length)
+                .fill(false)
+                .map((_, index) => index === 0);
               //---------------------- v1.0.2------>
             }
             return prev; // Preserve existing toggle states
           });
         } else {
-          console.error('Error fetching assessment questions:', error);
+          console.error("Error fetching assessment questions:", error);
         }
       });
     }
@@ -87,15 +90,20 @@ function AssessmentView() {
 
   const tabs = [
     {
-      id: 'Details',
-      name: 'Details',
-      icon: '📋',
-      content: <DetailsTab assessment={assessment} assessmentQuestions={assessmentQuestions} />,
+      id: "Details",
+      name: "Details",
+      icon: "📋",
+      content: (
+        <DetailsTab
+          assessment={assessment}
+          assessmentQuestions={assessmentQuestions}
+        />
+      ),
     },
     {
-      id: 'Questions',
-      name: 'Questions',
-      icon: '❓',
+      id: "Questions",
+      name: "Questions",
+      icon: "❓",
       content: (
         <QuestionsTab
           sections={assessmentQuestions.sections || []}
@@ -105,15 +113,15 @@ function AssessmentView() {
       ),
     },
     {
-      id: 'Assessments',
-      name: 'Assessments',
-      icon: '📑',
+      id: "Assessments",
+      name: "Assessments",
+      icon: "📑",
       content: <AssessmentsTab assessment={assessment} />,
     },
     {
-      id: 'Results',
-      name: 'Results',
-      icon: '📈',
+      id: "Results",
+      name: "Results",
+      icon: "📈",
       content: (
         <AssessmentResultsTab
           assessment={assessment}
@@ -125,14 +133,19 @@ function AssessmentView() {
       ),
     },
     {
-      id: 'Activity',
-      name: 'Activity',
-      icon: '📊',
+      id: "Activity",
+      name: "Activity",
+      icon: "📊",
       content: <Activity parentId={id} />,
     },
   ];
 
-  if (!assessment) return <div className="text-center items-center">Loading assessment details...</div>;
+  if (!assessment)
+    return (
+      <div className="text-center items-center">
+        Loading assessment details...
+      </div>
+    );
 
   return (
     <>
@@ -142,28 +155,36 @@ function AssessmentView() {
             className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
             onClick={handleCloseModal}
           />
+
+          {/* v1.0.5 <------------------------------------------------------------ */}
           <div
-            className={`fixed inset-y-0 right-0 flex max-w-full ${isFullscreen ? 'w-full' : 'w-1/2'
-              } transition-all duration-300`}
+            className={`fixed inset-y-0 right-0 flex max-w-full ${
+              isFullscreen ? "w-full" : "sm:w-full md:w-full lg:w-full w-1/2"
+            } transition-all duration-300`}
           >
+            {/* v1.0.5 ------------------------------------------------------------> */}
             <div className="w-full relative">
               <div className="h-full bg-white shadow-xl flex flex-col">
                 {/* <------------------------------- v1.0.1  */}
-                <div className="px-6 py-4 flex items-center justify-between">
-                {/* ------------------------------ v1.0.1 > */}
-                  <h3 className="text-lg font-medium text-gray-900">Assessment Template Details</h3>
+                {/* v1.0.5 <---------------------------------------------------------- */}
+                <div className="sm:px-4 px-6 py-4 flex items-center justify-between">
+                  {/* ------------------------------ v1.0.1 > */}
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Assessment Template Details
+                  </h3>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => navigate(`/assessments-template/edit/${assessment._id}`)}
+                      onClick={() =>
+                        navigate(`/assessments-template/edit/${assessment._id}`)
+                      }
                       className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
 
-
                     <button
                       onClick={toggleFullscreen}
-                      className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
+                      className="sm:hidden md:hidden lg:hidden inline p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
                     >
                       {isFullscreen ? (
                         <Minimize className="w-5 h-5 text-gray-500" />
@@ -180,15 +201,19 @@ function AssessmentView() {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
-                    <Tab.List className="flex space-x-3 border-b border-gray-200 px-2">
+                  <Tab.Group
+                    selectedIndex={selectedTab}
+                    onChange={setSelectedTab}
+                  >
+                    <Tab.List className="flex space-x-3 border-b border-gray-200 px-2 overflow-x-auto">
                       {tabs.map((tab, idx) => (
                         <Tab
                           key={idx}
                           className={({ selected }) =>
-                            `py-4 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center ${selected
-                              ? 'border-custom-blue text-custom-blue'
-                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            `py-4 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center ${
+                              selected
+                                ? "border-custom-blue text-custom-blue"
+                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                             }`
                           }
                         >
@@ -206,6 +231,7 @@ function AssessmentView() {
                     </Tab.Panels>
                   </Tab.Group>
                 </div>
+                {/* v1.0.5 ----------------------------------------------------------> */}
               </div>
             </div>
           </div>

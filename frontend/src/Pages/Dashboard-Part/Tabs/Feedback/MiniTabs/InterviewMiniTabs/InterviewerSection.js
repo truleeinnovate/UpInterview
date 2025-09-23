@@ -3,6 +3,7 @@
 //<----v1.0.1---Venkatesh-----update selected question on load from question bank
 ////<---v1.0.2-----Venkatesh-----solved edit mode issues
 //<----v1.0.3-----Venkatesh-----disable like and dislike in view mode
+// v1.0.4 - Ashok - Improved responsiveness
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
@@ -13,7 +14,6 @@ import { SlDislike } from "react-icons/sl";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { X } from "lucide-react";
 import QuestionBank from "../../../../Tabs/QuestionBank-Tab/QuestionBank.jsx";
-
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -44,7 +44,7 @@ const InterviewerSectionComponent = ({
   interviewerQuestions = [],
   // Interview data from parent
   interviewData,
-  decodedData
+  decodedData,
 }) => {
   // Get all questions from interviewData and filter for interviewer-added questions
   const location = useLocation();
@@ -57,27 +57,34 @@ const InterviewerSectionComponent = ({
   // console.log("feedbackData",interviewData?.questionFeedback);
 
   // Get interviewer-added questions from the new API structure
-  const rawInterviewerAddedQuestionsFromAPI = interviewData?.interviewQuestions?.interviewerAddedQuestions;
+  const rawInterviewerAddedQuestionsFromAPI =
+    interviewData?.interviewQuestions?.interviewerAddedQuestions;
   const interviewerAddedQuestionsFromAPI = React.useMemo(
     () => rawInterviewerAddedQuestionsFromAPI || [],
     [rawInterviewerAddedQuestionsFromAPI]
   );
-  const rawInterviewQuestions = interviewData?.interviewQuestions || interviewerSectionData;
+  const rawInterviewQuestions =
+    interviewData?.interviewQuestions || interviewerSectionData;
   const allQuestions = React.useMemo(() => {
-    if (feedbackData?.preSelectedQuestions) return feedbackData.preSelectedQuestions;
+    if (feedbackData?.preSelectedQuestions)
+      return feedbackData.preSelectedQuestions;
     return rawInterviewQuestions || [];
   }, [feedbackData, rawInterviewQuestions]);
 
   // console.log("rawInterviewQuestions",rawInterviewQuestions);
 
-
   // Use interviewer-added questions from API if available, otherwise fallback to old logic
   const filteredInterviewerQuestions = React.useMemo(() => {
-    if (Array.isArray(interviewerAddedQuestionsFromAPI) && interviewerAddedQuestionsFromAPI.length > 0) {
+    if (
+      Array.isArray(interviewerAddedQuestionsFromAPI) &&
+      interviewerAddedQuestionsFromAPI.length > 0
+    ) {
       return interviewerAddedQuestionsFromAPI;
     }
     if (Array.isArray(allQuestions)) {
-      return allQuestions.filter((question) => question.addedBy === "interviewer");
+      return allQuestions.filter(
+        (question) => question.addedBy === "interviewer"
+      );
     }
     return [];
   }, [interviewerAddedQuestionsFromAPI, allQuestions]);
@@ -93,8 +100,6 @@ const InterviewerSectionComponent = ({
   ////<---v1.0.2-----
   // Merge persisted feedback into interviewer questions without overwriting current UI state
   const questionsWithFeedback = React.useMemo(() => {
-
-
     //   const baseArray = [...(interviewerSectionData || []), ...(filteredInterviewerQuestions || [])];
     // //  console.log("baseArray",baseArray);
 
@@ -137,22 +142,28 @@ const InterviewerSectionComponent = ({
     //   });
 
     // });
-    const newlyAddedQuestions = (interviewerSectionData || [])
-      .filter(newQ => {
+    const newlyAddedQuestions = (interviewerSectionData || []).filter(
+      (newQ) => {
         const newId = newQ.questionId || newQ._id || newQ.id;
-        const isNotDuplicate = !existingQuestions.some(existingQ => {
-          const existingId = existingQ.questionId || existingQ._id || existingQ.id;
+        const isNotDuplicate = !existingQuestions.some((existingQ) => {
+          const existingId =
+            existingQ.questionId || existingQ._id || existingQ.id;
           return existingId === newId;
         });
-        const isAddedByInterviewer = (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
+        const isAddedByInterviewer =
+          (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
         return isNotDuplicate && isAddedByInterviewer;
-      });
+      }
+    );
 
     // Combine both arrays
     const allCombinedQuestions = [...existingQuestions, ...newlyAddedQuestions];
 
-
-    const shouldApplyFeedback = (isEditMode || isViewMode || isAddMode) && feedbackData && Array.isArray(feedbackData.questionFeedback) && feedbackData.questionFeedback.length > 0;
+    const shouldApplyFeedback =
+      (isEditMode || isViewMode || isAddMode) &&
+      feedbackData &&
+      Array.isArray(feedbackData.questionFeedback) &&
+      feedbackData.questionFeedback.length > 0;
     console.log("shouldApplyFeedback", shouldApplyFeedback, isAddMode);
 
     if (!shouldApplyFeedback) return allCombinedQuestions;
@@ -164,9 +175,17 @@ const InterviewerSectionComponent = ({
     }, {});
     const mapAnswerType = (type) => {
       if (!type) return undefined;
-      if (type === "correct" || type === "Fully Answered") return "Fully Answered";
-      if (type === "partial" || type === "Partially Answered") return "Partially Answered";
-      if (type === "incorrect" || type === "Not Answered" || type === "not answered" || type === "wrong") return "Not Answered";
+      if (type === "correct" || type === "Fully Answered")
+        return "Fully Answered";
+      if (type === "partial" || type === "Partially Answered")
+        return "Partially Answered";
+      if (
+        type === "incorrect" ||
+        type === "Not Answered" ||
+        type === "not answered" ||
+        type === "wrong"
+      )
+        return "Not Answered";
       return undefined;
     };
     return allCombinedQuestions.map((item) => {
@@ -175,8 +194,12 @@ const InterviewerSectionComponent = ({
       const f = id ? feedbackMap[id] : null;
       if (!f) return item;
       const merged = { ...item };
-      const submittedAns = f.candidateAnswer?.submittedAnswer || item.candidateAnswer?.submittedAnswer || "";
-      const answerType = f.candidateAnswer?.answerType || item.candidateAnswer?.answerType || "";
+      const submittedAns =
+        f.candidateAnswer?.submittedAnswer ||
+        item.candidateAnswer?.submittedAnswer ||
+        "";
+      const answerType =
+        f.candidateAnswer?.answerType || item.candidateAnswer?.answerType || "";
       const derivedIsAnswered = mapAnswerType(answerType);
       if (!merged.answer && submittedAns) merged.answer = submittedAns;
       if (!merged.isAnswered || merged.isAnswered === "Not Answered") {
@@ -185,17 +208,24 @@ const InterviewerSectionComponent = ({
       const liked = f.interviewerFeedback?.liked;
       const dislikeReason = f.interviewerFeedback?.dislikeReason;
       const note = f.interviewerFeedback?.note;
-      if ((!merged.isLiked || merged.isLiked === "") && liked) merged.isLiked = liked;
-      if (!merged.whyDislike && dislikeReason) merged.whyDislike = dislikeReason;
+      if ((!merged.isLiked || merged.isLiked === "") && liked)
+        merged.isLiked = liked;
+      if (!merged.whyDislike && dislikeReason)
+        merged.whyDislike = dislikeReason;
       if ((!merged.note || merged.note === "") && note) {
         merged.note = note;
         merged.notesBool = true;
       }
       return merged;
     });
-  }, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
+  }, [
+    isEditMode,
+    isViewMode,
+    feedbackData,
+    interviewerSectionData,
+    filteredInterviewerQuestions,
+  ]);
   ////---v1.0.2----->
-
 
   console.log("questionsWithFeedback", questionsWithFeedback);
 
@@ -205,13 +235,8 @@ const InterviewerSectionComponent = ({
   //   ]
   // );
   const [interviewerSection, setInterviewerSection] = useState(() => {
-    return (isAddMode || isEditMode)
-      ? questionsWithFeedback
-      : [];
+    return isAddMode || isEditMode ? questionsWithFeedback : [];
   });
-
-
-
 
   //<----v1.0.0---
   const [selectedQuestion, setSelectedQuestion] = useState(
@@ -222,43 +247,41 @@ const InterviewerSectionComponent = ({
   const [roundId, setRoundId] = useState("");
   const [selectedLabelId, setSelectedLabelId] = useState(null);
   const [type, setType] = useState("Feedback");
-  const [questionBankPopupVisibility, setQuestionBankPopupVisibility] = useState(true);
+  const [questionBankPopupVisibility, setQuestionBankPopupVisibility] =
+    useState(true);
   //----v1.0.1--->
 
   useEffect(() => {
-    if (
-      interviewerSection.length > 0 &&
-      selectedQuestion === null
-    ) {
+    if (interviewerSection.length > 0 && selectedQuestion === null) {
       setSelectedQuestion(interviewerSection[0].id);
     }
   }, [interviewerSection, selectedQuestion]);
 
-
-
   // Handle escape key to close question bank
   useEffect(() => {
     const handleEscapeKey = (event) => {
-      if (event.key === 'Escape' && isQuestionBankOpen) {
+      if (event.key === "Escape" && isQuestionBankOpen) {
         setIsQuestionBankOpen(false);
       }
     };
 
     if (isQuestionBankOpen) {
-      document.addEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      document.addEventListener("keydown", handleEscapeKey);
+      document.body.style.overflow = "hidden"; // Prevent background scrolling
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'unset'; // Restore scrolling
+      document.removeEventListener("keydown", handleEscapeKey);
+      document.body.style.overflow = "unset"; // Restore scrolling
     };
   }, [isQuestionBankOpen]);
 
   const onChangeInterviewQuestionNotes = (questionId, notes) => {
     setInterviewerSectionData((prev) =>
       prev.map((question) =>
-        (question.questionId || question.id) === questionId ? { ...question, note: notes } : question
+        (question.questionId || question.id) === questionId
+          ? { ...question, note: notes }
+          : question
       )
     );
   };
@@ -266,7 +289,9 @@ const InterviewerSectionComponent = ({
   const onClickAddNote = (id) => {
     setInterviewerSectionData((prev) =>
       prev.map((question) =>
-        (question.questionId || question.id) === id ? { ...question, notesBool: !question.notesBool } : question
+        (question.questionId || question.id) === id
+          ? { ...question, notesBool: !question.notesBool }
+          : question
       )
     );
   };
@@ -288,13 +313,17 @@ const InterviewerSectionComponent = ({
     setIsQuestionBankOpen(false);
   }, []);
 
-  const handleOutsideClickCallback = useCallback((event) => {
-    if (isQuestionBankOpen && !event.target.closest('.question-bank-sidebar')) {
-      setIsQuestionBankOpen(false);
-    }
-  }, [isQuestionBankOpen]);
-
-
+  const handleOutsideClickCallback = useCallback(
+    (event) => {
+      if (
+        isQuestionBankOpen &&
+        !event.target.closest(".question-bank-sidebar")
+      ) {
+        setIsQuestionBankOpen(false);
+      }
+    },
+    [isQuestionBankOpen]
+  );
 
   const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
     console.log("Updating questions from question bank:", questions);
@@ -303,22 +332,22 @@ const InterviewerSectionComponent = ({
       // Transform questions to match the interviewer section format
       const newQuestions = questions.map((question, index) => ({
         id: Date.now() + index, // Generate unique ID
-        question: question.question || question.title || 'N/A',
-        expectedAnswer: question.expectedAnswer || question.answer || 'N/A',
-        category: question.category || 'N/A',
-        difficulty: question.difficulty || 'N/A',
+        question: question.question || question.title || "N/A",
+        expectedAnswer: question.expectedAnswer || question.answer || "N/A",
+        category: question.category || "N/A",
+        difficulty: question.difficulty || "N/A",
         //addedBy: 'interviewer',
         mandatory: question.mandatory || false,
         isAnswered: "Not Answered",
         notesBool: false,
-        note: ""
+        note: "",
       }));
 
       // Add new questions to the existing interviewer section
-      setInterviewerSection(prev => [...prev, ...newQuestions]);
+      setInterviewerSection((prev) => [...prev, ...newQuestions]);
 
       // Update interviewerSectionData as well
-      const newQuestionsData = newQuestions.map(q => ({
+      const newQuestionsData = newQuestions.map((q) => ({
         ...q,
         isAnswered: "Not Answered",
         isLiked: "",
@@ -327,7 +356,7 @@ const InterviewerSectionComponent = ({
         note: "",
         //addedBy: 'interviewer',
       }));
-      setInterviewerSectionData(prev => [...prev, ...newQuestionsData]);
+      setInterviewerSectionData((prev) => [...prev, ...newQuestionsData]);
 
       // Close the question bank after adding questions
       setIsQuestionBankOpen(false);
@@ -363,7 +392,9 @@ const InterviewerSectionComponent = ({
   const onChangeRadioInput = (questionId, value) => {
     setInterviewerSectionData((prev) =>
       prev.map((question) =>
-        (question.questionId || question.id) === questionId ? { ...question, isAnswered: value } : question
+        (question.questionId || question.id) === questionId
+          ? { ...question, isAnswered: value }
+          : question
       )
     );
   };
@@ -380,18 +411,21 @@ const InterviewerSectionComponent = ({
   };
 
   const handleDislikeToggle = (id) => {
-    if (isViewMode) return;//<----v1.0.3-----
+    if (isViewMode) return; //<----v1.0.3-----
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
     else setDislikeQuestionId(id);
-    setInterviewerSectionData((prev) =>
-      prev.map((q) =>
-        q._id === id ? { 
-          ...q, 
-          isLiked: q.isLiked === "disliked" ? "" : "disliked",
-          // Clear dislike reason when toggling off dislike
-          whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike
-        } : q
-      )
+    setInterviewerSectionData(
+      (prev) =>
+        prev.map((q) =>
+          q._id === id
+            ? {
+                ...q,
+                isLiked: q.isLiked === "disliked" ? "" : "disliked",
+                // Clear dislike reason when toggling off dislike
+                whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
+              }
+            : q
+        )
       // prev.map((q) =>
       //   (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" } : q
       // )
@@ -399,17 +433,19 @@ const InterviewerSectionComponent = ({
   };
 
   const handleLikeToggle = (id) => {
-    if (isViewMode) return;//<----v1.0.3-----
-    setInterviewerSectionData((prev) =>
-    
-      prev.map((q) =>
-        q._id === id ? { 
-          ...q, 
-          isLiked: q.isLiked === "liked" ? "" : "liked",
-          // Clear dislike reason when liking
-          whyDislike: q.isLiked === "liked" ? q.whyDislike : ""
-        } : q
-      )
+    if (isViewMode) return; //<----v1.0.3-----
+    setInterviewerSectionData(
+      (prev) =>
+        prev.map((q) =>
+          q._id === id
+            ? {
+                ...q,
+                isLiked: q.isLiked === "liked" ? "" : "liked",
+                // Clear dislike reason when liking
+                whyDislike: q.isLiked === "liked" ? q.whyDislike : "",
+              }
+            : q
+        )
 
       // prev.map((q) =>
       //   (q.questionId || q.id) === id ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" } : q
@@ -418,11 +454,10 @@ const InterviewerSectionComponent = ({
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
   };
 
-
   const DisLikeSection = React.memo(({ each }) => {
     return (
       <>
-        {(isEditMode || isAddMode) ? (
+        {isEditMode || isAddMode ? (
           <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
             <div className="flex justify-between items-center mb-2">
               <h1>Tell us more :</h1>
@@ -439,9 +474,19 @@ const InterviewerSectionComponent = ({
                     name={`dislike-${each.questionId || each.id}`}
                     value={option.value}
                     checked={each.whyDislike === option.value}
-                    onChange={(e) => onChangeDislikeRadioInput(each.questionId || each.id, e.target.value)}
+                    onChange={(e) =>
+                      onChangeDislikeRadioInput(
+                        each.questionId || each.id,
+                        e.target.value
+                      )
+                    }
                   />
-                  <label htmlFor={`dislike-${each.questionId || each.id}-${option.value}`} className="cursor-pointer">
+                  <label
+                    htmlFor={`dislike-${each.questionId || each.id}-${
+                      option.value
+                    }`}
+                    className="cursor-pointer"
+                  >
                     {option.label}
                   </label>
                 </li>
@@ -449,7 +494,9 @@ const InterviewerSectionComponent = ({
             </ul>
           </div>
         ) : (
-          <p className="w-full flex gap-x-8 gap-y-2 ">{each.whyDislike || "N/A"}</p>
+          <p className="w-full flex gap-x-8 gap-y-2 ">
+            {each.whyDislike || "N/A"}
+          </p>
         )}
       </>
     );
@@ -478,29 +525,47 @@ const InterviewerSectionComponent = ({
     return (
       <div className="flex rounded-md mt-2">
         <p className="w-[200px] font-bold text-gray-700">
-          Response Type {(each.mandatory === "true" || each.snapshot?.mandatory === "true") && <span className="text-[red]">*</span>}
+          Response Type{" "}
+          {(each.mandatory === "true" ||
+            each.snapshot?.mandatory === "true") && (
+            <span className="text-[red]">*</span>
+          )}
         </p>
-        {(isEditMode || isAddMode) ? (
+        {isEditMode || isAddMode ? (
           <div className={`w-full flex gap-x-8 gap-y-2 `}>
-            {["Not Answered", "Partially Answered", "Fully Answered"].map((option) => (
-              <span key={option} className="flex items-center gap-2">
-                <input
-                  checked={each.isAnswered === option}
-                  value={option}
-                  name={`isAnswered-${each.questionId || each.id}`}
-                  type="radio"
-                  id={`isAnswered-${each.questionId || each.id}-${option}`}
-                  onChange={(e) => onChangeRadioInput(each.questionId || each.id, e.target.value)}
-                  className="whitespace-nowrap"
-                />
-                <label htmlFor={`isAnswered-${each.questionId || each.id}-${option}`} className="cursor-pointer">
-                  {option}
-                </label>
-              </span>
-            ))}
+            {["Not Answered", "Partially Answered", "Fully Answered"].map(
+              (option) => (
+                <span key={option} className="flex items-center gap-2">
+                  <input
+                    checked={each.isAnswered === option}
+                    value={option}
+                    name={`isAnswered-${each.questionId || each.id}`}
+                    type="radio"
+                    id={`isAnswered-${each.questionId || each.id}-${option}`}
+                    onChange={(e) =>
+                      onChangeRadioInput(
+                        each.questionId || each.id,
+                        e.target.value
+                      )
+                    }
+                    className="whitespace-nowrap"
+                  />
+                  <label
+                    htmlFor={`isAnswered-${
+                      each.questionId || each.id
+                    }-${option}`}
+                    className="cursor-pointer"
+                  >
+                    {option}
+                  </label>
+                </span>
+              )
+            )}
           </div>
         ) : (
-          <p className="w-full flex gap-x-8 gap-y-2 ">{each.isAnswered || "Not Answered"}</p>
+          <p className="w-full flex gap-x-8 gap-y-2 ">
+            {each.isAnswered || "Not Answered"}
+          </p>
         )}
       </div>
     );
@@ -510,7 +575,9 @@ const InterviewerSectionComponent = ({
     <>
       <div className="relative px-2 pt-2 space-y-2">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4 mt-4">
+          {/* v1.0.4 <----------------------------------------------------------------------------- */}
+          <div className="flex sm:flex-col sm:justify-start sm:items-start items-center gap-4 mt-4">
+            {/* v1.0.4 -----------------------------------------------------------------------------> */}
             <p>
               <b>Note:</b>
             </p>
@@ -518,41 +585,64 @@ const InterviewerSectionComponent = ({
               The questions listed below are interviewer's choice.
             </p>
           </div>
-          {isViewMode || isEditMode || decodedData?.schedule ?
-            <div>
-            </div> : (
-              <div className="flex items-center gap-2">
-                <button
-                  className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
-                  onClick={openQuestionBank}
-                  title="Add Question from Question Bank"
-                >
-                  <FaPlus className="text-sm" />
-                  <span>Add Question</span>
-                </button>
-              </div>
-            )}
+          {isViewMode || isEditMode || decodedData?.schedule ? (
+            <div></div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                className="flex items-center gap-2 px-4 py-2 bg-[#227a8a] text-white rounded-lg hover:bg-[#1a5f6b] transition-colors duration-200 shadow-md hover:shadow-lg font-medium"
+                onClick={openQuestionBank}
+                title="Add Question from Question Bank"
+              >
+                <FaPlus className="text-sm" />
+                <span>Add Question</span>
+              </button>
+            </div>
+          )}
         </div>
         <div className="space-y-4">
           {questionsWithFeedback?.length > 0 ? (
             // Render merged interviewer questions with feedback applied
             questionsWithFeedback.map((question) => (
-              <div key={question.questionId || question._id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2">
+              <div
+                key={question.questionId || question._id}
+                className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                    {question.snapshot?.skill || question.category || 'N/A'}
+                    {question.snapshot?.skill || question.category || "N/A"}
                   </span>
-                  <span className="text-sm text-gray-500">{question.snapshot?.difficultyLevel || question.difficulty || 'N/A'}</span>
+                  <span className="text-sm text-gray-500">
+                    {question.snapshot?.difficultyLevel ||
+                      question.difficulty ||
+                      "N/A"}
+                  </span>
                 </div>
-                <h3 className="font-semibold text-gray-800 mb-2">{question.snapshot?.questionText || question.question || 'N/A'}</h3>
+                <h3 className="font-semibold text-gray-800 mb-2">
+                  {question.snapshot?.questionText ||
+                    question.question ||
+                    "N/A"}
+                </h3>
                 {/* {question.expectedAnswer && ( */}
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-600 mb-2">Expected Answer:</p>
-                  <p className="text-sm text-gray-700">{question.snapshot?.correctAnswer || question.expectedAnswer || 'N/A'}</p>
+                  <p className="text-sm font-medium text-gray-600 mb-2">
+                    Expected Answer:
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    {question.snapshot?.correctAnswer ||
+                      question.expectedAnswer ||
+                      "N/A"}
+                  </p>
                 </div>
                 {(isEditMode || isAddMode) && (
                   <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-                    <span>Mandatory: {(question.mandatory === "true" || question.snapshot?.mandatory === "true") ? "Yes" : "No"}</span>
+                    <span>
+                      Mandatory:{" "}
+                      {question.mandatory === "true" ||
+                      question.snapshot?.mandatory === "true"
+                        ? "Yes"
+                        : "No"}
+                    </span>
                   </div>
                 )}
                 <div className="flex items-center justify-between gap-2 mt-2">
@@ -561,26 +651,40 @@ const InterviewerSectionComponent = ({
                     {(isEditMode || isAddMode) && (
                       <button
                         className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
-                        onClick={() => onClickAddNote(question.questionId || question.id)}
+                        onClick={() =>
+                          onClickAddNote(question.questionId || question.id)
+                        }
                       >
-                       {question.notesBool ? "Delete Note" : "Add a Note"}
+                        {question.notesBool ? "Delete Note" : "Add a Note"}
                       </button>
                     )}
                     <SharePopupSection />
                     {(isEditMode || isViewMode || isAddMode) && (
                       <>
                         <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out  ${question.isLiked === "liked" ? "text-green-700" : ""
-                            }`}
-                          onClick={() => handleLikeToggle(question.questionId || question._id)}
+                          className={`transition-transform hover:scale-110 duration-300 ease-in-out  ${
+                            question.isLiked === "liked" ? "text-green-700" : ""
+                          }`}
+                          onClick={() =>
+                            handleLikeToggle(
+                              question.questionId || question._id
+                            )
+                          }
                         >
                           <SlLike />
                         </span>
                         <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked" ? "text-red-500" : ""
-                            }`}
+                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
+                            question.isLiked === "disliked"
+                              ? "text-red-500"
+                              : ""
+                          }`}
                           style={{ cursor: "pointer" }}
-                          onClick={() => handleDislikeToggle(question.questionId || question._id)}
+                          onClick={() =>
+                            handleDislikeToggle(
+                              question.questionId || question._id
+                            )
+                          }
                         >
                           <SlDislike />
                         </span>
@@ -590,11 +694,16 @@ const InterviewerSectionComponent = ({
                 </div>
                 {question.notesBool && (
                   <div>
-                    <div className="flex justify-start mt-4">
-                      <label htmlFor={` note-input-${question.questionId}`} className="w-[170px] font-bold text-gray-700">
+                    {/* v1.0.4 <------------------------------------------------------ */}
+                    <div className="flex sm:flex-col justify-start mt-4">
+                      {/* v1.0.4 ------------------------------------------------------> */}
+                      <label
+                        htmlFor={` note-input-${question.questionId}`}
+                        className="w-[170px] font-bold text-gray-700"
+                      >
                         Note
                       </label>
-                      {(isEditMode || isAddMode) ? (
+                      {isEditMode || isAddMode ? (
                         <div className="flex flex-col items-start w-full h-[80px]">
                           <div className="w-full relative  rounded-md ">
                             <input
@@ -602,10 +711,14 @@ const InterviewerSectionComponent = ({
                               id={`note-input-${question.questionId}`}
                               type="text"
                               value={question.note}
-                              onChange={(e) => onChangeInterviewQuestionNotes(question.questionId, e.target.value.slice(0, 250))}
+                              onChange={(e) =>
+                                onChangeInterviewQuestionNotes(
+                                  question.questionId,
+                                  e.target.value.slice(0, 250)
+                                )
+                              }
                               placeholder="Add your note here"
                             />
-
                           </div>
                           <span className="w-full text-sm text-right text-gray-500">
                             {question.note?.length || 0}/250
@@ -614,17 +727,17 @@ const InterviewerSectionComponent = ({
                           {/* <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
                                   {question.note?.length || 0}/250
                                 </span> */}
-
                         </div>
                       ) : (
-                        <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">{question.note}</p>
+                        <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">
+                          {question.note}
+                        </p>
                       )}
                     </div>
                   </div>
                 )}
-                {(dislikeQuestionId === (question.questionId || question._id) || !!question.whyDislike) && (
-                  <DisLikeSection each={question} />
-                )}
+                {(dislikeQuestionId === (question.questionId || question._id) ||
+                  !!question.whyDislike) && <DisLikeSection each={question} />}
 
                 {/* )} */}
               </div>
@@ -634,14 +747,17 @@ const InterviewerSectionComponent = ({
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
               <div className="text-gray-500 mb-4">
                 <FaPlus className="mx-auto text-4xl mb-2" />
-                <p className="text-lg font-medium">No interviewer questions found</p>
-                <p className="text-sm">No questions have been added by interviewers for this round</p>
+                <p className="text-lg font-medium">
+                  No interviewer questions found
+                </p>
+                <p className="text-sm">
+                  No questions have been added by interviewers for this round
+                </p>
               </div>
             </div>
           )}
         </div>
       </div>
-
 
       {/* QuestionBank Modal */}
       {isQuestionBankOpen && (
