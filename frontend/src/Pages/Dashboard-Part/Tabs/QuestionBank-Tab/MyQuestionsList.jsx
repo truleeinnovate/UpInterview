@@ -97,7 +97,7 @@ function QuestionHeaderBar({
             onChange={(opt) => setDropdownValue(opt?.value || "")}
             options={[
               { value: "Interview Questions", label: "Interview Questions" },
-              { value: "Assignment Questions", label: "Assignment Questions" },
+              { value: "Assessment Questions", label: "Assessment Questions" },
             ]}
             placeholder="Select Question Type"
             menuPortalTarget={document.body}
@@ -376,13 +376,13 @@ const MyQuestionsList = ({
   // Map list type to display value
   const mapListTypeToDisplay = (type) => {
     if (typeof type === "boolean")
-      return type ? "Interview Questions" : "Assignment Questions";
+      return type ? "Interview Questions" : "Assessment Questions";
     if (typeof type === "string") {
       const t = type.toLowerCase();
       if (t.includes("interview questions")) return "Interview Questions";
-      if (t.includes("assignment questions")) return "Assignment Questions";
+      if (t.includes("assessment questions")) return "Assessment Questions";
       if (t === "interview questions") return "Interview Questions";
-      if (t === "assignment questions") return "Assignment Questions";
+      if (t === "assessment questions") return "Assessment Questions";
     }
     return "Interview Questions";
   };
@@ -672,12 +672,12 @@ const MyQuestionsList = ({
     setTempFiltrationData(filtrationData);
   }, [filtrationData]);
 
-  // When switching to Assignment Questions view, ensure any previously selected
+  // When switching to Assessment Questions view, ensure any previously selected
   // 'Interview Questions' question type filter is cleared to avoid stale filters
   useEffect(() => {
     const isAssignment = String(dropdownValue || "")
       .toLowerCase()
-      .includes("assignment");
+      .includes("assessment");
     if (!isAssignment) return;
     setSelectedQTypeFilterItems((prev) =>
       prev.filter((v) => v !== "interview questions")
@@ -740,13 +740,13 @@ const MyQuestionsList = ({
         value: t,
         isChecked: findChecked(techSection, t),
       }));
-      // When viewing Assignment Questions, hide any 'Interview Questions' value from the Question Type options
+      // When viewing Assessment Questions, hide any 'Interview Questions' value from the Question Type options
       const filteredQTypes = uniqueQTypes.filter((t) => {
         const name = String(t || "").toLowerCase();
         if (
           String(dropdownValue || "")
             .toLowerCase()
-            .includes("assignment")
+            .includes("assessment")
         ) {
           return name !== "interview questions";
         }
