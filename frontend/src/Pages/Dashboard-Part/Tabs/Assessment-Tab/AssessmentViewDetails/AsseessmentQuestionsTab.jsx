@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Improved responsiveness
+
 import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from 'react-icons/md';
 
 function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
@@ -66,19 +68,21 @@ return (
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start gap-3">
                             <div className="flex-1 min-w-0">
+                              {/* v1.0.0 <---------------------------------------------------- */}
                               <div className="flex items-baseline gap-2">
                                 <span className="text-gray-500 text-sm font-medium">
                                   {question.order}.
                                 </span>
-                                <p className="text-gray-800 font-medium truncate">
+                                <p className="sm:text-sm text-gray-800 font-medium truncate">
                                   {question.snapshot?.questionText}
                                 </p>
                               </div>
                               <div className="mt-2 flex flex-wrap gap-2">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span className="sm:text-sm inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                   {question.snapshot?.questionType}
                                 </span>
                               </div>
+                              {/* v1.0.0 ----------------------------------------------------> */}
                             </div>
                           </div>
                         </div>
