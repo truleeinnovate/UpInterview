@@ -121,7 +121,7 @@ const ContactsSchema = new mongoose.Schema(
     phone: String,
     linkedinUrl: String,
     portfolioUrl: String,
-    hourlyRate: Number,
+    // hourlyRate: Number,
     currentRole: String,
     industry: { type: String },
     experience: { type: String },
@@ -154,7 +154,7 @@ const ContactsSchema = new mongoose.Schema(
       contentType: String,
       publicId: String,
       fileSize: Number,
-      uploadDate: Date, 
+      uploadDate: Date,
     },
     // ranjith added have to check proeprly
     // coverLetterdescription: String,

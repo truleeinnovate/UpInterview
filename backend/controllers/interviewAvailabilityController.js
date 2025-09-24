@@ -76,8 +76,8 @@ const getAvailabilityByContactId = async (req, res) => {
   };
 
 // At the bottom of the file, update the exports to:
-module.exports = { 
-    createOrUpdateInterviewAvailability, 
-    updateInterviewAvailability, 
-    getAvailabilityByContactId 
+module.exports = {
+    createOrUpdateInterviewAvailability,
+    updateInterviewAvailability,
+    getAvailabilityByContactId
   };

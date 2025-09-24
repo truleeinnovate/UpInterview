@@ -215,12 +215,23 @@ const BasicDetails = ({
             setErrors((prevErrors) => ({ ...prevErrors, dateOfBirth: "" }));
             return;
         }
-        const formattedDate = formatDate(date);
+        
+        // Format the date for the API (YYYY-MM-DD)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const apiFormattedDate = `${year}-${month}-${day}`;
+        
         setBasicDetailsData((prevData) => ({
             ...prevData,
-            dateOfBirth: formattedDate,
+            dateOfBirth: apiFormattedDate, // Store in API format (YYYY-MM-DD)
         }));
+        
+        // Keep the display date in state for the date picker
         setStartDate(date);
+        
+        // Clear any previous errors
+        setErrors((prevErrors) => ({ ...prevErrors, dateOfBirth: "" }));
     };
 
     useEffect(() => {

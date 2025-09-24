@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import CustomDatePicker from "../../utils/CustomDatePicker";
 
 const DateOfBirthField = ({
@@ -14,6 +14,12 @@ const DateOfBirthField = ({
   minYear = 1950,
   maxYear,
 }) => {
+  const eighteenYearsAgo = useMemo(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 18);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
   const computedId = id || name;
   return (
     <div>
@@ -29,6 +35,7 @@ const DateOfBirthField = ({
         disabled={disabled}
         errors={error}
         minYear={minYear}
+        maxDate={eighteenYearsAgo}
         maxYear={maxYear}
       />
     </div>
@@ -36,3 +43,4 @@ const DateOfBirthField = ({
 };
 
 export default DateOfBirthField;
+    
