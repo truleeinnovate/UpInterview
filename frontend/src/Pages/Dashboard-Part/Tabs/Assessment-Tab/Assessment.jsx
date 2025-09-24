@@ -13,7 +13,7 @@ import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
 import { motion } from "framer-motion";
-import { Eye, Pencil, Plus } from "lucide-react";
+import { Eye, Pencil, Plus, Trash } from "lucide-react";
 import ShareAssessment from "./ShareAssessment.jsx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -469,6 +469,16 @@ const Assessment = () => {
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-custom-blue" />,
             onClick: handleEdit,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.AssessmentTemplates?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            // onClick: handleDelete,
           },
         ]
       : []),
