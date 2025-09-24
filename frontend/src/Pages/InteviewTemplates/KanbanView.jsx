@@ -159,6 +159,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                       <FaPencilAlt className="w-4 h-4" />
                     </motion.button>
                   )}
+                  
                 </div>
               </div>
               <div className="mt-auto">

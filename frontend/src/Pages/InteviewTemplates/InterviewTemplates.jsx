@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil, Trash } from "lucide-react";
 import { Outlet, useNavigate } from "react-router-dom";
 import KanbanView from "./KanbanView";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
@@ -353,6 +353,16 @@ const InterviewTemplates = () => {
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-green-600" />,
             onClick: handleEdit,
+          },
+        ]
+      : []),
+    ...(effectivePermissions.InterviewTemplates?.Delete
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            // onClick: handleDelete,
           },
         ]
       : []),
