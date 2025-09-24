@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Trash2, X } from 'lucide-react';
+import { components } from 'react-select';
 import InfoBox from './InfoBox.jsx';
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import InputField from '../../../Components/FormFields/InputField';
@@ -215,13 +216,12 @@ const InterviewDetails = ({
     // };
 
     // Handle technology selection
-    const handleTechnologyChange = (event) => {
+    const handleTechnologyChange = async (event) => {
         const selectedValue = event.target.value;
         console.log('handleTechnologyChange called with:', selectedValue);
 
         if (selectedValue) {
             console.log('Selected value:', selectedValue);
-            fetchRateCards(selectedValue);
 
             // Find the technology object
             const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
@@ -234,75 +234,97 @@ const InterviewDetails = ({
             setSelectedTechnologyies([technology]);
             console.log('Updated selectedTechnologyies:', [technology]);
 
-            // Update interviewDetailsData with new rates based on backend ranges
-            setInterviewDetailsData(prev => {
-                // Get rate ranges for the selected technology
-                const juniorRange = getRateRanges('Junior') || { usd: { min: 0 }, inr: { min: 0 } };
-                const midRange = getRateRanges('Mid-Level') || { usd: { min: 0 }, inr: { min: 0 } };
-                const seniorRange = getRateRanges('Senior') || { usd: { min: 0 }, inr: { min: 0 } };
+            // Fetch rate cards for the selected technology
+            try {
+                const rateCards = await fetchRateCards(selectedValue);
 
-                const newFormData = {
+                // Check if we have valid rate cards for this technology
+                const hasValidRates = rateCards && rateCards.length > 0;
+
+                // Update interviewDetailsData with new rates based on backend ranges or clear them
+                setInterviewDetailsData(prev => {
+                    let ratesUpdate = {
+                        junior: { usd: 0, inr: 0, isVisible: expYears <= 3 },
+                        mid: { usd: 0, inr: 0, isVisible: expYears > 3 && expYears <= 6 },
+                        senior: { usd: 0, inr: 0, isVisible: expYears > 6 }
+                    };
+
+                    // Only set rates if we have valid rate cards
+                    if (hasValidRates) {
+                        const juniorRange = getRateRanges('Junior') || { usd: { min: 0 }, inr: { min: 0 } };
+                        const midRange = getRateRanges('Mid-Level') || { usd: { min: 0 }, inr: { min: 0 } };
+                        const seniorRange = getRateRanges('Senior') || { usd: { min: 0 }, inr: { min: 0 } };
+
+                        ratesUpdate = {
+                            junior: {
+                                usd: juniorRange.usd.min || 0,
+                                inr: juniorRange.inr.min || 0,
+                                isVisible: expYears <= 3
+                            },
+                            mid: {
+                                usd: midRange.usd.min || 0,
+                                inr: midRange.inr.min || 0,
+                                isVisible: expYears > 3 && expYears <= 6
+                            },
+                            senior: {
+                                usd: seniorRange.usd.min || 0,
+                                inr: seniorRange.inr.min || 0,
+                                isVisible: expYears > 6
+                            }
+                        };
+                    }
+
+                    const newFormData = {
+                        ...prev,
+                        technologies: [selectedValue],
+                        rates: ratesUpdate
+                    };
+
+                    console.log('Updated interviewDetailsData:', newFormData);
+                    return newFormData;
+                });
+            } catch (error) {
+                console.error('Error fetching rate cards:', error);
+                // If there's an error, clear the rates
+                setInterviewDetailsData(prev => ({
                     ...prev,
                     technologies: [selectedValue],
                     rates: {
-                        junior: {
-                            usd: juniorRange.usd.min || 0,
-                            inr: juniorRange.inr.min || 0,
-                            isVisible: true
-                        },
-                        mid: {
-                            usd: midRange.usd.min || 0,
-                            inr: midRange.inr.min || 0,
-                            isVisible: expYears >= 4
-                        },
-                        senior: {
-                            usd: seniorRange.usd.min || 0,
-                            inr: seniorRange.inr.min || 0,
-                            isVisible: expYears > 6
-                        }
+                        junior: { usd: 0, inr: 0, isVisible: expYears <= 3 },
+                        mid: { usd: 0, inr: 0, isVisible: expYears > 3 && expYears <= 6 },
+                        senior: { usd: 0, inr: 0, isVisible: expYears > 6 }
                     }
-                };
-                console.log('Updated interviewDetailsData:', newFormData);
-                return newFormData;
-            });
+                }));
+            }
 
             // Clear technology error
-            setErrors(prev => {
-                const newErrors = {
-                    ...prev,
-                    technologies: '',
-                    junior_usd: '',
-                    junior_inr: '',
-                    mid_usd: '',
-                    mid_inr: '',
-                    senior_usd: '',
-                    senior_inr: ''
-                };
-                console.log('Updated errors:', newErrors);
-                return newErrors;
-            });
+            setErrors(prev => ({
+                ...prev,
+                technologies: '',
+                junior_usd: '',
+                junior_inr: '',
+                mid_usd: '',
+                mid_inr: '',
+                senior_usd: '',
+                senior_inr: ''
+            }));
         } else {
             console.log('No value selected, clearing selection');
             // Clear selection if no value is selected
             setSelectedTechnologyies([]);
-            setInterviewDetailsData(prev => {
-                const newFormData = {
-                    ...prev,
-                    technologies: [],
-                    rates: {
-                        junior: { usd: 0, inr: 0, isVisible: false },
-                        mid: { usd: 0, inr: 0, isVisible: false },
-                        senior: { usd: 0, inr: 0, isVisible: false }
-                    }
-                };
-                console.log('Cleared interviewDetailsData:', newFormData);
-                return newFormData;
-            });
-            setErrors(prev => {
-                const newErrors = { ...prev, technologies: 'Please select a technology' };
-                console.log('Updated errors:', newErrors);
-                return newErrors;
-            });
+            setInterviewDetailsData(prev => ({
+                ...prev,
+                technologies: [],
+                rates: {
+                    junior: { usd: 0, inr: 0, isVisible: false },
+                    mid: { usd: 0, inr: 0, isVisible: false },
+                    senior: { usd: 0, inr: 0, isVisible: false }
+                }
+            }));
+            setErrors(prev => ({
+                ...prev,
+                technologies: 'Please select a technology'
+            }));
         }
     };
 
@@ -547,6 +569,37 @@ const InterviewDetails = ({
     })) || [];
 
     const techPopupRef = useRef(null);
+
+    // In InterviewDetails.jsx, add this custom MenuList component
+    const CustomMenuList = (props) => {
+        const { children, ...rest } = props;
+
+        // Separate the "Add Custom Skill" option from other options
+        const [customOptions, regularOptions] = React.Children.toArray(children).reduce(
+            (acc, child) => {
+                if (child?.props?.data?.isCustom) {
+                    acc[0].push(child);
+                } else {
+                    acc[1].push(child);
+                }
+                return acc;
+            },
+            [[], []]
+        );
+
+        return (
+            <components.MenuList {...rest}>
+                <div className="max-h-60 overflow-y-auto">
+                    {regularOptions}
+                </div>
+                {customOptions.length > 0 && (
+                    <div className="border-t border-gray-200">
+                        {customOptions}
+                    </div>
+                )}
+            </components.MenuList>
+        );
+    };
 
     return (
         <>
@@ -1052,21 +1105,55 @@ const InterviewDetails = ({
                                     <div className="flex items-center">
                                         <input
                                             type="number"
-                                            min="0"
-                                            max="100"
+                                            min="10"
+                                            max="99"
                                             value={customDiscountValue}
                                             onChange={(e) => {
-                                                const value = e.target.value.replace(/\D/g, '');
+                                                let value = e.target.value.replace(/\D/g, '');
+                                                // Limit to 2 digits
+                                                if (value.length > 2) {
+                                                    value = value.slice(0, 2);
+                                                }
+                                                // Ensure value is within 10-99 range
+                                                const numValue = parseInt(value, 10);
+                                                if (!isNaN(numValue) && (numValue < 10 || numValue > 99)) {
+                                                    setErrors(prev => ({
+                                                        ...prev,
+                                                        mock_interview_discount: 'Discount must be between 10 and 99'
+                                                    }));
+                                                } else {
+                                                    setErrors(prev => ({
+                                                        ...prev,
+                                                        mock_interview_discount: ''
+                                                    }));
+                                                }
                                                 setCustomDiscountValue(value);
                                             }}
                                             onBlur={() => {
+                                                const numValue = parseInt(customDiscountValue, 10);
                                                 if (customDiscountValue) {
-                                                    handleChangeforExp({
-                                                        target: {
-                                                            name: 'mock_interview_discount',
-                                                            value: customDiscountValue
-                                                        }
-                                                    });
+                                                    if (numValue >= 10 && numValue <= 99) {
+                                                        handleChangeforExp({
+                                                            target: {
+                                                                name: 'mock_interview_discount',
+                                                                value: customDiscountValue
+                                                            }
+                                                        });
+                                                        setErrors(prev => ({
+                                                            ...prev,
+                                                            mock_interview_discount: ''
+                                                        }));
+                                                    } else {
+                                                        setErrors(prev => ({
+                                                            ...prev,
+                                                            mock_interview_discount: 'Discount must be between 10 and 99'
+                                                        }));
+                                                    }
+                                                } else {
+                                                    setErrors(prev => ({
+                                                        ...prev,
+                                                        mock_interview_discount: ''
+                                                    }));
                                                 }
                                                 setShowCustomDiscount(false);
                                             }}

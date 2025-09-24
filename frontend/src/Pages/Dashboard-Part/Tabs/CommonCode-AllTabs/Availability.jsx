@@ -15,7 +15,7 @@ const Availability = ({
   const [selectedDays, setSelectedDays] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
 
-  const dayMap = {
+  const dayMap = useMemo(() => ({
     Sun: 'Sunday',
     Mon: 'Monday',
     Tue: 'Tuesday',
@@ -23,7 +23,7 @@ const Availability = ({
     Thu: 'Thursday',
     Fri: 'Friday',
     Sat: 'Saturday',
-  };
+  }), []);
 
   const allDays = Object.keys(dayMap).map((shortDay) => dayMap[shortDay]);
 
@@ -42,7 +42,7 @@ const Availability = ({
       }
     }
     return options;
-  }, []);
+  }, [dayMap]);
 
   // Initialize times for all days with at least one empty slot
   useEffect(() => {
@@ -57,7 +57,7 @@ const Availability = ({
     if (updated && typeof onTimesChange === 'function') {
       onTimesChange(initialTimes);
     }
-  }, [onTimesChange, times]);
+  }, [onTimesChange, times, dayMap]);
 
   const handleAddTimeSlot = useCallback((day) => {
     const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
@@ -72,7 +72,7 @@ const Availability = ({
       ...prev,
       availability: newTimes,
     }));
-  }, [times, onTimesChange, setAvailabilityDetailsData]);
+  }, [times, onTimesChange, setAvailabilityDetailsData, dayMap]);
 
   const handleRemoveTimeSlot = useCallback((day, index) => {
     const shortDay = Object.keys(dayMap).find((key) => dayMap[key] === day);
@@ -146,7 +146,7 @@ const Availability = ({
     }));
     setShowPopup(false);
     setSelectedDays([]);
-  }, [times, selectedDay, selectedDays, onTimesChange, setAvailabilityDetailsData]);
+  }, [times, selectedDay, selectedDays, onTimesChange, setAvailabilityDetailsData, dayMap]);
 
   return (
     <div>
@@ -191,7 +191,7 @@ const Availability = ({
                               });
                             }}
                             readOnly
-                            className={`time-input p-2 rounded text-sm w-[100px] 
+                            className={`time-input p-2 rounded text-sm w-[100px]
                               ${from === "myprofileReadOnly"
                                 ? ' bg-gray-100 border-none emojis/emojis/1f6ab.png outline-none ring-0 focus:ring-0 focus:outline-none cursor-default text-black'
                                 : 'p-2 border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer'
@@ -238,7 +238,7 @@ const Availability = ({
                               });
                             }}
                             readOnly
-                            className={`time-input p-2 rounded text-sm w-[100px]  
+                            className={`time-input p-2 rounded text-sm w-[100px]
                               ${from === "myprofileReadOnly"
                                 ? ' bg-gray-100 border-none outline-none ring-0 focus:ring-0 focus:outline-none cursor-default text-black'
                                 : 'p-2 border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer'
