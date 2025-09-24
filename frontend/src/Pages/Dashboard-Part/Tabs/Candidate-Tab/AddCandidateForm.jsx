@@ -1031,6 +1031,16 @@ const AddCandidateForm = ({
                 <SkillsField
                   entries={entries}
                   errors={errors}
+                  onSkillsValidChange={(hasValidSkills) => {
+                    // Clear the skills error if at least one complete row exists
+                    if (hasValidSkills && errors.skills) {
+                      setErrors((prevErrors) => {
+                        const newErrors = { ...prevErrors };
+                        delete newErrors.skills;
+                        return newErrors;
+                      });
+                    }
+                  }}
                   onAddSkill={(setEditingIndexCallback) => {
                     setEntries((prevEntries) => {
                       const newEntries = [

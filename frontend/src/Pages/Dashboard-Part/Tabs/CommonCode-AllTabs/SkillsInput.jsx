@@ -17,6 +17,7 @@ const SkillsField = forwardRef(
 
       onDeleteSkill,
       onUpdateEntry,  // New prop for updating entries
+      onSkillsValidChange,  // New prop to notify parent when skills validity changes
       
       skills,
       expertiseOptions,
@@ -28,6 +29,7 @@ const SkillsField = forwardRef(
   ) => {
     const [deleteIndex, setDeleteIndex] = useState(null);
     const initializedRef = useRef(false);
+    const [rowErrors, setRowErrors] = useState({});
 
     
 
@@ -80,6 +82,47 @@ const SkillsField = forwardRef(
 
     // Removed handleClearRow - not needed since we have delete functionality
 
+    // Validate individual rows when entries change
+    useEffect(() => {
+      const newRowErrors = {};
+      let hasAtLeastOneCompleteRow = false;
+      
+      entries.forEach((entry, index) => {
+        // Only validate rows that have at least one field filled
+        const hasAnyValue = entry.skill || entry.experience || entry.expertise;
+        const isCompleteRow = entry.skill && entry.experience && entry.expertise;
+        
+        if (isCompleteRow) {
+          hasAtLeastOneCompleteRow = true;
+        }
+        
+        if (hasAnyValue) {
+          const errors = {};
+          
+          if (!entry.skill) {
+            errors.skill = true;
+          }
+          if (!entry.experience) {
+            errors.experience = true;
+          }
+          if (!entry.expertise) {
+            errors.expertise = true;
+          }
+          
+          if (Object.keys(errors).length > 0) {
+            newRowErrors[index] = errors;
+          }
+        }
+      });
+      
+      setRowErrors(newRowErrors);
+      
+      // Notify parent component about skills validity
+      if (onSkillsValidChange) {
+        onSkillsValidChange(hasAtLeastOneCompleteRow);
+      }
+    }, [entries, onSkillsValidChange]);
+
     // Auto-add three empty rows on first mount (no click needed)
     useEffect(() => {
       if (!initializedRef.current && entries.length === 0 && onAddSkill) {
@@ -120,11 +163,10 @@ const SkillsField = forwardRef(
         {/* Skills entries below */}
         <div className="space-y-2 mb-4 mt-5">
           {entries.map((entry, index) => (
-            <div
-              key={index}
-              className="border p-2 rounded-lg bg-gray-100 w-full flex"
-            >
-              
+            <div key={index}>
+              <div
+                className={`border p-2 rounded-lg bg-gray-100 w-full flex`}
+              >
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2">
                     <div className="px-1">
@@ -142,10 +184,22 @@ const SkillsField = forwardRef(
                             onUpdateEntry(index, { ...entry, skill: opt?.value || "" });
                           }
                         }}
-                        placeholder="Select Skill"
+                        placeholder="Skill"
                         classNamePrefix="rs"
                         onMenuOpen={onOpenSkills}
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            borderColor: rowErrors[index]?.skill ? '#ef4444' : base.borderColor,
+                            '&:hover': {
+                              borderColor: rowErrors[index]?.skill ? '#ef4444' : base['&:hover']?.borderColor
+                            }
+                          })
+                        }}
                       />
+                      {rowErrors[index]?.skill && (
+                        <span className="text-red-500 text-xs mt-1">Skill required</span>
+                      )}
                     </div>
                     <div className="px-1">
                       <DropdownSelect
@@ -161,9 +215,21 @@ const SkillsField = forwardRef(
                             onUpdateEntry(index, { ...entry, experience: opt?.value || "" });
                           }
                         }}
-                        placeholder="Select Experience"
+                        placeholder="Experience"
                         classNamePrefix="rs"
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            borderColor: rowErrors[index]?.experience ? '#ef4444' : base.borderColor,
+                            '&:hover': {
+                              borderColor: rowErrors[index]?.experience ? '#ef4444' : base['&:hover']?.borderColor
+                            }
+                          })
+                        }}
                       />
+                      {rowErrors[index]?.experience && (
+                        <span className="text-red-500 text-xs mt-1">Experience required</span>
+                      )}
                     </div>
                     <div className="px-1">
                       <DropdownSelect
@@ -179,9 +245,21 @@ const SkillsField = forwardRef(
                             onUpdateEntry(index, { ...entry, expertise: opt?.value || "" });
                           }
                         }}
-                        placeholder="Select Expertise"
+                        placeholder="Expertise"
                         classNamePrefix="rs"
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            borderColor: rowErrors[index]?.expertise ? '#ef4444' : base.borderColor,
+                            '&:hover': {
+                              borderColor: rowErrors[index]?.expertise ? '#ef4444' : base['&:hover']?.borderColor
+                            }
+                          })
+                        }}
                       />
+                      {rowErrors[index]?.expertise && (
+                        <span className="text-red-500 text-xs mt-1">Expertise required</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex space-x-2">
@@ -199,8 +277,13 @@ const SkillsField = forwardRef(
                     </button>
                   </div>
                 </>
-              
-              
+              </div>
+              {/* Show individual row error summary if there are errors */}
+              {/* {rowErrors[index] && (
+                <p className="text-red-500 text-xs mt-1 ml-2">
+                  Row {index + 1}: Please fill in all required fields
+                </p>
+              )} */}
             </div>
           ))}
         </div>
