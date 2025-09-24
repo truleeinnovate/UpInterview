@@ -1,5 +1,7 @@
 // v1.0.0  -  Ashraf  -  displaying more fileds in result
 // v1.0.1  -  Ashok   -  changed manImage (man.png) url from local to cloud storage url
+// v1.0.2  -  Ashok   -  Improved responsiveness
+
 import { format } from "date-fns";
 // import manImage from "../../../Images/man.png";
 import { ReactComponent as IoIosArrowBack } from "../../../../../icons/IoIosArrowBack.svg";
@@ -73,11 +75,13 @@ function AssessmentResultView({
   // <-------------------------------v1.0.0
 
   return (
+    // v1.0.2 <---------------------------------------------------------------
     <div
       className={`flex ${
         isFullscreen ? "flex-col" : "flex-col"
-      } gap-6 h-full min-h-screen p-6`}
+      } gap-6 h-full min-h-screen sm:p-0 p-6`}
     >
+      {/* v1.0.2 ------------------------------------------------------------> */}
       {/* Back Button */}
       <div className={`${isFullscreen ? "mb-2" : "mb-4"} flex items-center`}>
         <button
@@ -90,17 +94,22 @@ function AssessmentResultView({
       </div>
 
       {/* Main Content */}
+      {/* v1.0.2 <--------------------------------------------------------------- */}
       <div
         className={`flex ${
-          isFullscreen ? "flex-row w-full" : "flex-col"
+          isFullscreen ? "sm:flex-col md:flex-col flex-row w-full" : "flex-col"
         } gap-6 flex-1`}
       >
+        {/* v1.0.2 ---------------------------------------------------------------> */}
         {/* Left Panel - Candidate Details */}
+        {/* v1.0.2 <--------------------------------------------------------------- */}
+
         <div
           className={`${
-            isFullscreen ? "w-1/3" : "w-full"
+            isFullscreen ? "sm:w-full md:w-full w-1/3" : "w-full"
           } bg-white rounded-lg shadow-sm border border-gray-200 h-fit`}
         >
+          {/* v1.0.2 ---------------------------------------------------------------> */}
           <div className="p-6">
             {/* Candidate Profile */}
             <div className="flex flex-col items-center mb-6">
@@ -246,11 +255,13 @@ function AssessmentResultView({
         </div>
 
         {/* Right Panel - Question Details */}
+        {/* v1.0.2 <--------------------------------------------------------------- */}
         <div
           className={`${
-            isFullscreen ? "w-2/3" : "w-full"
+            isFullscreen ? "sm:w-full md:w-full w-2/3" : "w-full"
           } bg-white rounded-lg shadow-sm border border-gray-200 flex-1 h-fit`}
         >
+          {/* v1.0.2 ---------------------------------------------------------------> */}
           <div className="p-4 border-b border-gray-200">
             <h3 className="font-medium text-gray-800">Question Responses</h3>
           </div>

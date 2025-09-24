@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - improved responsiveness
+
 import { motion } from "framer-motion";
 
 const capitalizeFirstLetter = (str) =>
@@ -34,7 +36,9 @@ const KanbanView = ({
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
           <div className="overflow-y-auto max-h-[calc(100vh-260px)] pb-8 pr-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+            {/* v1.0.0 <------------------------------------------------------------------------------------ */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
+            {/* v1.0.0 ------------------------------------------------------------------------------------> */}
               {data.map((item, index) => (
                 <motion.div
                   key={item.id || item._id || index}
