@@ -48,6 +48,8 @@ export const selectBaseStyles = (hasError) => ({
       ? "#F0F9FB"
       : base.backgroundColor,
     color: state.isSelected ? "#ffffff" : base.color,
+    fontWeight: state.data?.isCustomOption ? "600" : base.fontWeight,
+    fontStyle: state.data?.isCustomOption ? "italic" : base.fontStyle,
   }),
 });
 

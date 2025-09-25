@@ -106,6 +106,8 @@ const TaskList = () => {
               )}
               onChange={(opt) => setSelectedTimeFilter(opt?.value || "all")}
               placeholder="All Time"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
             />
           </div>
           <div className="sm:min-w-[140px] min-w-[160px]">
@@ -116,6 +118,8 @@ const TaskList = () => {
               )}
               onChange={(opt) => setSelectedStatusFilter(opt?.value || "all")}
               placeholder="All Status"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
             />
           </div>
         </div>

@@ -23,7 +23,7 @@ const getErrorMessage = (field, value, formData) => {
         RelevantExperience: "Relevant Experience is required",
         RelevantExperienceGreater: "Relevant Experience cannot be greater than Current Experience",
         Position: "Position is required",
-        skills: "At least one skill is required",
+        skills: "First 3 rows are required",
         invalidEmail: "Invalid Email address",
         invalidPhone: "Invalid Phone number",
         CurrentRole: "Current Role is required",
@@ -56,14 +56,16 @@ const getErrorMessage = (field, value, formData) => {
 };
 
 // Validate candidate form. Ensures all field-level errors are caught, including
-// the cross-field constraint that RelevantExperience must not exceed CurrentExperience.
+// the cross-field constraint that relevantExperience must not exceed CurrentExperience.
 // Returns { formIsValid, newErrors }
-const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
+const validateCandidateForm = (formData, entries, errors) => {
     let formIsValid = true;
-    const newErrors = { ...errors };
+    const newErrors = { ...(errors || {}) };
 
     // Validate each field
     Object.keys(formData).forEach((field) => {
+        // Skip generic validation for skills; it's handled with custom logic below
+        if (field === "skills") return;
         const errorMessage = getErrorMessage(field, formData[field], formData);
         if (errorMessage) {
             newErrors[field] = errorMessage;
@@ -71,46 +73,52 @@ const validateCandidateForm = (formData, entries, selectedPosition, errors) => {
         }
     });
 
-    // Additional validations
-    if (!selectedPosition || selectedPosition.length === 0) {
-        newErrors.Position = getErrorMessage("Position", null, formData);
-        formIsValid = false;
+    // Skills validation:
+    // - First 3 rows are mandatory: all fields must be filled
+    // - Additional rows (4+) are validated only if partially filled
+    const rows = Array.isArray(entries) ? entries : [];
+    const invalidRows = [];
+
+    const getMissingFields = (entry) => {
+        const missing = [];
+        if (!entry?.skill) missing.push("skill");
+        if (!entry?.experience) missing.push("experience");
+        if (!entry?.expertise) missing.push("expertise");
+        return missing;
+    };
+
+    // Validate first 3 rows (mandatory)
+    for (let i = 0; i < 3; i++) {
+        const entry = rows[i] || {};
+        const missingFields = getMissingFields(entry);
+        if (missingFields.length > 0) {
+            invalidRows.push({ index: i, missingFields });
+        }
     }
 
-    // Skills: ignore entirely empty rows; require at least one filled row
-    const filledEntries = (entries || []).filter(
-        (e) => (e?.skill && e.skill !== "") || (e?.experience && e.experience !== "") || (e?.expertise && e.expertise !== "")
-    );
-    
-    if (filledEntries.length === 0) {
-        newErrors.skills = getErrorMessage("skills", 0, entries, formData) || "At least one skill is required";
+    // Validate additional rows (only if partially filled)
+    rows.forEach((entry, index) => {
+        if (index < 3) return;
+        const hasAnyValue = !!(entry?.skill || entry?.experience || entry?.expertise);
+        const missingFields = getMissingFields(entry);
+        if (hasAnyValue && missingFields.length > 0) {
+            invalidRows.push({ index, missingFields });
+        }
+    });
+
+    if (invalidRows.length > 0) {
+        const messages = [getErrorMessage("skills", 0, formData) || "First 3 rows are required"];
+        invalidRows.forEach(({ index, missingFields }) => {
+            messages.push(`Row ${index + 1}: Please fill in ${missingFields.join(", ")}`);
+        });
+        newErrors.skills = messages.join("; ");
         formIsValid = false;
     } else {
-        // Check each filled entry for missing fields
-        const invalidEntries = filledEntries.map((entry, index) => {
-            const missingFields = [];
-            if (!entry.skill) missingFields.push('skill');
-            if (!entry.experience) missingFields.push('experience');
-            if (!entry.expertise) missingFields.push('expertise');
-            
-            return missingFields.length > 0 
-                ? { index, missingFields }
-                : null;
-        }).filter(Boolean);
-
-        if (invalidEntries.length > 0) {
-            // Create a more helpful error message
-            const errorMessages = invalidEntries.map(({index, missingFields}) => 
-                `Row ${index + 1}: Please fill in ${missingFields.join(', ')}`
-            );
-            
-            newErrors.skills = errorMessages.join('; ');
-            formIsValid = false;
-        }
+        if (newErrors.skills) delete newErrors.skills;
     }
 
     return { formIsValid, newErrors };
 };
 
 
-export { validateCandidateForm, getErrorMessage};
+export { validateCandidateForm, getErrorMessage };

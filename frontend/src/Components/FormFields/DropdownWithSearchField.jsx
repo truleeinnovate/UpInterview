@@ -100,15 +100,15 @@ const DropdownWithSearchField = ({
             type="text"
             value={value}
             onChange={(e) => onChange({ target: { name: name, value: e.target.value } })}
-            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+            className={`block w-full rounded-md shadow-sm text-sm
             border ${
               error
-                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                : "border-gray-300 focus:ring-red-300"
+                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                : "border-gray-300 focus:ring-custom-blue focus:border-custom-blue"
             }
-            focus:outline-gray-300
+            h-[40px] px-2
           `}
-            placeholder={`Enter custom ${label} name`}
+            placeholder={placeholder ? placeholder : `Enter custom ${label} name`}
           />
           <button
             type="button"
@@ -118,7 +118,7 @@ const DropdownWithSearchField = ({
               }
               onChange({ target: { name: name, value: "" } });
             }}
-            className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+            className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

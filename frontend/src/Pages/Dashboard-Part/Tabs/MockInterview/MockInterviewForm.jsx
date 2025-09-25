@@ -525,6 +525,7 @@ const MockSchedulelater = () => {
   }, [id, mockinterviewData]);
 
   const [errors, setErrors] = useState({});
+  const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
   const [showDropdownQualification, setShowDropdownQualification] =
     useState(false);
@@ -577,6 +578,9 @@ const MockSchedulelater = () => {
     console.log("Errors:", errors);
     console.log("External Interviewers:", externalInterviewers);
     console.log("Selected Interview Type:", selectedInterviewType);
+
+    // Show skills validation when submit is attempted
+    setShowSkillValidation(true);
 
     const { formIsValid, newErrors } = validatemockForm(
       formData,
@@ -1199,6 +1203,7 @@ const MockSchedulelater = () => {
                         ref={fieldRefs.skills}
                         entries={entries}
                         errors={errors}
+                        showValidation={showSkillValidation}
                         onSkillsValidChange={(hasValidSkills) => {
                           // Clear the skills error if at least one complete row exists
                           if (hasValidSkills && errors.skills) {
