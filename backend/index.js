@@ -18,6 +18,8 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const app = express();
+const qs = require('qs');
+const axios = require('axios');
 
 // ✅ Trust Azure's proxy to detect HTTPS correctly
 app.set("trust proxy", 1);
@@ -1513,12 +1515,6 @@ app.post("/api/export/pdf", (req, res) => {
   }
 });
 
-// Catch-all for undefined routes
-app.use("*", (req, res) => {
-  res.status(404).json({ error: "Endpoint not found" });
-});
-
-//  v1.0.4 ------------------------------------------------------------------------------>
 
 
 
@@ -1549,40 +1545,191 @@ async function getS2SToken() {
   return cachedToken;
 }
 
-// Create meeting endpoint
+
+// Create meeting endpoint Zoom meet Links
 app.post('/api/create-meeting', async (req, res) => {
   try {
     const { topic, start_time, duration, timezone, userId, settings } = req.body;
     const token = await getS2SToken();
 
+    // Validate start_time
+    if (start_time) {
+      const startDate = new Date(start_time);
+      if (isNaN(startDate.getTime())) {
+        return res.status(400).json({ 
+          error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss' 
+        });
+      }
+      if (startDate <= new Date()) {
+        return res.status(400).json({ error: 'start_time must be in the future' });
+      }
+    }
+
     const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
     const type = start_time ? 2 : 1;
 
     const body = {
-      topic: topic || 'Meeting from API',
+      topic: topic || 'Interview Meeting',
       type,
-      ...(start_time ? { start_time } : {}),
+      ...(start_time && { start_time }),
       duration: duration || 60,
       timezone: timezone || 'Asia/Kolkata',
-      settings: settings || { join_before_host: true, host_video: false, participant_video: false }
+      settings: settings || { 
+        join_before_host: true, 
+        host_video: false, 
+        participant_video: false 
+      }
     };
+
+    console.log("Creating Zoom meeting with:", body);
 
     const create = await axios.post(
       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
       body,
-      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     );
 
-    console.log("create data ", create);
-
+    // ✅ Return only what frontend needs
     return res.json({
-      join_url: create.data.join_url,
-      start_url: create.data.start_url,
-      id: create.data.id,
-      password: create.data.password
+      meetingId: create.data.id,
+      password: create.data.password,
+      hostId: create.data.host_id,
+      hostEmail: create.data.host_email,
+      start_url: create.data.start_url, // host link
+      join_url: create.data.join_url    // attendee link
     });
+
   } catch (err) {
-    console.error(err.response?.data || err.message);
-    return res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });
+    console.error("Zoom API Error:", err.response?.data || err.message);
+    return res.status(err.response?.status || 500).json({ 
+      error: err.response?.data?.message || err.message 
+    });
   }
 });
+
+
+
+
+// Create meeting endpoint
+// app.post('/api/create-meeting', async (req, res) => {
+//   try {
+//     const { topic, start_time, duration, timezone, userId, settings } = req.body;
+//     const token = await getS2SToken();
+
+//     // Validate start_time if provided
+//     if (start_time) {
+//       const startDate = new Date(start_time);
+//       if (isNaN(startDate.getTime())) {
+//         return res.status(400).json({ 
+//           error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss' 
+//         });
+//       }
+      
+//       // Ensure start_time is in the future for scheduled meetings
+//       if (startDate <= new Date()) {
+//         return res.status(400).json({ 
+//           error: 'start_time must be in the future' 
+//         });
+//       }
+//     }
+
+//     const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
+//     const type = start_time ? 2 : 1; // 2 for scheduled, 1 for instant
+
+//     const body = {
+//       topic: topic || 'Interview Meeting',
+//       type,
+//       ...(start_time && { start_time }),
+//       duration: duration || 60,
+//       timezone: timezone || 'Asia/Kolkata',
+//       settings: settings || { 
+//         join_before_host: true, 
+//         host_video: false, 
+//         participant_video: false 
+//       }
+//     };
+
+//     console.log("Creating Zoom meeting with:", body);
+
+//     const create = await axios.post(
+//       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
+//       body,
+//       { 
+//         headers: { 
+//           Authorization: `Bearer ${token}`, 
+//           'Content-Type': 'application/json' 
+//         } 
+//       }
+//     );
+
+//     // {
+//     //   join_url: create.data.join_url,
+//     //   start_url: create.data.start_url,
+//     //   id: create.data.id,
+//     //   password: create.data.password
+//     // }
+
+//     return res.json(create.data);
+//   } catch (err) {
+//     console.error("Zoom API Error:", err.response?.data || err.message);
+//     return res.status(err.response?.status || 500).json({ 
+//       error: err.response?.data?.message || err.message 
+//     });
+//   }
+// });
+
+
+// Create meeting endpoint
+// app.post('/api/create-meeting', async (req, res) => {
+//   try {
+//     const { topic, start_time, duration, timezone, userId, settings } = req.body;
+//     const token = await getS2SToken();
+
+//     const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
+//     const type = start_time ? 2 : 1;
+
+//     const body = {
+//       topic: topic || 'Meeting from API',
+//       type,
+//       ...(start_time ? { start_time } : {}),
+//       duration: duration || 60,
+//       timezone: timezone || 'Asia/Kolkata',
+//       settings: settings || { join_before_host: true, host_video: false, participant_video: false }
+//     };
+
+//     const create = await axios.post(
+//       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
+//       body,
+//       { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+//     );
+
+//     console.log("create data ", create);
+
+//     return res.json({
+//       join_url: create.data.join_url,
+//       start_url: create.data.start_url,
+//       id: create.data.id,
+//       password: create.data.password
+//     });
+//   } catch (err) {
+//     console.error(err.response?.data || err.message);
+//     return res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });
+//   }
+// });
+
+
+
+// Catch-all for undefined routes
+app.use("*", (req, res) => {
+  res.status(404).json({ error: "Endpoint not found" });
+});
+
+//  v1.0.4 ------------------------------------------------------------------------------>
+
+
+

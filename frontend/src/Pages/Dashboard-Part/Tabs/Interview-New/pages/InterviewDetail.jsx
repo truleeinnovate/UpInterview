@@ -351,6 +351,8 @@ const InterviewDetail = () => {
 
   const handleEditRound = (round, options = {}) => {
     // Pass isReschedule to the form via navigation state or context
+   console.log("options", options);
+   console.log("round", round);
     navigate(`/interviews/${id}/rounds/${round._id}`, { state: { isReschedule: options.isReschedule } });
   };;
 

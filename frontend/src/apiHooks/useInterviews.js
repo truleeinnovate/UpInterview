@@ -143,6 +143,30 @@ export const useInterviews = (filters = {}) => {
     }
   });
 
+
+  // 🔹 New mutation: Update interview round (PATCH for edit)
+const updateInterviewRound = useMutation({
+  mutationFn: async (payload) => {
+    const response = await axios.patch(
+      `${config.REACT_APP_API_URL}/interview/update-round/${payload.roundId}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("authToken")}`,
+        },
+      }
+    );
+    return response.data;
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries(["interviews"]);
+  },
+  onError: (error) => {
+    console.error("Round update error:", error);
+  },
+});
+
   // Update round with meeting links mutation
   // const updateRoundWithMeetingLinks = useMutation({
   //   mutationFn: async ({ interviewId, roundId, roundData, meetingUrls }) => {
@@ -227,6 +251,9 @@ export const useInterviews = (filters = {}) => {
   // v1.0.2 <-----------------------------------------
 
   // Update interview status mutation
+  
+  
+  
   const updateInterviewStatus = useMutation({
     mutationFn: async ({ interviewId, status, reason }) => {
       const interviewData = {
@@ -311,6 +338,7 @@ export const useInterviews = (filters = {}) => {
     updateStatusError: updateInterviewStatus.error,
     createInterview: createInterview.mutateAsync,
     saveInterviewRound: saveInterviewRound.mutateAsync,
+    updateInterviewRound: updateInterviewRound.mutateAsync,
     // updateRoundWithMeetingLinks: updateRoundWithMeetingLinks.mutateAsync,
     updateInterviewStatus: updateInterviewStatus.mutateAsync,
     // refetchInterviews,

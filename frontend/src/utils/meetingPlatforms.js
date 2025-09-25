@@ -201,17 +201,121 @@ export class GoogleMeetPlatform {
   }
 }
 
+
+
 /**
- * Zoom platform integration (placeholder for future implementation)
+ * Zoom platform integration
  */
+// export class ZoomPlatform {
+//   constructor() {
+//     this.ZOOM_API_URL = `${config.REACT_APP_API_URL}`;
+//   }
+
+//   /**
+//    * Creates a Zoom meeting
+//    * @param {Object} options - Meeting creation options
+//    * @param {Object} options.payload - Prebuilt payload (topic, duration, start_time, etc.)
+//    * @param {Function} options.onProgress - Progress callback
+//    * @returns {Promise<string>} Zoom meeting join URL
+//    */
+//   async createMeeting(options) {
+//     // ✅ Expecting { payload } because your UI sends it like:
+//     // const meetingLink = await createMeeting(selectedMeetingPlatform, { payload }, ...)
+//     const { payload, onProgress } = options;
+
+//     try {
+//       onProgress?.("Starting Zoom meeting creation...");
+
+//         // const res = await fetch('http://localhost:5000/api/create-meeting', {
+//               //   method: 'POST',
+//               //   headers: { 'Content-Type': 'application/json' },
+//               //   body: JSON.stringify(payload)
+//               // });
+
+//       // ✅ Send payload directly to backend
+//       const response = await axios.post(
+//         `${this.ZOOM_API_URL}/api/create-meeting`,
+//         payload,
+//         {
+//           headers: { 'Content-Type': 'application/json' },
+//         }
+//       );
+
+//       // ✅ Return Zoom meeting join URL
+//       if (response.data) {
+//         onProgress?.("Zoom meeting created successfully!");
+//         return response.data;
+//       } else {
+//         throw new Error("Zoom API did not return a join_url");
+//       }
+
+//     } catch (err) {
+//       console.error("Error creating Zoom meeting:", err.response?.data || err.message);
+//       throw err;
+//     }
+//   }
+// }
+
+
+
+
+
+
+// export class ZoomPlatform {
+//   constructor() {
+//     // Zoom configuration will be added here
+//   }
+
+//   async createMeeting(options) {
+//     // TODO: Implement Zoom meeting creation
+//     throw new Error("Zoom integration not yet implemented");
+//   }
+// }
+
 export class ZoomPlatform {
   constructor() {
-    // Zoom configuration will be added here
+    // this.ZOOM_API_URL = `${config.REACT_APP_API_URL}`;
   }
 
   async createMeeting(options) {
-    // TODO: Implement Zoom meeting creation
-    throw new Error("Zoom integration not yet implemented");
+    const { payload, onProgress } = options;
+    console.log("options:", options);
+
+    try {
+      onProgress?.("Starting Zoom meeting creation...");
+
+      // Validate and format start_time for Zoom
+      // if (payload.start_time) {
+      //   const startDate = new Date(payload.start_time);
+      //   if (isNaN(startDate.getTime())) {
+      //     throw new Error("Invalid start time format");
+      //   }
+      //   // Zoom expects ISO string without the 'Z' for specific timezone handling
+      //   payload.start_time = startDate.toISOString().replace('Z', '');
+      // }
+
+      
+      
+
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/api/create-meeting`,
+        payload,
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      if (response.data) {
+        onProgress?.("Zoom meeting created successfully!");
+        return response.data;
+      } else {
+        throw new Error("Zoom API did not return a join_url");
+      }
+
+    } catch (err) {
+      console.error("Error creating Zoom meeting:", err.response?.data || err.message);
+      throw err;
+    }
   }
 }
 
@@ -238,7 +342,7 @@ export class MeetingPlatformFactory {
       case 'googlemeet':
       case 'google':
         return new GoogleMeetPlatform();
-      case 'zoom':
+      case 'zoommeet':
         return new ZoomPlatform();
       case 'teams':
       case 'microsoftteams':
