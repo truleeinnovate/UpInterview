@@ -12,6 +12,7 @@ import { Button } from '../../CommonCode-AllTabs/ui/button';
 import { motion } from 'framer-motion';
 import { formatDate } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { formatDateTime } from "../../../../../utils/dateFormatter";
 
 function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onEditInterview, effectivePermissions }) {
   const navigate = useNavigate();
@@ -149,7 +150,7 @@ function InterviewCard({ interview, onView, onViewPosition, onViewInterview, onE
             <div className="mt-4 space-y-2">
               <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                <span>Created: {formatDate(interview.createdAt, false)}</span>
+                <span>Created At: {formatDateTime(interview.createdAt)}</span>
               </div>
 
               <div className="flex items-center text-xs sm:text-sm text-muted-foreground">

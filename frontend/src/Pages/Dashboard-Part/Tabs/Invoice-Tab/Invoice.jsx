@@ -16,6 +16,8 @@ import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
 import InvocieKanban from "./InvocieKanban";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import { formatDateTime } from "../../../../utils/dateFormatter";
+
 
 // Loading Skeleton for Invoice Table
 const InvoiceTableSkeleton = () => {
@@ -332,7 +334,7 @@ const InvoiceTab = () => {
       header: "Created At",
       render: (value) =>
         value && value.createdAt
-          ? new Date(value.createdAt).toLocaleDateString()
+          ? formatDateTime(value.createdAt)
           : "N/A",
     },
   ];

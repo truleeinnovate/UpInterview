@@ -30,6 +30,7 @@ import { config } from "../../../../config.js";
 import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { usePositions } from "../../../../apiHooks/usePositions";
+import { formatDateTime } from "../../../../utils/dateFormatter";
 
 const Assessment = () => {
   // All hooks at the top
@@ -389,7 +390,7 @@ const Assessment = () => {
   const tableColumns = [
     {
       key: "AssessmentCode",
-      header: "Assessment Template ID",
+      header: "Template ID",
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
@@ -401,7 +402,7 @@ const Assessment = () => {
     },
     {
       key: "AssessmentTitle",
-      header: "Assessment Template Name",
+      header: "Template Name",
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
@@ -445,6 +446,11 @@ const Assessment = () => {
       key: "Duration",
       header: "Duration",
       render: (value) => value || "Not Provided",
+    },
+    {
+      key: "createdAt",
+      header: "Created At",
+      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
     },
   ];
   // <---------------------- v1.0.0
