@@ -47,6 +47,7 @@ import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI";
 import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { useInterviewerDetails } from "../../../../../utils/CommonFunctionRoundTemplates";
 
 const RoundCard = ({
   round,
@@ -67,7 +68,7 @@ const RoundCard = ({
   //   questionsError,
   //   setSectionQuestions,
   // } = useCustomContext();
-  const { deleteRoundMutation, saveInterviewRound } = useInterviews();
+  const { deleteRoundMutation, saveInterviewRound,updateInterviewRound } = useInterviews();
   const { fetchAssessmentQuestions } = useAssessments();
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
@@ -107,6 +108,8 @@ const RoundCard = ({
 
 
   const [actionInProgress, setActionInProgress] = useState(false);
+
+  
 
   useEffect(() => {
     if (isExpanded && round?.assessmentId) {
@@ -242,10 +245,11 @@ const RoundCard = ({
     };
 
     try {
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/interview/save-round`,
-        payload
-      );
+      // const response = await axios.post(
+      //   `${config.REACT_APP_API_URL}/interview/save-round`,
+      //   payload
+      // );
+     const  response = await updateInterviewRound(payload);
       console.log("Status updated:", response.data);
       // Show success toast
       toast.success(`Round Status updated to ${newStatus}`, {});
@@ -560,7 +564,7 @@ const RoundCard = ({
         };
         // Use saveInterviewRound mutation from useInterviews hook
         console.log("Calling saveInterviewRound...");
-        const response = await saveInterviewRound(payload);
+        const response = await updateInterviewRound(payload);
         console.log("response", response);
 
         // navigate(`/interviews/${interviewId}`);
@@ -1233,7 +1237,7 @@ const RoundCard = ({
                 {/* Edit */}
                 {canEdit && permissions.canEdit && !actionInProgress && (
                   <button
-                    onClick={onEdit}
+                    onClick={() => onEdit(round)}
                     className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
                   >
                     <Edit className="h-4 w-4 mr-1" /> Edit Round

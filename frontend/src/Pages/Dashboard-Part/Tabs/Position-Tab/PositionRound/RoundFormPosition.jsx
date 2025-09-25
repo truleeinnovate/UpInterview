@@ -938,7 +938,7 @@ function RoundFormPosition() {
 
           <InfoGuide
             className="mt-4"
-            title="Support Ticket Guidelines"
+            title="Position Round Guidelines"
             items={[
               <>
                 <span className="font-medium">Round Types:</span> Choose from

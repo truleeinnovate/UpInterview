@@ -3,6 +3,8 @@
 // v1.0.0  -  Ashraf  -  fixed name assessment to assessment template
 // v1.0.2  -  Ashraf  -  added sending interview email
 // v1.0.3  -  Ashok  -  Added new controller to get all interviews
+// v1.0.4  -  Ranjith  -  fixed new update api in updateInterviewRound and interview seprated the patch and post call
+
 
 const mongoose = require("mongoose");
 const { Interview } = require("../models/Interview/Interview.js");
@@ -860,6 +862,7 @@ async function processInterviewers(interviewers) {
   return processedInterviewers;
 }
 
+//interview round creation 
 const saveInterviewRound = async (req, res) => {
   try {
     const { interviewId, round, roundId, questions } = req.body;
@@ -1016,6 +1019,95 @@ const saveInterviewRound = async (req, res) => {
       .json({ message: "Internal server error.", error: error.message });
   }
 };
+
+
+// PATCH: Update interview round
+const updateInterviewRound = async (req, res) => {
+  try {
+    let roundIdParam   = req.params.roundId;
+    const { interviewId, round, questions } = req.body;
+    console.log("=== updateInterviewRound START ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    console.log("interviewId:", interviewId);
+
+
+
+    if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
+      return res.status(400).json({ message: "Invalid roundId" });
+    }
+    
+    const roundId = new mongoose.Types.ObjectId(roundIdParam);
+
+    console.log("roundId:", roundId);
+
+    if (!interviewId || !roundId || !round) {
+      return res.status(400).json({
+        message: "Interview ID, Round ID, and round data are required."
+      });
+    }
+
+    if (round.interviewers) {
+      round.interviewers = await processInterviewers(round.interviewers);
+    }
+
+    let existingRound = await InterviewRounds.findById(roundId);
+    if (!existingRound) {
+      console.log("Round not found with ID:", roundId);
+      return res.status(404).json({ message: "Round not found." });
+    }
+
+    console.log("Found existing round:", existingRound._id);
+
+    // Handle meetLink field separately to prevent conversion issues
+    const { meetLink, ...otherRoundData } = round;
+    Object.assign(existingRound, otherRoundData);
+
+    if (meetLink && Array.isArray(meetLink)) {
+      console.log("Updating meetLink directly:", meetLink);
+      existingRound.meetLink = meetLink;
+    }
+
+    // Save updated round
+    const savedRound = await existingRound.save();
+    console.log("Round updated successfully:", savedRound._id);
+
+    // Reorder rounds just in case sequence was changed
+    await reorderInterviewRounds(interviewId);
+
+    // Update questions if provided
+    if (questions && Array.isArray(questions)) {
+      await handleInterviewQuestions(interviewId, savedRound._id, questions);
+    } else {
+      console.log(
+        "updateInterviewRound: questions not provided, skipping handleInterviewQuestions"
+      );
+    }
+
+    return res.status(200).json({
+      message: "Round updated successfully.",
+      savedRound,
+      status: "ok"
+    });
+
+    async function reorderInterviewRounds(interviewId) {
+      const rounds = await InterviewRounds.find({ interviewId });
+      rounds.sort((a, b) => a.sequence - b.sequence);
+
+      for (let i = 0; i < rounds.length; i++) {
+        rounds[i].sequence = i + 1;
+        await rounds[i].save();
+      }
+    }
+  } catch (error) {
+    console.error("Error updating interview round:", error);
+    return res.status(500).json({
+      message: "Internal server error.",
+      error: error.message
+    });
+  }
+};
+
+
 // v1.0.2 <-----------------------------------------
 // Dashboard stats code remains unchanged
 const getDateRanges = () => {
@@ -1327,7 +1419,10 @@ const getAllInterviews = async (req, res) => {
 module.exports = {
   createInterview,
   updateInterview,
+  //  interview round 
   saveInterviewRound,
+  updateInterviewRound,
+  // interview round
   getDashboardStats,
   deleteRound,
   getInterviews,
