@@ -7,6 +7,7 @@ import { ReactComponent as FaTrash } from "../../../../icons/FaTrash.svg";
 import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
 // Removed FaTimes import - not needed for always-editable rows
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 
 const SkillsField = forwardRef(
   (
@@ -24,12 +25,14 @@ const SkillsField = forwardRef(
       experienceOptions,
       
       onOpenSkills,
+      showValidation = false,  // New prop to control when validation errors are shown
     },
     ref
   ) => {
     const [deleteIndex, setDeleteIndex] = useState(null);
     const initializedRef = useRef(false);
     const [rowErrors, setRowErrors] = useState({});
+    const [isCustomSkill, setIsCustomSkill] = useState({}); // Track custom skill state per row
 
     
 
@@ -37,6 +40,10 @@ const SkillsField = forwardRef(
       if (deleteIndex !== null) {
         onDeleteSkill(deleteIndex);
         setDeleteIndex(null);
+        // Clear custom skill state for deleted row
+        const newIsCustomSkill = { ...isCustomSkill };
+        delete newIsCustomSkill[deleteIndex];
+        setIsCustomSkill(newIsCustomSkill);
       }
     };
 
@@ -58,11 +65,14 @@ const SkillsField = forwardRef(
       // 1. Not selected in any other row, OR
       // 2. Currently selected in this row (so it remains visible)
       const currentRowSkill = entries[rowIndex]?.skill;
-      return skills.filter(
+      const availableSkills = skills.filter(
         (skill) =>
           !otherSelectedSkills.includes(skill.SkillName) ||
           skill.SkillName === currentRowSkill
       );
+      
+      // Add "Other" option at the end for custom skills
+      return [...availableSkills.map(s => ({ SkillName: s.SkillName })), { SkillName: "__other__" }];
     };
     const experienceOptionsRS = experienceOptions.map((e) => ({
       value: e,
@@ -85,32 +95,55 @@ const SkillsField = forwardRef(
     // Validate individual rows when entries change
     useEffect(() => {
       const newRowErrors = {};
-      let hasAtLeastOneCompleteRow = false;
+      let firstThreeRowsComplete = true;
       
       entries.forEach((entry, index) => {
-        // Only validate rows that have at least one field filled
-        const hasAnyValue = entry.skill || entry.experience || entry.expertise;
         const isCompleteRow = entry.skill && entry.experience && entry.expertise;
+        const hasAnyValue = entry.skill || entry.experience || entry.expertise;
         
-        if (isCompleteRow) {
-          hasAtLeastOneCompleteRow = true;
-        }
-        
-        if (hasAnyValue) {
-          const errors = {};
-          
-          if (!entry.skill) {
-            errors.skill = true;
+        // First 3 rows are mandatory
+        if (index < 3) {
+          // Check if row is complete for first three rows requirement
+          if (!isCompleteRow) {
+            firstThreeRowsComplete = false;
+            
+            // Only show errors if showValidation is true (after submit attempt)
+            if (showValidation) {
+              const errors = {};
+              
+              if (!entry.skill) {
+                errors.skill = true;
+              }
+              if (!entry.experience) {
+                errors.experience = true;
+              }
+              if (!entry.expertise) {
+                errors.expertise = true;
+              }
+              
+              if (Object.keys(errors).length > 0) {
+                newRowErrors[index] = errors;
+              }
+            }
           }
-          if (!entry.experience) {
-            errors.experience = true;
-          }
-          if (!entry.expertise) {
-            errors.expertise = true;
-          }
-          
-          if (Object.keys(errors).length > 0) {
-            newRowErrors[index] = errors;
+        } else {
+          // Additional rows (4+) - only validate if partially filled
+          if (hasAnyValue && !isCompleteRow) {
+            const errors = {};
+            
+            if (!entry.skill) {
+              errors.skill = true;
+            }
+            if (!entry.experience) {
+              errors.experience = true;
+            }
+            if (!entry.expertise) {
+              errors.expertise = true;
+            }
+            
+            if (Object.keys(errors).length > 0) {
+              newRowErrors[index] = errors;
+            }
           }
         }
       });
@@ -118,10 +151,11 @@ const SkillsField = forwardRef(
       setRowErrors(newRowErrors);
       
       // Notify parent component about skills validity
+      // Skills are valid when first 3 rows are complete
       if (onSkillsValidChange) {
-        onSkillsValidChange(hasAtLeastOneCompleteRow);
+        onSkillsValidChange(firstThreeRowsComplete);
       }
-    }, [entries, onSkillsValidChange]);
+    }, [entries, onSkillsValidChange, showValidation]);
 
     // Auto-add three empty rows on first mount (no click needed)
     useEffect(() => {
@@ -134,6 +168,29 @@ const SkillsField = forwardRef(
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Detect custom skills when entries change (important for edit mode)
+    useEffect(() => {
+      if (entries.length > 0 && skills && skills.length > 0) {
+        const customSkillStates = {};
+        entries.forEach((entry, index) => {
+          if (entry.skill) {
+            // Check if the skill exists in the predefined skills list
+            const isSkillInList = skills.some(
+              skill => skill.SkillName === entry.skill
+            );
+            // If not in list and not the special "__other__" value, it's custom
+            if (!isSkillInList && entry.skill !== "__other__") {
+              customSkillStates[index] = true;
+            }
+          }
+        });
+        // Only update if there are custom skills to set
+        if (Object.keys(customSkillStates).length > 0) {
+          setIsCustomSkill(prev => ({ ...prev, ...customSkillStates }));
+        }
+      }
+    }, [entries, skills]);
 
     return (
       <div ref={ref}>
@@ -157,9 +214,6 @@ const SkillsField = forwardRef(
           )}
         </div>
 
-        {errors.skills && (
-          <p className="text-red-500 text-sm">{errors.skills}</p>
-        )}
         {/* Skills entries below */}
         <div className="space-y-2 mb-4 mt-5">
           {entries.map((entry, index) => (
@@ -170,36 +224,30 @@ const SkillsField = forwardRef(
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2">
                     <div className="px-1">
-                      <DropdownSelect
+                      <DropdownWithSearchField
                         options={getAvailableSkillsForRow(index).map((s) => ({
-                          value: s.SkillName,
-                          label: s.SkillName,
+                          value: s.SkillName === "__other__" ? "__other__" : s.SkillName,
+                          label: s.SkillName === "__other__" ? "Other" : s.SkillName,
                         }))}
                         isSearchable
-                        value={
-                          entry.skill ? { value: entry.skill, label: entry.skill } : null
-                        }
-                        onChange={(opt) => {
+                        value={entry.skill}
+                        onChange={(e) => {
                           if (onUpdateEntry) {
-                            onUpdateEntry(index, { ...entry, skill: opt?.value || "" });
+                            onUpdateEntry(index, { ...entry, skill: e.target.value });
                           }
                         }}
                         placeholder="Skill"
-                        classNamePrefix="rs"
+                        name={`skill-${index}`}
                         onMenuOpen={onOpenSkills}
-                        styles={{
-                          control: (base) => ({
-                            ...base,
-                            borderColor: rowErrors[index]?.skill ? '#ef4444' : base.borderColor,
-                            '&:hover': {
-                              borderColor: rowErrors[index]?.skill ? '#ef4444' : base['&:hover']?.borderColor
-                            }
-                          })
+                        error={rowErrors[index]?.skill ? "Skill required" : ""}
+                        isCustomName={isCustomSkill[index] || false}
+                        setIsCustomName={(value) => {
+                          setIsCustomSkill({ ...isCustomSkill, [index]: value });
                         }}
                       />
-                      {rowErrors[index]?.skill && (
+                      {/* {rowErrors[index]?.skill && (
                         <span className="text-red-500 text-xs mt-1">Skill required</span>
-                      )}
+                      )} */}
                     </div>
                     <div className="px-1">
                       <DropdownSelect
@@ -217,15 +265,8 @@ const SkillsField = forwardRef(
                         }}
                         placeholder="Experience"
                         classNamePrefix="rs"
-                        styles={{
-                          control: (base) => ({
-                            ...base,
-                            borderColor: rowErrors[index]?.experience ? '#ef4444' : base.borderColor,
-                            '&:hover': {
-                              borderColor: rowErrors[index]?.experience ? '#ef4444' : base['&:hover']?.borderColor
-                            }
-                          })
-                        }}
+                        hasError={rowErrors[index]?.experience}
+                        
                       />
                       {rowErrors[index]?.experience && (
                         <span className="text-red-500 text-xs mt-1">Experience required</span>
@@ -247,43 +288,42 @@ const SkillsField = forwardRef(
                         }}
                         placeholder="Expertise"
                         classNamePrefix="rs"
-                        styles={{
-                          control: (base) => ({
-                            ...base,
-                            borderColor: rowErrors[index]?.expertise ? '#ef4444' : base.borderColor,
-                            '&:hover': {
-                              borderColor: rowErrors[index]?.expertise ? '#ef4444' : base['&:hover']?.borderColor
-                            }
-                          })
-                        }}
+                        hasError={rowErrors[index]?.expertise}
+
                       />
                       {rowErrors[index]?.expertise && (
                         <span className="text-red-500 text-xs mt-1">Expertise required</span>
                       )}
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onDeleteSkill) {
-                          onDeleteSkill(index); // Delete only this specific row
-                        }
-                      }}
-                      className="text-red-600 hover:text-red-800 p-1"
-                      title="Delete Row"
-                    >
-                      <FaTrash className="w-5 h-5" />
-                    </button>
-                  </div>
+                  {/* Only show delete button for rows beyond the 3rd row */}
+                  {entries.length > 3 && (
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onDeleteSkill) {
+                            onDeleteSkill(index); // Delete only this specific row
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Delete Row"
+                      >
+                        <FaTrash className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
                 </>
               </div>
               {/* Show individual row error summary if there are errors */}
-              {/* {rowErrors[index] && (
+              {/* {errors.skills && (
+              <p className="text-red-500 text-sm">{errors.skills}</p>
+              )} */}
+              {rowErrors[index] && (
                 <p className="text-red-500 text-xs mt-1 ml-2">
                   Row {index + 1}: Please fill in all required fields
                 </p>
-              )} */}
+              )}
             </div>
           ))}
         </div>

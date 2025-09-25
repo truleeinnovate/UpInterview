@@ -193,6 +193,7 @@ const AddCandidateForm = ({
   const [fileError, setFileError] = useState("");
   const [resumeError, setResumeError] = useState("");
   const [activeButton, setActiveButton] = useState(null); // 'save' or 'add' or null
+  const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
   // const authToken = Cookies.get("authToken");
   // const tokenPayload = decodeJwt(authToken);
@@ -505,6 +506,7 @@ const AddCandidateForm = ({
     resetResume();
     // -------------------------------------------------------------------------->
     setAllSelectedSkills([]);
+    setShowSkillValidation(false);  // Reset validation flag
   };
 
   const handleClose = () => {
@@ -542,6 +544,9 @@ const AddCandidateForm = ({
 
     // Set which button was clicked
     setActiveButton(isAddCandidate ? "add" : "save");
+
+    // Show skills validation when submit is attempted
+    setShowSkillValidation(true);
 
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
@@ -1029,8 +1034,10 @@ const AddCandidateForm = ({
               </div>
               <div>
                 <SkillsField
+                  ref={fieldRefs.skills}
                   entries={entries}
                   errors={errors}
+                  showValidation={showSkillValidation}
                   onSkillsValidChange={(hasValidSkills) => {
                     // Clear the skills error if at least one complete row exists
                     if (hasValidSkills && errors.skills) {

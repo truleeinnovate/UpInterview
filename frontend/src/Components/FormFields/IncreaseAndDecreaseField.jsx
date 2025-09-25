@@ -6,25 +6,28 @@ const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, labe
       <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      <input
-        ref={inputRef}
-        type="number"
-        name={name}
-        id={name}
-        min={min}
-        max={max}
-        value={value}
-        onChange={onChange}
-        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-        border ${
-          error
-            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-            : "border-gray-300 focus:ring-red-300"
-        }
-        focus:outline-gray-300
-      `}
-        placeholder={`Enter ${label}`}
-      />
+      <div className="relative mt-1">
+        {label === "Max Salary" || label === "Min Salary" ? <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span> : null}
+        <input
+          ref={inputRef}
+          type="number"
+          name={name}
+          id={name}
+          min={min}
+          max={max}
+          value={value}
+          onChange={onChange}
+          className={`block w-full rounded-md shadow-sm py-2 ${label === "Max Salary" || label === "Min Salary" ? "pr-3 pl-9" : "px-3"} sm:text-sm
+          border ${
+            error
+              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+              : "border-gray-300 focus:ring-red-300"
+          }
+          focus:outline-gray-300
+        `}
+          placeholder={`Enter ${label}`}
+        />
+      </div>
       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
     </div>
   );

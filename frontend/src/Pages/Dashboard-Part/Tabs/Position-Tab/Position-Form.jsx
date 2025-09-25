@@ -100,6 +100,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const navigate = useNavigate();
 
   const [errors, setErrors] = useState({});
+  const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
   const [showDropdownCompany, setShowDropdownCompany] = useState(false);
   const [isCustomCompany, setIsCustomCompany] = useState(false);
   const [companySearchTerm, setCompanySearchTerm] = useState("");
@@ -394,6 +395,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     setSelectedLevel("");
     setCurrentStep(0);
     setIsModalOpen(false);
+    setShowSkillValidation(false);  // Reset validation flag
+    
     // setEditingIndex(null);
     // setAllSelectedSkills(entries.map(e => e.skill));
   };
@@ -495,12 +498,17 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       "RoundDetailsSave&AddRound",
       "RoundDetailsSave&Next",
     ].includes(actionType);
-
+    
     // Use updatedData when required
     const dataToSubmit =
       shouldUseUpdatedDataForAction && shouldUseUpdatedData
         ? updatedData
         : formData;
+
+    // Show skills validation when submit is attempted
+    if (!skipValidation) {
+      setShowSkillValidation(true);
+    }
 
     if (!skipValidation) {
       const { formIsValid, newErrors } = validateForm(
@@ -1235,6 +1243,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         ref={fieldRefs.skills}
                         entries={entries}
                         errors={errors}
+                        showValidation={showSkillValidation}
                         onSkillsValidChange={(hasValidSkills) => {
                           // Clear the skills error if at least one complete row exists
                           if (hasValidSkills && errors.skills) {
