@@ -14,6 +14,19 @@ import { useSubscription } from "../../../../../apiHooks/useSubscription";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 
+// Helper function to format date as dd-mm-yy
+const formatDate = (dateStr) => {
+  if (!dateStr) return "N/A";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "N/A";
+  
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yy = String(date.getFullYear()).slice(-2);
+  
+  return `${dd}-${mm}-${yy}`;
+};
+
 // Loading Skeleton for Current Plan Section
 const CurrentPlanSkeleton = () => {
   return (
@@ -392,9 +405,7 @@ const Subscription = () => {
                   {/* v1.0.2 <------------------------------------------------------- */}
                   Next billing date:{" "}
                   {subscriptionData.nextBillingDate
-                    ? new Date(
-                        subscriptionData.nextBillingDate
-                      ).toLocaleDateString()
+                    ? formatDate(subscriptionData.nextBillingDate)
                     : "N/A"}
                 </p>
               </div>

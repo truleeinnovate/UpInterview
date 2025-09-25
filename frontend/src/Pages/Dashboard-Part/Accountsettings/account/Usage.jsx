@@ -18,6 +18,19 @@ const Usage = () => {
   const tenantId = tokenPayload?.tenantId;
   console.log("tenantId", tenantId);
 
+  // Helper function to format date as dd-mm-yy
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "N/A";
+    
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yy = String(date.getFullYear()).slice(-2);
+    
+    return `${dd}-${mm}-${yy}`;
+  };
+
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { effectivePermissions } = usePermissions();
 
@@ -165,14 +178,8 @@ const Usage = () => {
         <h3 className="text-lg font-medium">Current Period</h3>
         <p className="text-gray-600 mt-2">
           {usage?.period?.fromDate || usage?.period?.toDate
-            ? `${new Date(
-                usage?.period?.fromDate
-              )?.toLocaleDateString()} to ${usage?.period?.toDate ? new Date(
-                usage?.period?.toDate
-              )?.toLocaleDateString() : "N/A"}`
-            : //             `${usage?.period?.fromDate ? new Date(usage.period.fromDate).toLocaleDateString() : '—'} to ${usage?.period?.toDate ? new Date(usage.period.toDate).toLocaleDateString() : '—'}`
-
-              error || "—"}
+            ? `${formatDate(usage?.period?.fromDate)} to ${formatDate(usage?.period?.toDate)}`
+            : error || "—"}
         </p>
       </div>
       {/* v1.0.0 -------------------------------------------------------------------------> */}
