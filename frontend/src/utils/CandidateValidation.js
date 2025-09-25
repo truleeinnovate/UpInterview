@@ -66,6 +66,8 @@ const validateCandidateForm = (formData, entries, errors) => {
     Object.keys(formData).forEach((field) => {
         // Skip generic validation for skills; it's handled with custom logic below
         if (field === "skills") return;
+        // Skip validation for CountryCode, ImageData, resume - these are optional/non-validated fields
+        if (field === "CountryCode" || field === "ImageData" || field === "resume") return;
         const errorMessage = getErrorMessage(field, formData[field], formData);
         if (errorMessage) {
             newErrors[field] = errorMessage;
