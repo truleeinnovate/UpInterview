@@ -5,6 +5,7 @@
 // v1.0.4  - Ashok - Improved responsiveness and added common popup in the place of modal
 // v1.0.5  - Ashok - Fixed issues regarding responsiveness
 // v1.0.6  - Ashok - Fixed responsiveness issues
+// v1.0.7  - Ashok - Fixed scrollbar issue
 
 import Modal from "react-modal";
 import {
@@ -46,15 +47,17 @@ const CandidateDetails = ({ mode, candidateId }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   // const { id } = useParams();
   const params = useParams();
-  // v1.0.2 <--------------------------------------------------------------------
-  // v1.0.6 <--------------------------------------------------------------------
-  // useScrollLock(true);
-  useScrollLock(!!candidateId);
-  // v1.0.6 -------------------------------------------------------------------->
-  // v1.0.2 -------------------------------------------------------------------->
 
   const location = useLocation();
   const id = candidateId || params?.id;
+  // v1.0.2 <--------------------------------------------------------------------
+  // v1.0.6 <--------------------------------------------------------------------
+  // v1.0.7 <--------------------------------------------------------------------
+  // useScrollLock(true);
+  useScrollLock(!!id);
+  // v1.0.7 -------------------------------------------------------------------->
+  // v1.0.6 -------------------------------------------------------------------->
+  // v1.0.2 -------------------------------------------------------------------->
 
   useEffect(() => {
     let isMounted = true; // flag to track component mount status
