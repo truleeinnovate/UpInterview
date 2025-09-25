@@ -35,8 +35,11 @@ const TicketSchema = new mongoose.Schema(
       fileSize: Number,
       uploadDate: Date,
     },
-    createdByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },//<----v1.0.1----
-    updatedByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    // createdByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },//<----v1.0.1----
+    // updatedByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     ownerId: { type: String, required: true },//<----v1.0.1----
     tenantId: { type: String, required: true },//<----v1.0.1----
   },

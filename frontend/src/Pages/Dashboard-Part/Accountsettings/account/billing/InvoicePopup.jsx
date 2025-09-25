@@ -1,6 +1,7 @@
 
 import { SidePopup } from "../../common/SidePopup"
 
+
 export function InvoicePopup({ invoice, onClose }) {
   if (!invoice) return null
 

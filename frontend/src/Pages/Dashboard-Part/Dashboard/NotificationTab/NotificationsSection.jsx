@@ -14,6 +14,7 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 // v1.0.1 <-------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.1 ------------------------------------------------------------------->
+import { formatDateTime } from "../../../../utils/dateFormatter";
 
 const NotificationsSection = () => {
   const [activeTab, setActiveTab] = useState("email");
@@ -55,7 +56,7 @@ const NotificationsSection = () => {
             subject: notification.title,
             message: notification.body,
             status: notification.status,
-            timestamp: notification.createdAt,
+            timestamp: formatDateTime(notification.createdAt),
             priority: "medium", // Default priority if not provided
             recipients: notification.toAddress || [],
             cc: notification.cc || [],

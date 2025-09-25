@@ -16,6 +16,7 @@ import AuthCookieManager, {
 // v1.0.1 <---------------------------------------------------------------------------------------
 import { useScrollLock } from "../../apiHooks/scrollHook/useScrollLock";
 // v1.0.1 --------------------------------------------------------------------------------------->
+import { formatDateTime } from "../../utils/dateFormatter";
 
 const NotificationList = ({
   notifications = [],
@@ -50,9 +51,7 @@ const NotificationList = ({
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs text-gray-500">
-                    {notification?.timestamp
-                      ? new Date(notification.timestamp).toLocaleString()
-                      : "No date"}
+                    {formatDateTime(notification?.createdAt)}
                   </span>
                   <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
                     {notification?.type || "unknown"}

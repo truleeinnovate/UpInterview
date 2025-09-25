@@ -19,6 +19,7 @@ import { usePermissions } from "../../Context/PermissionsContext";
 // v1.0.0 <------------------------------------------------------------------------------------
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 // v1.0.0 ------------------------------------------------------------------------------------>
+import { formatDateTime } from "../../utils/dateFormatter.js";
 
 const InterviewTemplates = () => {
   const { effectivePermissions } = usePermissions();
@@ -249,24 +250,24 @@ const InterviewTemplates = () => {
     }
   };
 
-  const formatRelativeDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffMonths = Math.floor(diffDays / 30);
-    const diffYears = Math.floor(diffDays / 365);
+  // const formatRelativeDate = (dateString) => {
+  //   if (!dateString) return "";
+  //   const date = new Date(dateString);
+  //   const now = new Date();
+  //   const diffTime = Math.abs(now - date);
+  //   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  //   const diffMonths = Math.floor(diffDays / 30);
+  //   const diffYears = Math.floor(diffDays / 365);
 
-    if (date.toDateString() === now.toDateString()) return "Today";
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-    if (diffDays < 30) return `${diffDays} Day${diffDays > 1 ? "s" : ""} ago`;
-    if (diffMonths < 12)
-      return `${diffMonths} Month${diffMonths > 1 ? "s" : ""} ago`;
-    return `${diffYears} Year${diffYears > 1 ? "s" : ""} ago`;
-  };
+  //   if (date.toDateString() === now.toDateString()) return "Today";
+  //   const yesterday = new Date(now);
+  //   yesterday.setDate(yesterday.getDate() - 1);
+  //   if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  //   if (diffDays < 30) return `${diffDays} Day${diffDays > 1 ? "s" : ""} ago`;
+  //   if (diffMonths < 12)
+  //     return `${diffMonths} Month${diffMonths > 1 ? "s" : ""} ago`;
+  //   return `${diffYears} Year${diffYears > 1 ? "s" : ""} ago`;
+  // };
 
   const capitalizeFirstLetter = (str) => {
     if (!str) return "";
@@ -331,7 +332,7 @@ const InterviewTemplates = () => {
     {
       key: "updatedAt",
       header: "Last Modified",
-      render: (value) => formatRelativeDate(value) || "N/A",
+      render: (value, row) => formatDateTime(row.updatedAt) || "N/A",
     },
   ];
 

@@ -26,6 +26,7 @@ import StatusBadge from "../../CommonCode-AllTabs/StatusBadge";
 import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { usePermissions } from "../../../../../Context/PermissionsContext";
+import { formatDateTime } from "../../../../../utils/dateFormatter";
 
 function InterviewList() {
   const { effectivePermissions } = usePermissions();
@@ -714,13 +715,13 @@ function InterviewList() {
     },
     {
       key: "createdOn",
-      header: "Created On",
+      header: "Created At",
       render: (value, row) => (
         <div className="flex items-center truncate max-w-[120px]">
           <Calendar className="h-4 w-4 mr-1 text-gray-500" />
           <span className="text-sm text-gray-500">
             {row.createdAt
-              ? new Date(row.createdAt).toLocaleDateString()
+              ? formatDateTime(row.createdAt)
               : "N/A"}
           </span>
         </div>

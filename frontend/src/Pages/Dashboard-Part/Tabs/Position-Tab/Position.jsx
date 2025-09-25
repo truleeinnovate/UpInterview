@@ -37,6 +37,7 @@ import { createPortal } from "react-dom";
 import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal";
 import { format } from "date-fns";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
+import { formatDateTime } from "../../../../utils/dateFormatter";
 const capitalizeFirstLetter = (string) => {
   if (!string) return "";
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -529,7 +530,7 @@ const PositionTab = () => {
     {
       key: "createdAt",
       header: "Created At",
-      render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
+      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
     },
   ];
 

@@ -15,6 +15,7 @@ import {
 import { format } from 'date-fns';
 import PropTypes from 'prop-types';
 import Tooltip from '@mui/material/Tooltip';
+import { formatDateTime } from '../../../../utils/dateFormatter';
 
 const AssessmentKanban = ({ 
   assessments, 
@@ -299,7 +300,8 @@ const AssessmentKanban = ({
                                 whileHover={{ x: 2 }}
                               >
                                 <CalendarIcon className="w-4 h-4" />
-                                {format(new Date(assessment.ExpiryDate), 'MMM dd, yyyy')}
+                                {/* {format(new Date(assessment.ExpiryDate), 'MMM dd, yyyy')} */}
+                                {formatDateTime(assessment.createdAt)}
                               </motion.div>
                             </div>
 

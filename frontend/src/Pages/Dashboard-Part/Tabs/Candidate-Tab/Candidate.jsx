@@ -36,7 +36,7 @@ import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal.jsx";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import { logger } from "../../../../utils/logger.js";
 // v1.0.6 ------------------------------------------------------------------->
-
+import { formatDateTime } from "../../../../utils/dateFormatter.js";
 function Candidate({
   candidates,
   onResendLink,
@@ -599,7 +599,7 @@ function Candidate({
     {
       key: "createdAt",
       header: "Created At",
-      render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
+      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
     },
     //-----v1.0.4-------->
     // <---------------------- v1.0.2
