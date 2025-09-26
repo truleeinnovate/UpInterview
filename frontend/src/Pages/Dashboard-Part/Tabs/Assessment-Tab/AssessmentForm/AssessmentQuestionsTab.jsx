@@ -187,15 +187,21 @@ const AssessmentQuestionsTab = ({
             <div className="relative">
               <button
                 className="flex truncate items-center gap-2 rounded-lg sm:px-2 px-4 py-2 bg-custom-blue text-white text-sm font-medium hover:bg-custom-blue/90 transition-colors shadow-sm"
+                // onClick={() => handleAddSection()}
                 onClick={() =>
-                  setIsAddQuestionModalOpen(!isAddQuestionModalOpen)
+                  handleAddSection(() =>
+                    setIsAddQuestionModalOpen(false)
+                  )
                 }
+                // onClick={() =>
+                //   setIsAddQuestionModalOpen(!isAddQuestionModalOpen)
+                // }
               >
                 <PlusIcon className="w-4 h-4" />
                 Add Section
               </button>
 
-              {isAddQuestionModalOpen && (
+              {/* {isAddQuestionModalOpen && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center">
                   <div
                     className="absolute inset-0 bg-black bg-opacity-25"
@@ -254,7 +260,7 @@ const AssessmentQuestionsTab = ({
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
             {/* ---------------------- v1.0.0 > */}
             {isPassScoreSubmitted && (

@@ -59,7 +59,7 @@ const Profile3 = () => {
                         <div className='justify-center items-center mb-8'>
                             <button
                                 type="button"
-                                className={`flex w-full items-center justify-center border border-custom-blue rounded-md py-2 transition-colors duration-300 mb-2 
+                                className={`flex w-full items-center justify-center border border-custom-blue rounded-md py-2 transition-colors duration-300 mb-2
                                         ${selectedTab === 'technical' ? 'bg-custom-blue text-white' : 'bg-white text-black'}`}
                                 onClick={() => toggleActiveState('technical')}
                             >
@@ -67,7 +67,7 @@ const Profile3 = () => {
                             </button>
                             <button
                                 type="button"
-                                className={`flex  w-full items-center justify-center border border-custom-blue rounded-md  py-2 transition-colors duration-300 mb-2 
+                                className={`flex  w-full items-center justify-center border border-custom-blue rounded-md  py-2 transition-colors duration-300 mb-2
                                         ${selectedTab === 'hr' ? 'bg-custom-blue text-white' : 'bg-white text-black'}`}
                                 onClick={() => toggleActiveState('hr')}
                             >
@@ -80,7 +80,7 @@ const Profile3 = () => {
                             <button
                                 type="button"
                                 onClick={handleButtonClick}
-                                className={`w-56 items-center border rounded-md py-3 border-custom-blue 
+                                className={`w-56 items-center border rounded-md py-3 border-custom-blue
                                         ${selectedTab ? 'bg-custom-blue text-white' : 'text-custom-blue cursor-not-allowed'}`}
                                 disabled={!selectedTab}
                             >
@@ -185,7 +185,7 @@ const Profile3 = () => {
 
                 {/* Right side - Role Selection Form */}
                 <div className="w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-start justify-center p-4 lg:p-8 bg-gray-50 overflow-y-auto">
-                    <div className="max-w-lg w-full py-4">
+                    <div className="max-w-lg lg:max-w-[90%] xl:max-w-[85%] 2xl:max-w-[60%] w-full py-4">
                         <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
                             <div className="text-center mb-8">
                                 {/* v1.0.1 <-------------------------------------------------------------------------------------------------------------------------------------- */}

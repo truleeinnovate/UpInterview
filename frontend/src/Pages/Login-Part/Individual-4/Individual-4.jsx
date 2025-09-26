@@ -33,8 +33,8 @@ const FooterButtons = ({
                     onClick={onPrev}
                     disabled={isSubmitting}
                     className={`border ${isSubmitting
-                            ? "border-gray-300 text-gray-300 cursor-not-allowed"
-                            : "border-custom-blue text-custom-blue hover:bg-gray-50"
+                        ? "border-gray-300 text-gray-300 cursor-not-allowed"
+                        : "border-custom-blue text-custom-blue hover:bg-gray-50"
                         } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
                 >
                     Prev
@@ -46,8 +46,8 @@ const FooterButtons = ({
                 onClick={onNext}
                 disabled={isSubmitting}
                 className={`px-6 sm:px-3 py-1.5 rounded text-white flex items-center justify-center min-w-24 ${isSubmitting
-                        ? "bg-custom-blue/60 cursor-not-allowed"
-                        : "bg-custom-blue hover:bg-custom-blue/90"
+                    ? "bg-custom-blue/60 cursor-not-allowed"
+                    : "bg-custom-blue hover:bg-custom-blue/90"
                     } transition-colors duration-200`}
                 type="button"
             >
@@ -112,6 +112,8 @@ const MultiStepForm = () => {
         isProfileCompleteStateOrg,
         contactEmailFromOrg
     );
+
+    console.log("matchedContact", matchedContact);
 
     const [formLoading, setFormLoading] = useState(false);
 
@@ -344,12 +346,71 @@ const MultiStepForm = () => {
                 isValid = Object.keys(currentErrors).length === 0;
             }
             else if (currentStep === 2) {
+                const expYears = parseInt(additionalDetailsData.yearsOfExperience, 10) || 0;
+                const showJuniorLevel = expYears > 0 && expYears <= 6; // Show junior for 0-6 years
+                const showMidLevel = expYears > 3; // Show mid for 4+ years
+                const showSeniorLevel = expYears > 6; // Show senior for 7+ years
+
                 const validSkills = interviewDetailsData.skills?.filter(skill => skill !== null) || [];
                 if (validSkills.length === 0) currentErrors.skills = "Skills are required";
                 if (!interviewDetailsData.technologies?.length) currentErrors.technologies = "Technologies are required";
-                if (!interviewDetailsData.previousInterviewExperience) currentErrors.previousInterviewExperience = "Previous interview experience is required";
-                if (!interviewDetailsData.interviewFormatWeOffer?.length) currentErrors.interviewFormatWeOffer = "At least one interview format is required";
-                // if (!interviewDetailsData.noShowPolicy) currentErrors.noShowPolicy = "No-show policy is required";
+                if (!interviewDetailsData.previousInterviewExperience) {
+                    currentErrors.previousInterviewExperience = "Previous interview experience is required";
+                } else if (interviewDetailsData.previousInterviewExperience === 'yes' && !interviewDetailsData.previousInterviewExperienceYears) {
+                    currentErrors.previousInterviewExperienceYears = "Please specify years of experience";
+                }
+
+                // interview format validation
+                if (!interviewDetailsData.interviewFormatWeOffer || interviewDetailsData.interviewFormatWeOffer.length === 0) {
+                    currentErrors.interviewFormatWeOffer = "At least one interview format is required";
+                }
+
+                // mock discount validation
+                if (interviewDetailsData.interviewFormatWeOffer?.includes("mock")) {
+                    if (!interviewDetailsData.mock_interview_discount || 
+                        interviewDetailsData.mock_interview_discount.trim() === "") {
+                        currentErrors.mock_interview_discount = "Mock interview discount is required";
+                    } else {
+                        // Additional validation for the discount value
+                        const discountValue = parseInt(interviewDetailsData.mock_interview_discount, 10);
+                        if (isNaN(discountValue) || discountValue < 10 || discountValue > 99) {
+                            currentErrors.mock_interview_discount = "Discount must be between 10 and 99";
+                        }
+                    }
+                }
+
+                // Validate hourly rates for visible levels
+                const { rates = {} } = interviewDetailsData;
+
+                // Check junior level rates if visible
+                if (showJuniorLevel) {
+                    if (!rates.junior?.usd || !rates.junior?.inr) {
+                        currentErrors.rates = currentErrors.rates || {};
+                        currentErrors.rates.junior = currentErrors.rates.junior || {};
+                        if (!rates.junior?.usd) currentErrors.rates.junior.usd = "USD rate is required";
+                        if (!rates.junior?.inr) currentErrors.rates.junior.inr = "INR rate is required";
+                    }
+                }
+
+                // Check mid level rates if visible
+                if (showMidLevel) {
+                    if (!rates.mid?.usd || !rates.mid?.inr) {
+                        currentErrors.rates = currentErrors.rates || {};
+                        currentErrors.rates.mid = currentErrors.rates.mid || {};
+                        if (!rates.mid?.usd) currentErrors.rates.mid.usd = "USD rate is required";
+                        if (!rates.mid?.inr) currentErrors.rates.mid.inr = "INR rate is required";
+                    }
+                }
+
+                // Check senior level rates if visible
+                if (showSeniorLevel) {
+                    if (!rates.senior?.usd || !rates.senior?.inr) {
+                        currentErrors.rates = currentErrors.rates || {};
+                        currentErrors.rates.senior = currentErrors.rates.senior || {};
+                        if (!rates.senior?.usd) currentErrors.rates.senior.usd = "USD rate is required";
+                        if (!rates.senior?.inr) currentErrors.rates.senior.inr = "INR rate is required";
+                    }
+                }
 
                 if (!interviewDetailsData.professionalTitle?.trim()) {
                     currentErrors.professionalTitle = "Professional title is required";
@@ -388,6 +449,9 @@ const MultiStepForm = () => {
             // Calculate the updated completion status
             const currentStepKey = ["basicDetails", "additionalDetails", "interviewDetails", "availabilityDetails"][currentStep];
             const isLastStep = currentStep === (isInternalInterviewer ? 3 : Freelancer ? 3 : 1);
+
+            // Calculate years of experience for rate visibility
+            const expYears = parseInt(additionalDetailsData.yearsOfExperience, 10) || 0;
 
             // Create the updated completion status
             const updatedCompletionStatus = {
@@ -455,17 +519,17 @@ const MultiStepForm = () => {
                         junior: {
                             usd: Number(interviewDetailsData.rates?.junior?.usd) || 0,
                             inr: Number(interviewDetailsData.rates?.junior?.inr) || 0,
-                            isVisible: interviewDetailsData.rates?.junior?.isVisible !== false
+                            isVisible: expYears > 0 // Show junior if experience > 0 years
                         },
                         mid: {
                             usd: Number(interviewDetailsData.rates?.mid?.usd) || 0,
                             inr: Number(interviewDetailsData.rates?.mid?.inr) || 0,
-                            isVisible: Boolean(interviewDetailsData.rates?.mid?.isVisible)
+                            isVisible: expYears > 3 // Show mid if experience > 3 years
                         },
                         senior: {
                             usd: Number(interviewDetailsData.rates?.senior?.usd) || 0,
                             inr: Number(interviewDetailsData.rates?.senior?.inr) || 0,
-                            isVisible: Boolean(interviewDetailsData.rates?.senior?.isVisible)
+                            isVisible: expYears > 6 // Show senior if experience > 6 years
                         }
                     },
 
