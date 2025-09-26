@@ -87,6 +87,7 @@ function QuestionHeaderBar({
     >
       <div className="flex items-center gap-2 ">
         {/* Interview Type Dropdown (using DropdownSelect) */}
+        {type !== 'assessment' &&  
         <div className="w-48">
           <DropdownSelect
             isSearchable={false}
@@ -105,6 +106,7 @@ function QuestionHeaderBar({
             menuPosition="fixed"
           />
         </div>
+}
 
         {/* Label Dropdown (using DropdownSelect) */}
         <div className="w-48">
@@ -362,7 +364,7 @@ const MyQuestionsList = ({
 
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
-  const [dropdownValue, setDropdownValue] = useState("Interview Questions");
+  const [dropdownValue, setDropdownValue] = useState(type === 'assessment' ? "Assessment Questions" : "Interview Questions");
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;

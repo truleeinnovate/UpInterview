@@ -48,6 +48,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useInterviewerDetails } from "../../../../../utils/CommonFunctionRoundTemplates";
+import { notify } from "../../../../../services/toastService";
 
 const RoundCard = ({
   round,
@@ -174,10 +175,10 @@ const RoundCard = ({
   const handleDeleteRound = async () => {
     try {
       await deleteRoundMutation(round._id);
-      toast.success("Round Deleted successfully");
+      notify.success("Round Deleted successfully");
     } catch (error) {
       console.error("Error Deleting Round:", error);
-      toast.error("Failed to Delete Round");
+      notify.error("Failed to Delete Round");
     }
   };
 
@@ -252,7 +253,7 @@ const RoundCard = ({
      const  response = await updateInterviewRound(payload);
       console.log("Status updated:", response.data);
       // Show success toast
-      toast.success(`Round Status updated to ${newStatus}`, {});
+      notify.success(`Round Status updated to ${newStatus}`, {});
     } catch (error) {
       console.error("Error updating status:", error);
     }
@@ -346,9 +347,9 @@ const RoundCard = ({
     if (response?.data?.success) {
       // React Query will handle data refresh automatically
       // No need to manually fetch data
-      toast.success("Assessment link resent successfully");
+      notify.success("Assessment link resent successfully");
     } else {
-      toast.error(response?.message || "Failed to schedule assessment");
+      notify.error(response?.message || "Failed to schedule assessment");
     }
     // setIsLoading(false);
   };
@@ -569,10 +570,10 @@ const RoundCard = ({
 
         // navigate(`/interviews/${interviewId}`);
         if (response?.status === "ok") {
-          toast.success('Round Status updated successfully!');
+          notify.success('Round Status updated successfully!');
         }
       } else {
-        toast.error(result.message || "Failed to schedule assessment");
+        notify.error(result.message || "Failed to schedule assessment");
       }
 
     }

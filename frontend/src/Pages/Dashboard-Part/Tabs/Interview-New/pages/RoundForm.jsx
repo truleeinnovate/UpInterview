@@ -46,6 +46,7 @@ import DropdownWithSearchField from "../../../../../Components/FormFields/Dropdo
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import DescriptionField from "../../../../../Components/FormFields/DescriptionField.jsx";
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
+import { notify } from "../../../../../services/toastService.js";
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -608,7 +609,7 @@ const RoundFormInterviews = () => {
       if (sequence !== roundEditData.sequence)
         setSequence(roundEditData.sequence);
       if (duration !== (roundEditData.duration || 60))
-        setDuration(roundEditData.duration || 60);
+        setDuration(Number(roundEditData.duration) || 60);
       if (
         interviewerGroupName !== (roundEditData?.interviewerGroupName || "")
       ) {
@@ -1074,7 +1075,7 @@ const RoundFormInterviews = () => {
       console.log("Saved round ID:", response.savedRound._id);
 
       // Show success toast for round creation
-      toast.success('Interview round created successfully!');
+      notify.success('Interview round created successfully!');
 
 
       console.log("Response from selectedInterviewers:", selectedInterviewers);
@@ -1199,21 +1200,21 @@ const RoundFormInterviews = () => {
                 if (emailResponse.data.success) {
                   // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
                   if (emailResponse.data.data.failedEmails > 0) {
-                    toast.warning(`${emailResponse.data.data.failedEmails} emails failed to send`);
+                    notify.warning(`${emailResponse.data.data.failedEmails} emails failed to send`);
                   }
                 } else {
-                  toast.error('Failed to send outsource interview request emails');
+                  notify.error('Failed to send outsource interview request emails');
                 }
               } catch (emailError) {
                 console.error("Error sending outsource interview request emails:", emailError);
-                toast.error('Failed to send outsource interview request emails');
+                notify.error('Failed to send outsource interview request emails');
               }
             }
           }
 
         } else {
           navigate(`/interviews/${interviewId}`);
-          toast.success("Selected interview mode is Face to Face");
+          notify.success("Selected interview mode is Face to Face");
 
         }
 
@@ -1406,12 +1407,12 @@ const RoundFormInterviews = () => {
 
                     // Show success toast for emails
                     if (emailResponse.data.success) {
-                      toast.success('Interview round created and emails sent successfully!');
+                      notify.success('Interview round created and emails sent successfully!');
                       if (emailResponse.data.data.emailsSent > 0) {
-                        toast.success(`Emails sent to ${emailResponse.data.data.emailsSent} recipients`);
+                        notify.success(`Emails sent to ${emailResponse.data.data.emailsSent} recipients`);
                       }
                     } else {
-                      toast.error('Round created but email sending failed');
+                      notify.error('Round created but email sending failed');
                     }
 
                   }
@@ -1419,7 +1420,7 @@ const RoundFormInterviews = () => {
 
                 } catch (emailError) {
                   console.error("Error sending emails:", emailError);
-                  toast.error('Round created but email sending failed');
+                  notify.error('Round created but email sending failed');
                 }
               } catch (urlError) {
                 console.error("Error processing meeting URLs:", urlError);
@@ -1448,7 +1449,7 @@ const RoundFormInterviews = () => {
             }
           }
 
-          toast.success('Selected interview mode is Face to Face');
+          notify.success('Selected interview mode is Face to Face');
           navigate(`/interviews/${interviewId}`);
         }
       }
@@ -1462,7 +1463,7 @@ const RoundFormInterviews = () => {
       });
 
       // Show error toast
-      toast.error('Failed to create interview round. Please try again.');
+      notify.error('Failed to create interview round. Please try again.');
 
       setErrors({
         submit:

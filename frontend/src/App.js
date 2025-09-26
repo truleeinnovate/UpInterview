@@ -50,6 +50,7 @@ import WelcomePageUpinterviewIndividual from "./Pages/Login-Part/WelcomePage-Upi
 import JoinMeeting from "./Pages/videoCall/JoinCall.jsx";
 import { config } from "./config.js";
 import ToastProvider from "./Components/ToastProvider";
+import { VideoCallingSettings } from "./Pages/Dashboard-Part/Accountsettings/VideoCallingSetting/VideoCallingSettings.jsx";
 
 
 // Lazy-loaded components (unchanged)
@@ -923,11 +924,15 @@ const MainAppRoutes = ({
                     path="interviewer-groups"
                     element={<InterviewerGroups />}
                   >
+
+
                     <Route index element={null} />
                     <Route
                       path="interviewer-group-form"
                       element={<InterviewerGroupFormPopup />}
                     />
+
+
                     <Route
                       path="interviewer-group-edit-form/:id"
                       element={<InterviewerGroupFormPopup />}
@@ -966,6 +971,10 @@ const MainAppRoutes = ({
                     />
                   </Route>
                 )}
+                
+
+
+
                 {hasPermission("Subscription") && (
                   <>
                     <Route path="subscription" element={<Subscription />} />
@@ -989,6 +998,11 @@ const MainAppRoutes = ({
                 {hasPermission("Usage") && (
                   <Route path="usage" element={<Usage />} />
                 )}
+
+                {hasPermission("VideoCalling") && (
+                  <Route path="video-calling-settings" element={<VideoCallingSettings />} />
+                )}
+
                 {hasPermission("Roles") && (
                   <Route path="roles" element={<Role />}>
                     <Route index element={null} />
