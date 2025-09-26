@@ -1181,7 +1181,7 @@ export const Organization = () => {
 
           {/* Right side - Signup Form */}
           <div className="w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-start justify-center p-4 lg:p-8 bg-gray-50 overflow-y-auto">
-            <div className="max-w-lg w-full py-4">
+            <div className="max-w-lg lg:max-w-[90%] xl:max-w-[85%] 2xl:max-w-[60%] w-full py-4">
               <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
                 <div className="text-center mb-8">
                   {/* v1.0.1 <---------------------------------------------------------------------------------------------------------------------------------------- */}

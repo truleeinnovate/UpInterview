@@ -484,34 +484,43 @@ const InterviewDetails = ({
 
         let error = '';
 
-        if (numericValue) {
+        if (!numericValue) {
+            // field cleared → required validation
+            error = "This rate is required";
+        } else {
             const minRate = rateRange?.[currency]?.min || 0;
-            const maxRate = rateRange?.[currency]?.max || (currency === 'inr' ? 100000 : 1000);
+            const maxRate = rateRange?.[currency]?.max || (currency === "inr" ? 100000 : 1000);
             const numValue = parseInt(numericValue, 10);
 
             if (numValue < minRate) {
-                error = `Rate cannot be less than ${currency === 'inr' ? '₹' : '$'}${minRate}`;
+                error = `Rate cannot be less than ${currency === "inr" ? "₹" : "$"}${minRate}`;
             } else if (numValue > maxRate) {
-                error = `Rate cannot exceed ${currency === 'inr' ? '₹' : '$'}${maxRate}`;
+                error = `Rate cannot exceed ${currency === "inr" ? "₹" : "$"}${maxRate}`;
             }
         }
 
-        // Update the rate in the nested structure
-        setInterviewDetailsData(prev => ({
+        // update the state
+        setInterviewDetailsData((prev) => ({
             ...prev,
             rates: {
                 ...prev.rates,
                 [level]: {
                     ...prev.rates?.[level],
-                    [currency]: numericValue ? parseInt(numericValue, 10) : 0
+                    [currency]: numericValue ? parseInt(numericValue, 10) : "" // keep empty string if user cleared
                 }
             }
         }));
 
-        // Update errors
+        // update errors
         setErrors(prev => ({
             ...prev,
-            [`${level}_${currency}`]: error
+            rates: {
+                ...prev.rates,
+                [level]: {
+                    ...prev.rates?.[level],
+                    [currency]: ''
+                }
+            }
         }));
     };
 
@@ -769,13 +778,6 @@ const InterviewDetails = ({
 
                     {previousInterviewExperience === 'yes' && (
                         <div>
-                            <label
-                                htmlFor="previousInterviewExperienceYears"
-                                className="block text-sm font-medium text-gray-900 mb-2"
-                            >
-                                How many years of experience do you have in conducting interviews?{' '}
-                                <span className="text-red-500">*</span>
-                            </label>
                             <div className="w-1/2 sm:w-full">
                                 <IncreaseAndDecreaseField
                                     name="previousInterviewExperienceYears"
@@ -783,17 +785,12 @@ const InterviewDetails = ({
                                     onChange={handleChangeExperienceYears}
                                     min={1}
                                     max={15}
-                                    label="Years of experience"
+                                    label="How many years of experience do you have in conducting interviews ?"
                                     required={true}
                                     error={errors.previousInterviewExperienceYears}
                                     className={errors.previousInterviewExperienceYears ? 'border-red-500' : 'border-gray-400'}
                                 />
                             </div>
-                            {errors.previousInterviewExperienceYears && (
-                                <p className="text-red-500 text-sm sm:text-xs mt-2">
-                                    {errors.previousInterviewExperienceYears}
-                                </p>
-                            )}
                         </div>
                     )}
 
@@ -837,8 +834,8 @@ const InterviewDetails = ({
                                                     prefix="$"
                                                 />
                                             </div>
-                                            {errors.junior_usd && (
-                                                <p className="mt-1 text-xs text-red-600">{errors.junior_usd}</p>
+                                            {errors.rates?.junior?.usd && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.rates?.junior?.usd}</p>
                                             )}
                                         </div>
                                         <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
@@ -858,8 +855,8 @@ const InterviewDetails = ({
                                                     prefix="₹"
                                                 />
                                             </div>
-                                            {errors.junior_inr && (
-                                                <p className="mt-1 text-xs text-red-600">{errors.junior_inr}</p>
+                                            {errors.rates?.junior?.inr && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.rates?.junior?.inr}</p>
                                             )}
                                         </div>
                                     </div>
@@ -1098,10 +1095,11 @@ const InterviewDetails = ({
                                 htmlFor="mock_interview_discount"
                                 className="block text-sm font-medium text-gray-700 mb-2"
                             >
-                                Mock Interview Discount Percentage
+                                Mock Interview Discount Percentage <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                                 {showCustomDiscount ? (
+                                    // selecting the custom discount input field
                                     <div className="flex items-center">
                                         <input
                                             type="number"
@@ -1180,49 +1178,60 @@ const InterviewDetails = ({
                                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                                             </svg>
                                         </button>
+                                        {errors.mock_interview_discount && (
+                                            <p className="mt-2 text-sm text-red-600">{errors.mock_interview_discount}</p>
+                                        )}
                                     </div>
                                 ) : (
-                                    <DropdownSelect
-                                        id="mock_interview_discount"
-                                        name="mock_interview_discount"
-                                        value={interviewDetailsData.mock_interview_discount
-                                            ? {
-                                                value: interviewDetailsData.mock_interview_discount,
-                                                label: `${interviewDetailsData.mock_interview_discount}% discount`
-                                            }
-                                            : null
-                                        }
-                                        onChange={(selected) => {
-                                            if (selected?.value === 'custom') {
-                                                setShowCustomDiscount(true);
-                                                setCustomDiscountValue('');
-                                            } else if (selected) {
-                                                handleChangeforExp({
-                                                    target: {
-                                                        name: 'mock_interview_discount',
-                                                        value: selected.value
+                                    <>
+                                        {/* selecting the discount from dropdown */}
+                                        <div className="w-full">
+                                            <DropdownSelect
+                                                id="mock_interview_discount"
+                                                name="mock_interview_discount"
+                                                value={interviewDetailsData.mock_interview_discount
+                                                    ? {
+                                                        value: interviewDetailsData.mock_interview_discount,
+                                                        label: `${interviewDetailsData.mock_interview_discount}% discount`
                                                     }
-                                                });
-                                            } else {
-                                                handleChangeforExp({
-                                                    target: {
-                                                        name: 'mock_interview_discount',
-                                                        value: ''
+                                                    : null
+                                                }
+                                                onChange={(selected) => {
+                                                    if (selected?.value === 'custom') {
+                                                        setShowCustomDiscount(true);
+                                                        setCustomDiscountValue('');
+                                                    } else if (selected) {
+                                                        handleChangeforExp({
+                                                            target: {
+                                                                name: 'mock_interview_discount',
+                                                                value: selected.value
+                                                            }
+                                                        });
+                                                    } else {
+                                                        handleChangeforExp({
+                                                            target: {
+                                                                name: 'mock_interview_discount',
+                                                                value: ''
+                                                            }
+                                                        });
                                                     }
-                                                });
-                                            }
-                                        }}
-                                        options={[
-                                            { value: '10', label: '10% discount' },
-                                            { value: '20', label: '20% discount' },
-                                            { value: '30', label: '30% discount' },
-                                            { value: 'custom', label: 'Add custom percentage...' }
-                                        ]}
-                                        placeholder="Select discount percentage"
-                                        className="w-full"
-                                        classNamePrefix="select"
-                                        isClearable={true}
-                                    />
+                                                }}
+                                                options={[
+                                                    { value: '10', label: '10% discount' },
+                                                    { value: '20', label: '20% discount' },
+                                                    { value: '30', label: '30% discount' },
+                                                    { value: 'custom', label: 'Add custom percentage...' }
+                                                ]}
+                                                placeholder="Select discount percentage"
+                                                className="w-full"
+                                                classNamePrefix="select"
+                                                isClearable={true}
+                                            />
+                                            {errors.mock_interview_discount && (
+                                                <p className="mt-1 text-sm text-red-600">{errors.mock_interview_discount}</p>
+                                            )}
+                                        </div>
+                                    </>
                                 )}
                             </div>
                             <p className="mt-1.5 text-xs text-custom-blue">

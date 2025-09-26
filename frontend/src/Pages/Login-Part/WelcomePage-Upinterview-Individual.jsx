@@ -245,7 +245,7 @@ const WelcomePageUpinterviewIndividual = () => {
 
         {/* Right side - Login Form */}
         <div className="w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-start justify-center p-6 lg:p-12 bg-gradient-to-br from-gray-50 to-white pt-8">
-          <div className="max-w-lg w-full">
+          <div className="max-w-lg lg:max-w-[90%] xl:max-w-[85%] 2xl:max-w-[60%] w-full">
             <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 hover:shadow-3xl transition-all duration-300">
               <div className="text-center mb-8">
                 {/* v1.0.1 <------------------------------------------------------------------------------------------------------------------------------------------- */}
