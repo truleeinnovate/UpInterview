@@ -1145,7 +1145,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.minsalary}
                           min={0}
                           max={1000000000}
-                          label="Min Salary"
+                          label="Min Salary(Annual)"
                           name="minSalary"
                           required={formData.maxSalary ? true : false}
                         />
@@ -1156,7 +1156,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           inputRef={fieldRefs.maxSalary}
                           error={errors.maxsalary}
-                          label="Max Salary"
+                          label="Max Salary(Annual)"
                           name="maxSalary"
                           required={formData.minSalary ? true : false}
                         />

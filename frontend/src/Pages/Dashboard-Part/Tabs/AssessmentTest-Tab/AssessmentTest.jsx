@@ -18,13 +18,13 @@ import { useAssessments } from "../../../../apiHooks/useAssessments.js";
 const AssessmentTest = () => {
   const { fetchAssessmentQuestions } = useAssessments();
   // <---------------------- v1.0.0
-
   const [isVerified, setIsVerified] = useState(false);
   const [assessment, setAssessment] = useState(null);
   const [assessmentQuestions, setAssessmentQuestions] = useState(null);
   const [calculatedScores, setCalculatedScores] = useState(null);
   const [isLinkExpired, setIsLinkExpired] = useState(false);
   const [error, setError] = useState(null);
+  const [assessmentStatus, setAssessmentStatus] = useState(null); // New state for assessment status
   const location = useLocation();
   const [scheduledAssessmentId, setScheduledAssessmentID] = useState("");
   const [candidateId, setCandidateId] = useState("");
@@ -82,6 +82,7 @@ const AssessmentTest = () => {
           scheduledAssessmentId: document.scheduledAssessmentId,
           candidateId: document.candidateId,
           expiryAt: document.expiryAt,
+          status: document.status, // Include status
         };
       } else {
         throw new Error("Failed to fetch candidate assessment details");
@@ -172,15 +173,23 @@ const AssessmentTest = () => {
         const decryptedId = decrypt(candidateAssessmentId, "test");
         setCandidateAssessmentId(decryptedId);
 
-        const { candidateId, scheduledAssessmentId, expiryAt } =
+        const { candidateId, scheduledAssessmentId, expiryAt, status } =
           await getCandidateAssessmentDetails(decryptedId);
         // console.log("candidateId, scheduledAssessmentId, expiryAt", candidateId, scheduledAssessmentId, expiryAt);
+
+        // Store the status
+        setAssessmentStatus(status);
 
         // Check if the link has expired
         if (new Date(expiryAt) < new Date()) {
           setIsLinkExpired(true);
           toast.error("The assessment link has expired.");
           return;
+        }
+
+        // Check for terminal statuses
+        if (["completed", "pass", "fail", "cancelled"].includes(status)) {
+          return; // Early return, status message will be handled in render
         }
 
         if (!scheduledAssessmentId || !candidateId) {
@@ -273,7 +282,8 @@ const AssessmentTest = () => {
     );
   };
 
-  if (isLinkExpired) {
+  // Render messages based on assessment status
+  if (isLinkExpired || assessmentStatus === "expired") {
     return (
       <div className="-mt-16">
         <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
@@ -287,6 +297,82 @@ const AssessmentTest = () => {
             <p className="mt-4 text-gray-600">
               The assessment link you are trying to access has expired. Please
               contact the administrator for a new link.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (assessmentStatus === "completed") {
+    return (
+      <div className="-mt-16">
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
+          {renderHeader()}
+          <div className="max-w-2xl mx-auto mt-16 p-8 text-center">
+            <h1 className="sm:text-md md:text-md lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-blue-600">
+              Assessment Completed
+            </h1>
+            <p className="mt-4 text-gray-600">
+              You have already completed this assessment. Please contact the
+              administrator for further details.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (assessmentStatus === "pass") {
+    return (
+      <div className="-mt-16">
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
+          {renderHeader()}
+          <div className="max-w-2xl mx-auto mt-16 p-8 text-center">
+            <h1 className="sm:text-md md:text-md lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-green-600">
+              Assessment Passed
+            </h1>
+            <p className="mt-4 text-gray-600">
+              Congratulations! You have passed this assessment. Please contact the
+              administrator for next steps.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (assessmentStatus === "fail") {
+    return (
+      <div className="-mt-16">
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
+          {renderHeader()}
+          <div className="max-w-2xl mx-auto mt-16 p-8 text-center">
+            <h1 className="sm:text-md md:text-md lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-red-600">
+              Assessment Failed
+            </h1>
+            <p className="mt-4 text-gray-600">
+              You did not pass this assessment. Please contact the administrator
+              for further details or next steps.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (assessmentStatus === "cancelled") {
+    return (
+      <div className="-mt-16">
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
+          {renderHeader()}
+          <div className="max-w-2xl mx-auto mt-16 p-8 text-center">
+            <h1 className="sm:text-md md:text-md lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-red-600">
+              Assessment Cancelled
+            </h1>
+            <p className="mt-4 text-gray-600">
+              This assessment has been cancelled. Please contact the
+              administrator for more information.
             </p>
           </div>
         </div>
