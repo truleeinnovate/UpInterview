@@ -24,6 +24,7 @@ import {
   GlobeAltIcon,
   CodeBracketIcon,
   ArrowsRightLeftIcon,
+  VideoCameraIcon,
 } from "@heroicons/react/24/outline";
 
 const AccountSettingsSidebar = () => {
@@ -60,12 +61,14 @@ const AccountSettingsSidebar = () => {
   const securityNavigation = [
     { name: "Security", icon: KeyIcon, id: "security" },
     { name: "Usage", icon: ChartBarIcon, id: "usage" },
+   
   ];
 
   const organizationNavigation = [
     { name: "Users", icon: UsersIcon, id: "users" },
     { name: "Interviewer Groups", icon: UserGroupIcon, id: "interviewer-groups" },
     { name: "Roles", icon: UserIcon, id: "roles" },
+    { name: "Video Calling", icon: VideoCameraIcon, id: "video-calling-settings" },
   ];
 
   const settingsNavigation = [
@@ -98,6 +101,7 @@ const AccountSettingsSidebar = () => {
     profile: "CompanyProfile",
     "billing-details": "Billing",
     subscription: "Subscription",
+    "video-calling-settings": "VideoCalling",
     wallet: "Wallet",
     security: "Security",
     notifications: "NotificationsSettings",

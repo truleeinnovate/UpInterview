@@ -63,7 +63,13 @@ const NewAssessment = () => {
     : null;
 
   const [activeTab, setActiveTab] = useState("Basicdetails");
-  const [startDate, setStartDate] = useState(new Date());
+  // const [startDate, setStartDate] = useState(new Date());
+  // Replace the current startDate initialization with:
+const [startDate, setStartDate] = useState(() => {
+  const sixMonthsFromNow = new Date();
+  sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+  return sixMonthsFromNow;
+});
   const [showMessage, setShowMessage] = useState(false);
   const [errors, setErrors] = useState("");
   const [showDropdownAssessment, setShowDropdownAssessment] = useState(false);
@@ -1230,43 +1236,125 @@ const NewAssessment = () => {
   // changes made by shashank on [08/01/2025] addedSections onSectionAdded
   const [sectionName, setSectionName] = useState("");
   const handleAddSection = (closeAddSectionPopup) => {
-    const validateErrors = {};
-    if (!sectionName.trim()) {
-      validateErrors.sectionName = "";
-      setIsAlreadyExistingSection("section name is required*");
-      return;
-    }
+    // const validateErrors = {};
+    // if (!sectionName.trim()) {
+    //   validateErrors.sectionName = "";
+    //   setIsAlreadyExistingSection("section name is required*");
+    //   return;
+    // }
     if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
       setIsAlreadyExistingSection(`section ${sectionName} already exists`);
       return;
     }
 
+    // Generate section name (Section1, Section2, etc.)
+  const sectionNumber = addedSections.length + 1;
+  const newSectionName = `Section${sectionNumber}`;
+  
+  // Check if section name already exists (in case of deletions)
+  let finalSectionName = newSectionName;
+  let counter = 1;
+  
+  while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
+    finalSectionName = `Section${sectionNumber + counter}`;
+    counter++;
+  }
+console.log(finalSectionName);
     handleSectionAdded({
-      SectionName: sectionName,
+      SectionName: finalSectionName,
       Questions: [],
     });
     setSectionName("");
+    // closeAddSectionPopup();
+     // Close the popup if it exists
+  if (closeAddSectionPopup) {
     closeAddSectionPopup();
+  }
   };
+
+  // const updateQuestionsInAddedSectionFromQuestionBank = (
+  //   sectionName,
+  //   question
+  // ) => {
+  //   console.log("Updating questions in section:", sectionName);
+
+  //   setAddedSections((prevSections) => {
+  //     return prevSections.map((section) => {
+  //       if (section.SectionName === sectionName) {
+  //         return {
+  //           ...section,
+  //           Questions: [...(section.Questions || []), question],
+  //         };
+  //       }
+  //       return section;
+  //     });
+  //   });
+  // };
 
   const updateQuestionsInAddedSectionFromQuestionBank = (
     sectionName,
-    question
+    question,
+    questionIdToRemove = null
   ) => {
-    console.log("Updating questions in section:", sectionName);
-
+    console.log("🔄 updateQuestionsInAddedSectionFromQuestionBank called:", {
+      sectionName,
+      question: question ? 'has question' : 'no question',
+      questionIdToRemove
+    });
+  
     setAddedSections((prevSections) => {
-      return prevSections.map((section) => {
+      const updatedSections = prevSections.map((section) => {
         if (section.SectionName === sectionName) {
+          let updatedQuestions = [...(section.Questions || [])];
+          
+          if (questionIdToRemove) {
+            // Remove the question
+            const initialLength = updatedQuestions.length;
+            updatedQuestions = updatedQuestions.filter(q => {
+              if (!q) return false;
+              
+              // Try multiple ID properties
+              const id = q.questionId || q._id || q.id;
+              if (!id) {
+                console.warn('Question without ID found:', q);
+                return false;
+              }
+              
+              return id !== questionIdToRemove;
+            });
+            
+            console.log(`🗑️ Removed question ${questionIdToRemove}. ${initialLength} → ${updatedQuestions.length} questions`);
+          } 
+          else if (question) {
+            // Add the question (with duplicate check)
+            const existingQuestionId = question.questionId || question._id;
+            const isDuplicate = updatedQuestions.some(q => {
+              if (!q) return false;
+              const qId = q.questionId || q._id;
+              return qId === existingQuestionId;
+            });
+            
+            if (!isDuplicate) {
+              updatedQuestions.push(question);
+              console.log(`✅ Added question ${existingQuestionId}`);
+            } else {
+              console.warn(`⚠️ Duplicate question ${existingQuestionId} not added`);
+            }
+          }
+          
           return {
             ...section,
-            Questions: [...(section.Questions || []), question],
+            Questions: updatedQuestions,
           };
         }
         return section;
       });
+      
+      console.log("📊 Final sections state:", updatedSections);
+      return updatedSections;
     });
   };
+
 
   const navigate = useNavigate();
 

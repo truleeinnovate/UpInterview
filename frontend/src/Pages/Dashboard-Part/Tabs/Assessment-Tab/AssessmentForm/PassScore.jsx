@@ -410,6 +410,7 @@ const PassScore = forwardRef(
                           type="number"
                           id="totalScore"
                           name="totalScore"
+                          placeholder="Enter Total Score"
                           value={localTotalScore}
                           onChange={(e) =>
                             handleOverallTotalScoreChange(e.target.value)
@@ -433,6 +434,7 @@ const PassScore = forwardRef(
                           type="number"
                           id="passScore"
                           name="passScore"
+                          placeholder="Enter Pass Score"
                           value={localPassScore}
                           onChange={(e) =>
                             handleOverallPassScoreChange(e.target.value)
