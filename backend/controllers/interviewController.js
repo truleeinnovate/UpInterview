@@ -26,6 +26,13 @@ const {
 // v1.0.2 <-----------------------------------------
 // ------------------------------v1.0.0 >
 
+// Import push notification functions
+const {
+  createInterviewCreatedNotification,
+  createInterviewRoundScheduledNotification,
+  createInterviewStatusUpdateNotification,
+} = require("./PushNotificationControllers/pushNotificationInterviewController");
+
 // const createInterview = async (req, res) => {
 //   try {
 //     const {
@@ -324,12 +331,19 @@ const createInterview = async (req, res) => {
 
       interview = new Interview(interviewData);
       await interview.save();
-    // }
-
-    // Handle rounds and questions if not just updating status
-    if (!updatingInterviewStatus) {
-      const position = await Position.findById(positionId);
-      let roundsToSave = [];
+      
+      // Create push notification for interview creation
+      try {
+        await createInterviewCreatedNotification(interview);
+      } catch (notificationError) {
+        console.error('[INTERVIEW] Error creating notification:', notificationError);
+        // Continue execution even if notification fails
+      }
+      
+      // Handle rounds and questions if not just updating status
+      if (!updatingInterviewStatus) {
+        const position = await Position.findById(positionId);
+        let roundsToSave = [];
 
       if (position?.templateId?.toString() === templateId?.toString()) {
         roundsToSave = position.rounds || [];
@@ -388,6 +402,16 @@ const createInterview = async (req, res) => {
           // Save the round document
           const savedRound = await roundDoc.save();
           // console.log("Saved roundDoc:", JSON.stringify(savedRound, null, 2));
+          
+          // Create notification if round has scheduled date and interviewer
+          if (savedRound.dateTime || savedRound.interviewers?.length > 0) {
+            try {
+              await createInterviewRoundScheduledNotification(savedRound);
+            } catch (notificationError) {
+              console.error('[INTERVIEW] Error creating round scheduled notification:', notificationError);
+              // Continue execution even if notification fails
+            }
+          }
 
           // Handle questions if they exist and are valid
           if (
@@ -530,6 +554,16 @@ const updateInterview = async (req, res) => {
     const interview = await Interview.findByIdAndUpdate(id, interviewData, {
       new: true,
     });
+    
+    // Create notification if status changed
+    if (status && status !== existingInterview.status) {
+      try {
+        await createInterviewStatusUpdateNotification(interview, existingInterview.status, status);
+      } catch (notificationError) {
+        console.error('[INTERVIEW] Error creating status update notification:', notificationError);
+        // Continue execution even if notification fails
+      }
+    }
 
     // Handle rounds/questions only if not just updating status and template is provided/changed
     if (!updatingInterviewStatus && templateId && templateId !== existingInterview.templateId?.toString()) {
@@ -971,11 +1005,25 @@ const saveInterviewRound = async (req, res) => {
 
       savedRound = await newInterviewRound.save();
       await reorderInterviewRounds(interviewId);
-    // }
+      
+      // Create notification for round scheduling
+      if (savedRound.dateTime || savedRound.interviewers?.length > 0) {
+        try {
+          await createInterviewRoundScheduledNotification(savedRound);
+        } catch (notificationError) {
+          console.error('[INTERVIEW] Error creating round scheduled notification:', notificationError);
+          // Continue execution even if notification fails
+        }
+      }
 
     // Only call handleInterviewQuestions if questions is provided
     if (questions && Array.isArray(questions)) {
-      await handleInterviewQuestions(interviewId, savedRound._id, questions);
+      try {
+        await handleInterviewQuestions(interviewId, savedRound._id, questions);
+      } catch (error) {
+        console.error('[INTERVIEW] Error handling interview questions:', error);
+        // Continue execution even if question handling fails
+      }
     } else {
       console.log(
         "saveInterviewRound: questions is null, undefined, or not an array, skipping handleInterviewQuestions"
