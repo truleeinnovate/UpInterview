@@ -129,7 +129,6 @@ const AddCandidateForm = ({
   const [editingIndex, setEditingIndex] = useState(null);
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
-  const expertiseOptions = ["Basic", "Medium", "Expert"];
   // const [filePreview, setFilePreview] = useState(null);
   // const [isImageUploaded, setIsImageUploaded] = useState(false);
 
@@ -140,19 +139,6 @@ const AddCandidateForm = ({
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
   const genderOptions = ["Male", "Female"];
-  const experienceOptions = [
-    "0-1 Years",
-    "1-2 years",
-    "2-3 years",
-    "3-4 years",
-    "4-5 years",
-    "5-6 years",
-    "6-7 years",
-    "7-8 years",
-    "8-9 years",
-    "9-10 years",
-    "10+ years",
-  ];
 
   // v1.0.3 <---------------------------------------------------------------------------
   const fieldRefs = {
@@ -1112,8 +1098,6 @@ const AddCandidateForm = ({
                   selectedLevel={selectedLevel}
                   setSelectedLevel={setSelectedLevel}
                   skills={skills}
-                  expertiseOptions={expertiseOptions}
-                  experienceOptions={experienceOptions}
                   isNextEnabled={isNextEnabled}
                   handleAddEntry={handleAddEntry}
                   skillpopupcancelbutton={skillpopupcancelbutton}

@@ -155,14 +155,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [entries, setEntries] = useState([]);
-  const [selectTemplete, setselectTemplete] = useState(true);
+  
   const [selectedExp, setSelectedExp] = useState("");
-  const [positionId, setPositionId] = useState(null);
+ 
   const [selectedLevel, setSelectedLevel] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
 
-  const [deleteIndex, setDeleteIndex] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
@@ -181,21 +179,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   }, [currentStage]);
 
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
-  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
-  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
-  const experienceOptions = [
-    "0-1 Years",
-    "1-2 years",
-    "2-3 years",
-    "3-4 years",
-    "4-5 years",
-    "5-6 years",
-    "6-7 years",
-    "7-8 years",
-    "8-9 years",
-    "9-10 years",
-    "10+ years",
-  ];
+  
+  
 
   const isNextEnabled = () => {
     if (currentStep === 0) {
@@ -225,7 +210,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     return false;
   };
 
-  const expertiseOptions = ["Basic", "Medium", "Expert"];
+
 
   // Mapped options for shared DropdownWithSearchField
   const companyOptionsRS = (companies || [])
@@ -410,7 +395,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         (template) =>
           template.templateName === selectedPosition?.selectedTemplete
       );
-      setPositionId(id);
+      //setPositionId(id);
 
       const companyName = selectedPosition?.companyname || "";
 
@@ -465,12 +450,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       setAllSelectedSkills(
         selectedPosition.skills?.map((skill) => skill.skill) || []
       );
-      setAllSelectedExperiences(
-        selectedPosition.skills?.map((skill) => skill.experience) || []
-      );
-      setAllSelectedExpertises(
-        selectedPosition.skills?.map((skill) => skill.expertise) || []
-      );
+      // setAllSelectedExperiences(
+      //   selectedPosition.skills?.map((skill) => skill.experience) || []
+      // );
+      // setAllSelectedExpertises(
+      //   selectedPosition.skills?.map((skill) => skill.expertise) || []
+      // );
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1323,8 +1308,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         selectedLevel={selectedLevel}
                         setSelectedLevel={setSelectedLevel}
                         skills={skills}
-                        expertiseOptions={expertiseOptions}
-                        experienceOptions={experienceOptions}
+                        
                         isNextEnabled={isNextEnabled}
                         handleAddEntry={handleAddEntry}
                         skillpopupcancelbutton={skillpopupcancelbutton}
