@@ -467,8 +467,8 @@ const Subscription = () => {
         {loading ? (
           <SubscriptionPlansSkeleton />
         ) : (
-          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          <div className="w-full px-4 pt-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
               {plans.map((plan) => (
                 <div
                   key={plan.name}
