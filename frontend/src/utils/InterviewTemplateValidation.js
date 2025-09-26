@@ -35,6 +35,24 @@ export const validateInterviewTemplate = (templateData) => {
   // }
   // v1.0.0 ---------------------->
 
+  // Validate bestFor
+  if (!templateData.bestFor || !templateData.bestFor.trim()) {
+    errors.bestFor = 'Best For is required';
+    isValid = false;
+  } else if (templateData.bestFor.trim().length > 50) {
+    errors.bestFor = 'Best For cannot exceed 50 characters';
+    isValid = false;
+  }
+
+  // Validate format
+  if (!templateData.format || !templateData.format.trim()) {
+    errors.format = 'Format is required';
+    isValid = false;
+  } else if (!['fully online', 'hybrid', 'offline'].includes(templateData.format)) {
+    errors.format = 'Format must be one of: fully online, hybrid, or offline';
+    isValid = false;
+  }
+
   // Validate rounds (if provided)
   if (templateData.rounds && templateData.rounds.length > 0) {
     const roundErrors = [];

@@ -26,6 +26,7 @@ import { scrollToFirstError } from "../../utils/ScrollToFirstError/scrollToFirst
 import SidebarPopup from "../../Components/Shared/SidebarPopup/SidebarPopup";
 import InputField from "../../Components/FormFields/InputField";
 import DescriptionField from "../../Components/FormFields/DescriptionField";
+import DropdownWithSearchField from "../../Components/FormFields/DropdownWithSearchField";
 // v1.0.4 ---------------------------------------------------------------------------->
 
 const InterviewSlideover = ({ mode }) => {
@@ -44,6 +45,8 @@ const InterviewSlideover = ({ mode }) => {
     description: "",
     status: "draft",
     rounds: [],
+    bestFor: "",
+    format: "",
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -61,8 +64,10 @@ const InterviewSlideover = ({ mode }) => {
   const fieldRefs = {
     templateTitle: useRef(null),
     // label: useRef(null),
+    bestFor: useRef(null),
+    format: useRef(null),
   };
-  // v1.0.3 ------------------------------------------------------------------------------------>
+  // v1.0.3 ----------------------------------------------------------------------------------->
 
   useEffect(() => {
     if (templatesData) {
@@ -77,6 +82,8 @@ const InterviewSlideover = ({ mode }) => {
             description: foundTemplate.description || "",
             status: foundTemplate.status || "draft",
             rounds: foundTemplate.rounds || [],
+            bestFor: foundTemplate.bestFor || "",
+            format: foundTemplate.format || "",
           }));
         }
       } else {
@@ -87,6 +94,8 @@ const InterviewSlideover = ({ mode }) => {
           description: "",
           status: "draft",
           rounds: [],
+          bestFor: "",
+          format: "",
         });
       }
       setIsLoading(false);
@@ -101,6 +110,8 @@ const InterviewSlideover = ({ mode }) => {
       name: newTemplate.name,
       description: newTemplate.description,
       rounds: newTemplate.rounds,
+      bestFor: newTemplate.bestFor,
+      format: newTemplate.format,
     };
 
     const { errors: validationErrors } = validateInterviewTemplate(
@@ -234,6 +245,8 @@ const InterviewSlideover = ({ mode }) => {
         description: newTemplate.description,
         status: newTemplate.status,
         isSaved: !isTemplate,
+        bestFor: newTemplate.bestFor,
+        format: newTemplate.format,
       };
       // console.log('Template Data:', templateData);
 
@@ -310,7 +323,7 @@ const InterviewSlideover = ({ mode }) => {
           className="flex-1 flex flex-col h-[calc(100vh-100px)]"
         >
           <div className="flex-1">
-            <div className="space-y-6 pt-6 pb-5">
+            <div className="space-y-4 pt-6 pb-5">
               <div>
                 <InputField
                   label="Title"
@@ -345,6 +358,63 @@ const InterviewSlideover = ({ mode }) => {
                 />
               </div>
 
+             
+
+              <div>
+                <InputField
+                  label="Best For"
+                  ref={fieldRefs.bestFor}
+                  type="text"
+                  id="bestFor"
+                  name="bestFor"
+                  placeholder="e.g., Senior developers with 5+ years experience"
+                  value={newTemplate.bestFor}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 50); // Limit to 50 characters
+                    setNewTemplate((prev) => ({
+                      ...prev,
+                      bestFor: value,
+                    }));
+                    if (errors.bestFor) {
+                      setErrors((prev) => ({ ...prev, bestFor: "" }));
+                    }
+                  }}
+                  onBlur={() => handleBlur("bestFor")}
+                  autoComplete="off"
+                  error={errors.bestFor}
+                  maxLength={50}
+                  required
+                />
+                <p className="flex justify-end text-xs text-gray-500 mt-1">
+                  {newTemplate.bestFor.length}/50 characters
+                </p>
+              </div>
+
+              <div>
+                <DropdownWithSearchField
+                  label="Format"
+                  name="format"
+                  value={newTemplate.format}
+                  options={[
+                    { label: "Fully Online", value: "fully online" },
+                    { label: "Hybrid", value: "hybrid" },
+                    { label: "Offline", value: "offline" },
+                  ]}
+                  onChange={(e) => {
+                    setNewTemplate((prev) => ({
+                      ...prev,
+                      format: e.target.value,
+                    }));
+                    if (errors.format) {
+                      setErrors((prev) => ({ ...prev, format: "" }));
+                    }
+                  }}
+                  placeholder="Select format"
+                  error={errors.format}
+                  containerRef={fieldRefs.format}
+                  required
+                />
+              </div>
               <div>
                 <DescriptionField
                   label="Description"
