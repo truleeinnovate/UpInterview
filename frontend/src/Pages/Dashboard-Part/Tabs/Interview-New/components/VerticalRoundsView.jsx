@@ -1,5 +1,7 @@
 // v1.0.0 - Ashok - modified as first card should open by default and added optional chaining(?)
 // v1.0.1 - Ashok - improved first should open by default
+// v1.0.2 - Ashok - Improved responsiveness
+
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import RoundCard from "./RoundCard";
@@ -109,7 +111,9 @@ const VerticalRoundsView = ({
               </div>
               <div>
                 <div className="flex items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  {/* v1.0.3 <-------------------------------------------------------------------------------------------- */}
+                  <h3 className="sm:text-sm md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
+                  {/* v1.0.3 --------------------------------------------------------------------------------------------> */}
                     {round?.roundTitle}
                   </h3>
                   <span className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(round?.status)}`}>
@@ -136,7 +140,9 @@ const VerticalRoundsView = ({
             </div>
           </button>
           {isExpanded(round._id) && (
-            <div className="px-4 pb-4">
+            // v1.0.3 <--------------------------------
+            <div className="sm:px-0 px-4 pb-4">
+            {/* v1.0.3 --------------------------------> */}
               <RoundCard
                 round={round}
                 interviewData={interviewData}

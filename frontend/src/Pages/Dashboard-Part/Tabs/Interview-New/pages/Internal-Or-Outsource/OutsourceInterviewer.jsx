@@ -1,37 +1,75 @@
 // v1.0.0  -  Ashraf  -  header border-b removed
 // v1.0.1  -  Venkatesh  -  interviewer if  wallet balance is less than hourlyrate then show wallet modal
-import React, { useState, useRef, useEffect, useMemo } from 'react';//<----v1.0.1-----
-import { X, Star, ExternalLink, ChevronDown, ChevronUp, Search, Minimize, Info, Clock, Users, Expand } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '../../../CommonCode-AllTabs/ui/button.jsx';
-import InterviewerAvatar from '../../../CommonCode-AllTabs/InterviewerAvatar.jsx';
-import InterviewerDetailsModal from '../Internal-Or-Outsource/OutsourceInterviewerDetail.jsx';
-import { useCustomContext } from '../../../../../../Context/Contextfetch.js';
-import Wallet from '../../../../Accountsettings/account/wallet/Wallet.jsx';
-import { useWallet } from '../../../../../../apiHooks/useWallet';//<----v1.0.1-----
-import toast, { Toaster } from 'react-hot-toast';//<----v1.0.1-----
-import { WalletTopupPopup } from '../../../../Accountsettings/account/wallet/WalletTopupPopup.jsx';
+// v1.0.2  -  Ashok   -  Improved responsiveness and added common code to popups
 
-const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDetails, navigatedfrom }) => {
+import React, { useState, useRef, useEffect, useMemo } from "react"; //<----v1.0.1-----
+import {
+  X,
+  Star,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Minimize,
+  Info,
+  Clock,
+  Users,
+  Expand,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
+import InterviewerAvatar from "../../../CommonCode-AllTabs/InterviewerAvatar.jsx";
+import InterviewerDetailsModal from "../Internal-Or-Outsource/OutsourceInterviewerDetail.jsx";
+import { useCustomContext } from "../../../../../../Context/Contextfetch.js";
+import Wallet from "../../../../Accountsettings/account/wallet/Wallet.jsx";
+import { useWallet } from "../../../../../../apiHooks/useWallet"; //<----v1.0.1-----
+import toast, { Toaster } from "react-hot-toast"; //<----v1.0.1-----
+import { WalletTopupPopup } from "../../../../Accountsettings/account/wallet/WalletTopupPopup.jsx";
+import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+
+const OutsourcedInterviewerCard = ({
+  interviewer,
+  isSelected,
+  onSelect,
+  onViewDetails,
+  navigatedfrom,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const fullName = interviewer?.contact?.firstName || interviewer?.contact?.Name || "Unnamed";
-  const professionalTitle = interviewer?.contact?.professionalTitle || interviewer?.contact?.CurrentRole || "Interviewer";
+  const fullName =
+    interviewer?.contact?.firstName || interviewer?.contact?.Name || "Unnamed";
+  const professionalTitle =
+    interviewer?.contact?.professionalTitle ||
+    interviewer?.contact?.CurrentRole ||
+    "Interviewer";
   const company = interviewer?.contact?.industry || "Freelancer";
   const hourlyRate = interviewer?.contact?.hourlyRate || "not provided";
   const rating = interviewer?.contact?.rating || "4.5";
-  const introduction = interviewer?.contact?.introduction || "No introduction provided.";
+  const introduction =
+    interviewer?.contact?.introduction || "No introduction provided.";
   const skillsArray = interviewer?.contact?.skills ?? [];
-  const avgResponseTime = interviewer?.contact?.avgResponseTime || "not provided";
+  const avgResponseTime =
+    interviewer?.contact?.avgResponseTime || "not provided";
 
   return (
-    <div className={`bg-white rounded-lg border ${isSelected ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200'} p-4 shadow-sm hover:shadow-md transition-all`}>
+    <div
+      className={`bg-white rounded-lg border ${
+        isSelected
+          ? "border-orange-500 ring-2 ring-orange-200"
+          : "border-gray-200"
+      } p-4 shadow-sm hover:shadow-md transition-all`}
+    >
       <div className="flex items-start justify-between">
         <div className="flex items-center">
           <InterviewerAvatar interviewer={interviewer} size="lg" />
           <div className="ml-3">
             <h3 className="text-base font-medium text-gray-900">{fullName}</h3>
-            <p className="text-sm text-gray-500 truncate max-w-[200px]" title={professionalTitle}>
-              {professionalTitle.length > 15 ? `${professionalTitle.substring(0, 15)}...` : professionalTitle}
+            <p
+              className="text-sm text-gray-500 truncate max-w-[200px]"
+              title={professionalTitle}
+            >
+              {professionalTitle.length > 15
+                ? `${professionalTitle.substring(0, 15)}...`
+                : professionalTitle}
             </p>
             <p className="text-xs text-orange-600">{company}</p>
           </div>
@@ -39,23 +77,45 @@ const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDe
         <div className="flex items-center space-x-2">
           <div className="flex items-center">
             <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-            <span className="ml-1 text-sm font-medium text-gray-700">{rating}</span>
+            <span className="ml-1 text-sm font-medium text-gray-700">
+              {rating}
+            </span>
           </div>
-          <span className="text-sm font-medium text-gray-700">${hourlyRate}/hr</span>
+          <span className="text-sm font-medium text-gray-700">
+            ${hourlyRate}/hr
+          </span>
         </div>
       </div>
 
       <div className="mt-3">
-        <div className={`text-sm text-gray-600 ${!isExpanded && 'line-clamp-2'}`}>{introduction}</div>
-        <button onClick={() => setIsExpanded(!isExpanded)} className="text-xs text-custom-blue hover:text-custom-blue/80 mt-1 flex items-center">
-          {isExpanded ? <>Show less <ChevronUp className="h-3 w-3 ml-1" /></> : <>Show more <ChevronDown className="h-3 w-3 ml-1" /></>}
+        <div
+          className={`text-sm text-gray-600 ${!isExpanded && "line-clamp-2"}`}
+        >
+          {introduction}
+        </div>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-xs text-custom-blue hover:text-custom-blue/80 mt-1 flex items-center"
+        >
+          {isExpanded ? (
+            <>
+              Show less <ChevronUp className="h-3 w-3 ml-1" />
+            </>
+          ) : (
+            <>
+              Show more <ChevronDown className="h-3 w-3 ml-1" />
+            </>
+          )}
         </button>
       </div>
 
       <div className="mt-3">
         <div className="flex flex-wrap gap-1">
           {skillsArray.slice(0, 3).map((skill, index) => (
-            <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+            <span
+              key={index}
+              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+            >
               {typeof skill === "string" ? skill : skill?.skill || "Skill"}
             </span>
           ))}
@@ -69,15 +129,25 @@ const OutsourcedInterviewerCard = ({ interviewer, isSelected, onSelect, onViewDe
 
       <div className="mt-4 flex justify-between items-center">
         <div className="flex items-center text-sm text-gray-600">
-          <Clock className="h-4 w-4 mr-1 text-gray-400" /> Avg. response: {avgResponseTime}
+          <Clock className="h-4 w-4 mr-1 text-gray-400" /> Avg. response:{" "}
+          {avgResponseTime}
         </div>
-        {navigatedfrom !== 'dashboard' && (
+        {navigatedfrom !== "dashboard" && (
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={onViewDetails} className="text-custom-blue hover:text-custom-blue/80">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onViewDetails}
+              className="text-custom-blue hover:text-custom-blue/80"
+            >
               <ExternalLink className="h-3 w-3 mr-1" /> View Details
             </Button>
-            <Button variant={isSelected ? "destructive" : "customblue"} size="sm" onClick={onSelect}>
-              {isSelected ? 'Remove' : 'Select'}
+            <Button
+              variant={isSelected ? "destructive" : "customblue"}
+              size="sm"
+              onClick={onSelect}
+            >
+              {isSelected ? "Remove" : "Select"}
             </Button>
           </div>
         )}
@@ -92,22 +162,23 @@ function OutsourcedInterviewerModal({
   positionData,
   onProceed,
   skills,
-  navigatedfrom
+  navigatedfrom,
 }) {
-
-  const { interviewers, contacts } = useCustomContext();//<----v1.0.1-----
+  const { interviewers, contacts } = useCustomContext(); //<----v1.0.1-----
   //console.log("contacts===",contacts)
-  const { data: walletBalance, refetch } = useWallet();//<----v1.0.1-----
+  const { data: walletBalance, refetch } = useWallet(); //<----v1.0.1-----
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [rateRange, setRateRange] = useState([0, 250]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedInterviewer, setSelectedInterviewer] = useState(null);
-  const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState([]);
+  const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState(
+    []
+  );
   const requestSentRef = useRef(false);
   const [filteredInterviewers, setFilteredInterviewers] = useState([]);
   const [baseInterviewers, setBaseInterviewers] = useState([]);
-  const [showWalletModal, setShowWalletModal] = useState(false);//<----v1.0.1-----
+  const [showWalletModal, setShowWalletModal] = useState(false); //<----v1.0.1-----
 
   //<----v1.0.1-----
   // Compute the highest hourlyRate from backend contacts
@@ -125,14 +196,22 @@ function OutsourcedInterviewerModal({
 
   // Fetch and filter interviewers based on skills and availability
   useEffect(() => {
-    if (navigatedfrom !== 'dashboard' && navigatedfrom !== 'mock-interview' && (!positionData || requestSentRef.current)) {
+    if (
+      navigatedfrom !== "dashboard" &&
+      navigatedfrom !== "mock-interview" &&
+      (!positionData || requestSentRef.current)
+    ) {
       return;
     }
     // <-------------------  this position data we will select in interview form
     // console.log('positionData:', positionData);
     // console.log('dateTime:', dateTime);
     // this position data we will select in interview form -------------------------->
-    const fetchInterviewers = async (positionSkills, positionMinExperience, positionMaxExperience) => {
+    const fetchInterviewers = async (
+      positionSkills,
+      positionMinExperience,
+      positionMaxExperience
+    ) => {
       // console.log('positionSkills:', positionSkills);
       // console.log('positionMinExperience:', positionMinExperience);
       // console.log('positionMaxExperience:', positionMaxExperience);
@@ -143,60 +222,71 @@ function OutsourcedInterviewerModal({
         console.log("Interviewers from context:", response);
         // ---------------------->
 
-        const externalInterviewers = response.data.filter(interviewer => interviewer.type === 'external');
+        const externalInterviewers = response.data.filter(
+          (interviewer) => interviewer.type === "external"
+        );
         console.log("External Interviewers:", externalInterviewers);
 
-        if (navigatedfrom === "dashboard" || navigatedfrom === "mock-interview") {
-          console.log(`Navigated from ${navigatedfrom} – using all external interviewers with skill matching.`);
+        if (
+          navigatedfrom === "dashboard" ||
+          navigatedfrom === "mock-interview"
+        ) {
+          console.log(
+            `Navigated from ${navigatedfrom} – using all external interviewers with skill matching.`
+          );
 
-          const skillFilteredInterviewers = externalInterviewers.filter(interviewer => {
-            const interviewerSkills = interviewer.contact?.Skills || [];
-            // console.log(`Checking interviewer: ${interviewer.contact?.UserName || 'Unknown'}`);
-            // console.log("Interviewer's Skills:", interviewerSkills);
-            // console.log("Required Skills:", skills);
+          const skillFilteredInterviewers = externalInterviewers.filter(
+            (interviewer) => {
+              const interviewerSkills = interviewer.contact?.Skills || [];
+              // console.log(`Checking interviewer: ${interviewer.contact?.UserName || 'Unknown'}`);
+              // console.log("Interviewer's Skills:", interviewerSkills);
+              // console.log("Required Skills:", skills);
 
-            // If no skills are required, show all interviewers
-            if (!skills || !Array.isArray(skills) || skills.length === 0) {
-              // console.log("No skills to match against, including all interviewers");
-              return true;
+              // If no skills are required, show all interviewers
+              if (!skills || !Array.isArray(skills) || skills.length === 0) {
+                // console.log("No skills to match against, including all interviewers");
+                return true;
+              }
+
+              if (interviewerSkills.length === 0) {
+                // console.log("Interviewer has no skills, excluding");
+                return false;
+              }
+
+              // Convert all skills to lowercase for case-insensitive comparison
+              const interviewerSkillsLower = interviewerSkills.map((skill) =>
+                skill?.toLowerCase()
+              );
+
+              // Check if any of the required skills match the interviewer's skills
+              const hasMatchingSkill = skills.some((requiredSkill) => {
+                // Get the skill name and convert to lowercase
+                const requiredSkillName = requiredSkill.skill?.toLowerCase();
+                if (!requiredSkillName) return false;
+
+                return interviewerSkillsLower.includes(requiredSkillName);
+              });
+
+              // console.log(`✅ ${interviewer.contact?.UserName || 'Unknown'} Skill Match Status: ${hasMatchingSkill}`);
+              return hasMatchingSkill;
+
+              // if (!skills || !Array.isArray(skills) || skills.length === 0) {
+              //   console.log("No skills to match against, including all interviewers");
+              //   return true;
+              // }
+
+              // const hasMatchingSkill = skills.some(skillObj =>
+              //   interviewerSkills.some(interviewerSkill =>
+              //     interviewerSkill.toLowerCase() === skillObj.skill.toLowerCase()
+              //   )
+              // );
+              // console.log("hasMatchingSkill:", hasMatchingSkill);
+
+              // console.log(`✅ ${interviewer.contact?.UserName || 'Unknown'} Skill Match Status: ${hasMatchingSkill}`);
+              // return hasMatchingSkill;
+              // return true;
             }
-
-            if (interviewerSkills.length === 0) {
-              // console.log("Interviewer has no skills, excluding");
-              return false;
-            }
-
-            // Convert all skills to lowercase for case-insensitive comparison
-            const interviewerSkillsLower = interviewerSkills.map(skill => skill?.toLowerCase());
-
-            // Check if any of the required skills match the interviewer's skills
-            const hasMatchingSkill = skills.some(requiredSkill => {
-              // Get the skill name and convert to lowercase
-              const requiredSkillName = requiredSkill.skill?.toLowerCase();
-              if (!requiredSkillName) return false;
-
-              return interviewerSkillsLower.includes(requiredSkillName);
-            });
-
-            // console.log(`✅ ${interviewer.contact?.UserName || 'Unknown'} Skill Match Status: ${hasMatchingSkill}`);
-            return hasMatchingSkill;
-
-            // if (!skills || !Array.isArray(skills) || skills.length === 0) {
-            //   console.log("No skills to match against, including all interviewers");
-            //   return true;
-            // }
-
-            // const hasMatchingSkill = skills.some(skillObj =>
-            //   interviewerSkills.some(interviewerSkill =>
-            //     interviewerSkill.toLowerCase() === skillObj.skill.toLowerCase()
-            //   )
-            // );
-            // console.log("hasMatchingSkill:", hasMatchingSkill);
-
-            // console.log(`✅ ${interviewer.contact?.UserName || 'Unknown'} Skill Match Status: ${hasMatchingSkill}`);
-            // return hasMatchingSkill;
-            // return true;
-          });
+          );
 
           // console.log("Skill Filtered External Interviewers:", skillFilteredInterviewers);
           setBaseInterviewers(skillFilteredInterviewers);
@@ -205,21 +295,23 @@ function OutsourcedInterviewerModal({
         }
 
         const timeToMinutes = (timeStr) => {
-          const [time, period] = timeStr.split(' ');
-          const [hours, minutes] = time.split(':').map(Number);
+          const [time, period] = timeStr.split(" ");
+          const [hours, minutes] = time.split(":").map(Number);
           let totalMinutes = (hours % 12) * 60 + minutes;
-          if (period === 'PM') totalMinutes += 720;
+          if (period === "PM") totalMinutes += 720;
           return totalMinutes;
         };
 
         // console.log("changing dateTime format :", dateTime);
 
-        const [datePart, ...timeParts] = dateTime.split(' ');
-        const timeRange = timeParts.join(' ');
+        const [datePart, ...timeParts] = dateTime.split(" ");
+        const timeRange = timeParts.join(" ");
         // console.log("Date Part:", datePart);
         // console.log("Time Range:", timeRange);
 
-        const [startTimeStr, endTimeStr] = timeRange.split('-').map(t => t.trim());
+        const [startTimeStr, endTimeStr] = timeRange
+          .split("-")
+          .map((t) => t.trim());
         // console.log("Start Time String:", startTimeStr);
         // console.log("End Time String:", endTimeStr);
 
@@ -228,57 +320,98 @@ function OutsourcedInterviewerModal({
         console.log("Interviewer Start Time in Minutes:", startTimeMinutes);
         console.log("Interviewer End Time in Minutes:", endTimeMinutes);
 
-        const [day, month, year] = datePart.split('-');
+        const [day, month, year] = datePart.split("-");
         const interviewDate = new Date(`${year}-${month}-${day}`);
-        const interviewDayFull = interviewDate.toLocaleDateString('en-US', { weekday: 'long' });
+        const interviewDayFull = interviewDate.toLocaleDateString("en-US", {
+          weekday: "long",
+        });
         const interviewDayShort = interviewDayFull.substring(0, 3);
         console.log("Interviewer Day (Full):", interviewDayFull);
         console.log("Interviewer Day (Short):", interviewDayShort);
 
-        const availableInterviewers = externalInterviewers.filter(externalInterviewer => {
-          console.log("externalInterviewer:", externalInterviewer);
-          console.log("Checking externalInterviewer:", externalInterviewer.contact?.firstName + " " + externalInterviewer.contact?.lastName || 'Unknown');
+        const availableInterviewers = externalInterviewers.filter(
+          (externalInterviewer) => {
+            console.log("externalInterviewer:", externalInterviewer);
+            console.log(
+              "Checking externalInterviewer:",
+              externalInterviewer.contact?.firstName +
+                " " +
+                externalInterviewer.contact?.lastName || "Unknown"
+            );
 
-          console.log("externalInterviewer days:", externalInterviewer.days);
-          return externalInterviewer.days?.some(day => {
-            console.log("externalInterviewer Checking day:", day.day, "against", interviewDayFull, "or", interviewDayShort);
-            // Check if the day matches either the full or short form
-            const dayMatches = day.day === interviewDayFull || day.day === interviewDayShort;
-            console.log("externalInterviewer Day matches:", dayMatches);
-            if (!dayMatches) {
-              console.log("externalInterviewer Day does not match.");
-              return false;
-            }
-
-            return day.timeSlots?.some(timeSlot => {
-              console.log("externalInterviewer Checking timeSlot:", timeSlot);
-
-              const formattedStartTime = timeSlot.startTime;
-              const formattedEndTime = timeSlot.endTime;
-
-              const availabilityStartMinutes = timeToMinutes(formattedStartTime);
-              const availabilityEndMinutes = timeToMinutes(formattedEndTime);
-
-              console.log("externalInterviewer Formatted Start Time:", formattedStartTime);
-              console.log("externalInterviewer Formatted End Time:", formattedEndTime);
-              console.log("externalInterviewer Availability Start Minutes:", availabilityStartMinutes);
-              console.log("externalInterviewer Availability End Minutes:", availabilityEndMinutes);
-
-              const isWithinAvailability = (
-                startTimeMinutes >= availabilityStartMinutes &&
-                endTimeMinutes <= availabilityEndMinutes
+            console.log("externalInterviewer days:", externalInterviewer.days);
+            return externalInterviewer.days?.some((day) => {
+              console.log(
+                "externalInterviewer Checking day:",
+                day.day,
+                "against",
+                interviewDayFull,
+                "or",
+                interviewDayShort
               );
+              // Check if the day matches either the full or short form
+              const dayMatches =
+                day.day === interviewDayFull || day.day === interviewDayShort;
+              console.log("externalInterviewer Day matches:", dayMatches);
+              if (!dayMatches) {
+                console.log("externalInterviewer Day does not match.");
+                return false;
+              }
 
-              console.log("externalInterviewer Start Time Minutes:", startTimeMinutes);
-              console.log("externalInterviewer End Time Minutes:", endTimeMinutes);
-              console.log("externalInterviewer Is Within Availability:", isWithinAvailability);
+              return day.timeSlots?.some((timeSlot) => {
+                console.log("externalInterviewer Checking timeSlot:", timeSlot);
 
-              return isWithinAvailability;
+                const formattedStartTime = timeSlot.startTime;
+                const formattedEndTime = timeSlot.endTime;
+
+                const availabilityStartMinutes =
+                  timeToMinutes(formattedStartTime);
+                const availabilityEndMinutes = timeToMinutes(formattedEndTime);
+
+                console.log(
+                  "externalInterviewer Formatted Start Time:",
+                  formattedStartTime
+                );
+                console.log(
+                  "externalInterviewer Formatted End Time:",
+                  formattedEndTime
+                );
+                console.log(
+                  "externalInterviewer Availability Start Minutes:",
+                  availabilityStartMinutes
+                );
+                console.log(
+                  "externalInterviewer Availability End Minutes:",
+                  availabilityEndMinutes
+                );
+
+                const isWithinAvailability =
+                  startTimeMinutes >= availabilityStartMinutes &&
+                  endTimeMinutes <= availabilityEndMinutes;
+
+                console.log(
+                  "externalInterviewer Start Time Minutes:",
+                  startTimeMinutes
+                );
+                console.log(
+                  "externalInterviewer End Time Minutes:",
+                  endTimeMinutes
+                );
+                console.log(
+                  "externalInterviewer Is Within Availability:",
+                  isWithinAvailability
+                );
+
+                return isWithinAvailability;
+              });
             });
-          });
-        });
+          }
+        );
 
-        console.log("externalInterviewer Available External Interviewers after time check:", availableInterviewers);
+        console.log(
+          "externalInterviewer Available External Interviewers after time check:",
+          availableInterviewers
+        );
 
         // const experienceFilteredInterviewers = availableInterviewers.filter(interviewer => {
         //   const interviewerMinExp = parseInt(interviewer.contact?.minexperience || '0');
@@ -293,32 +426,53 @@ function OutsourcedInterviewerModal({
 
         // console.log("Experience Filtered External Interviewers:", experienceFilteredInterviewers);
 
-        const skillFilteredInterviewers = availableInterviewers.filter((interviewer, index) => {
-          console.log(`\n🔍 Checking Interviewer #${index + 1}:`, interviewer.contact?.UserName || 'Unknown');
-          console.log("👉 Interviewer's Skills:", interviewer.contact?.skills || []);
+        const skillFilteredInterviewers = availableInterviewers.filter(
+          (interviewer, index) => {
+            console.log(
+              `\n🔍 Checking Interviewer #${index + 1}:`,
+              interviewer.contact?.UserName || "Unknown"
+            );
+            console.log(
+              "👉 Interviewer's Skills:",
+              interviewer.contact?.skills || []
+            );
 
-          if (!positionSkills || !Array.isArray(positionSkills)) {
-            console.log("⚠️ positionSkills is invalid or not an array:", positionSkills);
-            return false;
+            if (!positionSkills || !Array.isArray(positionSkills)) {
+              console.log(
+                "⚠️ positionSkills is invalid or not an array:",
+                positionSkills
+              );
+              return false;
+            }
+
+            const interviewerSkills = interviewer.contact?.skills || [];
+            console.log("Interviewer's Skills 1:", interviewerSkills);
+            console.log("Position Skills 1:", positionSkills);
+
+            const matchingSkills = interviewerSkills.filter(
+              (interviewerSkill) =>
+                positionSkills.some(
+                  (positionSkill) =>
+                    positionSkill.skill?.toLowerCase() ===
+                    interviewerSkill?.toLowerCase()
+                )
+            );
+
+            console.log("🎯 Matching Skills Found:", matchingSkills);
+            const hasMatchingSkills = matchingSkills.length > 0;
+            console.log(
+              `✅ ${
+                interviewer.contact?.UserName || "Unknown"
+              } Skill Match Status: ${hasMatchingSkills}`
+            );
+            return hasMatchingSkills;
           }
+        );
 
-          const interviewerSkills = interviewer.contact?.skills || [];
-          console.log("Interviewer's Skills 1:", interviewerSkills);
-          console.log("Position Skills 1:", positionSkills);
-
-          const matchingSkills = interviewerSkills.filter(interviewerSkill =>
-            positionSkills.some(positionSkill =>
-              positionSkill.skill?.toLowerCase() === interviewerSkill?.toLowerCase()
-            )
-          );
-
-          console.log("🎯 Matching Skills Found:", matchingSkills);
-          const hasMatchingSkills = matchingSkills.length > 0;
-          console.log(`✅ ${interviewer.contact?.UserName || 'Unknown'} Skill Match Status: ${hasMatchingSkills}`);
-          return hasMatchingSkills;
-        });
-
-        console.log("Skill Filtered External Interviewers:", skillFilteredInterviewers);
+        console.log(
+          "Skill Filtered External Interviewers:",
+          skillFilteredInterviewers
+        );
 
         setBaseInterviewers(skillFilteredInterviewers);
         // setBaseInterviewers(externalInterviewers);
@@ -330,26 +484,38 @@ function OutsourcedInterviewerModal({
     };
 
     // console.log('Fetching interviewers with:', positionData?.skills, positionData?.CurrentExperience);
-    fetchInterviewers(positionData?.skills, positionData?.minexperience, positionData?.maxexperience);
+    fetchInterviewers(
+      positionData?.skills,
+      positionData?.minexperience,
+      positionData?.maxexperience
+    );
     requestSentRef.current = true;
   }, [positionData, dateTime, navigatedfrom, interviewers]);
 
   // Filter interviewers based on search term and rate range
   useEffect(() => {
-    const filtered = baseInterviewers.filter(interviewer => {
-      const fullName = interviewer?.contact?.firstName || interviewer?.contact?.Name || "";
-      const professionalTitle = interviewer?.contact?.professionalTitle || interviewer?.contact?.CurrentRole || "";
+    const filtered = baseInterviewers.filter((interviewer) => {
+      const fullName =
+        interviewer?.contact?.firstName || interviewer?.contact?.Name || "";
+      const professionalTitle =
+        interviewer?.contact?.professionalTitle ||
+        interviewer?.contact?.CurrentRole ||
+        "";
       const company = interviewer?.contact?.industry || "";
       const skills = interviewer?.contact?.skills || [];
       const hourlyRate = parseFloat(interviewer?.contact?.hourlyRate) || 0;
 
-      const searchMatch = searchTerm.trim() === '' ||
+      const searchMatch =
+        searchTerm.trim() === "" ||
         fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        skills.some(skill => skill?.toLowerCase().includes(searchTerm.toLowerCase()));
+        skills.some((skill) =>
+          skill?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-      const rateMatch = hourlyRate >= rateRange[0] && hourlyRate <= rateRange[1];
+      const rateMatch =
+        hourlyRate >= rateRange[0] && hourlyRate <= rateRange[1];
 
       return searchMatch && rateMatch;
     });
@@ -373,7 +539,9 @@ function OutsourcedInterviewerModal({
 
   const handleSelectClick = (interviewer) => {
     setSelectedInterviewersLocal((prev) => {
-      const isAlreadySelected = prev.some((selected) => selected._id === interviewer._id);
+      const isAlreadySelected = prev.some(
+        (selected) => selected._id === interviewer._id
+      );
       return isAlreadySelected
         ? prev.filter((selected) => selected._id !== interviewer._id)
         : [...prev, interviewer];
@@ -381,13 +549,13 @@ function OutsourcedInterviewerModal({
   };
 
   const handleTopup = async (topupData) => {
-    console.log('Processing top-up:', topupData);
+    console.log("Processing top-up:", topupData);
 
     try {
-      console.log('Refreshing wallet data after topup');
+      console.log("Refreshing wallet data after topup");
       await refetch();
     } catch (error) {
-      console.error('Error refreshing wallet data after topup:', error);
+      console.error("Error refreshing wallet data after topup:", error);
     }
   };
 
@@ -403,8 +571,12 @@ function OutsourcedInterviewerModal({
       toast.error(
         `Your wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.`,
         {
-          position: 'top-center',
-          style: { whiteSpace: 'pre-line', textAlign: 'center', maxWidth: '520px' }
+          position: "top-center",
+          style: {
+            whiteSpace: "pre-line",
+            textAlign: "center",
+            maxWidth: "520px",
+          },
         }
       );
       setTimeout(() => setShowWalletModal(true), 1000);
@@ -416,57 +588,32 @@ function OutsourcedInterviewerModal({
 
   return (
     <>
-    <Toaster/>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50">
-        <motion.div
-          className={`bg-white h-full shadow-xl flex flex-col ${isFullscreen ? 'w-full' : 'w-full md:w-2/3 lg:w-1/2 xl:w-1/2 2xl:w-1/2'}`}
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        >
-          {/* Fixed Header */}
-          {/* <------------------------------- v1.0.0  */}
-          <div className="flex justify-between items-center px-5 py-4 bg-white z-10">
-            {/* ------------------------------ v1.0.0 > */}
-            <div>
-              <h2 className="text-2xl font-semibold text-custom-blue">Select Outsourced Interviewers</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                {selectedInterviewersLocal?.length} interviewer{selectedInterviewersLocal?.length !== 1 ? 's' : ''} selected
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-              >
-                {isFullscreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <Expand className="w-5 h-5 text-gray-500" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
+      <Toaster />
+      {/* v1.0.2 <-------------------------------------------------------------------------- */}
+      <SidebarPopup
+        title="Select Outsourced Interviewers"
+        subTitle={`${selectedInterviewersLocal?.length} interviewer${
+          selectedInterviewersLocal?.length !== 1 ? "s" : ""
+        } selected`}
+        onClose={onClose}
+        setIsFullscreen={setIsFullscreen}
+      >
+        <div>
           {/* Fixed Search and Info Section */}
           {/* <------------------------------- v1.0.0  */}
-          <div className="px-6 py-4 bg-white z-10">
+          <div className="sm:px-2 px-6 py-4 bg-white z-10">
             {/* ------------------------------ v1.0.0 > */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-start space-x-3 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+              <div
+                className="flex items-start space-x-3 cursor-pointer"
+                onClick={() => setIsOpen(!isOpen)}
+              >
                 <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-custom-blue">Interview Scheduling Policy</h3>
+                    <h3 className="text-sm font-medium text-custom-blue">
+                      Interview Scheduling Policy
+                    </h3>
                     {isOpen ? (
                       <ChevronUp className="h-5 w-5 text-custom-blue" />
                     ) : (
@@ -485,29 +632,42 @@ function OutsourcedInterviewerModal({
                   <div className="text-sm text-custom-blue space-y-1">
                     <div className="flex items-center">
                       <Users className="h-4 w-4 mr-2" />
-                      <span>Interviews are scheduled based on first acceptance</span>
+                      <span>
+                        Interviews are scheduled based on first acceptance
+                      </span>
                     </div>
                     <ul className="list-disc list-inside pl-6 text-sm space-y-0.5">
-                      <li>Interview requests sent to all selected interviewers</li>
-                      <li>First interviewer to accept will conduct the interview</li>
-                      <li>Select multiple interviewers to increase availability</li>
+                      <li>
+                        Interview requests sent to all selected interviewers
+                      </li>
+                      <li>
+                        First interviewer to accept will conduct the interview
+                      </li>
+                      <li>
+                        Select multiple interviewers to increase availability
+                      </li>
                     </ul>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="flex md:flex-row md:items-end md:space-x-4 md:space-y-0 justify-between pt-4">
-              <div className="flex items-center gap-x-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
+            <div className="flex flex-col  justify-between pt-4 gap-4">
+              <div className="flex flex-col w-full">
+                <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
                   Hourly Rate Range
                 </label>
-                <div className="flex items-center space-x-1.5">
+                <div className="flex items-center space-x-1.5 w-full">
                   <input
                     type="number"
                     value={rateRange[0]}
-                    onChange={(e) => setRateRange([parseInt(e.target.value) || 0, rateRange[1]])}
-                    className="px-2 py-2 border border-gray-300 rounded-md"
+                    onChange={(e) =>
+                      setRateRange([
+                        parseInt(e.target.value) || 0,
+                        rateRange[1],
+                      ])
+                    }
+                    className="px-2 py-2 border border-gray-300 rounded-md w-full"
                     min="0"
                     max={rateRange[1]}
                   />
@@ -515,15 +675,20 @@ function OutsourcedInterviewerModal({
                   <input
                     type="number"
                     value={rateRange[1]}
-                    onChange={(e) => setRateRange([rateRange[0], parseInt(e.target.value) || 250])}
-                    className="px-2 py-2 border border-gray-300 rounded-md"
+                    onChange={(e) =>
+                      setRateRange([
+                        rateRange[0],
+                        parseInt(e.target.value) || 250,
+                      ])
+                    }
+                    className="px-2 py-2 border border-gray-300 rounded-md w-full"
                     min={rateRange[0]}
                     max="250"
                   />
                 </div>
               </div>
 
-              <div className="w-[30%]">
+              <div className="w-full">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
@@ -539,8 +704,14 @@ function OutsourcedInterviewerModal({
           </div>
 
           {/* Scrollable Data Section */}
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            <div className={`grid gap-4 ${isFullscreen ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3' : 'grid-cols-1'}`}>
+          <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
+            <div
+              className={`grid gap-4 px-6 ${
+                isFullscreen
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
+                  : "grid-cols-1"
+              }`}
+            >
               {filteredInterviewers.map((interviewer) => (
                 // <OutsourcedInterviewerCard
                 //   key={interviewer._id}
@@ -554,7 +725,9 @@ function OutsourcedInterviewerModal({
                 <OutsourcedInterviewerCard
                   key={interviewer._id}
                   interviewer={interviewer}
-                  isSelected={selectedInterviewersLocal.some(sel => sel._id === interviewer._id)}
+                  isSelected={selectedInterviewersLocal.some(
+                    (sel) => sel._id === interviewer._id
+                  )}
                   onSelect={() => handleSelectClick(interviewer)}
                   onViewDetails={() => setSelectedInterviewer(interviewer)}
                   navigatedfrom={navigatedfrom}
@@ -562,15 +735,17 @@ function OutsourcedInterviewerModal({
               ))}
             </div>
             {filteredInterviewers.length === 0 && (
-              <div className={`text-gray-500 ${isFullscreen ? 'min-h-full flex items-center justify-center -mt-10' : 'flex items-center justify-center h-full -mt-8'}`}>
-                <p>No available interviewers found for the selected criteria.</p>
+              <div className="flex justify-center pt-6 px-6 w-full">
+                <p className="text-center">
+                  No available interviewers found for the selected criteria.
+                </p>
               </div>
             )}
           </div>
 
           {/* Fixed Footer (Hidden when navigatedfrom is 'dashboard') */}
-          {navigatedfrom !== 'dashboard' && (
-            <div className="sticky bottom-0 bg-white p-4 flex justify-end">
+          {navigatedfrom !== "dashboard" && (
+            <div className="absolute bottom-10 right-10 flex justify-end">
               <button
                 onClick={handleProceed}
                 disabled={selectedInterviewersLocal.length === 0}
@@ -580,11 +755,11 @@ function OutsourcedInterviewerModal({
               </button>
             </div>
           )}
-        </motion.div>
-      </div>
-
+        </div>
+      </SidebarPopup>
+      {/* v1.0.2 --------------------------------------------------------------------------> */}
       <AnimatePresence>
-        {selectedInterviewer && navigatedfrom !== 'dashboard' && (
+        {selectedInterviewer && navigatedfrom !== "dashboard" && (
           <InterviewerDetailsModal
             interviewer={selectedInterviewer}
             onClose={() => setSelectedInterviewer(null)}
@@ -593,11 +768,11 @@ function OutsourcedInterviewerModal({
       </AnimatePresence>
 
       {showWalletModal && (
-              <WalletTopupPopup
-                onClose={() => setShowWalletModal(false)}
-                onTopup={handleTopup}
-              />
-            )}
+        <WalletTopupPopup
+          onClose={() => setShowWalletModal(false)}
+          onTopup={handleTopup}
+        />
+      )}
     </>
   );
 }
