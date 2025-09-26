@@ -323,7 +323,7 @@ const InterviewSlideover = ({ mode }) => {
           className="flex-1 flex flex-col h-[calc(100vh-100px)]"
         >
           <div className="flex-1">
-            <div className="space-y-6 pt-6 pb-5">
+            <div className="space-y-4 pt-6 pb-5">
               <div>
                 <InputField
                   label="Title"
