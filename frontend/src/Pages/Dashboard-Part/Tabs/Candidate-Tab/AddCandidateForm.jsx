@@ -861,7 +861,7 @@ const AddCandidateForm = ({
 
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-6">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-4">
+              <div className="bg-white space-y-4">
                 {/* v1.0.7 <------------------------------------------------------ */}
                 {/* <h4 className="text-lg font-semibold text-gray-800"> */}
                 <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">

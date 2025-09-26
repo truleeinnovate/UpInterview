@@ -40,7 +40,7 @@ const InterviewSlideover = ({ mode }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     templateTitle: "",
-    label: "",
+    name: "",
     description: "",
     status: "draft",
     rounds: [],
@@ -59,7 +59,7 @@ const InterviewSlideover = ({ mode }) => {
 
   // v1.0.3 <------------------------------------------------------------------------------------
   const fieldRefs = {
-    name: useRef(null),
+    templateTitle: useRef(null),
     // label: useRef(null),
   };
   // v1.0.3 ------------------------------------------------------------------------------------>
@@ -73,7 +73,7 @@ const InterviewSlideover = ({ mode }) => {
           setNewTemplate((prev) => ({
             ...prev,
             templateTitle: foundTemplate.templateName || "",
-            label: foundTemplate.label || "",
+            name: foundTemplate.name || "",
             description: foundTemplate.description || "",
             status: foundTemplate.status || "draft",
             rounds: foundTemplate.rounds || [],
@@ -83,7 +83,7 @@ const InterviewSlideover = ({ mode }) => {
         setIsEditMode(false);
         setNewTemplate({
           templateTitle: "",
-          label: "",
+          name: "",
           description: "",
           status: "draft",
           rounds: [],
@@ -97,8 +97,8 @@ const InterviewSlideover = ({ mode }) => {
   // v1.0.3 <------------------------------------------------------
   const validateForm = () => {
     const templateForValidation = {
-      name: newTemplate.templateTitle,
-      label: newTemplate.label,
+      templateTitle: newTemplate.templateTitle,
+      name: newTemplate.name,
       description: newTemplate.description,
       rounds: newTemplate.rounds,
     };
@@ -134,20 +134,20 @@ const InterviewSlideover = ({ mode }) => {
     // const sanitizedValue = value; // Remove filtering or make it less restrictive
     // const label = value.trim().replace(/[^a-zA-Z0-9_]/g, '_').replace(/\s+/g, '_');
     const sanitizedValue = value.replace(/[^a-zA-Z0-9_ ]/g, "");
-    const label = sanitizedValue.trim().replace(/\s+/g, "_");
+    const name = sanitizedValue.trim().replace(/\s+/g, "_");
 
     setNewTemplate((prev) => ({
       ...prev,
       templateTitle: sanitizedValue,
-      label,
+      name,
     }));
 
     // Clear errors when user starts typing
     if (isSubmitted) {
       setErrors((prev) => ({
         ...prev,
+        templateTitle: "",
         name: "",
-        label: "",
       }));
     }
   };
@@ -192,8 +192,8 @@ const InterviewSlideover = ({ mode }) => {
 
     // Mark all fields as touched
     const allFieldsTouched = {
+      templateTitle: true,
       name: true,
-      label: true,
       description: true,
       rounds: true,
     };
@@ -230,7 +230,7 @@ const InterviewSlideover = ({ mode }) => {
     try {
       const templateData = {
         templateName: newTemplate.templateTitle,
-        label: newTemplate.label,
+        name: newTemplate.name,
         description: newTemplate.description,
         status: newTemplate.status,
         isSaved: !isTemplate,
@@ -315,7 +315,7 @@ const InterviewSlideover = ({ mode }) => {
                 <InputField
                   label="Title"
                   // v1.0.3 <---------------------------------------------------
-                  ref={fieldRefs.name}
+                  ref={fieldRefs.templateTitle}
                   // v1.0.3 --------------------------------------------------->
                   type="text"
                   id="templateTitle"
@@ -325,22 +325,22 @@ const InterviewSlideover = ({ mode }) => {
                   onChange={handleTitleChange}
                   onBlur={() => handleBlur("templateTitle")}
                   autoComplete="off"
-                  error={errors.name}
+                  error={errors.templateTitle}
                   required
                 />
               </div>
 
               <div>
                 <InputField
-                  label="Label"
+                  label="Name"
                   type="text"
-                  id="label"
-                  name="label"
+                  id="name"
+                  name="name"
                   placeholder="Senior_Frontend_Developer"
-                  value={newTemplate.label}
+                  value={newTemplate.name}
                   readOnly
-                  onFocus={() => handleBlur("label")}
-                  error={errors.label}
+                  onFocus={() => handleBlur("name")}
+                  error={errors.name}
                   required
                 />
               </div>
