@@ -998,6 +998,12 @@ app.use("/api/auth", authRoutes);
 // Ensures pushNotificationTaskController registers its cron schedule on server start
 require("./controllers/PushNotificationControllers/pushNotificationTaskController");
 
+// Start Interview notification system and cron jobs
+require("./controllers/PushNotificationControllers/pushNotificationInterviewController");
+
+// Start Assessment notification system and cron jobs
+require("./controllers/PushNotificationControllers/pushNotificationAssessmentController");
+
 // in contextfetch for fetchUserProfile
 app.get("/auth/users/:id", async (req, res) => {
   try {
@@ -1231,6 +1237,13 @@ app.use("/wallet", WalletRouter);
 // task
 const taskRoutes = require("./routes/taskRoutes");
 app.use("/tasks", taskRoutes);
+
+// Notification test routes (only for development/testing)
+if (process.env.NODE_ENV !== 'production') {
+  const notificationTestRoutes = require("./routes/pushNotificationTestRoutes");
+  app.use("/notifications", notificationTestRoutes);
+  console.log('[NOTIFICATIONS] Test endpoints registered at /notifications/*');
+}
 
 //i am using this code for outsource interviewers we need to change his into contact controller
 // app.get('/api/contacts/outsource', async (req, res) => {

@@ -15,6 +15,10 @@ const { encrypt } = require("../utils/generateOtp");
 const sendEmail = require("../utils/sendEmail");
 const emailTemplateModel = require("../models/EmailTemplatemodel");
 const notificationMiddleware = require("../middleware/notificationMiddleware");
+
+// Import push notification functions
+const {createAssessmentCreatedNotification} = require("./PushNotificationControllers/pushNotificationAssessmentController");
+
 //newassessment is using
 
 exports.newAssessment = async (req, res) => {
@@ -108,6 +112,16 @@ exports.newAssessment = async (req, res) => {
 
     const assessment = new Assessment(newAssessmentData);
     await assessment.save();
+    
+    // Create push notification for assessment creation
+    try {
+      // Pass ownerId as the createdBy parameter
+      await createAssessmentCreatedNotification(assessment, assessment.ownerId);
+    } catch (notificationError) {
+      console.error('[ASSESSMENT] Error creating notification:', notificationError);
+      // Continue execution even if notification fails
+    }
+    
     res.status(201).json({ success: true, data: assessment });
   } catch (error) {
     res.status(400).json({ error: error.message });

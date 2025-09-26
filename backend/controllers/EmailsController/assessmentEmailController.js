@@ -23,6 +23,11 @@ const Assessment = require("../../models/Assessment/assessmentTemplates.js");
 const config = require("../../config");
 // ------------------------------v1.0.2 >
 
+// Import push notification functions
+const {
+  createAssessmentScheduledNotification,
+} = require('../PushNotificationControllers/pushNotificationAssessmentController');
+
 
 
 
@@ -430,8 +435,17 @@ exports.shareAssessment = async (req, res) => {
       proctoringEnabled: true,
       createdBy: userId,
       order: `Assessment ${nextNumber}`,
+      expiryAt, // Add the expiry date
     });
-    await scheduleAssessment.save();
+    const savedScheduleAssessment = await scheduleAssessment.save();
+
+    // Create push notification for scheduled assessment
+    try {
+      await createAssessmentScheduledNotification(savedScheduleAssessment);
+    } catch (notificationError) {
+      console.error('[ASSESSMENT] Error creating scheduled notification:', notificationError);
+      // Continue execution even if notification fails
+    }
 
     // Check for existing candidate assessments without session
     const existingAssessments = await CandidateAssessment.find({

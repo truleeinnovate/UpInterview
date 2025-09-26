@@ -7,8 +7,8 @@ const InterviewTemplateSchema = new mongoose.Schema(
     // <------------------------------- v1.0.0 
     interviewTemplateCode: { type: String },
     // ------------------------------ v1.0.0 >
-    templateName: { type: String, required: true }, // Template name
-    label: { type: String, required: true }, // Template label
+    templateName: { type: String, required: true }, // Template title
+    name: { type: String, required: true }, // Template name
     description: { type: String }, // Template purpose
     status: {
       type: String,
