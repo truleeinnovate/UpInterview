@@ -10,6 +10,13 @@ const InterviewTemplateSchema = new mongoose.Schema(
     templateName: { type: String, required: true }, // Template title
     name: { type: String, required: true }, // Template name
     description: { type: String }, // Template purpose
+    bestFor: { type: String, maxlength: 50, required: true }, // Best for description, max 50 chars
+    format: { 
+      type: String, 
+      required: true,
+      enum: ["fully online", "hybrid", "offline"],
+      default: "fully online"
+    }, // Interview format
     status: {
       type: String,
       enum: ["active", "draft", "inactive", "archived"],
