@@ -25,7 +25,7 @@ const USE_LOCKS = process.env.TASK_REMINDER_USE_LOCKS === 'true'; // default: no
 const runTaskReminderJob = async () => {
   // Ensure DB connection is ready to avoid queries before initial connection completes
   if (mongoose.connection.readyState !== 1) {
-    console.warn('[TASK REMINDER] Skipping: MongoDB not connected yet (readyState:', mongoose.connection.readyState, ')');
+    // console.warn('[TASK REMINDER] Skipping: MongoDB not connected yet (readyState:', mongoose.connection.readyState, ')');
     return;
   }
 
@@ -65,18 +65,18 @@ const runTaskReminderJob = async () => {
     });
 
     if (tasks.length === 0) {
-      console.log('[TASK REMINDER] No tasks found due in the next 24 hours.');
+    //   console.log('[TASK REMINDER] No tasks found due in the next 24 hours.');
       return;
     }
 
 
-    
-    console.log(`[TASK REMINDER] Found ${tasks.length} tasks due in the next 24 hours:`);
+
+    // console.log(`[TASK REMINDER] Found ${tasks.length} tasks due in the next 24 hours:`);
     // tasks.forEach(task => {
     //   console.log(`  - Task: "${task.title}" | Due: ${moment(task.dueDate).toISOString()} | Status: ${task.status}`);
     // });
 
-   
+
 
     for (const task of tasks) {
       //console.log(`[TASK REMINDER] Processing task: "${task.title}" (ID: ${task._id})`);
@@ -88,7 +88,7 @@ const runTaskReminderJob = async () => {
       // console.log(`[TASK REMINDER]   - Using recipientUserId: ${recipientUserId || 'none'}`);
 
       if (!recipientUserId) {
-        console.warn(`[TASK REMINDER]   ❌ Skipping: No assignedToId or ownerId`);
+        // console.warn(`[TASK REMINDER]   ❌ Skipping: No assignedToId or ownerId`);
         continue;
       }
 
@@ -101,7 +101,7 @@ const runTaskReminderJob = async () => {
 
       // Create a more reliable unique identifier for the task
       const taskIdentifier = task.taskCode || task._id;
-      
+
       // Check for existing notification using both task identifier and due date
       const existingNotification = await PushNotification.findOne({
         ownerId: ownerIdForNotification,
@@ -109,7 +109,7 @@ const runTaskReminderJob = async () => {
         $or: [
           { message: { $regex: `taskID: ${taskIdentifier}`, $options: 'i' } },
           { message: { $regex: `TaskId:${taskIdentifier}`, $options: 'i' } },
-          { 
+          {
             $and: [
               { 'metadata.taskId': taskIdentifier },
               { 'metadata.dueDate': task.dueDate.toISOString() }
@@ -140,9 +140,9 @@ const runTaskReminderJob = async () => {
         try {
           const notification = new PushNotification(notificationData);
           await notification.save();
-          console.log(`[TASK REMINDER]   ✅ Notification created successfully! ID: ${notification._id}`);
+        //   console.log(`[TASK REMINDER]   ✅ Notification created successfully! ID: ${notification._id}`);
         } catch (saveError) {
-          console.error(`[TASK REMINDER]   ❌ Failed to save notification:`, saveError.message);
+        //   console.error(`[TASK REMINDER]   ❌ Failed to save notification:`, saveError.message);
         }
       } else {
         continue;
@@ -150,10 +150,10 @@ const runTaskReminderJob = async () => {
       }
     }
 
-    console.log('[TASK REMINDER] Job completed successfully.');
+    // console.log('[TASK REMINDER] Job completed successfully.');
 
   } catch (error) {
-    console.error('[TASK REMINDER] Job Error:', error);
+    // console.error('[TASK REMINDER] Job Error:', error);
   }
 };
 
@@ -211,12 +211,12 @@ function scheduleTaskReminderCron() {
             try {
               const lockDoc = await mongoose.connection.collection('jobLocks').findOne({ _id: LOCK_NAME });
               if (lockDoc) {
-                console.log(`[TASK REMINDER] ⏳ Skipping tick: lock held by ${lockDoc.holder} until ${new Date(lockDoc.lockUntil).toISOString()}`);
+                // console.log(`[TASK REMINDER] ⏳ Skipping tick: lock held by ${lockDoc.holder} until ${new Date(lockDoc.lockUntil).toISOString()}`);
               } else {
-                console.log('[TASK REMINDER] ⏳ Skipping tick: lock not acquired');
+                // console.log('[TASK REMINDER] ⏳ Skipping tick: lock not acquired');
               }
             } catch (e) {
-              console.log('[TASK REMINDER] ⏳ Skipping tick: lock not acquired (failed to read lock doc)');
+            //   console.log('[TASK REMINDER] ⏳ Skipping tick: lock not acquired (failed to read lock doc)');
             }
             return;
           }
@@ -230,18 +230,18 @@ function scheduleTaskReminderCron() {
     },
     { timezone: CRON_TZ }
   );
-  console.log(`[TASK REMINDER] ⚡ Cron job scheduled to run EVERY 10 SECONDS for testing (TZ=${CRON_TZ}, locks=${USE_LOCKS ? 'on' : 'off'}).`);
+//   console.log(`[TASK REMINDER] ⚡ Cron job scheduled to run EVERY 10 SECONDS for testing (TZ=${CRON_TZ}, locks=${USE_LOCKS ? 'on' : 'off'}).`);
 }
 
 if (mongoose.connection.readyState === 1) {
   scheduleTaskReminderCron();
   // Run once immediately after confirmed connection
-  console.log('[TASK REMINDER] 🚀 Running initial check immediately...');
+//   console.log('[TASK REMINDER] 🚀 Running initial check immediately...');
   if (USE_LOCKS) {
     acquireJobLock(LOCK_NAME, 10 * 1000) // 10 second lock
       .then((ok) => {
         if (!ok) {
-          console.log('[TASK REMINDER] ⏳ Initial check skipped: lock not acquired');
+        //   console.log('[TASK REMINDER] ⏳ Initial check skipped: lock not acquired');
           return;
         }
         return runTaskReminderJob();
@@ -253,12 +253,12 @@ if (mongoose.connection.readyState === 1) {
 } else {
   mongoose.connection.once('connected', () => {
     scheduleTaskReminderCron();
-    console.log('[TASK REMINDER] 🚀 MongoDB connected, running initial check...');
+    // console.log('[TASK REMINDER] 🚀 MongoDB connected, running initial check...');
     if (USE_LOCKS) {
       acquireJobLock(LOCK_NAME, 10 * 1000) // 10 second lock
         .then((ok) => {
           if (!ok) {
-            console.log('[TASK REMINDER] ⏳ Initial check after connect skipped: lock not acquired');
+            // console.log('[TASK REMINDER] ⏳ Initial check after connect skipped: lock not acquired');
             return;
           }
           return runTaskReminderJob();

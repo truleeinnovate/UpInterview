@@ -153,32 +153,43 @@ const mongooseOptions = {
 };
 
 // MongoDB connection with retry mechanism
-const connectWithRetry = async (retries = 5, delay = 5000) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
-      console.log("✅ MongoDB connected successfully");
-      return;
-    } catch (err) {
-      console.error(
-        `❌ MongoDB connection attempt ${i + 1} failed:`,
-        err.message
-      );
-      if (i === retries - 1) {
-        console.error("❌ All MongoDB connection attempts failed");
+const connectWithRetry = (retries = 5, delay = 5000) => {
+  return new Promise((resolve, reject) => {
+    const attemptConnect = async (attempt = 0) => {
+      try {
+        await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
+        console.log("✅ MongoDB connected successfully");
+        resolve(mongoose.connection);
+      } catch (err) {
         console.error(
-          "MongoDB URI status:",
-          process.env.MONGODB_URI ? "SET" : "NOT SET"
+          `❌ MongoDB connection attempt ${attempt + 1} failed:`,
+          err.message
         );
-        process.exit(1);
+        
+        if (attempt >= retries - 1) {
+          console.error("❌ All MongoDB connection attempts failed");
+          console.error(
+            "MongoDB URI status:",
+            process.env.MONGODB_URI ? "SET" : "NOT SET"
+          );
+          reject(new Error('Failed to connect to MongoDB after multiple attempts'));
+          return;
+        }
+        
+        // Wait for the specified delay before retrying
+        setTimeout(() => attemptConnect(attempt + 1), delay);
       }
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
+    };
+    
+    attemptConnect();
+  });
 };
 
 // Initialize MongoDB connection
-connectWithRetry();
+const dbConnection = connectWithRetry();
+
+// Export the MongoDB connection promise for other modules to use
+app.locals.dbConnection = dbConnection;
 
 // Handle MongoDB connection events with enhanced logging
 mongoose.connection.on("error", (err) => {
@@ -456,7 +467,57 @@ app.use("/feedback", feedbackRoute);
 app.use("/usage", usageRoutes);
 
 const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Server running on port ${port}`));
+
+// Start the server only after MongoDB is connected
+const startServer = async () => {
+  try {
+    // Wait for MongoDB connection
+    await dbConnection;
+    console.log('MongoDB connected successfully');
+    
+    const server = app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+      
+      // Initialize the daily exchange rate update
+      if (process.env.NODE_ENV !== 'test') {
+        const ExchangeRateService = require('./services/exchangeRateService');
+        ExchangeRateService.scheduleDailyRateUpdate();
+      }
+    });
+    
+    return server;
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+// Start the server
+const serverPromise = startServer();
+
+// Handle server shutdown
+const shutdown = async () => {
+  console.log('SIGTERM received. Shutting down gracefully');
+  try {
+    const server = await serverPromise;
+    server.close(() => {
+      console.log('Process terminated');
+      process.exit(0);
+    });
+    
+    // Force close the server after 10 seconds
+    setTimeout(() => {
+      console.error('Forcing shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 // Master Data Routes
 const { Skills } = require("./models/MasterSchemas/skills.js");
@@ -1318,6 +1379,10 @@ app.use("/receipts", ReceiptsRoute);
 // ==================================================================================>
 
 const feedbackRoutes = require("./routes/feedbackRoute");
+const exchangeRateRoutes = require("./routes/exchangeRateRoutes");
+
+// Exchange rate routes
+app.use("/api/exchange", exchangeRateRoutes);
 
 app.use("/feedback", feedbackRoutes);
 
