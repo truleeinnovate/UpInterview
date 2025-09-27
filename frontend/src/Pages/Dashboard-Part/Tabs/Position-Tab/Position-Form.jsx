@@ -231,7 +231,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     setErrors((prev) => {
       const next = { ...prev };
       const keyMap = {
-        companyName: "companyname",
+        // companyName: "companyname",
         minSalary: "minsalary",
         maxSalary: "maxsalary",
       };
@@ -1097,11 +1097,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           value={formData.companyName}
                           options={companyOptionsRS}
                           onChange={handleChange}
-                          error={errors.companyname}
+                          // error={errors.companyname}
                           containerRef={fieldRefs.companyname}
                           label="Company Name"
                           name="companyName"
-                          required
+                          // required
                           isCustomName={isCustomCompany}
                           setIsCustomName={setIsCustomCompany}
                           onMenuOpen={loadCompanies}
@@ -1183,11 +1183,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           value={formData.Location}
                           options={locationOptionsRS}
                           onChange={handleChange}
-                          error={errors.Location}
+                          // error={errors.Location}
                           containerRef={fieldRefs.location}
                           label="Location"
                           name="Location"
-                          required
+                          // required
                           isCustomName={isCustomLocation}
                           setIsCustomName={setIsCustomLocation}
                           onMenuOpen={loadLocations}

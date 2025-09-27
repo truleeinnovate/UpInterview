@@ -48,6 +48,7 @@ import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import DescriptionField from "../../../../../Components/FormFields/DescriptionField.jsx";
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 import { notify } from "../../../../../services/toastService.js";
+import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -1757,13 +1758,14 @@ const RoundFormInterviews = () => {
                         value={
                           isCustomRoundTitle ? customRoundTitle : roundTitle
                         }
-                        options={[
-                          { value: "Assessment", label: "Assessment" },
-                          { value: "Technical", label: "Technical" },
-                          { value: "Final", label: "Final" },
-                          { value: "HR Interview", label: "HR Interview" },
-                          { value: "__other__", label: "Other" },
-                        ]}
+                          options={ROUND_TITLES}
+                        // options={[
+                        //   { value: "Assessment", label: "Assessment" },
+                        //   { value: "Technical", label: "Technical" },
+                        //   { value: "Final", label: "Final" },
+                        //   { value: "HR Interview", label: "HR Interview" },
+                        //   { value: "__other__", label: "Other" },
+                        // ]}
                         isCustomName={isCustomRoundTitle}
                         setIsCustomName={setIsCustomRoundTitle}
                         onChange={handleRoundTitleUnifiedChange}
