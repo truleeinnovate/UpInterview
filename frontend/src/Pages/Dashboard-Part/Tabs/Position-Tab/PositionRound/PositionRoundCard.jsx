@@ -247,18 +247,18 @@ const PositionRoundCard = ({
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
 
-  console.log("interviewData", interview);
+  // console.log("interviewData", interview);
 
   return (
     <>
       {/* v1.0.3 <--------------------------------------------------------------- */}
       <div
-        className={`bg-white rounded-lg ${
+        className={`bg-white  rounded-lg ${
           !hideHeader && "shadow-md"
         } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
       >
         {/* v1.0.3 <---------------------------------------------------------------> */}
-        <div className="p-2">
+        <div className="p-5">
           {/* Tabs */}
           {hasFeedback && (
             <div className="mt-4 border-b border-gray-200">

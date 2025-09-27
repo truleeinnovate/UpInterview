@@ -36,6 +36,7 @@ import { scrollToFirstError } from "../../utils/ScrollToFirstError/scrollToFirst
 import DropdownWithSearchField from "../../Components/FormFields/DropdownWithSearchField.jsx";
 import InputField from "../../Components/FormFields/InputField.jsx";
 import DescriptionField from "../../Components/FormFields/DescriptionField.jsx";
+import { ROUND_TITLES } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/roundTitlesConfig.js";
 
 function RoundFormTemplates() {
   const { templatesData, isMutationLoading, addOrUpdateRound, saveTemplate } =
@@ -889,17 +890,18 @@ function RoundFormTemplates() {
               <div>
                 <DropdownWithSearchField
                   containerRef={fieldRefs.roundTitle}
-                  label="Round Name"
+                  label="Round Title"
                   required
                   name="roundTitle"
                   value={formData.roundTitle === "Other" ? formData.customRoundTitle : formData.roundTitle}
-                  options={[
-                    { value: "Assessment", label: "Assessment" },
-                    { value: "Technical", label: "Technical" },
-                    { value: "Final", label: "Final" },
-                    { value: "HR Interview", label: "HR Interview" },
-                    { value: "__other__", label: "Other" },
-                  ]}
+                  options={ROUND_TITLES}
+                  // options={[
+                  //   { value: "Assessment", label: "Assessment" },
+                  //   { value: "Technical", label: "Technical" },
+                  //   { value: "Final", label: "Final" },
+                  //   { value: "HR Interview", label: "HR Interview" },
+                  //   { value: "__other__", label: "Other" },
+                  // ]}
                   isCustomName={formData.roundTitle === "Other"}
                   setIsCustomName={(value) => {
                     if (value) {

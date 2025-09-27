@@ -84,7 +84,7 @@ const VerticalRoundsViewPosition = ({
           // key={round._id}
            key={`${round._id}-${round.sequence}`} // Fix applied here
           //  v1.0.1 ------------------------------------------->
-          className="bg-white rounded-lg shadow-md overflow-hidden"
+          className="bg-white rounded-lg  border border-gray-200 shadow-md overflow-hidden"
         >
           <button
             onClick={() => toggleRound(round._id)}

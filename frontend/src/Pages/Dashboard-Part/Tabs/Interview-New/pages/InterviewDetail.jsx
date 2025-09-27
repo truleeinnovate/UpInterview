@@ -265,19 +265,21 @@ const InterviewDetail = () => {
   const internalInterviewerIds = new Set();
   const externalInterviewerIds = new Set();
 
-  // rounds.forEach(round => {
-  //   round.interviewers?.forEach(id => {
-  //     const interviewer = ;
-  //     if (interviewer) {
-  //       allInterviewerIds.add(id);
-  //       if (interviewer.isExternal) {
-  //         externalInterviewerIds.add(id);
-  //       } else {
-  //         internalInterviewerIds.add(id);
-  //       }
-  //     }
-  //   });
-  // });
+
+
+  rounds?.forEach((round) => {
+    round?.interviewers?.forEach((interviewer) => {
+      if (interviewer?._id) {
+        allInterviewerIds.add(interviewer._id);
+  
+        if (round.interviewerType?.toLowerCase() === "internal") {
+          internalInterviewerIds.add(interviewer._id);
+        } else if (round.interviewerType?.toLowerCase() === "external") {
+          externalInterviewerIds.add(interviewer._id);
+        }
+      }
+    });
+  });
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

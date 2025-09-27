@@ -592,7 +592,7 @@ const RoundCard = ({
     <>
       <div
         className={`bg-white rounded-lg ${!hideHeader && "shadow-md"
-          } overflow-hidden ${isActive ? "ring-2 ring-custom-blue" : ""}`}
+          } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
       >
         <div className="p-5">
           {/* Tabs */}

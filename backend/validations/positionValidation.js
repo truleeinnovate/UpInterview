@@ -111,11 +111,12 @@ const positionValidationSchema = Joi.object({
     "any.required": "Title is required",
     "string.empty": "Title cannot be empty",
   }),
+  companyname: Joi.string().optional().allow(null, ""),
 
-  companyname: Joi.string().required().messages({
-    "any.required": "Company Name is required",
-    "string.empty": "Company Name cannot be empty",
-  }),
+  // companyname: Joi.string().required().messages({
+  //   "any.required": "Company Name is required",
+  //   "string.empty": "Company Name cannot be empty",
+  // }),
 
   jobDescription: Joi.string().min(50).required().messages({
     "any.required": "Job Description is required",
@@ -149,10 +150,12 @@ const positionValidationSchema = Joi.object({
     "number.min": "Number of Positions must be greater than 0",
   }),
 
-  Location: Joi.string().required().messages({
-    "any.required": "Location is required",
-    "string.empty": "Location cannot be empty",
-  }),
+  Location: Joi.string().optional().allow(null, ""),
+
+  // Location: Joi.string().required().messages({
+  //   "any.required": "Location is required",
+  //   "string.empty": "Location cannot be empty",
+  // }),
 
   //add by venkatesh allow updating status; default stays 'draft'
   status: Joi.string()

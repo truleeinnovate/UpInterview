@@ -95,19 +95,19 @@ const AddCandidateForm = ({
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  console.log("skills", skills);
+  // console.log("skills", skills);
 
-  console.log("colleges", colleges);
+  // console.log("colleges", colleges);
 
-  console.log("isCurrentRolesFetching", isCurrentRolesFetching);
+  // console.log("isCurrentRolesFetching", isCurrentRolesFetching);
 
-  logger.log("qualifications", qualifications);
+  // logger.log("qualifications", qualifications);
 
-  logger.log("qualifications", currentRoles);
+  // logger.log("qualifications", currentRoles);
 
-  console.log("qualifications", qualifications);
+  // console.log("qualifications", qualifications);
 
-  console.log("currentRoles", currentRoles);
+  // console.log("currentRoles", currentRoles);
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -582,8 +582,8 @@ const AddCandidateForm = ({
       CurrentExperience: formData.CurrentExperience,
       RelevantExperience: formData.RelevantExperience,
       HigherQualification: formData.HigherQualification,
-      Gender: formData.Gender,
-      UniversityCollege: formData.UniversityCollege,
+      Gender: formData.Gender || "",
+      UniversityCollege: formData.UniversityCollege || "",
       Date_Of_Birth: formData.Date_Of_Birth,
       skills: filledSkills,
       CurrentRole: formData.CurrentRole,
@@ -903,10 +903,10 @@ const AddCandidateForm = ({
                     value={formData.Gender}
                     options={genderOptionsRS}
                     onChange={handleChange}
-                    error={errors.Gender}
+                    // error={errors.Gender}
                     containerRef={fieldRefs.Gender}
                     label="Gender"
-                    required
+                    // required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -975,13 +975,13 @@ const AddCandidateForm = ({
                         }));
                       }
                     }}
-                    error={errors.UniversityCollege}
+                    // error={errors.UniversityCollege}
                     isCustomName={isCustomUniversity}
                     setIsCustomName={setIsCustomUniversity}
                     containerRef={fieldRefs.UniversityCollege}
                     label="University/College"
                     name="UniversityCollege"
-                    required
+                    // required
                     onMenuOpen={loadColleges}
                     loading={isCollegesFetching}
                   />

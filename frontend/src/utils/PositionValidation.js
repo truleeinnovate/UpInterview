@@ -43,10 +43,10 @@ export const validateForm = (formData, entries, rounds) => {
     formIsValid = false;
   }
 
-  if (!formData.companyName) {
-    errors.companyname = "Company Name is required";
-    formIsValid = false;
-  }
+  // if (!formData.companyName) {
+  //   errors.companyname = "Company Name is required";
+  //   formIsValid = false;
+  // }
 
   if (!formData.minexperience) {
     errors.minexperience = "Minimum Experience is required";
@@ -155,10 +155,10 @@ export const validateForm = (formData, entries, rounds) => {
     }
     // v1.0.0 <----------------------------------------------------------------------
     // Add location validation
-    if (!formData.Location) {
-      errors.Location = "Location is required";
-      formIsValid = false;
-    }
+    // if (!formData.Location) {
+    //   errors.Location = "Location is required";
+    //   formIsValid = false;
+    // }
     // v1.0.0 ---------------------------------------------------------------------->
 
   return { formIsValid, newErrors: errors };
