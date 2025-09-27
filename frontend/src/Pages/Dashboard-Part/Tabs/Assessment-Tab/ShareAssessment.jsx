@@ -581,41 +581,20 @@ const ShareAssessment = ({
                   containerRef={dropdownRef}
                   name="Candidate"
                   value={selectedCandidates.map((c) => c._id)}
-                  options={[
-                    ...(candidateData?.map((candidate) => ({
+                  options={
+                    candidateData?.map((candidate) => ({
                       value: candidate._id,
                       label: `${candidate.FirstName} ${candidate.LastName}`,
                       subLabel: candidate.Email,
                       data: candidate,
-                    })) || []),
-                    {
-                      value: "select_all",
-                      label: "Select All",
-                      isSticky: true,
-                      className: "text-blue-600 font-medium border-t",
-                    },
-                  ]}
+                    })) || []
+                  }
                   onChange={(e) => {
                     const values = e?.target?.value || [];
 
-                    // Check if "Select All" was clicked
-                    if (values.includes("select_all")) {
-                      // If "select_all" was just added, select all candidates
-                      if (
-                        !selectedCandidates
-                          .map((c) => c._id)
-                          .includes("select_all")
-                      ) {
-                        setSelectedCandidates(candidateData || []);
-                        // Note: The component won't actually select "select_all" in its value
-                        // We just use it as a trigger
-                        return;
-                      }
-                    }
-
                     // Handle regular selection changes
                     const currentIds = selectedCandidates.map((c) => c._id);
-                    const newIds = values.filter((v) => v !== "select_all");
+                    const newIds = values;
 
                     // Find which IDs were added or removed
                     const addedIds = newIds.filter(
@@ -651,6 +630,40 @@ const ShareAssessment = ({
                   isMulti={true}
                   loading={loading}
                 />
+                
+                {/* Select All checkbox outside dropdown */}
+                <div className="mt-2">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={
+                        candidateData?.length > 0 &&
+                        selectedCandidates.length === candidateData.length
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          // Select all candidates
+                          setSelectedCandidates(candidateData || []);
+                          // Clear any errors
+                          setErrors({ ...errors, Candidate: "" });
+                        } else {
+                          // Deselect all candidates
+                          setSelectedCandidates([]);
+                        }
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      disabled={!candidateData || candidateData.length === 0 || loading}
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Select All Candidates
+                      {/* {candidateData && candidateData.length > 0 && (
+                        <span className="text-gray-500 ml-1">
+                          ({candidateData.length})
+                        </span>
+                      )} */}
+                    </span>
+                  </label>
+                </div>
 
                 {selectedCandidates.length > 0 && (
                   <div className="mt-3">

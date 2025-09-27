@@ -448,7 +448,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       setEntries(formattedSkills);
       // setAllSelectedSkills(formattedSkills)
       setAllSelectedSkills(
-        selectedPosition.skills?.map((skill) => skill.skill) || []
+        selectedPosition?.skills?.map((skill) => skill.skill) || []
       );
       // setAllSelectedExperiences(
       //   selectedPosition.skills?.map((skill) => skill.experience) || []
