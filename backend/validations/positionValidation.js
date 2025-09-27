@@ -94,13 +94,13 @@ const validateRoundData = Joi.object({
     otherwise: Joi.optional(),
   }),
 
-  questions: Joi.when("roundTitle", {
-    is: "Assessment",
-    then: Joi.array().default([]),
-    otherwise: Joi.array()
-      .min(1)
-      .messages({ "array.min": "At least one question is required" }),
-  }),
+  // questions: Joi.when("roundTitle", {
+  //   is: "Assessment",
+  //   then: Joi.array().default([]),
+  //   otherwise: Joi.array()
+  //     .min(1)
+  //     .messages({ "array.min": "At least one question is required" }),
+  // }),
 }).unknown(true);
 
 // Backend validation schema

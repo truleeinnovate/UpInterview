@@ -605,9 +605,9 @@ function RoundFormTemplates() {
         newErrors.interviewers =
           "At least one Internal interviewer is required";
       }
-      if (formData.interviewQuestionsList.length === 0) {
-        newErrors.questions = "At least one question is required";
-      }
+      // if (formData.interviewQuestionsList.length === 0) {
+      //   newErrors.questions = "At least one question is required";
+      // }
     }
 
     if (
@@ -1700,7 +1700,7 @@ function RoundFormTemplates() {
                   }));
                   clearError("instructions");
                 }}
-                placeholder="Enter round instructions..."
+                placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                 rows="10"
                 minLength={50}
                 maxLength={1000}
