@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Trash2, X } from 'lucide-react';
-import { components } from 'react-select';
+import { Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
 import InfoBox from './InfoBox.jsx';
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import InputField from '../../../Components/FormFields/InputField';
@@ -26,17 +25,20 @@ const InterviewDetails = ({
     setIsMockInterviewSelected,
     yearsOfExperience = 0,
 }) => {
-    // Log all props when component renders
     console.log('=== InterviewDetails Component Props ===');
     console.log('interviewDetailsData:', interviewDetailsData);
     const [showCustomDiscount, setShowCustomDiscount] = useState(false);
     const [customDiscountValue, setCustomDiscountValue] = useState('');
-    // Parse yearsOfExperience to ensure it's a number
     const expYears = parseInt(yearsOfExperience, 10) || 0;
 
-    // Initialize selectedSkills and selectedTechnologyies from interviewDetailsData
-    useEffect(() => {
+    // Skills-specific state
+    const [isCustomSkill, setIsCustomSkill] = useState(false);
+    const [customSkillValue, setCustomSkillValue] = useState('');
+    const [searchSkillValue, setSearchSkillValue] = useState('');
+    const [isSkillsMenuOpen, setIsSkillsMenuOpen] = useState(false);
+    const skillsMenuRef = useRef(null);
 
+    useEffect(() => {
         if (interviewDetailsData.skills && interviewDetailsData.skills.length > 0) {
             const skillsToSet = interviewDetailsData.skills
                 .filter(skill => skill && typeof skill === 'object' ? skill.SkillName : skill)
@@ -70,31 +72,29 @@ const InterviewDetails = ({
         }
     }, [interviewDetailsData]);
 
-    // Update rate visibility based on years of experience when component mounts or yearsOfExperience changes
     useEffect(() => {
         setInterviewDetailsData(prev => ({
             ...prev,
             rates: {
                 junior: {
                     ...prev.rates?.junior,
-                    isVisible: expYears <= 3 // show junior level if 3 years or less
+                    isVisible: expYears <= 3
                 },
                 mid: {
                     ...prev.rates?.mid,
-                    isVisible: expYears > 3 && expYears <= 6 // show mid level if more than 3 years and less than 6 years
+                    isVisible: expYears > 3 && expYears <= 6
                 },
                 senior: {
                     ...prev.rates?.senior,
-                    isVisible: expYears > 6 // show senior level if more than 6 years
+                    isVisible: expYears > 6
                 }
             }
         }));
     }, [yearsOfExperience, expYears, setInterviewDetailsData]);
 
-    // For backward compatibility with old UI
-    const showJuniorLevel = expYears >= 0; // Always show junior level
-    const showMidLevel = expYears >= 4; // Show mid-level if 3+ years
-    const showSeniorLevel = expYears > 6; // Show senior level only if more than 6 years (7+)
+    const showJuniorLevel = expYears >= 0;
+    const showMidLevel = expYears >= 4;
+    const showSeniorLevel = expYears > 6;
 
     const {
         skills,
@@ -105,10 +105,8 @@ const InterviewDetails = ({
         isTechnologiesFetching,
     } = useMasterData();
 
-    // State to store rate cards data
     const [rateCards, setRateCards] = useState([]);
 
-    // Memoize the fetch function to prevent unnecessary re-renders
     const fetchRateCardsMemoized = useCallback(async (techName) => {
         if (!techName) return;
 
@@ -119,7 +117,6 @@ const InterviewDetails = ({
             const token = localStorage.getItem('token');
             const baseUrl = process.env.REACT_APP_API_URL || '';
             const encodedTech = encodeURIComponent(techName);
-            // Updated endpoint to match new backend route structure
             const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
 
             console.log('2. Making API request to:', apiUrl);
@@ -153,69 +150,25 @@ const InterviewDetails = ({
         }
     }, []);
 
-    // Function to fetch rate cards by technology (public API)
     const fetchRateCards = (technologyName) => {
         return fetchRateCardsMemoized(technologyName);
     }
 
-    // Helper function to get rate ranges for a specific level
     const getRateRanges = (level) => {
         if (!rateCards.length) return null;
 
-        // Find the first rate card that has the specified level
         const rateCard = rateCards.find(card =>
             card.levels.some(lvl => lvl.level === level)
         );
 
         if (!rateCard) return null;
 
-        // Find the level data
         const levelData = rateCard.levels.find(lvl => lvl.level === level);
         if (!levelData || !levelData.rateRange) return null;
 
         return levelData.rateRange;
     }
 
-    const bioLength = interviewDetailsData.bio?.length || 0;
-
-    // uncomment this if any issue with handleTechnologyChange
-    // const handleTechnologyChange = (event) => {
-    //     const selectedValue = event.target.value;
-    //     if (selectedValue) {
-    //         fetchRateCards(selectedValue);
-
-    //         // Check if the technology is already selected
-    //         const isAlreadySelected = selectedTechnologyies.some(
-    //             tech => tech.TechnologyMasterName === selectedValue
-    //         );
-
-    //         if (!isAlreadySelected) {
-    //             const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
-    //                 _id: Math.random().toString(36).substr(2, 9),
-    //                 TechnologyMasterName: selectedValue
-    //             };
-
-    //             const newTechnologies = [...selectedTechnologyies, technology];
-    //             setSelectedTechnologyies(newTechnologies);
-
-    //             setInterviewDetailsData(prev => ({
-    //                 ...prev,
-    //                 technologies: newTechnologies.map(t => t.TechnologyMasterName),
-    //             }));
-
-    //             setErrors(prev => ({ ...prev, technologies: '' }));
-    //         }
-    //     } else {
-    //         setSelectedTechnologyies([]);
-    //         setInterviewDetailsData(prev => ({
-    //             ...prev,
-    //             technologies: []
-    //         }));
-    //         setErrors(prev => ({ ...prev, technologies: 'Please select a technology' }));
-    //     }
-    // };
-
-    // Handle technology selection
     const handleTechnologyChange = async (event) => {
         const selectedValue = event.target.value;
         console.log('handleTechnologyChange called with:', selectedValue);
@@ -223,25 +176,19 @@ const InterviewDetails = ({
         if (selectedValue) {
             console.log('Selected value:', selectedValue);
 
-            // Find the technology object
             const technology = technologies.find((t) => t.TechnologyMasterName === selectedValue) || {
                 _id: Math.random().toString(36).substr(2, 9),
                 TechnologyMasterName: selectedValue
             };
             console.log('Found technology:', technology);
 
-            // Update selectedTechnologyies with the new selection (single selection)
             setSelectedTechnologyies([technology]);
             console.log('Updated selectedTechnologyies:', [technology]);
 
-            // Fetch rate cards for the selected technology
             try {
                 const rateCards = await fetchRateCards(selectedValue);
-
-                // Check if we have valid rate cards for this technology
                 const hasValidRates = rateCards && rateCards.length > 0;
 
-                // Update interviewDetailsData with new rates based on backend ranges or clear them
                 setInterviewDetailsData(prev => {
                     let ratesUpdate = {
                         junior: { usd: 0, inr: 0, isVisible: expYears <= 3 },
@@ -249,7 +196,6 @@ const InterviewDetails = ({
                         senior: { usd: 0, inr: 0, isVisible: expYears > 6 }
                     };
 
-                    // Only set rates if we have valid rate cards
                     if (hasValidRates) {
                         const juniorRange = getRateRanges('Junior') || { usd: { min: 0 }, inr: { min: 0 } };
                         const midRange = getRateRanges('Mid-Level') || { usd: { min: 0 }, inr: { min: 0 } };
@@ -285,7 +231,6 @@ const InterviewDetails = ({
                 });
             } catch (error) {
                 console.error('Error fetching rate cards:', error);
-                // If there's an error, clear the rates
                 setInterviewDetailsData(prev => ({
                     ...prev,
                     technologies: [selectedValue],
@@ -297,7 +242,6 @@ const InterviewDetails = ({
                 }));
             }
 
-            // Clear technology error
             setErrors(prev => ({
                 ...prev,
                 technologies: '',
@@ -310,7 +254,6 @@ const InterviewDetails = ({
             }));
         } else {
             console.log('No value selected, clearing selection');
-            // Clear selection if no value is selected
             setSelectedTechnologyies([]);
             setInterviewDetailsData(prev => ({
                 ...prev,
@@ -328,18 +271,9 @@ const InterviewDetails = ({
         }
     };
 
-    // Add this useEffect to log state changes
-    useEffect(() => {
-        console.log('selectedTechnologyies state:', selectedTechnologyies);
-        console.log('interviewDetailsData.technologies state:', interviewDetailsData.technologies);
-        console.log('errors state:', errors);
-    }, [selectedTechnologyies, interviewDetailsData.technologies, errors]);
-
     const handleRemoveSkill = (index) => {
         const updatedSkills = selectedSkills.filter((_, i) => i !== index);
         setSelectedSkills(updatedSkills);
-
-        // Update interviewDetailsData with the new skills array
         setInterviewDetailsData(prev => ({
             ...prev,
             skills: updatedSkills.map(skill => skill.SkillName)
@@ -348,8 +282,6 @@ const InterviewDetails = ({
 
     const clearSkills = () => {
         setSelectedSkills([]);
-
-        // Clear skills in interviewDetailsData
         setInterviewDetailsData(prev => ({
             ...prev,
             skills: []
@@ -358,51 +290,47 @@ const InterviewDetails = ({
 
     const handleChangeforExp = (e) => {
         const value = e.target.value;
-        const discountValue = value.replace(/[^0-9]/g, ''); // Ensure only numbers
-
+        const discountValue = value.replace(/[^0-9]/g, '');
         setCustomDiscountValue(discountValue);
-
         setInterviewDetailsData(prev => ({
             ...prev,
             mock_interview_discount: discountValue,
-            // Ensure mock interview is selected when setting a discount
             interviewFormatWeOffer: prev.interviewFormatWeOffer?.includes('mock')
                 ? prev.interviewFormatWeOffer
                 : [...(prev.interviewFormatWeOffer || []), 'mock']
         }));
-
         if (!isMockInterviewSelected) {
             setIsMockInterviewSelected(true);
         }
-
         setErrors(prev => ({
             ...prev,
             mock_interview_discount: '',
         }));
     };
 
-    const handleSelectSkill = (event) => {
+    const handleSelectSkill = (skillName, isCustom = false) => {
         try {
-            const skillName = event?.target?.value?.trim();
             if (!skillName) {
                 console.error('No skill selected or invalid selection');
                 return;
             }
 
-            // Find the skill object from the skills list or create a new one
             let skill = skills?.find(s =>
                 s?.SkillName?.trim().toLowerCase() === skillName.toLowerCase()
             );
 
-            // If skill not found in the master list, create a new one
-            if (!skill) {
+            if (!skill && isCustom) {
                 skill = {
                     _id: Math.random().toString(36).substr(2, 9),
                     SkillName: skillName
                 };
             }
 
-            // Check if skill is already selected (case-insensitive comparison)
+            if (!skill) {
+                console.error('Skill not found and not a custom skill');
+                return;
+            }
+
             const isAlreadySelected = selectedSkills.some(selectedSkill =>
                 selectedSkill?.SkillName?.trim().toLowerCase() === skillName.toLowerCase()
             );
@@ -415,11 +343,11 @@ const InterviewDetails = ({
                     skills: updatedSkills.map(s => s?.SkillName).filter(Boolean),
                 }));
                 setErrors(prevErrors => ({ ...prevErrors, skills: '' }));
-
-                // Clear the input field after selection
-                const input = document.querySelector('.rs__input input');
-                if (input) {
-                    input.value = '';
+                if (isCustom) {
+                    setCustomSkillValue('');
+                } else {
+                    setSearchSkillValue('');
+                    setIsSkillsMenuOpen(false);
                 }
             }
         } catch (error) {
@@ -453,18 +381,6 @@ const InterviewDetails = ({
         }));
     };
 
-    const handleNoShow = (event) => {
-        const { value } = event.target;
-        setInterviewDetailsData((prevData) => ({
-            ...prevData,
-            noShowPolicy: value,
-        }));
-        setErrors((prev) => ({
-            ...prev,
-            noShowPolicy: '',
-        }));
-    };
-
     const handleBioChange = (e) => {
         const value = e.target.value;
         setInterviewDetailsData({ ...interviewDetailsData, bio: value });
@@ -476,20 +392,18 @@ const InterviewDetails = ({
 
     const handleHourlyRateChange = (level, currency) => (e) => {
         const value = e.target.value;
-        const numericValue = value.replace(/\D/g, ''); // Remove non-numeric characters
+        const numericValue = value.replace(/\D/g, '');
 
-        // Get rate range for validation
         const levelKey = level.charAt(0).toUpperCase() + level.slice(1);
         const rateRange = getRateRanges(levelKey);
 
         let error = '';
 
         if (!numericValue) {
-            // field cleared → required validation
             error = "This rate is required";
         } else {
             const minRate = rateRange?.[currency]?.min || 0;
-            const maxRate = rateRange?.[currency]?.max || (currency === "inr" ? 100000 : 1000);
+            const maxRate = rateRange?.[currency]?.max || (currency === 'inr' ? 100000 : 1000);
             const numValue = parseInt(numericValue, 10);
 
             if (numValue < minRate) {
@@ -499,19 +413,17 @@ const InterviewDetails = ({
             }
         }
 
-        // update the state
         setInterviewDetailsData((prev) => ({
             ...prev,
             rates: {
                 ...prev.rates,
                 [level]: {
                     ...prev.rates?.[level],
-                    [currency]: numericValue ? parseInt(numericValue, 10) : "" // keep empty string if user cleared
+                    [currency]: numericValue ? parseInt(numericValue, 10) : ""
                 }
             }
         }));
 
-        // update errors
         setErrors(prev => ({
             ...prev,
             rates: {
@@ -533,20 +445,15 @@ const InterviewDetails = ({
                 : [];
 
             if (checked) {
-                // Add the format if it's not already in the array
                 if (!updatedFormats.includes(value)) {
                     updatedFormats = [...updatedFormats, value];
                 }
             } else {
-                // Remove the format if it exists in the array
                 updatedFormats = updatedFormats.filter((format) => format !== value);
             }
 
-            // Special handling for mock interviews
             if (value === 'mock') {
                 setIsMockInterviewSelected(checked);
-
-                // If mock is being unchecked, clear the discount
                 if (!checked) {
                     setCustomDiscountValue('');
                     return {
@@ -565,7 +472,6 @@ const InterviewDetails = ({
             };
         });
 
-        // Clear any previous errors
         setErrors((prev) => ({
             ...prev,
             interviewFormatWeOffer: '',
@@ -577,38 +483,36 @@ const InterviewDetails = ({
         label: tech.TechnologyMasterName,
     })) || [];
 
+    const filteredSkills = skills
+        ?.filter(skill =>
+            skill &&
+            skill.SkillName &&
+            typeof skill.SkillName === 'string' &&
+            !selectedSkills.some(selectedSkill =>
+                selectedSkill &&
+                selectedSkill.SkillName &&
+                typeof selectedSkill.SkillName === 'string' &&
+                selectedSkill.SkillName.trim().toLowerCase() === skill.SkillName.trim().toLowerCase()
+            ) &&
+            (searchSkillValue ? skill.SkillName.toLowerCase().includes(searchSkillValue.toLowerCase()) : true)
+        )
+        .map(skill => ({
+            value: skill.SkillName,
+            label: skill.SkillName
+        })) || [];
+
     const techPopupRef = useRef(null);
 
-    // In InterviewDetails.jsx, add this custom MenuList component
-    const CustomMenuList = (props) => {
-        const { children, ...rest } = props;
-
-        // Separate the "Add Custom Skill" option from other options
-        const [customOptions, regularOptions] = React.Children.toArray(children).reduce(
-            (acc, child) => {
-                if (child?.props?.data?.isCustom) {
-                    acc[0].push(child);
-                } else {
-                    acc[1].push(child);
-                }
-                return acc;
-            },
-            [[], []]
-        );
-
-        return (
-            <components.MenuList {...rest}>
-                <div className="max-h-60 overflow-y-auto">
-                    {regularOptions}
-                </div>
-                {customOptions.length > 0 && (
-                    <div className="border-t border-gray-200">
-                        {customOptions}
-                    </div>
-                )}
-            </components.MenuList>
-        );
-    };
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (skillsMenuRef.current && !skillsMenuRef.current.contains(event.target)) {
+                setIsSkillsMenuOpen(false);
+                setSearchSkillValue('');
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
         <>
@@ -637,9 +541,9 @@ const InterviewDetails = ({
             <div className="grid grid-cols-2 sm:grid-cols-6 gap-x-6 gap-y-8">
                 <div className="col-span-2 w-[50%] sm:col-span-6" ref={techPopupRef}>
                     <DropdownWithSearchField
-                        value={selectedTechnologyies[0]?.TechnologyMasterName || ''} // Pass the selected technology name
+                        value={selectedTechnologyies[0]?.TechnologyMasterName || ''}
                         options={technologyOptions}
-                        onChange={handleTechnologyChange} // Use the updated handler
+                        onChange={handleTechnologyChange}
                         error={errors.technologies}
                         label="Select Your Comfortable Technology"
                         name="technology"
@@ -651,40 +555,117 @@ const InterviewDetails = ({
 
                 {/* Skills Section */}
                 <div className="col-span-2 sm:col-span-6 space-y-4">
-                    <div className="relative w-[50%]">
-                        <DropdownWithSearchField
-                            value=""
-                            options={skills
-                                ?.filter(skill =>
-                                    skill &&
-                                    skill.SkillName &&
-                                    typeof skill.SkillName === 'string' &&
-                                    !selectedSkills.some(selectedSkill =>
-                                        selectedSkill &&
-                                        selectedSkill.SkillName &&
-                                        typeof selectedSkill.SkillName === 'string' &&
-                                        selectedSkill.SkillName.trim().toLowerCase() === skill.SkillName.trim().toLowerCase()
-                                    )
-                                )
-                                .map(skill => ({
-                                    value: skill.SkillName,
-                                    label: skill.SkillName
-                                })) || []}
-                            onChange={handleSelectSkill}
-                            error={errors.skills}
-                            label="Select Skills"
-                            name="skills"
-                            required={selectedSkills.length === 0}
-                            className="w-full"
-                            placeholder="Search and select skills..."
-                            onMenuOpen={loadSkills}
-                            loading={isSkillsFetching}
-                            isClearable={true}
-                            classNamePrefix="select"
-                            noOptionsMessage={({ inputValue }) =>
-                                inputValue ? 'No matching skills found' : 'Start typing to search skills'
-                            }
-                        />
+                    <div className="relative w-[50%]" ref={skillsMenuRef}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Select Skills {selectedSkills.length === 0 && <span className="text-red-500">*</span>}
+                        </label>
+                        {!isCustomSkill ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={searchSkillValue}
+                                    onChange={(e) => setSearchSkillValue(e.target.value)}
+                                    onFocus={() => {
+                                        loadSkills();
+                                        setIsSkillsMenuOpen(true);
+                                    }}
+                                    placeholder="Search and select skills..."
+                                    className={`mt-1 block w-full rounded-md shadow-sm py-2 pl-3 pr-10 sm:text-sm border ${errors.skills
+                                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                        : "border-gray-300 focus:ring-blue-500 focus:outline-blue-300"
+                                        }`}
+                                    disabled={isSkillsFetching}
+                                />
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <div className="h-4 w-px bg-gray-300 mr-2"></div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSkillsMenuOpen(!isSkillsMenuOpen)}
+                                        className="text-gray-500 hover:text-gray-700"
+                                    >
+                                        {isSkillsMenuOpen ? (
+                                            <ChevronUp className="h-4 w-4" />
+                                        ) : (
+                                            <ChevronDown className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
+                                {isSkillsMenuOpen && (
+                                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                        {filteredSkills.length > 0 ? (
+                                            filteredSkills.map((skill) => (
+                                                <div
+                                                    key={skill.value}
+                                                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                                    onClick={() => handleSelectSkill(skill.value)}
+                                                >
+                                                    {skill.label}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-3 py-2 text-gray-500">
+                                                {searchSkillValue ? 'No matching skills found' : 'Start typing to search skills'}
+                                            </div>
+                                        )}
+                                        <div className="border-t border-gray-200">
+                                            <div
+                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-gray-700"
+                                                onClick={() => {
+                                                    setIsCustomSkill(true);
+                                                    setCustomSkillValue('');
+                                                    setIsSkillsMenuOpen(false);
+                                                }}
+                                            >
+                                                Add custom skill...
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="relative flex items-center">
+                                <input
+                                    type="text"
+                                    value={customSkillValue}
+                                    onChange={(e) => setCustomSkillValue(e.target.value)}
+                                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm border ${errors.skills
+                                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                        : "border-gray-300 focus:ring-custom-blue focus:outline-custom-blue"
+                                        }`}
+                                    placeholder="Enter custom skill name"
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (customSkillValue.trim()) {
+                                            handleSelectSkill(customSkillValue, true);
+                                        }
+                                    }}
+                                    className="ml-2 px-3 py-1.5 bg-custom-blue text-white rounded-md hover:bg-custom-blue-600 disabled:bg-gray-300"
+                                    disabled={!customSkillValue.trim()}
+                                >
+                                    Add
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsCustomSkill(false);
+                                        setCustomSkillValue('');
+                                        setSearchSkillValue('');
+                                    }}
+                                    className="ml-2 text-gray-500 hover:text-gray-700"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        )}
+                        {errors.skills && <p className="text-red-500 text-xs pt-1">{errors.skills}</p>}
+                        {isCustomSkill && (
+                            <p className="mt-1 text-xs text-gray-500">
+                                You can add custom skills by typing in the input and clicking 'Add'.
+                            </p>
+                        )}
                     </div>
 
                     {selectedSkills.length > 0 && (
@@ -1099,7 +1080,6 @@ const InterviewDetails = ({
                             </label>
                             <div className="relative">
                                 {showCustomDiscount ? (
-                                    // selecting the custom discount input field
                                     <div className="flex items-center">
                                         <input
                                             type="number"
@@ -1108,11 +1088,9 @@ const InterviewDetails = ({
                                             value={customDiscountValue}
                                             onChange={(e) => {
                                                 let value = e.target.value.replace(/\D/g, '');
-                                                // Limit to 2 digits
                                                 if (value.length > 2) {
                                                     value = value.slice(0, 2);
                                                 }
-                                                // Ensure value is within 10-99 range
                                                 const numValue = parseInt(value, 10);
                                                 if (!isNaN(numValue) && (numValue < 10 || numValue > 99)) {
                                                     setErrors(prev => ({
@@ -1183,55 +1161,52 @@ const InterviewDetails = ({
                                         )}
                                     </div>
                                 ) : (
-                                    <>
-                                        {/* selecting the discount from dropdown */}
-                                        <div className="w-full">
-                                            <DropdownSelect
-                                                id="mock_interview_discount"
-                                                name="mock_interview_discount"
-                                                value={interviewDetailsData.mock_interview_discount
-                                                    ? {
-                                                        value: interviewDetailsData.mock_interview_discount,
-                                                        label: `${interviewDetailsData.mock_interview_discount}% discount`
-                                                    }
-                                                    : null
+                                    <div className="w-full">
+                                        <DropdownSelect
+                                            id="mock_interview_discount"
+                                            name="mock_interview_discount"
+                                            value={interviewDetailsData.mock_interview_discount
+                                                ? {
+                                                    value: interviewDetailsData.mock_interview_discount,
+                                                    label: `${interviewDetailsData.mock_interview_discount}% discount`
                                                 }
-                                                onChange={(selected) => {
-                                                    if (selected?.value === 'custom') {
-                                                        setShowCustomDiscount(true);
-                                                        setCustomDiscountValue('');
-                                                    } else if (selected) {
-                                                        handleChangeforExp({
-                                                            target: {
-                                                                name: 'mock_interview_discount',
-                                                                value: selected.value
-                                                            }
-                                                        });
-                                                    } else {
-                                                        handleChangeforExp({
-                                                            target: {
-                                                                name: 'mock_interview_discount',
-                                                                value: ''
-                                                            }
-                                                        });
-                                                    }
-                                                }}
-                                                options={[
-                                                    { value: '10', label: '10% discount' },
-                                                    { value: '20', label: '20% discount' },
-                                                    { value: '30', label: '30% discount' },
-                                                    { value: 'custom', label: 'Add custom percentage...' }
-                                                ]}
-                                                placeholder="Select discount percentage"
-                                                className="w-full"
-                                                classNamePrefix="select"
-                                                isClearable={true}
-                                            />
-                                            {errors.mock_interview_discount && (
-                                                <p className="mt-1 text-sm text-red-600">{errors.mock_interview_discount}</p>
-                                            )}
-                                        </div>
-                                    </>
+                                                : null
+                                            }
+                                            onChange={(selected) => {
+                                                if (selected?.value === 'custom') {
+                                                    setShowCustomDiscount(true);
+                                                    setCustomDiscountValue('');
+                                                } else if (selected) {
+                                                    handleChangeforExp({
+                                                        target: {
+                                                            name: 'mock_interview_discount',
+                                                            value: selected.value
+                                                        }
+                                                    });
+                                                } else {
+                                                    handleChangeforExp({
+                                                        target: {
+                                                            name: 'mock_interview_discount',
+                                                            value: ''
+                                                        }
+                                                    });
+                                                }
+                                            }}
+                                            options={[
+                                                { value: '10', label: '10% discount' },
+                                                { value: '20', label: '20% discount' },
+                                                { value: '30', label: '30% discount' },
+                                                { value: 'custom', label: 'Add custom percentage...' }
+                                            ]}
+                                            placeholder="Select discount percentage"
+                                            className="w-full"
+                                            classNamePrefix="select"
+                                            isClearable={true}
+                                        />
+                                        {errors.mock_interview_discount && (
+                                            <p className="mt-1 text-sm text-red-600">{errors.mock_interview_discount}</p>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                             <p className="mt-1.5 text-xs text-custom-blue">
@@ -1239,31 +1214,6 @@ const InterviewDetails = ({
                             </p>
                         </div>
                     )}
-
-                    {/* policy for no-show cases - for now this want to be comment */}
-                    {/* <div>
-                        <p className="text-gray-900 text-sm font-medium leading-6 rounded-lg mb-1">
-                            Policy for No-Show Cases <span className="text-red-500">*</span>
-                        </p>
-                        <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-1 text-sm sm:text-xs">
-                            {['25%', '50%', '75%', '100%'].map((policy) => (
-                                <label key={policy} className="inline-flex items-center">
-                                    <input
-                                        type="radio"
-                                        name="noShowPolicy"
-                                        value={policy}
-                                        checked={interviewDetailsData.noShowPolicy === policy}
-                                        onChange={handleNoShow}
-                                        className="form-radio text-gray-600"
-                                    />
-                                    <span className="ml-2">Charge {policy} without rescheduling</span>
-                                </label>
-                            ))}
-                        </div>
-                        {errors.noShowPolicy && (
-                            <p className="text-red-500 text-sm sm:text-xs mt-2">{errors.noShowPolicy}</p>
-                        )}
-                    </div> */}
 
                     <div className="sm:col-span-6 col-span-2">
                         <InputField

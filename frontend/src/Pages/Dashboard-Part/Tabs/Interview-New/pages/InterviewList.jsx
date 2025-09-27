@@ -1,6 +1,7 @@
 //<---------v1.0.0---------Venkatesh-----add current round column
 // v1.0.1 - Ashok - improved searching by full name
 // v1.0.2  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.3  -  Ashok   -  improved responsiveness
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -75,7 +76,10 @@ function InterviewList() {
   const [selectedRoundStatuses, setSelectedRoundStatuses] = useState([]);
   const [selectedInterviewers, setSelectedInterviewers] = useState([]);
   const [createdDatePreset, setCreatedDatePreset] = useState("");
-  const [interviewDateRange, setInterviewDateRange] = useState({ from: "", to: "" });
+  const [interviewDateRange, setInterviewDateRange] = useState({
+    from: "",
+    to: "",
+  });
 
   // Sync filter states when popup opens
   useEffect(() => {
@@ -135,18 +139,18 @@ function InterviewList() {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-      filters.tech.length > 0 ||
-      filters.experience.min ||
-      filters.experience.max ||
-      filters.interviewType.length > 0 ||
-      filters.interviewMode.length > 0 ||
-      filters.position.length > 0 ||
-      filters.company.length > 0 ||
-      filters.roundStatus.length > 0 ||
-      filters.interviewer.length > 0 ||
-      filters.createdDate ||
-      filters.interviewDate.from ||
-      filters.interviewDate.to
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        filters.experience.max ||
+        filters.interviewType.length > 0 ||
+        filters.interviewMode.length > 0 ||
+        filters.position.length > 0 ||
+        filters.company.length > 0 ||
+        filters.roundStatus.length > 0 ||
+        filters.interviewer.length > 0 ||
+        filters.createdDate ||
+        filters.interviewDate.from ||
+        filters.interviewDate.to
     );
     setCurrentPage(0);
   }, []);
@@ -175,17 +179,13 @@ function InterviewList() {
 
   const handleInterviewTypeToggle = (type) => {
     setSelectedInterviewTypes((prev) =>
-      prev.includes(type)
-        ? prev.filter((t) => t !== type)
-        : [...prev, type]
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
   };
 
   const handleInterviewModeToggle = (mode) => {
     setSelectedInterviewModes((prev) =>
-      prev.includes(mode)
-        ? prev.filter((m) => m !== mode)
-        : [...prev, mode]
+      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
     );
   };
 
@@ -312,7 +312,7 @@ function InterviewList() {
         interview.interviewTitle,
         interview.interviewType,
         interview.status,
-        interview.interviewCode
+        interview.interviewCode,
       ].filter(Boolean);
 
       // v1.0.1 <---------------------------------------------------------------
@@ -324,11 +324,13 @@ function InterviewList() {
 
       // Full name both orders
       const fullNameNormal = normalizeSpaces(
-        `${interview.candidateId?.FirstName || ""} ${interview.candidateId?.LastName || ""
+        `${interview.candidateId?.FirstName || ""} ${
+          interview.candidateId?.LastName || ""
         }`
       );
       const fullNameReverse = normalizeSpaces(
-        `${interview.candidateId?.LastName || ""} ${interview.candidateId?.FirstName || ""
+        `${interview.candidateId?.LastName || ""} ${
+          interview.candidateId?.FirstName || ""
         }`
       );
 
@@ -353,10 +355,10 @@ function InterviewList() {
       const matchesExperience =
         (!selectedFilters.experience.min ||
           interview.candidateId?.CurrentExperience >=
-          Number(selectedFilters.experience.min)) &&
+            Number(selectedFilters.experience.min)) &&
         (!selectedFilters.experience.max ||
           interview.candidateId?.CurrentExperience <=
-          Number(selectedFilters.experience.max));
+            Number(selectedFilters.experience.max));
 
       // New filter matches
       const matchesInterviewType =
@@ -395,13 +397,13 @@ function InterviewList() {
         const createdAt = new Date(interview.createdAt);
         const now = new Date();
         const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-        
+
         switch (selectedFilters.createdDate) {
-          case 'last7':
+          case "last7":
             return daysDiff <= 7;
-          case 'last30':
+          case "last30":
             return daysDiff <= 30;
-          case 'last90':
+          case "last90":
             return daysDiff <= 90;
           default:
             return true;
@@ -409,17 +411,25 @@ function InterviewList() {
       };
 
       const matchesInterviewDate = () => {
-        if (!selectedFilters.interviewDate.from && !selectedFilters.interviewDate.to) {
+        if (
+          !selectedFilters.interviewDate.from &&
+          !selectedFilters.interviewDate.to
+        ) {
           return true;
         }
-        
+
         const hasValidDate = interview.rounds?.some((round) => {
           if (!round.dateTime) return false;
-          const roundDate = new Date(round.dateTime.split(' - ')[0]);
-          
-          if (selectedFilters.interviewDate.from && selectedFilters.interviewDate.to) {
-            return roundDate >= new Date(selectedFilters.interviewDate.from) &&
-                   roundDate <= new Date(selectedFilters.interviewDate.to);
+          const roundDate = new Date(round.dateTime.split(" - ")[0]);
+
+          if (
+            selectedFilters.interviewDate.from &&
+            selectedFilters.interviewDate.to
+          ) {
+            return (
+              roundDate >= new Date(selectedFilters.interviewDate.from) &&
+              roundDate <= new Date(selectedFilters.interviewDate.to)
+            );
           } else if (selectedFilters.interviewDate.from) {
             return roundDate >= new Date(selectedFilters.interviewDate.from);
           } else if (selectedFilters.interviewDate.to) {
@@ -427,14 +437,14 @@ function InterviewList() {
           }
           return true;
         });
-        
+
         return hasValidDate;
       };
 
       return (
-        matchesSearchQuery && 
-        matchesStatus && 
-        matchesTech && 
+        matchesSearchQuery &&
+        matchesStatus &&
+        matchesTech &&
         matchesExperience &&
         matchesInterviewType &&
         matchesInterviewMode &&
@@ -517,12 +527,12 @@ function InterviewList() {
                 >
                   {(candidate?.FirstName
                     ? candidate.FirstName.charAt(0).toUpperCase() +
-                    candidate.FirstName.slice(1)
+                      candidate.FirstName.slice(1)
                     : "") +
                     " " +
                     (candidate?.LastName
                       ? candidate.LastName.charAt(0).toUpperCase() +
-                      candidate.LastName.slice(1)
+                        candidate.LastName.slice(1)
                       : "")}
                 </div>
                 <div className="text-sm text-gray-500 truncate">
@@ -541,8 +551,9 @@ function InterviewList() {
         const position = row.positionId;
         return (
           <Tooltip
-            label={`${position?.title || "Unknown"} • ${position?.companyname || "No Company"
-              } • ${position?.Location || "No location"}`}
+            label={`${position?.title || "Unknown"} • ${
+              position?.companyname || "No Company"
+            } • ${position?.Location || "No location"}`}
           >
             <div className="truncate max-w-[120px]">
               <div
@@ -551,7 +562,7 @@ function InterviewList() {
               >
                 {position?.title
                   ? position.title.charAt(0).toUpperCase() +
-                  position.title.slice(1)
+                    position.title.slice(1)
                   : "Unknown"}
               </div>
               <div className="text-sm text-gray-500 truncate">
@@ -624,8 +635,9 @@ function InterviewList() {
               <div
                 className="bg-custom-blue h-2 rounded-full"
                 style={{
-                  width: `${totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0
-                    }%`,
+                  width: `${
+                    totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0
+                  }%`,
                 }}
               ></div>
             </div>
@@ -656,9 +668,7 @@ function InterviewList() {
                   <StatusBadge status={currentRound.status} size="sm" />
                   <div className="text-xs text-gray-500">
                     {currentRound.dateTime ? (
-                      <span>
-                        {currentRound.dateTime.split(' - ')[0]}
-                      </span>
+                      <span>{currentRound.dateTime.split(" - ")[0]}</span>
                     ) : (
                       <span>Not scheduled</span>
                     )}
@@ -720,9 +730,7 @@ function InterviewList() {
         <div className="flex items-center truncate max-w-[120px]">
           <Calendar className="h-4 w-4 mr-1 text-gray-500" />
           <span className="text-sm text-gray-500">
-            {row.createdAt
-              ? formatDateTime(row.createdAt)
-              : "N/A"}
+            {row.createdAt ? formatDateTime(row.createdAt) : "N/A"}
           </span>
         </div>
       ),
@@ -738,23 +746,23 @@ function InterviewList() {
   const tableActions = [
     ...(effectivePermissions.Interviews?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: handleViewInterview,
-        },
-      ]
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: handleViewInterview,
+          },
+        ]
       : []),
     ...(effectivePermissions.Interviews?.Edit
       ? [
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: handleEditInterview,
-        },
-      ]
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: handleEditInterview,
+          },
+        ]
       : []),
   ];
 
@@ -788,7 +796,9 @@ function InterviewList() {
           </div>
         </main>
       </div>
-      <main className="fixed top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+      {/* v1.0.3 <--------------------------------------------------------------------------------------- */}
+      <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {/* v1.0.3 ---------------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">
             <div className="relative w-full">
@@ -807,7 +817,9 @@ function InterviewList() {
               ) : (
                 <>
                   {/* Desktop Table View */}
-                  <div className="hidden lg:block xl:block 2xl:block w-full">
+                  {/* v1.0.3 <--------------------------------------------------------------------------------------------------------------------- */}
+                  <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                    {/* v1.0.3 ---------------------------------------------------------------------------------------------------------------------> */}
                     <TableView
                       data={currentFilteredRows}
                       columns={tableColumns}
@@ -822,101 +834,100 @@ function InterviewList() {
                   <div className="lg:hidden xl:hidden 2xl:hidden space-y-4 p-4">
                     {isLoading
                       ? Array(3)
-                        .fill(0)
-                        .map((_, index) => (
-                          <motion.div
-                            key={`placeholder-${index}`}
-                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 skeleton-animation"
-                            initial={false}
-                            animate={{ height: "auto" }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex items-center">
-                                <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200"></div>
-                                <div className="ml-3 space-y-2">
-                                  <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                                  <div className="h-3 w-48 bg-gray-200 rounded"></div>
+                          .fill(0)
+                          .map((_, index) => (
+                            <motion.div
+                              key={`placeholder-${index}`}
+                              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 skeleton-animation"
+                              initial={false}
+                              animate={{ height: "auto" }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200"></div>
+                                  <div className="ml-3 space-y-2">
+                                    <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                                    <div className="h-3 w-48 bg-gray-200 rounded"></div>
+                                  </div>
+                                </div>
+                                <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                              </div>
+                              <div className="space-y-3">
+                                <div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="h-4 w-40 bg-gray-200 rounded"></div>
+                                    <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                                  </div>
+                                  <div className="h-3 w-64 bg-gray-200 rounded mt-1"></div>
+                                </div>
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                                    <div className="h-3 w-24 bg-gray-200 rounded"></div>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2"></div>
                                 </div>
                               </div>
-                              <div className="h-6 w-24 bg-gray-200 rounded"></div>
-                            </div>
-                            <div className="space-y-3">
-                              <div>
-                                <div className="flex items-center justify-between">
-                                  <div className="h-4 w-40 bg-gray-200 rounded"></div>
-                                  <div className="h-3 w-20 bg-gray-200 rounded"></div>
-                                </div>
-                                <div className="h-3 w-64 bg-gray-200 rounded mt-1"></div>
-                              </div>
-                              <div>
-                                <div className="flex justify-between items-center mb-1">
-                                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
-                                  <div className="h-3 w-24 bg-gray-200 rounded"></div>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2"></div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))
+                            </motion.div>
+                          ))
                       : currentFilteredRows.map((interview) => {
-                        const candidate = interview.candidateId;
-                        const position = interview.positionId;
-                        const rounds = interview.rounds || [];
-                        const completedRounds = rounds.filter(
-                          (round) => round.status === "Completed"
-                        ).length;
-                        const totalRounds = rounds.length;
-                        const nextRound =
-                          rounds
-                            .filter((round) =>
-                              [
-                                "Scheduled",
-                                "RequestSent",
-                              ].includes(round.status)
-                            )
-                            .sort((a, b) => a.sequence - b.sequence)[0] ||
-                          null;
-                        const nextRoundInterviewers =
-                          nextRound?.interviewers?.map((interviewer) => ({
-                            ...interviewer,
-                            isExternal:
-                              nextRound?.interviewerType === "external",
-                          })) || [];
-                        const isExpanded = expandedRows[interview._id];
+                          const candidate = interview.candidateId;
+                          const position = interview.positionId;
+                          const rounds = interview.rounds || [];
+                          const completedRounds = rounds.filter(
+                            (round) => round.status === "Completed"
+                          ).length;
+                          const totalRounds = rounds.length;
+                          const nextRound =
+                            rounds
+                              .filter((round) =>
+                                ["Scheduled", "RequestSent"].includes(
+                                  round.status
+                                )
+                              )
+                              .sort((a, b) => a.sequence - b.sequence)[0] ||
+                            null;
+                          const nextRoundInterviewers =
+                            nextRound?.interviewers?.map((interviewer) => ({
+                              ...interviewer,
+                              isExternal:
+                                nextRound?.interviewerType === "external",
+                            })) || [];
+                          const isExpanded = expandedRows[interview._id];
 
-                        return (
-                          <motion.div
-                            key={interview._id}
-                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
-                            initial={false}
-                            animate={{ height: isExpanded ? "auto" : "auto" }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex items-center">
-                                <div className="flex-shrink-0 h-12 w-12">
-                                  {candidate?.imageUrl ? (
-                                    <img
-                                      src={candidate.imageUrl}
-                                      alt={candidate.LastName}
-                                      className="h-12 w-12 rounded-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="h-12 w-12 rounded-full bg-custom-blue flex items-center justify-center text-white text-lg font-semibold">
-                                      {candidate?.LastName?.charAt(0) || "?"}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="ml-3">
-                                  <div className="flex items-center">
-                                    <div className="text-base font-medium text-gray-700">
-                                      {(candidate?.FirstName || "") +
-                                        " " +
-                                        (candidate?.LastName || "")}
-                                    </div>
-                                    {effectivePermissions.Candidates
-                                      ?.View && (
+                          return (
+                            <motion.div
+                              key={interview._id}
+                              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+                              initial={false}
+                              animate={{ height: isExpanded ? "auto" : "auto" }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-12 w-12">
+                                    {candidate?.imageUrl ? (
+                                      <img
+                                        src={candidate.imageUrl}
+                                        alt={candidate.LastName}
+                                        className="h-12 w-12 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="h-12 w-12 rounded-full bg-custom-blue flex items-center justify-center text-white text-lg font-semibold">
+                                        {candidate?.LastName?.charAt(0) || "?"}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-3">
+                                    <div className="flex items-center">
+                                      <div className="text-base font-medium text-gray-700">
+                                        {(candidate?.FirstName || "") +
+                                          " " +
+                                          (candidate?.LastName || "")}
+                                      </div>
+                                      {effectivePermissions.Candidates
+                                        ?.View && (
                                         <button
                                           onClick={() => handleView(candidate)}
                                           className="ml-2 text-custom-blue hover:text-custom-blue/80"
@@ -924,151 +935,152 @@ function InterviewList() {
                                           <ExternalLink className="h-3 w-3" />
                                         </button>
                                       )}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                      {candidate?.Email || "No email"}
+                                    </div>
+                                  </div>
+                                </div>
+                                <StatusBadge
+                                  status={interview.status}
+                                  size="lg"
+                                />
+                              </div>
+
+                              <div className="space-y-3">
+                                <div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                      <div className="text-sm font-medium text-gray-700">
+                                        {position?.title || "Unknown"}
+                                      </div>
+                                      {effectivePermissions.Positions?.View && (
+                                        <button
+                                          onClick={() =>
+                                            handleViewPosition(position)
+                                          }
+                                          className="ml-2 text-custom-blue hover:text-custom-blue/80"
+                                        >
+                                          <ExternalLink className="h-3 w-3" />
+                                        </button>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {interview.createdAt
+                                        ? new Date(
+                                            interview.createdAt
+                                          ).toLocaleDateString()
+                                        : "N/A"}
+                                    </div>
                                   </div>
                                   <div className="text-sm text-gray-500">
-                                    {candidate?.Email || "No email"}
+                                    {position?.companyname || "No Company"} •{" "}
+                                    {position?.Location || "No location"}
                                   </div>
                                 </div>
-                              </div>
-                              <StatusBadge
-                                status={interview.status}
-                                size="lg"
-                              />
-                            </div>
 
-                            <div className="space-y-3">
-                              <div>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center">
-                                    <div className="text-sm font-medium text-gray-700">
-                                      {position?.title || "Unknown"}
-                                    </div>
-                                    {effectivePermissions.Positions?.View && (
-                                      <button
-                                        onClick={() =>
-                                          handleViewPosition(position)
-                                        }
-                                        className="ml-2 text-custom-blue hover:text-custom-blue/80"
-                                      >
-                                        <ExternalLink className="h-3 w-3" />
-                                      </button>
-                                    )}
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-sm text-gray-700">
+                                      Progress
+                                    </span>
+                                    <span className="text-sm text-gray-500">
+                                      {completedRounds} of {totalRounds} rounds
+                                    </span>
                                   </div>
-                                  <div className="text-xs text-gray-500">
-                                    {interview.createdAt
-                                      ? new Date(
-                                        interview.createdAt
-                                      ).toLocaleDateString()
-                                      : "N/A"}
-                                  </div>
-                                </div>
-                                <div className="text-sm text-gray-500">
-                                  {position?.companyname || "No Company"} •{" "}
-                                  {position?.Location || "No location"}
-                                </div>
-                              </div>
-
-                              <div>
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-sm text-gray-700">
-                                    Progress
-                                  </span>
-                                  <span className="text-sm text-gray-500">
-                                    {completedRounds} of {totalRounds} rounds
-                                  </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-custom-blue h-2 rounded-full"
-                                    style={{
-                                      width: `${totalRounds > 0
-                                          ? (completedRounds / totalRounds) *
-                                          100
-                                          : 0
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                      className="bg-custom-blue h-2 rounded-full"
+                                      style={{
+                                        width: `${
+                                          totalRounds > 0
+                                            ? (completedRounds / totalRounds) *
+                                              100
+                                            : 0
                                         }%`,
-                                    }}
-                                  ></div>
+                                      }}
+                                    ></div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
 
-                            <button
-                              onClick={() =>
-                                toggleRowExpansion(interview._id)
-                              }
-                              className="mt-4 w-full flex items-center justify-center py-2 text-sm text-gray-500 hover:text-gray-700"
-                            >
-                              {isExpanded ? (
-                                <>
-                                  <span>Show less</span>
-                                  <ChevronUp className="ml-1 h-4 w-4" />
-                                </>
-                              ) : (
-                                <>
-                                  <span>Show more</span>
-                                  <ChevronDown className="ml-1 h-4 w-4" />
-                                </>
-                              )}
-                            </button>
+                              <button
+                                onClick={() =>
+                                  toggleRowExpansion(interview._id)
+                                }
+                                className="mt-4 w-full flex items-center justify-center py-2 text-sm text-gray-500 hover:text-gray-700"
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    <span>Show less</span>
+                                    <ChevronUp className="ml-1 h-4 w-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <span>Show more</span>
+                                    <ChevronDown className="ml-1 h-4 w-4" />
+                                  </>
+                                )}
+                              </button>
 
-                            {isExpanded && (
-                              <div className="mt-4 pt-4 border-t border-gray-200">
-                                {nextRound ? (
-                                  <div className="space-y-3">
-                                    <div>
-                                      <div className="text-sm font-medium text-gray-700 mb-2">
-                                        Next Round: {nextRound.roundTitle}
-                                      </div>
-                                      <div className="flex items-center">
-                                        <StatusBadge
-                                          status={nextRound.status}
-                                          size="sm"
-                                        />
-                                        <span className="ml-2 text-xs text-gray-500">
-                                          {nextRound.interviewType}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    {nextRoundInterviewers.length > 0 && (
+                              {isExpanded && (
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                  {nextRound ? (
+                                    <div className="space-y-3">
                                       <div>
                                         <div className="text-sm font-medium text-gray-700 mb-2">
-                                          Interviewers
+                                          Next Round: {nextRound.roundTitle}
                                         </div>
-                                        <div className="flex flex-wrap gap-2">
-                                          {nextRoundInterviewers.map(
-                                            (interviewer) => (
-                                              <InterviewerAvatar
-                                                key={interviewer?._id}
-                                                interviewer={interviewer}
-                                                size="md"
-                                              />
-                                            )
-                                          )}
+                                        <div className="flex items-center">
+                                          <StatusBadge
+                                            status={nextRound.status}
+                                            size="sm"
+                                          />
+                                          <span className="ml-2 text-xs text-gray-500">
+                                            {nextRound.interviewType}
+                                          </span>
                                         </div>
                                       </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="text-sm text-gray-500">
-                                    No Upcoming Rounds
-                                  </div>
-                                )}
-                                {effectivePermissions.Interviews?.View && (
-                                  <button
-                                    onClick={() =>
-                                      handleViewInterview(interview)
-                                    }
-                                    className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                  >
-                                    View Full Details
-                                    <ArrowRight className="ml-1 h-4 w-4" />
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </motion.div>
-                        );
-                      })}
+                                      {nextRoundInterviewers.length > 0 && (
+                                        <div>
+                                          <div className="text-sm font-medium text-gray-700 mb-2">
+                                            Interviewers
+                                          </div>
+                                          <div className="flex flex-wrap gap-2">
+                                            {nextRoundInterviewers.map(
+                                              (interviewer) => (
+                                                <InterviewerAvatar
+                                                  key={interviewer?._id}
+                                                  interviewer={interviewer}
+                                                  size="md"
+                                                />
+                                              )
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm text-gray-500">
+                                      No Upcoming Rounds
+                                    </div>
+                                  )}
+                                  {effectivePermissions.Interviews?.View && (
+                                    <button
+                                      onClick={() =>
+                                        handleViewInterview(interview)
+                                      }
+                                      className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                    >
+                                      View Full Details
+                                      <ArrowRight className="ml-1 h-4 w-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </motion.div>
+                          );
+                        })}
                   </div>
                 </>
               )}
@@ -1096,7 +1108,13 @@ function InterviewList() {
                     </div>
                     {isStatusOpen && (
                       <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {["Draft", "Active", "Completed", "Cancelled", "On Hold"].map((status) => (
+                        {[
+                          "Draft",
+                          "Active",
+                          "Completed",
+                          "Cancelled",
+                          "On Hold",
+                        ].map((status) => (
                           <label
                             key={status}
                             className="flex items-center space-x-2"
@@ -1263,7 +1281,9 @@ function InterviewList() {
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsRoundStatusOpen(!isRoundStatusOpen)}
                     >
-                      <span className="font-medium text-gray-700">Round Status</span>
+                      <span className="font-medium text-gray-700">
+                        Round Status
+                      </span>
                       {isRoundStatusOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
@@ -1272,7 +1292,14 @@ function InterviewList() {
                     </div>
                     {isRoundStatusOpen && (
                       <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                        {["Scheduled", "Completed", "Cancelled", "RequestSent", "Pending", "In Progress"].map((status) => (
+                        {[
+                          "Scheduled",
+                          "Completed",
+                          "Cancelled",
+                          "RequestSent",
+                          "Pending",
+                          "In Progress",
+                        ].map((status) => (
                           <label
                             key={status}
                             className="flex items-center space-x-2"
@@ -1290,14 +1317,17 @@ function InterviewList() {
                     )}
                   </div>
 
-
                   {/* Interview Date Range Filter */}
                   <div>
                     <div
                       className="flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsInterviewDateOpen(!isInterviewDateOpen)}
+                      onClick={() =>
+                        setIsInterviewDateOpen(!isInterviewDateOpen)
+                      }
                     >
-                      <span className="font-medium text-gray-700">Interview Date</span>
+                      <span className="font-medium text-gray-700">
+                        Interview Date
+                      </span>
                       {isInterviewDateOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
@@ -1310,7 +1340,9 @@ function InterviewList() {
                           <input
                             type="date"
                             value={interviewDateRange.from}
-                            onChange={(e) => handleInterviewDateChange(e, "from")}
+                            onChange={(e) =>
+                              handleInterviewDateChange(e, "from")
+                            }
                             className="w-full p-1 border rounded text-sm"
                             placeholder="From"
                           />
@@ -1328,19 +1360,32 @@ function InterviewList() {
 
                   {/* Get unique positions and companies from data */}
                   {(() => {
-                    const uniquePositions = [...new Set(
-                      interviewData?.map(i => i.positionId?.title).filter(Boolean) || []
-                    )];
-                    const uniqueCompanies = [...new Set(
-                      interviewData?.map(i => i.positionId?.companyname).filter(Boolean) || []
-                    )];
-                    const uniqueInterviewers = [...new Set(
-                      interviewData?.flatMap(i => 
-                        i.rounds?.flatMap(r => 
-                          r.interviewers?.map(int => int.name)
-                        ) || []
-                      ).filter(Boolean) || []
-                    )];
+                    const uniquePositions = [
+                      ...new Set(
+                        interviewData
+                          ?.map((i) => i.positionId?.title)
+                          .filter(Boolean) || []
+                      ),
+                    ];
+                    const uniqueCompanies = [
+                      ...new Set(
+                        interviewData
+                          ?.map((i) => i.positionId?.companyname)
+                          .filter(Boolean) || []
+                      ),
+                    ];
+                    const uniqueInterviewers = [
+                      ...new Set(
+                        interviewData
+                          ?.flatMap(
+                            (i) =>
+                              i.rounds?.flatMap((r) =>
+                                r.interviewers?.map((int) => int.name)
+                              ) || []
+                          )
+                          .filter(Boolean) || []
+                      ),
+                    ];
 
                     return (
                       <>
@@ -1351,7 +1396,9 @@ function InterviewList() {
                               className="flex justify-between items-center cursor-pointer"
                               onClick={() => setIsPositionOpen(!isPositionOpen)}
                             >
-                              <span className="font-medium text-gray-700">Position</span>
+                              <span className="font-medium text-gray-700">
+                                Position
+                              </span>
                               {isPositionOpen ? (
                                 <ChevronUp className="text-xl text-gray-700" />
                               ) : (
@@ -1367,8 +1414,12 @@ function InterviewList() {
                                   >
                                     <input
                                       type="checkbox"
-                                      checked={selectedPositions.includes(position)}
-                                      onChange={() => handlePositionToggle(position)}
+                                      checked={selectedPositions.includes(
+                                        position
+                                      )}
+                                      onChange={() =>
+                                        handlePositionToggle(position)
+                                      }
                                       className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
                                     />
                                     <span className="text-sm">{position}</span>
@@ -1386,7 +1437,9 @@ function InterviewList() {
                               className="flex justify-between items-center cursor-pointer"
                               onClick={() => setIsCompanyOpen(!isCompanyOpen)}
                             >
-                              <span className="font-medium text-gray-700">Company</span>
+                              <span className="font-medium text-gray-700">
+                                Company
+                              </span>
                               {isCompanyOpen ? (
                                 <ChevronUp className="text-xl text-gray-700" />
                               ) : (
@@ -1402,8 +1455,12 @@ function InterviewList() {
                                   >
                                     <input
                                       type="checkbox"
-                                      checked={selectedCompanies.includes(company)}
-                                      onChange={() => handleCompanyToggle(company)}
+                                      checked={selectedCompanies.includes(
+                                        company
+                                      )}
+                                      onChange={() =>
+                                        handleCompanyToggle(company)
+                                      }
                                       className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
                                     />
                                     <span className="text-sm">{company}</span>
@@ -1419,9 +1476,13 @@ function InterviewList() {
                           <div>
                             <div
                               className="flex justify-between items-center cursor-pointer"
-                              onClick={() => setIsInterviewerOpen(!isInterviewerOpen)}
+                              onClick={() =>
+                                setIsInterviewerOpen(!isInterviewerOpen)
+                              }
                             >
-                              <span className="font-medium text-gray-700">Interviewer</span>
+                              <span className="font-medium text-gray-700">
+                                Interviewer
+                              </span>
                               {isInterviewerOpen ? (
                                 <ChevronUp className="text-xl text-gray-700" />
                               ) : (
@@ -1437,11 +1498,17 @@ function InterviewList() {
                                   >
                                     <input
                                       type="checkbox"
-                                      checked={selectedInterviewers.includes(interviewer)}
-                                      onChange={() => handleInterviewerToggle(interviewer)}
+                                      checked={selectedInterviewers.includes(
+                                        interviewer
+                                      )}
+                                      onChange={() =>
+                                        handleInterviewerToggle(interviewer)
+                                      }
                                       className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
                                     />
-                                    <span className="text-sm">{interviewer}</span>
+                                    <span className="text-sm">
+                                      {interviewer}
+                                    </span>
                                   </label>
                                 ))}
                               </div>
@@ -1458,7 +1525,9 @@ function InterviewList() {
                       className="flex justify-between items-center cursor-pointer"
                       onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
                     >
-                      <span className="font-medium text-gray-700">Created Date</span>
+                      <span className="font-medium text-gray-700">
+                        Created Date
+                      </span>
                       {isCreatedDateOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
                       ) : (
@@ -1473,12 +1542,17 @@ function InterviewList() {
                           { value: "last30", label: "Last 30 days" },
                           { value: "last90", label: "Last 90 days" },
                         ].map((option) => (
-                          <label key={option.value} className="flex items-center space-x-2">
+                          <label
+                            key={option.value}
+                            className="flex items-center space-x-2"
+                          >
                             <input
                               type="radio"
                               value={option.value}
                               checked={createdDatePreset === option.value}
-                              onChange={(e) => setCreatedDatePreset(e.target.value)}
+                              onChange={(e) =>
+                                setCreatedDatePreset(e.target.value)
+                              }
                               className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
                             />
                             <span className="text-sm">{option.label}</span>

@@ -3,6 +3,7 @@
    in that case view should be vertical fixed
 */
 // v1.0.2  -  Ashok    - Improved responsiveness
+// v1.0.3  -  Ashok    - Fixed responsiveness
 
 import { useState, useEffect } from "react";
 import {
@@ -271,7 +272,9 @@ const TemplateDetail = () => {
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 mt-4">
             <div className="flex sm:flex-col flex-row sm:items-start justify-between gap-4 sm:gap-0">
-              <div className="flex-1">
+              {/* v1.0.3 <----------------------------- */}
+              <div className="flex-1 w-full">
+              {/* v1.0.3 -----------------------------> */}
                 <div className="flex justify-between items-center">
                   <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl mb-2 leading-6 font-medium text-gray-900">
                     Interview Details

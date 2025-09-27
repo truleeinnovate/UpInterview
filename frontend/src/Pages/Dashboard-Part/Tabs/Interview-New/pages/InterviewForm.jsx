@@ -2,6 +2,8 @@
 // v1.0.1  -  mansoor  -  fixed dropdown alignments of candidate and position
 // v1.0.2  -  mansoor  -  added the add new buttons in the candidate and position dropdowns
 // v1.0.3  -  Ashok    -  Disabled outer scrollbar when popup is open for better UX
+// v1.0.4  -  Ashok    -  Improved responsiveness
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -21,7 +23,6 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.
 // v1.0.3 ----------------------------------------------------------->
 
 // Custom Dropdown Component
-
 
 // Reusable Modal Component
 const ConfirmationModal = ({ isOpen, onClose, onProceed, message }) => {
@@ -66,7 +67,8 @@ const InterviewForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { positionData, isLoading: positionsLoading } = usePositions();
-  const { templatesData, isLoading: templatesLoading } = useInterviewTemplates();
+  const { templatesData, isLoading: templatesLoading } =
+    useInterviewTemplates();
   const { interviewData, isMutationLoading, createInterview } = useInterviews();
   const { candidateData, isLoading: candidatesLoading } = useCandidates();
 
@@ -266,7 +268,7 @@ const InterviewForm = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 sm:px-4 lg:px-8">
         <div className="px-4 sm:px-0">
           <Breadcrumb
             items={[
@@ -285,7 +287,9 @@ const InterviewForm = () => {
           />
 
           <div className="mt-4 bg-white shadow overflow sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6">
+            {/* v1.0.4 <----------------------------------- */}
+            <div className="px-6 py-5 sm:px-4">
+            {/* v1.0.4 -----------------------------------> */}
               <h3 className="text-lg leading-6 font-medium text-gray-900">
                 {isEditing ? "Edit Interview" : "Create New Interview"}
               </h3>
@@ -295,8 +299,9 @@ const InterviewForm = () => {
                   : "Fill in the details to create a new interview"}
               </p>
             </div>
-
-            <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+            {/* v1.0.4 <-------------------------------------------------------- */}
+            <div className="border-t border-gray-200 px-6 py-5 sm:px-4">
+            {/* v1.0.4 --------------------------------------------------------> */}
               <form onSubmit={handleSubmit}>
                 {error && (
                   <div className="mb-4 p-4 bg-red-50 rounded-md">
@@ -313,7 +318,9 @@ const InterviewForm = () => {
                       options={[
                         ...(candidateData?.map((candidate) => ({
                           value: candidate._id,
-                          label: `${candidate.FirstName || ""} ${candidate.LastName || ""} (${candidate.Email || ""})`,
+                          label: `${candidate.FirstName || ""} ${
+                            candidate.LastName || ""
+                          } (${candidate.Email || ""})`,
                         })) || []),
                         {
                           value: "add_new",
@@ -352,7 +359,8 @@ const InterviewForm = () => {
                           value: "add_new",
                           label: "+ Add New Position",
                           isSticky: true,
-                          className: "text-blue-600 font-medium hover:bg-blue-50",
+                          className:
+                            "text-blue-600 font-medium hover:bg-blue-50",
                         },
                       ]}
                       onChange={(e) => {

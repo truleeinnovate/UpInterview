@@ -434,12 +434,12 @@ const Assessment = () => {
     },
     {
       key: "passScore",
-      header: "Pass Score (Number / %)",
+      header: "Pass Criteria",
       render: (value, row) =>
         row.passScore
-          ? `${row.passScore} ${
-              row.passScoreType === "Percentage" ? "%" : "Number"
-            }`
+          ? row.passScoreType === "Percentage"
+            ? `${row.passScore}%`
+            : `${row.passScore} pts` // or "marks"
           : "Not Provided",
     },
     {

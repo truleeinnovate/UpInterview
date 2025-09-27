@@ -21,8 +21,6 @@ const SkillsField = forwardRef(
       onSkillsValidChange,  // New prop to notify parent when skills validity changes
       
       skills,
-      expertiseOptions,
-      experienceOptions,
       
       onOpenSkills,
       showValidation = false,  // New prop to control when validation errors are shown
@@ -33,6 +31,20 @@ const SkillsField = forwardRef(
     const initializedRef = useRef(false);
     const [rowErrors, setRowErrors] = useState({});
     const [isCustomSkill, setIsCustomSkill] = useState({}); // Track custom skill state per row
+
+    const expertiseOptions = ["Basic", "Medium", "Expert"];
+    const experienceOptions = [
+    "0-1 Years",
+    "1-2 Years",
+    "2-3 Years",
+    "4-5 Years",
+    "5-6 Years",
+    "6-7 Years",
+    "7-8 Years",
+    "8-9 Years",
+    "9-10 Years",
+    "10+ Years",
+  ];
 
     
 

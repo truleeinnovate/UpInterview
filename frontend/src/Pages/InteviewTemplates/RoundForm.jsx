@@ -5,6 +5,7 @@
 // v1.0.4  -  Ashok   - added scroll to top when Add new Round
 // v1.0.5  -  Ashok   - Improved responsiveness
 // v1.0.6  -  Ashok   - Fixed responsiveness issues
+// v1.0.7  -  Ashok   - Fixed issues
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
@@ -905,28 +906,43 @@ function RoundFormTemplates() {
                   isCustomName={formData.roundTitle === "Other"}
                   setIsCustomName={(value) => {
                     if (value) {
-                      setFormData((prev) => ({ ...prev, roundTitle: "Other", customRoundTitle: "" }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        roundTitle: "Other",
+                        customRoundTitle: "",
+                      }));
                     } else {
-                      setFormData((prev) => ({ ...prev, roundTitle: "", customRoundTitle: "" }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        roundTitle: "",
+                        customRoundTitle: "",
+                      }));
                     }
                   }}
                   onChange={(e) => {
                     const value = e.target.value;
-                    
+
                     // If already in custom mode, treat changes as typing the custom title
                     if (formData.roundTitle === "Other") {
-                      setFormData((prev) => ({ ...prev, customRoundTitle: value }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        customRoundTitle: value,
+                      }));
                       clearError("roundTitle");
                       return;
                     }
-                    
+
                     // DropdownWithSearchField sends an empty string when "Other" is chosen.
                     if (value === "") {
-                      setFormData((prev) => ({ ...prev, roundTitle: "Other", customRoundTitle: "" }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        roundTitle: "Other",
+                        customRoundTitle: "",
+                      }));
                       clearError("roundTitle");
                       return;
                     }
-                    
+
                     // Normal predefined selection
                     handleRoundTitleChange({ target: { value } });
                     clearError("roundTitle");
@@ -936,7 +952,13 @@ function RoundFormTemplates() {
               </div>
 
               <div>
-                <div className={formData.roundTitle === "Assessment" ? "pointer-events-none opacity-60" : undefined}>
+                <div
+                  className={
+                    formData.roundTitle === "Assessment"
+                      ? "pointer-events-none opacity-60"
+                      : undefined
+                  }
+                >
                   <DropdownWithSearchField
                     containerRef={fieldRefs.interviewMode}
                     label="Interview Mode"
@@ -1027,19 +1049,27 @@ function RoundFormTemplates() {
                     }))}
                     onChange={(e) => {
                       const id = e.target.value;
-                      const selected = (filteredAssessments || []).find((a) => a._id === id);
+                      const selected = (filteredAssessments || []).find(
+                        (a) => a._id === id
+                      );
                       if (selected) {
                         handleAssessmentSelect(selected);
                       } else {
                         // cleared
                         setFormData((prev) => ({
                           ...prev,
-                          assessmentTemplate: { assessmentId: "", assessmentName: "" },
+                          assessmentTemplate: {
+                            assessmentId: "",
+                            assessmentName: "",
+                          },
                           interviewQuestionsList: [],
                         }));
                         setSectionQuestions({});
                       }
-                      setErrors((prev) => ({ ...prev, assessmentTemplate: "" }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        assessmentTemplate: "",
+                      }));
                     }}
                     error={errors.assessmentTemplate}
                   />
@@ -1605,8 +1635,10 @@ function RoundFormTemplates() {
                       {/* Question Popup */}
                       {isInterviewQuestionPopup && (
                         // v1.0.6 <--------------------------------------------------------------------------------------------
+                        // v1.0.7 <--------------------------------------------------------------------------------------------
                         <div
-                          className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen"
+                          className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen sm:px-1"
+                          // v1.0.7 -------------------------------------------------------------------------------------------->
                           onClick={() => setIsInterviewQuestionPopup(false)}
                         >
                           <div

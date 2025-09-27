@@ -88,7 +88,6 @@ const EditInterviewDetails = ({
         expectedRatePerMockInterview: "",
         mock_interview_discount: "",
         Technology: [],
-        technologies: [], // Added for consistency
         skills: [],
         NoShowPolicy: "",
         professionalTitle: "",
@@ -145,7 +144,7 @@ const EditInterviewDetails = ({
             ExpertiseLevel_ConductingInterviews:
                 userProfile?.expertiseLevelConductingInterviews || "",
             
-            technologies: Array.isArray(userProfile?.technologies)
+            Technology: Array.isArray(userProfile?.technologies)
                 ? userProfile?.technologies
                 : [],
             NoShowPolicy: userProfile?.noShowPolicy || "",
@@ -173,7 +172,7 @@ const EditInterviewDetails = ({
         // Removed unused setExpertiseLevel
         setIsReady(userProfile?.IsReadyForMockInterviews === "yes");
         setSelectedCandidates(
-            userProfile?.technologies.map((tech) => ({
+            userProfile?.technologies?.map((tech) => ({
                 TechnologyMasterName: tech,
             })) || []
         );
@@ -333,7 +332,7 @@ const EditInterviewDetails = ({
 
             setFormData((prev) => ({
                 ...prev,
-                technologies: updatedCandidates.map(t => t.TechnologyMasterName),
+                Technology: updatedCandidates.map(t => t.TechnologyMasterName),
             }));
 
             setErrors((prev) => ({ ...prev, technologies: "" }));
@@ -378,10 +377,12 @@ const EditInterviewDetails = ({
     const handleSave = async (e) => {
         e.preventDefault();
 
+        console.log("formData before validation:", formData);
+        console.log("formData.Technology:", formData.Technology);
+        
         const validationErrors = validateInterviewForm(formData, isReady);
+        console.log("validationErrors:", validationErrors);
         setErrors(validationErrors);
-
-        // console.log("validationErrors", validationErrors);
 
         if (!isEmptyObject(validationErrors)) {
             return; // Prevent submission if there are errors
@@ -640,8 +641,9 @@ const EditInterviewDetails = ({
                 console.log('Cleared formData:', newFormData);
                 return newFormData;
             });
+            // Don't set error when clearing - let validation handle it
             setErrors(prev => {
-                const newErrors = { ...prev, technologies: 'Please select a technology' };
+                const newErrors = { ...prev, technologies: '' };
                 console.log('Updated errors:', newErrors);
                 return newErrors;
             });
