@@ -664,9 +664,9 @@ function RoundFormPosition() {
       if (!formData.interviewerType) {
         newErrors.interviewerType = "Interviewer type is required";
       }
-      if (formData.interviewQuestionsList.length === 0) {
-        newErrors.questions = "At least one question is required";
-      }
+      // if (formData.interviewQuestionsList.length === 0) {
+      //   newErrors.questions = "At least one question is required";
+      // }
     }
 
     // Final, HR Interview, etc. (minimal validation)
@@ -811,7 +811,7 @@ function RoundFormPosition() {
         ? { positionId, round: roundData, tenantId, ownerId, roundId }
         : { positionId, round: roundData, tenantId, ownerId };
 
-      console.log("roundData after roundData", payload);
+      // console.log("roundData after roundData", payload);
       const response = await addRounds(payload);
 
       console.log("response", response);
@@ -1951,7 +1951,7 @@ function RoundFormPosition() {
                       name="instructions"
                       label="Instructions"
                       required
-                      placeholder="Enter round instructions..."
+                      placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                       rows={10}
                       minLength={50}
                       maxLength={1000}

@@ -332,7 +332,7 @@ const RoundCard = ({ round, onEdit, isActive = false, hideHeader = false }) => {
             </div>
           </div>
 
-          {round.roundTitle !== "Assessment" && (
+          {round.roundTitle !== "Assessment" &&  round?.questions?.length > 0 &&  (
             <div className="mt-4">
               <div className="flex justify-between items-center mb-2">
                 <h4 className="text-sm font-medium text-gray-700">

@@ -2797,7 +2797,7 @@ const RoundFormInterviews = () => {
                       rows="10"
                       minLength={50}
                       maxLength={1000}
-                      placeholder="Add Instructions after the interview round is completed"
+                      placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                       value={instructions}
                       readOnly={roundTitle === "Assessment"}
                       onChange={(e) => setInstructions(e.target.value)}
