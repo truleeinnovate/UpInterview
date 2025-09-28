@@ -37,6 +37,7 @@ import { createPortal } from "react-dom";
 import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal";
 import { format } from "date-fns";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
+import { formatDateTime } from "../../../../utils/dateFormatter";
 const capitalizeFirstLetter = (string) => {
   if (!string) return "";
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -96,12 +97,12 @@ const PositionTab = () => {
   // v1.0.4 -------------------------------------------------------->
   //<----v1.02-----
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
-  const STATUS_OPTIONS = ["draft", "opened", "closed", "hold", "cancelled"];
+  const STATUS_OPTIONS = ["opened", "closed", "hold", "cancelled"];
 
   // Status change modal state
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [statusTargetRow, setStatusTargetRow] = useState(null);
-  const [statusValue, setStatusValue] = useState("draft");
+  const [statusValue, setStatusValue] = useState("opened");
   //----v1.02----->
 
   //  Ranjith added delete Candidate functionality
@@ -431,7 +432,7 @@ const PositionTab = () => {
   // Open/close modal and confirm update
   const openStatusModal = (row) => {
     setStatusTargetRow(row);
-    setStatusValue(row?.status || "draft");
+    setStatusValue(row?.status);
     setIsStatusModalOpen(true);
   };
 
@@ -529,7 +530,7 @@ const PositionTab = () => {
     {
       key: "createdAt",
       header: "Created At",
-      render: (value, row) => new Date(row.createdAt).toLocaleString() || "N/A",
+      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
     },
   ];
 

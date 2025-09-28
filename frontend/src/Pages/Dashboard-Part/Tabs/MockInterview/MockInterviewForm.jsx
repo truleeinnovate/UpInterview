@@ -33,251 +33,11 @@ import { validateFile } from "../../../../utils/FileValidation/FileValidation.js
 // v1.0.1 <-------------------------------------------------------------------------------
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 // v1.0.1 ------------------------------------------------------------------------------->
+// Import common form field components
+import InputField from "../../../../Components/FormFields/InputField";
+import DescriptionField from "../../../../Components/FormFields/DescriptionField";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 
-// Reusable CustomDropdown Component
-// v1.0.1 <----------------------------------------------------------------
-// const CustomDropdown = ({
-//   label,
-//   name,
-//   value,
-//   options,
-//   onChange,
-//   error,
-//   placeholder,
-//   optionKey,
-//   optionValue,
-//   disableSearch = false,
-//   hideLabel = false,
-// }) => {
-//   const [showDropdown, setShowDropdown] = useState(false);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const dropdownRef = useRef(null);
-
-//   const toggleDropdown = () => {
-//     setShowDropdown(!showDropdown);
-//   };
-
-//   const handleSelect = (option) => {
-//     const selectedValue = optionValue ? option[optionValue] : option;
-//     onChange({ target: { name, value: selectedValue } });
-//     setShowDropdown(false);
-//     setSearchTerm("");
-//   };
-
-//   const filteredOptions = options?.filter((option) => {
-//     const displayValue = optionKey ? option[optionKey] : option;
-//     return displayValue
-//       .toString()
-//       .toLowerCase()
-//       .includes(searchTerm.toLowerCase());
-//   });
-
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setShowDropdown(false);
-//       }
-//     };
-
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => {
-//       document.removeEventListener("mousedown", handleClickOutside);
-//     };
-//   }, []);
-
-//   return (
-//     <div ref={dropdownRef}>
-//       {!hideLabel && (
-//         <label
-//           htmlFor={name}
-//           className="block text-sm font-medium text-gray-700 mb-1"
-//         >
-//           {label} <span className="text-red-500">*</span>
-//         </label>
-//       )}
-//       <div className="relative">
-//         <input
-//           name={name}
-//           type="text"
-//           id={name}
-//           value={value}
-//           onClick={toggleDropdown}
-//           placeholder={placeholder}
-//           autoComplete="off"
-//           className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-//             error ? "border-red-500" : "border-gray-300"
-//           }`}
-//           readOnly
-//         />
-//         <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-//           <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
-//         </div>
-//         {showDropdown && (
-//           <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-//             {!disableSearch && (
-//               <div className="border-b">
-//                 <div className="flex items-center border rounded px-2 py-1 m-2">
-//                   <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-//                   <input
-//                     type="text"
-//                     placeholder={`Search ${label}`}
-//                     value={searchTerm}
-//                     onChange={(e) => setSearchTerm(e.target.value)}
-//                     className="pl-8 focus:border-black focus:outline-none w-full"
-//                   />
-//                 </div>
-//               </div>
-//             )}
-//             {filteredOptions?.length > 0 ? (
-//               filteredOptions.map((option, index) => (
-//                 <div
-//                   key={option._id || index}
-//                   onClick={() => handleSelect(option)}
-//                   className="cursor-pointer hover:bg-gray-200 p-2"
-//                 >
-//                   {optionKey ? option[optionKey] : option}
-//                 </div>
-//               ))
-//             ) : (
-//               <div className="p-2 text-gray-500">No options found</div>
-//             )}
-//           </div>
-//         )}
-//       </div>
-//       {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
-//     </div>
-//   );
-// };
-
-const CustomDropdown = forwardRef(
-  (
-    {
-      label,
-      name,
-      value,
-      options,
-      onChange,
-      error,
-      placeholder,
-      optionKey,
-      optionValue,
-      disableSearch = false,
-      hideLabel = false,
-    },
-    ref
-  ) => {
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const dropdownRef = useRef(null);
-
-    const toggleDropdown = () => {
-      setShowDropdown(!showDropdown);
-    };
-
-    const handleSelect = (option) => {
-      const selectedValue = optionValue ? option[optionValue] : option;
-      onChange({ target: { name, value: selectedValue } });
-      setShowDropdown(false);
-      setSearchTerm("");
-    };
-
-    const filteredOptions = options?.filter((option) => {
-      const displayValue = optionKey ? option[optionKey] : option;
-      return displayValue
-        .toString()
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-    });
-
-    useEffect(() => {
-      const handleClickOutside = (event) => {
-        if (
-          dropdownRef.current &&
-          !dropdownRef.current.contains(event.target)
-        ) {
-          setShowDropdown(false);
-        }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, []);
-
-    return (
-      <div ref={dropdownRef}>
-        {!hideLabel && (
-          <label
-            htmlFor={name}
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            {label} <span className="text-red-500">*</span>
-          </label>
-        )}
-        <div className="relative">
-          <input
-            ref={ref}
-            name={name}
-            type="text"
-            id={name}
-            value={value}
-            onClick={toggleDropdown}
-            placeholder={placeholder}
-            autoComplete="off"
-            // className={`block w-full px-3 py-2 h-10 text-gray-900 border rounded-lg shadow-sm focus:ring-2 sm:text-sm ${
-            //   error ? "border-red-500" : "border-gray-300"
-            // }`}
-            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-              border ${
-                error
-                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                  : "border-gray-300 focus:ring-red-300"
-              }
-              focus:outline-gray-300
-            `}
-            readOnly
-          />
-          <div className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">
-            <ChevronDown className="text-lg w-5 h-5" onClick={toggleDropdown} />
-          </div>
-          {showDropdown && (
-            <div className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 text-xs">
-              {!disableSearch && (
-                <div className="border-b">
-                  <div className="flex items-center border rounded px-2 py-1 m-2">
-                    <Search className="absolute ml-1 text-gray-500 w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder={`Search ${label}`}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8 focus:border-black focus:outline-none w-full"
-                    />
-                  </div>
-                </div>
-              )}
-              {filteredOptions?.length > 0 ? (
-                filteredOptions.map((option, index) => (
-                  <div
-                    key={option._id || index}
-                    onClick={() => handleSelect(option)}
-                    className="cursor-pointer hover:bg-gray-200 p-2"
-                  >
-                    {optionKey ? option[optionKey] : option}
-                  </div>
-                ))
-              ) : (
-                <div className="p-2 text-gray-500">No options found</div>
-              )}
-            </div>
-          )}
-        </div>
-        {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
-      </div>
-    );
-  }
-);
 // v1.0.1 ---------------------------------------------------------------->
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -305,10 +65,8 @@ const formatToCustomDateTime = (date) => {
 
 const MockSchedulelater = () => {
   const { singleContact } = useSingleContact();
-  const { qualifications, technologies, skills, currentRoles, contacts } =
-    useMasterData();
-  const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } =
-    useMockInterviews();
+  const { qualifications, loadQualifications, isQualificationsFetching, technologies, loadTechnologies, isTechnologiesFetching, skills, loadSkills, isSkillsFetching, currentRoles, loadCurrentRoles, isCurrentRolesFetching, lcontacts } = useMasterData();
+  const { mockinterviewData, addOrUpdateMockInterview, isMutationLoading } = useMockInterviews();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -357,37 +115,71 @@ const MockSchedulelater = () => {
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
 
-  const [showDropdownRole, setShowDropdownRole] = useState(false);
+  // Role dropdown states - no longer needed with DropdownWithSearchField
+  // const [showDropdownRole, setShowDropdownRole] = useState(false);
+  // const [searchRoleText, setSearchRoleText] = useState("");
+  // const dropdownRoleRef = useRef(null);
 
   // v1.0.1 <-----------------------------------------------------------------------------
   const fieldRefs = {
+    candidateName: useRef(null),
     higherQualification: useRef(null),
     technology: useRef(null),
     currentExperience: useRef(null),
     relevantExperience: useRef(null),
     currentRole: useRef(null),
     skills: useRef(null),
+    jobDescription: useRef(null),
     "rounds.roundTitle": useRef(null),
     "rounds.interviewMode": useRef(null),
+    "rounds.duration": useRef(null),
+    "rounds.instructions": useRef(null),
+    scheduledDate: useRef(null),
   };
 
   // v1.0.1 ---------------------------------------------------------------------------->
 
-  const toggleDropdownRole = () => {
-    setShowDropdownRole(!showDropdownRole);
-  };
+  // No longer needed - handled by DropdownWithSearchField
+  // const toggleDropdownRole = () => {
+  //   setShowDropdownRole(!showDropdownRole);
+  // };
 
-  const handleRoleSelect = (role) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      Role: role.RoleName,
-    }));
-    setShowDropdownRole(false);
-  };
+  // No longer needed - handled by DropdownWithSearchField onChange
+  // const handleRoleSelect = (role) => {
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     Role: role.RoleName,
+  //   }));
+  //   setShowDropdownRole(false);
+  //   setSearchRoleText("");
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     Role: "",
+  //   }));
+  // };
+
+  // No longer needed - handled by DropdownWithSearchField internally
+  // const filteredRoles = currentRoles.filter((role) =>
+  //   role.RoleName.toLowerCase().includes(searchRoleText.toLowerCase())
+  // );
 
   const filteredSkills = skills.filter((skill) =>
     skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Close role dropdown when clicking outside - no longer needed with DropdownWithSearchField
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (dropdownRoleRef.current && !dropdownRoleRef.current.contains(event.target)) {
+  //       setShowDropdownRole(false);
+  //       setSearchRoleText("");
+  //     }
+  //   };
+  //   document.addEventListener("mousedown", handleClickOutside);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, []);
 
   // Populate formData for new interview from singleContact
   useEffect(() => {
@@ -426,16 +218,6 @@ const MockSchedulelater = () => {
 
         setExternalInterviewers(formattedInterviewers);
         setSelectedInterviewType(
-          formattedInterviewers.length > 0 ? "external" : "scheduled"
-        );
-
-        console.log("Edit Mode - MockEditData:", MockEditData);
-        console.log(
-          "Edit Mode - Formatted Interviewers:",
-          formattedInterviewers
-        );
-        console.log(
-          "Edit Mode - Selected Interview Type:",
           formattedInterviewers.length > 0 ? "external" : "scheduled"
         );
 
@@ -499,6 +281,20 @@ const MockSchedulelater = () => {
   }, [id, mockinterviewData]);
 
   const [errors, setErrors] = useState({});
+  const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
+
+  const [showDropdownQualification, setShowDropdownQualification] =
+    useState(false);
+
+  const toggleDropdownQualification = () => {
+    setShowDropdownQualification(!showDropdownQualification);
+  };
+
+  const [fileName, setFileName] = useState("");
+  const inputRef = useRef();
+  const [resume, setResume] = useState(null);
+  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+  const [resumeError, setResumeError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -525,20 +321,7 @@ const MockSchedulelater = () => {
   };
 
   const handleExperienceKeyDown = (e) => {
-    if (
-      [46, 8, 9, 27, 13].includes(e.keyCode) ||
-      (e.keyCode === 65 && e.ctrlKey === true) ||
-      (e.keyCode === 67 && e.ctrlKey === true) ||
-      (e.keyCode === 86 && e.ctrlKey === true) ||
-      (e.keyCode === 88 && e.ctrlKey === true) ||
-      (e.keyCode >= 35 && e.keyCode <= 39)
-    ) {
-      return;
-    }
-    if (
-      (e.keyCode < 48 || e.keyCode > 57) &&
-      (e.keyCode < 96 || e.keyCode > 105)
-    ) {
+    if (e.key === "e" || e.key === "E") {
       e.preventDefault();
     }
   };
@@ -551,6 +334,9 @@ const MockSchedulelater = () => {
     console.log("Errors:", errors);
     console.log("External Interviewers:", externalInterviewers);
     console.log("Selected Interview Type:", selectedInterviewType);
+
+    // Show skills validation when submit is attempted
+    setShowSkillValidation(true);
 
     const { formIsValid, newErrors } = validatemockForm(
       formData,
@@ -683,18 +469,7 @@ const MockSchedulelater = () => {
     };
   }, [sidebarOpen, handleOutsideClick]);
 
-  const [showDropdownQualification, setShowDropdownQualification] =
-    useState(false);
-
-  const toggleDropdownQualification = () => {
-    setShowDropdownQualification(!showDropdownQualification);
-  };
-
-  const [fileName, setFileName] = useState("");
-  const inputRef = useRef();
-  const [resume, setResume] = useState(null);
-  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
-  const [resumeError, setResumeError] = useState("");
+  
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -720,20 +495,6 @@ const MockSchedulelater = () => {
     setResumeError("");
   };
 
-  const experienceOptions = [
-    "0-1 Years",
-    "1-2 years",
-    "2-3 years",
-    "3-4 years",
-    "4-5 years",
-    "5-6 years",
-    "6-7 years",
-    "7-8 years",
-    "8-9 years",
-    "9-10 years",
-    "10+ years",
-  ];
-  const expertiseOptions = ["Basic", "Medium", "Expert"];
 
   const handleAddEntry = () => {
     if (editingIndex !== null) {
@@ -896,36 +657,40 @@ const MockSchedulelater = () => {
     return `${day}-${month}-${year}`;
   };
 
-  const [showDropdownTechnology, setShowDropdownTechnology] = useState(false);
+  // Technology dropdown states - no longer needed with DropdownWithSearchField
+  // const [showDropdownTechnology, setShowDropdownTechnology] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const toggleDropdownTechnology = () => {
-    setShowDropdownTechnology(!showDropdownTechnology);
-  };
+  // No longer needed - handled by DropdownWithSearchField
+  // const toggleDropdownTechnology = () => {
+  //   setShowDropdownTechnology(!showDropdownTechnology);
+  // };
 
-  const handleTechnologySelect = (technology) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      technology: technology.TechnologyMasterName,
-    }));
-    setShowDropdownTechnology(false);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      technology: "",
-    }));
-  };
+  // No longer needed - handled by DropdownWithSearchField onChange
+  // const handleTechnologySelect = (technology) => {
+  //   setFormData((prevFormData) => ({
+  //     ...prevFormData,
+  //     technology: technology.TechnologyMasterName,
+  //   }));
+  //   setShowDropdownTechnology(false);
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     technology: "",
+  //   }));
+  // };
 
-  const handleDropdownChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      higherQualification: value,
-    }));
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      higherQualification: "",
-    }));
-  };
+  // No longer needed - handled by DropdownWithSearchField onChange
+  // const handleDropdownChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     higherQualification: value,
+  //   }));
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     higherQualification: "",
+  //   }));
+  // };
 
   const handleNext = () => {
     const { formIsValid, newErrors } = validatePage1(formData, entries);
@@ -1068,194 +833,111 @@ const MockSchedulelater = () => {
                 {currentPage === 1 && (
                   <>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
-                      <div>
-                        <label
-                          htmlFor="CandidateName"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Name <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex-grow">
-                          <input
-                            value={formData.candidateName}
-                            onChange={handleChange}
-                            name="candidateName"
-                            type="text"
-                            id="CandidateName"
-                            readOnly
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
-                              errors.candidateName
-                                ? "border-red-500 focus:ring-red-500"
-                                : "border-gray-300"
-                            }`}
-                          />
-                          {errors.candidateName && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.candidateName}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <CustomDropdown
-                        // v1.0.1 <-----------------------------------------------------------------
-                        ref={fieldRefs.higherQualification}
-                        // v1.0.1 ----------------------------------------------------------------->
+                      <InputField
+                        inputRef={fieldRefs.candidateName}
+                        value={formData.candidateName}
+                        onChange={handleChange}
+                        name="candidateName"
+                        type="text"
+                        id="CandidateName"
+                        label="Name"
+                        required
+                        readOnly
+                        error={errors.candidateName}
+                        className="cursor-not-allowed bg-gray-50"
+                      />
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.higherQualification}
                         label="Higher Qualification"
-                        name="HigherQualification"
+                        name="higherQualification"
                         value={formData.higherQualification}
-                        options={qualifications}
-                        onChange={handleDropdownChange}
+                        options={qualifications.map(q => ({
+                          value: q.QualificationName,
+                          label: q.QualificationName
+                        }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            higherQualification: e.target.value
+                          }));
+                          setErrors(prev => ({
+                            ...prev,
+                            higherQualification: ""
+                          }));
+                        }}
                         error={errors.higherQualification}
                         placeholder="Select Higher Qualification"
-                        optionKey="QualificationName"
-                        optionValue="QualificationName"
+                        required
+                        onMenuOpen={loadQualifications}
+                        loading={isQualificationsFetching}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
-                      <div>
-                        <label
-                          htmlFor="technology"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Technology <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex-grow relative">
-                          <div className="relative">
-                            <input
-                              // v.0.1 <--------------------------------------------------------
-                              ref={fieldRefs.technology}
-                              // v.0.1 -------------------------------------------------------->
-                              value={formData.technology}
-                              onClick={toggleDropdownTechnology}
-                              name="technology"
-                              type="text"
-                              id="Technology"
-                              readOnly
-                              // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
-                              //   errors.technology
-                              //     ? "border-red-500 focus:ring-red-500"
-                              //     : "border-gray-300"
-                              // }`}
-                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${
-                                  errors.technology
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
-                                }
-                                focus:outline-gray-300
-                              `}
-                            />
-                            {errors.technology && (
-                              <p className="text-red-500 text-sm mt-1">
-                                {errors.technology}
-                              </p>
-                            )}
-                          </div>
-                          {showDropdownTechnology && (
-                            <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {technologies.map((technology, index) => (
-                                <div
-                                  key={index}
-                                  className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                  onClick={() =>
-                                    handleTechnologySelect(technology)
-                                  }
-                                >
-                                  {technology.TechnologyMasterName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <div>
-                          <label
-                            htmlFor="currentExperience"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                          >
-                            Current Experience{" "}
-                            <span className="text-red-500">*</span>
-                          </label>
-                        </div>
-                        <div className="flex-grow">
-                          {/* v1.0.0 <-------------------------------------------------------------- */}
-                          <input
-                            ref={fieldRefs.currentExperience}
-                            type="number"
-                            name="currentExperience"
-                            value={formData.currentExperience}
-                            onChange={handleChange}
-                            id="Experience"
-                            min="1"
-                            max="15"
-                            autoComplete="off"
-                            onKeyDown={handleExperienceKeyDown}
-                            // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
-                            //   errors.currentExperience
-                            //     ? "border-red-500 focus:ring-red-500"
-                            //     : "border-gray-300"
-                            // }`}
-                            className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                              border ${
-                                errors.currentExperience
-                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                  : "border-gray-300 focus:ring-red-300"
-                              }
-                              focus:outline-gray-300
-                            `}
-                          />
-                          {errors.currentExperience && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.currentExperience}
-                            </p>
-                          )}
-                          {/* v1.0.1 --------------------------------------------------------------> */}
-                        </div>
-                      </div>
-                      <div>
-                        <div>
-                          <label
-                            htmlFor="Role"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                          >
-                            Role <span className="text-red-500">*</span>
-                          </label>
-                        </div>
-                        <div className="flex-grow relative">
-                          <input
-                            value={formData.Role}
-                            onClick={toggleDropdownRole}
-                            name="Role"
-                            type="text"
-                            id="Role"
-                            readOnly
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
-                              errors.Role
-                                ? "border-red-500 focus:ring-red-500"
-                                : "border-gray-300"
-                            }`}
-                          />
-                          {errors.Role && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.Role}
-                            </p>
-                          )}
-                          {showDropdownRole && (
-                            <div className="absolute z-50 w-full bg-white shadow-md rounded-md mt-1 max-h-40 overflow-y-auto">
-                              {currentRoles.map((role, index) => (
-                                <div
-                                  key={index}
-                                  className="py-2 px-4 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleRoleSelect(role)}
-                                >
-                                  {role.RoleName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.technology}
+                        label="Technology"
+                        name="technology"
+                        value={formData.technology}
+                        options={technologies.map(t => ({
+                          value: t.TechnologyMasterName,
+                          label: t.TechnologyMasterName
+                        }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            technology: e.target.value
+                          }));
+                          setErrors(prev => ({
+                            ...prev,
+                            technology: ""
+                          }));
+                        }}
+                        error={errors.technology}
+                        placeholder="Select Technology"
+                        required
+                        onMenuOpen={loadTechnologies}
+                        loading={isTechnologiesFetching}
+                      />
+                      <InputField
+                        inputRef={fieldRefs.currentExperience}
+                        type="number"
+                        name="currentExperience"
+                        value={formData.currentExperience}
+                        onChange={handleChange}
+                        onKeyDown={handleExperienceKeyDown}
+                        id="Experience"
+                        label="Current Experience"
+                        required
+                        min="1"
+                        max="15"
+                        error={errors.currentExperience}
+                        placeholder="Enter experience in years"
+                      />
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.currentRole}
+                        label="Role"
+                        name="Role"
+                        value={formData.Role}
+                        options={currentRoles.map(r => ({
+                          value: r.RoleName,
+                          label: r.RoleName
+                        }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            Role: e.target.value
+                          }));
+                          setErrors(prev => ({
+                            ...prev,
+                            Role: ""
+                          }));
+                        }}
+                        error={errors.Role}
+                        placeholder="Select Role"
+                        required
+                        onMenuOpen={loadCurrentRoles}
+                        loading={isCurrentRolesFetching}
+                      />
                     </div>
                     <div>
                       {/* v1.0.0 <---------------------------------------------------------------- */}
@@ -1263,13 +945,27 @@ const MockSchedulelater = () => {
                         ref={fieldRefs.skills}
                         entries={entries}
                         errors={errors}
-                        onAddSkill={(setEditingIndex) => {
+                        showValidation={showSkillValidation}
+                        onSkillsValidChange={(hasValidSkills) => {
+                          // Clear the skills error if at least one complete row exists
+                          if (hasValidSkills && errors.skills) {
+                            setErrors((prevErrors) => {
+                              const newErrors = { ...prevErrors };
+                              delete newErrors.skills;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        onAddSkill={(setEditingIndexCallback) => {
                           setEntries((prevEntries) => {
                             const newEntries = [
                               ...prevEntries,
                               { skill: "", experience: "", expertise: "" },
                             ];
-                            setEditingIndex(newEntries.length - 1);
+                            // Only set editing index if callback is provided
+                            if (setEditingIndexCallback && typeof setEditingIndexCallback === 'function') {
+                              setEditingIndexCallback(newEntries.length - 1);
+                            }
                             return newEntries;
                           });
                           setSelectedSkill("");
@@ -1291,6 +987,21 @@ const MockSchedulelater = () => {
                           );
                           setEntries(entries.filter((_, i) => i !== index));
                         }}
+                        onUpdateEntry={(index, updatedEntry) => {
+                          const newEntries = [...entries];
+                          const oldSkill = newEntries[index]?.skill;
+                          newEntries[index] = updatedEntry;
+                          setEntries(newEntries);
+                          
+                          // Update allSelectedSkills if skill changed
+                          if (oldSkill !== updatedEntry.skill) {
+                            const newSelectedSkills = newEntries.map(e => e.skill).filter(Boolean);
+                            setAllSelectedSkills(newSelectedSkills);
+                          }
+                          
+                          // Update formData
+                          setFormData(prev => ({ ...prev, skills: newEntries }));
+                        }}
                         setIsModalOpen={setIsModalOpen}
                         setEditingIndex={setEditingIndex}
                         isModalOpen={isModalOpen}
@@ -1306,32 +1017,29 @@ const MockSchedulelater = () => {
                         selectedLevel={selectedLevel}
                         setSelectedLevel={setSelectedLevel}
                         skills={skills}
-                        expertiseOptions={expertiseOptions}
-                        experienceOptions={experienceOptions}
+                        
                         isNextEnabled={isNextEnabled}
                         handleAddEntry={handleAddEntry}
                         skillpopupcancelbutton={skillpopupcancelbutton}
                         editingIndex={editingIndex}
+                        onOpenSkills={loadSkills}
                       />
                       {/* v1.0.0 -------------------------------------------------------------------> */}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Job Description
-                      </label>
-                      <textarea
-                        onChange={handleChange}
-                        name="jobDescription"
-                        id="jobDescription"
-                        value={formData.jobDescription}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none`}
-                        rows={6}
-                        placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-                      ></textarea>
-                    </div>
+                    <DescriptionField
+                      inputRef={fieldRefs.jobDescription}
+                      value={formData.jobDescription}
+                      onChange={handleChange}
+                      name="jobDescription"
+                      label="Job Description"
+                      rows={6}
+                      maxLength={2000}
+                      placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+                      error={errors.jobDescription}
+                    />
                     <div className="text-center text-sm p-2">(OR)</div>
-                    <div className="w-full flex justify-center">
-                      <div className="w-full ms-[40%] flex items-center justify-center gap-5">
+                    <div className="w-full">
+                      <div className="flex items-center gap-5">
                         <label
                           htmlFor="fileUpload"
                           className="text-sm font-medium text-gray-900"
@@ -1391,95 +1099,44 @@ const MockSchedulelater = () => {
                 {currentPage === 2 && (
                   <>
                     <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
-                      <div>
-                        <label
-                          htmlFor="rounds.roundTitle"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Round Title *
-                        </label>
-                        {/* v1.0.0 <---------------------------------------------------------------------- */}
-                        <input
-                          ref={fieldRefs["rounds.roundTitle"]}
-                          id="rounds.roundTitle"
-                          name="rounds.roundTitle"
-                          value={formData.rounds.roundTitle}
-                          onChange={handleChange}
-                          // className={`mt-1 block w-full border ${
-                          //   errors["rounds.roundTitle"]
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                              errors["rounds.roundTitle"]
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
-                          required
-                        />
-                        {errors["rounds.roundTitle"] && (
-                          <p className="mt-1 text-sm text-red-500">
-                            {errors["rounds.roundTitle"]}
-                          </p>
-                        )}
-                        {/* v1.0.0 ----------------------------------------------------------------------> */}
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="rounds.interviewMode"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Interview Mode *
-                        </label>
-                        {/* v1.0.0 <----------------------------------------------------------------- */}
-                        <select
-                          ref={fieldRefs["rounds.interviewMode"]}
-                          id="rounds.interviewMode"
-                          name="rounds.interviewMode"
-                          value={formData.rounds.interviewMode}
-                          onChange={(event) => {
-                            const { name, value } = event.target;
-                            setFormData((prevData) => ({
-                              ...prevData,
-                              rounds: {
-                                ...prevData.rounds,
-                                [name.split(".")[1]]: value,
-                              },
-                            }));
-                            setErrors((prevErrors) => ({
-                              ...prevErrors,
-                              [name]: value ? "" : "This field is required",
-                            }));
-                          }}
-                          // className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
-                          //   errors.interviewMode
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                              errors["rounds.interviewMode"]
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
-                          required
-                        >
-                          <option value="">Select Interview Mode</option>
-                          <option value="Face to Face">Face to Face</option>
-                          <option value="Virtual">Virtual</option>
-                        </select>
-                        {errors["rounds.interviewMode"] && (
-                          <p className="mt-1 text-sm text-red-500">
-                            {errors["rounds.interviewMode"]}
-                          </p>
-                        )}
-                        {/* v1.0.0 -----------------------------------------------------------------> */}
-                      </div>
+                      <InputField
+                        inputRef={fieldRefs["rounds.roundTitle"]}
+                        id="rounds.roundTitle"
+                        name="rounds.roundTitle"
+                        value={formData.rounds.roundTitle}
+                        onChange={handleChange}
+                        label="Round Title"
+                        required
+                        error={errors["rounds.roundTitle"]}
+                        placeholder="Enter round title"
+                      />
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs["rounds.interviewMode"]}
+                        label="Interview Mode"
+                        name="rounds.interviewMode"
+                        value={formData.rounds.interviewMode}
+                        options={[
+                          { value: "Face to Face", label: "Face to Face" },
+                          { value: "Virtual", label: "Virtual" }
+                        ]}
+                        onChange={(e) => {
+                          const { name, value } = e.target;
+                          setFormData((prevData) => ({
+                            ...prevData,
+                            rounds: {
+                              ...prevData.rounds,
+                              [name.split(".")[1]]: value,
+                            },
+                          }));
+                          setErrors((prevErrors) => ({
+                            ...prevErrors,
+                            [name]: value ? "" : "This field is required",
+                          }));
+                        }}
+                        error={errors["rounds.interviewMode"]}
+                        placeholder="Select Interview Mode"
+                        required
+                      />
                     </div>
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1573,36 +1230,35 @@ const MockSchedulelater = () => {
                               Scheduled Date & Time
                             </label>
                             <input
+                              ref={fieldRefs.scheduledDate}
                               type="datetime-local"
                               id="scheduledDate"
                               name="scheduledDate"
                               value={scheduledDate}
                               onChange={(e) => setScheduledDate(e.target.value)}
                               min={new Date().toISOString().slice(0, 16)}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              className="mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+                                border border-gray-300 focus:ring-gray-300 focus:outline-gray-300"
                             />
                           </div>
                         )}
                         <div className="mt-4">
-                          <label
-                            htmlFor="rounds.duration"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Duration (minutes)
-                          </label>
-                          <select
-                            id="rounds.duration"
+                          <DropdownWithSearchField
+                            containerRef={fieldRefs["rounds.duration"]}
+                            label="Duration (minutes)"
                             name="rounds.duration"
                             value={formData.rounds.duration}
+                            options={[
+                              { value: "30", label: "30 min" },
+                              { value: "45", label: "45 min" },
+                              { value: "60", label: "60 min" },
+                              { value: "90", label: "90 min" },
+                              { value: "120", label: "120 min" }
+                            ]}
                             onChange={handleChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          >
-                            <option value="30">30 min</option>
-                            <option value="45">45 min</option>
-                            <option value="60">60 min</option>
-                            <option value="90">90 min</option>
-                            <option value="120">120 min</option>
-                          </select>
+                            error={errors["rounds.duration"]}
+                            placeholder="Select duration"
+                          />
                         </div>
                       </div>
                       {interviewType === "instant" && (
@@ -1738,23 +1394,17 @@ const MockSchedulelater = () => {
                         {errors.interviewers}
                       </p>
                     )}
-                    <div>
-                      <label
-                        htmlFor="rounds.instructions"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Instructions
-                      </label>
-                      <textarea
-                        id="rounds.instructions"
-                        name="rounds.instructions"
-                        rows={3}
-                        value={formData.rounds.instructions}
-                        onChange={handleChange}
-                        placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      />
-                    </div>
+                    <DescriptionField
+                      inputRef={fieldRefs["rounds.instructions"]}
+                      value={formData.rounds.instructions}
+                      onChange={handleChange}
+                      name="rounds.instructions"
+                      label="Instructions"
+                      rows={3}
+                      maxLength={1000}
+                      placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+                      error={errors["rounds.instructions"]}
+                    />
                   </>
                 )}
               </form>

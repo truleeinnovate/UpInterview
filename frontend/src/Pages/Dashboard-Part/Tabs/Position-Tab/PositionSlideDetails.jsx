@@ -44,9 +44,13 @@ const PositionSlideDetails = () => {
   const [activeTab, setActiveTab] = useState("Details");
 
   // Count internal and external interviewers across all rounds
-  const allInterviewerIds = new Set();
-  const internalInterviewerIds = new Set();
-  const externalInterviewerIds = new Set();
+  // const allInterviewerIds = new Set();
+  // const internalInterviewerIds = new Set();
+  // const externalInterviewerIds = new Set();
+  const [allInterviewerCount, setAllInterviewerCount] = useState(0);
+const [internalInterviewerCount, setInternalInterviewerCount] = useState(0);
+const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
+
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -99,6 +103,34 @@ const PositionSlideDetails = () => {
           if (roundsList.length === 1) {
             setRoundsViewMode("vertical");
           }
+
+
+           // ✅ Collect interviewer counts
+        const allSet = new Set();
+        const internalSet = new Set();
+        const externalSet = new Set();
+        console.log("roundsList", roundsList);
+
+        roundsList.forEach((round) => {
+          round?.interviewers?.forEach((interviewer) => {
+            if (interviewer?._id) {
+              allSet.add(interviewer._id);
+
+              if (round.interviewerType?.toLowerCase() === "internal") {
+                internalSet.add(interviewer._id);
+              } else if (round.interviewerType?.toLowerCase() === "external") {
+                externalSet.add(interviewer._id);
+              }
+            }
+          });
+        });
+
+        setAllInterviewerCount(allSet.size);
+        setInternalInterviewerCount(internalSet.size);
+        setExternalInterviewerCount(externalSet.size);
+
+
+
         }
       } catch (error) {
         console.error("Error fetching template:", error);
@@ -409,11 +441,11 @@ const PositionSlideDetails = () => {
               <div className="flex flex-wrap gap-2">
                 <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                   <span className="font-medium">
-                    {internalInterviewerIds.size}
+                    {internalInterviewerCount}
                   </span>{" "}
                   Internal
                 </div>
-                <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                {/* <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
                   <span className="font-medium">
                     {externalInterviewerIds.size}
                   </span>{" "}
@@ -422,7 +454,7 @@ const PositionSlideDetails = () => {
                 <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
                   <span className="font-medium">{allInterviewerIds.size}</span>{" "}
                   Total
-                </div>
+                </div> */}
               </div>
             </div>
 

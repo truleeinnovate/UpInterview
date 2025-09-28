@@ -24,6 +24,9 @@ import { scrollToFirstError } from "../../utils/ScrollToFirstError/scrollToFirst
 // v1.0.3 ----------------------------------------------------------------------------->
 // v1.0.4 <----------------------------------------------------------------------------
 import SidebarPopup from "../../Components/Shared/SidebarPopup/SidebarPopup";
+import InputField from "../../Components/FormFields/InputField";
+import DescriptionField from "../../Components/FormFields/DescriptionField";
+import DropdownWithSearchField from "../../Components/FormFields/DropdownWithSearchField";
 // v1.0.4 ---------------------------------------------------------------------------->
 
 const InterviewSlideover = ({ mode }) => {
@@ -38,10 +41,12 @@ const InterviewSlideover = ({ mode }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     templateTitle: "",
-    label: "",
+    name: "",
     description: "",
     status: "draft",
     rounds: [],
+    bestFor: "",
+    format: "",
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -57,10 +62,12 @@ const InterviewSlideover = ({ mode }) => {
 
   // v1.0.3 <------------------------------------------------------------------------------------
   const fieldRefs = {
-    name: useRef(null),
+    templateTitle: useRef(null),
     // label: useRef(null),
+    bestFor: useRef(null),
+    format: useRef(null),
   };
-  // v1.0.3 ------------------------------------------------------------------------------------>
+  // v1.0.3 ----------------------------------------------------------------------------------->
 
   useEffect(() => {
     if (templatesData) {
@@ -71,20 +78,24 @@ const InterviewSlideover = ({ mode }) => {
           setNewTemplate((prev) => ({
             ...prev,
             templateTitle: foundTemplate.templateName || "",
-            label: foundTemplate.label || "",
+            name: foundTemplate.name || "",
             description: foundTemplate.description || "",
             status: foundTemplate.status || "draft",
             rounds: foundTemplate.rounds || [],
+            bestFor: foundTemplate.bestFor || "",
+            format: foundTemplate.format || "",
           }));
         }
       } else {
         setIsEditMode(false);
         setNewTemplate({
           templateTitle: "",
-          label: "",
+          name: "",
           description: "",
           status: "draft",
           rounds: [],
+          bestFor: "",
+          format: "",
         });
       }
       setIsLoading(false);
@@ -95,10 +106,12 @@ const InterviewSlideover = ({ mode }) => {
   // v1.0.3 <------------------------------------------------------
   const validateForm = () => {
     const templateForValidation = {
-      name: newTemplate.templateTitle,
-      label: newTemplate.label,
+      templateTitle: newTemplate.templateTitle,
+      name: newTemplate.name,
       description: newTemplate.description,
       rounds: newTemplate.rounds,
+      bestFor: newTemplate.bestFor,
+      format: newTemplate.format,
     };
 
     const { errors: validationErrors } = validateInterviewTemplate(
@@ -132,20 +145,20 @@ const InterviewSlideover = ({ mode }) => {
     // const sanitizedValue = value; // Remove filtering or make it less restrictive
     // const label = value.trim().replace(/[^a-zA-Z0-9_]/g, '_').replace(/\s+/g, '_');
     const sanitizedValue = value.replace(/[^a-zA-Z0-9_ ]/g, "");
-    const label = sanitizedValue.trim().replace(/\s+/g, "_");
+    const name = sanitizedValue.trim().replace(/\s+/g, "_");
 
     setNewTemplate((prev) => ({
       ...prev,
       templateTitle: sanitizedValue,
-      label,
+      name,
     }));
 
     // Clear errors when user starts typing
     if (isSubmitted) {
       setErrors((prev) => ({
         ...prev,
+        templateTitle: "",
         name: "",
-        label: "",
       }));
     }
   };
@@ -190,8 +203,8 @@ const InterviewSlideover = ({ mode }) => {
 
     // Mark all fields as touched
     const allFieldsTouched = {
+      templateTitle: true,
       name: true,
-      label: true,
       description: true,
       rounds: true,
     };
@@ -228,10 +241,12 @@ const InterviewSlideover = ({ mode }) => {
     try {
       const templateData = {
         templateName: newTemplate.templateTitle,
-        label: newTemplate.label,
+        name: newTemplate.name,
         description: newTemplate.description,
         status: newTemplate.status,
         isSaved: !isTemplate,
+        bestFor: newTemplate.bestFor,
+        format: newTemplate.format,
       };
       // console.log('Template Data:', templateData);
 
@@ -308,17 +323,12 @@ const InterviewSlideover = ({ mode }) => {
           className="flex-1 flex flex-col h-[calc(100vh-100px)]"
         >
           <div className="flex-1">
-            <div className="space-y-6 pt-6 pb-5">
+            <div className="space-y-4 pt-6 pb-5">
               <div>
-                <label
-                  htmlFor="templateTitle"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Title <span className="text-red-500">*</span>
-                </label>
-                <input
+                <InputField
+                  label="Title"
                   // v1.0.3 <---------------------------------------------------
-                  ref={fieldRefs.name}
+                  ref={fieldRefs.templateTitle}
                   // v1.0.3 --------------------------------------------------->
                   type="text"
                   id="templateTitle"
@@ -327,54 +337,87 @@ const InterviewSlideover = ({ mode }) => {
                   value={newTemplate.templateTitle}
                   onChange={handleTitleChange}
                   onBlur={() => handleBlur("templateTitle")}
-                  className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
-                    touched.name && errors.name
-                      ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
-                  } focus:outline-none focus:ring-1`}
                   autoComplete="off"
+                  error={errors.templateTitle}
+                  required
                 />
-                {touched.name && errors.name && (
-                  <p className="mt-1 text-sm text-red-500">{errors.name}</p>
-                )}
               </div>
 
               <div>
-                <label
-                  htmlFor="label"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Label <span className="text-red-500">*</span>
-                </label>
-                <input
+                <InputField
+                  label="Name"
                   type="text"
-                  id="label"
-                  name="label"
+                  id="name"
+                  name="name"
                   placeholder="Senior_Frontend_Developer"
-                  value={newTemplate.label}
+                  value={newTemplate.name}
                   readOnly
-                  onFocus={() => handleBlur("label")}
-                  className={`w-full mt-1 border rounded-md sm:text-sm shadow-sm px-3 py-2 ${
-                    touched.label && errors.label
-                      ? "border-red-500"
-                      : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
-                  } focus:outline-none focus:ring-1`}
+                  onFocus={() => handleBlur("name")}
+                  error={errors.name}
+                  required
                 />
-                {touched.label && errors.label && (
-                  <p className="mt-1 text-sm text-red-500">{errors.label}</p>
-                )}
+              </div>
+
+             
+
+              <div>
+                <InputField
+                  label="Best For"
+                  ref={fieldRefs.bestFor}
+                  type="text"
+                  id="bestFor"
+                  name="bestFor"
+                  placeholder="e.g., Senior developers with 5+ years experience"
+                  value={newTemplate.bestFor}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 50); // Limit to 50 characters
+                    setNewTemplate((prev) => ({
+                      ...prev,
+                      bestFor: value,
+                    }));
+                    if (errors.bestFor) {
+                      setErrors((prev) => ({ ...prev, bestFor: "" }));
+                    }
+                  }}
+                  onBlur={() => handleBlur("bestFor")}
+                  autoComplete="off"
+                  error={errors.bestFor}
+                  maxLength={50}
+                  required
+                />
+                <p className="flex justify-end text-xs text-gray-500 mt-1">
+                  {newTemplate.bestFor.length}/50 characters
+                </p>
               </div>
 
               <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  {/* <------ v1.0.0 */}
-                  Description
-                  {/* v1.0.0 ------> */}
-                </label>
-                <textarea
+                <DropdownWithSearchField
+                  label="Format"
+                  name="format"
+                  value={newTemplate.format}
+                  options={[
+                    { label: "Fully Online", value: "fully online" },
+                    { label: "Hybrid", value: "hybrid" },
+                    { label: "Offline", value: "offline" },
+                  ]}
+                  onChange={(e) => {
+                    setNewTemplate((prev) => ({
+                      ...prev,
+                      format: e.target.value,
+                    }));
+                    if (errors.format) {
+                      setErrors((prev) => ({ ...prev, format: "" }));
+                    }
+                  }}
+                  placeholder="Select format"
+                  error={errors.format}
+                  containerRef={fieldRefs.format}
+                  required
+                />
+              </div>
+              <div>
+                <DescriptionField
+                  label="Description"
                   id="description"
                   name="description"
                   // <------ v1.0.0
@@ -385,30 +428,12 @@ const InterviewSlideover = ({ mode }) => {
                   onBlur={() => handleBlur("description")}
                   rows={4}
                   maxLength={300}
-                  // <------ v1.0.0
-                  className={`w-full mt-1 border rounded-md px-3 py-2 shadow-sm sm:text-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500`}
-                  // v1.0.0 ------>
+                  
                 />
                 {/* {touched.description && errors.description && (
                     <p className="mt-1 text-sm text-red-500">{errors.description}</p>
                 )} */}
-                <div className="flex justify-between items-center">
-                  {/* <------ v1.0.0 */}
-                  <p></p>
-                  {/* <span className="text-sm text-gray-500">
-                      {errors.description ? (
-                          <p className="text-red-500 text-sm ">{errors.description}</p>
-                      ) : newTemplate.description.length > 0 && newTemplate.description.length < 20 ? (
-                          <p className="text-gray-500 text-sm">
-                              Minimum {20 - newTemplate.description.length} more characters needed
-                          </p>
-                      ) : null}
-                  </span> */}
-                  {/* v1.0.0 ------> */}
-                  <p className="text-sm text-gray-500">
-                    {newTemplate.description.length}/20
-                  </p>
-                </div>
+                
               </div>
 
               {/* <div>

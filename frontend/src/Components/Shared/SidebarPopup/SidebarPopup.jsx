@@ -3,6 +3,8 @@
                     added createPortal it avoids z-index issues at any level
 */
 // v1.0.2 - Ashok - Added subtitle and Icon
+// v1.0.3 - Ashok - fixed padding
+// v1.0.4 - Ashok - fixed some responsiveness issue
 
 import { useState } from "react";
 import { Minimize, Expand, X, ExternalLink } from "lucide-react";
@@ -57,7 +59,9 @@ function SidebarPopup({
         }`}
         // v1.0.0 ----------------------------------------------------------------------------->
       >
-        <div className="sticky top-0 bg-white px-4 py-6 z-10">
+        {/* v1.0.4 <---------------------------------------------------------- */}
+        <div className="sticky top-0 bg-white px-4 py-3 z-10">
+        {/* v1.0.4 ----------------------------------------------------------> */}
           <div className="flex justify-between items-center px-2">
             {/* v1.0.2 <----------------------------------------------------------- */}
             <div className="flex items-center gap-3">
@@ -128,7 +132,7 @@ function SidebarPopup({
         </div>
 
         {/* Popup content */}
-        <div className="flex-grow overflow-y-auto p-4 sm:p-6">{children}</div>
+        <div className="flex-grow overflow-y-auto px-4">{children}</div>
       </div>
     </div>
   );

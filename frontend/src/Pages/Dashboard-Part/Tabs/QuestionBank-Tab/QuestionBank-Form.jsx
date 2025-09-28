@@ -122,7 +122,7 @@ const QuestionBankForm = ({
   ]);
 
   const [dropdownValue, setDropdownValue] = useState(
-    isInterviewType ? "Interview Questions" : "Assignment Questions"
+    isInterviewType ? "Interview Questions" : "Assessment Questions"
   );
   const autoSelectInitializedRef = useRef(false);
 
@@ -165,7 +165,7 @@ const QuestionBankForm = ({
   ]); //<--v1.0.8----->
 
   const questionTypeOptions = [
-    ...(isInterviewType && dropdownValue !== "Assignment Questions"
+    ...(isInterviewType && dropdownValue !== "Assessment Questions"
       ? ["Interview Questions"]
       : []), //<----v1.0.7------
     "MCQ",
@@ -182,7 +182,7 @@ const QuestionBankForm = ({
   const difficultyOptionsRS = difficultyLevels.map((d) => ({ value: d, label: d }));
   const assIntOptionsRS = [
     { value: "Interview Questions", label: "Interview Questions" },
-    { value: "Assignment Questions", label: "Assignment Questions" },
+    { value: "Assessment Questions", label: "Assessment Questions" },
   ];
   const categoryOptionsRS = (category || [])
     .filter((opt) => opt.status === "Active")
@@ -192,7 +192,7 @@ const QuestionBankForm = ({
   const [formData, setFormData] = useState({
     questionText: "",
     questionType:
-      isInterviewType && dropdownValue !== "Assignment Questions"
+      isInterviewType && dropdownValue !== "Assessment Questions"
         ? "Interview Questions"
         : "", //<----v1.0.7------
     skill: "",
@@ -220,7 +220,7 @@ const QuestionBankForm = ({
   const [showDropdownDifficultyLevel, setShowDropdownDifficultyLevel] =
     useState(false);
   const [selectedQuestionType, setSelectedQuestionType] = useState(
-    (isInterviewType && dropdownValue !== "Assignment Questions") ||
+    (isInterviewType && dropdownValue !== "Assessment Questions") ||
       type === "Feedback"
       ? "Interview Questions"
       : "" //<----v1.0.7------
@@ -326,7 +326,7 @@ const QuestionBankForm = ({
       setDropdownValue(
         question.isInterviewQuestionType
           ? "Interview Questions"
-          : "Assignment Questions"
+          : "Assessment Questions"
       );
       setHintContent(question.hints || "");
       setSelectedSkill(question.skill || "");
@@ -385,14 +385,14 @@ const QuestionBankForm = ({
   useEffect(() => {
     if (isInterviewType && !isEdit) {
       setSelectedQuestionType(
-        isInterviewType && dropdownValue !== "Assignment Questions"
+        isInterviewType && dropdownValue !== "Assessment Questions"
           ? "Interview Questions"
           : ""
       );
       setFormData((prev) => ({
         ...prev,
         questionType:
-          isInterviewType && dropdownValue !== "Assignment Questions"
+          isInterviewType && dropdownValue !== "Assessment Questions"
             ? "Interview Questions"
             : "",
       }));
@@ -400,7 +400,7 @@ const QuestionBankForm = ({
       setErrors((prev) => ({
         ...prev,
         questionType:
-          isInterviewType && dropdownValue !== "Assignment Questions" && "",
+          isInterviewType && dropdownValue !== "Assessment Questions" && "",
       }));
     }
   }, [isInterviewType, isEdit, dropdownValue]);
@@ -410,7 +410,7 @@ const QuestionBankForm = ({
     setFormData({
       questionText: "",
       questionType:
-        isInterviewType && dropdownValue !== "Assignment Questions"
+        isInterviewType && dropdownValue !== "Assessment Questions"
           ? "Interview Questions"
           : "", //<----v1.0.7------
       skill: "",
@@ -427,7 +427,7 @@ const QuestionBankForm = ({
 
     setSelectedSkill("");
     setSelectedCategory("");
-    setSelectedQuestionType((isInterviewType && dropdownValue !== "Assignment Questions") ? "Interview Questions" : "");//<----v1.0.7------
+    setSelectedQuestionType((isInterviewType && dropdownValue !== "Assessment Questions") ? "Interview Questions" : "");//<----v1.0.7------
     setSelectedDifficultyLevel("");
     setAutoAssessment("");
     setHintContent("");
@@ -518,7 +518,7 @@ const extractValidationErrors = (axiosError) => {
       type,
       {
         skipQuestionType:
-          isInterviewType && dropdownValue !== "Assignment Questions",
+          isInterviewType && dropdownValue !== "Assessment Questions",
       } //<----v1.0.7------
     );
     if (Object.keys(newErrors).length > 0) {
@@ -1312,7 +1312,7 @@ const extractValidationErrors = (axiosError) => {
                   </div>
 
                   {/* Question Type Selection */}
-                  {dropdownValue === "Assignment Questions" && (
+                  {dropdownValue === "Assessment Questions" && (
                     <div className="flex flex-col gap-1 mb-4">
                       <DropdownWithSearchField
                         value={selectedQuestionType}

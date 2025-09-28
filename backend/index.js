@@ -18,6 +18,8 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const app = express();
+const qs = require('qs');
+const axios = require('axios');
 
 // ✅ Trust Azure's proxy to detect HTTPS correctly
 app.set("trust proxy", 1);
@@ -541,7 +543,7 @@ app.get("/skills", async (req, res) => {
     const skills = await Skills.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(skills);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -553,7 +555,7 @@ app.get("/locations", async (req, res) => {
     const LocationNames = await LocationMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(LocationNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -565,7 +567,7 @@ app.get("/industries", async (req, res) => {
     const IndustryNames = await Industry.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(IndustryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -577,7 +579,7 @@ app.get("/roles", async (req, res) => {
     const roles = await RoleMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(roles);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -591,7 +593,7 @@ app.get("/technology", async (req, res) => {
     const technology = await TechnologyMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(technology);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -605,7 +607,7 @@ app.get("/qualification", async (req, res) => {
     const higherqualifications = await HigherQualification.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(higherqualifications);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -617,7 +619,7 @@ app.get("/universitycollege", async (req, res) => {
     const universityCollegeNames = await University_CollegeName.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(universityCollegeNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -629,7 +631,7 @@ app.get("/company", async (req, res) => {
     const CompanyNames = await Company.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(CompanyNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -641,7 +643,7 @@ app.get("/category", async (req, res) => {
     const CategoryNames = await CategoryQuestionsMaster.find({})
       .populate("ownerId", "firstName lastName email -password")
       .populate("createdBy", "firstName lastName email -password")
-      .populate("updatedBy", "firstName lastName email -password");
+      .populate("updatedBy", "firstName lastName email -password").lean();
     res.json(CategoryNames);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -1057,15 +1059,30 @@ app.use("/api/auth", authRoutes);
 // Ensures pushNotificationTaskController registers its cron schedule on server start
 require("./controllers/PushNotificationControllers/pushNotificationTaskController");
 
+// Start Interview notification system and cron jobs
+require("./controllers/PushNotificationControllers/pushNotificationInterviewController");
+
+// Start Assessment notification system and cron jobs
+require("./controllers/PushNotificationControllers/pushNotificationAssessmentController");
+
 // in contextfetch for fetchUserProfile
 app.get("/auth/users/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await Users.findById(id);
+    const user = await Users.findById(id).lean();
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(user);
+ 
+    const contact = await Contacts.findOne({ ownerId: id }, "_id").lean();
+    // user.contactId = contact._id;
+ 
+ 
+    // res.json(user);
+    res.json({
+      ...user, // convert mongoose doc to plain object
+      contactId: contact ? contact._id : null, // attach contactId
+    });
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -1282,6 +1299,13 @@ app.use("/wallet", WalletRouter);
 const taskRoutes = require("./routes/taskRoutes");
 app.use("/tasks", taskRoutes);
 
+// Notification test routes (only for development/testing)
+if (process.env.NODE_ENV !== 'production') {
+  const notificationTestRoutes = require("./routes/pushNotificationTestRoutes");
+  app.use("/notifications", notificationTestRoutes);
+  console.log('[NOTIFICATIONS] Test endpoints registered at /notifications/*');
+}
+
 //i am using this code for outsource interviewers we need to change his into contact controller
 // app.get('/api/contacts/outsource', async (req, res) => {
 //   try {
@@ -1426,6 +1450,7 @@ const {
   getTopSkills,
   getTopExternalInterviewers,
 } = require("./data/mockData.js");
+const { Contacts } = require("./models/Contacts.js");
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -1578,9 +1603,221 @@ app.post("/api/export/pdf", (req, res) => {
   }
 });
 
+
+
+
+let cachedToken = null;
+let tokenExpiresAt = 0;
+
+// Get Zoom S2S token
+async function getS2SToken() {
+  if (cachedToken && Date.now() < tokenExpiresAt - 60000) return cachedToken;
+
+  const tokenUrl = 'https://zoom.us/oauth/token';
+  const auth = Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64');
+
+  const data = qs.stringify({
+    grant_type: 'account_credentials',
+    account_id: process.env.ZOOM_ACCOUNT_ID
+  });
+
+  const r = await axios.post(tokenUrl, data, {
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+
+  cachedToken = r.data.access_token;
+  tokenExpiresAt = Date.now() + (r.data.expires_in * 1000);
+  return cachedToken;
+}
+
+
+// Create meeting endpoint Zoom meet Links
+app.post('/api/create-meeting', async (req, res) => {
+  try {
+    const { topic, start_time, duration, timezone, userId, settings } = req.body;
+    const token = await getS2SToken();
+
+    // Validate start_time
+    if (start_time) {
+      const startDate = new Date(start_time);
+      if (isNaN(startDate.getTime())) {
+        return res.status(400).json({ 
+          error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss' 
+        });
+      }
+      if (startDate <= new Date()) {
+        return res.status(400).json({ error: 'start_time must be in the future' });
+      }
+    }
+
+    const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
+    const type = start_time ? 2 : 1;
+
+    const body = {
+      topic: topic || 'Interview Meeting',
+      type,
+      ...(start_time && { start_time }),
+      duration: duration || 60,
+      timezone: timezone || 'Asia/Kolkata',
+      settings: settings || { 
+        join_before_host: true, 
+        host_video: false, 
+        participant_video: false 
+      }
+    };
+
+    console.log("Creating Zoom meeting with:", body);
+
+    const create = await axios.post(
+      `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
+      body,
+      { 
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
+
+    // ✅ Return only what frontend needs
+    return res.json({
+      meetingId: create.data.id,
+      password: create.data.password,
+      hostId: create.data.host_id,
+      hostEmail: create.data.host_email,
+      start_url: create.data.start_url, // host link
+      join_url: create.data.join_url    // attendee link
+    });
+
+  } catch (err) {
+    console.error("Zoom API Error:", err.response?.data || err.message);
+    return res.status(err.response?.status || 500).json({ 
+      error: err.response?.data?.message || err.message 
+    });
+  }
+});
+
+
+
+
+// Create meeting endpoint
+// app.post('/api/create-meeting', async (req, res) => {
+//   try {
+//     const { topic, start_time, duration, timezone, userId, settings } = req.body;
+//     const token = await getS2SToken();
+
+//     // Validate start_time if provided
+//     if (start_time) {
+//       const startDate = new Date(start_time);
+//       if (isNaN(startDate.getTime())) {
+//         return res.status(400).json({ 
+//           error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss' 
+//         });
+//       }
+      
+//       // Ensure start_time is in the future for scheduled meetings
+//       if (startDate <= new Date()) {
+//         return res.status(400).json({ 
+//           error: 'start_time must be in the future' 
+//         });
+//       }
+//     }
+
+//     const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
+//     const type = start_time ? 2 : 1; // 2 for scheduled, 1 for instant
+
+//     const body = {
+//       topic: topic || 'Interview Meeting',
+//       type,
+//       ...(start_time && { start_time }),
+//       duration: duration || 60,
+//       timezone: timezone || 'Asia/Kolkata',
+//       settings: settings || { 
+//         join_before_host: true, 
+//         host_video: false, 
+//         participant_video: false 
+//       }
+//     };
+
+//     console.log("Creating Zoom meeting with:", body);
+
+//     const create = await axios.post(
+//       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
+//       body,
+//       { 
+//         headers: { 
+//           Authorization: `Bearer ${token}`, 
+//           'Content-Type': 'application/json' 
+//         } 
+//       }
+//     );
+
+//     // {
+//     //   join_url: create.data.join_url,
+//     //   start_url: create.data.start_url,
+//     //   id: create.data.id,
+//     //   password: create.data.password
+//     // }
+
+//     return res.json(create.data);
+//   } catch (err) {
+//     console.error("Zoom API Error:", err.response?.data || err.message);
+//     return res.status(err.response?.status || 500).json({ 
+//       error: err.response?.data?.message || err.message 
+//     });
+//   }
+// });
+
+
+// Create meeting endpoint
+// app.post('/api/create-meeting', async (req, res) => {
+//   try {
+//     const { topic, start_time, duration, timezone, userId, settings } = req.body;
+//     const token = await getS2SToken();
+
+//     const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
+//     const type = start_time ? 2 : 1;
+
+//     const body = {
+//       topic: topic || 'Meeting from API',
+//       type,
+//       ...(start_time ? { start_time } : {}),
+//       duration: duration || 60,
+//       timezone: timezone || 'Asia/Kolkata',
+//       settings: settings || { join_before_host: true, host_video: false, participant_video: false }
+//     };
+
+//     const create = await axios.post(
+//       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
+//       body,
+//       { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+//     );
+
+//     console.log("create data ", create);
+
+//     return res.json({
+//       join_url: create.data.join_url,
+//       start_url: create.data.start_url,
+//       id: create.data.id,
+//       password: create.data.password
+//     });
+//   } catch (err) {
+//     console.error(err.response?.data || err.message);
+//     return res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });
+//   }
+// });
+
+
+
 // Catch-all for undefined routes
 app.use("*", (req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
 
 //  v1.0.4 ------------------------------------------------------------------------------>
+
+
+

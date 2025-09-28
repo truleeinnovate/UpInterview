@@ -27,18 +27,23 @@ const candidateValidationSchema = Joi.object({
   Date_Of_Birth: Joi.date()
   .optional()       // ✅ Changed to optional
   .allow(null, ""),
-  Gender: Joi.string().required().messages({
-    "string.empty": "Gender is required",
-    "any.required": "Gender is required",
-  }),
+  Gender: Joi.string().optional().allow("", null)
+  // Gender: Joi.string().optional()
+  // .messages({
+  //   "string.empty": "Gender is required",
+  //   "any.required": "Gender is required",
+  // })
+  ,
   HigherQualification: Joi.string().required().messages({
     "string.empty": "Higher Qualification is required",
     "any.required": "Higher Qualification is required",
   }),
-  UniversityCollege: Joi.string().required().messages({
-    "string.empty": "University/College is required",
-    "any.required": "University/College is required",
-  }),
+  UniversityCollege: Joi.string().optional().allow(null, "")
+  // .messages({
+  //   "string.empty": "University/College is required",
+  //   "any.required": "University/College is required",
+  // })
+  ,
   CurrentExperience: Joi.number().required().messages({
     "number.base": "Current Experience must be a number",
     "any.required": "Current Experience is required",

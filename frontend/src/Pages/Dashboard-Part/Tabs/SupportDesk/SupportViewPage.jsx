@@ -33,6 +33,7 @@ import Activity from "../CommonCode-AllTabs/Activity";
 
 //const validReopenStatus = ["resolved", "cancel"];
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { formatDateTime } from "../../../../utils/dateFormatter";
 const SupportViewPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -342,7 +343,7 @@ const SupportViewPage = () => {
                   <p className="text-gray-700">
                     {ticketData?.contact?.charAt(0).toUpperCase() +
                       ticketData?.contact?.slice(1) || "Unknown"}
-                    , {formatDate(ticketData?.createdAt)}
+                    , {formatDateTime(ticketData?.createdAt)}
                   </p>
                 </div>
               </div>
@@ -358,7 +359,7 @@ const SupportViewPage = () => {
                       .toUpperCase() +
                       ticketData?.statusHistory?.[0]?.user.slice(1) ||
                       "Unknown"}
-                    , {formatDate(ticketData?.updatedAt)}
+                    , {formatDateTime(ticketData?.updatedAt)}
                   </p>
                 </div>
               </div>

@@ -10,12 +10,14 @@
 /* eslint-disable react/prop-types */
 // v1.0.6 - Ashok - Improved responsiveness and added sidebarPopup common code to popup to modal
 // v1.0.7 - Ashok - Fixed issues in responsiveness
+// v1.0.8 - Ashok - Fixed responsiveness issues
+
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
 import {
   validateCandidateForm,
-  getErrorMessage
+  getErrorMessage,
 } from "../../../../utils/CandidateValidation";
 import Cookies from "js-cookie";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -39,7 +41,6 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.3 <----------------------------------------------------------------------------------
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError";
 // v1.0.3 ----------------------------------------------------------------------------------->
-
 
 import { notify } from "../../../../services/toastService";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
@@ -94,30 +95,29 @@ const AddCandidateForm = ({
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  console.log("skills", skills);
+  // console.log("skills", skills);
 
-  console.log("colleges", colleges);
+  // console.log("colleges", colleges);
 
-  console.log("isCurrentRolesFetching", isCurrentRolesFetching);
+  // console.log("isCurrentRolesFetching", isCurrentRolesFetching);
 
-  logger.log("qualifications", qualifications); 
+  // logger.log("qualifications", qualifications);
 
-  logger.log("qualifications", currentRoles); 
+  // logger.log("qualifications", currentRoles);
 
-  console.log("qualifications", qualifications);
+  // console.log("qualifications", qualifications);
 
-  console.log("currentRoles", currentRoles);
-
+  // console.log("currentRoles", currentRoles);
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedResume, setSelectedResume] = useState(null);
-  
+
   const [selectedImage, setSelectedImage] = useState(null);
   // const [imageFile, setImageFile] = useState(null);
   // const [resumeFile, setResumeFile] = useState(null);
-  
+
   const [entries, setEntries] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -129,36 +129,16 @@ const AddCandidateForm = ({
   const [editingIndex, setEditingIndex] = useState(null);
   const [selectedExp, setSelectedExp] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
-  const expertiseOptions = ["Basic", "Medium", "Expert"];
   // const [filePreview, setFilePreview] = useState(null);
   // const [isImageUploaded, setIsImageUploaded] = useState(false);
-  
+
   //<----v1.0.1 - University dropdown state---
   const [isCustomUniversity, setIsCustomUniversity] = useState(false);
-  
 
-  
-
-  
-
-  
   //----v1.0.1--->
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
   const genderOptions = ["Male", "Female"];
-  const experienceOptions = [
-    "0-1 Years",
-    "1-2 years",
-    "2-3 years",
-    "3-4 years",
-    "4-5 years",
-    "5-6 years",
-    "6-7 years",
-    "7-8 years",
-    "8-9 years",
-    "9-10 years",
-    "10+ years",
-  ];
 
   // v1.0.3 <---------------------------------------------------------------------------
   const fieldRefs = {
@@ -199,6 +179,7 @@ const AddCandidateForm = ({
   const [fileError, setFileError] = useState("");
   const [resumeError, setResumeError] = useState("");
   const [activeButton, setActiveButton] = useState(null); // 'save' or 'add' or null
+  const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
   // const authToken = Cookies.get("authToken");
   // const tokenPayload = decodeJwt(authToken);
@@ -264,7 +245,7 @@ const AddCandidateForm = ({
   // Ensure University/College custom input is shown in edit mode when the saved value
   // is not present in master list (handles the '+ Others' flow gracefully)
   useEffect(() => {
-    const saved = (formData.UniversityCollege || '').trim();
+    const saved = (formData.UniversityCollege || "").trim();
     // When nothing saved, keep dropdown mode
     if (!saved) {
       setIsCustomUniversity(false);
@@ -274,7 +255,9 @@ const AddCandidateForm = ({
     if (!Array.isArray(colleges) || colleges.length === 0) {
       return;
     }
-    const list = (colleges || []).map((c) => (c?.University_CollegeName || '').trim().toLowerCase());
+    const list = (colleges || []).map((c) =>
+      (c?.University_CollegeName || "").trim().toLowerCase()
+    );
     const existsInList = list.includes(saved.toLowerCase());
     setIsCustomUniversity(!existsInList);
   }, [colleges, formData.UniversityCollege]);
@@ -509,6 +492,7 @@ const AddCandidateForm = ({
     resetResume();
     // -------------------------------------------------------------------------->
     setAllSelectedSkills([]);
+    setShowSkillValidation(false);  // Reset validation flag
   };
 
   const handleClose = () => {
@@ -547,6 +531,9 @@ const AddCandidateForm = ({
     // Set which button was clicked
     setActiveButton(isAddCandidate ? "add" : "save");
 
+    // Show skills validation when submit is attempted
+    setShowSkillValidation(true);
+
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries,
@@ -563,8 +550,14 @@ const AddCandidateForm = ({
       return;
     }
 
-   
-    
+    // Filter out empty skill rows - only include rows where at least one field has a value
+    const filledSkills = entries
+      .filter((entry) => entry.skill || entry.experience || entry.expertise)
+      .map((entry) => ({
+        skill: entry.skill,
+        experience: entry.experience,
+        expertise: entry.expertise,
+      }));
 
     const data = {
       FirstName: formData.FirstName,
@@ -575,14 +568,10 @@ const AddCandidateForm = ({
       CurrentExperience: formData.CurrentExperience,
       RelevantExperience: formData.RelevantExperience,
       HigherQualification: formData.HigherQualification,
-      Gender: formData.Gender,
-      UniversityCollege: formData.UniversityCollege,
+      Gender: formData.Gender || "",
+      UniversityCollege: formData.UniversityCollege || "",
       Date_Of_Birth: formData.Date_Of_Birth,
-      skills: entries.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
+      skills: filledSkills,
       CurrentRole: formData.CurrentRole,
       ownerId: userId,
       tenantId: orgId,
@@ -612,22 +601,51 @@ const AddCandidateForm = ({
 
       // notify.success("Candidate added successfully");
 
-
-
-      if (isAddCandidate){
+      if (isAddCandidate) {
         if (response.status === "success") {
           notify.success("Candidate added successfully");
         }
       }
-  
 
       resetFormData();
 
       if (!isAddCandidate) {
         // setTimeout(() => {
-          // If it's a modal, call the onClose function with the new candidate data
-          if (isModal && onClose) {
-            onClose(response.data);
+        // If it's a modal, call the onClose function with the new candidate data
+        if (isModal && onClose) {
+          onClose(response.data);
+          if (response.status === "success") {
+            notify.success("Candidate added successfully");
+          } else if (
+            response.status === "no_changes" ||
+            response.status === "Updated successfully"
+          ) {
+            notify.success("Candidate updated successfully");
+          }
+          return;
+        }
+
+        // Check if we came from InterviewForm
+        const fromPath = location.state?.from;
+        const returnTo = location.state?.returnTo;
+
+        if (fromPath === "/interviews/new" && returnTo) {
+          navigate(returnTo);
+          return;
+        }
+
+        switch (mode) {
+          case ("Edit" && response.status === "no_changes") ||
+            response.status === "Updated successfully":
+            navigate(`/candidate`);
+            notify.success("Candidate updated successfully");
+            break;
+          case "Candidate Edit":
+            navigate(`/candidate/${id}`);
+            notify.success("Candidate updated successfully");
+            break;
+          default:
+            navigate("/candidate");
             if (response.status === "success") {
               notify.success("Candidate added successfully");
             } else if (
@@ -636,45 +654,13 @@ const AddCandidateForm = ({
             ) {
               notify.success("Candidate updated successfully");
             }
-            return;
-          }
-
-          // Check if we came from InterviewForm
-          const fromPath = location.state?.from;
-          const returnTo = location.state?.returnTo;
-
-          if (fromPath === "/interviews/new" && returnTo) {
-            navigate(returnTo);
-            return;
-          }
-
-          switch (mode) {
-            case "Edit" &&  response.status === "no_changes" ||
-            response.status === "Updated successfully":
-              navigate(`/candidate`);
-              notify.success("Candidate updated successfully");
-              break;
-            case "Candidate Edit":
-              navigate(`/candidate/${id}`);
-              notify.success("Candidate updated successfully");
-              break;
-            default:
-              navigate("/candidate");
-              if (response.status === "success") {
-                notify.success("Candidate added successfully");
-              } else if (
-                response.status === "no_changes" ||
-                response.status === "Updated successfully"
-              ) {
-                notify.success("Candidate updated successfully");
-              }
-          }
+        }
         // }, 1000); // Delay navigation to ensure loading state is visible
       } else {
         // For "Add Candidate" button, also close modal if in modal mode
         if (isModal && onClose) {
           // setTimeout(() => {
-            onClose(response.data);
+          onClose(response.data);
           // }, 1000);
         }
       }
@@ -682,7 +668,11 @@ const AddCandidateForm = ({
       console.error("Error adding candidate:", error);
 
       // Show error toast
-      notify.error(error.response?.data?.message || error.message || "Failed to save candidate");
+      notify.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to save candidate"
+      );
 
       if (error.response?.data?.errors) {
         // Backend Joi validation errors
@@ -711,8 +701,6 @@ const AddCandidateForm = ({
     // v1.0.2 ---------------------------------------------------------------------------->
   };
 
-  
-
   // Using shared DropdownSelect styles from CommonCode-AllTabs/DropdownSelect
 
   // Using shared CollegeMenuList from CommonCode-AllTabs/DropdownSelect
@@ -720,12 +708,11 @@ const AddCandidateForm = ({
   // Mapped options for react-select
   // const genderOptionsRS = genderOptions.map((g) => ({ value: g, label: g }));
 
-  
   const genderOptionsRS = useMemo(
     () => genderOptions.map((g) => ({ value: g, label: g })),
     []
   );
-  
+
   // const qualificationOptionsRS =
   //   qualifications?.map((q) => ({
   //     value: q?.QualificationName,
@@ -741,7 +728,6 @@ const AddCandidateForm = ({
     [qualifications]
   );
 
-
   // const collegeOptionsRS = (
   //   colleges?.map((c) => ({
   //     value: c?.University_CollegeName,
@@ -751,15 +737,14 @@ const AddCandidateForm = ({
 
   const collegeOptionsRS = useMemo(
     () =>
-      (colleges?.map((c) => ({
-        value: c?.University_CollegeName,
-        label: c?.University_CollegeName,
-      })) || []
+      (
+        colleges?.map((c) => ({
+          value: c?.University_CollegeName,
+          label: c?.University_CollegeName,
+        })) || []
       ).concat([{ value: "__other__", label: "+ Others" }]),
     [colleges]
   );
-
-
 
   // const roleOptionsRS =
   //   currentRoles?.map((r) => ({ value: r?.RoleName, label: r?.RoleName })) || [];
@@ -785,22 +770,54 @@ const AddCandidateForm = ({
         <InfoGuide
           title="Candidate Profile Guidelines"
           items={[
-            <><span className="font-medium">Complete Profile:</span> Fill all required fields to create a comprehensive candidate profile</>,
-            <><span className="font-medium">Profile Photo:</span> Upload a professional headshot (max 100KB, 200×200 recommended)</>,
-            <><span className="font-medium">Resume Requirements:</span> PDF or Word documents only, maximum 4MB file size</>,
-            <><span className="font-medium">Contact Information:</span> Provide accurate email and phone number for communication</>,
-            <><span className="font-medium">Education Details:</span> Include highest qualification and university/college information</>,
-            <><span className="font-medium">Experience Tracking:</span> Specify both current and relevant experience in years</>,
-            <><span className="font-medium">Skill Assessment:</span> Add relevant skills with proficiency levels (Basic, Medium, Expert)</>,
-            <><span className="font-medium">Current Role:</span> Select the candidate's current job position from available options</>,
-            <><span className="font-medium">Data Validation:</span> All fields are validated in real-time with error highlighting</>,
-            <><span className="font-medium">Flexible Options:</span> Custom university entries available if not found in the list</>
+            <>
+              <span className="font-medium">Complete Profile:</span> Fill all
+              required fields to create a comprehensive candidate profile
+            </>,
+            <>
+              <span className="font-medium">Profile Photo:</span> Upload a
+              professional headshot (max 100KB, 200×200 recommended)
+            </>,
+            <>
+              <span className="font-medium">Resume Requirements:</span> PDF or
+              Word documents only, maximum 4MB file size
+            </>,
+            <>
+              <span className="font-medium">Contact Information:</span> Provide
+              accurate email and phone number for communication
+            </>,
+            <>
+              <span className="font-medium">Education Details:</span> Include
+              highest qualification and university/college information
+            </>,
+            <>
+              <span className="font-medium">Experience Tracking:</span> Specify
+              both current and relevant experience in years
+            </>,
+            <>
+              <span className="font-medium">Skill Assessment:</span> Add
+              relevant skills with proficiency levels (Basic, Medium, Expert)
+            </>,
+            <>
+              <span className="font-medium">Current Role:</span> Select the
+              candidate's current job position from available options
+            </>,
+            <>
+              <span className="font-medium">Data Validation:</span> All fields
+              are validated in real-time with error highlighting
+            </>,
+            <>
+              <span className="font-medium">Flexible Options:</span> Custom
+              university entries available if not found in the list
+            </>,
           ]}
         />
 
         {/* v1.0.7 <--------------------------------------------------------------------- */}
         {/* <div className="p-4" ref={formRef}> */}
-        <div className="sm:p-0 p-4" ref={formRef}>
+        {/* v1.0.8 <---------------------------------------------- */}
+        <div className="sm:p-0 p-4 mb-10" ref={formRef}>
+          {/* v1.0.8 ----------------------------------------------> */}
           {/* v1.0.7 ---------------------------------------------------------------------> */}
           {/* v1.0.4 ----------------------------------------------------------------------------------> */}
           {/* v1.0.2 ------------------------------------------------------------------> */}
@@ -830,7 +847,7 @@ const AddCandidateForm = ({
 
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-6">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-4">
+              <div className="bg-white space-y-4">
                 {/* v1.0.7 <------------------------------------------------------ */}
                 {/* <h4 className="text-lg font-semibold text-gray-800"> */}
                 <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
@@ -859,7 +876,11 @@ const AddCandidateForm = ({
 
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                   <DateOfBirthField
-                    selectedDate={formData.Date_Of_Birth ? new Date(formData.Date_Of_Birth) : null}
+                    selectedDate={
+                      formData.Date_Of_Birth
+                        ? new Date(formData.Date_Of_Birth)
+                        : null
+                    }
                     onChange={handleDateChange}
                     label="Date of Birth"
                     required={false}
@@ -868,10 +889,10 @@ const AddCandidateForm = ({
                     value={formData.Gender}
                     options={genderOptionsRS}
                     onChange={handleChange}
-                    error={errors.Gender}
+                    // error={errors.Gender}
                     containerRef={fieldRefs.Gender}
                     label="Gender"
-                    required
+                    // required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -929,18 +950,24 @@ const AddCandidateForm = ({
                     options={collegeOptionsRS}
                     onChange={(e) => {
                       const { value } = e.target;
-                      setFormData((prev) => ({ ...prev, UniversityCollege: value }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        UniversityCollege: value,
+                      }));
                       if (errors.UniversityCollege) {
-                        setErrors((prevErrors) => ({ ...prevErrors, UniversityCollege: "" }));
+                        setErrors((prevErrors) => ({
+                          ...prevErrors,
+                          UniversityCollege: "",
+                        }));
                       }
                     }}
-                    error={errors.UniversityCollege}
+                    // error={errors.UniversityCollege}
                     isCustomName={isCustomUniversity}
                     setIsCustomName={setIsCustomUniversity}
                     containerRef={fieldRefs.UniversityCollege}
                     label="University/College"
                     name="UniversityCollege"
-                    required
+                    // required
                     onMenuOpen={loadColleges}
                     loading={isCollegesFetching}
                   />
@@ -993,15 +1020,33 @@ const AddCandidateForm = ({
               </div>
               <div>
                 <SkillsField
+                  ref={fieldRefs.skills}
                   entries={entries}
                   errors={errors}
-                  onAddSkill={(setEditingIndex) => {
+                  showValidation={showSkillValidation}
+                  onSkillsValidChange={(hasValidSkills) => {
+                    // Clear the skills error if at least one complete row exists
+                    if (hasValidSkills && errors.skills) {
+                      setErrors((prevErrors) => {
+                        const newErrors = { ...prevErrors };
+                        delete newErrors.skills;
+                        return newErrors;
+                      });
+                    }
+                  }}
+                  onAddSkill={(setEditingIndexCallback) => {
                     setEntries((prevEntries) => {
                       const newEntries = [
                         ...prevEntries,
                         { skill: "", experience: "", expertise: "" },
                       ];
-                      setEditingIndex(newEntries.length - 1);
+                      // Only set editing index if callback is provided
+                      if (
+                        setEditingIndexCallback &&
+                        typeof setEditingIndexCallback === "function"
+                      ) {
+                        setEditingIndexCallback(newEntries.length - 1);
+                      }
                       return newEntries;
                     });
                     setSelectedSkill("");
@@ -1021,6 +1066,23 @@ const AddCandidateForm = ({
                     );
                     setEntries(entries.filter((_, i) => i !== index));
                   }}
+                  onUpdateEntry={(index, updatedEntry) => {
+                    const newEntries = [...entries];
+                    const oldSkill = newEntries[index]?.skill;
+                    newEntries[index] = updatedEntry;
+                    setEntries(newEntries);
+
+                    // Update allSelectedSkills if skill changed
+                    if (oldSkill !== updatedEntry.skill) {
+                      const newSelectedSkills = newEntries
+                        .map((e) => e.skill)
+                        .filter(Boolean);
+                      setAllSelectedSkills(newSelectedSkills);
+                    }
+
+                    // Update formData
+                    setFormData((prev) => ({ ...prev, skills: newEntries }));
+                  }}
                   setIsModalOpen={setIsModalOpen}
                   setEditingIndex={setEditingIndex}
                   isModalOpen={isModalOpen}
@@ -1036,8 +1098,6 @@ const AddCandidateForm = ({
                   selectedLevel={selectedLevel}
                   setSelectedLevel={setSelectedLevel}
                   skills={skills}
-                  expertiseOptions={expertiseOptions}
-                  experienceOptions={experienceOptions}
                   isNextEnabled={isNextEnabled}
                   handleAddEntry={handleAddEntry}
                   skillpopupcancelbutton={skillpopupcancelbutton}
@@ -1046,7 +1106,9 @@ const AddCandidateForm = ({
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-6">
+              {/* v1.0.8 <----------------------------------- */}
+              <div className="flex justify-end gap-3">
+                {/* v1.0.8 <----------------------------------- */}
                 <button
                   type="button"
                   onClick={handleClose}

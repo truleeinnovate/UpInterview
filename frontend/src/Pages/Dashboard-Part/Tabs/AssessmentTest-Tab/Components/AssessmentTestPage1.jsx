@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+// v1.0.0 - Ashok - Improved responsiveness
+
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
   ClipboardDocumentListIcon,
   ClockIcon,
@@ -11,9 +13,9 @@ import {
   ArrowPathIcon,
   ShieldCheckIcon,
   LightBulbIcon,
-} from '@heroicons/react/24/outline';
-import axios from 'axios';
-import { config } from '../../../../../config';
+} from "@heroicons/react/24/outline";
+import axios from "axios";
+import { config } from "../../../../../config";
 
 const AssessmentTestPage1 = ({
   scheduledAssessmentId,
@@ -26,20 +28,19 @@ const AssessmentTestPage1 = ({
   calculatedScores,
   candidateAssessmentId,
 }) => {
-
   useEffect(() => {
-    console.log('assessment', assessment);
+    console.log("assessment", assessment);
   }, [assessment]);
 
   const [showOtpInput, setShowOtpInput] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '', '']);
+  const [otp, setOtp] = useState(["", "", "", "", ""]);
   const [isResending, setIsResending] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
   const [timer, setTimer] = useState(30);
 
   const handleProceed = () => {
     // if (isVerified && isAgreed) {
-      setCurrentStep(2);
+    setCurrentStep(2);
     // } else {
     //   toast.error('Please verify your email and agree to the terms.');
     // }
@@ -56,7 +57,7 @@ const AssessmentTestPage1 = ({
       const response = await axios.post(url, { candidateAssessmentId, otp });
       return response.data.isValid;
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to verify OTP.');
+      toast.error(error.response?.data?.message || "Failed to verify OTP.");
       return false;
     }
   };
@@ -70,29 +71,31 @@ const AssessmentTestPage1 = ({
 
     // Move to next input if current field is filled
     if (element.value && index < 4) {
-      const nextInput = element.parentElement.nextSibling.querySelector('input');
+      const nextInput =
+        element.parentElement.nextSibling.querySelector("input");
       if (nextInput) {
         nextInput.focus();
       }
     }
 
     // Submit if all fields are filled
-    if (newOtp.every((digit) => digit !== '')) {
-      const isValid = await verifyOtp(candidateAssessmentId, newOtp.join(''));
+    if (newOtp.every((digit) => digit !== "")) {
+      const isValid = await verifyOtp(candidateAssessmentId, newOtp.join(""));
       if (isValid) {
         setIsVerified(true);
         setShowOtpInput(false);
-        toast.success('OTP verified successfully');
+        toast.success("OTP verified successfully");
       } else {
-        toast.error('Invalid OTP');
-        setOtp(['', '', '', '', '']);
+        toast.error("Invalid OTP");
+        setOtp(["", "", "", "", ""]);
       }
     }
   };
 
   const handleKeyDown = (e, index) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = e.target.parentElement.previousSibling.querySelector('input');
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      const prevInput =
+        e.target.parentElement.previousSibling.querySelector("input");
       if (prevInput) {
         prevInput.focus();
       }
@@ -101,19 +104,19 @@ const AssessmentTestPage1 = ({
 
   const handleResend = async () => {
     setIsResending(true);
-    setOtp(['', '', '', '', '']); // Clear existing OTP inputs
+    setOtp(["", "", "", "", ""]); // Clear existing OTP inputs
     try {
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/emails/send-otp/${scheduledAssessmentId}/${candidateId}/${candidateAssessmentId}`
       );
       if (response.data.success) {
         setTimer(30);
-        toast.success('OTP resent successfully!');
+        toast.success("OTP resent successfully!");
       } else {
-        toast.error('Failed to resend OTP.');
+        toast.error("Failed to resend OTP.");
       }
     } catch (error) {
-      toast.error('Failed to resend OTP.');
+      toast.error("Failed to resend OTP.");
     } finally {
       setIsResending(false);
     }
@@ -127,55 +130,75 @@ const AssessmentTestPage1 = ({
       if (response.data.success) {
         setShowOtpInput(true);
         setTimer(30);
-        toast.success('OTP sent successfully!');
+        toast.success("OTP sent successfully!");
       } else {
-        toast.error('Failed to send OTP.');
+        toast.error("Failed to send OTP.");
       }
     } catch (error) {
-      toast.error('Failed to send OTP.');
+      toast.error("Failed to send OTP.");
     }
   };
 
   return (
     <React.Fragment>
-      <div className="max-w-[90rem] mx-auto py-8 px-8">
+      {/* v1.0.0 <------------------------------------------------------- */}
+      <div className="max-w-[90rem] mx-auto py-6 sm:px-4 md:px-4 px-6">
+        {/* v1.0.0 <------------------------------------------------------- */}
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden border border-white/20">
-          <div className="bg-custom-blue p-4 relative overflow-hidden">
+          <div className="bg-custom-blue p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6TTI0IDQ4YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnptMC0xMmMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA6IDYgNi02IDIuNjktNiA2LTZ6IiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIuMSIvPjwvZz48L3N2Zz4=')] opacity-10" />
             <div className="relative">
-              <div className="flex items-center justify-between mb-4">
+              {/* v1.0.0 <---------------------------------------------------------------------------------- */}
+              <div className="flex sm:flex-col sm:items-start sm:gap-4 items-center justify-between mb-4">
+                {/* v1.0.0 ----------------------------------------------------------------------------------> */}
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
-                    <LightBulbIcon className="h-5 w-5 text-white" />
+                  <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                    <LightBulbIcon className="sm:h-5 sm:w-5 h-6 w-6 text-white" />
                   </div>
                 </div>
-                <div className="flex items-center space-x-4 text-sm">
+                {/* v1.0.0 <-------------------------------------------------------------------------------------------- */}
+                <div className="flex sm:flex-col sm:items-start sm:gap-3 items-center sm:space-x-0 space-x-4 text-sm">
+                  {/* v1.0.0 --------------------------------------------------------------------------------------------> */}
                   {[
-                    { icon: ClockIcon, value: assessment?.assessmentId?.Duration },
-                    { icon: DocumentTextIcon, value: `${assessment?.assessmentId?.NumberOfQuestions} Questions` },
+                    {
+                      icon: ClockIcon,
+                      value: assessment?.assessmentId?.Duration,
+                    },
+                    {
+                      icon: DocumentTextIcon,
+                      value: `${assessment?.assessmentId?.NumberOfQuestions} Questions`,
+                    },
                     {
                       icon: AcademicCapIcon,
                       value: calculatedScores
-                        ? `${calculatedScores.passScore}${calculatedScores.showPercentage ? '%' : ''} Pass Score`
-                        : 'Loading...',
+                        ? `${calculatedScores.passScore}${
+                            calculatedScores.showPercentage ? "%" : ""
+                          } Pass Score`
+                        : "Loading...",
                     },
                   ].map((stat, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <stat.icon className="h-4 w-4 text-blue-200" />
-                      <span className=" font-medium text-blue-100">{stat.value}</span>
+                      <span className=" font-medium text-blue-100">
+                        {stat.value}
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="mt-4">
-                <h1 className="text-xl font-bold text-white tracking-tight leading-tight mb-2">
+                {/* v1.0.0 <---------------------------------------------------------------------------------------------------------------------------------- */}
+                <h1 className="sm:text-md md:text-md lg:text-xl xl:text-sl 2xl:text-xl text-xl font-bold text-white tracking-tight leading-tight mb-2">
+                  {/* v1.0.0 ----------------------------------------------------------------------------------------------------------------------------------> */}
                   {assessment?.assessmentId?.AssessmentTitle}
                 </h1>
                 {assessment?.assessmentId?.Position && (
                   <p className="text-blue-100 text-sm font-light">
-                    Position: <span className="font-medium text-white">
-                      {typeof assessment?.assessmentId?.Position === 'object' 
-                        && (assessment.assessmentId.Position.title || 'Position Title Not Available')}
+                    Position:{" "}
+                    <span className="font-medium text-white">
+                      {typeof assessment?.assessmentId?.Position === "object" &&
+                        (assessment.assessmentId.Position.title ||
+                          "Position Title Not Available")}
                     </span>
                   </p>
                 )}
@@ -187,31 +210,51 @@ const AssessmentTestPage1 = ({
           <div className="p-4">
             <div className="space-y-4">
               {/* Instructions */}
+              {/* v1.0.0 <------------------------------------------------------------------ */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center mb-4">
                   <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
-                    <BookOpenIcon className="h-5 w-5 text-custom-blue" />
+                    <BookOpenIcon className="sm:h-5 sm:w-5 h-6 w-6 text-custom-blue" />
                   </div>
-                  <h2 className="ml-3 text-lg font-semibold text-gray-900">Instructions</h2>
+                  <h2 className="ml-3 sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
+                    Instructions
+                  </h2>
                 </div>
-                <div className="prose prose-blue max-w-none">
-                  {assessment?.assessmentId?.Instructions?.split('\n').map((line, index) => (
-                    <p key={index} className="text-gray-600 leading-relaxed text-[13px]">{line}</p>
-                  ))}
+                <div className="prose prose-blue max-w-none break-words whitespace-pre-wrap">
+                  {assessment?.assessmentId?.Instructions?.split("\n").map(
+                    (line, index) => (
+                      <p
+                        key={index}
+                        className="text-gray-600 leading-relaxed text-[13px] break-words"
+                      >
+                        {line}
+                      </p>
+                    )
+                  )}
                 </div>
               </div>
+              {/* v1.0.0 ------------------------------------------------------------------> */}
 
               {!showOtpInput && (
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                  {/* v1.0.0 <--------------------------------------------------------------------- */}
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
-                      <ShieldCheckIcon className="h-6 w-6 text-custom-blue" />
+                    <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
+                      <ShieldCheckIcon className="sm:h-5 sm:w-5 h-6 w-6 text-custom-blue" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">Verify Your Email</h3>
-                      <p className="text-gray-500 mt-1 text-[13px]">Enter the code sent to {candidate?.Email}</p>
+                      <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
+                        Verify Your Email
+                      </h3>
+                      <p className="flex sm:flex-col sm:items-start items-center sm:gap-0 gap-4 text-gray-500 mt-1 text-[13px]">
+                        Enter the code sent to{" "}
+                        <span className="font-medium break-all">
+                          {candidate?.Email}
+                        </span>
+                      </p>
                     </div>
                   </div>
+                  {/* v1.0.0 ---------------------------------------------------------------------> */}
 
                   <button
                     onClick={handleSendOtp}
@@ -224,15 +267,24 @@ const AssessmentTestPage1 = ({
 
               {showOtpInput && !isVerified && (
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                  {/* v1.0.0 <------------------------------------------------------ */}
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
-                      <ShieldCheckIcon className="h-6 w-6 text-custom-blue" />
+                    <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
+                      <ShieldCheckIcon className="sm:h-5 sm:w-5 h-6 w-6 text-custom-blue" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">Verify Your Email</h3>
-                      <p className="text-gray-500 mt-1 text-[13px]">Enter the code sent to {candidate?.Email}</p>
+                      <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
+                        Verify Your Email
+                      </h3>
+                      <p className="flex sm:flex-col sm:items-start items-center sm:gap-0 gap-4 text-gray-500 mt-1 text-[13px]">
+                        Enter the code sent to
+                        <span className="font-medium break-all">
+                          {candidate?.Email}
+                        </span>
+                      </p>
                     </div>
                   </div>
+                  {/* v1.0.0 ------------------------------------------------------> */}
 
                   <div className="flex justify-center space-x-4 mb-8">
                     {otp?.map((digit, index) => (
@@ -264,7 +316,7 @@ const AssessmentTestPage1 = ({
                             Resending...
                           </>
                         ) : (
-                          'Resend Code'
+                          "Resend Code"
                         )}
                       </button>
                     )}
@@ -274,63 +326,77 @@ const AssessmentTestPage1 = ({
 
               {isVerified && (
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                  {/* v1.0.0 <---------------------------------------------------- */}
                   <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl">
-                      <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                    <div className="p-2 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg">
+                      <CheckCircleIcon className="sm:h-5 sm:w-5 h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">Email Verified</h3>
-                      <p className="text-gray-500 mt-1 text-[13px]">Your email has been successfully verified.</p>
+                      <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
+                        Email Verified
+                      </h3>
+                      <p className="text-gray-500 mt-1 text-[13px]">
+                        Your email has been successfully verified.
+                      </p>
                     </div>
                   </div>
+                  {/* v1.0.0 ----------------------------------------------------> */}
                 </div>
               )}
 
               {assessment?.assessmentId?.AdditionalNotes && (
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  {/* v1.0.0 <---------------------------------------------------------------- */}
                   <div className="flex items-center mb-4">
                     <div className="p-2 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg">
-                      <ClipboardDocumentListIcon className="h-5 w-5 text-custom-blue" />
+                      <ClipboardDocumentListIcon className="sm:h-5 sm:w-5 h-6 w-6 text-custom-blue" />
                     </div>
-                    <h2 className="ml-3 text-lg font-semibold text-gray-900">Additional Notes</h2>
+                    <h2 className="ml-3 sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
+                      Additional Notes
+                    </h2>
                   </div>
+                  {/* v1.0.0 ----------------------------------------------------------------> */}
                   <div className="prose prose-indigo max-w-none">
-                    {assessment?.assessmentId?.AdditionalNotes?.split('\n').map((line, index) => (
-                      <p key={index} className="text-gray-600 text-base leading-relaxed text-[13px]">{line}</p>
-                    ))}
+                    {assessment?.assessmentId?.AdditionalNotes?.split("\n").map(
+                      (line, index) => (
+                        <p
+                          key={index}
+                          className="text-gray-600 text-base leading-relaxed text-[13px]"
+                        >
+                          {line}
+                        </p>
+                      )
+                    )}
                   </div>
                 </div>
               )}
 
               {/* Terms and Conditions */}
+              {/* v1.0.0 <--------------------------------------------------------------------- */}
               <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center mb-4">
                   <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
-                    <ShieldCheckIcon className="h-5 w-5 text-custom-blue" />
+                    <ShieldCheckIcon className="sm:h-5 sm:w-5 h-6 w-6 text-custom-blue" />
                   </div>
-                  <h2 className="ml-3 text-lg font-semibold text-gray-900">Terms and Conditions</h2>
+                  <h2 className="ml-3 sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
+                    Terms and Conditions
+                  </h2>
                 </div>
                 <div className="mb-4">
-                  <div className="flex items-start space-x-4">
-                    <div className="flex items-center h-6">
-                      <input
-                        type="checkbox"
-                        checked={isAgreed}
-                        onChange={(e) => setIsAgreed(e.target.checked)}
-                        className="h-5 w-5 text-custom-blue focus:ring-custom-blue border-gray-300 rounded-lg transition-colors cursor-pointer"
-                      />
-                    </div>
+                  <div className="flex items-start space-x-4 mb-4">
                     <div className="text-gray-700">
-                      I understand and agree to the following terms:
                       <ul className="list-none mt-3 space-y-2 text-[13px]">
                         {[
-                          'I will complete the assessment honestly and independently',
-                          'I will not use any external resources unless explicitly permitted',
-                          'I will not share or distribute any assessment content',
-                          'I understand that my responses will be monitored and recorded',
-                          'I agree to the time limit and submission requirements',
+                          "I will complete the assessment honestly and independently",
+                          "I will not use any external resources unless explicitly permitted",
+                          "I will not share or distribute any assessment content",
+                          "I understand that my responses will be monitored and recorded",
+                          "I agree to the time limit and submission requirements",
                         ].map((term, index) => (
-                          <li key={index} className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg">
+                          <li
+                            key={index}
+                            className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg"
+                          >
                             <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
                             {term}
                           </li>
@@ -338,8 +404,22 @@ const AssessmentTestPage1 = ({
                       </ul>
                     </div>
                   </div>
+                  <div className="flex gap-4">
+                    <div className="flex items-center h-6">
+                      <input
+                        type="checkbox"
+                        checked={isAgreed}
+                        onChange={(e) => setIsAgreed(e.target.checked)}
+                        className="sm:h-4 sm:w-4 h-5 w-5 accent-custom-blue focus:ring-custom-blue border-gray-300 rounded-lg transition-colors cursor-pointer"
+                      />
+                    </div>
+                    <span className="sm:text-sm">
+                      I understand and agree to the following terms.
+                    </span>
+                  </div>
                 </div>
               </div>
+              {/* v1.0.0 ---------------------------------------------------------------------> */}
             </div>
           </div>
 
@@ -348,13 +428,14 @@ const AssessmentTestPage1 = ({
             <div className="flex justify-end">
               <button
                 onClick={handleProceed}
-                // disabled={!isVerified || !isAgreed}
+                disabled={!isVerified || !isAgreed}
                 className={`
-                  group inline-flex items-center px-4 py-2 rounded-xl text-base font-medium
+                  group inline-flex items-center px-4 py-2 rounded-xl sm:text-sm md:text-sm lg:text-base xl:text-base 2xl:text-base font-medium
                   transition-all duration-300 transform
-                  ${isVerified && isAgreed
-                    ? 'text-white bg-custom-blue hover:bg-custom-blue/90'
-                    : 'text-gray-500 bg-gray-300 cursor-not-allowed'
+                  ${
+                    isVerified && isAgreed
+                      ? "text-white bg-custom-blue hover:bg-custom-blue/90"
+                      : "text-gray-500 bg-gray-300 cursor-not-allowed"
                   }
                 `}
               >

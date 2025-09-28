@@ -5,6 +5,8 @@
 // v1.0.4  -  Venkatesh  -  added common status column style
 // v1.0.5  -  Ashok   -  Added new Kanban view
 // v1.0.6  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
+// v1.0.7  -  Ashok   -  Improved responsiveness
+
 import { useState, useRef, useEffect } from "react";
 import "../../../../index.css";
 import "../styles/tabs.scss";
@@ -18,7 +20,15 @@ import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeybo
 import { useScheduleAssessments } from "../../../../apiHooks/useScheduleAssessments.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 // <-------------------------------v1.0.3
-import { Eye, Pencil, Calendar, AlertTriangle, RefreshCw, Share2, Mail } from 'lucide-react';
+import {
+  Eye,
+  Pencil,
+  Calendar,
+  AlertTriangle,
+  RefreshCw,
+  Share2,
+  Mail,
+} from "lucide-react";
 // ------------------------------v1.0.3 >
 import ScheduleAssessmentKanban from "./ScheduleAssessmentKanban.jsx";
 // <-------------------------------v1.0.3 >
@@ -52,8 +62,9 @@ const ScheduleAssessment = () => {
   // <---------------------- v1.0.3
   const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [selectedAction, setSelectedAction] = useState(''); // 'extend', 'cancel', or 'resend'
-  const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] = useState(null);
+  const [selectedAction, setSelectedAction] = useState(""); // 'extend', 'cancel', or 'resend'
+  const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] =
+    useState(null);
   // Function to check if action buttons should be shown based on schedule status
   const shouldShowActionButtons = (schedule) => {
     const status = schedule.status?.toLowerCase();
@@ -85,14 +96,32 @@ const ScheduleAssessment = () => {
   // ------------------------------v1.0.3 >
   // Applied filters
   const [selectedStatus, setSelectedStatus] = useState([]);
+  const [selectedTemplates, setSelectedTemplates] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState({ min: "", max: "" });
+  const [selectedExpiryDate, setSelectedExpiryDate] = useState(""); // '', 'expired', 'next7', 'next30'
+  const [selectedCreatedDate, setSelectedCreatedDate] = useState(""); // '', 'last7', 'last30', 'last90'
+
   // Draft filters edited inside popup (not applied until Apply is clicked)
   const [tempSelectedStatus, setTempSelectedStatus] = useState([]);
-  const [isStatusOpen, setIsStatusOpen] = useState(true);
+  const [tempSelectedTemplates, setTempSelectedTemplates] = useState([]);
+  const [tempOrderRange, setTempOrderRange] = useState({ min: "", max: "" });
+  const [tempExpiryDatePreset, setTempExpiryDatePreset] = useState("");
+  const [tempCreatedDatePreset, setTempCreatedDatePreset] = useState("");
+
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+  const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [isExpiryDateOpen, setIsExpiryDateOpen] = useState(false);
+  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
 
   // Derived pagination
   const rowsPerPage = 10;
   const startIndex = currentPage * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
+
+  // Helper function to normalize spaces for better search
+  const normalizeSpaces = (str) =>
+    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
 
   // Filters and search apply here
   const filteredSchedules = (
@@ -114,18 +143,110 @@ const ScheduleAssessment = () => {
         (s.status || "").charAt(0).toUpperCase() + (s.status || "").slice(1)
       );
 
-    // Search filter
+    // Template filter
+    const matchesTemplate = () => {
+      if (selectedTemplates.length === 0) return true;
+      const templateId =
+        typeof s.assessmentId === "object"
+          ? s.assessmentId._id
+          : s.assessmentId;
+      return selectedTemplates.includes(templateId);
+    };
+
+    // Order range filter
+    const orderValue = parseInt(s.order) || 0;
+    const matchesOrder =
+      (selectedOrder.min === "" || orderValue >= Number(selectedOrder.min)) &&
+      (selectedOrder.max === "" || orderValue <= Number(selectedOrder.max));
+
+    // Expiry date filter
+    const matchesExpiryDate = () => {
+      if (!selectedExpiryDate) return true;
+      if (!s.expiryAt) return false;
+      const expiryAt = new Date(s.expiryAt);
+      const now = new Date();
+      const daysDiff = Math.floor((expiryAt - now) / (1000 * 60 * 60 * 24));
+
+      switch (selectedExpiryDate) {
+        case "expired":
+          return daysDiff < 0;
+        case "next7":
+          return daysDiff >= 0 && daysDiff <= 7;
+        case "next30":
+          return daysDiff >= 0 && daysDiff <= 30;
+        default:
+          return true;
+      }
+    };
+
+    // Created date filter
+    const matchesCreatedDate = () => {
+      if (!selectedCreatedDate) return true;
+      if (!s.createdAt) return false;
+      const createdAt = new Date(s.createdAt);
+      const now = new Date();
+      const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+
+      switch (selectedCreatedDate) {
+        case "last7":
+          return daysDiff <= 7;
+        case "last30":
+          return daysDiff <= 30;
+        case "last90":
+          return daysDiff <= 90;
+        default:
+          return true;
+      }
+    };
+
+    // Enhanced search filter
+    const normalizedQuery = normalizeSpaces(searchQuery);
+
+    // Get assessment template details
+    let assessmentTemplateTitle = null;
+    let assessmentTemplateCode = null;
+
+    if (s.assessmentId) {
+      if (typeof s.assessmentId === "object") {
+        assessmentTemplateTitle = s.assessmentId.AssessmentTitle;
+        assessmentTemplateCode =
+          s.assessmentId.AssessmentCode || s.assessmentId._id;
+      } else {
+        // If assessmentId is just an ID string, find the assessment in assessmentData
+        const assessment = assessmentData?.find(
+          (a) => a._id === s.assessmentId
+        );
+        if (assessment) {
+          assessmentTemplateTitle = assessment.AssessmentTitle;
+          assessmentTemplateCode = assessment.AssessmentCode || assessment._id;
+        } else {
+          // Fallback to using the ID itself as searchable
+          assessmentTemplateCode = s.assessmentId;
+        }
+      }
+    }
+
     const fields = [
       s.scheduledAssessmentCode,
-      s.order,
+      s.order?.toString(),
       s.expiryAt,
       s.status,
+      assessmentTemplateTitle,
+      assessmentTemplateCode,
     ].filter(Boolean);
-    const matchesSearch = fields.some((f) =>
-      f.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    );
 
-    return matchesStatus && matchesSearch;
+    const matchesSearch =
+      searchQuery === "" ||
+      fields.some((f) => normalizeSpaces(f).includes(normalizedQuery));
+
+    return (
+      matchesStatus &&
+      matchesTemplate() &&
+      matchesOrder &&
+      matchesExpiryDate() &&
+      matchesCreatedDate() &&
+      matchesSearch
+    );
   });
 
   const totalPages = Math.ceil(filteredSchedules.length / rowsPerPage) || 1;
@@ -142,6 +263,30 @@ const ScheduleAssessment = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Sync filter states when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setTempSelectedStatus(selectedStatus);
+      setTempSelectedTemplates(selectedTemplates);
+      setTempOrderRange(selectedOrder);
+      setTempExpiryDatePreset(selectedExpiryDate);
+      setTempCreatedDatePreset(selectedCreatedDate);
+      // Reset all open states
+      setIsStatusOpen(false);
+      setIsTemplateOpen(false);
+      setIsOrderOpen(false);
+      setIsExpiryDateOpen(false);
+      setIsCreatedDateOpen(false);
+    }
+  }, [
+    isFilterPopupOpen,
+    selectedStatus,
+    selectedTemplates,
+    selectedOrder,
+    selectedExpiryDate,
+    selectedCreatedDate,
+  ]);
+
   // Handlers
   const handleStatusToggle = (status) => {
     setTempSelectedStatus((prev) => {
@@ -152,15 +297,52 @@ const ScheduleAssessment = () => {
     });
   };
 
+  const handleTemplateToggle = (templateId) => {
+    setTempSelectedTemplates((prev) => {
+      if (prev.includes(templateId)) {
+        return prev.filter((t) => t !== templateId);
+      }
+      return [...prev, templateId];
+    });
+  };
+
+  const handleOrderChange = (e, type) => {
+    const value =
+      e.target.value === "" ? "" : Math.max(0, Number(e.target.value) || "");
+    setTempOrderRange((prev) => ({
+      ...prev,
+      [type]: value,
+    }));
+  };
+
   const handleApplyFilters = () => {
     setSelectedStatus(tempSelectedStatus);
-    setIsFilterActive(true);
+    setSelectedTemplates(tempSelectedTemplates);
+    setSelectedOrder(tempOrderRange);
+    setSelectedExpiryDate(tempExpiryDatePreset);
+    setSelectedCreatedDate(tempCreatedDatePreset);
+    setIsFilterActive(
+      tempSelectedStatus.length > 0 ||
+        tempSelectedTemplates.length > 0 ||
+        tempOrderRange.min !== "" ||
+        tempOrderRange.max !== "" ||
+        tempExpiryDatePreset !== "" ||
+        tempCreatedDatePreset !== ""
+    );
     setFilterPopupOpen(false);
   };
   // ------------------------------v1.0.3 >
   const handleClearFilters = () => {
     setSelectedStatus([]);
+    setSelectedTemplates([]);
+    setSelectedOrder({ min: "", max: "" });
+    setSelectedExpiryDate("");
+    setSelectedCreatedDate("");
     setTempSelectedStatus([]);
+    setTempSelectedTemplates([]);
+    setTempOrderRange({ min: "", max: "" });
+    setTempExpiryDatePreset("");
+    setTempCreatedDatePreset("");
     setIsFilterActive(false);
   };
 
@@ -203,10 +385,10 @@ const ScheduleAssessment = () => {
   const handleResendClick = (schedule) => {
     // Get assessment template ID directly from the row data
     const assessmentTemplateId = getAssessmentTemplateId(schedule);
-    console.log('Debug - Resend Assessment Template ID:', assessmentTemplateId);
-    
+    console.log("Debug - Resend Assessment Template ID:", assessmentTemplateId);
+
     // Use the same logic as handleActionClick since candidate data is already available
-    handleActionClick(schedule, 'resend');
+    handleActionClick(schedule, "resend");
   };
 
   // <---------------------- v1.0.3
@@ -215,8 +397,11 @@ const ScheduleAssessment = () => {
       // Get and store the assessment template ID from the original row data
       const assessmentTemplateId = getAssessmentTemplateId(schedule);
       setSelectedAssessmentTemplateId(assessmentTemplateId);
-      console.log('Debug - Stored Assessment Template ID:', assessmentTemplateId);
-      
+      console.log(
+        "Debug - Stored Assessment Template ID:",
+        assessmentTemplateId
+      );
+
       // Fetch candidate data for this schedule if not already available
       if (!schedule.candidates || schedule.candidates.length === 0) {
         if (assessmentTemplateId) {
@@ -498,20 +683,25 @@ const ScheduleAssessment = () => {
           </div>
         </main>
       </div>
-
-      <main className="fixed top-48 left-0 right-0 bg-background">
+      {/* v1.0.7 <------------------------------------------------------------------------------ */}
+      <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {/* v1.0.7 ------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "table" ? (
-              <TableView
-                data={currentRows}
-                columns={tableColumns}
-                actions={tableActions}
-                loading={isLoading}
-                emptyState="No assessments found."
-                className="table-fixed w-full"
-              />
+              //  v1.0.7 <------------------------------------------------------------------------------
+              <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                <TableView
+                  data={currentRows}
+                  columns={tableColumns}
+                  actions={tableActions}
+                  loading={isLoading}
+                  emptyState="No assessments found."
+                  className="table-fixed w-full"
+                />
+              </div>
             ) : (
+              //  v1.0.7 ------------------------------------------------------------------------------>
               // <ScheduleAssessmentKanban
               //   schedules={currentRows}
               //   assessments={assessmentData}
@@ -545,7 +735,8 @@ const ScheduleAssessment = () => {
               onClearAll={handleClearFilters}
               filterIconRef={filterIconRef}
             >
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {/* Status Filter */}
                 <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
@@ -569,11 +760,133 @@ const ScheduleAssessment = () => {
                             type="checkbox"
                             checked={tempSelectedStatus.includes(option)}
                             onChange={() => handleStatusToggle(option)}
-                            // v1.0.6 <-------------------------------------------------------------
                             className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                            // v1.0.6 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Order Range Filter */}
+                {/* <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsOrderOpen(!isOrderOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Order Priority</span>
+                    {isOrderOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isOrderOpen && (
+                    <div className="mt-2 pl-3 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={tempOrderRange.min}
+                          onChange={(e) => handleOrderChange(e, "min")}
+                          placeholder="Min"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                        />
+                        <span className="text-sm">to</span>
+                        <input
+                          type="number"
+                          value={tempOrderRange.max}
+                          onChange={(e) => handleOrderChange(e, "max")}
+                          placeholder="Max"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div> */}
+
+                {/* Expiry Date Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsExpiryDateOpen(!isExpiryDateOpen)}
+                  >
+                    <span className="font-medium text-gray-700">
+                      Expiry Date
+                    </span>
+                    {isExpiryDateOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isExpiryDateOpen && (
+                    <div className="mt-2 pl-3 space-y-1">
+                      {[
+                        { value: "", label: "Any time" },
+                        { value: "expired", label: "Already expired" },
+                        { value: "next7", label: "Expires in next 7 days" },
+                        { value: "next30", label: "Expires in next 30 days" },
+                      ].map((option) => (
+                        <label
+                          key={option.value}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="radio"
+                            value={option.value}
+                            checked={tempExpiryDatePreset === option.value}
+                            onChange={(e) =>
+                              setTempExpiryDatePreset(e.target.value)
+                            }
+                            className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Created Date Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
+                  >
+                    <span className="font-medium text-gray-700">
+                      Created Date
+                    </span>
+                    {isCreatedDateOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isCreatedDateOpen && (
+                    <div className="mt-2 pl-3 space-y-1">
+                      {[
+                        { value: "", label: "Any time" },
+                        { value: "last7", label: "Last 7 days" },
+                        { value: "last30", label: "Last 30 days" },
+                        { value: "last90", label: "Last 90 days" },
+                      ].map((option) => (
+                        <label
+                          key={option.value}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="radio"
+                            value={option.value}
+                            checked={tempCreatedDatePreset === option.value}
+                            onChange={(e) =>
+                              setTempCreatedDatePreset(e.target.value)
+                            }
+                            className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option.label}</span>
                         </label>
                       ))}
                     </div>
@@ -595,24 +908,24 @@ const ScheduleAssessment = () => {
       )}
       {/* <---------------------- v1.0.1 > */}
       {/* <---------------------- v1.0.3 */}
-             {isActionPopupOpen && selectedSchedule && (
-         <AssessmentActionPopup
-           isOpen={isActionPopupOpen}
-           onClose={() => {
-             setIsActionPopupOpen(false);
-             setSelectedSchedule(null);
-             setSelectedAction("");
-             setSelectedAssessmentTemplateId(null);
-           }}
-           schedule={{
-             ...selectedSchedule, 
-             assessmentId: selectedAssessmentTemplateId
-           }}
-           candidates={selectedSchedule.candidates || []}
-           onSuccess={handleActionSuccess}
-           defaultAction={selectedAction}
-         />
-       )}
+      {isActionPopupOpen && selectedSchedule && (
+        <AssessmentActionPopup
+          isOpen={isActionPopupOpen}
+          onClose={() => {
+            setIsActionPopupOpen(false);
+            setSelectedSchedule(null);
+            setSelectedAction("");
+            setSelectedAssessmentTemplateId(null);
+          }}
+          schedule={{
+            ...selectedSchedule,
+            assessmentId: selectedAssessmentTemplateId,
+          }}
+          candidates={selectedSchedule.candidates || []}
+          onSuccess={handleActionSuccess}
+          defaultAction={selectedAction}
+        />
+      )}
       {/* ------------------------------ v1.0.3 >  */}
     </div>
   );

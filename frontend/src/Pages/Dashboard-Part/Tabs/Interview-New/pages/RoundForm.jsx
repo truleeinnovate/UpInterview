@@ -3,6 +3,7 @@
 // v1.0.2 - Ashraf - Added sending interview email,creating custom url for each user
 // v1.0.3 - Ashok - fixed button text while loading from Creating links to Creating Links
 //<-----v1.0.4----Venkatesh-----default and enforce scheduledDate when switching to "scheduled" after 2 hours from now
+// v1.0.5 - Ashok - Improved responsiveness
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -16,6 +17,8 @@ import {
   Trash2,
   Clock,
   Calendar,
+  ChevronUp,
+  Info,
 } from "lucide-react";
 import { Button } from "../../CommonCode-AllTabs/ui/button.jsx";
 import axios from "axios";
@@ -24,14 +27,14 @@ import OutsourceOption from "./Internal-Or-Outsource/OutsourceInterviewer.jsx";
 import Cookies from "js-cookie";
 // import { useCustomContext } from "../../../../../Context/Contextfetch.js";
 import { validateInterviewRoundData } from "../../../../../utils/interviewRoundValidation.js";
-import { Search, ChevronUp } from "lucide-react";
+import { Search } from "lucide-react";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { config } from "../../../../../config";
 import QuestionBank from "../../QuestionBank-Tab/QuestionBank.jsx";
 import Loading from "../../../../../Components/Loading.js";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 // Test import to see if the file can be imported
 // import { processMeetingUrls } from "../../../../../utils/meetingUrlGenerator.js";
 import LoadingButton from "../../../../../Components/LoadingButton";
@@ -40,6 +43,12 @@ import LoadingButton from "../../../../../Components/LoadingButton";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI.jsx";
 import { useQueryClient } from "@tanstack/react-query";
+import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
+import InputField from "../../../../../Components/FormFields/InputField.jsx";
+import DescriptionField from "../../../../../Components/FormFields/DescriptionField.jsx";
+import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
+import { notify } from "../../../../../services/toastService.js";
+import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -72,15 +81,23 @@ const formatDateTime = (date, showDate = true) => {
 };
 
 const RoundFormInterviews = () => {
-  const { interviewData, isMutationLoading, saveInterviewRound, updateRoundWithMeetingLinks } =
-    useInterviews();
+  // Add useScrollLock hook at the beginning
+  const {
+    interviewData,
+    isMutationLoading,
+    saveInterviewRound,
+    updateInterviewRound,
+    updateRoundWithMeetingLinks,
+  } = useInterviews();
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   // v1.0.2 <-----------------------------------------
 
   // State for meeting creation loading
-  const [isMeetingCreationLoading, setIsMeetingCreationLoading] = useState(false);
-  const [meetingCreationProgress, setMeetingCreationProgress] = useState('');
-  const [selectedMeetingPlatform, setSelectedMeetingPlatform] = useState('googlemeet'); // Default to Google Meet
+  const [isMeetingCreationLoading, setIsMeetingCreationLoading] =
+    useState(false);
+  const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
+  const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
+    useState("zoommeet"); // Default to Google Meet googlemeet
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
   // v1.0.2 <-----------------------------------------
 
@@ -169,22 +186,22 @@ const RoundFormInterviews = () => {
   // console.log("internalInterviewers selected", internalInterviewers);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
 
+  // console.log("externalInterviewers 0000000000000000", externalInterviewers);
 
-  console.log("externalInterviewers 0000000000000000", externalInterviewers);
-
-  console.log("internalInterviewers", internalInterviewers);
-  console.log("interviewerViewType", interviewerViewType);
-  console.log("interviewerGroupName", interviewerGroupName);
-
+  // console.log("internalInterviewers", internalInterviewers);
+  // console.log("interviewerViewType", interviewerViewType);
+  // console.log("interviewerGroupName", interviewerGroupName);
 
   useEffect(() => {
-    if (selectedInterviewType === "External" && externalInterviewers.length > 0) {
+    if (
+      selectedInterviewType === "External" &&
+      externalInterviewers.length > 0
+    ) {
       setStatus("RequestSent");
     } else if (selectedInterviewType !== "External") {
       setStatus("Draft");
     }
   }, [selectedInterviewType, externalInterviewers]);
-
 
   //<-----v1.0.4----
   // Helper: format a Date to 'YYYY-MM-DDTHH:mm' for <input type="datetime-local"/>
@@ -397,13 +414,13 @@ const RoundFormInterviews = () => {
       prev.map((question) =>
         question.questionId === questionId
           ? {
-            ...question,
-            snapshot: {
-              ...question.snapshot,
-              mandatory:
-                question.snapshot.mandatory === "true" ? "false" : "true",
-            },
-          }
+              ...question,
+              snapshot: {
+                ...question.snapshot,
+                mandatory:
+                  question.snapshot.mandatory === "true" ? "false" : "true",
+              },
+            }
           : question
       )
     );
@@ -419,24 +436,45 @@ const RoundFormInterviews = () => {
     setRemovedQuestionIds((prev) => [...prev, questionId]);
   };
 
+  const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
+
+  const handleRoundTitleUnifiedChange = (e) => {
+    const value = e.target.value;
+
+    // If already in custom mode, treat changes as typing the custom title
+    if (isCustomRoundTitle) {
+      setCustomRoundTitle(value);
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
+    }
+
+    // DropdownWithSearchField sends an empty string when "Other" is chosen.
+    // Enter custom mode and keep roundTitle as "Other" for submission mapping.
+    if (value === "") {
+      setIsCustomRoundTitle(true);
+      setRoundTitle("Other");
+      setCustomRoundTitle("");
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
+    }
+
+    // Normal predefined selection
+    setRoundTitle(value);
+    setCustomRoundTitle("");
+    if (value === "Assessment") {
+      setInterviewMode("Virtual");
+    }
+    setErrors((prev) => ({ ...prev, roundTitle: "", interviewMode: "" }));
+  };
+
   const handleRoundTitleChange = (e) => {
     const selectedTitle = e.target.value;
 
     if (selectedTitle === "Other") {
-      setRoundTitle("Other");
       setCustomRoundTitle("");
-      setInstructions("");
-      setInstructions("");
-      setInterviewMode("");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
-      setInterviewerGroupName("");
       setInterviewerViewType("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null)
+      setSelectedAssessmentData(null);
       setCombinedDateTime("");
     } else {
       setRoundTitle(selectedTitle);
@@ -454,7 +492,7 @@ const RoundFormInterviews = () => {
       setInterviewerViewType("");
       setCombinedDateTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null)
+      setSelectedAssessmentData(null);
     }
 
     if (selectedTitle === "Other") {
@@ -474,7 +512,7 @@ const RoundFormInterviews = () => {
       setStartTime("");
       setEndTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null)
+      setSelectedAssessmentData(null);
       setCombinedDateTime("");
     } else {
       setInterviewMode("");
@@ -488,7 +526,7 @@ const RoundFormInterviews = () => {
       setStartTime("");
       setEndTime("");
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null)
+      setSelectedAssessmentData(null);
       setCombinedDateTime("");
 
       setInterviewerGroupName("");
@@ -538,18 +576,23 @@ const RoundFormInterviews = () => {
 
       // Find full assessment object
       const fullAssessment =
-        roundEditData?.roundTitle === "Assessment" && roundEditData?.assessmentId
-          ? assessmentData?.find((a) => a._id === roundEditData?.assessmentId) || null
+        roundEditData?.roundTitle === "Assessment" &&
+        roundEditData?.assessmentId
+          ? assessmentData?.find(
+              (a) => a._id === roundEditData?.assessmentId
+            ) || null
           : null;
 
       const newAssessmentTemplate =
-        roundEditData?.roundTitle === "Assessment" && roundEditData?.assessmentId
+        roundEditData?.roundTitle === "Assessment" &&
+        roundEditData?.assessmentId
           ? {
-            assessmentId: roundEditData?.assessmentId,
-            assessmentName:
-              assessmentData?.find((a) => a._id === roundEditData?.assessmentId)
-                ?.AssessmentTitle || "",
-          }
+              assessmentId: roundEditData?.assessmentId,
+              assessmentName:
+                assessmentData?.find(
+                  (a) => a._id === roundEditData?.assessmentId
+                )?.AssessmentTitle || "",
+            }
           : { assessmentId: "", assessmentName: "" };
       if (
         JSON.stringify(assessmentTemplate) !==
@@ -580,7 +623,7 @@ const RoundFormInterviews = () => {
       if (sequence !== roundEditData.sequence)
         setSequence(roundEditData.sequence);
       if (duration !== (roundEditData.duration || 60))
-        setDuration(roundEditData.duration || 60);
+        setDuration(Number(roundEditData.duration) || 60);
       if (
         interviewerGroupName !== (roundEditData?.interviewerGroupName || "")
       ) {
@@ -669,9 +712,7 @@ const RoundFormInterviews = () => {
       return;
     }
 
-
     console.log("interviwers", interviewers, viewType, groupName);
-
 
     // Clear existing interviewers when view type changes
 
@@ -889,7 +930,7 @@ const RoundFormInterviews = () => {
       duration,
       instructions,
       selectedInterviewers: selectedInterviewers?.length || 0,
-      selectedMeetingPlatform
+      selectedMeetingPlatform,
     });
     e.preventDefault();
 
@@ -999,7 +1040,6 @@ const RoundFormInterviews = () => {
       const validationErrors = validateInterviewRoundData(roundData);
       setErrors(validationErrors);
 
-
       console.log("Validation errors:", validationErrors);
       if (Object.keys(validationErrors).length > 0) {
         console.log("Validation errors found, stopping submission");
@@ -1009,39 +1049,44 @@ const RoundFormInterviews = () => {
 
       // v1.0.1 --------------------------------------------------------------------------------->
 
-
-      // console.log("roundData", roundData);
       const payload = isEditing
         ? {
-          interviewId,
-          round: roundData,
-          roundId,
-          questions: interviewQuestionsList,
-        }
+            interviewId,
+            round: roundData,
+            roundId,
+            questions: interviewQuestionsList,
+          }
         : {
-          interviewId,
-          round: roundData,
-          questions: interviewQuestionsList.map((q) => ({
-            questionId: q.questionId,
-            snapshot: {
-              ...q.snapshot,
-              mandatory: q.snapshot.mandatory || "false",
-            },
-          })) || [],
-        };
+            interviewId,
+            round: roundData,
+            questions:
+              interviewQuestionsList.map((q) => ({
+                questionId: q.questionId,
+                snapshot: {
+                  ...q.snapshot,
+                  mandatory: q.snapshot.mandatory || "false",
+                },
+              })) || [],
+          };
 
       console.log("=== Round Saving Process ===");
       console.log("Payload for submission:", payload);
 
       // Use saveInterviewRound mutation from useInterviews hook
-      console.log("Calling saveInterviewRound...");
-      const response = await saveInterviewRound(payload);
+
+      let response;
+      if (isEditing) {
+        response = await updateInterviewRound(payload);
+      } else {
+        response = await saveInterviewRound(payload);
+      }
+
+      // const response = await saveInterviewRound(payload);
       console.log("Round saved successfully:", response);
       console.log("Saved round ID:", response.savedRound._id);
 
       // Show success toast for round creation
-      toast.success('Interview round created successfully!');
-
+      notify.success("Interview round created successfully!");
 
       console.log("Response from selectedInterviewers:", selectedInterviewers);
       console.log(
@@ -1049,9 +1094,7 @@ const RoundFormInterviews = () => {
         selectedInterviewType
       );
 
-
       if (payload.round.roundTitle === "Assessment") {
-
         // Calculate link expiry days
         let linkExpiryDays = null;
         if (selectedAssessmentData?.ExpiryDate) {
@@ -1082,110 +1125,121 @@ const RoundFormInterviews = () => {
           navigate(`/interviews/${interviewId}`);
           // toast.success('Assessment shared successfully!');
         }
-
       }
       if (payload.round.roundTitle !== "Assessment") {
-      
-        if(payload?.round?.interviewMode !== "Face to Face"){
-
-        // Handle outsource request if interviewers are selected
-        if (selectedInterviewers && selectedInterviewers.length > 0) {
-          const isInternal = selectedInterviewType === "Internal";
-          console.log(
-            `Sending ${selectedInterviewers.length} outsource requests`
-          );
-          console.log("selectedInterviewers", selectedInterviewers);
-
-          for (const interviewer of selectedInterviewers) {
-            // console.log("interviewer", interviewer);
-            // console.log("interviewer contactId", interviewer.contact?._id);
-            const outsourceRequestData = {
-              tenantId: orgId,
-              ownerId: userId,
-              scheduledInterviewId: interviewId,
-              interviewerType: selectedInterviewType,
-              interviewerId: interviewer.contact?._id || interviewer._id,
-              status: isInternal ? "accepted" : "RequestSent",
-              dateTime: combinedDateTime,
-              duration,
-              candidateId: candidate?._id,
-              positionId: position?._id,
-              roundId: response.savedRound._id,
-              requestMessage: isInternal
-                ? "Internal interview request"
-                : "Outsource interview request",
-              expiryDateTime: new Date(
-                Date.now() + 24 * 60 * 60 * 1000
-              ).toISOString(),
-            };
-
-            // console.log("Sending outsource request:", outsourceRequestData);
-            await axios.post(
-              `${config.REACT_APP_API_URL}/interviewrequest`,
-              outsourceRequestData,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${Cookies.get("authToken")}`,
-                },
-              }
+        if (payload?.round?.interviewMode !== "Face to Face") {
+          // Handle outsource request if interviewers are selected
+          if (selectedInterviewers && selectedInterviewers.length > 0) {
+            const isInternal = selectedInterviewType === "Internal";
+            console.log(
+              `Sending ${selectedInterviewers.length} outsource requests`
             );
-          }
+            console.log("selectedInterviewers", selectedInterviewers);
 
-          // Send outsource interview request emails if this is an outsource round
-          if (!isInternal && selectedInterviewers && selectedInterviewers.length > 0) {
-            try {
-              console.log("=== Sending outsource interview request emails ===");
-              const interviewerIds = selectedInterviewers.map(interviewer =>
-                interviewer.contact?._id || interviewer._id
-              );
+            for (const interviewer of selectedInterviewers) {
+              // console.log("interviewer", interviewer);
+              // console.log("interviewer contactId", interviewer.contact?._id);
+              const outsourceRequestData = {
+                tenantId: orgId,
+                ownerId: userId,
+                scheduledInterviewId: interviewId,
+                interviewerType: selectedInterviewType,
+                interviewerId: interviewer.contact?._id || interviewer._id,
+                status: isInternal ? "accepted" : "RequestSent",
+                dateTime: combinedDateTime,
+                duration,
+                candidateId: candidate?._id,
+                positionId: position?._id,
+                roundId: response.savedRound._id,
+                requestMessage: isInternal
+                  ? "Internal interview request"
+                  : "Outsource interview request",
+                expiryDateTime: new Date(
+                  Date.now() + 24 * 60 * 60 * 1000
+                ).toISOString(),
+              };
 
-              const emailResponse = await axios.post(
-                `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
-                {
-                  interviewId: interviewId,
-                  roundId: response.savedRound._id,
-                  interviewerIds: interviewerIds,
-                  candidateId: candidate?._id,
-                  positionId: position?._id,
-                  dateTime: combinedDateTime,
-                  duration: duration,
-                  roundTitle: roundTitle
-                },
+              // console.log("Sending outsource request:", outsourceRequestData);
+              await axios.post(
+                `${config.REACT_APP_API_URL}/interviewrequest`,
+                outsourceRequestData,
                 {
                   headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${Cookies.get("authToken")}`,
                   },
                 }
               );
+            }
 
-              console.log("Outsource email sending response:", emailResponse.data);
+            // Send outsource interview request emails if this is an outsource round
+            if (
+              !isInternal &&
+              selectedInterviewers &&
+              selectedInterviewers.length > 0
+            ) {
+              try {
+                console.log(
+                  "=== Sending outsource interview request emails ==="
+                );
+                const interviewerIds = selectedInterviewers.map(
+                  (interviewer) => interviewer.contact?._id || interviewer._id
+                );
 
-              if (emailResponse.data.success) {
-                // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
-                if (emailResponse.data.data.failedEmails > 0) {
-                  toast.warning(`${emailResponse.data.data.failedEmails} emails failed to send`);
+                const emailResponse = await axios.post(
+                  `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
+                  {
+                    interviewId: interviewId,
+                    roundId: response.savedRound._id,
+                    interviewerIds: interviewerIds,
+                    candidateId: candidate?._id,
+                    positionId: position?._id,
+                    dateTime: combinedDateTime,
+                    duration: duration,
+                    roundTitle: roundTitle,
+                  },
+                  {
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${Cookies.get("authToken")}`,
+                    },
+                  }
+                );
+
+                console.log(
+                  "Outsource email sending response:",
+                  emailResponse.data
+                );
+
+                if (emailResponse.data.success) {
+                  // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
+                  if (emailResponse.data.data.failedEmails > 0) {
+                    notify.warning(
+                      `${emailResponse.data.data.failedEmails} emails failed to send`
+                    );
+                  }
+                } else {
+                  notify.error(
+                    "Failed to send outsource interview request emails"
+                  );
                 }
-              } else {
-                toast.error('Failed to send outsource interview request emails');
+              } catch (emailError) {
+                console.error(
+                  "Error sending outsource interview request emails:",
+                  emailError
+                );
+                notify.error(
+                  "Failed to send outsource interview request emails"
+                );
               }
-            } catch (emailError) {
-              console.error("Error sending outsource interview request emails:", emailError);
-              toast.error('Failed to send outsource interview request emails');
             }
           }
+        } else {
+          navigate(`/interviews/${interviewId}`);
+          notify.success("Selected interview mode is Face to Face");
         }
 
-      }else{
-        navigate(`/interviews/${interviewId}`);
-        toast.success("Selected interview mode is Face to Face");
-        
-      }
-
-
         // console.log("response", response);
-
 
         // don't remove this code related to agora video room
         // if (response.status === 'ok'){
@@ -1200,146 +1254,242 @@ const RoundFormInterviews = () => {
         // }
 
         // Meeting platform link creation
-        if (response.status === 'ok') {
+        if (response.status === "ok") {
           console.log("Generating meeting link for the interview");
-          if(payload?.round?.interviewMode !== "Face to Face"){
-          try {
-            setIsMeetingCreationLoading(true);
-            // v1.0.3 <-----------------------------------------------------------
-            setMeetingCreationProgress('Creating links...');
-            // v1.0.3 ----------------------------------------------------------->
-            // Import the meeting platform utility
-            const { createMeeting } = await import('../../../../../utils/meetingPlatforms.js');
-
-            console.log("Selected interviewers for meeting creation:", selectedInterviewers);
-
-            // Create meeting using the platform utility
-            const meetingLink = await createMeeting(selectedMeetingPlatform, {
-              roundTitle,
-              instructions,
-              combinedDateTime,
-              duration,
-              selectedInterviewers: selectedInterviewers
-            }, (progress) => {
-              setMeetingCreationProgress(progress);
-            });
-
-            // Persist meeting link on the round (avoid reassigning consts)
-            if (meetingLink) {
-              const updatedRoundData = {
-                ...roundData,
-                meetingId: meetingLink,
-              };
-              const targetRoundId = response?.savedRound?._id || roundId;
-              const updatePayload = {
-                interviewId,
-                roundId: targetRoundId,
-                round: updatedRoundData,
-                ...(isEditing ? { questions: interviewQuestionsList } : {}),
-              };
-              const updateResponse = await saveInterviewRound(updatePayload);
-              console.log("Round updated with meeting link:", updateResponse);
-            }
-
-            console.log("Meeting created successfully:", meetingLink);
-            console.log("Meeting link type:", typeof meetingLink);
-            console.log("Meeting link value:", meetingLink);
-
-            // Use the new utility to generate and save meeting URLs
+          if (payload?.round?.interviewMode !== "Face to Face") {
             try {
-              console.log("=== Starting meeting URL processing ===");
+              setIsMeetingCreationLoading(true);
+              // v1.0.3 <-----------------------------------------------------------
+              setMeetingCreationProgress("Creating links...");
+              // v1.0.3 ----------------------------------------------------------->
+              // Import the meeting platform utility
+              const { createMeeting } = await import(
+                "../../../../../utils/meetingPlatforms.js"
+              );
 
-              // // Dynamic import to avoid import issues
-              // const { processMeetingUrls } = await import("../../../../../utils/meetingUrlGenerator.js");
-              // console.log("Dynamic import successful, processMeetingUrls type:", typeof processMeetingUrls);
+              // console.log("Selected interviewers for meeting creation:", selectedInterviewers);
 
-              // console.log("Calling processMeetingUrls with:", {
-              //   meetingLink,
-              //   roundId: response.savedRound._id,
-              //   interviewId,
-              //   roundData,
-              //   updateRoundWithMeetingLinks: typeof updateRoundWithMeetingLinks
+              // Create meeting using the platform utility
+              // const meetingLink = await createMeeting(selectedMeetingPlatform, {
+              //   roundTitle,
+              //   instructions,
+              //   combinedDateTime,
+              //   duration,
+              //   selectedInterviewers: selectedInterviewers
+              // }, (progress) => {
+              //   setMeetingCreationProgress(progress);
               // });
-              // console.log("updateRoundWithMeetingLinks function:", updateRoundWithMeetingLinks);
-              // console.log("roundData details:", roundData);
 
-              // const result = await processMeetingUrls(
-              //   meetingLink, // meetingLink
-              //   response.savedRound._id, // roundId
-              //   interviewId, // interviewId
-              //   roundData, // roundData
-              //   updateRoundWithMeetingLinks // Function from useInterviews hook
-              // );
+              let meetingLink;
 
-              // console.log("Meeting URL processing completed successfully:", result);
-              const isInternal = selectedInterviewType === "Internal";
-              // Send emails after meeting links are generated
-              try {
-                console.log("=== Sending interview round emails ===");
-
-                if (isInternal) {
-                  const emailResponse = await axios.post(
-                    `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
-                    {
-                      interviewId: interviewId,
-                      roundId: response.savedRound._id,
-                      sendEmails: true
-                    },
-                    {
-                      headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${Cookies.get("authToken")}`,
-                      },
-                    }
-                  );
-
-                  console.log("Email sending response:", emailResponse.data);
-
-                  // Show success toast for emails
-                  if (emailResponse.data.success) {
-                    toast.success('Interview round created and emails sent successfully!');
-                    if (emailResponse.data.data.emailsSent > 0) {
-                      toast.success(`Emails sent to ${emailResponse.data.data.emailsSent} recipients`);
-                    }
-                  } else {
-                    toast.error('Round created but email sending failed');
+              // ========================================
+              // Google Meet creation
+              // ========================================
+              if (selectedMeetingPlatform === "googlemeet") {
+                meetingLink = await createMeeting(
+                  "googlemeet",
+                  {
+                    roundTitle,
+                    instructions,
+                    combinedDateTime,
+                    duration,
+                    selectedInterviewers,
+                  },
+                  (progress) => {
+                    setMeetingCreationProgress(progress);
                   }
+                );
 
+                // ========================================
+                // Zoom meeting creation
+                // ========================================
+              } else if (selectedMeetingPlatform === "zoommeet") {
+                // Format helper
+                function formatStartTimeToUTC(startTimeStr) {
+                  if (!startTimeStr) return undefined;
+                  try {
+                    const parsed = new Date(startTimeStr);
+                    if (isNaN(parsed.getTime()))
+                      throw new Error("Invalid date");
+
+                    const year = parsed.getUTCFullYear();
+                    const month = String(parsed.getUTCMonth() + 1).padStart(
+                      2,
+                      "0"
+                    );
+                    const day = String(parsed.getUTCDate()).padStart(2, "0");
+                    const hours = String(parsed.getUTCHours()).padStart(2, "0");
+                    const minutes = String(parsed.getUTCMinutes()).padStart(
+                      2,
+                      "0"
+                    );
+                    const seconds = String(parsed.getUTCSeconds()).padStart(
+                      2,
+                      "0"
+                    );
+
+                    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+                  } catch (error) {
+                    console.error("Error parsing date:", error);
+                    return undefined;
+                  }
                 }
 
+                const formattedStartTime = formatStartTimeToUTC(startTime);
+                if (!formattedStartTime)
+                  throw new Error("Invalid start time format");
 
-              } catch (emailError) {
-                console.error("Error sending emails:", emailError);
-                toast.error('Round created but email sending failed');
+                const payloads = {
+                  topic: roundTitle,
+                  duration: Number(duration),
+                  userId: undefined,
+                  ...(interviewType === "scheduled" &&
+                    formattedStartTime && {
+                      start_time: formattedStartTime,
+                      timezone:
+                        Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    }),
+                  settings: {
+                    join_before_host: true,
+                    host_video: false,
+                    participant_video: false,
+                  },
+                };
+
+                meetingLink = await createMeeting(
+                  "zoommeet",
+                  { payload: payloads },
+                  (progress) => {
+                    setMeetingCreationProgress(progress);
+                  }
+                );
+
+                console.log("Zoom meeting response:", meetingLink);
               }
-            } catch (urlError) {
-              console.error("Error processing meeting URLs:", urlError);
-              console.error("URL Error details:", {
-                message: urlError.message,
-                stack: urlError.stack,
-                response: urlError.response?.data
+
+              const data = await meetingLink;
+              console.log("meetingLink zoom response", data);
+
+              // Persist meeting link on the round (avoid reassigning consts)
+              if (data) {
+                const updatedRoundData = {
+                  ...roundData,
+                  meetingId: data?.start_url || meetingLink,
+                };
+                const targetRoundId = response?.savedRound?._id || roundId;
+                const updatePayload = {
+                  interviewId,
+                  roundId: targetRoundId,
+                  round: updatedRoundData,
+                  ...(isEditing ? { questions: interviewQuestionsList } : {}),
+                };
+                console.log("updatePayload", updatePayload);
+
+                // 🔹 Call PATCH mutation instead of POST
+                const updateResponse = await updateInterviewRound(
+                  updatePayload
+                );
+                console.log("Round updated with meeting link:", updateResponse);
+              }
+
+              // Use the new utility to generate and save meeting URLs
+              try {
+                console.log("=== Starting meeting URL processing ===");
+
+                // // Dynamic import to avoid import issues
+                // const { processMeetingUrls } = await import("../../../../../utils/meetingUrlGenerator.js");
+                // console.log("Dynamic import successful, processMeetingUrls type:", typeof processMeetingUrls);
+
+                // console.log("Calling processMeetingUrls with:", {
+                //   meetingLink,
+                //   roundId: response.savedRound._id,
+                //   interviewId,
+                //   roundData,
+                //   updateRoundWithMeetingLinks: typeof updateRoundWithMeetingLinks
+                // });
+                // console.log("updateRoundWithMeetingLinks function:", updateRoundWithMeetingLinks);
+                // console.log("roundData details:", roundData);
+
+                // const result = await processMeetingUrls(
+                //   meetingLink, // meetingLink
+                //   response.savedRound._id, // roundId
+                //   interviewId, // interviewId
+                //   roundData, // roundData
+                //   updateRoundWithMeetingLinks // Function from useInterviews hook
+                // );
+
+                // console.log("Meeting URL processing completed successfully:", result);
+                const isInternal = selectedInterviewType === "Internal";
+                // Send emails after meeting links are generated
+                try {
+                  console.log("=== Sending interview round emails ===");
+
+                  if (isInternal) {
+                    const emailResponse = await axios.post(
+                      `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
+                      {
+                        interviewId: interviewId,
+                        roundId: response.savedRound._id,
+                        sendEmails: true,
+                      },
+                      {
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${Cookies.get("authToken")}`,
+                        },
+                      }
+                    );
+
+                    console.log("Email sending response:", emailResponse.data);
+
+                    // Show success toast for emails
+                    if (emailResponse.data.success) {
+                      notify.success(
+                        "Interview round created and emails sent successfully!"
+                      );
+                      if (emailResponse.data.data.emailsSent > 0) {
+                        notify.success(
+                          `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
+                        );
+                      }
+                    } else {
+                      notify.error("Round created but email sending failed");
+                    }
+                  }
+                } catch (emailError) {
+                  console.error("Error sending emails:", emailError);
+                  notify.error("Round created but email sending failed");
+                }
+              } catch (urlError) {
+                console.error("Error processing meeting URLs:", urlError);
+                console.error("URL Error details:", {
+                  message: urlError.message,
+                  stack: urlError.stack,
+                  response: urlError.response?.data,
+                });
+              }
+
+              // Navigate to interview page after successful creation
+              console.log(
+                "Navigating to interview page:",
+                `/interviews/${interviewId}`
+              );
+              console.log("Navigation function type:", typeof navigate);
+              navigate(`/interviews/${interviewId}`);
+              console.log("Navigation called successfully");
+            } catch (err) {
+              console.error("Error in meeting creation:", err);
+              setErrors({
+                meetingCreation: err.message || "Failed to create meeting",
               });
+            } finally {
+              console.log("Meeting creation process finished");
+              setIsMeetingCreationLoading(false);
+              setMeetingCreationProgress("");
             }
-
-            // Navigate to interview page after successful creation
-            console.log("Navigating to interview page:", `/interviews/${interviewId}`);
-            console.log("Navigation function type:", typeof navigate);
-            navigate(`/interviews/${interviewId}`);
-            console.log("Navigation called successfully");
-
-          } catch (err) {
-            console.error("Error in meeting creation:", err);
-            setErrors({
-              meetingCreation: err.message || "Failed to create meeting"
-            });
-          } finally {
-            console.log("Meeting creation process finished");
-            setIsMeetingCreationLoading(false);
-            setMeetingCreationProgress('');
           }
-        }
-        
-          toast.success('Selected interview mode is Face to Face');
+
+          notify.success("Selected interview mode is Face to Face");
           navigate(`/interviews/${interviewId}`);
         }
       }
@@ -1349,11 +1499,11 @@ const RoundFormInterviews = () => {
       console.error("Error details:", {
         message: err.message,
         stack: err.stack,
-        response: err.response?.data
+        response: err.response?.data,
       });
 
       // Show error toast
-      toast.error('Failed to create interview round. Please try again.');
+      notify.error("Failed to create interview round. Please try again.");
 
       setErrors({
         submit:
@@ -1512,13 +1662,71 @@ const RoundFormInterviews = () => {
   // };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+    <div className="h-[calc(100vh-4rem)] overflow-y-auto bg-gray-50">
+      {/* v1.0.5 <------------------------------------------------------------- */}
+      <main className="max-w-7xl overflow-y-auto mx-auto py-6 sm:px-4 px-8">
+        {/* v1.0.5 -------------------------------------------------------------> */}
+        {/* v1.0.5 <---------------------------------- */}
         <div className="px-4 sm:px-0">
-          <Breadcrumb items={breadcrumbItems} />
+          {/* v1.0.5 ----------------------------------> */}
+          <div className="sm:mb-0 mb-4">
+            <Breadcrumb items={breadcrumbItems} />
+          </div>
+
+          {/* Info Guide for Round Form */}
+          <InfoGuide
+            className="mt-4"
+            title="Interview Round Guidelines"
+            items={[
+              <>
+                <span className="font-medium">Round Types:</span> Choose from
+                predefined round types (Assessment, Technical, Final, HR
+                Interview) or create custom rounds
+              </>,
+              <>
+                <span className="font-medium">Assessment Rounds:</span> Select
+                assessment templates with pre-configured questions and scoring
+              </>,
+              <>
+                <span className="font-medium">Interview Rounds:</span> Build
+                custom interview rounds with specific questions and evaluation
+                criteria
+              </>,
+              <>
+                <span className="font-medium">Interviewer Selection:</span>{" "}
+                Choose between internal team members or outsourced interviewers
+              </>,
+              <>
+                <span className="font-medium">Question Management:</span> Add
+                questions from your question bank or create new ones on the fly
+              </>,
+              <>
+                <span className="font-medium">Custom Instructions:</span>{" "}
+                Provide detailed instructions for each round (minimum 50
+                characters)
+              </>,
+              <>
+                <span className="font-medium">Sequence Control:</span> Set the
+                order of rounds in your interview process
+              </>,
+              <>
+                <span className="font-medium">Duration Settings:</span> Define
+                time allocation for each interview round (30-120 minutes)
+              </>,
+              <>
+                <span className="font-medium">Interview Scheduling:</span>{" "}
+                Schedule interviews in advance or start them instantly
+              </>,
+              <>
+                <span className="font-medium">Real-time Validation:</span> Form
+                validation ensures all required fields are completed before
+                submission
+              </>,
+            ]}
+          />
 
           <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6">
+            <div className="px-4 py-5">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
                 {isEditing ? "Edit Interview Round" : "Add New Interview Round"}
               </h3>
@@ -1528,8 +1736,9 @@ const RoundFormInterviews = () => {
                   : "Fill in the details to add a new interview round"}
               </p>
             </div>
-
-            <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+            {/* v1.0.5 <------------------------------------------------ */}
+            <div className="border-t border-gray-200 px-4 py-5">
+              {/* v1.0.5 ------------------------------------------------> */}
               <form>
                 {/* {error && (
                   <div className="mb-4 p-4 bg-red-50 rounded-md">
@@ -1541,150 +1750,70 @@ const RoundFormInterviews = () => {
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
                     {/* Round Title */}
                     <div>
-                      <label
-                        htmlFor="roundTitle"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Round Title <span className="text-red-500">*</span>
-                      </label>
-                      {/* v1.0.1 <------------------------------------------------------------------------ */}
-                      {roundTitle === "Other" ? (
-                        <input
-                          ref={fieldRefs.roundTitle}
-                          type="text"
-                          id="roundTitle"
-                          name="roundTitle"
-                          value={customRoundTitle}
-                          onChange={(e) => {
-                            setCustomRoundTitle(e.target.value);
-                            setErrors({ ...errors, roundTitle: "" }); // Clear error on change
-                          }}
-                          onBlur={() => {
-                            if (!customRoundTitle.trim()) {
-                              setRoundTitle(""); // Reset if the input is left empty
-                            }
-                          }}
-                          // className={`mt-1 block w-full border ${
-                          //   errors.roundTitle
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${errors.roundTitle
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
-                          // required
-                          placeholder="Enter Custom Round Title"
-                        />
-                      ) : (
-                        <select
-                          ref={fieldRefs.roundTitle}
-                          id="roundTitle"
-                          name="roundTitle"
-                          value={roundTitle}
-                          onChange={(e) => {
-                            handleRoundTitleChange(e);
-                            setErrors({
-                              ...errors,
-                              roundTitle: "",
-                              interviewMode: "",
-                            }); // Clear error on change
-                          }}
-                          // className={`mt-1 block w-full border ${
-                          //   errors.roundTitle
-                          //     ? "border-red-500"
-                          //     : "border-gray-300"
-                          // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${errors.roundTitle
-                              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                              : "border-gray-300 focus:ring-red-300"
-                            }
-                            focus:outline-gray-300
-                          `}
-                        // required
-                        >
-                          <option value="">Select Round Title</option>
-                          <option value="Assessment">Assessment</option>
-                          <option value="Technical">Technical</option>
-                          <option value="Final">Final</option>
-                          <option value="HR Interview">HR Interview</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      )}
-                      {errors.roundTitle && (
-                        <p className="mt-1 text-sm text-red-500">
-                          {errors.roundTitle}
-                        </p>
-                      )}
-                      {/* v1.0.1 ------------------------------------------------------------------------> */}
+                      <DropdownWithSearchField
+                        containerRef={fieldRefs.roundTitle}
+                        label="Round Title"
+                        required
+                        name="roundTitle"
+                        value={
+                          isCustomRoundTitle ? customRoundTitle : roundTitle
+                        }
+                          options={ROUND_TITLES}
+                        // options={[
+                        //   { value: "Assessment", label: "Assessment" },
+                        //   { value: "Technical", label: "Technical" },
+                        //   { value: "Final", label: "Final" },
+                        //   { value: "HR Interview", label: "HR Interview" },
+                        //   { value: "__other__", label: "Other" },
+                        // ]}
+                        isCustomName={isCustomRoundTitle}
+                        setIsCustomName={setIsCustomRoundTitle}
+                        onChange={handleRoundTitleUnifiedChange}
+                        error={errors.roundTitle}
+                      />
                     </div>
 
                     {/* Interview Mode */}
                     <div>
-                      <label
-                        htmlFor="mode"
-                        className="block text-sm font-medium text-gray-700"
+                      <div
+                        className={
+                          roundTitle === "Assessment"
+                            ? "pointer-events-none opacity-60"
+                            : undefined
+                        }
                       >
-                        Interview Mode <span className="text-red-500">*</span>
-                      </label>
-                      {/* v1.0.1 <-------------------------------------------------------------------------------- */}
-                      <select
-                        ref={fieldRefs.interviewMode}
-                        id="interviewMode"
-                        name="interviewMode"
-                        value={interviewMode}
-                        onChange={(e) => {
-                          setInterviewMode(e.target.value);
-                          setErrors({ ...errors, interviewMode: "" }); // Clear error on change
-                        }}
-                        // className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border ${
-                        //   errors.interviewMode
-                        //     ? "border-red-500"
-                        //     : "border-gray-300"
-                        // } focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.interviewMode
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                        // required
-                        disabled={roundTitle === "Assessment"}
-                      >
-                        <option value="">Select Interview Mode</option>
-                        <option value="Face to Face">Face to Face</option>
-                        <option value="Virtual">Virtual</option>
-                      </select>
-                      {errors.interviewMode && (
-                        <p className="mt-1 text-sm text-red-500">
-                          {errors.interviewMode}
-                        </p>
-                      )}
-                      {/* v1.0.1 --------------------------------------------------------------------------------> */}
+                        <DropdownWithSearchField
+                          containerRef={fieldRefs.interviewMode}
+                          label="Interview Mode"
+                          required
+                          disabled={roundTitle === "Assessment"}
+                          name="interviewMode"
+                          value={interviewMode}
+                          options={[
+                            { value: "Face to Face", label: "Face to Face" },
+                            { value: "Virtual", label: "Virtual" },
+                          ]}
+                          onChange={(e) => {
+                            setInterviewMode(e.target.value);
+                            setErrors({ ...errors, interviewMode: "" });
+                          }}
+                          error={errors.interviewMode}
+                        />
+                      </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1">
                     {/* Sequence */}
                     <div>
-                      <label
-                        htmlFor="sequence"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Sequence <span className="text-red-500">*</span>
-                      </label>
                       {/* v1.0.1 <------------------------------------------------------------------------------------- */}
-                      <input
-                        ref={fieldRefs.sequence}
+                      <InputField
+                        label="Sequence"
                         type="number"
                         id="sequence"
                         name="sequence"
-                        min="1"
+                        min={1}
+                        ref={fieldRefs.sequence}
                         value={sequence}
                         onChange={(e) => {
                           setSequence(parseInt(e.target.value));
@@ -1693,24 +1822,14 @@ const RoundFormInterviews = () => {
                         // className={`mt-1 block w-full border ${
                         //   errors.sequence ? "border-red-500" : "border-gray-300"
                         // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                          border ${errors.sequence
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                          }
-                          focus:outline-gray-300
-                        `}
-                      // required
+                        error={errors.sequence}
+                        required
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         The order in which this round appears in the interview
                         process
                       </p>
-                      {errors.sequence && (
-                        <p className="mt-1 text-sm text-red-500">
-                          {errors.sequence}
-                        </p>
-                      )}
+
                       {/* v1.0.1 ---------------------------------------------------------------------------------------> */}
                     </div>
 
@@ -1731,100 +1850,62 @@ const RoundFormInterviews = () => {
                     </div> */}
 
                     <div>
-                      <label
-                        htmlFor="duration"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Duration (Minutes)
-                      </label>
-                      <select
-                        id="duration"
+                      <DropdownWithSearchField
+                        label="Duration (Minutes)"
                         name="duration"
                         value={duration}
-                        onChange={(e) =>
-                          setDuration(parseInt(e.target.value))
-                        }
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
-                      >
-                        <option value="30">30 min</option>
-                        <option value="60">60 min</option>
-                        <option value="90">90 min</option>
-                        <option value="120">120 min</option>
-                      </select>
+                        options={[
+                          { value: 30, label: "30 min" },
+                          { value: 45, label: "45 min" },
+                          { value: 60, label: "60 min" },
+                          { value: 90, label: "90 min" },
+                          { value: 120, label: "120 min" },
+                        ]}
+                        onChange={(e) => {
+                          setDuration(parseInt(e.target.value));
+                          //clearError("duration")
+                        }}
+                        error={errors.duration}
+                      />
                     </div>
 
                     {roundTitle === "Assessment" && (
                       <>
                         <div>
-                          <label
-                            htmlFor="assessmentTemplate"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Assessment Template{" "}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          {/* v1.0.1 <--------------------------------------------------------------------- */}
-                          <div className="relative flex-1">
-                            <input
-                              ref={fieldRefs.assessmentTemplate}
-                              type="text"
-                              name="assessmentTemplate"
-                              id="assessmentTemplate"
-                              // className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                              className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                                border ${errors.assessmentTemplate
-                                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                  : "border-gray-300 focus:ring-red-300"
-                                }
-                                focus:outline-gray-300
-                              `}
-                              placeholder="Enter Assessment Template Name"
-                              value={assessmentTemplate.assessmentName || ""}
-                              onChange={(e) => {
-                                setAssessmentTemplate((prev) => ({
-                                  ...prev,
-                                  assessmentId: prev.assessmentId, // Keep the existing assessmentId
-                                  assessmentName: e.target.value, // Update assessmentName
-                                }));
-
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  assessmentTemplate: "",
-                                })); // Clear only this error
-                              }}
-                              onClick={() => setShowDropdown(!showDropdown)}
-                            />
-                            <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none">
-                              <Search className="text-gray-600 text-lg" />
-                            </div>
-                            {showDropdown && (
-                              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                {assessmentData.length > 0 ? (
-                                  assessmentData.map((user, index) => (
-                                    <div
-                                      key={index}
-                                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                      onClick={() =>
-                                        handleAssessmentSelect(user)
-                                      }
-                                    >
-                                      {user.AssessmentTitle}
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div className="px-3 py-2 text-gray-500">
-                                    No Assessments Found
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          {errors.assessmentTemplate && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {errors.assessmentTemplate}
-                            </p>
-                          )}
-                          {/* v1.0.1 ---------------------------------------------------------------------> */}
+                          <DropdownWithSearchField
+                            containerRef={fieldRefs.assessmentTemplate}
+                            label="Assessment Template"
+                            required
+                            name="assessmentTemplate"
+                            value={assessmentTemplate.assessmentId || ""}
+                            options={(assessmentData || []).map((a) => ({
+                              value: a._id,
+                              label: a.AssessmentTitle,
+                            }))}
+                            onChange={(e) => {
+                              const id = e.target.value;
+                              const selected = (assessmentData || []).find(
+                                (a) => a._id === id
+                              );
+                              if (selected) {
+                                handleAssessmentSelect(selected);
+                              } else {
+                                // cleared
+                                setAssessmentTemplate({
+                                  assessmentId: "",
+                                  assessmentName: "",
+                                });
+                                setSelectedAssessmentData(null);
+                                setSectionQuestions({});
+                                setInterviewQuestionsList([]);
+                              }
+                              setErrors((prev) => ({
+                                ...prev,
+                                assessmentTemplate: "",
+                              }));
+                            }}
+                            error={errors.assessmentTemplate}
+                          />
                         </div>
 
                         {/* assessment questions */}
@@ -1852,193 +1933,196 @@ const RoundFormInterviews = () => {
                                 ) : (
                                   <div className="space-y-4">
                                     {!sectionQuestions ||
-                                      sectionQuestions.noQuestions ? (
+                                    sectionQuestions.noQuestions ? (
                                       <div className="text-center py-4 text-gray-500">
                                         No Sections available for this
                                         Assessment
                                       </div>
                                     ) : //  <div className="space-y-4">
-                                      Object.keys(sectionQuestions).length > 0 ? (
-                                        Object.entries(sectionQuestions).map(
-                                          ([sectionId, sectionData]) => {
-                                            // Find section details from assessmentData
-                                            // const selectedAssessment = assessmentData.find(
-                                            //   a => a._id === formData.assessmentTemplate[0].assessmentId
-                                            // );
+                                    Object.keys(sectionQuestions).length > 0 ? (
+                                      Object.entries(sectionQuestions).map(
+                                        ([sectionId, sectionData]) => {
+                                          // Find section details from assessmentData
+                                          // const selectedAssessment = assessmentData.find(
+                                          //   a => a._id === formData.assessmentTemplate[0].assessmentId
+                                          // );
 
-                                            // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
+                                          // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
 
-                                            if (
-                                              !sectionData ||
-                                              !Array.isArray(
-                                                sectionData.questions
-                                              )
-                                            ) {
-                                              return (
-                                                <div
-                                                  key={sectionId}
-                                                  className="border rounded-md shadow-sm p-4"
-                                                >
-                                                  <div className="text-center py-4 text-gray-500">
-                                                    No Valid data for this section
-                                                  </div>
-                                                </div>
-                                              );
-                                            }
-
+                                          if (
+                                            !sectionData ||
+                                            !Array.isArray(
+                                              sectionData.questions
+                                            )
+                                          ) {
                                             return (
                                               <div
                                                 key={sectionId}
                                                 className="border rounded-md shadow-sm p-4"
                                               >
-                                                <button
-                                                  onClick={(e) =>
-                                                    toggleSection(sectionId, e)
-                                                  }
-                                                  className="flex justify-between items-center w-full"
-                                                >
-                                                  <span className="font-medium">
-                                                    {sectionData?.sectionName
-                                                      ? sectionData?.sectionName
+                                                <div className="text-center py-4 text-gray-500">
+                                                  No Valid data for this section
+                                                </div>
+                                              </div>
+                                            );
+                                          }
+
+                                          return (
+                                            <div
+                                              key={sectionId}
+                                              className="border rounded-md shadow-sm p-4"
+                                            >
+                                              <button
+                                                onClick={(e) =>
+                                                  toggleSection(sectionId, e)
+                                                }
+                                                className="flex justify-between items-center w-full"
+                                              >
+                                                <span className="font-medium">
+                                                  {sectionData?.sectionName
+                                                    ? sectionData?.sectionName
                                                         .charAt(0)
                                                         .toUpperCase() +
                                                       sectionData?.sectionName.slice(
                                                         1
                                                       )
-                                                      : "Unnamed Section"}
-                                                  </span>
-                                                  <ChevronUp
-                                                    className={`transform transition-transform ${expandedSections[sectionId]
+                                                    : "Unnamed Section"}
+                                                </span>
+                                                <ChevronUp
+                                                  className={`transform transition-transform ${
+                                                    expandedSections[sectionId]
                                                       ? ""
                                                       : "rotate-180"
-                                                      }`}
-                                                  />
-                                                </button>
+                                                  }`}
+                                                />
+                                              </button>
 
-                                                {expandedSections[sectionId] && (
-                                                  <div className="mt-4 space-y-3">
-                                                    {sectionData?.questions
-                                                      .length > 0 ? (
-                                                      sectionData?.questions.map(
-                                                        (question, idx) => (
+                                              {expandedSections[sectionId] && (
+                                                <div className="mt-4 space-y-3">
+                                                  {sectionData?.questions
+                                                    .length > 0 ? (
+                                                    sectionData?.questions.map(
+                                                      (question, idx) => (
+                                                        <div
+                                                          key={
+                                                            question._id || idx
+                                                          }
+                                                          className="border rounded-md shadow-sm overflow-hidden"
+                                                        >
                                                           <div
-                                                            key={
-                                                              question._id || idx
-                                                            }
-                                                            className="border rounded-md shadow-sm overflow-hidden"
-                                                          >
-                                                            <div
-                                                              onClick={() =>
-                                                                setExpandedQuestions(
-                                                                  (prev) => ({
-                                                                    ...prev,
-                                                                    [question._id]:
-                                                                      !prev[
+                                                            onClick={() =>
+                                                              setExpandedQuestions(
+                                                                (prev) => ({
+                                                                  ...prev,
+                                                                  [question._id]:
+                                                                    !prev[
                                                                       question
                                                                         ._id
-                                                                      ],
-                                                                  })
-                                                                )
-                                                              }
-                                                              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                                            >
-                                                              <div className="flex items-center gap-2">
-                                                                <span className="font-medium text-gray-600">
-                                                                  {idx + 1}.
-                                                                </span>
-                                                                <p className="text-sm text-gray-700">
-                                                                  {question
-                                                                    .snapshot
-                                                                    ?.questionText ||
-                                                                    "No question text"}
-                                                                </p>
-                                                              </div>
-                                                              <ChevronDown
-                                                                className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
+                                                                    ],
+                                                                })
+                                                              )
+                                                            }
+                                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                          >
+                                                            <div className="flex items-center gap-2">
+                                                              <span className="font-medium text-gray-600">
+                                                                {idx + 1}.
+                                                              </span>
+                                                              <p className="text-sm text-gray-700">
+                                                                {question
+                                                                  .snapshot
+                                                                  ?.questionText ||
+                                                                  "No question text"}
+                                                              </p>
+                                                            </div>
+                                                            <ChevronDown
+                                                              className={`w-5 h-5 text-gray-400 transition-transform ${
+                                                                expandedQuestions[
                                                                   question._id
                                                                 ]
                                                                   ? "transform rotate-180"
                                                                   : ""
-                                                                  }`}
-                                                              />
-                                                            </div>
+                                                              }`}
+                                                            />
+                                                          </div>
 
-                                                            {expandedQuestions[
-                                                              question._id
-                                                            ] && (
-                                                                <div className="px-4 py-3">
-                                                                  <div className="flex justify-between mb-2">
-                                                                    <div className="flex items-center gap-2">
-                                                                      <span className="text-sm font-medium text-gray-500">
-                                                                        Type:
-                                                                      </span>
-                                                                      <span className="text-sm text-gray-700">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.questionType ||
-                                                                          "Not specified"}
-                                                                      </span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                      <span className="text-sm font-medium text-gray-500">
-                                                                        Score:
-                                                                      </span>
-                                                                      <span className="text-sm text-gray-700">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.score ||
-                                                                          "0"}
-                                                                      </span>
-                                                                    </div>
-                                                                  </div>
+                                                          {expandedQuestions[
+                                                            question._id
+                                                          ] && (
+                                                            <div className="px-4 py-3">
+                                                              <div className="flex justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Type:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.questionType ||
+                                                                      "Not specified"}
+                                                                  </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Score:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.score ||
+                                                                      "0"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
 
-                                                                  {/* Display question options if MCQ */}
-                                                                  {question.snapshot
-                                                                    ?.questionType ===
-                                                                    "MCQ" && (
-                                                                      <div className="mt-2">
-                                                                        <span className="text-sm font-medium text-gray-500">
-                                                                          Options:
-                                                                        </span>
-                                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                                          {question.snapshot?.options?.map(
-                                                                            (
-                                                                              option,
-                                                                              optIdx
-                                                                            ) => (
-                                                                              <div
-                                                                                key={
-                                                                                  optIdx
-                                                                                }
-                                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                                className={`text-sm p-2 rounded border ${option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer
-                                                                                  ? "bg-green-50 border-green-200 text-green-800"
-                                                                                  : "bg-gray-50 border-gray-200"
-                                                                                  }`}
-                                                                              >
-                                                                                {
-                                                                                  option
-                                                                                }
-                                                                                {option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer && (
-                                                                                    <span className="ml-2 text-green-600">
-                                                                                      ✓
-                                                                                    </span>
-                                                                                  )}
-                                                                              </div>
-                                                                            )
+                                                              {/* Display question options if MCQ */}
+                                                              {question.snapshot
+                                                                ?.questionType ===
+                                                                "MCQ" && (
+                                                                <div className="mt-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Options:
+                                                                  </span>
+                                                                  <div className="grid grid-cols-2 gap-2 mt-1">
+                                                                    {question.snapshot?.options?.map(
+                                                                      (
+                                                                        option,
+                                                                        optIdx
+                                                                      ) => (
+                                                                        <div
+                                                                          key={
+                                                                            optIdx
+                                                                          }
+                                                                          //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                          className={`text-sm p-2 rounded border ${
+                                                                            option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer
+                                                                              ? "bg-green-50 border-green-200 text-green-800"
+                                                                              : "bg-gray-50 border-gray-200"
+                                                                          }`}
+                                                                        >
+                                                                          {
+                                                                            option
+                                                                          }
+                                                                          {option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer && (
+                                                                            <span className="ml-2 text-green-600">
+                                                                              ✓
+                                                                            </span>
                                                                           )}
                                                                         </div>
-                                                                      </div>
+                                                                      )
                                                                     )}
+                                                                  </div>
+                                                                </div>
+                                                              )}
 
-                                                                  {/* Display correct answer */}
-                                                                  {/* <div className="mt-2">
+                                                              {/* Display correct answer */}
+                                                              {/* <div className="mt-2">
                                                                                               <span className="text-sm font-medium text-gray-500">
                                                                                                 Correct Answer:
                                                                                               </span>
@@ -2047,52 +2131,52 @@ const RoundFormInterviews = () => {
                                                                                               </div>
                                                                                             </div> */}
 
-                                                                  {/* Additional question metadata */}
-                                                                  <div className="grid grid-cols-2 gap-4 mt-3">
-                                                                    <div>
-                                                                      <span className="text-xs font-medium text-gray-500">
-                                                                        Difficulty:
-                                                                      </span>
-                                                                      <span className="text-xs text-gray-700 ml-1">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.difficultyLevel ||
-                                                                          "Not specified"}
-                                                                      </span>
-                                                                    </div>
-                                                                    <div>
-                                                                      <span className="text-xs font-medium text-gray-500">
-                                                                        Skills:
-                                                                      </span>
-                                                                      <span className="text-xs text-gray-700 ml-1">
-                                                                        {question.snapshot?.skill?.join(
-                                                                          ", "
-                                                                        ) || "None"}
-                                                                      </span>
-                                                                    </div>
-                                                                  </div>
+                                                              {/* Additional question metadata */}
+                                                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Difficulty:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.difficultyLevel ||
+                                                                      "Not specified"}
+                                                                  </span>
                                                                 </div>
-                                                              )}
-                                                          </div>
-                                                        )
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Skills:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question.snapshot?.skill?.join(
+                                                                      ", "
+                                                                    ) || "None"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                        </div>
                                                       )
-                                                    ) : (
-                                                      <div className="text-center py-4 text-gray-500">
-                                                        No Questions found in this
-                                                        section
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            );
-                                          }
-                                        )
-                                      ) : (
-                                        <div className="text-center py-4 text-gray-500">
-                                          No Assessment data available
-                                        </div>
-                                      )}
+                                                    )
+                                                  ) : (
+                                                    <div className="text-center py-4 text-gray-500">
+                                                      No Questions found in this
+                                                      section
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        }
+                                      )
+                                    ) : (
+                                      <div className="text-center py-4 text-gray-500">
+                                        No Assessment data available
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -2113,22 +2197,25 @@ const RoundFormInterviews = () => {
                           <button
                             type="button"
                             onClick={() => setInterviewType("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "instant"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${interviewType === "instant"
-                                ? "text-custom-blue/70"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue/70"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Instant Interview
                             </span>
@@ -2140,22 +2227,25 @@ const RoundFormInterviews = () => {
                           <button
                             type="button"
                             onClick={() => setInterviewType("scheduled")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "scheduled"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${interviewType === "scheduled"
-                                ? "text-custom-blue/70"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue/70"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Schedule for Later
                             </span>
@@ -2185,7 +2275,9 @@ const RoundFormInterviews = () => {
                                   const val = e.target.value;
                                   const minVal = twoHoursFromNowLocal();
                                   // Prevent selecting past/less than 2 hours from now
-                                  setScheduledDate(val && val < minVal ? minVal : val);
+                                  setScheduledDate(
+                                    val && val < minVal ? minVal : val
+                                  );
                                 }}
                                 min={twoHoursFromNowLocal()}
                                 //-----v1.0.4---->
@@ -2265,10 +2357,10 @@ const RoundFormInterviews = () => {
                             </div>
                           </div>
                         )}
-
                       </div>
 
                       {/* Select Interviewers */}
+                      {/* v1.0.5 <-------------------------------------------------------- */}
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-sm font-medium text-gray-700">
                           Interviewers
@@ -2283,10 +2375,11 @@ const RoundFormInterviews = () => {
                               }}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                                }`}
+                              className={`${
+                                isExternalSelected
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2294,8 +2387,10 @@ const RoundFormInterviews = () => {
                                   : ""
                               }
                             >
-                              <User className="h-4 w-4 mr-1 text-custom-blue" />
-                              Select Internal
+                              <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
+                              <span className="sm:hidden inline">
+                                Select Internal
+                              </span>
                             </Button>
                           ) : (
                             <Button
@@ -2303,10 +2398,11 @@ const RoundFormInterviews = () => {
                               onClick={() => setInternalInterviews(true)}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                                }`}
+                              className={`${
+                                isExternalSelected
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -2314,8 +2410,10 @@ const RoundFormInterviews = () => {
                                   : ""
                               }
                             >
-                              <User className="h-4 w-4 mr-1 text-custom-blue" />
-                              Select Internal
+                              <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
+                              <span className="sm:hidden inline">
+                                Select Internal
+                              </span>
                             </Button>
                           )}
 
@@ -2324,28 +2422,39 @@ const RoundFormInterviews = () => {
                             onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
-                            className={`${isInternalSelected
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
-                              }`}
-                            disabled={isInternalSelected || interviewMode === "Face to Face"}
+                            className={`${
+                              isInternalSelected
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
+                            disabled={
+                              isInternalSelected ||
+                              interviewMode === "Face to Face"
+                            }
                             title={
                               isInternalSelected
                                 ? "Clear internal interviewers first"
                                 : ""
                             }
                           >
-                            <User className="h-4 w-4 mr-1 text-orange-600" />
-                            Select Outsourced
+                            <User className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
+                            <span className="sm:hidden inline">
+                              Select Outsourced
+                            </span>
                           </Button>
                         </div>
                       </div>
+                      {/* v1.0.5 --------------------------------------------------------> */}
 
                       {/* Selected Interviewers Summary */}
+                      {/* v1.0.5 <------------------------------------------------------------ */}
                       <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
                         {selectedInterviewers.length === 0 ? (
                           <p className="text-sm text-gray-500 text-center">
-                            No Interviewers Selected
+                            No Interviewers
+                            <span className="sm:hidden inline ml-1">
+                              Selected
+                            </span>
                           </p>
                         ) : (
                           <div>
@@ -2355,7 +2464,9 @@ const RoundFormInterviews = () => {
                                 <span className="text-sm text-gray-700">
                                   {selectedInterviewers.length} Interviewer
                                   {selectedInterviewers.length > 1 ? "s " : " "}
-                                  Selected
+                                  <span className="sm:hidden inline ml-1">
+                                    Selected
+                                  </span>
                                   {isInternalSelected && (
                                     <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
                                       Internal
@@ -2375,7 +2486,9 @@ const RoundFormInterviews = () => {
                                   className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                 >
                                   <Trash2 className="h-3 w-3 mr-1" />
-                                  Clear All
+                                  <span className="sm:hidden inline">
+                                    Clear All
+                                  </span>
                                 </button>
                               )}
                             </div>
@@ -2435,29 +2548,30 @@ const RoundFormInterviews = () => {
                                               {/* <p className="text-xs text-gray-600 mb-2">{interviewer.description}</p> */}
                                               <ul className="list-disc list-inside text-xs text-custom-blue ml-1">
                                                 {interviewer.usersNames &&
-                                                  interviewer.usersNames.length >
+                                                interviewer.usersNames.length >
                                                   0
                                                   ? interviewer.usersNames.map(
-                                                    (name, i) => (
-                                                      <li
-                                                        key={`${interviewer._id}-user-${i}`}
-                                                      >
-                                                        {name}
-                                                      </li>
+                                                      (name, i) => (
+                                                        <li
+                                                          key={`${interviewer._id}-user-${i}`}
+                                                        >
+                                                          {name}
+                                                        </li>
+                                                      )
                                                     )
-                                                  )
-                                                  : `${interviewer.firstName ||
-                                                    ""
-                                                    } ${interviewer.lastName || ""
+                                                  : `${
+                                                      interviewer.firstName ||
+                                                      ""
+                                                    } ${
+                                                      interviewer.lastName || ""
                                                     }`.trim() ||
-                                                  interviewer.email}
+                                                    interviewer.email}
 
                                                 {/* {interviewer.usersNames.map((name, i) => (
                                                                                 <li key={`${interviewer._id}-user-${i}`}>{name}</li>
                                                                               ))} */}
                                               </ul>
                                             </div>
-
                                           </div>
                                         );
                                       }
@@ -2471,9 +2585,11 @@ const RoundFormInterviews = () => {
                                           <div className="flex items-center">
                                             <User className="h-4 w-4 text-custom-blue mr-2" />
                                             <span className="text-sm font-medium text-custom-blue truncate">
-                                              {`${interviewer.firstName || ""
-                                                } ${interviewer.lastName || ""
-                                                }`.trim() || interviewer.email}
+                                              {`${
+                                                interviewer.firstName || ""
+                                              } ${
+                                                interviewer.lastName || ""
+                                              }`.trim() || interviewer.email}
                                             </span>
                                           </div>
 
@@ -2558,6 +2674,7 @@ const RoundFormInterviews = () => {
                           </div>
                         )}
                       </div>
+                      {/* v1.0.5 ------------------------------------------------------------> */}
                       {errors.interviewers && (
                         <p className="text-red-500 text-sm -mt-5">
                           {errors.interviewers}
@@ -2588,10 +2705,11 @@ const RoundFormInterviews = () => {
                                     return (
                                       <li
                                         key={qIndex}
-                                        className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                          ? "border-red-500"
-                                          : "border-gray-300"
-                                          }`}
+                                        className={`flex justify-between items-center p-3 border rounded-md ${
+                                          isMandatory
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                        }`}
                                       >
                                         <span className="text-gray-900 font-medium">
                                           {qIndex + 1}.{" "}
@@ -2623,13 +2741,14 @@ const RoundFormInterviews = () => {
                           </div>
 
                           {/* Question Popup */}
+                          {/* v1.0.5 <--------------------------------------------------------------------- */}
                           {isInterviewQuestionPopup && (
                             <div
-                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen sm:px-1"
                               onClick={() => setIsInterviewQuestionPopup(false)}
                             >
                               <div
-                                className="bg-white rounded-md w-[95%] h-[90%]"
+                                className="bg-white rounded-md w-[98%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <div className="py-3 px-4  flex items-center justify-between">
@@ -2662,6 +2781,7 @@ const RoundFormInterviews = () => {
                               </div>
                             </div>
                           )}
+                          {/* v1.0.5 ---------------------------------------------------------------------> */}
                         </div>
                       </div>
                     </>
@@ -2669,28 +2789,20 @@ const RoundFormInterviews = () => {
 
                   {/* instructions */}
                   <div>
-                    <label
-                      htmlFor="feedback"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Instructions
-                    </label>
-                    <textarea
-                      id="instructions"
+                    <DescriptionField
+                      inputRef={fieldRefs.instructions}
                       name="instructions"
+                      label="Instructions"
+                      id="instructions"
                       rows="10"
                       minLength={50}
                       maxLength={1000}
-                      placeholder="Add Instructions after the interview round is completed"
+                      placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                       value={instructions}
                       readOnly={roundTitle === "Assessment"}
                       onChange={(e) => setInstructions(e.target.value)}
-                      className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3   sm:text-sm h-64
-                  ${errors.instructions ? "border-red-400" : ""}
-                  `}
-                    // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="text-sm text-gray-500">
                       Add Instructions after the interview round is completed
                     </p>
                   </div>
@@ -2707,13 +2819,19 @@ const RoundFormInterviews = () => {
 
                     <LoadingButton
                       onClick={handleSubmit}
-                      isLoading={isMutationLoading || isMeetingCreationLoading || isSubmitting}
+                      isLoading={
+                        isMutationLoading ||
+                        isMeetingCreationLoading ||
+                        isSubmitting
+                      }
                       loadingText={
                         isMeetingCreationLoading
                           ? meetingCreationProgress || "Creating meeting..."
                           : isSubmitting
-                            ? "Submitting..."
-                            : isEditing ? "Updating..." : "Saving..."
+                          ? "Submitting..."
+                          : isEditing
+                          ? "Updating..."
+                          : "Saving..."
                       }
                       disabled={isSubmitting}
                     >
@@ -2754,7 +2872,7 @@ const RoundFormInterviews = () => {
           selectedInterviewers={internalInterviewers}
           defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
-        //  clearOnViewTypeChange={true}
+          //  clearOnViewTypeChange={true}
         />
       )}
     </div>

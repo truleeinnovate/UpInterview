@@ -6,6 +6,7 @@
 //  v1.0.5  -  Ranjith  -  fixed delete questions from db add all functionality
 // v1.0.6 - Ashok -  Improved Responsiveness and (Fixed issue while selecting labels said by Ranjith)
 // v1.0.7 - Ashok - Fixed loading issue
+// v1.0.8 - Ashok - Fixed responsive issues
 
 import React, {
   useState,
@@ -86,6 +87,7 @@ function QuestionHeaderBar({
     >
       <div className="flex items-center gap-2 ">
         {/* Interview Type Dropdown (using DropdownSelect) */}
+        {type !== 'assessment' &&  
         <div className="w-48">
           <DropdownSelect
             isSearchable={false}
@@ -97,13 +99,14 @@ function QuestionHeaderBar({
             onChange={(opt) => setDropdownValue(opt?.value || "")}
             options={[
               { value: "Interview Questions", label: "Interview Questions" },
-              { value: "Assignment Questions", label: "Assignment Questions" },
+              { value: "Assessment Questions", label: "Assessment Questions" },
             ]}
             placeholder="Select Question Type"
             menuPortalTarget={document.body}
             menuPosition="fixed"
           />
         </div>
+}
 
         {/* Label Dropdown (using DropdownSelect) */}
         <div className="w-48">
@@ -361,7 +364,7 @@ const MyQuestionsList = ({
 
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
-  const [dropdownValue, setDropdownValue] = useState("Interview Questions");
+  const [dropdownValue, setDropdownValue] = useState(type === 'assessment' ? "Assessment Questions" : "Interview Questions");
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -376,13 +379,13 @@ const MyQuestionsList = ({
   // Map list type to display value
   const mapListTypeToDisplay = (type) => {
     if (typeof type === "boolean")
-      return type ? "Interview Questions" : "Assignment Questions";
+      return type ? "Interview Questions" : "Assessment Questions";
     if (typeof type === "string") {
       const t = type.toLowerCase();
       if (t.includes("interview questions")) return "Interview Questions";
-      if (t.includes("assignment questions")) return "Assignment Questions";
+      if (t.includes("assessment questions")) return "Assessment Questions";
       if (t === "interview questions") return "Interview Questions";
-      if (t === "assignment questions") return "Assignment Questions";
+      if (t === "assessment questions") return "Assessment Questions";
     }
     return "Interview Questions";
   };
@@ -672,12 +675,12 @@ const MyQuestionsList = ({
     setTempFiltrationData(filtrationData);
   }, [filtrationData]);
 
-  // When switching to Assignment Questions view, ensure any previously selected
+  // When switching to Assessment Questions view, ensure any previously selected
   // 'Interview Questions' question type filter is cleared to avoid stale filters
   useEffect(() => {
     const isAssignment = String(dropdownValue || "")
       .toLowerCase()
-      .includes("assignment");
+      .includes("assessment");
     if (!isAssignment) return;
     setSelectedQTypeFilterItems((prev) =>
       prev.filter((v) => v !== "interview questions")
@@ -740,13 +743,13 @@ const MyQuestionsList = ({
         value: t,
         isChecked: findChecked(techSection, t),
       }));
-      // When viewing Assignment Questions, hide any 'Interview Questions' value from the Question Type options
+      // When viewing Assessment Questions, hide any 'Interview Questions' value from the Question Type options
       const filteredQTypes = uniqueQTypes.filter((t) => {
         const name = String(t || "").toLowerCase();
         if (
           String(dropdownValue || "")
             .toLowerCase()
-            .includes("assignment")
+            .includes("assessment")
         ) {
           return name !== "interview questions";
         }
@@ -1308,10 +1311,7 @@ const MyQuestionsList = ({
                     checked={option.isChecked}
                     className="w-4 cursor-pointer"
                     value={String(
-                      option.type ||
-                      option.level ||
-                      option.value ||
-                      ""
+                      option.type || option.level || option.value || ""
                     ).toLowerCase()}
                     id={`${filter.filterType}-${
                       option.type || option.level || option.value
@@ -1458,12 +1458,22 @@ const MyQuestionsList = ({
     if (!searchInput) return selectedLabelItems;
     const s = String(searchInput || "").toLowerCase();
     return selectedLabelItems.filter((q) => {
-      const inText = String(q?.questionText || "").toLowerCase().includes(s);
+      const inText = String(q?.questionText || "")
+        .toLowerCase()
+        .includes(s);
       const inTags =
         Array.isArray(q?.tags) &&
-        q.tags.some((t) => String(t || "").toLowerCase().includes(s));
+        q.tags.some((t) =>
+          String(t || "")
+            .toLowerCase()
+            .includes(s)
+        );
       const inSkill = Array.isArray(q?.skill)
-        ? q.skill.some((sk) => String(sk || "").toLowerCase().includes(s))
+        ? q.skill.some((sk) =>
+            String(sk || "")
+              .toLowerCase()
+              .includes(s)
+          )
         : typeof q?.skill === "string"
         ? q.skill.toLowerCase().includes(s)
         : false;
@@ -1519,7 +1529,7 @@ const MyQuestionsList = ({
     <div className="w-full px-4 py-6">
       {/* Question List Skeleton */}
       <div className="space-y-4">
-      {/* // v1.0.7 ------------------------------------------------------------------------> */}
+        {/* // v1.0.7 ------------------------------------------------------------------------> */}
         <div className="bg-gray-200 h-12 rounded-t-lg skeleton-animation"></div>
         <div className="p-4 bg-blue-50 rounded-b-lg border border-t-0 border-gray-200">
           {Array(3)
@@ -1553,7 +1563,7 @@ const MyQuestionsList = ({
   return (
     <>
       {/* <Toaster /> */}
-      <div className="w-full px-4 py-2 bg-white">
+      <div className="w-full sm:px-2 px-4 py-2 bg-white">
         {/* v1.0.6 <---------------------------------------------------------------- */}
         <div>
           <QuestionHeaderBar
@@ -1585,6 +1595,7 @@ const MyQuestionsList = ({
         </div>
         {/* v1.0.6 ----------------------------------------------------------------> */}
 
+        {/* v1.0.8 <-------------------------------------------------------------------------- */}
         <div
           className={`${
             type === "interviewerSection" ||
@@ -1772,14 +1783,17 @@ const MyQuestionsList = ({
                                                       index
                                                     )
                                                   }
-                                                  className="rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
+                                                  className="sm:flex sm:items-center sm:justify-center rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
                                                 >
-                                                  Remove
+                                                  <span className="sm:hidden inline">
+                                                    Remove
+                                                  </span>
+                                                  <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                                 </button>
                                               ) : (
                                                 <button
                                                   type="button"
-                                                  className="bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
+                                                  className="sm:flex sm:items-center sm:justify-center bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
                                                   onClick={() =>
                                                     onClickAddButton(
                                                       question,
@@ -1788,7 +1802,10 @@ const MyQuestionsList = ({
                                                     )
                                                   }
                                                 >
-                                                  Add
+                                                  <span className="sm:hidden inline">
+                                                    Add
+                                                  </span>
+                                                  <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                                 </button>
                                               )}
                                             </div>
@@ -1802,12 +1819,15 @@ const MyQuestionsList = ({
                                                     question._id
                                                 )
                                               ) ? (
-                                                <span className="text-green-600 text-sm font-medium py-1 px-1">
-                                                  ✓ Added
+                                                <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
+                                                  ✓
+                                                  <span className="sm:hidden inline">
+                                                    Added
+                                                  </span>
                                                 </span>
                                               ) : (
                                                 <button
-                                                  className={`bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${
+                                                  className={`sm:flex sm:items-center sm:justify-center bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${
                                                     addedSections.reduce(
                                                       (acc, s) =>
                                                         acc +
@@ -1833,7 +1853,10 @@ const MyQuestionsList = ({
                                                     ) >= questionsLimit
                                                   }
                                                 >
-                                                  Add
+                                                  <span className="sm:hidden inline">
+                                                    Add
+                                                  </span>
+                                                  <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                                 </button>
                                               )}
                                             </div>
@@ -1867,13 +1890,13 @@ const MyQuestionsList = ({
                                         </div>
                                       </div>
                                       <div className="flex items-start w-full pt-2">
-                                        <span className="font-semibold w-8">
+                                        <span className="sm:text-sm font-semibold w-8">
                                           {(currentPage - 1) * itemsPerPage +
                                             index +
                                             1}
                                           .
                                         </span>
-                                        <p className="text-gray-700 break-words">
+                                        <p className="sm:text-sm text-gray-700 break-words">
                                           {question.questionText}
                                         </p>
                                       </div>
@@ -1905,7 +1928,7 @@ const MyQuestionsList = ({
                                                           )
                                                         </span>
                                                       )}
-                                                      <span className="text-gray-700">
+                                                      <span className="sm:text-sm text-gray-700">
                                                         {option}
                                                       </span>
                                                     </li>
@@ -1955,6 +1978,7 @@ const MyQuestionsList = ({
             </>
           )}
         </div>
+        {/* v1.0.8 --------------------------------------------------------------------------> */}
 
         {/* // Ranjith added these feilds //  v1.0.5  */}
         {showCheckboxes && (

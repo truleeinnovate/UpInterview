@@ -8,6 +8,12 @@ const cron = require('node-cron');
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema"); 
 // ------------------------------v1.0.0 >
 
+// Import push notification functions
+const {
+  createAssessmentSubmissionNotification,
+  createAssessmentStatusUpdateNotification,
+} = require("./PushNotificationControllers/pushNotificationAssessmentController");
+
 // exports.updateCandidateAssessment = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -296,6 +302,7 @@ exports.submitCandidateAssessment = async (req, res) => {
     });
 
     // Update the candidate assessment with processed data
+    const oldStatus = candidateAssessment.status;
     candidateAssessment.status = status || 'completed';
     candidateAssessment.sections = processedSections;
     candidateAssessment.totalScore = totalScore;
@@ -305,6 +312,24 @@ exports.submitCandidateAssessment = async (req, res) => {
 
     // Save the updated assessment
     const updatedAssessment = await candidateAssessment.save();
+    
+    // Create notification if status changed
+    if (oldStatus !== candidateAssessment.status) {
+      try {
+        await createAssessmentStatusUpdateNotification(updatedAssessment, oldStatus, candidateAssessment.status);
+      } catch (notificationError) {
+        console.error('[ASSESSMENT] Error creating status update notification:', notificationError);
+        // Continue execution even if notification fails
+      }
+    }
+    
+    // Create push notification for assessment submission
+    try {
+      await createAssessmentSubmissionNotification(updatedAssessment);
+    } catch (notificationError) {
+      console.error('[ASSESSMENT] Error creating submission notification:', notificationError);
+      // Continue execution even if notification fails
+    }
 
     return res.status(200).json({
       success: true,
@@ -377,10 +402,20 @@ exports.extendCandidateAssessment = async (req, res) => {
         const newExpiry = new Date(currentExpiry.getTime() + (extensionDays * 24 * 60 * 60 * 1000));
 
         // Update the candidate assessment
+        const oldStatus = candidateAssessment.status;
         candidateAssessment.expiryAt = newExpiry;
         candidateAssessment.status = 'extended';
         
         await candidateAssessment.save();
+        
+        // Create notification for status update
+        if (oldStatus !== 'extended') {
+          try {
+            await createAssessmentStatusUpdateNotification(candidateAssessment, oldStatus, 'extended');
+          } catch (notificationError) {
+            console.error('[ASSESSMENT] Error creating extension notification:', notificationError);
+          }
+        }
 
         results.push({
           candidateAssessmentId,
@@ -445,10 +480,20 @@ exports.cancelCandidateAssessments = async (req, res) => {
         }
 
         // Update the candidate assessment status
+        const oldStatus = candidateAssessment.status;
         candidateAssessment.status = 'cancelled';
         candidateAssessment.isActive = false;
         
         await candidateAssessment.save();
+        
+        // Create notification for cancellation
+        if (oldStatus !== 'cancelled') {
+          try {
+            await createAssessmentStatusUpdateNotification(candidateAssessment, oldStatus, 'cancelled');
+          } catch (notificationError) {
+            console.error('[ASSESSMENT] Error creating cancellation notification:', notificationError);
+          }
+        }
 
         results.push({
           candidateAssessmentId,
@@ -610,9 +655,19 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
     for (const assessment of expiredAssessments) {
       try {
         // Update status to expired
+        const oldStatus = assessment.status;
         assessment.status = 'expired';
         assessment.isActive = false;
         await assessment.save();
+        
+        // Create notification for expiry
+        if (oldStatus !== 'expired') {
+          try {
+            await createAssessmentStatusUpdateNotification(assessment, oldStatus, 'expired');
+          } catch (notificationError) {
+            console.error('[ASSESSMENT] Error creating expiry notification:', notificationError);
+          }
+        }
         
         updatedAssessments.push({
           id: assessment._id,

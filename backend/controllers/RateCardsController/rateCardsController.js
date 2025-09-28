@@ -1,38 +1,87 @@
+// v1.0.0 - Ashok - changed createRateCard to support bulk creation
+
 const RateCard = require("../../models/RateCards/RateCards");
 
 // Create new RateCard
+// v1.0.0 <------------------------------------------------------------------------
+// const createRateCard = async (req, res) => {
+//   try {
+//     const {
+//       category,
+//       technology,
+//       levels,
+//       defaultCurrency,
+//       isActive,
+//     } = req.body;
+
+//     // Create new rate card document
+//     const newCard = new RateCard({
+//       category,
+//       technology,
+//       levels,
+//       defaultCurrency,
+//       isActive,
+//     });
+
+//     const savedCard = await newCard.save();
+
+//     res.status(201).json({
+//       message: "Rate card created successfully",
+//       rateCard: savedCard,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Error creating rate card",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const createRateCard = async (req, res) => {
   try {
-    const {
-      category,
-      technology,
-      levels,
-      defaultCurrency,
-      isActive,
-    } = req.body;
+    if (Array.isArray(req.body.rateCards)) {
+      // Bulk insert
+      const savedCards = await RateCard.insertMany(req.body.rateCards);
+      return res.status(201).json({
+        message: `${savedCards.length} rate cards created successfully`,
+        rateCards: savedCards,
+      });
+    } else {
+      // Single insert
+      const {
+        category,
+        technology,
+        levels,
+        defaultCurrency,
+        isActive,
+        discountMockInterview,
+      } = req.body;
 
-    // Create new rate card document
-    const newCard = new RateCard({
-      category,
-      technology,
-      levels,
-      defaultCurrency,
-      isActive,
-    });
+      const newCard = new RateCard({
+        category,
+        technology,
+        levels,
+        discountMockInterview,
+        defaultCurrency,
+        isActive,
+      });
 
-    const savedCard = await newCard.save();
+      const savedCard = await newCard.save();
 
-    res.status(201).json({
-      message: "Rate card created successfully",
-      rateCard: savedCard,
-    });
+      return res.status(201).json({
+        message: "Rate card created successfully",
+        rateCard: savedCard,
+      });
+    }
   } catch (error) {
+    console.error("Error creating rate card:", error);
     res.status(500).json({
       message: "Error creating rate card",
       error: error.message,
     });
   }
 };
+// v1.0.0 <------------------------------------------------------------------------
 
 // Fetch all RateCards
 const getAllRateCards = async (req, res) => {
@@ -52,7 +101,9 @@ const getRateCardsByTechnology = async (req, res) => {
   try {
     const { technology } = req.params;
     if (!technology) {
-      return res.status(400).json({ message: "Technology parameter is required" });
+      return res
+        .status(400)
+        .json({ message: "Technology parameter is required" });
     }
 
     const cards = await RateCard.find({

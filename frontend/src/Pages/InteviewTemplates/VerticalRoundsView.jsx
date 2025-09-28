@@ -53,7 +53,7 @@ const VerticalRoundsView = ({ rounds, onEditRound }) => {
       {sortedRounds.map((round, index) => (
         <div
           key={round._id}
-          className="bg-white rounded-lg shadow-md overflow-hidden"
+          className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
         >
           <div className="flex justify-between items-center p-4 hover:bg-gray-50">
             <div

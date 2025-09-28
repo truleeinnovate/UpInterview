@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - Improved responsiveness and disabled outer scrollbar
 // v1.0.2 - Ashok - Fixed alignment issues
 // v1.0.3 - Ashok - Fixed issue
+// v1.0.4 - Ashok - Fixed responsiveness issues
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -37,10 +38,12 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.
 import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import DescriptionField from "../../../../../Components/FormFields/DescriptionField.jsx";
+import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 // v1.0.1 ------------------------------------------------------------------------>
 
 function RoundFormPosition() {
   const { userProfile } = useCustomContext();
+  console.log("user---",userProfile);
   const formatName = (name) => {
     if (!name) return "";
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
@@ -48,6 +51,7 @@ function RoundFormPosition() {
 
   const firstName = formatName(userProfile?.firstName);
   const lastName = formatName(userProfile?.lastName);
+  const contactId = formatName(userProfile?.contactId);
 
   const { assessmentData, fetchAssessmentQuestions } = useAssessments();
   const { positionData, isMutationLoading, addRounds } = usePositions();
@@ -498,7 +502,7 @@ function RoundFormPosition() {
     if (organization === false) {
       // For non-organization users, set the current user as the interviewer
       const currentUser = {
-        _id: ownerId,
+        _id: contactId,
         firstName: firstName,
         lastName: lastName,
         email: tokenPayload?.email || "",
@@ -660,9 +664,9 @@ function RoundFormPosition() {
       if (!formData.interviewerType) {
         newErrors.interviewerType = "Interviewer type is required";
       }
-      if (formData.interviewQuestionsList.length === 0) {
-        newErrors.questions = "At least one question is required";
-      }
+      // if (formData.interviewQuestionsList.length === 0) {
+      //   newErrors.questions = "At least one question is required";
+      // }
     }
 
     // Final, HR Interview, etc. (minimal validation)
@@ -807,7 +811,7 @@ function RoundFormPosition() {
         ? { positionId, round: roundData, tenantId, ownerId, roundId }
         : { positionId, round: roundData, tenantId, ownerId };
 
-      console.log("roundData after roundData", payload);
+      // console.log("roundData after roundData", payload);
       const response = await addRounds(payload);
 
       console.log("response", response);
@@ -935,7 +939,7 @@ function RoundFormPosition() {
 
           <InfoGuide
             className="mt-4"
-            title="Support Ticket Guidelines"
+            title="Position Round Guidelines"
             items={[
               <>
                 <span className="font-medium">Round Types:</span> Choose from
@@ -1017,13 +1021,14 @@ function RoundFormPosition() {
                             ? formData.customRoundTitle
                             : formData.roundTitle
                         }
-                        options={[
-                          { value: "Assessment", label: "Assessment" },
-                          { value: "Technical", label: "Technical" },
-                          { value: "Final", label: "Final" },
-                          { value: "HR Interview", label: "HR Interview" },
-                          { value: "__other__", label: "Other" },
-                        ]}
+                        options={ROUND_TITLES}
+                        // options={[
+                        //   { value: "Assessment", label: "Assessment" },
+                        //   { value: "Technical", label: "Technical" },
+                        //   { value: "Final", label: "Final" },
+                        //   { value: "HR Interview", label: "HR Interview" },
+                        //   { value: "__other__", label: "Other" },
+                        // ]}
                         isCustomName={isCustomRoundTitle}
                         setIsCustomName={setIsCustomRoundTitle}
                         onChange={handleRoundTitleUnifiedChange}
@@ -1837,6 +1842,7 @@ function RoundFormPosition() {
                               + Add Question
                             </button>
                           </div>
+                          {/* v1.0.4 <--------------------------------------------------------------------------- */}
                           <div className="border border-gray-300 rounded-md p-4 max-h-60 overflow-y-auto">
                             {/* Display Added Questions */}
                             {formData.interviewQuestionsList.length > 0 ? (
@@ -1859,7 +1865,7 @@ function RoundFormPosition() {
                                             : "border-gray-300"
                                         }`}
                                       >
-                                        <span className="text-gray-900 font-medium">
+                                        <span className="sm:text-sm text-gray-900 font-medium">
                                           {qIndex + 1}. {questionText}
                                         </span>
                                         <button
@@ -1884,6 +1890,8 @@ function RoundFormPosition() {
                               </p>
                             )}
                           </div>
+                          {/* v1.0.4 <--------------------------------------------------------------------------- */}
+
                           {errors.questions && (
                             <p className="mt-1 text-xs text-red-500">
                               {errors.questions}
@@ -1891,12 +1899,13 @@ function RoundFormPosition() {
                           )}
                           {/* Question Popup */}
                           {isInterviewQuestionPopup && (
+                            // v1.0.4 <--------------------------------------------------------------
                             <div
-                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                              className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen"
                               onClick={() => setIsInterviewQuestionPopup(false)}
                             >
                               <div
-                                className="bg-white rounded-md w-[95%] h-[90%]"
+                                className="bg-white rounded-md w-[96%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <div className="py-3 px-4  flex items-center justify-between">
@@ -1928,6 +1937,7 @@ function RoundFormPosition() {
                                 )}
                               </div>
                             </div>
+                            // v1.0.4 -------------------------------------------------------------->
                           )}
                         </div>
                       </div>
@@ -1941,7 +1951,7 @@ function RoundFormPosition() {
                       name="instructions"
                       label="Instructions"
                       required
-                      placeholder="Enter round instructions..."
+                      placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                       rows={10}
                       minLength={50}
                       maxLength={1000}

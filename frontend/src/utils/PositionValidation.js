@@ -43,10 +43,10 @@ export const validateForm = (formData, entries, rounds) => {
     formIsValid = false;
   }
 
-  if (!formData.companyName) {
-    errors.companyname = "Company Name is required";
-    formIsValid = false;
-  }
+  // if (!formData.companyName) {
+  //   errors.companyname = "Company Name is required";
+  //   formIsValid = false;
+  // }
 
   if (!formData.minexperience) {
     errors.minexperience = "Minimum Experience is required";
@@ -104,13 +104,35 @@ export const validateForm = (formData, entries, rounds) => {
     formIsValid = false;
   }
 
-  if (entries.length === 0) {
+  // Skills validation: ignore entirely empty rows, validate only rows where any field is filled
+  const filledEntries = (entries || []).filter(
+    (e) => (e?.skill && e.skill !== "") || (e?.experience && e.experience !== "") || (e?.expertise && e.expertise !== "")
+  );
+  if (filledEntries.length === 0) {
     errors.skills = "At least one skill must be selected";
     formIsValid = false;
-  }
-  else if (entries.some((entry) => !entry.skill || !entry.experience || !entry.expertise)) {
-    errors.skills = "All skills must have a value in the skill, experience and expertise fields";
-    formIsValid = false;
+  } else {
+      // Check each filled entry for missing fields
+      const invalidEntries = filledEntries.map((entry, index) => {
+          const missingFields = [];
+          if (!entry.skill) missingFields.push('skill');
+          if (!entry.experience) missingFields.push('experience');
+          if (!entry.expertise) missingFields.push('expertise');
+          
+          return missingFields.length > 0 
+              ? { index, missingFields }
+              : null;
+      }).filter(Boolean);
+
+      if (invalidEntries.length > 0) {
+          // Create a more helpful error message
+          const errorMessages = invalidEntries.map(({index, missingFields}) => 
+              `Row ${index + 1}: Please fill in ${missingFields.join(', ')}`
+          );
+          
+          errors.skills = errorMessages.join('; ');
+          formIsValid = false;
+      }
   }
 
     // Add salary validation
@@ -133,10 +155,10 @@ export const validateForm = (formData, entries, rounds) => {
     }
     // v1.0.0 <----------------------------------------------------------------------
     // Add location validation
-    if (!formData.Location) {
-      errors.Location = "Location is required";
-      formIsValid = false;
-    }
+    // if (!formData.Location) {
+    //   errors.Location = "Location is required";
+    //   formIsValid = false;
+    // }
     // v1.0.0 ---------------------------------------------------------------------->
 
   return { formIsValid, newErrors: errors };

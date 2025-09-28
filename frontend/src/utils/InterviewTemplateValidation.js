@@ -4,20 +4,20 @@ export const validateInterviewTemplate = (templateData) => {
   let isValid = true;
 
   // Validate template name
-  if (!templateData.name || !templateData.name.trim()) {
-    errors.name = 'Title is required';
+  if (!templateData.templateTitle || !templateData.templateTitle.trim()) {
+    errors.templateTitle = 'Title is required';
     isValid = false;
-  } else if (templateData.name.trim().length > 100) {
-    errors.name = 'Title cannot exceed 100 characters';
+  } else if (templateData.templateTitle.trim().length > 100) {
+    errors.templateTitle = 'Title cannot exceed 100 characters';
     isValid = false;
   }
 
   // Validate label
-  if (!templateData.label || !templateData.label.trim()) {
-    errors.label = 'Label is required';
+  if (!templateData.name || !templateData.name.trim()) {
+    errors.name = 'Label is required';
     isValid = false;
-  } else if (templateData.label.trim().length > 50) {
-    errors.label = 'Label cannot exceed 50 characters';
+  } else if (templateData.name.trim().length > 50) {
+    errors.name = 'Label cannot exceed 50 characters';
     isValid = false;
   }
 
@@ -34,6 +34,24 @@ export const validateInterviewTemplate = (templateData) => {
   //   isValid = false;
   // }
   // v1.0.0 ---------------------->
+
+  // Validate bestFor
+  if (!templateData.bestFor || !templateData.bestFor.trim()) {
+    errors.bestFor = 'Best For is required';
+    isValid = false;
+  } else if (templateData.bestFor.trim().length > 50) {
+    errors.bestFor = 'Best For cannot exceed 50 characters';
+    isValid = false;
+  }
+
+  // Validate format
+  if (!templateData.format || !templateData.format.trim()) {
+    errors.format = 'Format is required';
+    isValid = false;
+  } else if (!['fully online', 'hybrid', 'offline'].includes(templateData.format)) {
+    errors.format = 'Format must be one of: fully online, hybrid, or offline';
+    isValid = false;
+  }
 
   // Validate rounds (if provided)
   if (templateData.rounds && templateData.rounds.length > 0) {

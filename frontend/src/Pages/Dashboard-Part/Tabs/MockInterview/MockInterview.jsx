@@ -38,9 +38,21 @@ const MockInterview = () => {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
+    technology: [],
+    duration: { min: "", max: "" },
+    createdDate: "", // '', 'last7', 'last30', 'last90'
+    interviewer: []
   });
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isTechnologyOpen, setIsTechnologyOpen] = useState(false);
+  const [isDurationOpen, setIsDurationOpen] = useState(false);
+  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+  const [isInterviewerOpen, setIsInterviewerOpen] = useState(false);
+  const [selectedTechnology, setSelectedTechnology] = useState([]);
+  const [durationRange, setDurationRange] = useState({ min: "", max: "" });
+  const [createdDatePreset, setCreatedDatePreset] = useState("");
+  const [selectedInterviewers, setSelectedInterviewers] = useState([]);
   const [mockinterviewDataView, setmockinterviewDataView] = useState(false);
   const [reschedule, setReschedule] = useState(false);
   const [cancelSchedule, setCancelSchedule] = useState(false);
@@ -59,6 +71,23 @@ const MockInterview = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Sync filter states when popup opens
+  useEffect(() => {
+    if (isFilterPopupOpen) {
+      setSelectedStatus(selectedFilters.status);
+      setSelectedTechnology(selectedFilters.technology);
+      setDurationRange(selectedFilters.duration);
+      setCreatedDatePreset(selectedFilters.createdDate);
+      setSelectedInterviewers(selectedFilters.interviewer);
+      // Reset all open states
+      setIsStatusOpen(false);
+      setIsTechnologyOpen(false);
+      setIsDurationOpen(false);
+      setIsCreatedDateOpen(false);
+      setIsInterviewerOpen(false);
+    }
+  }, [isFilterPopupOpen, selectedFilters]);
 
   // Don't render until permissions are initialized
   if (!isInitialized) {
@@ -83,17 +112,65 @@ const MockInterview = () => {
     );
   };
 
+  const handleTechnologyToggle = (tech) => {
+    setSelectedTechnology((prev) =>
+      prev.includes(tech)
+        ? prev.filter((t) => t !== tech)
+        : [...prev, tech]
+    );
+  };
+
+  const handleDurationChange = (e, type) => {
+    const value = e.target.value === "" ? "" : Math.max(0, Math.min(180, Number(e.target.value) || ""));
+    setDurationRange((prev) => ({
+      ...prev,
+      [type]: value,
+    }));
+  };
+
+  const handleInterviewerToggle = (interviewer) => {
+    setSelectedInterviewers((prev) =>
+      prev.includes(interviewer)
+        ? prev.filter((i) => i !== interviewer)
+        : [...prev, interviewer]
+    );
+  };
+
   const handleApplyFilters = () => {
-    const filters = { status: selectedStatus };
+    const filters = { 
+      status: selectedStatus,
+      technology: selectedTechnology,
+      duration: durationRange,
+      createdDate: createdDatePreset,
+      interviewer: selectedInterviewers
+    };
     setSelectedFilters(filters);
-    setIsFilterActive(filters.status.length > 0);
+    setIsFilterActive(
+      filters.status.length > 0 ||
+      filters.technology.length > 0 ||
+      filters.duration.min !== "" ||
+      filters.duration.max !== "" ||
+      filters.createdDate !== "" ||
+      filters.interviewer.length > 0
+    );
     setFilterPopupOpen(false);
     setCurrentPage(0);
   };
 
   const handleClearAll = () => {
+    const clearedFilters = {
+      status: [],
+      technology: [],
+      duration: { min: "", max: "" },
+      createdDate: "",
+      interviewer: []
+    };
     setSelectedStatus([]);
-    setSelectedFilters({ status: [] });
+    setSelectedTechnology([]);
+    setDurationRange({ min: "", max: "" });
+    setCreatedDatePreset("");
+    setSelectedInterviewers([]);
+    setSelectedFilters(clearedFilters);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -105,23 +182,88 @@ const MockInterview = () => {
     }
   };
 
+  // Helper function to normalize spaces for better search
+  const normalizeSpaces = (str) =>
+    str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
+
   const FilteredData = () => {
     if (!Array.isArray(mockinterviewData)) return [];
     return mockinterviewData.filter((interview) => {
+      // Enhanced search across multiple fields
+      const normalizedQuery = normalizeSpaces(searchQuery);
       const fieldsToSearch = [
-        interview?.rounds?.roundTitle,
+        interview?.mockInterviewCode,
+        interview?.rounds?.[0]?.roundTitle,
         interview?.technology,
+        interview?.candidateName,
+        interview?.Role,
+        interview?.rounds?.[0]?.status
       ].filter(Boolean);
 
-      const matchesSearchQuery = fieldsToSearch.some((field) =>
-        field?.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const matchesSearchQuery = 
+        searchQuery === "" ||
+        fieldsToSearch.some((field) =>
+          normalizeSpaces(field).includes(normalizedQuery)
+        );
 
+      // Status filter
       const matchesStatus =
         selectedFilters.status.length === 0 ||
-        selectedFilters.status.includes(interview.rounds?.status);
+        selectedFilters.status.includes(interview.rounds?.[0]?.status);
 
-      return matchesSearchQuery && matchesStatus;
+      // Technology filter
+      const matchesTechnology =
+        selectedFilters.technology.length === 0 ||
+        selectedFilters.technology.includes(interview.technology);
+
+      // Duration filter
+      const duration = parseInt(interview?.rounds?.[0]?.duration) || 0;
+      const matchesDuration =
+        (selectedFilters.duration.min === "" ||
+          duration >= Number(selectedFilters.duration.min)) &&
+        (selectedFilters.duration.max === "" ||
+          duration <= Number(selectedFilters.duration.max));
+
+      // Created date filter
+      const matchesCreatedDate = () => {
+        if (!selectedFilters.createdDate) return true;
+        if (!interview.createdAt) return false;
+        const createdAt = new Date(interview.createdAt);
+        const now = new Date();
+        const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+        
+        switch (selectedFilters.createdDate) {
+          case 'last7':
+            return daysDiff <= 7;
+          case 'last30':
+            return daysDiff <= 30;
+          case 'last90':
+            return daysDiff <= 90;
+          default:
+            return true;
+        }
+      };
+
+      // Interviewer filter
+      const matchesInterviewer = () => {
+        if (selectedFilters.interviewer.length === 0) return true;
+        const interviewers = interview?.rounds?.[0]?.interviewers || [];
+        return interviewers.some(interviewer => {
+          const contact = interviewer?.contact;
+          const name = contact?.Name || 
+            `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim();
+          return selectedFilters.interviewer.includes(name);
+        });
+      };
+
+      return (
+        matchesSearchQuery && 
+        matchesStatus && 
+        matchesTechnology &&
+        matchesDuration &&
+        matchesCreatedDate() &&
+        matchesInterviewer()
+      );
     });
   };
 
@@ -359,7 +501,8 @@ const MockInterview = () => {
               onClearAll={handleClearAll}
               filterIconRef={filterIconRef}
             >
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {/* Status Filter */}
                 <div>
                   <div
                     className="flex justify-between items-center cursor-pointer"
@@ -374,7 +517,7 @@ const MockInterview = () => {
                   </div>
                   {isStatusOpen && (
                     <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
-                      {["Draft", "Scheduled", "Cancelled"].map((status) => (
+                      {["Draft", "Scheduled", "Completed", "Cancelled", "In Progress", "Requests Sent"].map((status) => (
                         <label
                           key={status}
                           className="flex items-center space-x-2"
@@ -383,11 +526,176 @@ const MockInterview = () => {
                             type="checkbox"
                             checked={selectedStatus.includes(status)}
                             onChange={() => handleStatusToggle(status)}
-                            // v1.0.3 <-------------------------------------------------------------
                             className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                            // v1.0.3 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{status}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Duration Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsDurationOpen(!isDurationOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Duration (Minutes)</span>
+                    {isDurationOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isDurationOpen && (
+                    <div className="mt-2 pl-3 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={durationRange.min}
+                          onChange={(e) => handleDurationChange(e, "min")}
+                          placeholder="Min"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                          max="180"
+                        />
+                        <span className="text-sm">to</span>
+                        <input
+                          type="number"
+                          value={durationRange.max}
+                          onChange={(e) => handleDurationChange(e, "max")}
+                          placeholder="Max"
+                          className="w-20 p-1 border rounded"
+                          min="0"
+                          max="180"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Dynamic Technology and Interviewer Filters */}
+                {(() => {
+                  const uniqueTechnologies = [...new Set(
+                    mockinterviewData?.map(i => i.technology).filter(Boolean) || []
+                  )];
+                  const uniqueInterviewers = [...new Set(
+                    mockinterviewData?.flatMap(i => {
+                      const interviewers = i.rounds?.[0]?.interviewers || [];
+                      return interviewers.map(interviewer => {
+                        const contact = interviewer?.contact;
+                        return contact?.Name || 
+                          `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim();
+                      });
+                    }).filter(Boolean) || []
+                  )];
+
+                  return (
+                    <>
+                      {/* Technology Filter */}
+                      {uniqueTechnologies.length > 0 && (
+                        <div>
+                          <div
+                            className="flex justify-between items-center cursor-pointer"
+                            onClick={() => setIsTechnologyOpen(!isTechnologyOpen)}
+                          >
+                            <span className="font-medium text-gray-700">Technology</span>
+                            {isTechnologyOpen ? (
+                              <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                            ) : (
+                              <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                            )}
+                          </div>
+                          {isTechnologyOpen && (
+                            <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                              {uniqueTechnologies.map((tech) => (
+                                <label
+                                  key={tech}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedTechnology.includes(tech)}
+                                    onChange={() => handleTechnologyToggle(tech)}
+                                    className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                  />
+                                  <span className="text-sm">{tech}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Interviewer Filter */}
+                      {uniqueInterviewers.length > 0 && (
+                        <div>
+                          <div
+                            className="flex justify-between items-center cursor-pointer"
+                            onClick={() => setIsInterviewerOpen(!isInterviewerOpen)}
+                          >
+                            <span className="font-medium text-gray-700">Interviewer</span>
+                            {isInterviewerOpen ? (
+                              <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                            ) : (
+                              <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                            )}
+                          </div>
+                          {isInterviewerOpen && (
+                            <div className="mt-1 space-y-1 pl-3 max-h-32 overflow-y-auto">
+                              {uniqueInterviewers.map((interviewer) => (
+                                <label
+                                  key={interviewer}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedInterviewers.includes(interviewer)}
+                                    onChange={() => handleInterviewerToggle(interviewer)}
+                                    className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
+                                  />
+                                  <span className="text-sm">{interviewer}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+
+                {/* Created Date Filter */}
+                <div>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
+                  >
+                    <span className="font-medium text-gray-700">Created Date</span>
+                    {isCreatedDateOpen ? (
+                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
+                    ) : (
+                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
+                    )}
+                  </div>
+                  {isCreatedDateOpen && (
+                    <div className="mt-2 pl-3 space-y-1">
+                      {[
+                        { value: "", label: "Any time" },
+                        { value: "last7", label: "Last 7 days" },
+                        { value: "last30", label: "Last 30 days" },
+                        { value: "last90", label: "Last 90 days" },
+                      ].map((option) => (
+                        <label key={option.value} className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            value={option.value}
+                            checked={createdDatePreset === option.value}
+                            onChange={(e) => setCreatedDatePreset(e.target.value)}
+                            className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
+                          />
+                          <span className="text-sm">{option.label}</span>
                         </label>
                       ))}
                     </div>

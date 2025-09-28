@@ -2,36 +2,37 @@ import { motion } from 'framer-motion';
 import { Calendar, Layers } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaPencilAlt } from 'react-icons/fa';
+import { formatDateTime } from '../../utils/dateFormatter';
 
 const KanbanView = ({ templates, loading = false, effectivePermissions, onView, onEdit }) => {
   const navigate = useNavigate();
 
   console.log("templates--", templates);
-  const formatRelativeDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffMonths = Math.floor(diffDays / 30);
-    const diffYears = Math.floor(diffDays / 365);
+  // const formatRelativeDate = (dateString) => {
+  //   if (!dateString) return '';
+  //   const date = new Date(dateString);
+  //   const now = new Date();
+  //   const diffTime = Math.abs(now - date);
+  //   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  //   const diffMonths = Math.floor(diffDays / 30);
+  //   const diffYears = Math.floor(diffDays / 365);
 
-    if (date.toDateString() === now.toDateString()) {
-      return 'Today';
-    }
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    }
-    if (diffDays < 30) {
-      return `${diffDays} Day${diffDays > 1 ? 's' : ''} ago`;
-    }
-    if (diffMonths < 12) {
-      return `${diffMonths} Month${diffMonths > 1 ? 's' : ''} ago`;
-    }
-    return `${diffYears} Year${diffYears > 1 ? 's' : ''} ago`;
-  };
+  //   if (date.toDateString() === now.toDateString()) {
+  //     return 'Today';
+  //   }
+  //   const yesterday = new Date(now);
+  //   yesterday.setDate(yesterday.getDate() - 1);
+  //   if (date.toDateString() === yesterday.toDateString()) {
+  //     return 'Yesterday';
+  //   }
+  //   if (diffDays < 30) {
+  //     return `${diffDays} Day${diffDays > 1 ? 's' : ''} ago`;
+  //   }
+  //   if (diffMonths < 12) {
+  //     return `${diffMonths} Month${diffMonths > 1 ? 's' : ''} ago`;
+  //   }
+  //   return `${diffYears} Year${diffYears > 1 ? 's' : ''} ago`;
+  // };
 
   if (loading) {
     return (
@@ -159,6 +160,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                       <FaPencilAlt className="w-4 h-4" />
                     </motion.button>
                   )}
+                  
                 </div>
               </div>
               <div className="mt-auto">
@@ -176,7 +178,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                       whileHover={{ scale: 1.05 }}
                     >
                       <Calendar className="h-4 w-4 text-custom-blue" />
-                      <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{formatRelativeDate(template.updatedAt)}</span>
+                      <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{formatDateTime(template.updatedAt)}</span>
                     </motion.div>
                   </div>
                   <motion.span 

@@ -1,6 +1,8 @@
 // v1.0.0  -  Ashraf  -  extend limit changed to 5 days max
 // v1.0.1  -  Ashraf  -  added resend link functionality and if already extended and cancel show as disable
 // v1.0.2  -  Ashok   -  Disabled outer scrollbar when popup is open for better user experience
+// v1.0.3  -  Ashok   -  Improved responsiveness
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, AlertCircle, CheckCircle, Clock, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -473,7 +475,9 @@ const AssessmentActionPopup = ({
                           setSelectedCandidates([]);
                         }
                       }}
-                      className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue/80"
+                      // v1.0.3 <------------------------------------------------------------------------------------------------
+                      className="rounded border-gray-300 accent-custom-blue text-custom-blue focus:ring-custom-blue/80"
+                      // v1.0.3 ------------------------------------------------------------------------------------------------>
                       disabled={isLoading}
                     />
                     <span className="text-sm text-gray-700">Select All</span>
@@ -511,7 +515,9 @@ const AssessmentActionPopup = ({
                           type="checkbox"
                           checked={selectedCandidates.includes(candidateId)}
                           onChange={() => candidate.canAct && handleCandidateToggle(candidateId)}
-                          className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue/80 mr-3"
+                          // v1.0.3 <------------------------------------------------------------------------------------------------
+                          className="rounded border-gray-300 accent-custom-blue text-custom-blue focus:ring-custom-blue/80 mr-3"
+                          // v1.0.3 ------------------------------------------------------------------------------------------------>
                           disabled={isLoading || !candidate.canAct}
                         />
                         <div className="flex-1">

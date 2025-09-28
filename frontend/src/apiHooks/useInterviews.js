@@ -72,10 +72,26 @@ export const useInterviews = (filters = {}) => {
         status: "Draft",
       };
 
-      const response = await axios.post(`${config.REACT_APP_API_URL}/interview`, {
-        ...interviewData,
-        interviewId: id
-      });
+      // const response = await axios.post(`${config.REACT_APP_API_URL}/interview`, {
+      //   ...interviewData,
+      //   interviewId: id
+      // });
+
+      let response;
+
+      if (id) {
+        // 🔹 PATCH call when interviewId exists (update)
+        response = await axios.patch(
+          `${config.REACT_APP_API_URL}/interview/${id}`,
+          interviewData
+        );
+      } else {
+        // 🔹 POST call when creating a new interview
+        response = await axios.post(
+          `${config.REACT_APP_API_URL}/interview`,
+          interviewData
+        );
+      }
 
       // Link candidate to position
       await axios.post(`${config.REACT_APP_API_URL}/candidateposition`, {
@@ -126,6 +142,30 @@ export const useInterviews = (filters = {}) => {
       // Error toast will be handled in the frontend
     }
   });
+
+
+  // 🔹 New mutation: Update interview round (PATCH for edit)
+const updateInterviewRound = useMutation({
+  mutationFn: async (payload) => {
+    const response = await axios.patch(
+      `${config.REACT_APP_API_URL}/interview/update-round/${payload.roundId}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("authToken")}`,
+        },
+      }
+    );
+    return response.data;
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries(["interviews"]);
+  },
+  onError: (error) => {
+    console.error("Round update error:", error);
+  },
+});
 
   // Update round with meeting links mutation
   // const updateRoundWithMeetingLinks = useMutation({
@@ -211,6 +251,9 @@ export const useInterviews = (filters = {}) => {
   // v1.0.2 <-----------------------------------------
 
   // Update interview status mutation
+  
+  
+  
   const updateInterviewStatus = useMutation({
     mutationFn: async ({ interviewId, status, reason }) => {
       const interviewData = {
@@ -295,6 +338,7 @@ export const useInterviews = (filters = {}) => {
     updateStatusError: updateInterviewStatus.error,
     createInterview: createInterview.mutateAsync,
     saveInterviewRound: saveInterviewRound.mutateAsync,
+    updateInterviewRound: updateInterviewRound.mutateAsync,
     // updateRoundWithMeetingLinks: updateRoundWithMeetingLinks.mutateAsync,
     updateInterviewStatus: updateInterviewStatus.mutateAsync,
     // refetchInterviews,

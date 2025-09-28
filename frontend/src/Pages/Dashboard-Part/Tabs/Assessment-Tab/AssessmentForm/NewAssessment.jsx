@@ -2,6 +2,8 @@
 // v1.0.1  -  Ashraf  -  assessment file name changed
 // v1.0.2  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 // v1.0.3  -  Ashok   -  Added scroll to first error functionality
+// v1.0.4  -  Ashok   - Improved responsiveness
+// v1.0.5  -  Ashok   - Fixed responsive issues
 
 import React, {
   useState,
@@ -32,7 +34,7 @@ import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { usePositions } from "../../../../../apiHooks/usePositions";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { Button } from "@mui/material";
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 
 const NewAssessment = () => {
@@ -61,7 +63,13 @@ const NewAssessment = () => {
     : null;
 
   const [activeTab, setActiveTab] = useState("Basicdetails");
-  const [startDate, setStartDate] = useState(new Date());
+  // const [startDate, setStartDate] = useState(new Date());
+  // Replace the current startDate initialization with:
+const [startDate, setStartDate] = useState(() => {
+  const sixMonthsFromNow = new Date();
+  sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+  return sixMonthsFromNow;
+});
   const [showMessage, setShowMessage] = useState(false);
   const [errors, setErrors] = useState("");
   const [showDropdownAssessment, setShowDropdownAssessment] = useState(false);
@@ -148,7 +156,7 @@ const NewAssessment = () => {
         (pos) => pos._id === assessment.Position
       );
       console.log("matchedPosition", matchedPosition);
-      console.log("Ass",assessment);
+      console.log("Ass", assessment);
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",
@@ -1228,43 +1236,125 @@ const NewAssessment = () => {
   // changes made by shashank on [08/01/2025] addedSections onSectionAdded
   const [sectionName, setSectionName] = useState("");
   const handleAddSection = (closeAddSectionPopup) => {
-    const validateErrors = {};
-    if (!sectionName.trim()) {
-      validateErrors.sectionName = "";
-      setIsAlreadyExistingSection("section name is required*");
-      return;
-    }
+    // const validateErrors = {};
+    // if (!sectionName.trim()) {
+    //   validateErrors.sectionName = "";
+    //   setIsAlreadyExistingSection("section name is required*");
+    //   return;
+    // }
     if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
       setIsAlreadyExistingSection(`section ${sectionName} already exists`);
       return;
     }
 
+    // Generate section name (Section1, Section2, etc.)
+  const sectionNumber = addedSections.length + 1;
+  const newSectionName = `Section${sectionNumber}`;
+  
+  // Check if section name already exists (in case of deletions)
+  let finalSectionName = newSectionName;
+  let counter = 1;
+  
+  while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
+    finalSectionName = `Section${sectionNumber + counter}`;
+    counter++;
+  }
+console.log(finalSectionName);
     handleSectionAdded({
-      SectionName: sectionName,
+      SectionName: finalSectionName,
       Questions: [],
     });
     setSectionName("");
+    // closeAddSectionPopup();
+     // Close the popup if it exists
+  if (closeAddSectionPopup) {
     closeAddSectionPopup();
+  }
   };
+
+  // const updateQuestionsInAddedSectionFromQuestionBank = (
+  //   sectionName,
+  //   question
+  // ) => {
+  //   console.log("Updating questions in section:", sectionName);
+
+  //   setAddedSections((prevSections) => {
+  //     return prevSections.map((section) => {
+  //       if (section.SectionName === sectionName) {
+  //         return {
+  //           ...section,
+  //           Questions: [...(section.Questions || []), question],
+  //         };
+  //       }
+  //       return section;
+  //     });
+  //   });
+  // };
 
   const updateQuestionsInAddedSectionFromQuestionBank = (
     sectionName,
-    question
+    question,
+    questionIdToRemove = null
   ) => {
-    console.log("Updating questions in section:", sectionName);
-
+    console.log("🔄 updateQuestionsInAddedSectionFromQuestionBank called:", {
+      sectionName,
+      question: question ? 'has question' : 'no question',
+      questionIdToRemove
+    });
+  
     setAddedSections((prevSections) => {
-      return prevSections.map((section) => {
+      const updatedSections = prevSections.map((section) => {
         if (section.SectionName === sectionName) {
+          let updatedQuestions = [...(section.Questions || [])];
+          
+          if (questionIdToRemove) {
+            // Remove the question
+            const initialLength = updatedQuestions.length;
+            updatedQuestions = updatedQuestions.filter(q => {
+              if (!q) return false;
+              
+              // Try multiple ID properties
+              const id = q.questionId || q._id || q.id;
+              if (!id) {
+                console.warn('Question without ID found:', q);
+                return false;
+              }
+              
+              return id !== questionIdToRemove;
+            });
+            
+            console.log(`🗑️ Removed question ${questionIdToRemove}. ${initialLength} → ${updatedQuestions.length} questions`);
+          } 
+          else if (question) {
+            // Add the question (with duplicate check)
+            const existingQuestionId = question.questionId || question._id;
+            const isDuplicate = updatedQuestions.some(q => {
+              if (!q) return false;
+              const qId = q.questionId || q._id;
+              return qId === existingQuestionId;
+            });
+            
+            if (!isDuplicate) {
+              updatedQuestions.push(question);
+              console.log(`✅ Added question ${existingQuestionId}`);
+            } else {
+              console.warn(`⚠️ Duplicate question ${existingQuestionId} not added`);
+            }
+          }
+          
           return {
             ...section,
-            Questions: [...(section.Questions || []), question],
+            Questions: updatedQuestions,
           };
         }
         return section;
       });
+      
+      console.log("📊 Final sections state:", updatedSections);
+      return updatedSections;
     });
   };
+
 
   const navigate = useNavigate();
 
@@ -1289,11 +1379,14 @@ const NewAssessment = () => {
     const selectedCount = getSelectedQuestionsCount();
 
     return (
-      <div className="flex justify-between px-6 pt-6">
+      // v1.0.4 <----------------------------------------------------------------------------
+      // v1.0.5 <---------------------------------------------------------------------------
+      <div className="flex justify-end sm:px-0 px-6 pt-6">
+      {/* v1.0.5 --------------------------------------------------------------------------> */}
         {currentTab !== "Basicdetails" && (
           <button
             onClick={handleBack}
-            className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex justify-center mr-4 py-2 sm:px-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Back
           </button>
@@ -1312,12 +1405,16 @@ const NewAssessment = () => {
             <>
               {/* Always show Delete Selected if questions are selected */}
               {selectedCount > 0 && (
+                // v1.0.5 <---------------------------------------------------------------------------
                 <button
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="flex items-center truncate sm:text-sm sm:px-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                   onClick={() => openDeleteConfirmation("bulk", null, null)}
                 >
-                  Delete Selected ({selectedCount})
+                  <Trash2 className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden text-red-500 mr-1" />
+                  <span className="sm:hidden inline">Delete Selected</span> (
+                  {selectedCount})
                 </button>
+                // v1.0.5 --------------------------------------------------------------------------->
               )}
 
               {isPassScoreSubmitted ? (
@@ -1341,7 +1438,14 @@ const NewAssessment = () => {
                     // ---------------------- v1.0.0 >
                     loadingText={id ? "Updating..." : "Saving..."}
                   >
-                    {isEditing ? "Update & Next" : "Save & Create Assessment"}
+                    {isEditing ? (
+                      <span>
+                        <span className="sm:hidden inline mr-1">Update &</span>
+                        Next
+                      </span>
+                    ) : (
+                      "Save & Create Assessment"
+                    )}
                   </LoadingButton>
                 </>
               ) : (
@@ -1383,25 +1487,34 @@ const NewAssessment = () => {
                   // <---------------------- v1.0.0
                   loadingText={id ? "Updating..." : "Saving..."}
                 >
-                  {isEditing ? "Update & Next" : "Save & Next"}
+                  {isEditing ? (
+                    <span>
+                      <span className="sm:hidden inline mr-1">Update &</span>
+                      Next
+                    </span>
+                  ) : (
+                    "Save & Next"
+                  )}
                 </LoadingButton>
               )}
             </>
           )}
         </div>
       </div>
+      // v1.0.4 ---------------------------------------------------------------------------->
     );
   };
 
   return (
     <div ref={formRef}>
       <div className="bg-gray-50">
-        <main className=" mx-auto py-4 sm:px-6 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+        {/* v1.0.4 <------------------------------------------------------------------ */}
+        <main className="mx-auto py-4 sm:px-3 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg">
-              <div className="flex justify-between px-12 py-4 sm:px-6">
+              <div className="flex justify-between px-12 py-6 sm:px-4">
                 <div>
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  <h3 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl leading-6 font-medium text-gray-900">
                     {isEditing
                       ? "Edit Assessment Template"
                       : "Add New Assessment Template"}
@@ -1562,7 +1675,8 @@ const NewAssessment = () => {
 
                     {activeTab === "Candidates" && (
                       <>
-                        <div className="px-6">
+                        {/* v1.0.4 <------------------------------------------------------- */}
+                        <div className="sm:px-0 px-6 overflow-x-auto">
                           <AssessmentsTab
                             assessment={
                               isEditing
@@ -1572,6 +1686,7 @@ const NewAssessment = () => {
                           />
                           <TabFooter currentTab="Candidates" />
                         </div>
+                        {/* v1.0.4 -------------------------------------------------------> */}
                       </>
                     )}
                   </div>
@@ -1641,28 +1756,28 @@ const NewAssessment = () => {
                   />
                 )}
                 {sidebarOpen && (
-                  <div className={"fixed inset-0 bg-black bg-opacity-15 z-50"}>
-                    <div className="fixed inset-y-0 right-0 z-50 w-1/2 bg-white shadow-lg transition-transform duration-5000 transform">
-                      <PassScore
-                        formData={formData}
-                        setFormData={setFormData}
-                        addedSections={addedSections}
-                        setAddedSections={setAddedSections}
-                        onClose={() => setSidebarOpen(false)}
-                        onSave={handlePassScoreSave}
-                        onOutsideClick={handleOutsideClick}
-                        ref={sidebarRef}
-                        totalScore={totalScore}
-                        setTotalScore={setTotalScore}
-                        totalScores={totalScores}
-                        setTotalScores={setTotalScores}
-                        passScores={passScores}
-                        passScore={passScore}
-                        setPassScores={setPassScores}
-                        setPassScore={setPassScore}
-                      />
-                    </div>
+                  // v1.0.4 <----------------------------------------------------------------------
+                  <div>
+                    <PassScore
+                      formData={formData}
+                      setFormData={setFormData}
+                      addedSections={addedSections}
+                      setAddedSections={setAddedSections}
+                      onClose={() => setSidebarOpen(false)}
+                      onSave={handlePassScoreSave}
+                      onOutsideClick={handleOutsideClick}
+                      ref={sidebarRef}
+                      totalScore={totalScore}
+                      setTotalScore={setTotalScore}
+                      totalScores={totalScores}
+                      setTotalScores={setTotalScores}
+                      passScores={passScores}
+                      passScore={passScore}
+                      setPassScores={setPassScores}
+                      setPassScore={setPassScore}
+                    />
                   </div>
+                  // v1.0.4 -------------------------------------------------------------------------->
                 )}
                 {isQuestionLimitErrorPopupOpen && (
                   <ConfirmationPopup
@@ -1690,6 +1805,7 @@ const NewAssessment = () => {
             </div>
           </div>
         </main>
+        {/* v1.0.4 ------------------------------------------------------------------> */}
       </div>
     </div>
   );

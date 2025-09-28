@@ -9,13 +9,22 @@ const {
   deleteRound,
   getInterviews,
   getAllInterviews,
+  updateInterview,
+  updateInterviewRound,
 } = require("../controllers/interviewController");
 
 // router.get('/', getAllInterviews);
 // router.get('/:id',getInterviewBasedOnInterviewId)
 router.post("/", createInterview);
+
+//  Ranjith added patch call for interview update
+router.patch("/:id", updateInterview);
+
 // router.patch('/:id', updateInterview);
 router.post("/save-round", saveInterviewRound);
+
+//  interview round update
+router.patch("/update-round/:roundId", updateInterviewRound);
 
 // Route to fetch dashboard statistics
 router.get("/dashboard-stats", getDashboardStats);

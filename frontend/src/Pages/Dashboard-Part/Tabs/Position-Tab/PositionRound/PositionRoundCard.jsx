@@ -247,18 +247,18 @@ const PositionRoundCard = ({
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
 
-  console.log("interviewData", interview);
+  // console.log("interviewData", interview);
 
   return (
     <>
       {/* v1.0.3 <--------------------------------------------------------------- */}
       <div
-        className={`bg-white rounded-lg ${
+        className={`bg-white  rounded-lg ${
           !hideHeader && "shadow-md"
         } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
       >
         {/* v1.0.3 <---------------------------------------------------------------> */}
-        <div className="p-2">
+        <div className="p-5">
           {/* Tabs */}
           {hasFeedback && (
             <div className="mt-4 border-b border-gray-200">
@@ -442,7 +442,8 @@ const PositionRoundCard = ({
                 )}
               </div>
 
-              {round.roundTitle !== "Assessment" && (
+
+              {round.roundTitle !== "Assessment" && round?.questions.length > 0 && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="text-sm font-medium text-gray-700">
@@ -463,7 +464,7 @@ const PositionRoundCard = ({
                   {/* v1.0.1 <--------------------------------------------------------- */}
                   {showQuestions && round.questions && (
                     <div className="space-y-2">
-                      {round?.questions.length > 0 ? (
+                      {round?.questions.length > 0 && (
                         <ul className="mt-2 space-y-1">
                           {round?.questions?.map((question, qIndex) => {
                             // const isMandatory = question?.mandatory === "true";
@@ -483,15 +484,18 @@ const PositionRoundCard = ({
                             );
                           })}
                         </ul>
-                      ) : (
-                        <p className="mt-2 text-gray-500 flex justify-center">
-                          No Questions added yet.
-                        </p>
-                      )}
+                      ) 
+                      // : (
+                      //   <p className="mt-2 text-gray-500 flex justify-center">
+                      //     No Questions added yet.
+                      //   </p>
+                      // )
+                      }
                     </div>
                   )}
                 </div>
-              )}
+              )
+            } 
 
               {round.roundTitle === "Assessment" && (
                 <div className="mt-4">

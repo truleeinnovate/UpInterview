@@ -6,6 +6,9 @@ const scheduledAssessmentsSchema = require("../models/Assessment/assessmentsSche
 // ------------------------------v1.0.0 >
 const mongoose = require("mongoose");
 
+// Import push notification functions
+const {createAssessmentScheduledNotification} = require("./PushNotificationControllers/pushNotificationAssessmentController");
+
 exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
   try {
     const { id } = req.params;
@@ -139,6 +142,14 @@ exports.createScheduledAssessment = async (req, res) => {
 
     // Save to DB
     const savedAssessment = await scheduledAssessment.save();
+    
+    // Create push notification for scheduled assessment
+    try {
+      await createAssessmentScheduledNotification(savedAssessment);
+    } catch (notificationError) {
+      console.error('[ASSESSMENT] Error creating scheduled notification:', notificationError);
+      // Continue execution even if notification fails
+    }
 
     res.status(201).json({
       status: "success",

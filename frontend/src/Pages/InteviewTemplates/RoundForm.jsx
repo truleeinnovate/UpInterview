@@ -4,6 +4,8 @@
 // v1.0.3  -  Ashok   - improved the code
 // v1.0.4  -  Ashok   - added scroll to top when Add new Round
 // v1.0.5  -  Ashok   - Improved responsiveness
+// v1.0.6  -  Ashok   - Fixed responsiveness issues
+// v1.0.7  -  Ashok   - Fixed issues
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
@@ -30,7 +32,12 @@ import LoadingButton from "../../Components/LoadingButton";
 import { ReactComponent as FaPlus } from "../../icons/FaPlus.svg";
 // v1.0.3 <-------------------------------------------------------------------------------------
 import { scrollToFirstError } from "../../utils/ScrollToFirstError/scrollToFirstError.js";
-// v1.0.3 ------------------------------------------------------------------------------------->
+// v1.0.3 -------------------------------------------------------------------------------->
+// Common Form Field Components
+import DropdownWithSearchField from "../../Components/FormFields/DropdownWithSearchField.jsx";
+import InputField from "../../Components/FormFields/InputField.jsx";
+import DescriptionField from "../../Components/FormFields/DescriptionField.jsx";
+import { ROUND_TITLES } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/roundTitlesConfig.js";
 
 function RoundFormTemplates() {
   const { templatesData, isMutationLoading, addOrUpdateRound, saveTemplate } =
@@ -598,9 +605,9 @@ function RoundFormTemplates() {
         newErrors.interviewers =
           "At least one Internal interviewer is required";
       }
-      if (formData.interviewQuestionsList.length === 0) {
-        newErrors.questions = "At least one question is required";
-      }
+      // if (formData.interviewQuestionsList.length === 0) {
+      //   newErrors.questions = "At least one question is required";
+      // }
     }
 
     if (
@@ -882,178 +889,120 @@ function RoundFormTemplates() {
 
             <div className="grid grid-cols-2 sm:grid-cols-1 gap-6 mb-6">
               <div>
-                <label
-                  htmlFor="roundTitle"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Round Name <span className="text-red-500">*</span>
-                </label>
-                {formData.roundTitle === "Other" ? (
-                  <input
-                    // v1.0.2 <---------------------------------------------------------------
-                    ref={fieldRefs.roundTitle}
-                    // v1.0.2 --------------------------------------------------------------->
-                    type="text"
-                    id="roundTitle"
-                    name="roundTitle"
-                    value={formData.customRoundTitle}
-                    onChange={(e) => {
+                <DropdownWithSearchField
+                  containerRef={fieldRefs.roundTitle}
+                  label="Round Title"
+                  required
+                  name="roundTitle"
+                  value={formData.roundTitle === "Other" ? formData.customRoundTitle : formData.roundTitle}
+                  options={ROUND_TITLES}
+                  // options={[
+                  //   { value: "Assessment", label: "Assessment" },
+                  //   { value: "Technical", label: "Technical" },
+                  //   { value: "Final", label: "Final" },
+                  //   { value: "HR Interview", label: "HR Interview" },
+                  //   { value: "__other__", label: "Other" },
+                  // ]}
+                  isCustomName={formData.roundTitle === "Other"}
+                  setIsCustomName={(value) => {
+                    if (value) {
                       setFormData((prev) => ({
                         ...prev,
-                        customRoundTitle: e.target.value,
-                        // DO NOT update roundTitle here!
+                        roundTitle: "Other",
+                        customRoundTitle: "",
                       }));
-                      clearError("roundTitle");
-                    }}
-                    onBlur={() => {
-                      if (!formData.customRoundTitle.trim()) {
-                        setFormData((prev) => ({
-                          ...prev,
-                          roundTitle: "",
-                          customRoundTitle: "",
-                        }));
-                        clearError("roundTitle");
-                      }
-                    }}
-                    // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
-                    // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-0 focus:border-gray-400 sm:text-sm"
-                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.roundTitle
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                    required
-                    placeholder="Enter Custom Round Title"
-                  />
-                ) : (
-                  <select
-                    // v1.0.2 <-------------------------------------------------
-                    ref={fieldRefs.roundTitle}
-                    // v1.0.2 ------------------------------------------------->
-                    id="roundTitle"
-                    name="roundTitle"
-                    value={formData.roundTitle}
-                    onChange={handleRoundTitleChange}
-                    // className={`w-full px-3 py-2 border rounded-md focus:outline-none ${errors.maxexperience ? "border-red-500 focus:ring-red-500 " : "border-gray-300"}`}
-                    // className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3
-                    //         ${
-                    //           errors.roundTitle
-                    //             ? "border-red-500 focus:ring-red-500 "
-                    //             : "border-gray-300"
-                    //         }
-                    //         focus:outline-none  sm:text-sm`}
-                    className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                      border ${
-                        errors.roundTitle
-                          ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                          : "border-gray-300 focus:ring-red-300"
-                      }
-                      focus:outline-gray-300
-                    `}
-                    required
-                  >
-                    <option value="">Select Round Title</option>
-                    <option value="Assessment">Assessment</option>
-                    <option value="Technical">Technical</option>
-                    <option value="Final">Final</option>
-                    <option value="HR Interview">HR Interview</option>
-                    <option value="Other">Other</option>
-                  </select>
-                )}
-                {errors.roundTitle && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.roundTitle}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="interviewMode"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Interview Mode <span className="text-red-500">*</span>
-                </label>
-                <select
-                  // v1.0.2 <----------------------------------------------------------------------------
-                  ref={fieldRefs.interviewMode}
-                  id="interviewMode"
-                  name="interviewMode"
-                  value={formData.interviewMode}
-                  // onChange={(e) =>
-                  //   setFormData((prev) => ({
-                  //     ...prev,
-                  //     interviewMode: e.target.value,
-                  //   }))
-                  // }
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    setFormData((prev) => ({
-                      ...prev,
-                      interviewMode: value,
-                    }));
-
-                    // Clear error if user selected a valid value
-                    if (value && errors.interviewMode) {
-                      setErrors((prevErrors) => ({
-                        ...prevErrors,
-                        interviewMode: "",
+                    } else {
+                      setFormData((prev) => ({
+                        ...prev,
+                        roundTitle: "",
+                        customRoundTitle: "",
                       }));
                     }
                   }}
-                  // className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none sm:text-sm ${
-                  //   errors.interviewMode ? "border-red-500" : "border-gray-300"
-                  // }`}
-                  className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                    border ${
-                      errors.interviewMode
-                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                        : "border-gray-300 focus:ring-red-300"
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    // If already in custom mode, treat changes as typing the custom title
+                    if (formData.roundTitle === "Other") {
+                      setFormData((prev) => ({
+                        ...prev,
+                        customRoundTitle: value,
+                      }));
+                      clearError("roundTitle");
+                      return;
                     }
-                    focus:outline-gray-300
-                  `}
-                  required
-                  disabled={formData.roundTitle === "Assessment"}
+
+                    // DropdownWithSearchField sends an empty string when "Other" is chosen.
+                    if (value === "") {
+                      setFormData((prev) => ({
+                        ...prev,
+                        roundTitle: "Other",
+                        customRoundTitle: "",
+                      }));
+                      clearError("roundTitle");
+                      return;
+                    }
+
+                    // Normal predefined selection
+                    handleRoundTitleChange({ target: { value } });
+                    clearError("roundTitle");
+                  }}
+                  error={errors.roundTitle}
+                />
+              </div>
+
+              <div>
+                <div
+                  className={
+                    formData.roundTitle === "Assessment"
+                      ? "pointer-events-none opacity-60"
+                      : undefined
+                  }
                 >
-                  {/* v1.0.2 ----------------------------------------------------------------------------> */}
-                  <option value="">Select Interview Mode</option>
-                  <option value="Face to Face">Face to Face</option>
-                  <option value="Virtual">Virtual</option>
-                </select>
-                {errors.interviewMode && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.interviewMode}
-                  </p>
-                )}
+                  <DropdownWithSearchField
+                    containerRef={fieldRefs.interviewMode}
+                    label="Interview Mode"
+                    required
+                    disabled={formData.roundTitle === "Assessment"}
+                    name="interviewMode"
+                    value={formData.interviewMode}
+                    options={[
+                      { value: "Face to Face", label: "Face to Face" },
+                      { value: "Virtual", label: "Virtual" },
+                    ]}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        interviewMode: value,
+                      }));
+                      setErrors({ ...errors, interviewMode: "" });
+                    }}
+                    error={errors.interviewMode}
+                  />
+                </div>
               </div>
             </div>
             {/* v1.0.5 <---------------------------------------------------------------- */}
             <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-1 sm:mb-6">
               {/* v1.0.5 ----------------------------------------------------------------> */}
               <div>
-                <label
-                  htmlFor="sequence"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Sequence
-                </label>
-                <input
+                <InputField
+                  label="Sequence"
                   type="number"
                   id="sequence"
                   name="sequence"
-                  min="1"
+                  min={1}
+                  ref={fieldRefs.sequence}
                   value={formData.sequence}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setFormData((prev) => ({
                       ...prev,
                       sequence: parseInt(e.target.value),
-                    }))
-                  }
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none  sm:text-sm"
+                    }));
+                    setErrors({ ...errors, sequence: "" });
+                  }}
+                  error={errors.sequence}
                   required
                 />
                 <p className="mt-1 text-xs text-gray-500">
@@ -1063,111 +1012,67 @@ function RoundFormTemplates() {
 
               {formData.roundTitle !== "Assessment" && (
                 <div>
-                  <label
-                    htmlFor="duration"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Duration (Minutes)
-                  </label>
-                  <select
-                    id="duration"
+                  <DropdownWithSearchField
+                    label="Duration (Minutes)"
                     name="duration"
                     value={formData.duration}
-                    onChange={(e) =>
+                    options={[
+                      { value: 30, label: "30 min" },
+                      { value: 45, label: "45 min" },
+                      { value: 60, label: "60 min" },
+                      { value: 90, label: "90 min" },
+                      { value: 120, label: "120 min" },
+                    ]}
+                    onChange={(e) => {
                       setFormData((prev) => ({
                         ...prev,
                         duration: parseInt(e.target.value),
-                      }))
-                    }
-                    className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none sm:text-sm ${
-                      errors.duration ? "border-red-500" : "border-gray-300"
-                    }`}
-                  >
-                    <option value="30">30 min</option>
-                    <option value="45">45 min</option>
-                    <option value="60">60 min</option>
-                    <option value="90">90 min</option>
-                    <option value="120">120 min</option>
-                  </select>
-                  {errors.duration && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.duration}
-                    </p>
-                  )}
+                      }));
+                      clearError("duration");
+                    }}
+                    error={errors.duration}
+                  />
                 </div>
               )}
 
               {formData.roundTitle === "Assessment" && (
                 <div>
-                  <label
-                    htmlFor="assessmentTemplate"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Assessment Template <span className="text-red-500">*</span>
-                  </label>
-                  {/* v1.0.0 <----------------------------------------------------------------------- */}
-                  <div className="relative flex-1" ref={dropdownRef}>
-                    <input
-                      ref={fieldRefs.assessmentTemplate}
-                      type="text"
-                      name="assessmentTemplate"
-                      id="assessmentTemplate"
-                      // className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none sm:text-sm ${
-                      //   errors.assessmentTemplate
-                      //     ? "border-red-500"
-                      //     : "border-gray-300"
-                      // }`}
-                      className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                        border ${
-                          errors.assessmentTemplate
-                            ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                            : "border-gray-300 focus:ring-red-300"
-                        }
-                        focus:outline-gray-300
-                      `}
-                      placeholder="Enter Assessment Template Name"
-                      value={formData.assessmentTemplate?.assessmentName || ""}
-                      onChange={(e) =>
+                  <DropdownWithSearchField
+                    containerRef={fieldRefs.assessmentTemplate}
+                    label="Assessment Template"
+                    required
+                    name="assessmentTemplate"
+                    value={formData.assessmentTemplate.assessmentId || ""}
+                    options={(filteredAssessments || []).map((a) => ({
+                      value: a._id,
+                      label: a.AssessmentTitle,
+                    }))}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      const selected = (filteredAssessments || []).find(
+                        (a) => a._id === id
+                      );
+                      if (selected) {
+                        handleAssessmentSelect(selected);
+                      } else {
+                        // cleared
                         setFormData((prev) => ({
                           ...prev,
                           assessmentTemplate: {
-                            ...prev.assessmentTemplate,
-                            assessmentName: e.target.value,
+                            assessmentId: "",
+                            assessmentName: "",
                           },
-                        }))
+                          interviewQuestionsList: [],
+                        }));
+                        setSectionQuestions({});
                       }
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      readOnly
-                    />
-                    <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none">
-                      <Search className="text-gray-600 text-lg" />
-                    </div>
-                    {showDropdown && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                        {filteredAssessments.length > 0 ? (
-                          filteredAssessments.map((assessment, index) => (
-                            <div
-                              key={index}
-                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                              onClick={() => handleAssessmentSelect(assessment)}
-                            >
-                              {assessment.AssessmentTitle}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="px-3 py-2 text-gray-500">
-                            No Assessments Found
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {errors.assessmentTemplate && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.assessmentTemplate}
-                    </p>
-                  )}
-                  {/* v1.0.0 --------------------------------------------------------------------------> */}
+                      setErrors((prev) => ({
+                        ...prev,
+                        assessmentTemplate: "",
+                      }));
+                    }}
+                    error={errors.assessmentTemplate}
+                  />
                 </div>
               )}
             </div>
@@ -1668,6 +1573,7 @@ function RoundFormTemplates() {
                     )}
                   </div>
                   {/* v.0.3 <----------------------------------------------------------------------------------------------------- */}
+                  {/* v1.0.6 <--------------------------------------------------------------------- */}
                   <div className="mt-4" ref={fieldRefs.questions}>
                     <div className="py-3 mx-auto rounded-md">
                       {/* Header with Title and Add Button */}
@@ -1700,7 +1606,7 @@ function RoundFormTemplates() {
                                         : "border-gray-300"
                                     }`}
                                   >
-                                    <span className="text-gray-900 font-medium">
+                                    <span className="sm:text-sm text-gray-900 font-medium">
                                       {qIndex + 1}. {questionText}
                                     </span>
                                     <button
@@ -1728,12 +1634,15 @@ function RoundFormTemplates() {
 
                       {/* Question Popup */}
                       {isInterviewQuestionPopup && (
+                        // v1.0.6 <--------------------------------------------------------------------------------------------
+                        // v1.0.7 <--------------------------------------------------------------------------------------------
                         <div
-                          className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50"
+                          className="fixed inset-0 bg-gray-800 bg-opacity-70 flex justify-center items-center z-50 min-h-screen sm:px-1"
+                          // v1.0.7 -------------------------------------------------------------------------------------------->
                           onClick={() => setIsInterviewQuestionPopup(false)}
                         >
                           <div
-                            className="bg-white rounded-md w-[95%] h-[90%]"
+                            className="bg-white rounded-md w-[98%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="py-3 px-4  flex items-center justify-between">
@@ -1762,12 +1671,14 @@ function RoundFormTemplates() {
                             )}
                           </div>
                         </div>
+                        // v1.0.6 -------------------------------------------------------------------------------------------->
                       )}
                     </div>
                     {errors.questions && (
                       <p className="text-red-500 text-sm">{errors.questions}</p>
                     )}
                   </div>
+                  {/* v1.0.6 ---------------------------------------------------------------------> */}
                   {/* v.0.3 -----------------------------------------------------------------------------------------------------> */}
                 </div>
                 {/* v1.0.5 --------------------------------------------------------> */}
@@ -1776,24 +1687,12 @@ function RoundFormTemplates() {
 
             {/* v1.0.3 <------------------------------------------------------------------------- */}
             <div className="mt-6">
-              <label
-                htmlFor="instructions"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Instructions <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                ref={fieldRefs.instructions}
-                value={formData.instructions}
-                id="instructions"
+              <DescriptionField
+                containerRef={fieldRefs.instructions}
+                label="Instructions"
+                required
                 name="instructions"
-                // v1.0.3 <-------------------------------------------------------------------------------------------------------------------
-                // onChange={(e) =>
-                //   setFormData((prev) => ({
-                //     ...prev,
-                //     instructions: e.target.value,
-                //   }))
-                // }
+                value={formData.instructions}
                 onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
@@ -1801,49 +1700,14 @@ function RoundFormTemplates() {
                   }));
                   clearError("instructions");
                 }}
-                // className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 sm:text-sm h-64 ${
-                //   errors.instructions ? "border-red-500" : "border-gray-300"
-                // }`}
-                // className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 sm:text-sm h-64
-                //   ${
-                //     errors.instructions
-                //       ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                //       : "border-gray-300 focus:ring-indigo-500"
-                //   }
-                //   focus:outline-gray-300
-                // `}
-                className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                  border ${
-                    errors.instructions
-                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                      : "border-gray-300 focus:ring-red-300"
-                  }
-                  focus:outline-gray-300
-                `}
-                placeholder="Enter round instructions..."
+                placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                 rows="10"
                 minLength={50}
                 maxLength={1000}
                 readOnly={formData.roundTitle === "Assessment"}
+                error={errors.instructions}
+                showCharCount={true}
               />
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-sm text-gray-500">
-                  {errors.instructions ? (
-                    <p className="text-red-500 text-xs pt-1">
-                      {errors.instructions}
-                    </p>
-                  ) : formData.instructions.length > 0 &&
-                    formData.instructions.length < 50 ? (
-                    <p className="text-gray-500 text-xs">
-                      Minimum {50 - formData.instructions.length} more
-                      characters needed
-                    </p>
-                  ) : null}
-                </span>
-                <p className="text-sm text-gray-500">
-                  {formData.instructions.length}/1000
-                </p>
-              </div>
               {/*  v1.0.3 --------------------------------------------------------------------------------------------------------------> */}
             </div>
 

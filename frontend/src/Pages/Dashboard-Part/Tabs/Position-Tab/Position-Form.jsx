@@ -4,6 +4,7 @@
 // v1.0.1 - Ashok - added scroll to error functionality
 // v1.0.2 - Ashok - Improved responsiveness
 // v1.0.3 - Ashok - Fixed issues at responsiveness
+// v1.0.4 - Ashok - Fixed style issue
 
 import { useEffect, useState, useRef } from "react";
 import AssessmentDetails from "./AssessmentType";
@@ -35,13 +36,12 @@ import InputField from "../../../../Components/FormFields/InputField";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
 // v1.0.1 ---------------------------------------------------------------------------->
 
-
-
 const PositionForm = ({ mode, onClose, isModal = false }) => {
   const { positionData, isMutationLoading, addOrUpdatePosition } =
     usePositions();
 
-  const { templatesData, isQueryLoading: isTemplatesFetching } = useInterviewTemplates();
+  const { templatesData, isQueryLoading: isTemplatesFetching } =
+    useInterviewTemplates();
   const {
     companies,
     locations,
@@ -100,6 +100,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const navigate = useNavigate();
 
   const [errors, setErrors] = useState({});
+  const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
   const [showDropdownCompany, setShowDropdownCompany] = useState(false);
   const [isCustomCompany, setIsCustomCompany] = useState(false);
   const [companySearchTerm, setCompanySearchTerm] = useState("");
@@ -154,14 +155,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [entries, setEntries] = useState([]);
-  const [selectTemplete, setselectTemplete] = useState(true);
+  
   const [selectedExp, setSelectedExp] = useState("");
-  const [positionId, setPositionId] = useState(null);
+ 
   const [selectedLevel, setSelectedLevel] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
 
-  const [deleteIndex, setDeleteIndex] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
@@ -180,21 +179,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   }, [currentStage]);
 
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
-  const [allSelectedExperiences, setAllSelectedExperiences] = useState([]);
-  const [allSelectedExpertises, setAllSelectedExpertises] = useState([]);
-  const experienceOptions = [
-    "0-1 Years",
-    "1-2 years",
-    "2-3 years",
-    "3-4 years",
-    "4-5 years",
-    "5-6 years",
-    "6-7 years",
-    "7-8 years",
-    "8-9 years",
-    "9-10 years",
-    "10+ years",
-  ];
+  
+  
 
   const isNextEnabled = () => {
     if (currentStep === 0) {
@@ -224,19 +210,15 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     return false;
   };
 
-  const expertiseOptions = ["Basic", "Medium", "Expert"];
+
 
   // Mapped options for shared DropdownWithSearchField
-  const companyOptionsRS = (
-    companies || []
-  ).map((c) => ({ value: c?.CompanyName, label: c?.CompanyName })).concat([
-    { value: "__other__", label: "+ Others" },
-  ]);
-  const locationOptionsRS = (
-    locations || []
-  ).map((l) => ({ value: l?.LocationName, label: l?.LocationName })).concat([
-    { value: "__other__", label: "+ Others" },
-  ]);
+  const companyOptionsRS = (companies || [])
+    .map((c) => ({ value: c?.CompanyName, label: c?.CompanyName }))
+    .concat([{ value: "__other__", label: "+ Others" }]);
+  const locationOptionsRS = (locations || [])
+    .map((l) => ({ value: l?.LocationName, label: l?.LocationName }))
+    .concat([{ value: "__other__", label: "+ Others" }]);
   const templateOptions = (templatesData || [])
     .filter((t) => t?.rounds?.length > 0 && t?.status === "active")
     .map((t) => ({ value: t._id, label: t.templateName }));
@@ -249,7 +231,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     setErrors((prev) => {
       const next = { ...prev };
       const keyMap = {
-        companyName: "companyname",
+        // companyName: "companyname",
         minSalary: "minsalary",
         maxSalary: "maxsalary",
       };
@@ -260,8 +242,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
       // Live cross-field validation: Experience
       if (name === "minexperience" || name === "maxexperience") {
-        const min = name === "minexperience" ? parseInt(value) : parseInt(formData.minexperience);
-        const max = name === "maxexperience" ? parseInt(value) : parseInt(formData.maxexperience);
+        const min =
+          name === "minexperience"
+            ? parseInt(value)
+            : parseInt(formData.minexperience);
+        const max =
+          name === "maxexperience"
+            ? parseInt(value)
+            : parseInt(formData.maxexperience);
         if (!Number.isNaN(min) && !Number.isNaN(max)) {
           if (min > max) {
             next.minexperience = "Min Experience cannot be greater than Max";
@@ -272,28 +260,40 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           }
         } else {
           // If either is empty, clear cross-field errors
-          if (next.minexperience === "Min Experience cannot be greater than Max") next.minexperience = "";
-          if (next.maxexperience === "Max Experience cannot be less than Min") next.maxexperience = "";
+          if (
+            next.minexperience === "Min Experience cannot be greater than Max"
+          )
+            next.minexperience = "";
+          if (next.maxexperience === "Max Experience cannot be less than Min")
+            next.maxexperience = "";
         }
       }
 
       // Live cross-field validation: Salary (keys are minsalary/maxsalary in validation)
       if (name === "minSalary" || name === "maxSalary") {
-        const minS = name === "minSalary" ? parseInt(value) : parseInt(formData.minSalary);
-        const maxS = name === "maxSalary" ? parseInt(value) : parseInt(formData.maxSalary);
+        const minS =
+          name === "minSalary" ? parseInt(value) : parseInt(formData.minSalary);
+        const maxS =
+          name === "maxSalary" ? parseInt(value) : parseInt(formData.maxSalary);
 
         // Negative checks
         if (name === "minSalary") {
           if (!Number.isNaN(minS) && minS < 0) {
             next.minsalary = "Minimum salary cannot be negative";
-          } else if (next.minsalary && next.minsalary.startsWith("Minimum salary")) {
+          } else if (
+            next.minsalary &&
+            next.minsalary.startsWith("Minimum salary")
+          ) {
             next.minsalary = "";
           }
         }
         if (name === "maxSalary") {
           if (!Number.isNaN(maxS) && maxS < 0) {
             next.maxsalary = "Maximum salary cannot be negative";
-          } else if (next.maxsalary && next.maxsalary.startsWith("Maximum salary")) {
+          } else if (
+            next.maxsalary &&
+            next.maxsalary.startsWith("Maximum salary")
+          ) {
             next.maxsalary = "";
           }
         }
@@ -303,8 +303,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
             next.minsalary = "Minimum Salary cannot be greater than Maximum";
             next.maxsalary = "Maximum Salary cannot be less than Minimum";
           } else {
-            if (next.minsalary === "Minimum Salary cannot be greater than Maximum") next.minsalary = "";
-            if (next.maxsalary === "Maximum Salary cannot be less than Minimum") next.maxsalary = "";
+            if (
+              next.minsalary === "Minimum Salary cannot be greater than Maximum"
+            )
+              next.minsalary = "";
+            if (next.maxsalary === "Maximum Salary cannot be less than Minimum")
+              next.maxsalary = "";
           }
         }
       }
@@ -376,6 +380,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     setSelectedLevel("");
     setCurrentStep(0);
     setIsModalOpen(false);
+    setShowSkillValidation(false);  // Reset validation flag
+    
     // setEditingIndex(null);
     // setAllSelectedSkills(entries.map(e => e.skill));
   };
@@ -389,7 +395,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         (template) =>
           template.templateName === selectedPosition?.selectedTemplete
       );
-      setPositionId(id);
+      //setPositionId(id);
 
       const companyName = selectedPosition?.companyname || "";
 
@@ -404,7 +410,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         } else {
           setIsCustomCompany(false);
         }
-      } else if (companyName && (!Array.isArray(companies) || companies.length === 0)) {
+      } else if (
+        companyName &&
+        (!Array.isArray(companies) || companies.length === 0)
+      ) {
         // Defer decision; will re-run when companies update
         setIsCustomCompany(true);
       }
@@ -439,18 +448,18 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       setEntries(formattedSkills);
       // setAllSelectedSkills(formattedSkills)
       setAllSelectedSkills(
-        selectedPosition.skills?.map((skill) => skill.skill) || []
+        selectedPosition?.skills?.map((skill) => skill.skill) || []
       );
-      setAllSelectedExperiences(
-        selectedPosition.skills?.map((skill) => skill.experience) || []
-      );
-      setAllSelectedExpertises(
-        selectedPosition.skills?.map((skill) => skill.expertise) || []
-      );
+      // setAllSelectedExperiences(
+      //   selectedPosition.skills?.map((skill) => skill.experience) || []
+      // );
+      // setAllSelectedExpertises(
+      //   selectedPosition.skills?.map((skill) => skill.expertise) || []
+      // );
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positionData, id, companies,templatesData]);
+  }, [positionData, id, companies, templatesData]);
 
   const handleSubmit = async (
     e,
@@ -474,12 +483,17 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       "RoundDetailsSave&AddRound",
       "RoundDetailsSave&Next",
     ].includes(actionType);
-
+    
     // Use updatedData when required
     const dataToSubmit =
       shouldUseUpdatedDataForAction && shouldUseUpdatedData
         ? updatedData
         : formData;
+
+    // Show skills validation when submit is attempted
+    if (!skipValidation) {
+      setShowSkillValidation(true);
+    }
 
     if (!skipValidation) {
       const { formIsValid, newErrors } = validateForm(
@@ -520,11 +534,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // maxexperience: dataToSubmit.maxexperience || "",
       ownerId: userId,
       tenantId: orgId,
-      skills: entries.map((entry) => ({
-        skill: entry.skill,
-        experience: entry.experience,
-        expertise: entry.expertise,
-      })),
+      // Filter out empty skill rows - only include rows where at least one field has a value
+      skills: entries
+        .filter((entry) => entry.skill || entry.experience || entry.expertise)
+        .map((entry) => ({
+          skill: entry.skill,
+          experience: entry.experience,
+          expertise: entry.expertise,
+        })),
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
       // templateId: dataToSubmit.template,
@@ -558,7 +575,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       console.log("response", response);
       if (response.status === "success") {
         notify.success("Position added successfully");
-
       } else if (
         response.status === "no_changes" ||
         response.status === "Updated successfully"
@@ -569,8 +585,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         throw new Error(response.message || "Failed to save position");
       }
 
-
-      if (response.status === "success" || response.status === "Updated successfully" || response.status === "no_changes") {
+      if (
+        response.status === "success" ||
+        response.status === "Updated successfully" ||
+        response.status === "no_changes"
+      ) {
         // Handle navigation
         if (actionType === "BasicDetailsSave") {
           // If it's a modal, call the onClose function with the new position data
@@ -609,10 +628,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       }
     } catch (error) {
       // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
-console.log("error", error);
+      console.log("error", error);
       // Show error toast
-    notify.error(error.response?.data?.message || error.message || "Failed to save position");
-    
+      notify.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to save position"
+      );
+
       if (error.response && error.response.status === 400) {
         const backendErrors = error.response.data.errors || {};
         console.log("backendErrors", backendErrors);
@@ -962,7 +985,9 @@ console.log("error", error);
 
   return (
     <div className="flex items-center justify-center">
-      <div className="bg-white rounded-lg w-full flex flex-col">
+      {/* v1.0.4 <------------------------------------------------------- */}
+      <div className="bg-white rounded-lg w-full flex flex-col mb-10">
+      {/* v1.0.4 -------------------------------------------------------> */}
         {/* Modal Header */}
         <div className="mt-4">
           <h2 className="text-2xl font-semibold px-[13%] sm:mt-5 sm:mb-2 sm:text-lg sm:px-[5%] md:mt-6 md:mb-2 md:text-xl md:px-[5%]">
@@ -1068,116 +1093,110 @@ console.log("error", error);
 
                       {/* Company Name */}
                       <div>
-                        
                         <DropdownWithSearchField
                           value={formData.companyName}
                           options={companyOptionsRS}
                           onChange={handleChange}
-                          error={errors.companyname}
+                          // error={errors.companyname}
                           containerRef={fieldRefs.companyname}
                           label="Company Name"
                           name="companyName"
-                          required
+                          // required
                           isCustomName={isCustomCompany}
                           setIsCustomName={setIsCustomCompany}
                           onMenuOpen={loadCompanies}
                           loading={isCompaniesFetching}
-                          
                         />
                       </div>
                     </div>
 
                     {/* Experience */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
-                        <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                          <IncreaseAndDecreaseField
-                            value={formData.minexperience}
-                            onChange={handleChange}
-                            inputRef={fieldRefs.minexperience}
-                            error={errors.minexperience}
-                            label="Min Experience"
-                            min={1}
-                            max={15}
-                            name="minexperience"
-                            required
-                          />
-                          <IncreaseAndDecreaseField
-                            value={formData.maxexperience}
-                            onChange={handleChange}
-                            inputRef={fieldRefs.maxexperience}
-                            error={errors.maxexperience}
-                            min={1}
-                            max={15}
-                            label="Max Experience"
-                            name="maxexperience"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                          <IncreaseAndDecreaseField
-                            value={formData.minSalary}
-                            onChange={handleChange}
-                            inputRef={fieldRefs.minSalary}
-                            error={errors.minsalary}
-                            min={0}
-                            max={1000000000}
-                            label="Min Salary"
-                            name="minSalary"
-                            required={formData.maxSalary ? true : false}
-                          />
-                          <IncreaseAndDecreaseField
-                            value={formData.maxSalary}
-                            onChange={handleChange}
-                            min={0}
-                            max={1000000000}
-                            inputRef={fieldRefs.maxSalary}
-                            error={errors.maxsalary}
-                            label="Max Salary"
-                            name="maxSalary"
-                            required={formData.minSalary ? true : false}
-                          />
-                        </div>
-
-                      
-                    </div>
-
-                      {/* location  and no of positions  */}
-
-                      <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
                         <IncreaseAndDecreaseField
-                          value={formData.NoofPositions}
+                          value={formData.minexperience}
                           onChange={handleChange}
-                          inputRef={fieldRefs.NoofPositions}
-                          error={errors.NoofPositions}
+                          inputRef={fieldRefs.minexperience}
+                          error={errors.minexperience}
+                          label="Min Experience"
                           min={1}
-                          max={100}
-                          label="No. of Positions"
-                          name="NoofPositions"
+                          max={15}
+                          name="minexperience"
                           required
                         />
-
-                        <div>
-                          
-                          <DropdownWithSearchField
-                            value={formData.Location}
-                            options={locationOptionsRS}
-                            onChange={handleChange}
-                            error={errors.Location}
-                            containerRef={fieldRefs.location}
-                            label="Location"
-                            name="Location"
-                            required
-                            isCustomName={isCustomLocation}
-                            setIsCustomName={setIsCustomLocation}
-                            onMenuOpen={loadLocations}
-                            loading={isLocationsFetching}
-                          />
-                         
-                        </div>
-                        {/* -----v1.0.0-----> */}
+                        <IncreaseAndDecreaseField
+                          value={formData.maxexperience}
+                          onChange={handleChange}
+                          inputRef={fieldRefs.maxexperience}
+                          error={errors.maxexperience}
+                          min={1}
+                          max={15}
+                          label="Max Experience"
+                          name="maxexperience"
+                          required
+                        />
                       </div>
-                      {/* </div> */}
+
+                      <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
+                        <IncreaseAndDecreaseField
+                          value={formData.minSalary}
+                          onChange={handleChange}
+                          inputRef={fieldRefs.minSalary}
+                          error={errors.minsalary}
+                          min={0}
+                          max={1000000000}
+                          label="Min Salary(Annual)"
+                          name="minSalary"
+                          required={formData.maxSalary ? true : false}
+                        />
+                        <IncreaseAndDecreaseField
+                          value={formData.maxSalary}
+                          onChange={handleChange}
+                          min={0}
+                          max={1000000000}
+                          inputRef={fieldRefs.maxSalary}
+                          error={errors.maxsalary}
+                          label="Max Salary(Annual)"
+                          name="maxSalary"
+                          required={formData.minSalary ? true : false}
+                        />
+                      </div>
+                    </div>
+
+                    {/* location  and no of positions  */}
+
+                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <IncreaseAndDecreaseField
+                        value={formData.NoofPositions}
+                        onChange={handleChange}
+                        inputRef={fieldRefs.NoofPositions}
+                        error={errors.NoofPositions}
+                        min={1}
+                        max={100}
+                        label="No. of Positions"
+                        name="NoofPositions"
+                        required
+                      />
+
+                      <div>
+                        <DropdownWithSearchField
+                          value={formData.Location}
+                          options={locationOptionsRS}
+                          onChange={handleChange}
+                          // error={errors.Location}
+                          containerRef={fieldRefs.location}
+                          label="Location"
+                          name="Location"
+                          // required
+                          isCustomName={isCustomLocation}
+                          setIsCustomName={setIsCustomLocation}
+                          onMenuOpen={loadLocations}
+                          loading={isLocationsFetching}
+                        />
+                      </div>
+                      {/* -----v1.0.0-----> */}
+                    </div>
+                    {/* </div> */}
 
                     {/* Job Description */}
                     <DescriptionField
@@ -1186,7 +1205,10 @@ console.log("error", error);
                         const value = e.target.value;
                         setFormData({ ...formData, jobDescription: value });
                         if (errors.jobDescription) {
-                          setErrors((prev) => ({ ...prev, jobDescription: "" }));
+                          setErrors((prev) => ({
+                            ...prev,
+                            jobDescription: "",
+                          }));
                         }
                       }}
                       name="jobDescription"
@@ -1206,13 +1228,30 @@ console.log("error", error);
                         ref={fieldRefs.skills}
                         entries={entries}
                         errors={errors}
-                        onAddSkill={(setEditingIndex) => {
+                        showValidation={showSkillValidation}
+                        onSkillsValidChange={(hasValidSkills) => {
+                          // Clear the skills error if at least one complete row exists
+                          if (hasValidSkills && errors.skills) {
+                            setErrors((prevErrors) => {
+                              const newErrors = { ...prevErrors };
+                              delete newErrors.skills;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        onAddSkill={(setEditingIndexCallback) => {
                           setEntries((prevEntries) => {
                             const newEntries = [
                               ...prevEntries,
                               { skill: "", experience: "", expertise: "" },
                             ];
-                            setEditingIndex(newEntries.length - 1);
+                            // Only set editing index if callback is provided
+                            if (
+                              setEditingIndexCallback &&
+                              typeof setEditingIndexCallback === "function"
+                            ) {
+                              setEditingIndexCallback(newEntries.length - 1);
+                            }
                             return newEntries;
                           });
                           setSelectedSkill("");
@@ -1234,6 +1273,26 @@ console.log("error", error);
                           );
                           setEntries(entries.filter((_, i) => i !== index));
                         }}
+                        onUpdateEntry={(index, updatedEntry) => {
+                          const newEntries = [...entries];
+                          const oldSkill = newEntries[index]?.skill;
+                          newEntries[index] = updatedEntry;
+                          setEntries(newEntries);
+
+                          // Update allSelectedSkills if skill changed
+                          if (oldSkill !== updatedEntry.skill) {
+                            const newSelectedSkills = newEntries
+                              .map((e) => e.skill)
+                              .filter(Boolean);
+                            setAllSelectedSkills(newSelectedSkills);
+                          }
+
+                          // Update formData
+                          setFormData((prev) => ({
+                            ...prev,
+                            skills: newEntries,
+                          }));
+                        }}
                         setIsModalOpen={setIsModalOpen}
                         setEditingIndex={setEditingIndex}
                         isModalOpen={isModalOpen}
@@ -1249,8 +1308,7 @@ console.log("error", error);
                         selectedLevel={selectedLevel}
                         setSelectedLevel={setSelectedLevel}
                         skills={skills}
-                        expertiseOptions={expertiseOptions}
-                        experienceOptions={experienceOptions}
+                        
                         isNextEnabled={isNextEnabled}
                         handleAddEntry={handleAddEntry}
                         skillpopupcancelbutton={skillpopupcancelbutton}
@@ -1265,8 +1323,13 @@ console.log("error", error);
                         value={formData.template?._id || ""}
                         options={templateOptions}
                         onChange={(e) => {
-                          const selectedTemplate = templatesData.find((t) => t._id === e.target.value);
-                          setFormData({ ...formData, template: selectedTemplate || {} });
+                          const selectedTemplate = templatesData.find(
+                            (t) => t._id === e.target.value
+                          );
+                          setFormData({
+                            ...formData,
+                            template: selectedTemplate || {},
+                          });
                         }}
                         error={errors?.template}
                         label="Select Template"
@@ -1278,7 +1341,12 @@ console.log("error", error);
                     {/* v1.0.2 ---------------------------------------------------> */}
                     <DescriptionField
                       value={formData.additionalNotes}
-                      onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          additionalNotes: e.target.value,
+                        })
+                      }
                       name="additionalNotes"
                       error={errors?.additionalNotes}
                       label="Additional Notes"
@@ -1286,51 +1354,51 @@ console.log("error", error);
                       rows={5}
                       maxLength={1000}
                     />
-                    </form>
-                  <div className="flex justify-end items-center p-4 gap-2">
-                    <button 
-                    className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50"
-                    type="button" 
-                    onClick={() => {
-                    // If it's a modal, call the onClose function
-                    if (isModal && onClose) {
-                      onClose();
-                      return;
-                    }
+                  </form>
+                  {/* v1.0.4 <---------------------------------------------------- */}
+                  <div className="flex justify-end items-center px-0 py-4 gap-2">
+                  {/* v1.0.4 ----------------------------------------------------> */}
+                    <button
+                      className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50"
+                      type="button"
+                      onClick={() => {
+                        // If it's a modal, call the onClose function
+                        if (isModal && onClose) {
+                          onClose();
+                          return;
+                        }
 
-                    // Check if we came from InterviewForm
-                    const fromPath = location.state?.from;
-                    const returnTo = location.state?.returnTo;
+                        // Check if we came from InterviewForm
+                        const fromPath = location.state?.from;
+                        const returnTo = location.state?.returnTo;
 
-                    if (fromPath === "/interviews/new" && returnTo) {
-                      navigate(returnTo);
-                    } else {
-                      // Navigate back to position main page
-                      // navigate("/position");
-                      navigate(-1);
-                    }
-                  }}
-                >
-                  Cancel
-                </button>
-                <LoadingButton
-                  onClick={(e) => handleSubmit(e, "BasicDetailsSave")}
-                  isLoading={isMutationLoading}
-                  loadingText={id ? "Updating..." : "Saving..."}
-                >
-                  {isEdit ? "Update" : "Save"}
-                </LoadingButton>
+                        if (fromPath === "/interviews/new" && returnTo) {
+                          navigate(returnTo);
+                        } else {
+                          // Navigate back to position main page
+                          // navigate("/position");
+                          navigate(-1);
+                        }
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <LoadingButton
+                      onClick={(e) => handleSubmit(e, "BasicDetailsSave")}
+                      isLoading={isMutationLoading}
+                      loadingText={id ? "Updating..." : "Saving..."}
+                    >
+                      {isEdit ? "Update" : "Save"}
+                    </LoadingButton>
+                  </div>
                 </div>
-            </div>
-            </div>
+              </div>
             </>
           )}
         </div>
       </div>
     </div>
-
   );
-}
-
+};
 
 export default PositionForm;

@@ -29,6 +29,7 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import { useMediaQuery } from "react-responsive";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.4 ----------------------------------------------------------->
+import { formatDateTime } from "../../../../utils/dateFormatter";
 
 function SupportDesk() {
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -317,7 +318,7 @@ function SupportDesk() {
     {
       key: "createdAt",
       header: "Created At",
-      render: (value) => formatDate(value),
+      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
     },
     ...(impersonatedUser_roleName === "Super_Admin" ||
     impersonatedUser_roleName === "Support_Team"

@@ -3,6 +3,7 @@
 //<---v1.0.2------venkatesh------default and enforce time to after 2 hours from now
 // v1.0.3 - Ashok - Improved responsiveness and used common code for popup
 // v1.0.4 - Ranjith -  added due date changes
+// v1.0.5 - Ashok -  Fixed style issue
 
 import React, { useState, useEffect, useRef, useCallback } from "react"; //<---v1.0.2-----
 import Modal from "react-modal";
@@ -175,7 +176,8 @@ const TaskForm = ({
   // State for storing selections
   const [selectedCategoryRelatedTo, setSelectedCategoryRelatedTo] =
     useState("");
-  const [selectedOptionIdRelatedTo, setSelectedOptionIdRelatedTo] = useState("");
+  const [selectedOptionIdRelatedTo, setSelectedOptionIdRelatedTo] =
+    useState("");
 
   const [isModalOpen] = useState(false);
 
@@ -323,7 +325,9 @@ const TaskForm = ({
         ownerId,
         tenantId,
         // Ranjith v1.0.4
-        dueDate: scheduledDate ? formatForISOString(scheduledDate) : formData.dueDate,
+        dueDate: scheduledDate
+          ? formatForISOString(scheduledDate)
+          : formData.dueDate,
         // dueDate: dueDateISO,
         // Ranjith v1.0.4
         priority: selectedPriority,
@@ -345,22 +349,26 @@ const TaskForm = ({
       }
       console.log("Task saved successfully:", res);
 
-      if (res.status === "Created successfully" || res.status === "Task updated successfully" || res.status === "no_changes") {
-      
-      if (res?.status === "Created successfully"){
-        notify.success("Task created successfully");
-      }else if(res?.status === "Task updated successfully" || res?.status === "no_changes"){
-        notify.success("Task updated successfully");
-      }else{
-        notify.error("Failed to save task");
-      
+      if (
+        res.status === "Created successfully" ||
+        res.status === "Task updated successfully" ||
+        res.status === "no_changes"
+      ) {
+        if (res?.status === "Created successfully") {
+          notify.success("Task created successfully");
+        } else if (
+          res?.status === "Task updated successfully" ||
+          res?.status === "no_changes"
+        ) {
+          notify.success("Task updated successfully");
+        } else {
+          notify.error("Failed to save task");
+        }
+        setInterval(() => {
+          onTaskAdded();
+          onClose();
+        }, 1000);
       }
-      setInterval(() => {
-        onTaskAdded();
-        onClose();
-      }, 1000);
-   
-    }
     } catch (error) {
       console.error("Error saving task:", error);
 
@@ -422,44 +430,9 @@ const TaskForm = ({
       title={`${taskId ? "Update Task" : "Add New Task"}`}
       onClose={onClose}
     >
-      {/* <Modal
-        isOpen={true}
-        onRequestClose={onClose}
-        className={modalClass}
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-50"
-      > */}
-      {/* <div
-        className={classNames(
-          "h-full",
-          { "max-w-6xl mx-auto px-6": isFullScreen },
-          { "opacity-50": isSaving }
-        )}
-      > */}
-      <div className="sm:p-0 p-6">
-        {/* <div className="flex justify-between items-center mb-3">
-            <h2 className="text-2xl font-semibold text-custom-blue">
-              {taskId ? "Update Task" : "Add New Task"}
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden md:hidden"
-              >
-                {isFullScreen ? (
-                  <Minimize className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <Expand className="w-5 h-5 text-gray-500" />
-                )}
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div> */}
-
+      {/* v1.0.5 <---------------------------------- */}
+      <div className="sm:p-0 px-6 py-2 mb-8">
+        {/* v1.0.5 ----------------------------------> */}
         {/* added to Task Form Guideliness by Ranjith */}
         <div className="mb-4">
           <InfoGuide
@@ -576,8 +549,9 @@ const TaskForm = ({
                     options={(usersRes || []).map((user) => ({
                       value: user._id,
                       label:
-                        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-                        user.email,
+                        `${user.firstName || ""} ${
+                          user.lastName || ""
+                        }`.trim() || user.email,
                     }))}
                     onChange={(e) => {
                       const selectedUserId = e.target.value;
@@ -606,7 +580,9 @@ const TaskForm = ({
                     required
                     name="assignedTo"
                     value={formData.assignedTo}
-                    onChange={(e) => handleInputChange("assignedTo", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("assignedTo", e.target.value)
+                    }
                     error={errors.assignedTo}
                   />
                 </div>
@@ -622,7 +598,10 @@ const TaskForm = ({
                   required
                   name="priority"
                   value={selectedPriority}
-                  options={(priorities || []).map((p) => ({ value: p, label: p }))}
+                  options={(priorities || []).map((p) => ({
+                    value: p,
+                    label: p,
+                  }))}
                   onChange={(e) => {
                     const v = e.target.value;
                     setSelectedPriority(v);
@@ -641,7 +620,10 @@ const TaskForm = ({
                   required
                   name="status"
                   value={selectedStatus}
-                  options={(statuses || []).map((s) => ({ value: s, label: s }))}
+                  options={(statuses || []).map((s) => ({
+                    value: s,
+                    label: s,
+                  }))}
                   onChange={(e) => {
                     const v = e.target.value;
                     setSelectedStatus(v);
@@ -654,7 +636,6 @@ const TaskForm = ({
             </div>
             {/* Related To */}
             <div className="space-y-1">
-              
               <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                 <div className="w-full">
                   <DropdownWithSearchField
@@ -667,7 +648,9 @@ const TaskForm = ({
                       value: c,
                       label: c,
                     }))}
-                    onChange={(e) => handleCategorySelectRelatedTo(e.target.value)}
+                    onChange={(e) =>
+                      handleCategorySelectRelatedTo(e.target.value)
+                    }
                     error={errors.relatedToCategory}
                   />
                 </div>
@@ -684,7 +667,9 @@ const TaskForm = ({
                     }))}
                     onChange={(e) => {
                       const id = e.target.value;
-                      const opt = getOptionsForSelectedCategory().find((o) => o.id === id);
+                      const opt = getOptionsForSelectedCategory().find(
+                        (o) => o.id === id
+                      );
                       handleOptionSelectRelatedTo(opt?.name || "", id);
                     }}
                     error={errors.relatedToOption}
@@ -734,13 +719,16 @@ const TaskForm = ({
                 label="Comments"
                 name="comments"
                 value={formData.comments}
-                onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, comments: e.target.value })
+                }
                 error={errors.comments}
                 rows={5}
               />
             </div>
-
-            <div className="flex justify-end space-x-3 mt-6">
+            {/* v1.0.5 <---------------------------------------- */}
+            <div className="flex justify-end space-x-3">
+              {/* v1.0.5 ----------------------------------------> */}
               <button
                 onClick={onClose}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

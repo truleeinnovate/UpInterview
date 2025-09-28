@@ -33,7 +33,7 @@ const DescriptionField = ({
   name,
   inputRef,
   error,
-  label = "Description",
+  label,
   required = false,
   id,
   placeholder = "",
@@ -50,9 +50,11 @@ const DescriptionField = ({
 
   return (
     <div>
+    {label && (
       <label htmlFor={computedId} className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
+    )}
       <textarea
         ref={inputRef}
         id={computedId}

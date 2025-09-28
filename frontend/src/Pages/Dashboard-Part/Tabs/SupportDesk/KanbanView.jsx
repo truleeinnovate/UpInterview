@@ -9,6 +9,7 @@ import { format, isValid, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase } from "lucide-react";
 import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge';
+import { formatDateTime } from '../../../../utils/dateFormatter';
 
 
 const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, effectivePermissions_RoleName, impersonatedUser_roleName, impersonationPayloadID }) => {
@@ -197,7 +198,7 @@ const KanbanView = ({currentTickets, tickets, currentUserId, loading = false, ef
                       {/* v1.0.1 - Ashraf - Added subject field */}
                       {ticket.subject || ticket.ticketCode}
                     </h4>
-                    <p className="text-sm text-gray-500">#{ticket.ticketCode} • {formatDate(ticket.createdAt)}</p>
+                    <p className="text-sm text-gray-500">#{ticket.ticketCode} • {formatDateTime(ticket.createdAt)}</p>
                     {/* v1.0.1 - Ashraf - Added subject field */}
                   </motion.div>
                   <div className="flex gap-1 flex-shrink-0">

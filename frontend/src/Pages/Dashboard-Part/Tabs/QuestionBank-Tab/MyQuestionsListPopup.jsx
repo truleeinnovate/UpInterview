@@ -90,22 +90,22 @@ const MyQuestionsList1 = forwardRef(
         // Sync the Type dropdown with caller or existing list type (supports boolean or string)
         if (typeof defaultType !== 'undefined') {
           if (typeof defaultType === 'boolean') {
-            setDropdownValue(defaultType ? 'Interview Questions' : 'Assignment Questions');
+            setDropdownValue(defaultType ? 'Interview Questions' : 'Assessment Questions');
           } else if (typeof defaultType === 'string') {
             const dt = defaultType.toLowerCase();
             if (dt === 'true' || dt === 'interview questions') setDropdownValue('Interview Questions');
-            else if (dt === 'false' || dt === 'assignment questions') setDropdownValue('Assignment Questions');
+            else if (dt === 'false' || dt === 'assessment questions') setDropdownValue('Assessment Questions');
             else setDropdownValue('Interview Questions');
           }
         } else if (isEditingMode) {
           const existing = createdLists.find((l) => l._id === sectionId);
           if (existing && typeof existing.type !== 'undefined') {
             if (typeof existing.type === 'boolean') {
-              setDropdownValue(existing.type ? 'Interview Questions' : 'Assignment Questions');
+              setDropdownValue(existing.type ? 'Interview Questions' : 'Assessment Questions');
             } else if (typeof existing.type === 'string') {
               const et = existing.type.toLowerCase();
               if (et === 'true' || et === 'interview questions') setDropdownValue('Interview Questions');
-              else if (et === 'false' || et === 'assignment questions') setDropdownValue('Assignment Questions');
+              else if (et === 'false' || et === 'assessment questions') setDropdownValue('Assessment Questions');
             }
           }
         }
@@ -231,7 +231,7 @@ const MyQuestionsList1 = forwardRef(
             if (typeof t === 'string') {
               const s = t.toLowerCase();
               if (s === 'true' || s === 'interview questions' || s === 'interview' || s === 'interviews') return true;
-              if (s === 'false' || s === 'assignment questions' || s === 'assignment' || s === 'assignments') return false;
+              if (s === 'false' || s === 'assessment questions' || s === 'assessment' || s === 'assessment') return false;
             }
             return undefined;
           };
@@ -625,7 +625,7 @@ const MyQuestionsList1 = forwardRef(
                   onChange={(opt) => setDropdownValue(opt?.value || "")}
                   options={[
                     { value: "Interview Questions", label: "Interview Questions" },
-                    { value: "Assignment Questions", label: "Assignment Questions" },
+                    { value: "Assessment Questions", label: "Assessment Questions" },
                   ]}
                   placeholder="Select Question Type"
                 />

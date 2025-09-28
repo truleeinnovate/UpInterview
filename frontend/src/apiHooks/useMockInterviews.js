@@ -101,10 +101,13 @@ export const useMockInterviews = () => {
       };
 
       const payload = {
-        skills: formData.entries?.map((entry) => ({
-          skill: entry.skill,
-          experience: entry.experience,
-          expertise: entry.expertise,
+        // Filter out empty skill rows - only include rows where at least one field has a value
+        skills: formData.entries
+          ?.filter(entry => entry.skill || entry.experience || entry.expertise)
+          .map((entry) => ({
+            skill: entry.skill,
+            experience: entry.experience,
+            expertise: entry.expertise,
         })),
         Role: formData.Role,
         candidateName: formData.candidateName,

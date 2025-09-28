@@ -1,6 +1,7 @@
 // v1.0.0  - mansoor - center the loading in vertically it is horizontally center previously itself
 // v1.0.1  - Ashok   - modified in the table columns as clicking invoice ID can open view details popup
 // v1.0.2  - Ashok   - fixed style issues
+// v1.0.3  - Ashok   - fixed responsiveness issue at kanban loading view
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FileText, ChevronDown, ChevronUp } from "lucide-react";
@@ -15,6 +16,8 @@ import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
 import InvocieKanban from "./InvocieKanban";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import { formatDateTime } from "../../../../utils/dateFormatter";
+
 
 // Loading Skeleton for Invoice Table
 const InvoiceTableSkeleton = () => {
@@ -331,7 +334,7 @@ const InvoiceTab = () => {
       header: "Created At",
       render: (value) =>
         value && value.createdAt
-          ? new Date(value.createdAt).toLocaleDateString()
+          ? formatDateTime(value.createdAt)
           : "N/A",
     },
   ];
@@ -444,11 +447,13 @@ const InvoiceTab = () => {
             viewMode === "table" ? (
               <InvoiceTableSkeleton />
             ) : (
+              // v1.0.2 <---------------------------------------------------
               // v1.0.3 <---------------------------------------------------
-              <div className="sm:mt-[670px] mt-40 xl:mt-0 2xl:mt-0">
+              <div className="sm:mt-[140px] mt-40 xl:mt-0 2xl:mt-0">
                 <InvoiceKanbanSkeleton />
               </div>
               // v1.0.3 --------------------------------------------------->
+              // v1.0.2 --------------------------------------------------->
             )
           ) : (
             <motion.div className="w-full">

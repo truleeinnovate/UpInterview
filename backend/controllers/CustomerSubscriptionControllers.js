@@ -16,7 +16,7 @@ const createSubscriptionControllers = async (req, res) => {
     }
     console.log("planDetails ----", planDetails);
     console.log("userDetails ----", userDetails);
-    console.log("status ----", status);
+    console.log("status create----", status);
     console.log("totalAmount ----", totalAmount);
    
 
