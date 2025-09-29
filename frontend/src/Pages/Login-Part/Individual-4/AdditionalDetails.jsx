@@ -1,4 +1,6 @@
 // v1.0.0 - mansoor - change resume and cover letter buttons color to custom blue
+// v1.0.1 - Ashok   - fixed style issue
+
 import React, { useRef, useState } from "react";
 import InfoBox from "./InfoBox.jsx";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
@@ -15,9 +17,19 @@ const AdditionalDetails = ({
   setIsResumeRemoved,
   setCoverLetterFile,
   setIsCoverLetterRemoved,
-  isProfileCompleteStateOrg
+  isProfileCompleteStateOrg,
 }) => {
-  const { locations, loadLocations, isLocationsFetching, industries, loadIndustries, isIndustriesFetching, currentRoles, loadCurrentRoles, isCurrentRolesFetching } = useMasterData();
+  const {
+    locations,
+    loadLocations,
+    isLocationsFetching,
+    industries,
+    loadIndustries,
+    isIndustriesFetching,
+    currentRoles,
+    loadCurrentRoles,
+    isCurrentRolesFetching,
+  } = useMasterData();
   const resumeInputRef = useRef(null);
   const coverLetterInputRef = useRef(null);
   const [coverLetterName, setCoverLetterName] = useState(
@@ -47,6 +59,9 @@ const AdditionalDetails = ({
       }
       setResumeFile(file);
       setResumeError("");
+      // v1.0.1 <------------------------------------------
+      setErrors((prev) => ({ ...prev, resume: "" }));
+      // v1.0.1 ------------------------------------------>
       setResumeName(file.name);
     }
   };
@@ -57,35 +72,36 @@ const AdditionalDetails = ({
     }
     setResumeFile(null);
     setIsResumeRemoved(true);
+    // v1.0.1 <------------------------------------------
+    setErrors((prev) => ({ ...prev, resume: "Resume is required" }));
+    // v1.0.1 ------------------------------------------>
     setResumeName("");
   };
-
-
 
   const handleChange = (selectedOption, meta) => {
     // Handle both select dropdown and regular input changes
     let name, value;
-    
+
     if (meta && meta.name) {
       // This is from react-select
       name = meta.name;
-      value = selectedOption?.value || '';
+      value = selectedOption?.value || "";
     } else if (selectedOption && selectedOption.target) {
       // This is from a regular input
       name = selectedOption.target.name;
       value = selectedOption.target.value;
     } else {
       // Fallback
-      name = '';
+      name = "";
       value = selectedOption;
     }
-    
-    setAdditionalDetailsData(prev => ({
+
+    setAdditionalDetailsData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    
-    setErrors(prev => ({
+
+    setErrors((prev) => ({
       ...prev,
       [name]: "",
     }));
@@ -118,7 +134,6 @@ const AdditionalDetails = ({
     setCoverLetterName("");
   };
 
-
   return (
     <>
       {/* Info Box */}
@@ -147,19 +162,24 @@ const AdditionalDetails = ({
         {/* Current Role */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
-            value={additionalDetailsData.currentRole || ''}
+            value={additionalDetailsData.currentRole || ""}
             options={[
               // Include the current value in options even if not in the database yet
-              ...(additionalDetailsData.currentRole && !currentRoles?.some(role => role.RoleName === additionalDetailsData.currentRole)
-                ? [{
-                    value: additionalDetailsData.currentRole,
-                    label: additionalDetailsData.currentRole
-                  }]
+              ...(additionalDetailsData.currentRole &&
+              !currentRoles?.some(
+                (role) => role.RoleName === additionalDetailsData.currentRole
+              )
+                ? [
+                    {
+                      value: additionalDetailsData.currentRole,
+                      label: additionalDetailsData.currentRole,
+                    },
+                  ]
                 : []),
-              ...(currentRoles?.map(role => ({
+              ...(currentRoles?.map((role) => ({
                 value: role.RoleName,
-                label: role.RoleName
-              })) || [])
+                label: role.RoleName,
+              })) || []),
             ]}
             onChange={handleChange}
             error={errors.currentRole}
@@ -174,21 +194,26 @@ const AdditionalDetails = ({
         {/* Industry */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
-            value={additionalDetailsData.industry || ''}
+            value={additionalDetailsData.industry || ""}
             options={[
               // Include the current value in options even if not in the database yet
-              ...(additionalDetailsData.industry && !industries?.some(ind => ind.IndustryName === additionalDetailsData.industry)
-                ? [{
-                    value: additionalDetailsData.industry,
-                    label: additionalDetailsData.industry
-                  }]
+              ...(additionalDetailsData.industry &&
+              !industries?.some(
+                (ind) => ind.IndustryName === additionalDetailsData.industry
+              )
+                ? [
+                    {
+                      value: additionalDetailsData.industry,
+                      label: additionalDetailsData.industry,
+                    },
+                  ]
                 : []),
               ...(industries
-                ?.filter(industry => industry.IndustryName)
-                .map(industry => ({
+                ?.filter((industry) => industry.IndustryName)
+                .map((industry) => ({
                   value: industry.IndustryName,
-                  label: industry.IndustryName
-                })) || [])
+                  label: industry.IndustryName,
+                })) || []),
             ]}
             name="industry"
             onChange={handleChange}
@@ -207,13 +232,13 @@ const AdditionalDetails = ({
             value={additionalDetailsData.yearsOfExperience}
             onChange={(e) => {
               const value = e.target.value;
-              setAdditionalDetailsData(prev => ({
+              setAdditionalDetailsData((prev) => ({
                 ...prev,
-                yearsOfExperience: value
+                yearsOfExperience: value,
               }));
-              setErrors(prev => ({
+              setErrors((prev) => ({
                 ...prev,
-                yearsOfExperience: ""
+                yearsOfExperience: "",
               }));
             }}
             name="yearsOfExperience"
@@ -228,21 +253,26 @@ const AdditionalDetails = ({
         {/* Location */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
-            value={additionalDetailsData.location || ''}
+            value={additionalDetailsData.location || ""}
             options={[
               // Include the current value in options even if not in the database yet
-              ...(additionalDetailsData.location && !locations?.some(loc => loc.LocationName === additionalDetailsData.location)
-                ? [{
-                    value: additionalDetailsData.location,
-                    label: additionalDetailsData.location
-                  }]
+              ...(additionalDetailsData.location &&
+              !locations?.some(
+                (loc) => loc.LocationName === additionalDetailsData.location
+              )
+                ? [
+                    {
+                      value: additionalDetailsData.location,
+                      label: additionalDetailsData.location,
+                    },
+                  ]
                 : []),
               ...(locations
-                ?.filter(location => location.LocationName)
-                .map(location => ({
+                ?.filter((location) => location.LocationName)
+                .map((location) => ({
                   value: location.LocationName,
-                  label: location.LocationName
-                })) || [])
+                  label: location.LocationName,
+                })) || []),
             ]}
             name="location"
             onChange={handleChange}
@@ -258,14 +288,16 @@ const AdditionalDetails = ({
         {!isProfileCompleteStateOrg && (
           <>
             {/* Resume Section */}
-            < div className="sm:col-span-2 col-span-2">
+            <div className="sm:col-span-2 col-span-2">
               <div>
+                {/* v1.0.1 <----------------------------------------------------- */}
                 <label
                   htmlFor="resume"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Resume
+                  Resume<span className="text-red-500 ml-1">*</span>
                 </label>
+                {/* v1.0.1 <----------------------------------------------------- */}
                 <div className="relative flex">
                   <input
                     ref={resumeInputRef}
@@ -289,26 +321,32 @@ const AdditionalDetails = ({
                 </div>
               </div>
               {resumeName && (
-                <div className="border mt-2 inline-flex items-center gap-2">
-                  <span className="text-gray-600">{resumeName}</span>
+                // v1.0.1 <-------------------------------------------------------------
+                <div className="border mt-2 flex items-center justify-between gap-2 px-2 rounded-md xl:max-w-md 2xl:max-w-md">
+                  <div className="min-w-0">
+                    <span className="text-sm block truncate text-gray-600">
+                      {resumeName}
+                    </span>
+                  </div>
                   <button
-                    className="text-red-500"
+                    className="text-red-500 flex-shrink-0"
                     onClick={() => handleRemoveFile("resume")}
                   >
                     <span className="text-xl">×</span>
                   </button>
                 </div>
               )}
-              {errors.resume && (
+              {errors.resume && !resumeError && (
                 <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
                   {errors.resume}
                 </p>
               )}
-              {resumeError && !errors.resume && (
+              {resumeError && (
                 <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
                   {resumeError}
                 </p>
               )}
+              {/* v1.0.1 -------------------------------------------------------------> */}
             </div>
 
             {/* Cover Letter Section */}
@@ -343,15 +381,21 @@ const AdditionalDetails = ({
                 </div>
               </div>
               {coverLetterName && (
-                <div className="border mt-2 inline-flex items-center gap-2">
-                  <span className="text-gray-600">{coverLetterName}</span>
+                // v1.0.1 <------------------------------------------------------------------
+                <div className="border mt-2 flex items-center justify-between gap-2 px-2 rounded-md xl:max-w-md 2xl:max-w-md">
+                  <div className="min-w-0">
+                    <span className="text-sm block truncate text-gray-600">
+                      {coverLetterName}
+                    </span>
+                  </div>
                   <button
-                    className="text-red-500"
+                    className="text-red-500 flex-shrink-0"
                     onClick={handleRemoveCoverLetter}
                   >
                     <span className="text-xl">×</span>
                   </button>
                 </div>
+                // v1.0.1 ----------------------------------------------------------------->
               )}
               <p className="text-sm sm:text-xs text-red-500 mt-2 font-semibold">
                 {coverLetterError}

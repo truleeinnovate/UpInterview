@@ -5,6 +5,7 @@
 // v1.0.2 - Ashok - Added subtitle and Icon
 // v1.0.3 - Ashok - fixed padding
 // v1.0.4 - Ashok - fixed some responsiveness issue
+// v1.0.5 - Ashok - tried to give padding at the bottom because some mobile screens require padding bottom
 
 import { useState } from "react";
 import { Minimize, Expand, X, ExternalLink } from "lucide-react";
@@ -132,7 +133,9 @@ function SidebarPopup({
         </div>
 
         {/* Popup content */}
-        <div className="flex-grow overflow-y-auto px-4">{children}</div>
+        {/* v1.0.5 <----------------------------------------------------------------- */}
+        <div className="flex-grow overflow-y-auto px-4 sm:pb-12">{children}</div>
+        {/* v1.0.5 <----------------------------------------------------------------- */}
       </div>
     </div>
   );
