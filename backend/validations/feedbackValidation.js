@@ -98,7 +98,7 @@ const createFeedbackSchema = Joi.object({
         'array.min': 'Please provide skill names and ratings for all skills',
         'any.required': 'Please provide skill names and ratings for all skills'
       }),
-    otherwise: Joi.array().items(skillsSchema).allow([]).optional()
+    otherwise: Joi.array().items(skillsSchema).optional()
   }),
   
   questionFeedback: Joi.array().items(questionFeedbackSchema).optional(),
