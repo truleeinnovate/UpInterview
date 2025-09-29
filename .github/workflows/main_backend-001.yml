@@ -95,7 +95,7 @@ jobs:
           REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
           REACT_APP_CLIENT_SECRET: ${{ secrets.REACT_APP_CLIENT_SECRET }}
           REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
-          
+
           # API URLs
           REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
         run: npm ci --only=production
@@ -104,7 +104,7 @@ jobs:
         run: |
           # Create deployment directory
           mkdir -p deploy/backend
-          
+
           # Copy only essential files (much faster than rsync)
           cp -r backend/package*.json deploy/backend/
           cp -r backend/index.js deploy/backend/
@@ -118,10 +118,11 @@ jobs:
           cp -r backend/constants deploy/backend/
           cp -r backend/data deploy/backend/
           cp -r backend/validations deploy/backend/
-          
+          cp -r backend/services deploy/backend/
+
           # Copy node_modules (already installed with production deps)
           cp -r backend/node_modules deploy/backend/
-          
+
           # Create zip file
           cd deploy
           zip -r ../release.zip . -x "*.git*" "*.DS_Store*" "*.log*"
