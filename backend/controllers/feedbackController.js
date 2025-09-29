@@ -11,6 +11,13 @@ const { Contacts } = require('../models/Contacts.js');
 const { Interview } = require('../models/Interview/Interview.js');
 const Tenant = require('../models/Tenant.js');
 
+// Import validation functions
+const { 
+  validateCreateFeedback, 
+  validateUpdateFeedback, 
+  validateFeedbackBusinessRules 
+} = require('../validations/feedbackValidation');
+
 
 // const mongoose = require("mongoose");
 // const FeedbackModel = require("../models/InterviewFeedback"); 
@@ -20,6 +27,27 @@ const Tenant = require('../models/Tenant.js');
 
 const createFeedback = async (req, res) => {
   try {
+    // ✅ Validate input using Joi schema
+    const { isValid, errors, value: validatedData } = validateCreateFeedback(req.body);
+    
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors
+      });
+    }
+
+    // ✅ Apply additional business rule validations
+    const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
+    if (businessRuleErrors) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: businessRuleErrors
+      });
+    }
+
     const {
       type, // "submit" | "draft"
       tenantId,
@@ -34,15 +62,7 @@ const createFeedback = async (req, res) => {
       overallImpression,
       status,
       feedbackCode,
-    } = req.body;
-
-    // ✅ Validate required fields
-    if (!interviewerId || !interviewRoundId) {
-      return res.status(400).json({
-        success: false,
-        message: "Interviewer ID and Interview Round ID are required",
-      });
-    }
+    } = validatedData;
 
     // ✅ Process questions
     const processedQuestionFeedback = (questionFeedback || []).map((qFeedback) => {
@@ -1104,14 +1124,38 @@ const getFeedbackRoundId = async (req, res) => {
 const updateFeedback = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
-
+    
     if (!id) {
       return res.status(400).json({
         success: false,
         message: "Feedback ID is required"
       });
     }
+
+    // ✅ Validate input using Joi schema
+    const { isValid, errors, value: validatedData } = validateUpdateFeedback(req.body);
+    
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors
+      });
+    }
+
+    // ✅ Apply additional business rule validations if updating to submit
+    if (validatedData.type === 'submit' || validatedData.status === 'submitted') {
+      const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
+      if (businessRuleErrors) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: businessRuleErrors
+        });
+      }
+    }
+
+    const updateData = validatedData;
 
     console.log('📥 Received update feedback data:', updateData);
 
@@ -1167,6 +1211,56 @@ const updateFeedback = async (req, res) => {
   }
 };
 
+// Validation endpoint for feedback
+const validateFeedback = async (req, res) => {
+  try {
+    const { type } = req.body;
+    
+    // Determine which validation to use based on operation type
+    const isUpdate = req.params.operation === 'update';
+    
+    // Validate input using appropriate schema
+    const { isValid, errors, value: validatedData } = isUpdate 
+      ? validateUpdateFeedback(req.body)
+      : validateCreateFeedback(req.body);
+    
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors
+      });
+    }
+
+    // Apply additional business rule validations for submit type
+    if (type === 'submit' || validatedData.status === 'submitted') {
+      const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
+      if (businessRuleErrors) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: businessRuleErrors
+        });
+      }
+    }
+
+    // Return success if all validations pass
+    return res.status(200).json({
+      success: true,
+      message: 'Validation successful',
+      data: validatedData
+    });
+    
+  } catch (error) {
+    console.error('Error validating feedback:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to validate feedback',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createFeedback,
   // getFeedbackByTenantId,
@@ -1175,6 +1269,7 @@ module.exports = {
   getFeedbackByRoundId,
   getAllFeedback,
   updateFeedback,
+  validateFeedback,
   getFeedbackByContactIdRoundId,
   getCandidateByRoundId,
   getFeedbackRoundId // getting all feedbacks  by roundid for scheduler only 

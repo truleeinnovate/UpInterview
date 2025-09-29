@@ -3,6 +3,7 @@ const express = require("express");
 const {
   newAssessment,
   updateAssessment,
+  validateAssessmentStep,
   getAssessmentResults,
   getAssignedCandidates,
   shareAssessment,
@@ -11,6 +12,9 @@ const {
 } = require("../controllers/assessmentController");
 
 const router = express.Router();
+
+// Validation endpoint for step-wise validation
+router.post("/validate/:tab", validateAssessmentStep);
 
 router.post("/new-assessment", newAssessment);
 

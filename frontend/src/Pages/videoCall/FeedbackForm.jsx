@@ -22,6 +22,7 @@ import QuestionBank from "../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.j
 import { config } from "../../config.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
+import axios from "axios";
 import {
   useCreateFeedback,
   useUpdateFeedback,
@@ -990,7 +991,7 @@ const FeedbackForm = ({
         preselectedQuestionsResponses
       );
 
-      // Validate form
+      // Validate form locally first
       if (!validateForm()) {
         console.log("❌ Form validation failed");
         return;
@@ -1068,6 +1069,36 @@ const FeedbackForm = ({
           note: "",
         },
       };
+
+      // Validate with backend before submission (optional - can be enabled)
+      try {
+        const validationResponse = await axios.post(
+          `${config.REACT_APP_API_URL}/feedback/validate`,
+          feedbackData,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (!validationResponse.data.success) {
+          console.log("❌ Backend validation failed", validationResponse.data.errors);
+          // Update error state with backend errors
+          if (validationResponse.data.errors) {
+            setErrors(prevErrors => ({
+              ...prevErrors,
+              ...validationResponse.data.errors
+            }));
+          }
+          alert("Validation failed. Please check the form.");
+          return;
+        }
+      } catch (validationError) {
+        // If backend validation fails, continue with frontend validation only
+        console.warn("Backend validation unavailable, proceeding with frontend validation only", validationError);
+      }
 
       const updatedFeedbackData = {
         overallRating,
@@ -1211,6 +1242,30 @@ const FeedbackForm = ({
         },
         status: "draft", // Mark as draft
       };
+
+      // Optional: Validate draft with backend (usually not needed for drafts)
+      // Uncomment if you want to validate drafts too
+      /*
+      try {
+        const validationResponse = await axios.post(
+          `${config.REACT_APP_API_URL}/feedback/validate`,
+          feedbackData,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (!validationResponse.data.success) {
+          console.log("⚠️ Draft validation warnings", validationResponse.data.errors);
+          // For drafts, we might just show warnings but not block saving
+        }
+      } catch (validationError) {
+        console.warn("Backend validation unavailable for draft", validationError);
+      }
+      */
 
       const updatedFeedbackData = {
         overallRating,
