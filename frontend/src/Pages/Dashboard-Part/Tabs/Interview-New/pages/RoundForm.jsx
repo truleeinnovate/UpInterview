@@ -1069,8 +1069,8 @@ const RoundFormInterviews = () => {
               })) || [],
           };
 
-      console.log("=== Round Saving Process ===");
-      console.log("Payload for submission:", payload);
+      // console.log("=== Round Saving Process ===");
+      // console.log("Payload for submission:", payload);
 
       // Use saveInterviewRound mutation from useInterviews hook
 
@@ -1086,13 +1086,18 @@ const RoundFormInterviews = () => {
       console.log("Saved round ID:", response.savedRound._id);
 
       // Show success toast for round creation
-      notify.success("Interview round created successfully!");
+      // notify.success("Interview round created successfully!");
 
-      console.log("Response from selectedInterviewers:", selectedInterviewers);
-      console.log(
-        "Response from selectedInterviewType:",
-        selectedInterviewType
-      );
+      // console.log("Response from selectedInterviewers:", selectedInterviewers);
+      // console.log(
+      //   "Response from selectedInterviewType:",
+      //   selectedInterviewType
+      // );
+
+          // ✅ Collect success messages instead of showing immediately
+    const successMessages = [];
+    successMessages.push("Interview round created successfully!");
+
 
       if (payload.round.roundTitle === "Assessment") {
         // Calculate link expiry days
@@ -1131,10 +1136,10 @@ const RoundFormInterviews = () => {
           // Handle outsource request if interviewers are selected
           if (selectedInterviewers && selectedInterviewers.length > 0) {
             const isInternal = selectedInterviewType === "Internal";
-            console.log(
-              `Sending ${selectedInterviewers.length} outsource requests`
-            );
-            console.log("selectedInterviewers", selectedInterviewers);
+            // console.log(
+            //   `Sending ${selectedInterviewers.length} outsource requests`
+            // );
+            // console.log("selectedInterviewers", selectedInterviewers);
 
             for (const interviewer of selectedInterviewers) {
               // console.log("interviewer", interviewer);
@@ -1206,10 +1211,10 @@ const RoundFormInterviews = () => {
                   }
                 );
 
-                console.log(
-                  "Outsource email sending response:",
-                  emailResponse.data
-                );
+                // console.log(
+                //   "Outsource email sending response:",
+                //   emailResponse.data
+                // );
 
                 if (emailResponse.data.success) {
                   // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
@@ -1444,13 +1449,16 @@ const RoundFormInterviews = () => {
 
                     // Show success toast for emails
                     if (emailResponse.data.success) {
-                      notify.success(
+                      successMessages.push(
                         "Interview round created and emails sent successfully!"
                       );
                       if (emailResponse.data.data.emailsSent > 0) {
-                        notify.success(
+                        successMessages.push(
                           `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
                         );
+                        console.log("Navigation function type:", typeof navigate);
+                   navigate(`/interviews/${interviewId}`);
+                 console.log("Navigation called successfully");
                       }
                     } else {
                       notify.error("Round created but email sending failed");
@@ -1460,6 +1468,20 @@ const RoundFormInterviews = () => {
                   console.error("Error sending emails:", emailError);
                   notify.error("Round created but email sending failed");
                 }
+
+                // ✅ Show toasts one by one after everything finishes
+    for (const [i, msg] of successMessages.entries()) {
+      setTimeout(() => {
+        notify.success(msg);
+      }, i * 1000); // gap of 1s between each toast
+    }
+
+    // ✅ Navigate after showing toasts
+    setTimeout(() => {
+      navigate(`/interviews/${interviewId}`);
+    }, successMessages.length * 1000);
+
+
               } catch (urlError) {
                 console.error("Error processing meeting URLs:", urlError);
                 console.error("URL Error details:", {
@@ -1470,13 +1492,11 @@ const RoundFormInterviews = () => {
               }
 
               // Navigate to interview page after successful creation
-              console.log(
-                "Navigating to interview page:",
-                `/interviews/${interviewId}`
-              );
-              console.log("Navigation function type:", typeof navigate);
-              navigate(`/interviews/${interviewId}`);
-              console.log("Navigation called successfully");
+              // console.log(
+              //   "Navigating to interview page:",
+              //   `/interviews/${interviewId}`
+              // );
+              
             } catch (err) {
               console.error("Error in meeting creation:", err);
               setErrors({
