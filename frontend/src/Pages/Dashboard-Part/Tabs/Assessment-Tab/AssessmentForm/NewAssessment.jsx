@@ -5,14 +5,14 @@
 // v1.0.4  -  Ashok   - Improved responsiveness
 // v1.0.5  -  Ashok   - Fixed responsive issues
 
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  forwardRef,
-  useCallback,
-} from "react";
-import axios from "axios";
+import React, { useState, useEffect, useRef, useCallback, forwardRef } from "react";
+import {
+  getAssessmentQuestions,
+  upsertAssessmentQuestions,
+} from "../../../../../api";
+import { config } from "../../../../../config";
+import { useNavigate, useParams } from "react-router-dom";
+import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-input-2/lib/style.css";
 // import AddPositionForm from "../Position-Tab/Position-Form.jsx";
@@ -20,7 +20,7 @@ import { validateAssessmentData } from "../../../../../utils/assessmentValidatio
 import Cookies from "js-cookie";
 import { format } from "date-fns";
 import ConfirmationPopup from "../ConfirmationPopup.jsx";
-import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 import BasicDetailsTab from "./BasicDetailsTab.jsx";
 import AssessmentTestDetailsTab from "./AssessmentTestDetailsTab.jsx";
 import AssessmentQuestionsTab from "./AssessmentQuestionsTab.jsx";
@@ -29,7 +29,6 @@ import AssessmentsTab from "../AssessmentViewDetails/AssessmentViewAssessmentTab
 // <---------------------- v1.0.1 >
 import PassScore from "./PassScore.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
-import { config } from "../../../../../config.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { usePositions } from "../../../../../apiHooks/usePositions";
 import LoadingButton from "../../../../../Components/LoadingButton";
@@ -346,10 +345,10 @@ const [startDate, setStartDate] = useState(() => {
   const [isQuestionLimitErrorPopupOpen, setIsQuestionLimitErrorPopupOpen] =
     useState(false);
 
-  const validateAndPrepareData = (currentTab) => {
+  const validateAndPrepareData = async (currentTab) => {
     let newErrors = {};
 
-    // Validate data based on the current tab
+    // First do frontend validation
     switch (currentTab) {
       case "Basicdetails":
         newErrors = validateAssessmentData(formData, "Basicdetails");
@@ -395,6 +394,25 @@ const [startDate, setStartDate] = useState(() => {
 
     if (organizationId) {
       assessmentData.tenantId = organizationId;
+    }
+
+    // Validate with backend before proceeding (optional - for enhanced validation)
+    try {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/assessments/validate/${currentTab}`,
+        assessmentData
+      );
+      
+      if (!response.data.success) {
+        return { errors: response.data.errors || newErrors };
+      }
+    } catch (error) {
+      // If backend validation fails, use the errors from backend
+      if (error.response?.data?.errors) {
+        return { errors: error.response.data.errors };
+      }
+      // Fallback to frontend validation errors
+      console.warn("Backend validation unavailable, using frontend validation only");
     }
 
     return { assessmentData };
@@ -511,7 +529,8 @@ const [startDate, setStartDate] = useState(() => {
       `🔹 Save triggered for tab: ${currentTab}, action: ${actionType}`
     );
 
-    const { errors, assessmentData } = validateAndPrepareData(currentTab);
+    // Await the async validation function
+    const { errors, assessmentData } = await validateAndPrepareData(currentTab);
 
     if (errors) {
       console.warn("❗ Validation failed:", errors);
@@ -694,8 +713,13 @@ const [startDate, setStartDate] = useState(() => {
           linkExpiryDays: formData.linkExpiryDays,
         }),
         ...{ status: formData.status },
-        passScoreType: formData.passScoreType, // Always include
-        passScoreBy: formData.passScoreBy, // Always include
+        // Only include passScoreType and passScoreBy if they have values
+        ...(formData.passScoreType && formData.passScoreType.trim() !== '' && {
+          passScoreType: formData.passScoreType,
+        }),
+        ...(formData.passScoreBy && formData.passScoreBy.trim() !== '' && {
+          passScoreBy: formData.passScoreBy,
+        }),
         ...(formData.passScoreBy === "Overall" && { totalScore: totalScore }),
         ...(formData.passScoreBy === "Overall" &&
           formData.passScore && { passScore: formData.passScore }),

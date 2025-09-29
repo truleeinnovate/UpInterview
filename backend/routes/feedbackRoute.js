@@ -2,16 +2,18 @@
 
 const express = require('express')
 
-const { createFeedback, getFeedbackByRoundId,getAllFeedback, updateFeedback, getFeedbackByContactIdRoundId, getCandidateByRoundId, getFeedbackRoundId } = require('../controllers/feedbackController.js')
+const { createFeedback, getFeedbackByRoundId, getAllFeedback, updateFeedback, validateFeedback, getFeedbackByContactIdRoundId, getCandidateByRoundId, getFeedbackRoundId } = require('../controllers/feedbackController.js')
 
 const router = express.Router()
+
+// Route to validate feedback (for frontend pre-validation)
+router.post('/validate/:operation?', validateFeedback)
 
 // Route to create feedback
 router.post('/create', createFeedback)
 
 // Route to get feedback by round ID (specific route for detailed view)
 router.get('/round/:roundId', getFeedbackByRoundId)
-
 
 // Route to update feedback by ID
 router.put('/:id', updateFeedback);
