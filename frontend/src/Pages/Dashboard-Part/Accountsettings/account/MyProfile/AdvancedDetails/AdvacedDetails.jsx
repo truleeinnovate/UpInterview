@@ -9,7 +9,7 @@ import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 
 const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
-  console.log("type in AdvancedDetails", type);
+//   console.log("type in AdvancedDetails", type);
 
   // const { usersRes } = useCustomContext();
   const navigate = useNavigate();

@@ -144,7 +144,7 @@ const BasicDetailsEditPage = ({
   useEffect(() => {
     // const contact = usersRes.find(user => user.contactId === resolvedId);
     if (!userProfile) return;
-    console.log("contact userProfile BasicDetailsEditPage", userProfile);
+    // console.log("contact userProfile BasicDetailsEditPage", userProfile);
     setFormData({
       email: userProfile.email || "",
       firstName: userProfile.firstName || "",

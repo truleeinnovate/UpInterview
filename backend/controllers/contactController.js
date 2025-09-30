@@ -468,14 +468,18 @@ const updateContactsDetails = async (req, res) => {
             // Set visibility based on years of experience if not explicitly set
             const expYears = parseInt(yearsOfExperience || contactData.yearsOfExperience || 0, 10);
 
+            const showJuniorLevel = expYears > 0;
+            const showMidLevel = expYears >= 4;
+            const showSeniorLevel = expYears >= 7;
+
             if (contactData.rates.junior.isVisible === undefined) {
-                contactData.rates.junior.isVisible = expYears <= 3; // Always show junior
+                contactData.rates.junior.isVisible = showJuniorLevel; // Always show junior
             }
             if (contactData.rates.mid.isVisible === undefined) {
-                contactData.rates.mid.isVisible = expYears > 3 && expYears <= 6; // Show mid if 3+ years
+                contactData.rates.mid.isVisible = showMidLevel; // Show mid if 3+ years
             }
             if (contactData.rates.senior.isVisible === undefined) {
-                contactData.rates.senior.isVisible = expYears > 6; // Show senior if 7+ years
+                contactData.rates.senior.isVisible = showSeniorLevel; // Show senior if 7+ years
             }
         }
 

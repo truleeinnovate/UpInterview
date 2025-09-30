@@ -167,7 +167,7 @@ const connectWithRetry = (retries = 5, delay = 5000) => {
           `❌ MongoDB connection attempt ${attempt + 1} failed:`,
           err.message
         );
-        
+
         if (attempt >= retries - 1) {
           console.error("❌ All MongoDB connection attempts failed");
           console.error(
@@ -177,12 +177,12 @@ const connectWithRetry = (retries = 5, delay = 5000) => {
           reject(new Error('Failed to connect to MongoDB after multiple attempts'));
           return;
         }
-        
+
         // Wait for the specified delay before retrying
         setTimeout(() => attemptConnect(attempt + 1), delay);
       }
     };
-    
+
     attemptConnect();
   });
 };
@@ -476,17 +476,17 @@ const startServer = async () => {
     // Wait for MongoDB connection
     await dbConnection;
     console.log('MongoDB connected successfully');
-    
+
     const server = app.listen(port, () => {
       console.log(`Server running on port ${port}`);
-      
+
       // Initialize the daily exchange rate update
       if (process.env.NODE_ENV !== 'test') {
         const ExchangeRateService = require('./services/exchangeRateService');
         ExchangeRateService.scheduleDailyRateUpdate();
       }
     });
-    
+
     return server;
   } catch (error) {
     console.error('Failed to start server:', error);
@@ -506,7 +506,7 @@ const shutdown = async () => {
       console.log('Process terminated');
       process.exit(0);
     });
-    
+
     // Force close the server after 10 seconds
     setTimeout(() => {
       console.error('Forcing shutdown after timeout');
@@ -1073,11 +1073,11 @@ app.get("/auth/users/:id", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
- 
+
     const contact = await Contacts.findOne({ ownerId: id }, "_id").lean();
     // user.contactId = contact._id;
- 
- 
+
+
     // res.json(user);
     res.json({
       ...user, // convert mongoose doc to plain object
@@ -1406,7 +1406,7 @@ const feedbackRoutes = require("./routes/feedbackRoute");
 const exchangeRateRoutes = require("./routes/exchangeRateRoutes");
 
 // Exchange rate routes
-app.use("/api/exchange", exchangeRateRoutes);
+app.use("/exchange", exchangeRateRoutes);
 
 app.use("/feedback", feedbackRoutes);
 
@@ -1644,8 +1644,8 @@ app.post('/api/create-meeting', async (req, res) => {
     if (start_time) {
       const startDate = new Date(start_time);
       if (isNaN(startDate.getTime())) {
-        return res.status(400).json({ 
-          error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss' 
+        return res.status(400).json({
+          error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss'
         });
       }
       if (startDate <= new Date()) {
@@ -1662,10 +1662,10 @@ app.post('/api/create-meeting', async (req, res) => {
       ...(start_time && { start_time }),
       duration: duration || 60,
       timezone: timezone || 'Asia/Kolkata',
-      settings: settings || { 
-        join_before_host: true, 
-        host_video: false, 
-        participant_video: false 
+      settings: settings || {
+        join_before_host: true,
+        host_video: false,
+        participant_video: false
       }
     };
 
@@ -1674,11 +1674,11 @@ app.post('/api/create-meeting', async (req, res) => {
     const create = await axios.post(
       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
       body,
-      { 
-        headers: { 
-          Authorization: `Bearer ${token}`, 
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       }
     );
 
@@ -1694,8 +1694,8 @@ app.post('/api/create-meeting', async (req, res) => {
 
   } catch (err) {
     console.error("Zoom API Error:", err.response?.data || err.message);
-    return res.status(err.response?.status || 500).json({ 
-      error: err.response?.data?.message || err.message 
+    return res.status(err.response?.status || 500).json({
+      error: err.response?.data?.message || err.message
     });
   }
 });
@@ -1713,15 +1713,15 @@ app.post('/api/create-meeting', async (req, res) => {
 //     if (start_time) {
 //       const startDate = new Date(start_time);
 //       if (isNaN(startDate.getTime())) {
-//         return res.status(400).json({ 
-//           error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss' 
+//         return res.status(400).json({
+//           error: 'Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss'
 //         });
 //       }
-      
+
 //       // Ensure start_time is in the future for scheduled meetings
 //       if (startDate <= new Date()) {
-//         return res.status(400).json({ 
-//           error: 'start_time must be in the future' 
+//         return res.status(400).json({
+//           error: 'start_time must be in the future'
 //         });
 //       }
 //     }
@@ -1735,10 +1735,10 @@ app.post('/api/create-meeting', async (req, res) => {
 //       ...(start_time && { start_time }),
 //       duration: duration || 60,
 //       timezone: timezone || 'Asia/Kolkata',
-//       settings: settings || { 
-//         join_before_host: true, 
-//         host_video: false, 
-//         participant_video: false 
+//       settings: settings || {
+//         join_before_host: true,
+//         host_video: false,
+//         participant_video: false
 //       }
 //     };
 
@@ -1747,11 +1747,11 @@ app.post('/api/create-meeting', async (req, res) => {
 //     const create = await axios.post(
 //       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
 //       body,
-//       { 
-//         headers: { 
-//           Authorization: `Bearer ${token}`, 
-//           'Content-Type': 'application/json' 
-//         } 
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           'Content-Type': 'application/json'
+//         }
 //       }
 //     );
 
@@ -1765,8 +1765,8 @@ app.post('/api/create-meeting', async (req, res) => {
 //     return res.json(create.data);
 //   } catch (err) {
 //     console.error("Zoom API Error:", err.response?.data || err.message);
-//     return res.status(err.response?.status || 500).json({ 
-//       error: err.response?.data?.message || err.message 
+//     return res.status(err.response?.status || 500).json({
+//       error: err.response?.data?.message || err.message
 //     });
 //   }
 // });
@@ -1818,6 +1818,3 @@ app.use("*", (req, res) => {
 });
 
 //  v1.0.4 ------------------------------------------------------------------------------>
-
-
-

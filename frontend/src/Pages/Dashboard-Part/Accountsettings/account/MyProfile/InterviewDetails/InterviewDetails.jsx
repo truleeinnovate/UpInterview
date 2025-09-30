@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v2.0.0 - Added comprehensive interview details view
 
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
@@ -7,14 +8,28 @@ import { useCustomContext } from "../../../../../../Context/Contextfetch";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 
-// Create a formatting function
+// Format skill name with proper capitalization
+const formatSkill = (skill) => {
+    if (!skill) return '';
+    return skill
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
+// Format interview type for display
 const formatInterviewType = (type) => {
     const formatMap = {
         'technical': 'Technical',
         'mock': 'Mock',
         'system_design': 'System Design',
         'behavioral': 'Behavioral',
-        // Add more mappings as needed
+        'resume_review': 'Resume Review',
+        'coding_challenge': 'Coding Challenge',
+        'system_architecture': 'System Architecture',
+        'leadership': 'Leadership',
+        'case_study': 'Case Study'
     };
 
     return formatMap[type] || type
@@ -23,18 +38,31 @@ const formatInterviewType = (type) => {
         .join(' ');
 };
 
+// Format currency values
+const formatCurrency = (amount, currency = 'USD') => {
+    if (amount === undefined || amount === null) return '0.00';
+    return parseFloat(amount).toLocaleString('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+};
+
 const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
     const { usersRes } = useCustomContext();
     const navigate = useNavigate();
     const [contactData, setContactData] = useState({});
 
-    useEffect(() => {
-        console.log('Full contactData:', contactData);
-        console.log('contactData.rates:', contactData?.rates);
-        console.log('contactData.rates.junior:', contactData?.rates?.junior);
-        console.log('contactData.rates.junior.isVisible:', contactData?.rates?.junior?.isVisible);
-        console.log('contactData.previousExperienceConductingInterviews:', contactData?.previousExperienceConductingInterviews);
-    }, [contactData]);
+    // console.log('contact data in interview details', contactData);
+
+    // useEffect(() => {
+    //     console.log('Full contactData:', contactData);
+    //     console.log('contactData.rates:', contactData?.rates);
+    //     console.log('contactData.rates.junior:', contactData?.rates?.junior);
+    //     console.log('contactData.rates.junior.isVisible:', contactData?.rates?.junior?.isVisible);
+    //     console.log('contactData.previousExperienceConductingInterviews:', contactData?.previousExperienceConductingInterviews);
+    // }, [contactData]);
 
     const authToken = Cookies.get("authToken");
     const tokenPayload = decodeJwt(authToken);
@@ -92,198 +120,190 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
 
     // console.log("contactData?.contactId", contactData);
 
+    const expYears = parseInt(contactData?.yearsOfExperience || 0, 10);
+
+    const showJuniorLevel = expYears > 0;
+    const showMidLevel = expYears >= 4;
+    const showSeniorLevel = expYears >= 7;
+
     return (
-        // v1.0.0 <-------------------
         <div className="mx-2">
-            {/* // v1.0.0 -------------------> */}
-            {/* v1.0.0 <---------------------------------- */}
-            <div
-                className={`flex  items-center my-4 ${mode === "users" ? "justify-end" : "justify-between py-2"
-                    }`}
-            >
-                <h3
-                    className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}
-                >
+            <div className={`flex items-center my-4 ${mode === "users" ? "justify-end" : "justify-between py-2"}`}>
+                <h3 className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}>
                     Interview Details
                 </h3>
-
                 <button
                     onClick={() => {
                         mode === "users"
                             ? setInterviewEditOpen(true)
-                            : navigate(
-                                `/account-settings/my-profile/interview-edit/${contactData?._id}`
-                            );
-                        //  details/:idinterview-edit
-                        // navigate(`/account-settings/my-profile/interview-edit/${userId}`)
+                            : navigate(`/account-settings/my-profile/interview-edit/${contactData?._id}`);
                     }}
-                    className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
+                    className="px-4 py-2 text-sm bg-custom-blue text-white rounded hover:bg-custom-blue/80 transition-colors"
                 >
                     Edit
                 </button>
             </div>
-            {/* v1.0.0 ----------------------------------> */}
 
-            <div
-                className={`bg-white rounded-lg space-y-4 ${mode !== "users" ? "p-4" : ""
-                    }`}
-            >
-                <div className="grid mb-2 grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-                    <div className="">
+            <div className={`bg-white rounded-lg ${mode !== "users" ? "p-4" : ""}`}>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                    {/* Row 1: Technologies and Skills */}
+                    <div classN ame="col-span-1 space-y-2">
                         <p className="text-sm text-gray-500">Technologies</p>
                         <div className="flex flex-wrap gap-2 mt-1">
-                            {contactData?.technologies &&
-                                Array.isArray(contactData.technologies) &&
-                                contactData?.technologies.length > 0 ? (
-                                contactData?.technologies.map((technology, index) => (
-                                    <span
-                                        key={index}
-                                        className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
-                                    >
-                                        {technology || "N/A"}
+                            {contactData?.technologies?.length > 0 ? (
+                                contactData.technologies.map((tech, index) => (
+                                    <span key={index} className="px-2 py-1 bg-blue-50 text-custom-blue rounded-full text-xs">
+                                        {tech}
                                     </span>
                                 ))
                             ) : (
-                                <span className="font-medium sm:text-sm">No Technologies Available</span>
+                                <p className="text-gray-500 text-sm">-</p>
                             )}
                         </div>
                     </div>
 
-                    <div>
+                    <div className="col-span-1 space-y-2">
                         <p className="text-sm text-gray-500">Skills</p>
                         <div className="flex flex-wrap gap-2 mt-1">
-                            {contactData?.skills &&
-                                Array.isArray(contactData?.skills) &&
-                                contactData?.skills.length > 0 ? (
-                                contactData?.skills.map((skill, index) => (
-                                    <span
-                                        key={index}
-                                        className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
-                                    >
-                                        {skill || "N/A"}
-                                    </span>
-                                ))
+                            {contactData?.skills?.length > 0 ? (
+                                <>
+                                    {contactData.skills.slice(0, 3).map((skill, index) => (
+                                        <span key={index} className="px-2 py-1 bg-blue-50 text-custom-blue rounded-full text-xs whitespace-nowrap">
+                                            {formatSkill(skill)}
+                                        </span>
+                                    ))}
+                                    {contactData.skills.length > 3 && (
+                                        <div className="relative group">
+                                            <span 
+                                                className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs cursor-default"
+                                                title={contactData.skills.slice(3).map(skill => formatSkill(skill)).join(', ')}
+                                            >
+                                                +{contactData.skills.length - 3} more
+                                            </span>
+                                            <div className="absolute z-10 hidden group-hover:block bg-white p-2 rounded shadow-lg border border-gray-200 text-xs text-gray-700 whitespace-nowrap">
+                                                {contactData.skills.slice(3).map((skill, index) => (
+                                                    <div key={index} className="px-2 py-1 hover:bg-gray-50">
+                                                        {formatSkill(skill)}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             ) : (
-                                <span className="font-medium sm:text-sm">No Skills Available</span>
+                                <p className="text-gray-500 text-sm">-</p>
                             )}
                         </div>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-sm text-gray-500">
-                            Previous Experience Conducting Interviews
-                        </p>
-                        <p className="font-medium sm:text-sm">
-                            {contactData?.previousExperienceConductingInterviews ||
-                                "Not Provided"}
+                    {/* Row 2: Interview Experience */}
+                    <div className="space-y-1">
+                        <p className="text-sm text-gray-500">Previous Experience Conducting Interviews</p>
+                        <p className="text-sm font-medium">
+                            {contactData?.previousExperienceConductingInterviews === "yes" ? 'Yes' : 'No'}
                         </p>
                     </div>
 
                     {contactData?.previousExperienceConductingInterviews === "yes" && (
-                        <>
-                            <div>
-                                <p className="text-sm text-gray-500">
-                                    Previous Experience
-                                </p>
-                                <p className="font-medium sm:text-sm">
-                                    {contactData?.previousExperienceConductingInterviewsYears ||
-                                        "Not Provided"}{" "}
-                                    Years
-                                </p>
+                        <div className="space-y-1">
+                            <p className="text-sm text-gray-500">Years of Experience</p>
+                            <p className="text-sm font-medium">
+                                {contactData?.previousExperienceConductingInterviewsYears || '0'} years
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Row 3: Rates and Interview Formats */}
+                    {contactData?.rates && Object.entries(contactData.rates).map(([level, rate]) => {
+                        const shouldShow =
+                            (level === 'junior' && showJuniorLevel) ||  // Always show junior level
+                            (level === 'mid' && showMidLevel) ||     // Show mid-level if 4+ years
+                            (level === 'senior' && showSeniorLevel);     // Show senior if 7+ years
+
+                        return shouldShow && (
+                            <div key={level} className="space-y-1">
+                                <p className="text-sm text-gray-500">{level.charAt(0).toUpperCase() + level.slice(1)} Rate</p>
+                                <div className="text-sm">
+                                    <p className="font-medium">{formatCurrency(rate?.usd, 'USD')}</p>
+                                    <p className="text-gray-600">{formatCurrency(rate?.inr, 'INR')}</p>
+                                </div>
                             </div>
-                        </>
-                    )}
+                        );
+                    })}
 
-                    {contactData?.rates?.junior?.isVisible && (
-                        <div>
-                            <p className="text-sm text-gray-500">Junior Level Rate</p>
-                            <p className="font-medium sm:text-sm">
-                                ${contactData?.rates?.junior?.usd || "0"} (${contactData?.rates?.junior?.inr} INR)
-                            </p>
-                        </div>
-                    )}
-
-                    {contactData?.rates?.mid?.isVisible && (
-                        <div>
-                            <p className="text-sm text-gray-500">Mid Level Rate</p>
-                            <p className="font-medium sm:text-sm">
-                                ${contactData?.rates?.mid?.usd || "0"} (${contactData?.rates?.mid?.inr} INR)
-                            </p>
-                        </div>
-                    )}
-
-                    {contactData?.rates?.senior?.isVisible && (
-                        <div>
-                            <p className="text-sm text-gray-500">Senior Level Rate</p>
-                            <p className="font-medium sm:text-sm">
-                                ${contactData?.rates?.senior?.usd || "0"} (${contactData?.rates?.senior?.inr} INR)
-                            </p>
-                        </div>
-                    )}
-
-                    <div>
-                        <p className="text-sm text-gray-500">Interview Formats You Offer</p>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                            {contactData?.interviewFormatWeOffer &&
-                                Array.isArray(contactData?.interviewFormatWeOffer) &&
-                                contactData?.interviewFormatWeOffer.length > 0 ? (
-                                contactData?.interviewFormatWeOffer.map((interview, index) => (
+                    <div className="space-y-2">
+                        <p className="text-sm text-gray-500">Interview Formats</p>
+                        <div className="flex flex-wrap gap-2">
+                            {contactData?.interviewFormatWeOffer?.length > 0 ? (
+                                contactData.interviewFormatWeOffer.map((format, index) => (
                                     <span
                                         key={index}
-                                        className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm"
+                                        className="px-2 py-1 bg-blue-50 text-custom-blue rounded-full text-xs"
                                     >
-                                        {formatInterviewType(interview) || "N/A"}
+                                        {formatInterviewType(format)}
                                     </span>
                                 ))
                             ) : (
-                                <span className="font-medium sm:text-sm">
-                                    No Interview Formats You Offer Available
-                                </span>
+                                <p className="text-gray-500 text-sm">-</p>
                             )}
                         </div>
-                        {/* <p className="font-medium">$ {contactData?.InterviewFormatWeOffer || "N/A"}</p> */}
                     </div>
 
-                    {/* <div>
-          <p className="text-sm text-gray-500">Mock Interview</p>
-          <p>{contactData?.IsReadyForMockInterviews || "NO"}</p>
-
-        </div> */}
-                    {contactData?.expectedRatePerMockInterview && (
-                        <div>
-                            <p className="text-sm text-gray-500">
-                                Rate Per Mock Interview Charges
-                            </p>
-                            <p className="font-medium sm:text-sm">
-                                {contactData?.expectedRatePerMockInterview
-                                    ? `$ ${contactData?.expectedRatePerMockInterview}`
-                                    : "Not Provided"}
+                    {/* Row 4: Hourly Rate */}
+                    {contactData?.hourlyRate && (
+                        <div className="space-y-1">
+                            <p className="text-sm text-gray-500">Hourly Rate</p>
+                            <p className="text-sm font-medium">
+                                {formatCurrency(contactData.hourlyRate, 'USD')}
                             </p>
                         </div>
                     )}
 
-                </div>
+                    {/* Row 5: Discount and Professional Title */}
+                    {contactData?.mock_interview_discount ? (
+                        <div className="space-y-1">
+                            <p className="text-sm text-gray-500">Discount</p>
+                            <p className="text-sm font-medium">
+                                {contactData.mock_interview_discount}%
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-1">
+                            <p className="text-sm text-gray-500">Discount</p>
+                            <p className="text-sm text-gray-500">-</p>
+                        </div>
+                    )}
 
-                <div>
-                    <p className="text-sm text-gray-500">Professional Title</p>
-                    <p className="font-medium  sm:text-sm whitespace-pre-line break-words">
-                        {contactData?.professionalTitle || "Not Provided"}
-                    </p>
-                </div>
+                    <div className="space-y-1">
+                        <p className="text-sm text-gray-500">Professional Title</p>
+                        <p
+                            className="text-sm font-medium truncate"
+                            title={contactData?.professionalTitle || ''}
+                        >
+                            {contactData?.professionalTitle || '-'}
+                        </p>
+                    </div>
 
-                {/* <div className="flex flex-col mt-2"> */}
-                <div
-                    className={`flex flex-col ${mode === "users" ? "w-full" : "max-w-3xl"
-                        } break-words`}
-                >
-                    <span className="text-sm text-gray-500">Professional Bio</span>
+                    {/* Row 6: Bio (full width) */}
+                    <div className="space-y-1">
+                        <p className="text-sm text-gray-500">Professional Bio</p>
+                        <p
+                            className="text-sm font-medium truncate"
+                            title={contactData?.bio || ''}
+                        >
+                            {contactData?.bio || 'No bio provided'}
+                        </p>
+                    </div>
 
-                    {/* <p className="text-gray-800 text-sm sm:text-xs float-right mt-3 font-medium"> */}
-                    <p className="text-gray-800 text-sm sm:text-sm mt-1 font-medium whitespace-pre-line break-words">
-                        {contactData?.bio || "Not Provided"}
-                    </p>
+                    {/* No Show Policy */}
+                    {contactData?.noShowPolicy && (
+                        <div className="col-span-2 space-y-1">
+                            <p className="text-sm text-gray-500">No Show Policy</p>
+                            <p className="text-sm text-gray-700">
+                                {contactData.noShowPolicy}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
