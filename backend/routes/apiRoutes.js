@@ -355,6 +355,20 @@ router.get('/:model', permissionMiddleware, async (req, res) => {
       // <------------------------------- v1.0.3 
       case 'interviewtemplate':
         // console.log('[34] Processing InterviewTemplate model');
+        // Use the existing query (which has tenantId and ownerId filters) and add standard templates
+        query = {
+          $or: [
+            { type: 'standard' }, // Standard templates are accessible to all
+            {
+              $and: [
+                { type: 'custom' },
+                query, // Reuse the base query with tenantId and ownerId filters
+              ],
+            },
+          ],
+        };
+    
+        // console.log('[34.1] InterviewTemplate query:', JSON.stringify(query, null, 2));
         data = await DataModel.find(query)
           .populate({
             path: 'rounds.interviewers',

@@ -21,6 +21,29 @@ import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadg
 // v1.0.0 ------------------------------------------------------------------------------------>
 import { formatDateTime } from "../../utils/dateFormatter.js";
 
+const FilterTabs = ({ activeFilter, onFilterChange, standardCount, customCount, totalCount }) => {
+  const tabs = [
+    { id: 'all', label: 'All', count: totalCount },
+    { id: 'standard', label: 'Standard', count: standardCount },
+    { id: 'custom', label: 'Custom', count: customCount }
+  ];
+
+  return (
+    <div className="filter-tabs">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          className={`filter-tab ${activeFilter === tab.id ? 'active' : ''}`}
+          onClick={() => onFilterChange(tab.id)}
+        >
+          {tab.label}
+          <span className="filter-count">{tab.count}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const InterviewTemplates = () => {
   const { effectivePermissions } = usePermissions();
   const { templatesData, isLoading } = useInterviewTemplates();
@@ -47,6 +70,22 @@ const InterviewTemplates = () => {
   const [createdDatePreset, setCreatedDatePreset] = useState("");
   const filterIconRef = useRef(null);
   const itemsPerPage = 10;
+
+
+  const [activeFilter, setActiveFilter] = useState('all');
+
+  // const allTemplates = [...standardTemplates, ...customTemplates];
+
+  const getFilteredTemplates = () => {
+    switch (activeFilter) {
+      case 'standard':
+        // return standardTemplates;
+      case 'custom':
+        // return customTemplates;
+      default:
+        // return allTemplates;
+    }
+  };
 
   useEffect(() => {
     if (isTablet) {
@@ -399,6 +438,13 @@ const InterviewTemplates = () => {
               filterIconRef={filterIconRef}
             />
           </div>
+          <FilterTabs
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          standardCount={"10"}
+          customCount={"10"}
+          totalCount={"10"}
+        />
         </main>
       </div>
       <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
