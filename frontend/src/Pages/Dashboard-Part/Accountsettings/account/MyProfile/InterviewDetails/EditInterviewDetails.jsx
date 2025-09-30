@@ -59,7 +59,7 @@ const EditInterviewDetails = ({
     const [isRateLoading, setIsRateLoading] = useState(false);
     const [lastRateUpdate, setLastRateUpdate] = useState('');
 
-        const skillsInputRef = useRef(null);
+    const skillsInputRef = useRef(null);
 
     // Update your existing fetchExchangeRate function
     const fetchExchangeRate = useCallback(async () => {
@@ -594,7 +594,7 @@ const EditInterviewDetails = ({
             }
         } catch (error) {
             console.error("Error updating interview details:", error);
-            
+
             if (error.response) {
                 if (error.response.status === 400) {
                     const backendErrors = error.response.data.errors || {};
@@ -916,18 +916,6 @@ const EditInterviewDetails = ({
                 <form className="space-y-6 pb-2" onSubmit={handleSave}>
                     <div className="grid grid-cols-1 gap-4">
 
-                        {/* Exchange Rate Info - Simplified */}
-                        <div className="text-sm text-gray-600 mb-4">
-                            {isRateLoading ? (
-                                <span>Loading exchange rate...</span>
-                            ) : (
-                                <span>1 USD = {exchangeRate} INR {lastRateUpdate && `(Updated at ${new Date(lastRateUpdate).toLocaleTimeString()})`}</span>
-                            )}
-                            <p className="text-xs text-gray-500 mt-1">
-                                Changing USD will automatically update INR, and vice versa
-                            </p>
-                        </div>
-
                         {/* Technology Selection */}
                         <div className="space-y-4">
                             <DropdownWithSearchField
@@ -1053,7 +1041,7 @@ const EditInterviewDetails = ({
                                                 key={index}
                                                 className="bg-custom-blue/10 border border-custom-blue/40 rounded-full px-3 py-1 text-sm text-custom-blue flex items-center"
                                             >
-                                                <SkillIcon className="h-3.5 w-3.5 mr-1.5 text-custom-blue" />
+                                                {/* <SkillIcon className="h-3.5 w-3.5 mr-1.5 text-custom-blue" /> */}
                                                 <span className="mr-1.5">{skill}</span>
                                                 <button
                                                     type="button"
@@ -1154,6 +1142,17 @@ const EditInterviewDetails = ({
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Hourly Rates by Experience Level <span className="text-red-500">*</span>
                                 </label>
+                                {/* Exchange Rate Info - Simplified */}
+                                <div className="text-sm text-gray-600 mb-4">
+                                    {isRateLoading ? (
+                                        <span>Loading exchange rate...</span>
+                                    ) : (
+                                        <span>1 USD = {Number(exchangeRate).toFixed(2)} INR {lastRateUpdate && `(Updated at ${new Date(lastRateUpdate).toLocaleTimeString()})`}</span>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Changing USD will automatically update INR, and vice versa
+                                    </p>
+                                </div>
                                 <div className="space-y-4">
                                     {/* Junior Level (0-3 years) - Always visible */}
                                     {showJuniorLevel && (
