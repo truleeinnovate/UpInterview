@@ -9,7 +9,8 @@ const {
   createWithdrawalRequest,
   getWithdrawalRequests,
   cancelWithdrawalRequest,
-  handlePayoutWebhook
+  handlePayoutWebhook,
+  fixVerifiedBankAccounts
 } = require('../controllers/WalletControllers');
 
 const WalletRouter = express.Router();
@@ -48,5 +49,9 @@ WalletRouter.post('/withdrawals/:withdrawalRequestId/cancel', cancelWithdrawalRe
 // Webhook Routes
 // POST /wallet/payout-webhook - Handle Razorpay payout webhook events
 WalletRouter.post('/payout-webhook', handlePayoutWebhook);
+
+// Utility Routes
+// POST /wallet/fix-verified-accounts - Fix verified bank accounts that are not marked as active
+WalletRouter.post('/fix-verified-accounts', fixVerifiedBankAccounts);
 
 module.exports = WalletRouter;

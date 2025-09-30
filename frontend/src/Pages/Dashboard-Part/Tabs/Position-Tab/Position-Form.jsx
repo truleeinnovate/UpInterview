@@ -1333,6 +1333,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         }}
                         error={errors?.template}
                         label="Select Template"
+                        placeholder="Select Template"
                         name="template"
                         required={false}
                         loading={isTemplatesFetching}

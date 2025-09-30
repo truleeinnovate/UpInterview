@@ -10,7 +10,7 @@ import LoadingButton from "../../../../../Components/LoadingButton";
 
 export function WithdrawalModal({ onClose, onSuccess }) {
   const { userProfile } = useUserProfile();
-  const ownerId = userProfile?.id;
+  const ownerId = userProfile?.id || userProfile?._id;
   const tenantId = userProfile?.tenantId;
   
   // API hooks
@@ -28,8 +28,17 @@ export function WithdrawalModal({ onClose, onSuccess }) {
   const [fees, setFees] = useState(null);
   const [errors, setErrors] = useState({});
   
+  // Debug logging
+  // console.log("WithdrawalModal Debug:", {
+  //   ownerId,
+  //   bankAccounts,
+  //   loadingAccounts,
+  //   userProfile
+  // });
+  
   // Get verified bank accounts only
   const verifiedAccounts = bankAccounts.filter(acc => acc.isVerified && acc.isActive);
+  //console.log("Verified accounts:", verifiedAccounts);
   const availableBalance = walletData?.balance - (walletData?.holdAmount || 0);
   
   // Calculate fees when amount changes
