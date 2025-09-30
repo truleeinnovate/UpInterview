@@ -27,6 +27,10 @@ const config = require("../../config");
 const {
   createAssessmentScheduledNotification,
 } = require('../PushNotificationControllers/pushNotificationAssessmentController');
+const { 
+  validateScheduledAssessment,
+  //validateCandidateAssessment 
+} = require("../../validations/assessmentValidation.js");
 
 
 
@@ -427,17 +431,36 @@ exports.shareAssessment = async (req, res) => {
 
      // <---------------------- v1.0.0
 
-    const scheduleAssessment = new ScheduleAssessment({
-      scheduledAssessmentCode,
-      assessmentId,
-      organizationId,
-      status: 'scheduled',
-      proctoringEnabled: true,
-      createdBy: userId,
-      order: `Assessment ${nextNumber}`,
-      expiryAt, // Add the expiry date
-    });
-    const savedScheduleAssessment = await scheduleAssessment.save();
+      // Validate the scheduled assessment data
+      const { errors, isValid } = validateScheduledAssessment({
+        assessmentId,
+        organizationId,
+        expiryAt,
+        createdBy: userId
+      });
+
+    let savedScheduleAssessment;
+
+    if (!isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Validation failed", 
+        errors 
+      });
+    } else {
+      const scheduleAssessment = new ScheduleAssessment({
+        scheduledAssessmentCode,
+        assessmentId,
+        organizationId,
+        status: 'scheduled',
+        proctoringEnabled: true,
+        createdBy: userId,
+        order: `Assessment ${nextNumber}`,
+        expiryAt, // Add the expiry date
+      });
+      savedScheduleAssessment = await scheduleAssessment.save();
+    }
+
 
     // Create push notification for scheduled assessment
     try {
@@ -449,7 +472,7 @@ exports.shareAssessment = async (req, res) => {
 
     // Check for existing candidate assessments without session
     const existingAssessments = await CandidateAssessment.find({
-      scheduledAssessmentId: scheduleAssessment._id,
+      scheduledAssessmentId: savedScheduleAssessment._id,
       candidateId: { $in: selectedCandidates.map(c => c._id) },
     });
 
@@ -462,19 +485,31 @@ exports.shareAssessment = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: 'All selected candidates already assigned',
-        data: { scheduledAssessmentId: scheduleAssessment._id },
+        data: { scheduledAssessmentId: savedScheduleAssessment._id },
       });
     }
 
     // Create candidate assessments with validated dates
     const candidateAssessments = newCandidates.map(candidate => ({
-      scheduledAssessmentId: scheduleAssessment._id,
+      scheduledAssessmentId: savedScheduleAssessment._id,
       candidateId: candidate._id,
       status: 'pending',
       expiryAt: new Date(expiryAt), // Create new Date instance for each
       isActive: true,
       assessmentLink: '',
     }));
+
+    // Validate each candidate assessment before inserting
+    // for (const candidateAssessment of candidateAssessments) {
+    //   const { errors, isValid } = validateCandidateAssessment(candidateAssessment);
+    //   if (!isValid) {
+    //     return res.status(400).json({ 
+    //       success: false,
+    //       message: "Candidate assessment validation failed", 
+    //       errors 
+    //     });
+    //   }
+    // }
 
     const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments);
 
@@ -598,7 +633,7 @@ exports.shareAssessment = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Assessment shared successfully',
-      data: { scheduledAssessmentId: scheduleAssessment._id },
+      data: { scheduledAssessmentId: savedScheduleAssessment._id },
     });
 
   } catch (error) {

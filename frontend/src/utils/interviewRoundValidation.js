@@ -27,7 +27,7 @@ export const validateInterviewRoundData = (data) => {
   }
 
   // Conditional validation for Interviewers
-  if (data.status === "Scheduled" && !data.dateTime) {
+  if (data.status === "Scheduled" && data.roundTitle !== "Assessment" && !data.dateTime) {
     errors.dateTime = "Date & Time is required for scheduled interviews";
   }
 

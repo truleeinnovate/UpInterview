@@ -94,7 +94,7 @@ function RoundFormPosition() {
     // internalInterviewers: [],
     interviewerType: "",
     scheduledDate: "",
-    duration: 30,
+    duration: 60,
   });
   const [isInterviewQuestionPopup, setIsInterviewQuestionPopup] =
     useState(false);
@@ -1048,7 +1048,7 @@ function RoundFormPosition() {
                           containerRef={fieldRefs.interviewMode}
                           label="Interview Mode"
                           required
-                          disabled={formData.roundTitle === "Assessment"}
+                        
                           name="interviewMode"
                           value={formData.interviewMode}
                           options={[
@@ -1093,12 +1093,13 @@ function RoundFormPosition() {
                       </p>
                     </div>
 
-                    {formData.roundTitle !== "Assessment" && (
+                    {/* {formData.roundTitle !== "Assessment" && ( */}
                       <div>
                         <DropdownWithSearchField
                           label="Duration (Minutes)"
                           name="duration"
                           value={formData.duration}
+                          disabled={formData.roundTitle === "Assessment"}
                           options={[
                             { value: 30, label: "30 min" },
                             { value: 45, label: "45 min" },
@@ -1116,7 +1117,7 @@ function RoundFormPosition() {
                           error={errors.duration}
                         />
                       </div>
-                    )}
+                    {/* // )} */}
 
                     {formData.roundTitle === "Assessment" && (
                       <>

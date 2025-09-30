@@ -1024,9 +1024,9 @@ const RoundFormInterviews = () => {
           ? { assessmentId: assessmentTemplate.assessmentId }
           : {}),
         instructions,
-        status,
+        duration,
+        status: roundTitle === "Assessment" ? "Scheduled" : status,
         ...(roundTitle !== "Assessment" && {
-          duration,
           interviewerType: selectedInterviewType,
           dateTime: combinedDateTime,
           interviewType,
@@ -1082,8 +1082,8 @@ const RoundFormInterviews = () => {
       }
 
       // const response = await saveInterviewRound(payload);
-      console.log("Round saved successfully:", response);
-      console.log("Saved round ID:", response.savedRound._id);
+      // console.log("Round saved successfully:", response);
+      // console.log("Saved round ID:", response.savedRound._id);
 
       // Show success toast for round creation
       // notify.success("Interview round created successfully!");
@@ -1127,6 +1127,18 @@ const RoundFormInterviews = () => {
         });
         console.log("assessment result", result);
         if (result.success) {
+          // const updatedRoundData = {
+          //   ...roundData,
+          //   // meetingId: data?.start_url || meetingLink,
+          // };
+          // const targetRoundId = response?.savedRound?._id || roundId;
+          // const updatePayload = {
+          //   interviewId,
+          //   roundId: targetRoundId,
+          //   round: updatedRoundData,
+          //   ...(isEditing ? { questions: interviewQuestionsList } : {}),
+          // };
+          // response = await updateInterviewRound(payload);
           navigate(`/interviews/${interviewId}`);
           // toast.success('Assessment shared successfully!');
         }
@@ -1388,7 +1400,7 @@ const RoundFormInterviews = () => {
                   round: updatedRoundData,
                   ...(isEditing ? { questions: interviewQuestionsList } : {}),
                 };
-                console.log("updatePayload", updatePayload);
+                // console.log("updatePayload", updatePayload);
 
                 // 🔹 Call PATCH mutation instead of POST
                 const updateResponse = await updateInterviewRound(
@@ -1603,6 +1615,7 @@ const RoundFormInterviews = () => {
     };
     setAssessmentTemplate(assessmentData);
     setSelectedAssessmentData(assessment);
+    // console.log("assessment", assessment);
     setDuration(parseInt(assessment.Duration.replace(" minutes", "")));
     setInstructions(assessment.Instructions);
     setExpandedSections({});
@@ -1881,6 +1894,7 @@ const RoundFormInterviews = () => {
                           { value: 90, label: "90 min" },
                           { value: 120, label: "120 min" },
                         ]}
+                        disabled={roundTitle === "Assessment"}
                         onChange={(e) => {
                           setDuration(parseInt(e.target.value));
                           //clearError("duration")

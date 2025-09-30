@@ -75,16 +75,16 @@ export const validateAdvancedForm = (formData) => {
     if (!formData.currentRole?.trim()) {
       errors.currentRole = "Current Role is required";
     }
-  
+    
     // Industry validation
     if (!formData.industry?.trim()) {
       errors.industry = "Industry is required";
     }
   
     // Experience validation
-    if (!formData.experience?.trim()) {
+    if (!formData.yearsOfExperience?.toString().trim()) {
       errors.yearsOfExperience = "Years of Experience is required";
-    } else if (!/^\d+$/.test(formData.experience.trim())) {
+    } else if (!/^\d+$/.test(formData.yearsOfExperience.toString().trim())) {
       errors.yearsOfExperience = "Please enter a valid number";
     }
   
@@ -93,7 +93,6 @@ export const validateAdvancedForm = (formData) => {
       errors.location = "Location is required";
     }
   
- 
   
     // Introduction validation
     // if (!formData.introduction?.trim()) {

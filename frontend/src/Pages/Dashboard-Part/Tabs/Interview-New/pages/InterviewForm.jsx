@@ -3,6 +3,7 @@
 // v1.0.2  -  mansoor  -  added the add new buttons in the candidate and position dropdowns
 // v1.0.3  -  Ashok    -  Disabled outer scrollbar when popup is open for better UX
 // v1.0.4  -  Ashok    -  Improved responsiveness
+// v1.0.6  -  Ranjith    -  Fixed issues at responsiveness
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -20,6 +21,7 @@ import PositionForm from "../../Position-Tab/Position-Form.jsx";
 import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
 // v1.0.3 <-----------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+import { notify } from "../../../../../services/toastService.js";
 // v1.0.3 ----------------------------------------------------------->
 
 // Custom Dropdown Component
@@ -83,6 +85,8 @@ const InterviewForm = () => {
   const [showCandidateModal, setShowCandidateModal] = useState(false);
   const [showPositionModal, setShowPositionModal] = useState(false);
   const [from360, setFrom360] = useState(false);
+
+  const [rounds, setRounds] = useState([]);
 
   // Modal handlers for Add New buttons
   const handleAddNewCandidate = () => {
@@ -150,9 +154,21 @@ const InterviewForm = () => {
       const selectedPosition = positionData.find(
         (pos) => pos._id === positionId
       );
+
+      if (selectedPosition.rounds && selectedPosition.rounds.length > 0) {
+        setRounds(selectedPosition.rounds);
+      } else {
+        setRounds([]);
+      }
+
+
       if (selectedPosition) {
+        console.log("selectedPosition.rounds", selectedPosition);
+
+
         if (selectedPosition.templateId) {
           setTemplateId(selectedPosition.templateId);
+
           toast.info("Template and rounds are fetched from the position.");
         } else {
           setTemplateId("");
@@ -181,6 +197,7 @@ const InterviewForm = () => {
     }
 
     const selectedPosition = positionData.find((pos) => pos._id === positionId);
+    const selectedTemplate = templatesData.find((t) => t._id === newTemplateId);
 
     if (selectedPosition) {
       if (
@@ -192,6 +209,13 @@ const InterviewForm = () => {
       } else {
         setTemplateId(newTemplateId);
       }
+
+      if (selectedTemplate && selectedTemplate.rounds?.length > 0) {
+        setRounds(selectedTemplate.rounds);
+        // toast.success("Rounds have been overridden by the template.");
+      }
+
+
     }
   };
 
@@ -265,6 +289,18 @@ const InterviewForm = () => {
     }
   };
   // v1.0.0 ---------------------------->
+  // console.log("rounds", rounds);
+
+  // v1.0.6
+  const handleClearTemplate = () => {
+    setTemplateId("");
+    setRounds([]); // Also clear any rounds that were set from template
+
+    // If you want to show a message when template is cleared
+    // notify.success("Template cleared");
+  };
+  // v1.0.6 <----------------------------------->
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -275,13 +311,13 @@ const InterviewForm = () => {
               { label: "Interviews", path: "/interviewList" },
               ...(isEditing && interview
                 ? [
-                    {
-                      label: candidateData?.LastName || "Interview",
-                      path: `/interviews/${id}`,
-                      status: interview.status,
-                    },
-                    { label: "Edit Interview", path: "" },
-                  ]
+                  {
+                    label: candidateData?.LastName || "Interview",
+                    path: `/interviews/${id}`,
+                    status: interview.status,
+                  },
+                  { label: "Edit Interview", path: "" },
+                ]
                 : [{ label: "New Interview", path: "" }]),
             ]}
           />
@@ -289,7 +325,7 @@ const InterviewForm = () => {
           <div className="mt-4 bg-white shadow overflow sm:rounded-lg">
             {/* v1.0.4 <----------------------------------- */}
             <div className="px-6 py-5 sm:px-4">
-            {/* v1.0.4 -----------------------------------> */}
+              {/* v1.0.4 -----------------------------------> */}
               <h3 className="text-lg leading-6 font-medium text-gray-900">
                 {isEditing ? "Edit Interview" : "Create New Interview"}
               </h3>
@@ -301,7 +337,7 @@ const InterviewForm = () => {
             </div>
             {/* v1.0.4 <-------------------------------------------------------- */}
             <div className="border-t border-gray-200 px-6 py-5 sm:px-4">
-            {/* v1.0.4 --------------------------------------------------------> */}
+              {/* v1.0.4 --------------------------------------------------------> */}
               <form onSubmit={handleSubmit}>
                 {error && (
                   <div className="mb-4 p-4 bg-red-50 rounded-md">
@@ -318,9 +354,8 @@ const InterviewForm = () => {
                       options={[
                         ...(candidateData?.map((candidate) => ({
                           value: candidate._id,
-                          label: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
-                          } (${candidate.Email || ""})`,
+                          label: `${candidate.FirstName || ""} ${candidate.LastName || ""
+                            } (${candidate.Email || ""})`,
                         })) || []),
                         {
                           value: "add_new",
@@ -380,7 +415,7 @@ const InterviewForm = () => {
                     />
                   </div>
 
-                  <div>
+                  <div className="relative">
                     <DropdownWithSearchField
                       label="Interview Template"
                       name="templateId"
@@ -403,7 +438,56 @@ const InterviewForm = () => {
                       isMulti={false}
                     />
                     {/* v1.0.1 -------------------> */}
+
+  {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
+                    {/* Clear template button */}
+                    {templateId && (
+                      <button
+                        type="button"
+                        onClick={handleClearTemplate}
+                        className="absolute right-14 text-xl  top-7 text-red-500 hover:text-red-600 z-10"
+                        // className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10 bg-red p-1 rounded-full hover:bg-gray-100"
+                        title="Clear template"
+                      >
+                        ×
+                      </button>
+                    )}
+
                   </div>
+
+                 
+                  {rounds.length > 0 && (
+                    <div className="mt-6">
+                      <p className="text-sm font-semibold text-gray-800 mb-4">Rounds Pathway</p>
+                      <div className="flex items-center space-x-4 overflow-x-auto pb-2">
+                        {rounds.map((round, index) => (
+                          <React.Fragment key={index}>
+                            <div
+                              className={`flex items-center px-4 py-2 border rounded-lg shadow-sm min-w-[200px]  `}
+
+                            // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
+                            >
+                              {/* Step number circle */}
+                              <div className="flex items-center justify-center w-6 h-6 rounded-full border border-gray-400 text-xs font-medium text-gray-600 mr-3">
+                                {index + 1}
+                              </div>
+                              {/* Round title */}
+                              <span className="text-sm font-medium text-gray-800 truncate">
+                                {round?.roundTitle || `Round ${index + 1}`}
+                              </span>
+                            </div>
+
+                            {/* Connector line */}
+                            {index < rounds.length - 1 && (
+                              <div className="flex-shrink-0 w-6 h-[2px] bg-gray-300"></div>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+ {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
 
                   <div className="flex justify-end space-x-3">
                     <button

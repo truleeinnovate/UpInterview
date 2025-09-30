@@ -31,7 +31,7 @@ import Loading from "../../../../../../Components/Loading";
 import { notify } from "../../../../../../services/toastService";
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 // Shared form fields
-import { InputField, DropdownWithSearchField } from "../../../../../../Components/FormFields";
+import { InputField, DropdownWithSearchField, IncreaseAndDecreaseField } from "../../../../../../Components/FormFields";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 // Skills.svg
 
@@ -62,7 +62,6 @@ const EditAdvacedDetails = ({
     loadCurrentRoles,
     isCurrentRolesFetching
   } = useMasterData();
-
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const { id } = useParams();
@@ -85,7 +84,7 @@ const EditAdvacedDetails = ({
   const [formData, setFormData] = useState({
     currentRole: "",
     industry: "",
-    experience: "",
+    yearsOfExperience: "",
     location: "",
     // coverLetterdescription: "",
   });
@@ -93,21 +92,17 @@ const EditAdvacedDetails = ({
 
   const [loading, setLoading] = useState(false);
 
-  // console.log("userId AdvacedDetails", from);
 
   useEffect(() => {
     // const contact = usersRes.find(user => user.contactId === resolvedId);
     // if (!userProfile) return;
     if (!userProfile || !userProfile._id) return;
 
-    // console.log("✅ Latest userProfile loaded", userProfile);
-    // console.log("contact userProfile BasicDetailsEditPage",userProfile )
-
     if (userProfile) {
       setFormData({
         currentRole: userProfile.currentRole || "",
         industry: userProfile.industry || "",
-        experience: userProfile.yearsOfExperience || "",
+        yearsOfExperience: userProfile.yearsOfExperience || "",
         location: userProfile.location || "",
         // coverLetterdescription: userProfile.coverLetterdescription || "",
         id: userProfile._id,
@@ -162,7 +157,7 @@ const EditAdvacedDetails = ({
     const cleanFormData = {
       currentRole: formData.currentRole?.trim() || "",
       industry: formData.industry?.trim() || "",
-      yearsOfExperience: formData.experience?.trim() || "",
+      yearsOfExperience: formData?.yearsOfExperience || "",
       location: formData.location?.trim() || "",
       // coverLetterdescription: formData.coverLetterdescription?.trim() || "",
       // skills: formData.skills
@@ -182,7 +177,6 @@ const EditAdvacedDetails = ({
 
       await queryClient.invalidateQueries(["userProfile", resolvedId]);
 
-    //   console.log("response cleanFormData", response);
 
       if (response.status === 200) {
         notify.success("Updated Advanced Details Successfully");
@@ -201,7 +195,6 @@ const EditAdvacedDetails = ({
     } catch (error) {
       if (error.response && error.response.status === 400) {
         const backendErrors = error.response.data.errors || {};
-        // console.log("backendErrors", backendErrors);
         setErrors(backendErrors);
         // scrollToFirstError(backendErrors, fieldRefs);
       } else {
@@ -214,7 +207,6 @@ const EditAdvacedDetails = ({
     }
   };
 
-  // console.log('skills from context:', skills);
   // v1.0.1 <-----------------------------------------------------------------
   const modalClass = classNames(
     // "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
@@ -227,12 +219,11 @@ const EditAdvacedDetails = ({
   );
 
   // Refs for error scrolling
-  const experienceRef = useRef(null);
+  //const experienceRef = useRef(null);
   const fieldRefs = {
     currentRole: useRef(null),
     industry: useRef(null),
-    experience: experienceRef,
-    yearsOfExperience: experienceRef,
+    yearsOfExperience: useRef(null),
     location: useRef(null),
   };
 
@@ -325,13 +316,15 @@ const EditAdvacedDetails = ({
             </div>
 
             <div className="flex flex-col">
-              <InputField
-                value={formData.experience}
+              <IncreaseAndDecreaseField
+                value={formData.yearsOfExperience}
                 onChange={handleInputChange}
-                inputRef={fieldRefs.experience}
+                min={0}
+                max={30}
+                inputRef={fieldRefs.yearsOfExperience}
                 error={errors.yearsOfExperience}
                 label="Years of Experience"
-                name="experience"
+                name="yearsOfExperience"
                 required
               />
             </div>

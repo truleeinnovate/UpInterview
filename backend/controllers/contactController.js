@@ -435,6 +435,8 @@ const updateContactsDetails = async (req, res) => {
         const contactId = req.params.id;
         const { availability, yearsOfExperience, ...contactData } = req.body;
 
+        console.log("contactData", req.body);
+
         // If timeZone is an object (e.g., { label: "", value: "" }), extract value
         if (contactData.timeZone && typeof contactData.timeZone === "object") {
             contactData.timeZone = contactData.timeZone.value;

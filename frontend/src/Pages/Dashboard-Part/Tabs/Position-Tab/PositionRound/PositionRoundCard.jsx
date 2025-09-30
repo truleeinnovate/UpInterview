@@ -289,7 +289,7 @@ const PositionRoundCard = ({
 
           {activeTab === "details" && (
             <>
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
+              <div className=" grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Schedule
