@@ -18,6 +18,7 @@ const DropdownWithSearchField = forwardRef(({
     isMulti = false,
     loading = false,
     onKeyDown,
+    placeholder,
     creatable = false,
 }, ref) => {
     const inputRef = useRef(null);
@@ -163,7 +164,7 @@ const DropdownWithSearchField = forwardRef(({
                                 onChange({ target: { name: name, value: opt?.value || "" } });
                             }
                         }}
-                        placeholder={`Select a ${label}`}
+                        placeholder={placeholder ? placeholder : `Select ${label}`}
                         isDisabled={disabled}
                         hasError={!!error}
                         classNamePrefix="rs"
@@ -180,7 +181,15 @@ const DropdownWithSearchField = forwardRef(({
                     <input
                         type="text"
                         value={value}
-                        onChange={(e) => onChange({ target: { name: name, value: e.target.value } })}
+                        onChange={(e) => {
+                            const newValue = e.target.value;
+                            onChange({ target: { name: name, value: newValue } });
+                            
+                            // If the input is cleared (empty string), automatically go back to dropdown
+                            if (newValue === "" && typeof setIsCustomName === "function") {
+                                setIsCustomName(false);
+                            }
+                        }}
                         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
             border ${error
                                 ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
@@ -188,24 +197,10 @@ const DropdownWithSearchField = forwardRef(({
                             }
             focus:outline-gray-300
           `}
-                        placeholder={`Enter custom ${label} name`}
+                        placeholder={placeholder ? placeholder :`Enter Custom ${label}`}
                         ref={inputRef}
                         onKeyDown={handleKeyDown}
                     />
-                    <button
-                        type="button"
-                        onClick={() => {
-                            if (typeof setIsCustomName === "function") {
-                                setIsCustomName(false);
-                            }
-                            onChange({ target: { name: name, value: "" } });
-                        }}
-                        className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
                 </div>
             )}
             {error && <p className="text-red-500 text-xs pt-1">{error}</p>}

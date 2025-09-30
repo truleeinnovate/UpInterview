@@ -7,7 +7,7 @@ const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, labe
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative mt-1">
-        {label === "Max Salary" || label === "Min Salary" ? <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span> : null}
+        {label === "Max Salary(Annual)" || label === "Min Salary(Annual)" ? <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span> : null}
         <input
           ref={inputRef}
           type="number"
@@ -17,7 +17,7 @@ const IncreaseAndDecreaseField = ({ value, onChange, name, inputRef, error, labe
           max={max}
           value={value}
           onChange={onChange}
-          className={`block w-full rounded-md shadow-sm py-2 ${label === "Max Salary" || label === "Min Salary" ? "pr-3 pl-9" : "px-3"} sm:text-sm
+          className={`block w-full rounded-md shadow-sm py-2 ${label === "Max Salary(Annual)" || label === "Min Salary(Annual)" ? "pr-3 pl-9" : "px-3"} sm:text-sm
           border ${
             error
               ? "border-red-500 focus:ring-red-500 focus:outline-red-300"

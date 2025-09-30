@@ -248,7 +248,7 @@ const SkillsField = forwardRef(
                             onUpdateEntry(index, { ...entry, skill: e.target.value });
                           }
                         }}
-                        placeholder="Skill"
+                        placeholder="Select Skill"
                         name={`skill-${index}`}
                         onMenuOpen={onOpenSkills}
                         error={rowErrors[index]?.skill ? "Skill required" : ""}
@@ -275,7 +275,7 @@ const SkillsField = forwardRef(
                             onUpdateEntry(index, { ...entry, experience: opt?.value || "" });
                           }
                         }}
-                        placeholder="Experience"
+                        placeholder="Select Experience"
                         classNamePrefix="rs"
                         hasError={rowErrors[index]?.experience}
                         
@@ -298,7 +298,7 @@ const SkillsField = forwardRef(
                             onUpdateEntry(index, { ...entry, expertise: opt?.value || "" });
                           }
                         }}
-                        placeholder="Expertise"
+                        placeholder="Select Expertise"
                         classNamePrefix="rs"
                         hasError={rowErrors[index]?.expertise}
 

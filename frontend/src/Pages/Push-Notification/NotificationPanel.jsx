@@ -1,10 +1,8 @@
 // v1.0.0  -  Ashraf  -  using authcookie manager to get current tokein
 // v1.0.1  -  Ashok   -  Disabled outer scrollbar when popup is open
 import { useState, useEffect } from "react";
-import { BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { IoIosArrowUp } from "react-icons/io";
+import { BellIcon } from "@heroicons/react/24/outline";
 import PropTypes from "prop-types";
-import Cookies from "js-cookie";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import { X } from "lucide-react";
 import { usePushNotifications } from "../../apiHooks/usePushNotifications";
@@ -72,28 +70,21 @@ NotificationList.propTypes = {
       _id: PropTypes.string,
       title: PropTypes.string,
       message: PropTypes.string,
+      createdAt: PropTypes.string,
       type: PropTypes.string,
       unread: PropTypes.bool,
-      timestamp: PropTypes.string,
     })
   ),
   detailed: PropTypes.bool,
-  onMarkAsRead: PropTypes.func.isRequired,
+  onMarkAsRead: PropTypes.func,
 };
 
-export default function NotificationPanel({
-  isOpen,
-  setIsOpen,
-  closeOtherDropdowns,
-}) {
+const NotificationPanel = ({ closeOtherDropdowns }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
-  const [filter, setFilter] = useState("all");
-  // <---------------------- v1.0.0
+  const [selectedNotificationInAll, setSelectedNotificationInAll] = useState(null);
+  const [filterType, setFilterType] = useState("all");
   const [showPermissionRequest, setShowPermissionRequest] = useState(false);
-  // ---------------------- v1.0.0 >
-
-  // Disabled outer scrollbar using this when popup is open for better user experience
-  // v1.0.1 <-------------------------------------------------------------
   useScrollLock(showPermissionRequest);
   // v1.0.1 ------------------------------------------------------------->
 
@@ -132,17 +123,17 @@ export default function NotificationPanel({
   const typeFilteredNotifications = (notificationList || []).filter(
     (notification) => {
       if (!notification) return false;
-      if (filter === "all") return true;
-      if (filter === "unread") return notification.unread;
-      if (filter === "subscription")
+      if (filterType === "all") return true;
+      if (filterType === "unread") return notification.unread;
+      if (filterType === "subscription")
         return notification.category === "Subscription";
-      if (filter === "interviews")
+      if (filterType === "interviews")
         return notification.category === "Interviews";
-      if (filter === "assessments")
+      if (filterType === "assessments")
         return notification.category === "Assessments";
-      if (filter === "feedback") return notification.category === "Feedback";
-      if (filter === "schedule") return notification.category === "Schedule";
-      return notification.category === filter;
+      if (filterType === "feedback") return notification.category === "Feedback";
+      if (filterType === "schedule") return notification.category === "Schedule";
+      return notification.category === filterType;
     }
   );
 
@@ -155,9 +146,9 @@ export default function NotificationPanel({
 
   const togglePanel = () => {
     setIsOpen(!isOpen);
-    if (isOpen) {
-      setShowAllNotifications(false); // Reset full view when closing
-    }
+    // if (isOpen) {
+    //   setShowAllNotifications(false); // Reset full view when closing
+    // }
     if (!isOpen) {
       closeOtherDropdowns(); // Close other dropdowns when opening
     }
@@ -181,7 +172,7 @@ export default function NotificationPanel({
 
       {isOpen && !showAllNotifications && (
         <div className="relative">
-          <div className="absolute top-5 border right-0 w-80 bg-white rounded-lg shadow-lg py-2 z-50 -mr-10">
+          <div className="absolute top-5 border right-0 w-[500px] bg-white rounded-lg shadow-lg py-2 z-50 -mr-10">
             <div className="flex justify-between items-center px-3 sm:px-4 py-2 border-gray-200">
               <h3 className="text-base sm:text-lg font-medium text-gray-800">
                 Notifications
@@ -244,7 +235,10 @@ export default function NotificationPanel({
                 <div className="px-3 sm:px-4 py-2 border-t border-gray-200">
                   <button
                     className="w-full text-sm text-custom-blue hover:text-custom-blue/80 font-medium rounded-md px-3 py-1.5"
-                    onClick={() => setShowAllNotifications(true)}
+                    onClick={() => {
+                      setShowAllNotifications(true);
+                      togglePanel();
+                    }}
                   >
                     View All Notifications
                   </button>
@@ -291,46 +285,140 @@ export default function NotificationPanel({
       )}
       {/* // ---------------------- v1.0.0 > */}
       {/* Rest of the component remains the same */}
-      {isOpen && showAllNotifications && (
+      {showAllNotifications && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-lg w-full mx-28 h-[90vh] overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-gray-200">
               <h2 className="text-xl font-semibold">All Notifications</h2>
               <button
-                onClick={() => setShowAllNotifications(false)}
+                onClick={() => {
+                  setShowAllNotifications(false);
+                  setSelectedNotificationInAll(null);
+                }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
-              {loading ? (
-                <div className="text-center text-gray-500">
-                  Loading notifications...
+            <div className="flex h-[calc(90vh-80px)]">
+              {/* Notification List - Left Panel */}
+              <div className={`${selectedNotificationInAll ? 'w-1/2' : 'w-full'} border-r p-4 overflow-y-auto`}>
+                {loading ? (
+                  <div className="text-center text-gray-500">
+                    Loading notifications...
+                  </div>
+                ) : filteredNotifications.length === 0 ? (
+                  <div className="text-center text-gray-500">No notifications</div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredNotifications.map((notification) => (
+                      <div
+                        key={notification._id}
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                          selectedNotificationInAll?._id === notification._id
+                            ? "bg-custom-blue/20 border-custom-blue"
+                            : notification.unread
+                            ? "bg-blue-50 hover:bg-blue-100"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
+                        onClick={() => {
+                          setSelectedNotificationInAll(notification);
+                          if (notification.unread) {
+                            markAsRead(notification._id);
+                          }
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-semibold truncate">{notification.title}</h4>
+                            <p className="text-gray-600 line-clamp-2">{notification.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatDateTime(notification.createdAt)}
+                            </p>
+                          </div>
+                          {notification.unread && (
+                            <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 ml-2" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Notification Detail - Right Panel */}
+              {selectedNotificationInAll && (
+                <div className="w-1/2 p-6 overflow-y-auto bg-gray-50">
+                  <div className="bg-white rounded-lg p-6 shadow-sm">
+                    <h3 className="text-xl font-semibold mb-4">{selectedNotificationInAll.title}</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 mb-1">Message</p>
+                        <p className="text-gray-800 whitespace-pre-wrap">{selectedNotificationInAll.message}</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-500 mb-1">Type</p>
+                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
+                            {selectedNotificationInAll.type || 'General'}
+                          </span>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm font-medium text-gray-500 mb-1">Category</p>
+                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                            {selectedNotificationInAll.category || 'General'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 mb-1">Date & Time</p>
+                        <p className="text-gray-800">{formatDateTime(selectedNotificationInAll.createdAt)}</p>
+                      </div>
+                      
+                      {selectedNotificationInAll.priority && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-500 mb-1">Priority</p>
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
+                            selectedNotificationInAll.priority === 'high' 
+                              ? 'bg-red-100 text-red-800'
+                              : selectedNotificationInAll.priority === 'medium'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {selectedNotificationInAll.priority}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {selectedNotificationInAll.data && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-500 mb-1">Additional Details</p>
+                          <div className="bg-gray-50 rounded p-3 text-sm text-gray-700">
+                            <pre className="whitespace-pre-wrap">{JSON.stringify(selectedNotificationInAll.data, null, 2)}</pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              ) : filteredNotifications.length === 0 ? (
-                <div className="text-center text-gray-500">
-                  No notifications
-                </div>
-              ) : (
-                <NotificationList
-                  notifications={filteredNotifications}
-                  detailed={true}
-                  onMarkAsRead={markAsRead}
-                />
               )}
-              {/* // ---------------------- v1.0.0 > */}
             </div>
           </div>
         </div>
       )}
+      
+      {/* Notification Details Modal - to be implemented if needed */}
     </div>
   );
-}
+};
 
 NotificationPanel.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  setIsOpen: PropTypes.func.isRequired,
-  closeOtherDropdowns: PropTypes.func.isRequired,
+  closeOtherDropdowns: PropTypes.func,
 };
+
+export default NotificationPanel;

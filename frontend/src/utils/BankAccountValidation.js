@@ -24,9 +24,9 @@ export const validateBankAccount = (formData) => {
   }
 
   if (!formData.routingNumber || formData.routingNumber.trim() === '') {
-    errors.routingNumber = 'Routing number is required';
-  } else if (!/^[0-9]{9}$/.test(formData.routingNumber)) {
-    errors.routingNumber = 'Routing number must be 9 digits';
+    errors.routingNumber = 'Routing number or IFSC code is required';
+  } else if (!/^[0-9]{9}$/.test(formData.routingNumber) && !/^[A-Za-z]{4}[0-9]{7}$/.test(formData.routingNumber)) {
+    errors.routingNumber = 'Invalid format: Use 9-digit routing number or 11-character IFSC code';
   }
 
   if (!formData.bankName || formData.bankName.trim() === '') {
@@ -39,8 +39,8 @@ export const validateBankAccount = (formData) => {
 
   if (!formData.swiftCode || formData.swiftCode.trim() === '') {
     errors.swiftCode = 'SWIFT code is required';
-  } else if (!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(formData.swiftCode)) {
-    errors.swiftCode = 'Invalid SWIFT code format';
+  } else if (!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/i.test(formData.swiftCode.toUpperCase())) {
+    errors.swiftCode = 'Invalid SWIFT code format (8-11 characters: BANKCCLL or BANKCCLLXXX)';
   }
 
   return errors;
