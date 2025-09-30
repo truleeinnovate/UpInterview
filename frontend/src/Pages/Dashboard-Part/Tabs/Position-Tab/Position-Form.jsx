@@ -5,6 +5,7 @@
 // v1.0.2 - Ashok - Improved responsiveness
 // v1.0.3 - Ashok - Fixed issues at responsiveness
 // v1.0.4 - Ashok - Fixed style issue
+// v1.0.5 - Ranjith - rounds shown as horizontal stepper pathway
 
 import { useEffect, useState, useRef } from "react";
 import AssessmentDetails from "./AssessmentType";
@@ -155,9 +156,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [entries, setEntries] = useState([]);
-  
+
   const [selectedExp, setSelectedExp] = useState("");
- 
+
   const [selectedLevel, setSelectedLevel] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
 
@@ -179,8 +180,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   }, [currentStage]);
 
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
-  
-  
+
+
 
   const isNextEnabled = () => {
     if (currentStep === 0) {
@@ -325,10 +326,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry
       );
       setEntries(updatedEntries);
@@ -381,7 +382,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     setCurrentStep(0);
     setIsModalOpen(false);
     setShowSkillValidation(false);  // Reset validation flag
-    
+
     // setEditingIndex(null);
     // setAllSelectedSkills(entries.map(e => e.skill));
   };
@@ -483,7 +484,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       "RoundDetailsSave&AddRound",
       "RoundDetailsSave&Next",
     ].includes(actionType);
-    
+
     // Use updatedData when required
     const dataToSubmit =
       shouldUseUpdatedDataForAction && shouldUseUpdatedData
@@ -632,8 +633,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save position"
+        error.message ||
+        "Failed to save position"
       );
 
       if (error.response && error.response.status === 400) {
@@ -647,6 +648,26 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // console.error("Error saving position:", error);
     }
   };
+
+
+  // const handleClearField = (fieldName) => {
+  //   setFormData(prev => ({ ...prev, [fieldName]: "" }));
+
+  //   // Clear any related errors
+  //   if (errors[fieldName]) {
+  //     setErrors(prev => ({ ...prev, [fieldName]: "" }));
+  //   }
+  // };
+
+
+  //v1.0.5 Ranjith <----------------------------------->
+  const handleClearTemplate = () => {
+    setFormData({
+      ...formData,
+      template: null,
+    });
+  };
+  //v1.0.5 Ranjith <----------------------------------->
 
   const [isRoundModalOpen, setIsRoundModalOpen] = useState(false);
   // const [insertIndex, setInsertIndex] = useState(-1);
@@ -769,7 +790,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
     return (
       <div className="flex items-center justify-center mb-1 mt-1 w-full overflow-x-auto ">
-        <div className="flex items-center min-w-fit px-2">
+        <div className="flex items-center px-2">
           {/* Basic Details */}
           {/* <div className="flex items-center">
             <span className={`whitespace-nowrap px-3 py-1.5 rounded text-sm font-medium sm:text-[12px] md:text-[14px] ${isBasicStage
@@ -984,10 +1005,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   );
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center  justify-center">
       {/* v1.0.4 <------------------------------------------------------- */}
       <div className="bg-white rounded-lg w-full flex flex-col mb-10">
-      {/* v1.0.4 -------------------------------------------------------> */}
+        {/* v1.0.4 -------------------------------------------------------> */}
         {/* Modal Header */}
         <div className="mt-4">
           <h2 className="text-2xl font-semibold px-[13%] sm:mt-5 sm:mb-2 sm:text-lg sm:px-[5%] md:mt-6 md:mb-2 md:text-xl md:px-[5%]">
@@ -1101,6 +1122,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           containerRef={fieldRefs.companyname}
                           label="Company Name"
                           name="companyName"
+                          
                           // required
                           isCustomName={isCustomCompany}
                           setIsCustomName={setIsCustomCompany}
@@ -1308,7 +1330,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         selectedLevel={selectedLevel}
                         setSelectedLevel={setSelectedLevel}
                         skills={skills}
-                        
+
                         isNextEnabled={isNextEnabled}
                         handleAddEntry={handleAddEntry}
                         skillpopupcancelbutton={skillpopupcancelbutton}
@@ -1319,6 +1341,40 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                     {/* Select Template */}
                     <div className="grid sm:grid-cols-1 grid-cols-2">
+
+                      <div className="relative">
+                        <DropdownWithSearchField
+                          value={formData.template?._id || ""}
+                          options={templateOptions}
+                          onChange={(e) => {
+                            const selectedTemplate = templatesData.find(
+                              (t) => t._id === e.target.value
+                            );
+                            setFormData({
+                              ...formData,
+                              template: selectedTemplate || {},
+                            });
+                          }}
+                          error={errors?.template}
+                          label="Template"
+                          name="template"
+                          required={false}
+                          loading={isTemplatesFetching}
+                        />
+{/* //v1.0.5 Ranjith <-----------------------------------> */}
+                        {formData.template?._id && (
+                          <button
+                            type="button"
+                            onClick={handleClearTemplate}
+                            className="absolute right-14 text-xl top-7 text-red-500 hover:text-red-600 z-10"
+                            title="Clear template"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                      {/* //v1.0.5 Ranjith <-----------------------------------> */}
+
                       <DropdownWithSearchField
                         value={formData.template?._id || ""}
                         options={templateOptions}
@@ -1358,7 +1414,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                   </form>
                   {/* v1.0.4 <---------------------------------------------------- */}
                   <div className="flex justify-end items-center px-0 py-4 gap-2">
-                  {/* v1.0.4 ----------------------------------------------------> */}
+                    {/* v1.0.4 ----------------------------------------------------> */}
                     <button
                       className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50"
                       type="button"

@@ -35,7 +35,7 @@ const SidebarProfile = ({
   return (
     <div
       className={`
-        absolute inset-y-0 left-0 sm:w-62 md:w-62 lg:w-72 xl:w-72 2xl:w-72 bg-white transform transition-transform duration-300 ease-in-out
+        absolute inset-y-0 left-0 sm:w-62 md:w-62 lg:w-70 xl:w-70 2xl:w-70 bg-white transform transition-transform duration-300 ease-in-out
         z-30 lg:relative xl:relative 2xl:relative lg:translate-x-0 xl:translate-x-0 2xl:translate-x-0 lg:z-10 shadow-lg
         ${
           isSidebarOpen

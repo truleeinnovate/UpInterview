@@ -193,6 +193,7 @@ currentAction: {
   // Extra
   meetingId: String,
   assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
+  
   scheduleAssessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "ScheduledAssessment" },
   rejectionReason: String,
 });
