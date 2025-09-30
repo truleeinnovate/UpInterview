@@ -57,7 +57,7 @@ const DropdownWithSearchField = forwardRef(({
                     console.log('Select container (.rs__control) not found');
                 }
             } else {
-                console.log('inputRef.current is null');
+                // console.log('inputRef.current is null');
             }
         };
 

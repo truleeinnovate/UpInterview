@@ -10,6 +10,7 @@ import DescriptionField from '../../../Components/FormFields/DescriptionField';
 import IncreaseAndDecreaseField from '../../../Components/FormFields/IncreaseAndDecreaseField';
 import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
 import DropdownWithSearchField from '../../../Components/FormFields/DropdownWithSearchField';
+import { notify } from '../../../services/toastService.js';
 
 const InterviewDetails = ({
     errors,
@@ -31,6 +32,10 @@ const InterviewDetails = ({
     const [showCustomDiscount, setShowCustomDiscount] = useState(false);
     const [customDiscountValue, setCustomDiscountValue] = useState('');
     const expYears = parseInt(yearsOfExperience, 10) || 0;
+
+    const showJuniorLevel = expYears > 0;
+    const showMidLevel = expYears >= 4;
+    const showSeniorLevel = expYears >= 7;
 
     // Skills-specific state
     const [isCustomSkill, setIsCustomSkill] = useState(false);
@@ -120,23 +125,19 @@ const InterviewDetails = ({
             rates: {
                 junior: {
                     ...prev.rates?.junior,
-                    isVisible: expYears <= 3
+                    isVisible: showJuniorLevel
                 },
                 mid: {
                     ...prev.rates?.mid,
-                    isVisible: expYears > 3 && expYears <= 6
+                    isVisible: showMidLevel
                 },
                 senior: {
                     ...prev.rates?.senior,
-                    isVisible: expYears > 6
+                    isVisible: showSeniorLevel
                 }
             }
         }));
     }, [yearsOfExperience, expYears, setInterviewDetailsData]);
-
-    const showJuniorLevel = expYears >= 0;
-    const showMidLevel = expYears >= 4;
-    const showSeniorLevel = expYears > 6;
 
     const {
         skills,
@@ -233,9 +234,9 @@ const InterviewDetails = ({
 
                 setInterviewDetailsData(prev => {
                     let ratesUpdate = {
-                        junior: { usd: 0, inr: 0, isVisible: expYears <= 3 },
-                        mid: { usd: 0, inr: 0, isVisible: expYears > 3 && expYears <= 6 },
-                        senior: { usd: 0, inr: 0, isVisible: expYears > 6 }
+                        junior: { usd: 0, inr: 0, isVisible: showJuniorLevel },
+                        mid: { usd: 0, inr: 0, isVisible: showMidLevel },
+                        senior: { usd: 0, inr: 0, isVisible: showSeniorLevel }
                     };
 
                     if (hasValidRates) {
@@ -247,17 +248,17 @@ const InterviewDetails = ({
                             junior: {
                                 usd: juniorRange.usd.min || 0,
                                 inr: juniorRange.inr.min || 0,
-                                isVisible: expYears <= 3
+                                isVisible: showJuniorLevel
                             },
                             mid: {
                                 usd: midRange.usd.min || 0,
                                 inr: midRange.inr.min || 0,
-                                isVisible: expYears > 3 && expYears <= 6
+                                isVisible: showMidLevel
                             },
                             senior: {
                                 usd: seniorRange.usd.min || 0,
                                 inr: seniorRange.inr.min || 0,
-                                isVisible: expYears > 6
+                                isVisible: showSeniorLevel
                             }
                         };
                     }
@@ -277,9 +278,9 @@ const InterviewDetails = ({
                     ...prev,
                     technologies: [selectedValue],
                     rates: {
-                        junior: { usd: 0, inr: 0, isVisible: expYears <= 3 },
-                        mid: { usd: 0, inr: 0, isVisible: expYears > 3 && expYears <= 6 },
-                        senior: { usd: 0, inr: 0, isVisible: expYears > 6 }
+                        junior: { usd: 0, inr: 0, isVisible: showJuniorLevel },
+                        mid: { usd: 0, inr: 0, isVisible: showMidLevel },
+                        senior: { usd: 0, inr: 0, isVisible: showSeniorLevel }
                     }
                 }));
             }
@@ -622,9 +623,9 @@ const InterviewDetails = ({
                 skills: updatedSkills.map(s => s?.SkillName || s).filter(Boolean),
             }));
             setErrors(prev => ({ ...prev, skills: '' }));
-            console.log('Skill added successfully');
+            notify.success("Skill added successfully");
         } else {
-            console.log('Skill already exists:', trimmedSkill);
+            notify.error("Skill already exists");
         }
     };
 
@@ -1057,13 +1058,13 @@ const InterviewDetails = ({
                         )}
                     </div>
                     <p className="mt-2 text-xs text-gray-500">
-                        {expYears > 0 && expYears <= 3 && (
+                        {showJuniorLevel && (
                             `With your ${expYears} year${expYears > 1 ? 's' : ''} of experience, we'll match you with junior-level candidates.`
                         )}
-                        {expYears > 3 && expYears <= 6 && (
+                        {showMidLevel && (
                             'You can set rates for both junior and mid-level candidates based on your experience.'
                         )}
-                        {expYears > 6 && (
+                        {showSeniorLevel && (
                             'Your extensive experience qualifies you to interview candidates at all levels: junior, mid-level, and senior.'
                         )}
                     </p>

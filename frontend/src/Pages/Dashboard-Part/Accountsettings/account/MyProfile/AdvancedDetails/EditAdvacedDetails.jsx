@@ -90,7 +90,7 @@ const EditAdvacedDetails = ({
     // coverLetterdescription: "",
   });
 
-  
+
   const [loading, setLoading] = useState(false);
 
   // console.log("userId AdvacedDetails", from);
@@ -100,7 +100,7 @@ const EditAdvacedDetails = ({
     // if (!userProfile) return;
     if (!userProfile || !userProfile._id) return;
 
-    console.log("✅ Latest userProfile loaded", userProfile);
+    // console.log("✅ Latest userProfile loaded", userProfile);
     // console.log("contact userProfile BasicDetailsEditPage",userProfile )
 
     if (userProfile) {
@@ -118,8 +118,8 @@ const EditAdvacedDetails = ({
     }
   }, [resolvedId, userProfile?._id]);
 
-  
-  
+
+
 
   // Handle input changes for text fields
   const handleInputChange = (e) => {
@@ -169,20 +169,20 @@ const EditAdvacedDetails = ({
       id: formData.id,
     };
 
-    
+
     try {
-      
+
 
       const response = await updateContactDetail.mutateAsync({
         resolvedId,
         data: cleanFormData,
       });
 
-      
+
 
       await queryClient.invalidateQueries(["userProfile", resolvedId]);
 
-      console.log("response cleanFormData", response);
+    //   console.log("response cleanFormData", response);
 
       if (response.status === 200) {
         notify.success("Updated Advanced Details Successfully");
@@ -201,7 +201,7 @@ const EditAdvacedDetails = ({
     } catch (error) {
       if (error.response && error.response.status === 400) {
         const backendErrors = error.response.data.errors || {};
-        console.log("backendErrors", backendErrors);
+        // console.log("backendErrors", backendErrors);
         setErrors(backendErrors);
         // scrollToFirstError(backendErrors, fieldRefs);
       } else {

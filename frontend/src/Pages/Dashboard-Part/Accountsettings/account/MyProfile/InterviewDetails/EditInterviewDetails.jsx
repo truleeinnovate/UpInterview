@@ -50,13 +50,96 @@ const EditInterviewDetails = ({
     const updateContactDetail = useUpdateContactDetail();
     const queryClient = useQueryClient();
 
+    // Add exchange rate state with a reasonable default for USD to INR
+    const [exchangeRate, setExchangeRate] = useState(() => {
+        // Try to get rate from localStorage on initial load
+        const savedRate = localStorage.getItem('exchangeRate');
+        return savedRate ? Number(savedRate) : 83.5; // Default fallback
+    });
+    const [isRateLoading, setIsRateLoading] = useState(false);
+    const [lastRateUpdate, setLastRateUpdate] = useState('');
+
+        const skillsInputRef = useRef(null);
+
+    // Update your existing fetchExchangeRate function
+    const fetchExchangeRate = useCallback(async () => {
+        // If we have a recent rate in localStorage, use it
+        const lastUpdate = localStorage.getItem('exchangeRateLastUpdate');
+        const oneHourAgo = Date.now() - (60 * 60 * 1000);
+
+        // If we have a recent rate, use it
+        if (lastUpdate && new Date(lastUpdate) > new Date(oneHourAgo)) {
+            const savedRate = localStorage.getItem('exchangeRate');
+            if (savedRate) {
+                setExchangeRate(Number(savedRate));
+                return;
+            }
+        }
+
+        setIsRateLoading(true);
+        try {
+            // Try our API first
+            try {
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/exchange/rate/current`, {
+                    timeout: 3000
+                });
+                if (response.data && response.data.rate) {
+                    const rate = Number(response.data.rate);
+                    setExchangeRate(rate);
+                    setLastRateUpdate(new Date().toISOString());
+                    // Save to localStorage
+                    localStorage.setItem('exchangeRate', rate.toString());
+                    localStorage.setItem('exchangeRateLastUpdate', new Date().toISOString());
+                    return;
+                }
+            } catch (apiError) {
+                console.warn('Primary exchange rate API failed, trying fallback...', apiError);
+            }
+
+            // Fallback to a public API
+            try {
+                const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD', {
+                    timeout: 3000
+                });
+                if (response.data && response.data.rates && response.data.rates.INR) {
+                    const rate = Number(response.data.rates.INR.toFixed(2));
+                    setExchangeRate(rate);
+                    setLastRateUpdate(new Date().toISOString());
+                    // Save to localStorage
+                    localStorage.setItem('exchangeRate', rate.toString());
+                    localStorage.setItem('exchangeRateLastUpdate', new Date().toISOString());
+                    return;
+                }
+            } catch (fallbackError) {
+                console.warn('Fallback exchange rate API failed', fallbackError);
+            }
+
+            // If all else fails, use the default rate
+            setExchangeRate(83.5);
+        } catch (error) {
+            console.error('Error in exchange rate fetching:', error);
+            setExchangeRate(83.5); // Fallback to default
+        } finally {
+            setIsRateLoading(false);
+        }
+    }, []);
+
+    // Update your useEffect for fetching exchange rate
+    useEffect(() => {
+        fetchExchangeRate();
+
+        // Refresh rate every hour
+        const interval = setInterval(fetchExchangeRate, 60 * 60 * 1000);
+
+        return () => clearInterval(interval);
+    }, [fetchExchangeRate]);
+
     // Get years of experience from user profile or props
     const expYears = parseInt(userProfile?.yearsOfExperience || yearsOfExperience || 0, 10);
 
-    // For backward compatibility with old UI
-    const showJuniorLevel = expYears >= 0; // Always show junior level
-    const showMidLevel = expYears >= 4; // Show mid-level if 3+ years
-    const showSeniorLevel = expYears > 6; // Show senior level only if more than 6 years (7+)
+    const showJuniorLevel = expYears > 0;
+    const showMidLevel = expYears >= 4;
+    const showSeniorLevel = expYears >= 7;
 
     const {
         skills,
@@ -72,10 +155,10 @@ const EditInterviewDetails = ({
     const [selectedCandidates, setSelectedCandidates] = useState([]);
 
     const [selectedSkills, setSelectedSkills] = useState([]);
-    
+
     const [services, setServices] = useState([]);
     const [rateCards, setRateCards] = useState([]);
-    const [InterviewPreviousExperience, setInterviewPreviousExperience] = useState("");
+    // const [InterviewPreviousExperience, setInterviewPreviousExperience] = useState("");
     const [showCustomDiscount, setShowCustomDiscount] = useState(false);
     const [customDiscountValue, setCustomDiscountValue] = useState('');
 
@@ -101,7 +184,8 @@ const EditInterviewDetails = ({
         }
     });
     const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
-
+    const [hasChanges, setHasChanges] = useState(false);
+    const [initialFormData, setInitialFormData] = useState(null);
     const bioLength = formData.bio?.length || 0;
 
     // console.log("userId Interview Details", from);
@@ -118,32 +202,80 @@ const EditInterviewDetails = ({
         fetchData();
     }, []);
 
+    // Check if form has changes compared to initial data
+    const checkForChanges = useCallback((updatedFormData) => {
+        if (!initialFormData) return false;
+        return JSON.stringify(updatedFormData) !== JSON.stringify(initialFormData);
+    }, [initialFormData]);
+
+    // Update hasChanges when formData changes
+    useEffect(() => {
+        if (initialFormData) {
+            setHasChanges(checkForChanges(formData));
+        }
+    }, [formData, initialFormData, checkForChanges]);
+
     // Changed: Updated useEffect to properly map all backend fields
     useEffect(() => {
-        // const contact = usersRes.find(user => user.contactId === resolvedId);
-
-        // if (!contact) return;
         if (!userProfile || !userProfile._id) return;
 
-        console.log("Edit Interview Details userProfile", userProfile);
-        console.log("userProfile fields check:", {
-            previousExperienceConductingInterviews: userProfile?.previousExperienceConductingInterviews,
-            previousExperienceConductingInterviewsYears: userProfile?.previousExperienceConductingInterviewsYears,
-            technologies: userProfile?.technologies,
-            skills: userProfile?.skills,
-            professionalTitle: userProfile?.professionalTitle,
-            bio: userProfile?.bio,
-            yearsOfExperience: userProfile?.yearsOfExperience
+        // Create a clean version of the form data from userProfile
+        const cleanFormData = {
+            PreviousExperienceConductingInterviews: userProfile?.previousExperienceConductingInterviews || "",
+            PreviousExperienceConductingInterviewsYears: userProfile?.previousExperienceConductingInterviewsYears || "",
+            ExpertiseLevel_ConductingInterviews: userProfile?.expertiseLevelConductingInterviews || "",
+            hourlyRate: userProfile?.hourlyRate || "",
+            expectedRatePerMockInterview: userProfile?.expectedRatePerMockInterview || "",
+            mock_interview_discount: userProfile?.mock_interview_discount || "",
+            Technology: Array.isArray(userProfile?.technologies) ? userProfile.technologies : [],
+            skills: Array.isArray(userProfile?.skills) ? userProfile.skills : [],
+            NoShowPolicy: userProfile?.noShowPolicy || "",
+            professionalTitle: userProfile?.professionalTitle || "",
+            bio: userProfile?.bio || "",
+            interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer) ? userProfile.interviewFormatWeOffer : [],
+            yearsOfExperience: userProfile?.yearsOfExperience || 0,
+            rates: userProfile?.rates || {
+                junior: { usd: 0, inr: 0, isVisible: true },
+                mid: { usd: 0, inr: 0, isVisible: false },
+                senior: { usd: 0, inr: 0, isVisible: false }
+            }
+        };
+
+        // Set initial form data for comparison
+        setInitialFormData(cleanFormData);
+        setFormData(cleanFormData);
+
+        console.log("Setting form data from userProfile:", {
+            previousExperience: userProfile?.previousExperienceConductingInterviews,
+            previousExperienceYears: userProfile?.previousExperienceConductingInterviewsYears,
+            yearsOfExperience: userProfile?.yearsOfExperience,
+            expYears: expYears
         });
-        // console.log("user", user);
-        setFormData({
+
+        // Calculate which levels should be visible based on years of experience
+        // NEW LOGIC: Show multiple levels based on experience range
+        const years = parseInt(userProfile?.previousExperienceConductingInterviewsYears) || 0;
+        console.log("Years of experience for rate calculation:", years);
+
+        // Show Junior if years <= 6 (0-6 years)
+        const shouldShowJunior = years <= 6;
+        // Show Mid if years >= 3 AND years <= 9 (3-9 years)
+        const shouldShowMid = years >= 3 && years <= 9;
+        // Show Senior if years >= 6 (6+ years)
+        const shouldShowSenior = years >= 6;
+
+        console.log("Rate visibility:", {
+            junior: shouldShowJunior,
+            mid: shouldShowMid,
+            senior: shouldShowSenior
+        });
+
+        const newFormData = {
             PreviousExperienceConductingInterviews:
                 userProfile?.previousExperienceConductingInterviews || "",
-            PreviousExperienceConductingInterviewsYears:
-                userProfile?.previousExperienceConductingInterviewsYears || "",
+            PreviousExperienceConductingInterviewsYears: years,
             ExpertiseLevel_ConductingInterviews:
                 userProfile?.expertiseLevelConductingInterviews || "",
-            
             Technology: Array.isArray(userProfile?.technologies)
                 ? userProfile?.technologies
                 : [],
@@ -159,17 +291,36 @@ const EditInterviewDetails = ({
             expectedRatePerMockInterview:
                 userProfile?.expectedRatePerMockInterview || "",
             mock_interview_discount: userProfile?.mock_interview_discount || "",
-        });
+            hourlyRate: userProfile?.hourlyRate || "",
+            rates: {
+                junior: {
+                    usd: userProfile?.rates?.junior?.usd || 0,
+                    inr: userProfile?.rates?.junior?.inr || 0,
+                    isVisible: shouldShowJunior
+                },
+                mid: {
+                    usd: userProfile?.rates?.mid?.usd || 0,
+                    inr: userProfile?.rates?.mid?.inr || 0,
+                    isVisible: shouldShowMid
+                },
+                senior: {
+                    usd: userProfile?.rates?.senior?.usd || 0,
+                    inr: userProfile?.rates?.senior?.inr || 0,
+                    isVisible: shouldShowSenior
+                }
+            }
+        };
+
+        console.log("New form data being set:", newFormData);
+        setFormData(newFormData);
+
+        console.log('userProfile.expectedRatePerMockInterview :', userProfile.expectedRatePerMockInterview);
         setIsMockInterviewSelected(
             userProfile?.expectedRatePerMockInterview ? true : false
         );
         setSelectedSkills(
             Array.isArray(userProfile?.skills) ? userProfile?.skills : []
         );
-        setInterviewPreviousExperience(
-            userProfile?.previousExperienceConductingInterviews || ""
-        );
-        // Removed unused setExpertiseLevel
         setIsReady(userProfile?.IsReadyForMockInterviews === "yes");
         setSelectedCandidates(
             userProfile?.technologies?.map((tech) => ({
@@ -177,30 +328,7 @@ const EditInterviewDetails = ({
             })) || []
         );
         setErrors({});
-
-        // Update rate visibility based on years of experience
-        const years = parseInt(userProfile?.yearsOfExperience) || 0;
-        setFormData((prev) => ({
-            ...prev,
-            rates: {
-                junior: {
-                    usd: userProfile?.rates?.junior?.usd || 0,
-                    inr: userProfile?.rates?.junior?.inr || 0,
-                    isVisible: true
-                },
-                mid: {
-                    usd: userProfile?.rates?.mid?.usd || 0,
-                    inr: userProfile?.rates?.mid?.inr || 0,
-                    isVisible: years >= 3
-                },
-                senior: {
-                    usd: userProfile?.rates?.senior?.usd || 0,
-                    inr: userProfile?.rates?.senior?.inr || 0,
-                    isVisible: years > 6
-                }
-            }
-        }));
-    }, [resolvedId, userProfile, userProfile?._id]);
+    }, [resolvedId, userProfile, userProfile?._id, expYears]);
 
     const handleBioChange = (e) => {
         const value = e.target.value;
@@ -234,30 +362,50 @@ const EditInterviewDetails = ({
         }
     };
 
-    const handleRadioChange = (e) => {
-        const value = e.target.value;
-        setInterviewPreviousExperience(value);
-        setFormData((prev) => ({
-            ...prev,
-            PreviousExperienceConductingInterviews: value,
-            PreviousExperienceConductingInterviewsYears:
-                value === "no" ? "" : prev.PreviousExperienceConductingInterviewsYears,
-        }));
+    const handleRadioChange = (value) => {
+        // console.log("handleRadioChange called with:", value);
+        setFormData((prev) => {
+            const newFormData = {
+                ...prev,
+                PreviousExperienceConductingInterviews: value,
+                PreviousExperienceConductingInterviewsYears:
+                    value === "no" ? "" : prev.PreviousExperienceConductingInterviewsYears,
+            };
+            // console.log("Updated formData:", newFormData);
+            return newFormData;
+        });
         setErrors((prevErrors) => ({
             ...prevErrors,
             PreviousExperienceConductingInterviews: "",
             PreviousExperienceConductingInterviewsYears:
-                value === "no"
-                    ? ""
-                    : prevErrors.PreviousExperienceConductingInterviewsYears,
+                value === "no" ? "" : prevErrors.PreviousExperienceConductingInterviewsYears,
         }));
     };
+
+    // const handleRadioChange = (e) => {
+    //     const value = e.target.value;
+    //     setInterviewPreviousExperience(value);
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         PreviousExperienceConductingInterviews: value,
+    //         PreviousExperienceConductingInterviewsYears:
+    //             value === "no" ? "" : prev.PreviousExperienceConductingInterviewsYears,
+    //     }));
+    //     setErrors((prevErrors) => ({
+    //         ...prevErrors,
+    //         PreviousExperienceConductingInterviews: "",
+    //         PreviousExperienceConductingInterviewsYears:
+    //             value === "no"
+    //                 ? ""
+    //                 : prevErrors.PreviousExperienceConductingInterviewsYears,
+    //     }));
+    // };
 
     const fetchRateCardsMemoized = useCallback(async (techName) => {
         if (!techName) return;
 
-        console.group('=== fetchRateCards ===');
-        console.log('1. Input technologyName:', techName);
+        // console.group('=== fetchRateCards ===');
+        // console.log('1. Input technologyName:', techName);
 
         try {
             const token = localStorage.getItem('token');
@@ -266,7 +414,7 @@ const EditInterviewDetails = ({
             // Updated endpoint to match new backend route structure
             const apiUrl = `${baseUrl}/rate-cards/technology/${encodedTech}`;
 
-            console.log('2. Making API request to:', apiUrl);
+            // console.log('2. Making API request to:', apiUrl);
 
             const response = await axios.get(apiUrl, {
                 withCredentials: true,
@@ -276,10 +424,10 @@ const EditInterviewDetails = ({
                 }
             });
 
-            console.log('3. API Response:', {
-                status: response.status,
-                data: response.data || 'No data'
-            });
+            // console.log('3. API Response:', {
+            //     status: response.status,
+            //     data: response.data || 'No data'
+            // });
 
             if (response.data) {
                 const rateCardsData = Array.isArray(response.data) ? response.data : [response.data];
@@ -377,9 +525,14 @@ const EditInterviewDetails = ({
     const handleSave = async (e) => {
         e.preventDefault();
 
+        if (!hasChanges) {
+            notify.info("No changes to save");
+            return;
+        }
+
         console.log("formData before validation:", formData);
         console.log("formData.Technology:", formData.Technology);
-        
+
         const validationErrors = validateInterviewForm(formData, isReady);
         console.log("validationErrors:", validationErrors);
         setErrors(validationErrors);
@@ -388,7 +541,7 @@ const EditInterviewDetails = ({
             return; // Prevent submission if there are errors
         }
 
-        // console.log("form", formData , typeof Number(formData.hourlyRate));
+        console.log("form", formData, typeof Number(formData.hourlyRate));
 
         const cleanFormData = {
             PreviousExperienceConductingInterviews: String(
@@ -401,21 +554,13 @@ const EditInterviewDetails = ({
                 formData.ExpertiseLevel_ConductingInterviews || ""
             ).trim(),
             hourlyRate: Number(formData.hourlyRate) || "",
-
-            // IsReadyForMockInterviews: formData.IsReadyForMockInterviews?.trim() || '',
-            // ExpectedRatePerMockInterviewMin: String(formData.ExpectedRatePerMockInterviewMin)?.trim() || '', // Changed: Convert to string before trim
-            // ExpectedRatePerMockInterviewMax: String(formData.ExpectedRatePerMockInterviewMax)?.trim() || '', // Changed: Convert to string before trim
             technologies: Array.isArray(formData.Technology)
                 ? formData.Technology
                 : [],
             skills: Array.isArray(formData.skills) ? formData.skills : [],
             NoShowPolicy: String(formData.NoShowPolicy || "").trim(),
-            // ExpectedRateMin: String(formData.ExpectedRateMin)?.trim() || '', // Changed: Convert to string before trim
-            // ExpectedRateMax: String(formData.ExpectedRateMax)?.trim() || '',  // Changed: Convert to string before trim
             InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
-            expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes(
-                "mock"
-            )
+            expectedRatePerMockInterview: formData.interviewFormatWeOffer.includes("mock")
                 ? formData.expectedRatePerMockInterview
                 : "",
             mock_interview_discount: formData.interviewFormatWeOffer.includes("mock")
@@ -429,41 +574,79 @@ const EditInterviewDetails = ({
         };
 
         try {
-            // const response = await axios.patch(
-            //   `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-            //   cleanFormData
-            // );
-
             const response = await updateContactDetail.mutateAsync({
                 resolvedId,
                 data: cleanFormData,
             });
+
+            // Invalidate the query to refetch the updated data
             await queryClient.invalidateQueries(["userProfile", resolvedId]);
 
             console.log("response cleanFormData", response);
 
             if (response.status === 200) {
                 notify.success("Updated Interview Details Successfully");
-            }
-
-            if (response.status === 200) {
-                // setUserData((prev) => ({ ...prev, ...cleanFormData }));
-                // setIsBasicModalOpen(false);
+                // Only close the modal after successful update
                 handleCloseModal();
-                // onSuccess();
-                if (usersId) onSuccess();
+                if (usersId && onSuccess) {
+                    onSuccess();
+                }
             }
         } catch (error) {
-            if (error.response && error.response.status === 400) {
-                const backendErrors = error.response.data.errors || {};
-                console.log("backendErrors", backendErrors);
-                setErrors(backendErrors);
-                // scrollToFirstError(backendErrors, fieldRefs);
+            console.error("Error updating interview details:", error);
+            
+            if (error.response) {
+                if (error.response.status === 400) {
+                    const backendErrors = error.response.data.errors || {};
+                    console.log("backendErrors", backendErrors);
+                    setErrors(backendErrors);
+                } else {
+                    notify.error("Error updating interview details. Please try again.");
+                    setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
+                }
             } else {
-                console.error("Error saving changes:", error);
-                setErrors((prev) => ({ ...prev, form: "Error saving changes" }));
+                notify.error("Network error. Please check your connection and try again.");
+                setErrors((prev) => ({ ...prev, form: "Network error" }));
             }
-            // console.error("Error updating interview details:", error);
+        }
+    };
+
+
+
+    const addSkill = (skillName) => {
+        console.log('addSkill called with:', skillName);
+        const trimmedSkill = skillName.trim();
+        console.log('Trimmed skill:', trimmedSkill);
+        if (!trimmedSkill) {
+            console.log('Empty skill name, returning');
+            return;
+        }
+
+        // Check if skill already exists in the list (case-insensitive)
+        const skillExists = selectedSkills.some(s =>
+            (typeof s === 'object' ? s.SkillName : s).toLowerCase() === trimmedSkill.toLowerCase()
+        );
+        console.log('Skill exists check:', skillExists, 'Current skills:', selectedSkills);
+
+        if (!skillExists) {
+            const newSkill = {
+                _id: Math.random().toString(36).substr(2, 9),
+                SkillName: trimmedSkill
+            };
+            console.log('Creating new skill object:', newSkill);
+
+            const updatedSkills = [...selectedSkills, newSkill];
+            console.log('Updated skills array:', updatedSkills);
+
+            setSelectedSkills(updatedSkills);
+            setFormData(prev => ({
+                ...prev,
+                skills: updatedSkills.map(s => s?.SkillName || s).filter(Boolean),
+            }));
+            setErrors(prev => ({ ...prev, skills: '' }));
+            notify.success("Skill added successfully");
+        } else {
+            notify.error("Skill already exists");
         }
     };
 
@@ -500,64 +683,106 @@ const EditInterviewDetails = ({
         }
     };
 
-    // Handle years of experience change
     const handleYearsOfExperienceChange = (e) => {
         const years = parseInt(e.target.value) || 0;
+        console.log("Years of experience changed to:", years);
+
+        const shouldShowJunior = years <= 6;
+        const shouldShowMid = years >= 3 && years <= 9;
+        const shouldShowSenior = years >= 6;
+
+        console.log("Updated rate visibility:", {
+            junior: shouldShowJunior,
+            mid: shouldShowMid,
+            senior: shouldShowSenior
+        });
+
         setFormData(prev => ({
             ...prev,
             PreviousExperienceConductingInterviewsYears: years,
             rates: {
-                ...prev.rates,
                 junior: {
-                    ...(prev.rates?.junior || {}),
-                    isVisible: true
+                    ...prev.rates?.junior,
+                    isVisible: shouldShowJunior
                 },
                 mid: {
-                    ...(prev.rates?.mid || {}),
-                    isVisible: years >= 3
+                    ...prev.rates?.mid,
+                    isVisible: shouldShowMid
                 },
                 senior: {
-                    ...(prev.rates?.senior || {}),
-                    isVisible: years > 6
+                    ...prev.rates?.senior,
+                    isVisible: shouldShowSenior
                 }
             }
         }));
 
-        // Clear any errors
         setErrors(prev => ({
             ...prev,
             PreviousExperienceConductingInterviewsYears: ""
         }));
     };
 
-    // Handle rate changes for different experience levels and currencies
-    const handleRateChange = (level, field, value) => {
-        setFormData(prev => ({
+    // Enhanced rate change handler with exchange rate conversion
+    const handleRateChange = (level, currency) => (e) => {
+        const value = e.target.value;
+        const numericValue = value.replace(/\D/g, '');
+
+        const levelKey = level.charAt(0).toUpperCase() + level.slice(1);
+        const rateRange = getRateRanges(levelKey);
+
+        let error = '';
+
+        if (!numericValue) {
+            error = "This rate is required";
+        } else {
+            const minRate = rateRange?.[currency]?.min || 0;
+            const maxRate = rateRange?.[currency]?.max || (currency === 'inr' ? 100000 : 1000);
+            const numValue = parseInt(numericValue, 10);
+
+            if (numValue < minRate) {
+                error = `Rate cannot be less than ${currency === "inr" ? "₹" : "$"}${minRate}`;
+            } else if (numValue > maxRate) {
+                error = `Rate cannot exceed ${currency === "inr" ? "₹" : "$"}${maxRate}`;
+            }
+        }
+
+        setFormData((prev) => {
+            const updatedRates = {
+                ...prev.rates,
+                [level]: {
+                    ...prev.rates?.[level],
+                    [currency]: numericValue ? parseInt(numericValue, 10) : ""
+                }
+            };
+
+            // If USD is being updated, automatically update INR
+            if (currency === 'usd' && numericValue) {
+                const inrValue = Math.round(parseInt(numericValue, 10) * exchangeRate);
+                updatedRates[level].inr = inrValue;
+            }
+
+            // If INR is being updated, automatically update USD
+            if (currency === 'inr' && numericValue) {
+                const usdValue = Math.round(parseInt(numericValue, 10) / exchangeRate);
+                updatedRates[level].usd = usdValue;
+            }
+
+            return {
+                ...prev,
+                rates: updatedRates
+            };
+        });
+
+        setErrors(prev => ({
             ...prev,
             rates: {
                 ...prev.rates,
                 [level]: {
-                    ...(prev.rates?.[level] || {}),
-                    [field]: value ? parseInt(value) : ""
+                    ...prev.rates?.[level],
+                    [currency]: error
                 }
             }
         }));
-
-        // Clear any errors for this field
-        setErrors(prev => {
-            const newErrors = { ...prev };
-            if (newErrors.rates?.[level]?.[field]) {
-                delete newErrors.rates[level][field];
-                // Clean up empty rate objects
-                if (Object.keys(newErrors.rates[level] || {}).length === 0) {
-                    delete newErrors.rates[level];
-                }
-                if (Object.keys(newErrors.rates || {}).length === 0) {
-                    delete newErrors.rates;
-                }
-            }
-            return newErrors;
-        });
     };
 
     const handleChangeforExp = (e) => {
@@ -574,7 +799,7 @@ const EditInterviewDetails = ({
         }));
     };
 
-    
+
     const handleTechnologyChange = (selectedValue) => {
         console.log('handleTechnologyChange called with:', selectedValue);
 
@@ -582,18 +807,19 @@ const EditInterviewDetails = ({
             console.log('Selected value:', selectedValue);
             fetchRateCards(selectedValue);
 
-            // Find the technology object
             const technology = services.find((t) => t.TechnologyMasterName === selectedValue) || {
                 _id: Math.random().toString(36).substr(2, 9),
                 TechnologyMasterName: selectedValue
             };
-            console.log('Found technology:', technology);
 
-            // Update selectedCandidates with the new selection (single selection)
             setSelectedCandidates([technology]);
-            console.log('Updated selectedCandidates:', [technology]);
 
-            // Update formData
+            // Use the actual years from formData for rate visibility
+            const years = parseInt(formData.PreviousExperienceConductingInterviewsYears) || 0;
+            const shouldShowJunior = years <= 6;
+            const shouldShowMid = years >= 3 && years <= 9;
+            const shouldShowSenior = years >= 6;
+
             setFormData(prev => {
                 const newFormData = {
                     ...prev,
@@ -601,61 +827,62 @@ const EditInterviewDetails = ({
                     rates: {
                         junior: {
                             ...prev.rates?.junior,
-                            isVisible: expYears <= 3 // show junior level if 3 years or less
+                            usd: 0,
+                            inr: 0,
+                            isVisible: shouldShowJunior
                         },
                         mid: {
                             ...prev.rates?.mid,
-                            isVisible: expYears > 3 && expYears <= 6 // show mid level if more than 3 years and less than 6 years
+                            usd: 0,
+                            inr: 0,
+                            isVisible: shouldShowMid
                         },
                         senior: {
                             ...prev.rates?.senior,
-                            isVisible: expYears > 6 // show senior level if more than 6 years
+                            usd: 0,
+                            inr: 0,
+                            isVisible: shouldShowSenior
                         }
                     }
                 };
-                console.log('Updated formData:', newFormData);
+                console.log('Updated formData with new technology:', newFormData);
                 return newFormData;
             });
 
-            // Clear technology error
-            setErrors(prev => {
-                const newErrors = { ...prev, technologies: '' };
-                console.log('Updated errors:', newErrors);
-                return newErrors;
-            });
+            setErrors(prev => ({
+                ...prev,
+                technologies: '',
+                rates: {
+                    junior: { usd: '', inr: '' },
+                    mid: { usd: '', inr: '' },
+                    senior: { usd: '', inr: '' }
+                }
+            }));
         } else {
             console.log('No value selected, clearing selection');
-            // Clear selection if no value is selected
             setSelectedCandidates([]);
-            setFormData(prev => {
-                const newFormData = {
-                    ...prev,
-                    Technology: [],
-                    rates: {
-                        ...prev.rates,
-                        junior: { ...prev.rates.junior, isVisible: false },
-                        mid: { ...prev.rates.mid, isVisible: false },
-                        senior: { ...prev.rates.senior, isVisible: false }
-                    }
-                };
-                console.log('Cleared formData:', newFormData);
-                return newFormData;
-            });
-            // Don't set error when clearing - let validation handle it
-            setErrors(prev => {
-                const newErrors = { ...prev, technologies: '' };
-                console.log('Updated errors:', newErrors);
-                return newErrors;
-            });
+            setFormData(prev => ({
+                ...prev,
+                Technology: [],
+                rates: {
+                    junior: { usd: 0, inr: 0, isVisible: false },
+                    mid: { usd: 0, inr: 0, isVisible: false },
+                    senior: { usd: 0, inr: 0, isVisible: false }
+                }
+            }));
+            setErrors(prev => ({
+                ...prev,
+                technologies: 'Please select a technology'
+            }));
         }
     };
 
-    // Add useEffect to log state changes
-    useEffect(() => {
-        console.log('selectedCandidates state:', selectedCandidates);
-        console.log('formData.Technology state:', formData.Technology);
-        console.log('errors state:', errors);
-    }, [selectedCandidates, formData.Technology, errors]);
+    // // Add useEffect to log state changes
+    // useEffect(() => {
+    //     console.log('selectedCandidates state:', selectedCandidates);
+    //     console.log('formData.Technology state:', formData.Technology);
+    //     console.log('errors state:', errors);
+    // }, [selectedCandidates, formData.Technology, errors]);
 
     // Clamp rates when rateCards change
     useEffect(() => {
@@ -683,12 +910,24 @@ const EditInterviewDetails = ({
         }
     }, [rateCards]);
 
-   
     return (
         <SidebarPopup title="Edit Interview Details" onClose={handleCloseModal}>
             <div className="sm:p-0 p-6">
                 <form className="space-y-6 pb-2" onSubmit={handleSave}>
                     <div className="grid grid-cols-1 gap-4">
+
+                        {/* Exchange Rate Info - Simplified */}
+                        <div className="text-sm text-gray-600 mb-4">
+                            {isRateLoading ? (
+                                <span>Loading exchange rate...</span>
+                            ) : (
+                                <span>1 USD = {exchangeRate} INR {lastRateUpdate && `(Updated at ${new Date(lastRateUpdate).toLocaleTimeString()})`}</span>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">
+                                Changing USD will automatically update INR, and vice versa
+                            </p>
+                        </div>
+
                         {/* Technology Selection */}
                         <div className="space-y-4">
                             <DropdownWithSearchField
@@ -698,7 +937,6 @@ const EditInterviewDetails = ({
                                     label: tech.TechnologyMasterName
                                 }))}
                                 onChange={(e) => {
-                                    console.log('DropdownWithSearchField onChange:', e);
                                     handleTechnologyChange(e.target.value);
                                 }}
                                 error={errors.technologies}
@@ -712,14 +950,9 @@ const EditInterviewDetails = ({
 
                         {/* Skills Selection */}
                         <div className="space-y-4">
-                            {/* <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Select Skills <span className="text-red-500">*</span>
-                                <span className="text-xs text-gray-500 ml-2 font-normal">(Select up to 10 skills)</span>
-                            </label> */}
-
                             <div className="space-y-2">
                                 <div className="relative" ref={skillsPopupRef}>
-                                    <DropdownWithSearchField
+                                    {/* <DropdownWithSearchField
                                         value=""
                                         options={skills?.map(skill => ({
                                             value: skill.SkillName,
@@ -739,8 +972,77 @@ const EditInterviewDetails = ({
                                         }}
                                         onMenuOpen={loadSkills}
                                         loading={isSkillsFetching}
+                                    /> */}
+                                    <DropdownWithSearchField
+                                        ref={skillsInputRef}
+                                        value={null}
+                                        options={skills?.filter(skill =>
+                                            !selectedSkills.some(s => s.SkillName === skill.SkillName)
+                                        ).map(skill => ({
+                                            value: skill.SkillName,
+                                            label: skill.SkillName
+                                        })) || []}
+                                        onChange={(option) => {
+                                            if (!option) return;
+                                            const selectedOption = option?.target?.value ?
+                                                { value: option.target.value } : option;
+                                            if (selectedOption?.value) {
+                                                addSkill(selectedOption.value);
+                                                if (skillsInputRef.current) {
+                                                    skillsInputRef.current.value = '';
+                                                }
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            console.log('InterviewDetails onKeyDown triggered:', e.key, e.target.value);
+                                            if (e.key === 'Enter' && e.target.value && !e.target.readOnly) {
+                                                console.log('Enter key pressed with value:', e.target.value);
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                const newSkill = e.target.value.trim();
+                                                console.log('Trimmed skill name:', newSkill);
+                                                if (newSkill) {
+                                                    console.log('Adding skill:', newSkill);
+                                                    addSkill(newSkill);
+                                                    // Clear the input field using react-select's input
+                                                    setTimeout(() => {
+                                                        console.log('Attempting to clear input and close dropdown');
+                                                        if (skillsInputRef.current) {
+                                                            const selectContainer = skillsInputRef.current.closest('.rs__control');
+                                                            console.log('Select container found:', !!selectContainer);
+                                                            if (selectContainer) {
+                                                                const inputElement = selectContainer.querySelector('input');
+                                                                console.log('Input element found:', !!inputElement);
+                                                                if (inputElement) {
+                                                                    console.log('Clearing input value from:', inputElement.value);
+                                                                    // Use the proper way to clear react-select input
+                                                                    inputElement.value = '';
+                                                                    // Trigger input event to update react-select's internal state
+                                                                    const event = new Event('input', { bubbles: true });
+                                                                    inputElement.dispatchEvent(event);
+                                                                    console.log('Input cleared and event dispatched');
+                                                                }
+                                                            }
+                                                            // Close dropdown
+                                                            console.log('Blurring to close dropdown');
+                                                            skillsInputRef.current.blur();
+                                                        } else {
+                                                            console.log('skillsInputRef.current is null');
+                                                        }
+                                                    }, 50); // Increased timeout for better reliability
+                                                }
+                                            }
+                                        }}
+                                        error={errors.skills}
+                                        label="Select Skills"
+                                        name="skills"
+                                        required={selectedSkills.length === 0}
+                                        onMenuOpen={loadSkills}
+                                        loading={isSkillsFetching}
+                                        isMulti={false}
+                                        placeholder="Type to search or press Enter to add new skill"
+                                        creatable={true}
                                     />
-                                    {/* <span className="text-xs text-gray-500 ml-2 font-normal">(Select up to 10 skills)</span> */}
                                 </div>
 
                                 {/* Selected Skills */}
@@ -749,25 +1051,25 @@ const EditInterviewDetails = ({
                                         {formData.skills.map((skill, index) => (
                                             <div
                                                 key={index}
-                                                className="bg-blue-50 border border-blue-100 rounded-full px-3 py-1 text-sm text-blue-800 flex items-center"
+                                                className="bg-custom-blue/10 border border-custom-blue/40 rounded-full px-3 py-1 text-sm text-custom-blue flex items-center"
                                             >
-                                                <SkillIcon className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
+                                                <SkillIcon className="h-3.5 w-3.5 mr-1.5 text-custom-blue" />
                                                 <span className="mr-1.5">{skill}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveSkill(index)}
-                                                    className="ml-1 text-blue-400 hover:text-blue-600"
+                                                    className="ml-1 text-custom-blue hover:text-custom-blue/80"
                                                     aria-label={`Remove ${skill}`}
                                                 >
                                                     <X className="h-3.5 w-3.5" />
                                                 </button>
                                             </div>
                                         ))}
-                                        {formData.skills.length >= 10 && (
+                                        {/* {formData.skills.length >= 10 && (
                                             <p className="text-xs text-amber-600 mt-1">
                                                 Maximum of 10 skills reached
                                             </p>
-                                        )}
+                                        )} */}
                                     </div>
                                 )}
 
@@ -775,13 +1077,12 @@ const EditInterviewDetails = ({
                                     <p className="text-red-500 text-xs mt-1">{errors.skills}</p>
                                 )}
 
-                                <p className="text-xs text-gray-500 mt-1">
+                                {/* <p className="text-xs text-gray-500 mt-1">
                                     {formData.skills.length} of 10 skills selected
-                                </p>
+                                </p> */}
                             </div>
                         </div>
 
-                        {/* Skills Section */}
                         <div className="space-y-4">
                             {/* Previous Experience */}
                             <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
@@ -791,22 +1092,30 @@ const EditInterviewDetails = ({
                                 </p>
                                 <div className="mt-3 mb-3 flex space-x-6">
                                     <label className="inline-flex items-center">
-                                        <InputField
+                                        <input
                                             type="radio"
-                                            name="InterviewPreviousExperience"
+                                            name="PreviousExperienceConductingInterviews"
                                             value="yes"
-                                            checked={InterviewPreviousExperience === "yes"}
-                                            onChange={handleRadioChange}
+                                            checked={formData.PreviousExperienceConductingInterviews === "yes"}
+                                            onChange={(e) => {
+                                                // console.log("Radio changed to:", e.target.value);
+                                                handleRadioChange(e.target.value);
+                                            }}
+                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                         />
                                         <span className="ml-2">Yes</span>
                                     </label>
                                     <label className="inline-flex items-center">
-                                        <InputField
+                                        <input
                                             type="radio"
-                                            name="InterviewPreviousExperience"
+                                            name="PreviousExperienceConductingInterviews"
                                             value="no"
-                                            checked={InterviewPreviousExperience === "no"}
-                                            onChange={handleRadioChange}
+                                            checked={formData.PreviousExperienceConductingInterviews === "no"}
+                                            onChange={(e) => {
+                                                // console.log("Radio changed to:", e.target.value);
+                                                handleRadioChange(e.target.value);
+                                            }}
+                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                         />
                                         <span className="ml-2">No</span>
                                     </label>
@@ -816,18 +1125,17 @@ const EditInterviewDetails = ({
                                         {errors.PreviousExperienceConductingInterviews}
                                     </p>
                                 )}
-                                
                             </div>
 
                             {/* Conditional Experience Years */}
-                            {InterviewPreviousExperience === "yes" && (
+                            {/* {console.log('Rendering years of experience input, current value:', formData.PreviousExperienceConductingInterviewsYears)} */}
+                            {formData.PreviousExperienceConductingInterviews === "yes" && (
                                 <div className="w-1/2">
-                                    
                                     <InputField
                                         label="How many years of experience do you have in conducting interviews?"
                                         type="number"
-                                        id="InterviewPreviousExperienceYears"
-                                        name="InterviewPreviousExperienceYears"
+                                        id="PreviousExperienceConductingInterviewsYears"
+                                        name="PreviousExperienceConductingInterviewsYears"
                                         min="0"
                                         max="50"
                                         placeholder={0}
@@ -836,11 +1144,10 @@ const EditInterviewDetails = ({
                                         onChange={handleYearsOfExperienceChange}
                                         errors={errors.PreviousExperienceConductingInterviewsYears}
                                     />
-                                    
                                 </div>
                             )}
 
-                          
+
 
                             {/* Hourly Rates by Experience Level */}
                             <div>
@@ -848,8 +1155,8 @@ const EditInterviewDetails = ({
                                     Hourly Rates by Experience Level <span className="text-red-500">*</span>
                                 </label>
                                 <div className="space-y-4">
-                                    {/* Junior Level */}
-                                    {formData.rates?.junior?.isVisible && (
+                                    {/* Junior Level (0-3 years) - Always visible */}
+                                    {showJuniorLevel && (
                                         <div className="bg-gray-50 p-4 rounded-lg">
                                             <div className="flex justify-between items-center mb-2">
                                                 <label htmlFor="junior_rate" className="text-sm font-medium text-gray-700">
@@ -873,7 +1180,7 @@ const EditInterviewDetails = ({
                                                         <IncreaseAndDecreaseField
                                                             name="junior_usd"
                                                             value={formData.rates?.junior?.usd || ''}
-                                                            onChange={(e) => handleRateChange('junior', 'usd', e.target.value)}
+                                                            onChange={handleRateChange('junior', 'usd')}
                                                             label=""
                                                             min={getRateRanges('Junior')?.usd?.min || 0}
                                                             max={getRateRanges('Junior')?.usd?.max || 1000}
@@ -894,7 +1201,7 @@ const EditInterviewDetails = ({
                                                         <IncreaseAndDecreaseField
                                                             name="junior_inr"
                                                             value={formData.rates?.junior?.inr || ''}
-                                                            onChange={(e) => handleRateChange('junior', 'inr', e.target.value)}
+                                                            onChange={handleRateChange('junior', 'inr')}
                                                             label=""
                                                             min={getRateRanges('Junior')?.inr?.min || 0}
                                                             max={getRateRanges('Junior')?.inr?.max || 100000}
@@ -913,8 +1220,8 @@ const EditInterviewDetails = ({
                                         </div>
                                     )}
 
-                                    {/* Mid Level */}
-                                    {formData.rates?.mid?.isVisible && (
+                                    {/* Mid Level (4-6 years) - Show if 4+ years */}
+                                    {showMidLevel && (
                                         <div className="bg-gray-50 p-4 rounded-lg">
                                             <div className="flex justify-between items-center mb-2">
                                                 <label htmlFor="mid_rate" className="text-sm font-medium text-gray-700">
@@ -938,7 +1245,7 @@ const EditInterviewDetails = ({
                                                         <IncreaseAndDecreaseField
                                                             name="mid_usd"
                                                             value={formData.rates?.mid?.usd || ''}
-                                                            onChange={(e) => handleRateChange('mid', 'usd', e.target.value)}
+                                                            onChange={handleRateChange('mid', 'usd')}
                                                             label=""
                                                             min={getRateRanges('Mid-Level')?.usd?.min || 0}
                                                             max={getRateRanges('Mid-Level')?.usd?.max || 1000}
@@ -959,7 +1266,7 @@ const EditInterviewDetails = ({
                                                         <IncreaseAndDecreaseField
                                                             name="mid_inr"
                                                             value={formData.rates?.mid?.inr || ''}
-                                                            onChange={(e) => handleRateChange('mid', 'inr', e.target.value)}
+                                                            onChange={handleRateChange('mid', 'inr')}
                                                             label=""
                                                             min={getRateRanges('Mid-Level')?.inr?.min || 0}
                                                             max={getRateRanges('Mid-Level')?.inr?.max || 100000}
@@ -978,8 +1285,8 @@ const EditInterviewDetails = ({
                                         </div>
                                     )}
 
-                                    {/* Senior Level */}
-                                    {formData.rates?.senior?.isVisible && (
+                                    {/* Senior Level (7+ years) - Show if 7+ years */}
+                                    {showSeniorLevel && (
                                         <div className="bg-gray-50 p-4 rounded-lg">
                                             <div className="flex justify-between items-center mb-2">
                                                 <label htmlFor="senior_rate" className="text-sm font-medium text-gray-700">
@@ -1003,7 +1310,7 @@ const EditInterviewDetails = ({
                                                         <IncreaseAndDecreaseField
                                                             name="senior_usd"
                                                             value={formData.rates?.senior?.usd || ''}
-                                                            onChange={(e) => handleRateChange('senior', 'usd', e.target.value)}
+                                                            onChange={handleRateChange('senior', 'usd')}
                                                             label=""
                                                             min={getRateRanges('Senior')?.usd?.min || 0}
                                                             max={getRateRanges('Senior')?.usd?.max || 1000}
@@ -1024,7 +1331,7 @@ const EditInterviewDetails = ({
                                                         <IncreaseAndDecreaseField
                                                             name="senior_inr"
                                                             value={formData.rates?.senior?.inr || ''}
-                                                            onChange={(e) => handleRateChange('senior', 'inr', e.target.value)}
+                                                            onChange={handleRateChange('senior', 'inr')}
                                                             label=""
                                                             min={getRateRanges('Senior')?.inr?.min || 0}
                                                             max={getRateRanges('Senior')?.inr?.max || 100000}
@@ -1044,13 +1351,18 @@ const EditInterviewDetails = ({
                                     )}
                                 </div>
                                 <p className="mt-2 text-xs text-gray-500">
-                                    {formData.PreviousExperienceConductingInterviewsYears > 0
-                                        ? `Based on your ${formData.PreviousExperienceConductingInterviewsYears} years of experience, we're showing the most relevant experience levels.`
+                                    {showJuniorLevel
+                                        ? `Based on your ${expYears} year${expYears === 1 ? '' : 's'} of experience, we're showing the most relevant experience levels.`
                                         : 'Set competitive rates based on candidate experience levels.'
                                     }
-                                    {formData.PreviousExperienceConductingInterviewsYears === 6 &&
-                                        <span className="block mt-1">For Senior Level (7+ years), please select 7 or more years of experience.</span>
-                                    }
+                                    {!showSeniorLevel && (
+                                        <span className="block mt-1">
+                                            {!showMidLevel
+                                                ? 'To see Mid and Senior level options, please update your years of experience to 4 or more.'
+                                                : 'To see Senior level options, please update your years of experience to 7 or more.'
+                                            }
+                                        </span>
+                                    )}
                                 </p>
                             </div>
                             {/* </div> */}
@@ -1126,7 +1438,7 @@ const EditInterviewDetails = ({
                             </div>
 
                             {/* Expected Rate Per Mock Interview */}
-                            {isMockInterviewSelected && (
+                            {formData.interviewFormatWeOffer?.includes('mock') && (
                                 <div>
                                     <div className="p-4 rounded-lg border border-gray-200">
                                         <label
@@ -1300,13 +1612,13 @@ const EditInterviewDetails = ({
                                     //     setErrors(prev => ({ ...prev, professionalTitle: '' }));
                                     //   }
                                     // }}
-                                    
+
                                     error={errors.professionalTitle}
                                     placeholder="Senior Software Engineer"
                                 />
                                 <div className="flex justify-between ">
                                     <p className="text-xs text-gray-500">Min 50 characters</p>
-                                    
+
                                     {formData.professionalTitle?.length > 0 && (
                                         <p
                                             className={`text-xs ${formData.professionalTitle.length < 50 ||
@@ -1326,40 +1638,40 @@ const EditInterviewDetails = ({
 
                             {/* Professional Bio */}
                             <div className="sm:col-span-6 col-span-2">
-                                    <DescriptionField
-                                        label="Professional Bio"
-                                        id="bio"
-                                        rows="5"
-                                        value={formData.bio}
-                                        // onChange={handleBioChange}
-                                        onChange={(e) => {
-                                            handleBioChange(e);
-                                            // Clear error when user starts typing
-                                            // if (e.target.value.length >= 150) {
-                                            //   setErrors(prev => ({ ...prev, bio: '' }));
-                                            // }
-                                        }}
-                                        // onBlur={(e) => {
-                                        //   const value = e.target.value.trim();
-                                        //   if (!value) {
-                                        //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
-                                        //   } else if (value.length < 150) {
-                                        //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
-                                        //   } else {
-                                        //     setErrors(prev => ({ ...prev, bio: '' }));
-                                        //   }
-                                        // }}
-                                        
-                                        // ${errors.bio ? 'border-red-500' : 'border-gray-300'
-                                        //   }
-                                        required
-                                        placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
-                                        minLength={150}
-                                        maxLength={500}
-                                        error={errors.bio}
-                                    />
-                                    
-                                
+                                <DescriptionField
+                                    label="Professional Bio"
+                                    id="bio"
+                                    rows="5"
+                                    value={formData.bio}
+                                    // onChange={handleBioChange}
+                                    onChange={(e) => {
+                                        handleBioChange(e);
+                                        // Clear error when user starts typing
+                                        // if (e.target.value.length >= 150) {
+                                        //   setErrors(prev => ({ ...prev, bio: '' }));
+                                        // }
+                                    }}
+                                    // onBlur={(e) => {
+                                    //   const value = e.target.value.trim();
+                                    //   if (!value) {
+                                    //     setErrors(prev => ({ ...prev, bio: 'Professional bio is required' }));
+                                    //   } else if (value.length < 150) {
+                                    //     setErrors(prev => ({ ...prev, bio: 'Professional bio must be at least 150 characters' }));
+                                    //   } else {
+                                    //     setErrors(prev => ({ ...prev, bio: '' }));
+                                    //   }
+                                    // }}
+
+                                    // ${errors.bio ? 'border-red-500' : 'border-gray-300'
+                                    //   }
+                                    required
+                                    placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
+                                    minLength={150}
+                                    maxLength={500}
+                                    error={errors.bio}
+                                />
+
+
                             </div>
                         </div>
 

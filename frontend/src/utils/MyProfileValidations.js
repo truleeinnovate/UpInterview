@@ -274,21 +274,19 @@ export const validateInterviewForm = (formData, isReady) => {
     }
   }
 
-  // Expertise Level validation
-  if (!formData.ExpertiseLevel_ConductingInterviews) {
-    errors.ExpertiseLevel_ConductingInterviews = "Please select an expertise level";
+  // Expertise Level validation - Made optional
+  if (formData.ExpertiseLevel_ConductingInterviews && formData.ExpertiseLevel_ConductingInterviews.trim() === '') {
+    errors.ExpertiseLevel_ConductingInterviews = "Please select a valid expertise level";
   }
 
-  // Hourly Rate validation - checks range and presence
-  if (!formData.hourlyRate) {
-    errors.hourlyRate = "Hourly rate is required";
-  } else if (Number(formData.hourlyRate) < 20 || Number(formData.hourlyRate) > 500) {
-    errors.hourlyRate = "Hourly rate must be between $20 and $500";
+  // Hourly Rate validation - Made optional
+  if (formData.hourlyRate && (Number(formData.hourlyRate) < 20 || Number(formData.hourlyRate) > 500)) {
+    errors.hourlyRate = "Hourly rate must be between $20 and $500 if provided";
   }
 
-  // No-Show Policy validation
-  if (!formData.NoShowPolicy) {
-    errors.NoShowPolicy = "Please select a no-show policy";
+  // No-Show Policy validation - Made optional
+  if (formData.NoShowPolicy && formData.NoShowPolicy.trim() === '') {
+    errors.NoShowPolicy = "Please select a valid no-show policy";
   }
 
   // Professional Title validation
@@ -300,28 +298,24 @@ export const validateInterviewForm = (formData, isReady) => {
     errors.professionalTitle = "Professional Title cannot exceed 100 characters";
   }
 
-  // Professional Bio validation
-  if (!formData.bio) {
-    errors.bio = "Professional Bio is required";
-  } else if (formData.bio.length < 150) {
-    errors.bio = "Bio must be at least 150 characters";
-  } else if (formData.bio.length > 500) {
-    errors.bio = "Bio cannot exceed 500 characters";
+  // Professional Bio validation - Made optional with length constraints
+  if (formData.bio) {
+    if (formData.bio.length < 150) {
+      errors.bio = "Bio must be at least 150 characters";
+    } else if (formData.bio.length > 500) {
+      errors.bio = "Bio cannot exceed 500 characters";
+    }
   }
 
-  // Mock Interview validation (only if mock is selected)
-  if (formData.interviewFormatWeOffer?.includes("mock")) {
-    if (!formData.expectedRatePerMockInterview) {
-      errors.expectedRatePerMockInterview = "Expected rate is required for mock interviews";
-    } else if (Number(formData.expectedRatePerMockInterview) < 1) {
+  // Mock Interview validation - Made optional
+  if (formData.interviewFormatWeOffer?.includes("mock") && formData.expectedRatePerMockInterview) {
+    if (Number(formData.expectedRatePerMockInterview) < 1) {
       errors.expectedRatePerMockInterview = "Rate must be a positive number";
     }
   }
 
   return errors;
 };
-
-  // validations.js
 export const validateAvailabilityForm = (formData,times) => {
     const errors = {};
   
