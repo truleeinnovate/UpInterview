@@ -213,16 +213,16 @@ const AvailabilityUser = ({
     <div className="sm:mx-2 space-y-6">
       {/* <div className={`flex  items-center  ${mode === 'users' ? 'justify-end mr-6' : "justify-between mt-4"}`}> */}
       <div
-        className={`flex items-center ${
-          mode === "users" ? "justify-end mr-6" : "justify-between mt-6"
+        className={`flex items-center justify-end ${
+          mode === "users" ? "justify-end mr-6" : "mt-6"
         }`}
       >
     {/* v1.0.0 ------------------------------------------------------------------------------------------------------> */}
-        <h3
+        {/* <h3
           className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}
         >
           Availability
-        </h3>
+        </h3> */}
 
         <button
           onClick={() => {

@@ -128,17 +128,17 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
 
     return (
         <div className="mx-2">
-            <div className={`flex items-center my-4 ${mode === "users" ? "justify-end" : "justify-between py-2"}`}>
-                <h3 className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}>
+            <div className={`flex items-center justify-end my-4 ${mode === "users" ? "justify-end" : "py-2"}`}>
+                {/* <h3 className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}>
                     Interview Details
-                </h3>
+                </h3> */}
                 <button
                     onClick={() => {
                         mode === "users"
                             ? setInterviewEditOpen(true)
                             : navigate(`/account-settings/my-profile/interview-edit/${contactData?._id}`);
                     }}
-                    className="px-4 py-2 text-sm bg-custom-blue text-white rounded hover:bg-custom-blue/80 transition-colors"
+                    className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg "
                 >
                     Edit
                 </button>
