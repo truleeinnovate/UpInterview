@@ -16,9 +16,14 @@ import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect.j
 import LoadingButton from "../../../../../Components/LoadingButton.jsx";
 
 export function BankAccountsPopup({ onClose, onSelectAccount }) {
-  const { userProfile } = useUserProfile();
-  const ownerId = userProfile?.id;
+  const { userProfile, isLoading: profileLoading } = useUserProfile();
+  const ownerId = userProfile?.id || userProfile?._id;
   const tenantId = userProfile?.tenantId;
+  
+  // Debug logging
+  console.log("UserProfile:", userProfile);
+  console.log("OwnerId:", ownerId);
+  console.log("TenantId:", tenantId);
   
   // API hooks
   const { data: bankAccounts = [], isLoading: loadingAccounts, refetch } = useBankAccounts(ownerId);
@@ -54,6 +59,13 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Check if ownerId is available
+    if (!ownerId) {
+      console.error("OwnerId is missing. UserProfile might not be loaded yet.");
+      setErrors({ general: "User profile not loaded. Please refresh and try again." });
+      return;
+    }
+
     //<-----v1.0.0-----
     const validationErrors = validateBankAccount(newAccount);
     setErrors(validationErrors);
@@ -67,8 +79,8 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
 
     // Prepare data for backend
     const bankAccountData = {
-      ownerId,
-      tenantId,
+      ownerId: ownerId,
+      tenantId: tenantId || null,
       accountHolderName: newAccount.accountName,
       bankName: newAccount.bankName,
       accountType: newAccount.accountType,
@@ -78,6 +90,9 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
       swiftCode: newAccount.swiftCode,
       isDefault: newAccount.isDefault,
     };
+
+    // Debug log the data being sent
+    console.log("Submitting bank account data:", bankAccountData);
 
     // Add the new account to database
     addBankAccount(bankAccountData, {
@@ -134,6 +149,13 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
 
   const renderAccountForm = () => (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* General Error Message */}
+      {errors.general && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+          <p className="text-sm text-red-700">{errors.general}</p>
+        </div>
+      )}
+      
       {/* Personal Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Account Holder Information</h3>
@@ -232,16 +254,20 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
 
         <div>
           <InputField
-            label="Routing Number"
+            label="Routing Number / IFSC Code"
             required
             name="routingNumber"
             inputRef={fieldRefs.routingNumber}
+            placeholder="e.g., 021000021 (US) or HDFC0001234 (India)"
             value={newAccount.routingNumber}
             onChange={(e) =>
               setNewAccount({ ...newAccount, routingNumber: e.target.value })
             }
             error={errors.routingNumber}
           />
+          <p className="mt-1 text-sm text-gray-500">
+            US: 9-digit routing number | India: 11-character IFSC code
+          </p>
           {/*<-----v1.0.0-----*/}
         </div>
 
@@ -250,16 +276,17 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
             label="SWIFT/BIC Code"
             required
             name="swiftCode"
+            placeholder="e.g., CHASUS33XXX (US) or HDFCINBBXXX (India)"
             inputRef={fieldRefs.swiftCode}
             value={newAccount.swiftCode}
             onChange={(e) =>
-              setNewAccount({ ...newAccount, swiftCode: e.target.value })
+              setNewAccount({ ...newAccount, swiftCode: e.target.value.toUpperCase() })
             }
             error={errors.swiftCode}
           />
           {/*<-----v1.0.0-----*/}
           <p className="mt-1 text-sm text-gray-500">
-            8-11 characters. You can find it on your bank statement
+            8-11 characters (Bank Code + Country + Location + Optional Branch)
           </p>
         </div>
       </div>
@@ -286,10 +313,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
         <button
           type="button"
           onClick={() => setIsAddingAccount(false)}
-          // v1.0.1 <-----------------------------------------------------------------------
-          // className="px-4 py-2 text-gray-700 hover:text-gray-900"
-          className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
-          // v1.0.1 ----------------------------------------------------------------------->
+          className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg hover:bg-custom-blue/80"
         >
           Cancel
         </button>
@@ -419,7 +443,14 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
           </p>
         </div>
 
-        {isAddingAccount ? renderAccountForm() : renderAccountsList()}
+        {/* Show loading state while profile is loading */}
+        {profileLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="text-gray-500">Loading user profile...</div>
+          </div>
+        ) : (
+          isAddingAccount ? renderAccountForm() : renderAccountsList()
+        )}
       </div>
     </SidebarPopup>
   );

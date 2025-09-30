@@ -61,7 +61,7 @@ const AccountSettingsSidebar = () => {
   const securityNavigation = [
     { name: "Security", icon: KeyIcon, id: "security" },
     { name: "Usage", icon: ChartBarIcon, id: "usage" },
-   
+
   ];
 
   const organizationNavigation = [
@@ -118,7 +118,7 @@ const AccountSettingsSidebar = () => {
   // Filter navigation based on user type and permissions using useCallback
   const filterNavigation = useCallback(() => {
     if (!isInitialized && !getCachedPermissions()) {
-      console.log('🎯 Sidebar: No permissions available, returning empty navigation');
+    //   console.log('🎯 Sidebar: No permissions available, returning empty navigation');
       return [];
     }
 
@@ -129,24 +129,24 @@ const AccountSettingsSidebar = () => {
           if (userType === "superAdmin") {
             const superAdminItems = ["my-profile", "roles", "users"];
             if (!superAdminItems.includes(item.id)) {
-              console.log(`🎯 SuperAdmin filtering out ${item.id}: not in super admin items list`);
+            //   console.log(`🎯 SuperAdmin filtering out ${item.id}: not in super admin items list`);
               return false;
             }
 
             const permissionKey = permissionMap[item.id];
             const hasPermission = checkPermission(permissionKey);
-            console.log(`🎯 SuperAdmin ${item.id}:`, { permissionKey, hasPermission });
+            // console.log(`🎯 SuperAdmin ${item.id}:`, { permissionKey, hasPermission });
             return hasPermission;
           }
 
           const permissionKey = permissionMap[item.id];
           if (!permissionKey) {
-            console.log(`🎯 Non-super admin filtering out ${item.id}: no permission key`);
+            // console.log(`🎯 Non-super admin filtering out ${item.id}: no permission key`);
             return false;
           }
 
           const hasPermission = checkPermission(permissionKey);
-          console.log(`🎯 Non-super admin ${item.id}:`, { permissionKey, hasPermission });
+        //   console.log(`🎯 Non-super admin ${item.id}:`, { permissionKey, hasPermission });
 
           if (
             ["profile", "users", "sub-domain", "roles", "interviewer-groups", "sharing"].includes(item.id)
@@ -158,7 +158,7 @@ const AccountSettingsSidebar = () => {
       }))
       .filter((section) => section.items.length > 0);
 
-    console.log('📋 Filtered Sidebar Navigation:', filtered);
+    // console.log('📋 Filtered Sidebar Navigation:', filtered);
     return filtered;
   }, [checkPermission, isInitialized, organization, userType]);
 
@@ -169,7 +169,7 @@ const AccountSettingsSidebar = () => {
   }, []);
 
   const handleTabChange = useCallback((tabId) => {
-    console.log('🎯 Sidebar: Navigating to tab:', tabId);
+    // console.log('🎯 Sidebar: Navigating to tab:', tabId);
     if (tabId === "my-profile") {
       navigate("/account-settings/my-profile/basic");
       setIsSidebarOpen(true);
@@ -181,45 +181,45 @@ const AccountSettingsSidebar = () => {
   }, [navigate, organization, userType]);
 
   // Debug initialization state
-  useEffect(() => {
-    console.log('🎯 Sidebar Initialization:', {
-      authToken: !!authToken,
-      userType,
-      isInitialized,
-      loading,
-      organization,
-      activeTab,
-      location: location.pathname,
-    });
-  }, [authToken, userType, isInitialized, loading, organization, activeTab, location.pathname]);
+//   useEffect(() => {
+//     console.log('🎯 Sidebar Initialization:', {
+//       authToken: !!authToken,
+//       userType,
+//       isInitialized,
+//       loading,
+//       organization,
+//       activeTab,
+//       location: location.pathname,
+//     });
+//   }, [authToken, userType, isInitialized, loading, organization, activeTab, location.pathname]);
 
   // Redirect to appropriate tab on initial load
   useEffect(() => {
     if (location.pathname === "/account-settings") {
       if (organization && userType !== "superAdmin") {
-        console.log('🎯 Sidebar: Redirecting to /account-settings/profile');
+        // console.log('🎯 Sidebar: Redirecting to /account-settings/profile');
         navigate("/account-settings/profile", { replace: true });
       } else {
-        console.log('🎯 Sidebar: Redirecting to /account-settings/my-profile/basic');
+        // console.log('🎯 Sidebar: Redirecting to /account-settings/my-profile/basic');
         navigate("/account-settings/my-profile/basic", { replace: true });
       }
     }
 
     if (location.pathname === "/account-settings/my-profile") {
-      console.log('🎯 Sidebar: Redirecting to /account-settings/my-profile/basic');
+    //   console.log('🎯 Sidebar: Redirecting to /account-settings/my-profile/basic');
       navigate("/account-settings/my-profile/basic", { replace: true });
     }
   }, [location.pathname, navigate, organization, userType]);
 
   // Early return for loading or uninitialized states
   if (!authToken) {
-    console.log('🎯 Sidebar: No auth token, redirecting to login');
+    // console.log('🎯 Sidebar: No auth token, redirecting to login');
     navigate('/login');
     return null;
   }
 
   if (loading || !isInitialized) {
-    console.log('🎯 Sidebar: Waiting for initialization', { loading, isInitialized });
+    // console.log('🎯 Sidebar: Waiting for initialization', { loading, isInitialized });
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-50 z-50">
         <div>Loading...</div> {/* Replace with your Loading component */}

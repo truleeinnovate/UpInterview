@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  fixed assessment result tab issue.before getting only completed status data now we will display all status data
 // v1.0.1  -  Ashraf  -  fixed assessment code issue.now it will generate assessment code like ASMT-TPL-00001 and assessment name to assessment template
 // v1.0.2  -  Ashraf  -  fixed assessment code issue.now it will generate assessment code like ASMT-TPL-00001 and assessment name to assessment template
+// v1.0.3  -  Venkatesh  -  Added Joi validation for assessment creation and updates
  // <-------------------------------v1.0.1
 const Assessment = require("../models/Assessment/assessmentTemplates.js");
 // ------------------------------v1.0.1 >
@@ -19,10 +20,55 @@ const notificationMiddleware = require("../middleware/notificationMiddleware");
 // Import push notification functions
 const {createAssessmentCreatedNotification} = require("./PushNotificationControllers/pushNotificationAssessmentController");
 
+// Import validation functions
+const {
+  validateCreateAssessment,
+  validateUpdateAssessment,
+  validateAssessmentByTab,
+} = require("../validations/assessmentValidation");
+
+// Validate assessment by tab/step (for frontend step-wise validation)
+exports.validateAssessmentStep = async (req, res) => {
+  try {
+    const { tab } = req.params; // Get tab name from URL param
+    const { errors, isValid } = validateAssessmentByTab(req.body, tab);
+    
+    if (!isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Validation failed", 
+        errors 
+      });
+    }
+    
+    res.status(200).json({ 
+      success: true,
+      message: "Validation passed for " + tab,
+    });
+  } catch (error) {
+    console.error('[ASSESSMENT] Error validating assessment step:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to validate assessment",
+      error: error.message 
+    });
+  }
+};
+
 //newassessment is using
 
 exports.newAssessment = async (req, res) => {
   try {
+    // Validate the assessment data using Joi
+    const { errors, isValid } = validateCreateAssessment(req.body);
+    if (!isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Validation failed", 
+        errors 
+      });
+    }
+
     const {
       AssessmentTitle,
       // AssessmentType,
@@ -40,8 +86,14 @@ exports.newAssessment = async (req, res) => {
       tenantId,
       totalScore,
       passScore,
+      passScoreType,
+      passScoreBy,
     } = req.body;
 
+    // Clean up empty strings for enum fields
+    const cleanedPassScoreType = passScoreType && passScoreType.trim() !== '' ? passScoreType : undefined;
+    const cleanedPassScoreBy = passScoreBy && passScoreBy.trim() !== '' ? passScoreBy : undefined;
+    
     const newAssessmentData = {
       AssessmentTitle,
       // AssessmentType,
@@ -59,7 +111,14 @@ exports.newAssessment = async (req, res) => {
       totalScore,
       passScore,
     };
-    console.log("newAssessmentData", newAssessmentData);
+    
+    // Only add these fields if they have valid values
+    if (cleanedPassScoreType) {
+      newAssessmentData.passScoreType = cleanedPassScoreType;
+    }
+    if (cleanedPassScoreBy) {
+      newAssessmentData.passScoreBy = cleanedPassScoreBy;
+    }
 
     if (
       CandidateDetails &&
@@ -125,7 +184,12 @@ exports.newAssessment = async (req, res) => {
     
     res.status(201).json({ success: true, data: assessment });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('[ASSESSMENT] Error creating assessment:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to create assessment",
+      error: error.message 
+    });
   }
 };
 //update is using
@@ -136,21 +200,61 @@ exports.updateAssessment = async (req, res) => {
 
     // Validate the ID
     if (!isValidObjectId(id)) {
-      return res.status(400).json({ error: "Invalid ID format." });
+      return res.status(400).json({ 
+        success: false,
+        message: "Invalid ID format",
+        errors: { id: "Invalid assessment ID format" }
+      });
     }
 
-    const updatedAssessment = await Assessment.findByIdAndUpdate(id, req.body);
+    // Validate the update data using Joi
+    const { errors, isValid } = validateUpdateAssessment(req.body);
+    if (!isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Validation failed", 
+        errors 
+      });
+    }
+
+    // Clean up the data before updating
+    const updateData = { ...req.body };
+    
+    // Clean empty strings for enum fields
+    if (updateData.passScoreType !== undefined && (!updateData.passScoreType || updateData.passScoreType.trim() === '')) {
+      delete updateData.passScoreType;
+    }
+    if (updateData.passScoreBy !== undefined && (!updateData.passScoreBy || updateData.passScoreBy.trim() === '')) {
+      delete updateData.passScoreBy;
+    }
+
+    // Update with runValidators to ensure Mongoose schema validation
+    const updatedAssessment = await Assessment.findByIdAndUpdate(
+      id, 
+      updateData,
+      { new: true, runValidators: true }
+    );
 
     if (!updatedAssessment) {
-      return res.status(404).json({ error: "Assessment not found." });
+      return res.status(404).json({ 
+        success: false,
+        message: "Assessment not found",
+        errors: { assessment: "Assessment not found" }
+      });
     }
 
-    res
-      .status(200)
-      .json({ success: true, message: "Updated successfully.", data: updatedAssessment });
+    res.status(200).json({ 
+      success: true, 
+      message: "Assessment updated successfully", 
+      data: updatedAssessment 
+    });
   } catch (error) {
-    console.error("Error updating assessment:", error);
-    res.status(500).json({ error: error.message });
+    console.error("[ASSESSMENT] Error updating assessment:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to update assessment",
+      error: error.message 
+    });
   }
 };
 

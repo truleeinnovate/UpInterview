@@ -34,10 +34,18 @@ export const selectBaseStyles = (hasError) => ({
     ...base,
     color: "black",
     fontWeight: 500,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    maxWidth: "100%",
   }),
   placeholder: (base) => ({
     ...base,
     color: "#9ca3af",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    maxWidth: "100%",
   }),
   option: (base, state) => ({
     ...base,

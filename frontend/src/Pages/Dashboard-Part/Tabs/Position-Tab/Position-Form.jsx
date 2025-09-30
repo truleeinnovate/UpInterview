@@ -1341,6 +1341,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                     {/* Select Template */}
                     <div className="grid sm:grid-cols-1 grid-cols-2">
+
                       <div className="relative">
                         <DropdownWithSearchField
                           value={formData.template?._id || ""}
@@ -1373,6 +1374,26 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         )}
                       </div>
                       {/* //v1.0.5 Ranjith <-----------------------------------> */}
+
+                      <DropdownWithSearchField
+                        value={formData.template?._id || ""}
+                        options={templateOptions}
+                        onChange={(e) => {
+                          const selectedTemplate = templatesData.find(
+                            (t) => t._id === e.target.value
+                          );
+                          setFormData({
+                            ...formData,
+                            template: selectedTemplate || {},
+                          });
+                        }}
+                        error={errors?.template}
+                        label="Select Template"
+                        placeholder="Select Template"
+                        name="template"
+                        required={false}
+                        loading={isTemplatesFetching}
+                      />
                     </div>
                     {/* v1.0.2 ---------------------------------------------------> */}
                     <DescriptionField

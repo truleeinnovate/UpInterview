@@ -75,6 +75,10 @@ const validateFile = async (file, type = "attachment") => {
 };
 
 const SupportForm = ({ onClose, FeedbackIssueType }) => {
+  // v1.0.2 <-------------------------------------------------------------------------
+  useScrollLock(true); // This will lock the outer scrollbar when the form is open
+  // v1.0.2 ------------------------------------------------------------------------->
+  
   const { isMutationLoading, submitTicket } = useSupportTickets();
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const ownerId = tokenPayload?.userId;
@@ -96,9 +100,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
   const [isAttachmentFileRemoved, setIsAttachmentRemoved] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // v1.0.2 <-------------------------------------------------------------------------
-  useScrollLock(true); // This will lock the outer scrollbar when the form is open
-  // v1.0.2 ------------------------------------------------------------------------->
+  
 
   // v1.0.3 <-------------------------------------------------------------------------
   const issuesData = useMemo(
@@ -239,12 +241,25 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
 
   const onChangeIssue = useCallback((e) => {
     const value = e.target.value;
-    setFormState((prev) => ({
-      ...prev,
-      selectedIssue: value,
-    }));
+    // Handle both dropdown selection and custom input
+    if (otherIssueFlag) {
+      // For custom input, limit to 100 characters
+      const limitedValue = value.slice(0, 100);
+      setFormState((prev) => ({
+        ...prev,
+        otherIssue: limitedValue,
+        selectedIssue: "",
+      }));
+    } else {
+      // For dropdown selection
+      setFormState((prev) => ({
+        ...prev,
+        selectedIssue: value,
+        otherIssue: "",
+      }));
+    }
     setErrors((prev) => ({ ...prev, issueType: "" }));
-  }, []);
+  }, [otherIssueFlag]);
 
   const onChangeFileInput = async (e) => {
     const file = e.target.files[0];
@@ -278,14 +293,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
     setAttachmentFileName("");
   };
 
-  const onChangeOtherIssue = useCallback((e) => {
-    const value = e.target.value.slice(0, 100);
-    setFormState((prev) => ({
-      ...prev,
-      otherIssue: value,
-    }));
-    setErrors((prev) => ({ ...prev, issueType: "" }));
-  }, []);
+  // onChangeOtherIssue is no longer needed as it's handled in onChangeIssue
 
   const handleDescriptionChange = useCallback((e) => {
     const value = e.target.value.slice(0, maxDescriptionLen);
@@ -457,19 +465,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
         notify.error(error?.response?.data?.message || error.message);
       }
     },
-    [
-      validateForm,
-      notify,
-      createFormData,
-      submitTicket,
-      editMode,
-      initialTicketData?._id,
-      attachmentFile,
-      isAttachmentFileRemoved,
-      initialFormState,
-      onClose,
-      navigate,
-    ]
+    [validateForm, createFormData, editMode, initialTicketData?._id, attachmentFile, isAttachmentFileRemoved, tenantId, ownerId, submitTicket, initialFormState, onClose, navigate]
   );
 
   //  <------------------ added by ranjith
@@ -602,43 +598,37 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
 
                 {/* Issue Type Section */}
                 <div>
-                  {!otherIssueFlag ? (
-                    <DropdownWithSearchField
-                      containerRef={issueTypeRef}
-                      label="Issue Type"
-                      required
-                      name="selectedIssue"
-                      value={selectedIssue}
-                      options={[
-                        ...issuesData.map((each) => ({
-                          value: `${each.issue}`,
-                          label: `${each.issue}`,
-                        })),
-                        { value: "__other__", label: "Other" },
-                      ]}
-                      onChange={onChangeIssue}
-                      error={errors.issueType}
-                      isCustomName={otherIssueFlag}
-                      setIsCustomName={(flag) =>
-                        setFormState((prev) => ({ ...prev, otherIssueFlag: flag }))
-                      }
-                    />
-                  ) : (
-                    <div>
-                      <InputField
-                        inputRef={issueTypeRef}
-                        label="Issue Type"
-                        required
-                        name="otherIssue"
-                        value={otherIssue}
-                        onChange={onChangeOtherIssue}
-                        error={errors.issueType}
-                        placeholder="Enter issue"
-                      />
-                      <p className="text-right text-gray-500 text-xs mt-1">
-                        {otherIssue.length}/100
-                      </p>
-                    </div>
+                  <DropdownWithSearchField
+                    containerRef={issueTypeRef}
+                    label="Issue Type"
+                    required
+                    name="issueType"
+                    value={otherIssueFlag ? otherIssue : selectedIssue}
+                    options={[
+                      ...issuesData.map((each) => ({
+                        value: `${each.issue}`,
+                        label: `${each.issue}`,
+                      })),
+                      { value: "__other__", label: "Other" },
+                    ]}
+                    onChange={onChangeIssue}
+                    error={errors.issueType}
+                    isCustomName={otherIssueFlag}
+                    setIsCustomName={(flag) => {
+                      setFormState((prev) => ({ 
+                        ...prev, 
+                        otherIssueFlag: flag,
+                        // Clear values when switching modes
+                        selectedIssue: flag ? "" : prev.selectedIssue,
+                        otherIssue: flag ? prev.otherIssue : ""
+                      }));
+                    }}
+                    placeholder="Enter issue type"
+                  />
+                  {otherIssueFlag && (
+                    <p className="text-right text-gray-500 text-xs mt-1">
+                      {otherIssue.length}/100
+                    </p>
                   )}
                 </div>
 

@@ -363,7 +363,7 @@ const InterviewSlideover = ({ mode }) => {
               <div>
                 <InputField
                   label="Best For"
-                  ref={fieldRefs.bestFor}
+                  // ref={fieldRefs.bestFor}
                   type="text"
                   id="bestFor"
                   name="bestFor"
@@ -375,15 +375,15 @@ const InterviewSlideover = ({ mode }) => {
                       ...prev,
                       bestFor: value,
                     }));
-                    if (errors.bestFor) {
-                      setErrors((prev) => ({ ...prev, bestFor: "" }));
-                    }
+                    // if (errors.bestFor) {
+                    //   setErrors((prev) => ({ ...prev, bestFor: "" }));
+                    // }
                   }}
                   onBlur={() => handleBlur("bestFor")}
                   autoComplete="off"
-                  error={errors.bestFor}
+                  // error={errors.bestFor}
                   maxLength={50}
-                  required
+                  
                 />
                 <p className="flex justify-end text-xs text-gray-500 mt-1">
                   {newTemplate.bestFor.length}/50 characters
@@ -405,14 +405,14 @@ const InterviewSlideover = ({ mode }) => {
                       ...prev,
                       format: e.target.value,
                     }));
-                    if (errors.format) {
-                      setErrors((prev) => ({ ...prev, format: "" }));
-                    }
+                    // if (errors.format) {
+                    //   setErrors((prev) => ({ ...prev, format: "" }));
+                    // }
                   }}
                   placeholder="Select format"
-                  error={errors.format}
-                  containerRef={fieldRefs.format}
-                  required
+                  // error={errors.format}
+                  // containerRef={fieldRefs.format}
+                  
                 />
               </div>
               <div>
