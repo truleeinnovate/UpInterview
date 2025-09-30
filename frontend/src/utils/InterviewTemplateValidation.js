@@ -14,10 +14,10 @@ export const validateInterviewTemplate = (templateData) => {
 
   // Validate label
   if (!templateData.name || !templateData.name.trim()) {
-    errors.name = 'Label is required';
+    errors.name = 'Name is required';
     isValid = false;
   } else if (templateData.name.trim().length > 50) {
-    errors.name = 'Label cannot exceed 50 characters';
+    errors.name = 'name cannot exceed 50 characters';
     isValid = false;
   }
 

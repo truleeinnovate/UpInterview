@@ -14,38 +14,34 @@ const InterviewTemplateSchema = new mongoose.Schema(
     format: { 
       type: String, 
       required: true,
-      enum: ["fully online", "hybrid", "offline"],
-      default: "fully online"
+      enum: ["online", "hybrid", "offline"],
+      default: "online"
     }, // Interview format
     status: {
       type: String,
       enum: ["active", "draft", "inactive", "archived"],
       default: "inactive",
     },
+    type: {
+      type: String,
+      enum: ["custom", "standard"],
+      default: "custom",
+    },
     rounds: [
       {
         roundTitle: { type: String, required: true }, // e.g., "Technical Round"
         // interviewType: { type: String, required: true }, // Interview type
-        // assessmentTemplate: [{
-        //     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assessment' },
-        //     assessmentName: { type: String, required: true }
-        // }],
         assessmentId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Assessment",
-        }, // Changed to String and made optional
-        // assessmentQuestions: [{
-        //     sectionName: { type: String },
-        //     questionId: { type: String },
-        //     snapshot: [{ type: mongoose.Schema.Types.Mixed, required: true }]
-        // }],
+        },
         interviewerViewType: { type: String }, // group or individual
-        duration: { type: String }, // Changed to String and made optional
-        instructions: { type: String }, // Special notes for the round
-        interviewMode: { type: String }, // Made optional
-        minimumInterviewers: { type: String }, // Changed to String and made optional
-        selectedInterviewers: [{ type: String }], // Made array items optional
-        interviewerType: { type: String }, // Made optional
+        duration: { type: String },
+        instructions: { type: String },
+        interviewMode: { type: String },
+        minimumInterviewers: { type: String },
+        selectedInterviewers: [{ type: String }],
+        interviewerType: { type: String },
         selectedInterviewersType: { type: String }, // user or group
         interviewerViewType: { type: String },  // 
         interviewerGroupName: { type: String }, // group name
