@@ -79,6 +79,8 @@ const BasicDetailsEditPage = ({
   // Role dropdown state
   const [currentRole, setCurrentRole] = useState([]);
 
+  console.log("userProfile BasicDetailsEditPage", userProfile);
+
   const [selectedCurrentRoleId, setSelectedCurrentRoleId] = useState("");
 
   const [file, setFile] = useState(null);
@@ -105,8 +107,8 @@ const BasicDetailsEditPage = ({
   //   }
   // }, [tenantId]);
 
-  console.log("formattedDate", formData);
-  
+//   console.log("formattedDate", formData);
+
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
@@ -205,7 +207,7 @@ const BasicDetailsEditPage = ({
     setFormData((prevData) => ({ ...prevData, dateOfBirth: formattedDate }));
     setStartDate(date);
   };
-  
+
   // Options and handlers for common fields
   const genderOptions = [
     { value: "Male", label: "Male" },
@@ -315,7 +317,7 @@ const BasicDetailsEditPage = ({
   // };
 
   const handleProfileIdValidation = async (profileId) => {
-    console.log("profileId", profileId);
+    // console.log("profileId", profileId);
     if (profileId !== originalProfileId) {
       const error = await validateProfileId(profileId, checkProfileIdExists);
       setErrors((prev) => ({
@@ -389,7 +391,7 @@ const BasicDetailsEditPage = ({
         formData.profileId,
         checkProfileIdExists
       );
-      console.log("profileIdError", profileIdError);
+    //   console.log("profileIdError", profileIdError);
       if (profileIdError) {
         setErrors((prev) => ({ ...prev, profileId: profileIdError }));
         return;
@@ -415,7 +417,7 @@ const BasicDetailsEditPage = ({
     const validationErrors = validateFormMyProfile(formData);
     setErrors(validationErrors);
 
-    console.log("validationErrors", validationErrors);
+    // console.log("validationErrors", validationErrors);
 
     if (!isEmptyObject(validationErrors)) {
       scrollToFirstError(validationErrors, fieldRefs);
@@ -476,7 +478,7 @@ const BasicDetailsEditPage = ({
             setLoading(false);
             handleCloseModal();
           } else {
-            console.log("falied to save changes");
+            // console.log("falied to save changes");
 
             setErrors((prev) => ({
               ...prev,
@@ -523,7 +525,7 @@ const BasicDetailsEditPage = ({
     } catch (err) {
       if (err.response && err.response.status === 400) {
         const backendErrors = err.response.data.errors || {};
-        console.log("backendErrors", backendErrors);
+        // console.log("backendErrors", backendErrors);
         setErrors(backendErrors);
         scrollToFirstError(backendErrors, fieldRefs);
       } else {
@@ -756,15 +758,19 @@ const BasicDetailsEditPage = ({
               required
             />
 
-            <InputField
-              value={formData.linkedinUrl || ""}
-              onChange={handleInputChange}
-              inputRef={fieldRefs.linkedinUrl}
-              error={errors.linkedinUrl}
-              label="LinkedIn"
-              name="linkedinUrl"
-              required
-            />
+            <div className="relative">
+              <InputField
+                value={formData.linkedinUrl || ""}
+                onChange={handleInputChange}
+                inputRef={fieldRefs.linkedinUrl}
+                error={errors.linkedinUrl}
+                label="LinkedIn"
+                name="linkedinUrl"
+                required
+                disabled={true}
+                className="bg-gray-100"
+              />
+            </div>
 
             <DropdownWithSearchField
               value={selectedCurrentRoleId || ""}

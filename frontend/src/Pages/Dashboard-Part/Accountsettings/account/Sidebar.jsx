@@ -59,19 +59,19 @@ const SidebarProfile = ({
                 </h2>
                 {superAdminTabs.map((item) => {
                   const hasPermission = isInitialized && checkPermission(item.permissionKey);
-                  console.log('🎯 SidebarProfile SuperAdmin Tab:', {
-                    id: item.id,
-                    permissionKey: item.permissionKey,
-                    hasPermission,
-                    isInitialized,
-                  });
+                //   console.log('🎯 SidebarProfile SuperAdmin Tab:', {
+                //     id: item.id,
+                //     permissionKey: item.permissionKey,
+                //     hasPermission,
+                //     isInitialized,
+                //   });
 
                   return hasPermission ? (
                     <button
                       key={item.id}
                       onClick={() => {
                         if (activeTab !== item.id) {
-                          console.log('🎯 SidebarProfile: Clicking tab:', item.id);
+                        //   console.log('🎯 SidebarProfile: Clicking tab:', item.id);
                           handleTabChange(item.id);
                         }
                       }}
@@ -94,17 +94,17 @@ const SidebarProfile = ({
                     {section.category}
                   </h2>
                   {section.items.map((item) => {
-                    console.log('🎯 SidebarProfile Effective Tab:', {
-                      id: item.id,
-                      name: item.name,
-                      active: activeTab === item.id,
-                    });
+                    // console.log('🎯 SidebarProfile Effective Tab:', {
+                    //   id: item.id,
+                    //   name: item.name,
+                    //   active: activeTab === item.id,
+                    // });
                     return (
                       <button
                         key={item.id}
                         onClick={() => {
                           if (activeTab !== item.id) {
-                            console.log('🎯 SidebarProfile: Clicking tab:', item.id);
+                            // console.log('🎯 SidebarProfile: Clicking tab:', item.id);
                             handleTabChange(item.id);
                           }
                         }}
