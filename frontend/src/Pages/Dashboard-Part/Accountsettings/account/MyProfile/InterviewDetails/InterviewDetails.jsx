@@ -174,7 +174,7 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
                                     ))}
                                     {contactData.skills.length > 3 && (
                                         <div className="relative group">
-                                            <span 
+                                            <span
                                                 className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs cursor-default"
                                                 title={contactData.skills.slice(3).map(skill => formatSkill(skill)).join(', ')}
                                             >
@@ -206,7 +206,7 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
 
                     {contactData?.previousExperienceConductingInterviews === "yes" && (
                         <div className="space-y-1">
-                            <p className="text-sm text-gray-500">Years of Experience</p>
+                            <p className="text-sm text-gray-500">Years of Experience Conducting Interviews</p>
                             <p className="text-sm font-medium">
                                 {contactData?.previousExperienceConductingInterviewsYears || '0'} years
                             </p>
