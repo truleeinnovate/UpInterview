@@ -1135,8 +1135,6 @@ const EditInterviewDetails = ({
                                 </div>
                             )}
 
-
-
                             {/* Hourly Rates by Experience Level */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1147,7 +1145,7 @@ const EditInterviewDetails = ({
                                     {isRateLoading ? (
                                         <span>Loading exchange rate...</span>
                                     ) : (
-                                        <span>1 USD = {Number(exchangeRate).toFixed(2)} INR {lastRateUpdate && `(Updated at ${new Date(lastRateUpdate).toLocaleTimeString()})`}</span>
+                                        <span>1 USD = {Number(exchangeRate).toFixed(2)} INR</span>
                                     )}
                                     <p className="text-xs text-gray-500 mt-1">
                                         Changing USD will automatically update INR, and vice versa

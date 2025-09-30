@@ -623,9 +623,9 @@ const InterviewDetails = ({
                 skills: updatedSkills.map(s => s?.SkillName || s).filter(Boolean),
             }));
             setErrors(prev => ({ ...prev, skills: '' }));
-            notify.success("Skill added successfully");
+            console.log("Skill added successfully");
         } else {
-            notify.error("Skill already exists");
+            console.log("Skill already exists");
         }
     };
 
@@ -778,7 +778,7 @@ const InterviewDetails = ({
                                         return (
                                             <span
                                                 key={skillId}
-                                                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                                                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-custom-blue/10 text-custom-blue border border-custom-blue/50"
                                             >
                                                 {skillName}
                                                 <button
@@ -787,7 +787,7 @@ const InterviewDetails = ({
                                                         e.stopPropagation();
                                                         handleRemoveSkill(skill._id || skill.SkillName || skill);
                                                     }}
-                                                    className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                                                    className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-custom-blue hover:bg-custom-blue/10 hover:text-custom-blue/80 focus:outline-none"
                                                 >
                                                     <X className="h-3 w-3" />
                                                 </button>
@@ -864,6 +864,18 @@ const InterviewDetails = ({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Hourly Rates by Experience Level <span className="text-red-500">*</span>
                     </label>
+                    {/* Exchange Rate Info - Simplified */}
+                    <div className="text-sm text-gray-600 mb-4">
+                        {isRateLoading ? (
+                            <span>Loading exchange rate...</span>
+                        ) : (
+                            <span>1 USD = {Number(exchangeRate).toFixed(2)} INR
+                            </span>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                            Changing USD will automatically update INR, and vice versa
+                        </p>
+                    </div>
                     <div className="space-y-4">
                         {showJuniorLevel && (
                             <div className="bg-gray-50 p-4 rounded-lg">

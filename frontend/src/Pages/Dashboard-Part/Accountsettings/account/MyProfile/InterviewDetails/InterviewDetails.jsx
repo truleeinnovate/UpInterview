@@ -249,16 +249,6 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
                         </div>
                     </div>
 
-                    {/* Row 4: Hourly Rate */}
-                    {contactData?.hourlyRate && (
-                        <div className="space-y-1">
-                            <p className="text-sm text-gray-500">Hourly Rate</p>
-                            <p className="text-sm font-medium">
-                                {formatCurrency(contactData.hourlyRate, 'USD')}
-                            </p>
-                        </div>
-                    )}
-
                     {/* Row 5: Discount and Professional Title */}
                     {contactData?.mock_interview_discount ? (
                         <div className="space-y-1">
@@ -273,7 +263,9 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
                             <p className="text-sm text-gray-500">-</p>
                         </div>
                     )}
+                </div>
 
+                <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                         <p className="text-sm text-gray-500">Professional Title</p>
                         <p
@@ -294,16 +286,6 @@ const InterviewUserDetails = ({ mode, usersId, setInterviewEditOpen }) => {
                             {contactData?.bio || 'No bio provided'}
                         </p>
                     </div>
-
-                    {/* No Show Policy */}
-                    {contactData?.noShowPolicy && (
-                        <div className="col-span-2 space-y-1">
-                            <p className="text-sm text-gray-500">No Show Policy</p>
-                            <p className="text-sm text-gray-700">
-                                {contactData.noShowPolicy}
-                            </p>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
