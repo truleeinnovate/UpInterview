@@ -14,7 +14,7 @@ import {
   CheckCircleIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
-import { X } from "lucide-react";
+import { Edit2, X } from "lucide-react";
 
 const AssessmentQuestionsTab = ({
   assessmentId,
@@ -83,6 +83,7 @@ const AssessmentQuestionsTab = ({
   const handlePopupToggle = (section = null) => {
     setIsQuestionPopup(!isQuestionPopup);
     setSelectedSection(section);
+    setActiveMenu(null)
   };
 
   //   // <---------------------- v1.0.1
@@ -298,7 +299,7 @@ const AssessmentQuestionsTab = ({
                 <div className="flex justify-between items-center sm:p-2 p-4 border-b border-gray-200 bg-gray-50">
                   <div className="flex sm:flex-col sm:items-start items-center sm:space-x-0 space-x-4">
                     <div className="flex items-center space-x-3">
-                      <span className="bg-white px-3 py-1 rounded-lg border border-gray-200 text-sm font-medium shadow-xs">
+                      <span className="bg-white px-1 py-1 rounded-lg border border-gray-200 text-sm font-medium shadow-xs">
                         {section.Questions?.length || 0}{" "}
                         {section.Questions?.length <= 1
                           ? "Question"
@@ -310,6 +311,19 @@ const AssessmentQuestionsTab = ({
                             section.SectionName.slice(1)
                           : ""}
                       </h3>
+
+                      <button
+                      className="flex items-center gap-1 sm:mt-3 text-sm text-blue-500 hover:text-blue-600 font-medium sm:px-0 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                      onClick={() => {
+                        openEditSection(
+                          sectionIndex,
+                          addedSections[sectionIndex].SectionName
+                        );
+                        setActiveMenu(null)
+                      }}
+                    >
+                      <PencilIcon className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
+                      </button>
                     </div>
 
                     <button
@@ -389,7 +403,14 @@ const AssessmentQuestionsTab = ({
 
                     <button
                       className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
-                      onClick={() => toggleArrow1(sectionIndex)}
+                      // onClick={(e) => {
+                      //   e.stopPropagation();
+                      //   setActiveMenu(null);
+                      //   toggleArrow1(sectionIndex);
+                      // }}
+                      onClick={() =>
+                         
+                        toggleArrow1(sectionIndex)}
                     >
                       {toggleStates[sectionIndex] ? (
                         <MdOutlineKeyboardArrowUp className="text-xl" />

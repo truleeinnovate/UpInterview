@@ -62,7 +62,7 @@ function RoundFormTemplates() {
     roundTitle: "",
     interviewMode: "",
     sequence: 1,
-    duration: 30,
+    duration: 60,
     selectedInterviewType: null,
     interviewers: [],
     interviewerType: "",
@@ -818,7 +818,7 @@ function RoundFormTemplates() {
             roundTitle: "",
             interviewMode: "",
             sequence: maxSequence + 1,
-            duration: 30,
+            duration: 60,
             selectedInterviewType: null,
             interviewers: [],
             interviewerType: "",
@@ -1010,11 +1010,12 @@ function RoundFormTemplates() {
                 </p>
               </div>
 
-              {formData.roundTitle !== "Assessment" && (
+              {/* {formData.roundTitle !== "Assessment" && ( */}
                 <div>
                   <DropdownWithSearchField
                     label="Duration (Minutes)"
                     name="duration"
+                    disabled={formData.roundTitle === "Assessment"}
                     value={formData.duration}
                     options={[
                       { value: 30, label: "30 min" },
@@ -1033,7 +1034,7 @@ function RoundFormTemplates() {
                     error={errors.duration}
                   />
                 </div>
-              )}
+              {/* )} */}
 
               {formData.roundTitle === "Assessment" && (
                 <div>

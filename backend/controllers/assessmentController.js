@@ -59,6 +59,7 @@ exports.newAssessment = async (req, res) => {
       totalScore,
       passScore,
     };
+    console.log("newAssessmentData", newAssessmentData);
 
     if (
       CandidateDetails &&

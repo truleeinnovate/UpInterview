@@ -37,6 +37,7 @@ export const useAssessments = (filters = {}) => {
     // ---------------------- v1.0.1 >
     queryFn: async () => {
       const data = await fetchFilterData('assessment');
+      
       return data.map(assessment => ({
         ...assessment,
         // <---------------------- v1.0.4

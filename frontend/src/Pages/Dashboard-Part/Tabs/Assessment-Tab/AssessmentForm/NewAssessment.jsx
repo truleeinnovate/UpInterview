@@ -62,6 +62,7 @@ const NewAssessment = () => {
     ? assessmentData.find((assessment) => assessment._id === id)
     : null;
 
+
   const [activeTab, setActiveTab] = useState("Basicdetails");
   // const [startDate, setStartDate] = useState(new Date());
   // Replace the current startDate initialization with:
@@ -152,11 +153,11 @@ const [startDate, setStartDate] = useState(() => {
   // Load basic assessment data
   useEffect(() => {
     if (isEditing && assessment) {
+      
       const matchedPosition = positionData.find(
-        (pos) => pos._id === assessment.Position
+        (pos) => pos._id === assessment?.Position
       );
-      console.log("matchedPosition", matchedPosition);
-      console.log("Ass", assessment);
+      
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
         Position: assessment.Position || "",
@@ -1235,42 +1236,102 @@ const [startDate, setStartDate] = useState(() => {
 
   // changes made by shashank on [08/01/2025] addedSections onSectionAdded
   const [sectionName, setSectionName] = useState("");
-  const handleAddSection = (closeAddSectionPopup) => {
-    // const validateErrors = {};
-    // if (!sectionName.trim()) {
-    //   validateErrors.sectionName = "";
-    //   setIsAlreadyExistingSection("section name is required*");
-    //   return;
-    // }
-    if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
-      setIsAlreadyExistingSection(`section ${sectionName} already exists`);
-      return;
-    }
+ 
+ 
+//   const handleAddSection = (closeAddSectionPopup) => {
+//     // const validateErrors = {};
+//     // if (!sectionName.trim()) {
+//     //   validateErrors.sectionName = "";
+//     //   setIsAlreadyExistingSection("section name is required*");
+//     //   return;
+//     // }
+//     if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
+//       setIsAlreadyExistingSection(`section ${sectionName} already exists`);
+//       return;
+//     }
 
-    // Generate section name (Section1, Section2, etc.)
+//     // Generate section name (Section1, Section2, etc.)
+//   const sectionNumber = addedSections.length + 1;
+//   const newSectionName = `Section ${sectionNumber}`;
+  
+//   // Check if section name already exists (in case of deletions)
+//   let finalSectionName = newSectionName;
+//   let counter = 1;
+  
+//   while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
+//     finalSectionName = `Section${sectionNumber + counter}`;
+//     counter++;
+//   }
+// console.log(finalSectionName);
+//     handleSectionAdded({
+//       SectionName: finalSectionName,
+//       Questions: [],
+//     });
+//     setSectionName("");
+//     // closeAddSectionPopup();
+//      // Close the popup if it exists
+//   if (closeAddSectionPopup) {
+//     closeAddSectionPopup();
+//   }
+//   };
+
+
+  // Add this useEffect to automatically create default section when not in editing mode
+
+
+  useEffect(() => {
+  if (!isEditing && addedSections.length === 0) {
+    // Auto-create default section when not in editing mode and no sections exist
+    handleAddSection(null, true); // Pass true to indicate it's auto-creation
+  }
+}, [isEditing, addedSections.length]);
+
+const handleAddSection = (closeAddSectionPopup, isAutoCreate = false) => {
+  // If it's auto-creation in non-edit mode, use default naming
+  if (isAutoCreate) {
+    const defaultSectionName = "Section 1";
+    
+    handleSectionAdded({
+      SectionName: defaultSectionName,
+      Questions: [],
+    });
+    setSectionName("");
+    return;
+  }
+
+  // Existing logic for manual section creation
+  if (addedSections.map((each) => each.SectionName).includes(sectionName)) {
+    setIsAlreadyExistingSection(`section ${sectionName} already exists`);
+    return;
+  }
+
+  // Generate section name (Section1, Section2, etc.) - ONLY for manual creation
   const sectionNumber = addedSections.length + 1;
-  const newSectionName = `Section${sectionNumber}`;
+  const newSectionName = `Section ${sectionNumber}`;
   
   // Check if section name already exists (in case of deletions)
   let finalSectionName = newSectionName;
   let counter = 1;
   
   while (addedSections.map(each => each.SectionName).includes(finalSectionName)) {
-    finalSectionName = `Section${sectionNumber + counter}`;
+    finalSectionName = `Section ${sectionNumber + counter}`;
     counter++;
   }
-console.log(finalSectionName);
-    handleSectionAdded({
-      SectionName: finalSectionName,
-      Questions: [],
-    });
-    setSectionName("");
-    // closeAddSectionPopup();
-     // Close the popup if it exists
+
+  console.log(finalSectionName);
+  
+  handleSectionAdded({
+    SectionName: finalSectionName,
+    Questions: [],
+  });
+  setSectionName("");
+  
+  // Close the popup if it exists
   if (closeAddSectionPopup) {
     closeAddSectionPopup();
   }
-  };
+};
+  
 
   // const updateQuestionsInAddedSectionFromQuestionBank = (
   //   sectionName,
@@ -1509,7 +1570,7 @@ console.log(finalSectionName);
     <div ref={formRef}>
       <div className="bg-gray-50">
         {/* v1.0.4 <------------------------------------------------------------------ */}
-        <main className="mx-auto py-4 sm:px-3 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+        <main className="mx-auto py-4 sm:px-3 lg:px-8 md:px-8 xl:px-8 2xl:px-8 mr-14 ml-14">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg">
               <div className="flex justify-between px-12 py-6 sm:px-4">
