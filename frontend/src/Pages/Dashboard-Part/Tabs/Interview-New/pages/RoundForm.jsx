@@ -1127,19 +1127,25 @@ const RoundFormInterviews = () => {
         });
         console.log("assessment result", result);
         if (result.success) {
-          // const updatedRoundData = {
-          //   ...roundData,
-          //   // meetingId: data?.start_url || meetingLink,
-          // };
-          // const targetRoundId = response?.savedRound?._id || roundId;
-          // const updatePayload = {
-          //   interviewId,
-          //   roundId: targetRoundId,
-          //   round: updatedRoundData,
-          //   ...(isEditing ? { questions: interviewQuestionsList } : {}),
-          // };
-          // response = await updateInterviewRound(payload);
-          navigate(`/interviews/${interviewId}`);
+          const updatedRoundData = {
+            ...roundData,
+            scheduleAssessmentId: result.data?.scheduledAssessmentId,
+            // meetingId: data?.start_url || meetingLink,
+          };
+          const targetRoundId = response?.savedRound?._id || roundId;
+          const updatePayload = {
+            interviewId,
+            roundId: targetRoundId,
+            round: updatedRoundData,
+            ...(isEditing ? { questions: interviewQuestionsList } : {}),
+          };
+
+          response = await updateInterviewRound(updatePayload);
+          if (response.status === "ok") {
+            navigate(`/interviews/${interviewId}`);
+          }
+          // response = await updateInterviewRound(updatePayload);
+          // navigate(`/interviews/${interviewId}`);
           // toast.success('Assessment shared successfully!');
         }
       }

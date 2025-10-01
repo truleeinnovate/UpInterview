@@ -25,7 +25,7 @@ function AssessmentResultsTab({
 
   useEffect(() => {
     const getResults = async () => {
-      const { data, error } = await fetchAssessmentResults(assessment._id);
+      const { data, error } = await fetchAssessmentResults(assessment?._id);
       if (!error) {
         setResults(data);
       } else {
@@ -43,10 +43,15 @@ function AssessmentResultsTab({
   };
 
   const handleViewResult = (candidate, schedule) => {
+    // console.log("candidate", candidate);
+    // console.log("schedule", schedule);
+   
     setSelectedCandidate(candidate);
     setSelectedSchedule(schedule);
     setShowResultView(true);
   };
+// console.log("results ",results )
+  
 
   const closeResultView = () => {
     setShowResultView(false);
@@ -100,7 +105,7 @@ function AssessmentResultsTab({
   // <-------------------------------v1.0.1
 
   if (loading) return <div className="p-4">Loading results...</div>;
-
+  // console.log("schedule", assessment);
   if (showResultView) {
     return (
       <ScheduledAssessmentResultView
@@ -115,7 +120,7 @@ function AssessmentResultsTab({
       />
     );
   }
-
+console.log("results ",results )
   return (
     // v1.0.2 <----------------------------------
     <div className="sm:px-2 p-4">

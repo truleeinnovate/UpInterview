@@ -139,15 +139,92 @@ const InterviewForm = () => {
   const interview = isEditing
     ? interviewData.find((interview) => interview._id === id)
     : null;
-  //console.log('interview-----',interview);
+  console.log('interview-----',interview);
 
-  useEffect(() => {
-    if (isEditing && interview) {
-      setCandidateId(interview.candidateId._id);
-      setPositionId(interview.positionId._id);
-      setTemplateId(interview.templateId?._id);
+  // useEffect(() => {
+  //   if (isEditing && interview) {
+  //     setCandidateId(interview.candidateId._id);
+  //     setPositionId(interview.positionId._id);
+  //     // setTemplateId(interview.templateId?._id);
+
+  //     // Only set templateId when templatesData is available
+  //   if (interview.templateId?._id && templatesData.length > 0) {
+  //     // Verify the template exists in templatesData before setting
+  //     const templateExists = templatesData.some(template => template._id === interview.templateId._id);
+  //     if (templateExists) {
+  //       setTemplateId(interview.templateId._id);
+  //       console.log("Template ID set:", interview.templateId._id);
+  //     } else {
+  //       console.warn("Template not found in templatesData:", interview.templateId._id);
+  //       setTemplateId("");
+  //     }
+  //   } else if (interview.templateId?._id) {
+  //     // If templatesData is not loaded yet, set the ID anyway
+  //     setTemplateId(interview.templateId._id);
+  //   } else {
+  //     setTemplateId("");
+  //   }
+
+  //     if (interview.rounds && interview.rounds.length > 0) {
+  //       setRounds(interview.rounds);
+  //     } else {
+  //       setRounds([]);
+  //     }
+  //   }
+  // }, [isEditing, interview, templatesData]);
+
+// v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
+
+useEffect(() => {
+  if (isEditing && interview && templatesData.length > 0) {
+    console.log("Interview data:", interview);
+    
+    setCandidateId(interview.candidateId?._id || "");
+    setPositionId(interview.positionId?._id || "");
+    
+    // Fix for template - handle the nested object structure
+    if (interview.templateId) {
+      console.log("Template data:", interview.templateId);
+      
+      let templateIdToSet = null;
+      
+      if (typeof interview.templateId === 'object' && interview.templateId._id) {
+        templateIdToSet = interview.templateId._id;
+      } else if (typeof interview.templateId === 'string') {
+        templateIdToSet = interview.templateId;
+      }
+      
+      // Verify template exists in templatesData
+      if (templateIdToSet) {
+        const templateExists = templatesData.some(t => t._id === templateIdToSet);
+        if (templateExists) {
+          // Use setTimeout to ensure state updates after component renders
+          setTimeout(() => {
+            setTemplateId(templateIdToSet);
+            console.log("Template ID set:", templateIdToSet);
+          }, 0);
+        } else {
+          console.warn("Template not found in templatesData:", templateIdToSet);
+          setTemplateId("");
+        }
+      }
+    } else {
+      setTemplateId("");
     }
-  }, [isEditing, interview]);
+
+    if (interview?.rounds && interview?.rounds.length > 0) {
+      setRounds(interview?.rounds);
+    } else {
+      setRounds([]);
+    }
+  }
+}, [isEditing, interview, templatesData]);
+
+  console.log("Render state:", {
+    templateId,
+    templatesDataLength: templatesData?.length,
+    selectedTemplate: templatesData?.find(t => t._id === templateId)?.templatetitle
+  });
 
   useEffect(() => {
     if (positionId) {
@@ -155,8 +232,8 @@ const InterviewForm = () => {
         (pos) => pos._id === positionId
       );
 
-      if (selectedPosition.rounds && selectedPosition.rounds.length > 0) {
-        setRounds(selectedPosition.rounds);
+      if (selectedPosition?.rounds && selectedPosition?.rounds.length > 0) {
+        setRounds(selectedPosition?.rounds);
       } else {
         setRounds([]);
       }
@@ -416,14 +493,17 @@ const InterviewForm = () => {
                   </div>
 
                   <div className="relative">
+                   
                     <DropdownWithSearchField
+                   key={`template-${templateId}-${positionId}`}
+                   // key={`template-${templateId}`}
                       label="Interview Template"
                       name="templateId"
                       value={templateId || ""}
                       options={
                         templatesData?.map((template) => ({
                           value: template._id,
-                          label: template.templateName,
+                          label: template.templatetitle,
                         })) || []
                       }
                       onChange={(e) => {
