@@ -44,15 +44,15 @@ export function InvoicePopup({ invoice, onClose }) {
                   <tr key={index}>
                     <td className="px-4 py-2">{item.description}</td>
                     <td className="px-4 py-2 text-right">{item.quantity}</td>
-                    <td className="px-4 py-2 text-right">${item.unitPrice.toFixed(2)}</td>
-                    <td className="px-4 py-2 text-right">${item.total.toFixed(2)}</td>
+                    <td className="px-4 py-2 text-right">₹{item.unitPrice.toFixed(2)}</td>
+                    <td className="px-4 py-2 text-right">₹{item.total.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
                   <td colSpan="3" className="px-4 py-2 text-right font-medium">Total</td>
-                  <td className="px-4 py-2 text-right font-medium">${invoice.amount.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right font-medium">₹{invoice.amount.toFixed(2)}</td>
                 </tr>
               </tfoot>
             </table>
