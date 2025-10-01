@@ -170,7 +170,7 @@ const TemplateDetail = () => {
       path: "/interview-templates",
     },
     {
-      label: template?.templateName || "Template",
+      label: template?.title,
       path: `/interview-templates/${id}`,
       status: template?.status,
     },
@@ -316,8 +316,8 @@ const TemplateDetail = () => {
                 </div>
 
                 <h1 className="sm:text-md md:text-md lg:text-md xl:text-lg 2xl:text-lg text-lg font-semibold bg-gradient-to-r from-custom-blue to-custom-blue/80 bg-clip-text text-transparent mb-2 sm:mb-3">
-                  {template.templateName.charAt(0).toUpperCase() +
-                    template.templateName.slice(1)}
+                  {template.title.charAt(0).toUpperCase() +
+                    template.title.slice(1)}
                 </h1>
                 <p className="text-sm text-gray-600 mb-4 break-all whitespace-normal">
                   {template.description}

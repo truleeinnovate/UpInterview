@@ -131,10 +131,10 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                   whileHover={{ x: 2 }}
                 >
                   <h4 className="text-xl font-medium text-gray-900 group-hover:text-custom-blue transition-colors duration-200 truncate">
-                    {template.templateName.charAt(0).toUpperCase() + template.templateName.slice(1)}
+                    {template.title}
                   </h4>
                   <p className="mt-2 text-gray-600 line-clamp-2 h-[40px] text-sm break-words">
-                    {template.description}
+                    {/* {template.description} */}
                   </p>
                 </motion.div>
                 <div className="flex gap-1 flex-shrink-0">

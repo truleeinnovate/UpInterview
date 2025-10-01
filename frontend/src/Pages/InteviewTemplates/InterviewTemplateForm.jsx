@@ -258,7 +258,7 @@ const handleNameChange = (e) => {
 
     try {
       const templateData = {
-        templateName: newTemplate.templateTitle,
+        title: newTemplate.templateTitle,
         name: newTemplate.name,
         description: newTemplate.description,
         status: newTemplate.status,
