@@ -1,7 +1,9 @@
 // v1.0.0  - mansoor - removed the sort by createdAt in the mock interview controller to save the mockinterview in the online
 // v1.0.1 - Ashok - added the sort by _id in the createMockInterview controller
+// v1.0.2 - Added backend validation for mock interview
 // controllers/mockInterviewController.js
 const { MockInterview } = require("../models/mockinterview");
+const { validateMockInterview, mockInterviewUpdateSchema } = require("../validations/mockInterviewValidation");
 
 exports.createMockInterview = async (req, res) => {
   // Mark that logging will be handled by the controller
@@ -9,6 +11,16 @@ exports.createMockInterview = async (req, res) => {
   res.locals.processName = "Create mock interview";
 
   try {
+    // Validate request data
+    const validation = validateMockInterview(req.body);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors: validation.errors
+      });
+    }
+
     const {
       skills,
       ownerId,
@@ -20,6 +32,8 @@ exports.createMockInterview = async (req, res) => {
       Role,
       jobDescription,
       rounds,
+      createdById,
+      lastModifiedById,
     } = req.body;
 
     // ✅ Generate custom mockInterviewCode like MINT-00001
@@ -61,6 +75,8 @@ exports.createMockInterview = async (req, res) => {
       ownerId,
       tenantId,
       mockInterviewCode,
+      createdBy: createdById || ownerId, // Map createdById to createdBy, fallback to ownerId
+      updatedBy: lastModifiedById || createdById || ownerId, // Map lastModifiedById to updatedBy
     });
     const newMockInterview = await mockInterview.save();
     // const mockInterviews = await MockInterview.find({ ownerId });
@@ -125,6 +141,25 @@ exports.updateMockInterview = async (req, res) => {
   const { tenantId, ownerId, ...updateFields } = req.body;
 
   try {
+    // Validate update data
+    const { error } = mockInterviewUpdateSchema.validate(updateFields, { abortEarly: false });
+    if (error) {
+      const errors = {};
+      error.details.forEach((err) => {
+        // Handle nested field paths
+        let field = err.path.join(".");
+        if (field.includes(".0.")) {
+          field = field.replace(/\.\d+\./g, ".");
+        }
+        errors[field] = err.message;
+      });
+      
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors
+      });
+    }
     const currentMockInterview = await MockInterview.findById(mockId);
     if (!currentMockInterview) {
       console.error("MockInterview not found for ID:", mockId);
@@ -134,27 +169,17 @@ exports.updateMockInterview = async (req, res) => {
     // Track changes for logging
     const changes = [];
 
-    // Handle skills update (merge and avoid duplicates)
+    // Handle skills update (replace entirely - don't merge)
     if (updateFields.skills && Array.isArray(updateFields.skills)) {
-      const newSkills = updateFields.skills.filter(
-        (skill) =>
-          !currentMockInterview.skills.some(
-            (existing) => existing.skill === skill.skill
-          )
-      );
-      if (newSkills.length > 0) {
-        changes.push({
-          fieldName: "skills",
-          oldValue: currentMockInterview.skills.map((s) => s.skill),
-          newValue: [...currentMockInterview.skills, ...newSkills].map(
-            (s) => s.skill
-          ),
-        });
-        currentMockInterview.skills = [
-          ...currentMockInterview.skills,
-          ...newSkills,
-        ];
-      }
+      // Track changes for logging
+      changes.push({
+        fieldName: "skills",
+        oldValue: currentMockInterview.skills.map((s) => s.skill),
+        newValue: updateFields.skills.map((s) => s.skill),
+      });
+      
+      // Replace the entire skills array with the new one
+      currentMockInterview.skills = updateFields.skills;
     }
 
     // Handle rounds update
@@ -200,6 +225,16 @@ exports.updateMockInterview = async (req, res) => {
       currentMockInterview.markModified("rounds");
     }
 
+    // Map frontend fields to schema fields
+    if (updateFields.createdById) {
+      updateFields.createdBy = updateFields.createdById;
+      delete updateFields.createdById;
+    }
+    if (updateFields.lastModifiedById) {
+      updateFields.updatedBy = updateFields.lastModifiedById;
+      delete updateFields.lastModifiedById;
+    }
+
     // Update top-level fields
     const topLevelFields = [
       "candidateName",
@@ -208,7 +243,8 @@ exports.updateMockInterview = async (req, res) => {
       "technology",
       "jobDescription",
       "Role",
-      "lastModifiedById",
+      "createdBy",
+      "updatedBy",
     ];
     topLevelFields.forEach((field) => {
       if (
@@ -279,6 +315,38 @@ exports.updateMockInterview = async (req, res) => {
       status: "error",
       message: "Failed to update mock interview. Please try again later.",
       data: { error: error.message },
+    });
+  }
+};
+
+// Validate mock interview data endpoint
+exports.validateMockInterview = async (req, res) => {
+  try {
+    const { page } = req.params; // For page-wise validation
+    const isPage1Only = page === "page1";
+    
+    // Validate the data
+    const validation = validateMockInterview(req.body, isPage1Only);
+    
+    if (!validation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validation.errors
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: "Validation successful",
+      data: validation.value
+    });
+  } catch (error) {
+    console.error("Error validating mock interview:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Validation error",
+      errors: { general: error.message }
     });
   }
 };

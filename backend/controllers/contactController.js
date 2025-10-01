@@ -433,9 +433,9 @@ const updateContactsDetails = async (req, res) => {
         }
 
         const contactId = req.params.id;
-        const { availability, yearsOfExperience, ...contactData } = req.body;
+        const { availability, ...contactData } = req.body;
 
-        console.log("contactData", req.body);
+        //console.log("contactData", req.body);
 
         // If timeZone is an object (e.g., { label: "", value: "" }), extract value
         if (contactData.timeZone && typeof contactData.timeZone === "object") {
@@ -466,7 +466,7 @@ const updateContactsDetails = async (req, res) => {
             });
 
             // Set visibility based on years of experience if not explicitly set
-            const expYears = parseInt(yearsOfExperience || contactData.yearsOfExperience || 0, 10);
+            const expYears = parseInt(contactData.yearsOfExperience || 0, 10);
 
             const showJuniorLevel = expYears > 0;
             const showMidLevel = expYears >= 4;

@@ -186,6 +186,8 @@ const CombinedNavbar = React.memo(() => {
     closeAllDropdowns(dropdownState.outlineDropdown ? null : "outlineDropdown");
   const toggleProfileDropdown = () =>
     closeAllDropdowns(dropdownState.profileDropdown ? null : "profileDropdown");
+  const toggleNotification = () =>
+    closeAllDropdowns(dropdownState.isNotificationOpen ? null : "isNotificationOpen");
   const toggleSidebar = () =>
     setDropdownState((prev) => ({
       ...prev,
@@ -642,12 +644,7 @@ const CombinedNavbar = React.memo(() => {
       content: (
         <NotificationPanel
           isOpen={dropdownState.isNotificationOpen}
-          setIsOpen={(value) =>
-            setDropdownState((prev) => ({
-              ...prev,
-              isNotificationOpen: value,
-            }))
-          }
+          setIsOpen={toggleNotification}
           closeOtherDropdowns={() => closeAllDropdowns("isNotificationOpen")}
         />
       ),
