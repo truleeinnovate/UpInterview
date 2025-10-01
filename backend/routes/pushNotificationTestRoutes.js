@@ -71,6 +71,31 @@ router.post('/test-assessment-reminder', async (req, res) => {
   }
 });
 
+// Cleanup duplicate expired assessment notifications
+router.post('/cleanup-assessment-duplicates', async (req, res) => {
+  try {
+    const { 
+      cleanupDuplicateExpiredNotifications 
+    } = require('../controllers/PushNotificationControllers/pushNotificationAssessmentController');
+    
+    console.log('[TEST] Running cleanup for duplicate expired assessment notifications...');
+    const duplicatesRemoved = await cleanupDuplicateExpiredNotifications();
+    
+    res.status(200).json({ 
+      success: true, 
+      message: `Cleanup completed successfully. Removed ${duplicatesRemoved} duplicate notifications.`,
+      duplicatesRemoved 
+    });
+  } catch (error) {
+    console.error('[TEST] Error running cleanup:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to run cleanup', 
+      error: error.message 
+    });
+  }
+});
+
 // Test scheduled assessment notification
 router.post('/test-scheduled-assessment', async (req, res) => {
   try {
