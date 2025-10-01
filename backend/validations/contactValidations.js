@@ -84,12 +84,15 @@ const Joi = require("joi");
   technologies: Joi.array().min(1).messages({
     "array.min": "At least one technology is required",
   }),
-  hourlyRate: Joi.number().min(20).max(500).messages({
+  hourlyRate: Joi.alternatives().try(
+    Joi.number().min(20).max(500),
+    Joi.string().allow('').empty('')
+  ).messages({
     "number.base": "Hourly rate must be a number",
     "number.min": "Hourly rate must be between $20 and $500",
     "number.max": "Hourly rate must be between $20 and $500",
-  }),
-  NoShowPolicy: Joi.string().messages({
+  }).optional(),
+  NoShowPolicy: Joi.string().allow('').empty('').optional().messages({
     "string.empty": "Please select a no-show policy",
   }),
   professionalTitle: Joi.string().min(50).max(100).messages({
@@ -102,12 +105,16 @@ const Joi = require("joi");
     "string.min": "Bio must be at least 150 characters",
     "string.max": "Bio cannot exceed 500 characters",
   }),
-  expectedRatePerMockInterview: Joi.when("interviewFormatWeOffer", {
+  expectedRatePerMockInterview: Joi.alternatives().when("interviewFormatWeOffer", {
     is: Joi.array().items(Joi.string()).has("mock"),
-    then: Joi.number().min(1).messages({
+    then: Joi.alternatives().try(
+      Joi.number().min(1),
+      Joi.string().allow('').empty('')
+    ).messages({
+      "number.base": "Expected rate must be a number",
       "number.min": "Rate must be a positive number",
     }),
-  }),
+  }).optional(),
 
   // Availability
   timeZone: Joi.alternatives().try(

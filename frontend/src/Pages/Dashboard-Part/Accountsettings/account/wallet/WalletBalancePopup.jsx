@@ -71,13 +71,13 @@ const WalletBalancePopup = ({ walletBalance }) => {
               <div>
                 <p className="text-sm text-gray-500">Available</p>
                 <p className="text-2xl font-bold">
-                  ${walletBalance?.balance?.toFixed(2) || "0.00"}
+                ₹{walletBalance?.balance?.toFixed(2) || "0.00"}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Pending</p>
                 <p className="text-2xl font-bold">
-                  ${pendingBalance > 0 ? pendingBalance : "0.00"}
+                ₹{pendingBalance > 0 ? pendingBalance : "0.00"}
                 </p>
               </div>
             </div>
@@ -104,13 +104,13 @@ const WalletBalancePopup = ({ walletBalance }) => {
                 </span>
               </p>
               <p>
-                <span className="text-gray-500">Threshold:</span> $
+                <span className="text-gray-500">Threshold:</span> ₹
                 {walletBalance?.autoReloadSettings
                   ? walletBalance?.autoReloadSettings.threshold.toFixed(2)
                   : "N/A"}
               </p>
               <p>
-                <span className="text-gray-500">Reload Amount:</span> $
+                <span className="text-gray-500">Reload Amount:</span> ₹
                 {walletBalance?.autoReloadSettings
                   ? walletBalance?.autoReloadSettings.reloadAmount.toFixed(2)
                   : "N/A"}

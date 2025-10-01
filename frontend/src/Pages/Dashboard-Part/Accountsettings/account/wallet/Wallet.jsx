@@ -243,10 +243,10 @@ const Wallet = () => {
             >
               Top Up
             </button>
-            <EditButton
+            {/* <EditButton
               onClick={() => alert("Edit wallet settings")}
               className="sm:px-2 sm:py-1 bg-gray-100 rounded-lg"
-            />
+            /> */}
           </div>
         </div>
 
@@ -257,7 +257,7 @@ const Wallet = () => {
               <h3 className="text-lg font-medium">Available Balance</h3>
               <div className="mt-3 flex items-center">
                 <span className="sm:text-xl text-3xl font-bold mr-2">
-                  $
+                ₹
                   {walletBalance?.balance
                     ? walletBalance.balance.toFixed(2)
                     : "0.00"}
@@ -279,13 +279,13 @@ const Wallet = () => {
                 <div>
                   <span className="text-gray-500">Pending Balance: </span>
                   <span className="text-sm font-medium">
-                    ${pendingBalance.toFixed(2)}
+                  ₹{pendingBalance.toFixed(2)}
                   </span>
                 </div>
                 <div>
                   <span className="text-gray-500">Hold Amount: </span>
                   <span className="text-sm font-medium text-yellow-600">
-                    $
+                  ₹
                     {walletBalance?.holdAmount
                       ? walletBalance?.holdAmount.toFixed(2)
                       : 0.0}
@@ -375,7 +375,7 @@ const Wallet = () => {
                             : transaction.type === "debit"
                             ? "-"
                             : "~"}
-                          $
+                          ₹
                           {transaction.amount
                             ? transaction.amount.toFixed(2)
                             : "0.00"}

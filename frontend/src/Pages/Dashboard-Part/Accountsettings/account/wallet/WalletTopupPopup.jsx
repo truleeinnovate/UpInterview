@@ -94,7 +94,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
       // Create order from backend via TanStack Query
       const orderData = await createWalletOrder.mutateAsync({
         amount: parseFloat(amount),
-        currency: "USD",
+        currency: "INR",
         ownerId: ownerId,
         tenantId: tenantId || "default",
       });
@@ -105,7 +105,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
       const options = {
         key: key_id,
         amount: parseFloat(amount) * 100, // Amount in paisa
-        currency: "USD",
+        currency: "INR",
         name: "UpInterview",
         // v1.0.2 <--------------------------------------------------------------------------------
         // image: logo,
@@ -224,13 +224,13 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                       : "border-gray-200"
                   }`}
                 >
-                  ${presetAmount.toLocaleString()}
+                  ₹{presetAmount.toLocaleString()}
                 </button>
               ))}
             </div>
             <div className="mt-4">
                 <InputField
-                  label="Custom Amount (USD)"
+                  label="Custom Amount (INR)"
                   type="number"
                   name="customAmount"
                   value={amount}
@@ -270,16 +270,16 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Amount</span>
                 <span className="font-medium">
-                  ${parseFloat(amount || 0).toLocaleString()}
+                ₹{parseFloat(amount || 0).toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Processing Fee</span>
-                <span className="font-medium">$0.00</span>
+                <span className="font-medium">₹0.00</span>
               </div>
               <div className="flex justify-between text-base font-medium mt-2 pt-2 border-t">
                 <span>Total</span>
-                <span>${parseFloat(amount || 0).toLocaleString()}</span>
+                <span>₹{parseFloat(amount || 0).toLocaleString()}</span>
               </div>
             </div>
           </div>

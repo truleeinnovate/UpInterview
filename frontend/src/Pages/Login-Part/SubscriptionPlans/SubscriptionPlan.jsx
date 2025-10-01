@@ -272,7 +272,7 @@ const SubscriptionPlan = () => {
               </div>
               <div className="mt-auto">
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold mt-4">
-                  <span className="text-lg sm:text-xl md:text-2xl">$</span>
+                  <span className="text-lg sm:text-xl md:text-2xl">₹</span>
                   {isAnnual ? plan.annualPrice : plan.monthlyPrice}
                   <span className="text-lg sm:text-base md:text-lg font-medium"> /{isAnnual ? "annual" : "month"}</span>
                 </p>

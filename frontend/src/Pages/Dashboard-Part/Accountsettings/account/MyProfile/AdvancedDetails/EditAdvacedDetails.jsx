@@ -89,7 +89,7 @@ const EditAdvacedDetails = ({
     // coverLetterdescription: "",
   });
 
-  
+
   const [loading, setLoading] = useState(false);
 
 
@@ -97,7 +97,6 @@ const EditAdvacedDetails = ({
     // const contact = usersRes.find(user => user.contactId === resolvedId);
     // if (!userProfile) return;
     if (!userProfile || !userProfile._id) return;
-
 
     if (userProfile) {
       setFormData({
@@ -114,8 +113,8 @@ const EditAdvacedDetails = ({
     }
   }, [resolvedId, userProfile?._id]);
 
-  
-  
+
+
 
   // Handle input changes for text fields
   const handleInputChange = (e) => {
@@ -165,16 +164,16 @@ const EditAdvacedDetails = ({
       id: formData.id,
     };
 
-    
+
     try {
-      
+
 
       const response = await updateContactDetail.mutateAsync({
         resolvedId,
         data: cleanFormData,
       });
 
-      
+
 
       await queryClient.invalidateQueries(["userProfile", resolvedId]);
 

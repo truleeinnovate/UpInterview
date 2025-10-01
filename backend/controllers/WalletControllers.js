@@ -59,7 +59,7 @@ const getWalletByOwnerId = async (req, res) => {
 // Create Razorpay order for wallet top-up
 const createTopupOrder = async (req, res) => {
   try {
-    const { amount, currency = "USD", ownerId, tenantId } = req.body;
+    const { amount, currency = "INR", ownerId, tenantId } = req.body;
 
     // Validate inputs
     if (!amount || amount <= 0) {
@@ -141,7 +141,7 @@ const walletVerifyPayment = async (req, res) => {
       ownerId,
       tenantId,
       amount,
-      currency = "USD",
+      currency = "INR",
       description = "Wallet Top-up via Razorpay",
     } = req.body;
 
@@ -378,7 +378,7 @@ const walletVerifyPayment = async (req, res) => {
           tenantId: tenantId || "default",
           ownerId,
           amount: parsedAmount,
-          currency: currency || "USD",
+          currency: currency || "INR",
           status: "captured",
           paymentMethod: "wallet",
           paymentGateway: "razorpay",
@@ -707,7 +707,7 @@ const getBankAccounts = async (req, res) => {
     const bankAccounts = await BankAccount.find({
       ownerId,
       isActive: true
-    }).sort({ isDefault: -1, createdAt: -1 });
+    }).sort({ isDefault: -1, _id: -1 });
 
     res.status(200).json({
       success: true,
@@ -1275,7 +1275,7 @@ const getWithdrawalRequests = async (req, res) => {
 
     const withdrawalRequests = await WithdrawalRequest.find(query)
       .populate("bankAccountId", "bankName maskedAccountNumber accountHolderName")
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(skip));
 

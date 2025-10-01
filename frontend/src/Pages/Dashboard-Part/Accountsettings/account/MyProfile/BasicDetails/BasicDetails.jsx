@@ -34,7 +34,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
 
     const [contactData, setContactData] = useState({});
 
-    console.log("contactData in BasicDetails", contactData);
+    // console.log("contactData in BasicDetails", contactData);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -266,9 +266,21 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
 
                     <div>
                         <p className="text-sm text-gray-500">LinkedIn</p>
-                        <p className="font-medium truncate sm:text-sm">
+                        {/* <p className="font-medium truncate sm:text-sm">
                             {contactData.linkedinUrl || "Not Provided"}
-                        </p>
+                        </p> */}
+                        {contactData.linkedinUrl ? (
+                            <a
+                                href={contactData.linkedinUrl.startsWith('http') ? contactData.linkedinUrl : `https://${contactData.linkedinUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-custom-blue hover:underline"
+                            >
+                                {contactData.linkedinUrl}
+                            </a>
+                        ) : (
+                            <p className="font-medium sm:text-sm">Not Provided</p>
+                        )}
                     </div>
 
                     <div>

@@ -79,8 +79,7 @@ NotificationList.propTypes = {
   onMarkAsRead: PropTypes.func,
 };
 
-const NotificationPanel = ({ closeOtherDropdowns }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const NotificationPanel = ({ isOpen, setIsOpen, closeOtherDropdowns }) => {
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [selectedNotificationInAll, setSelectedNotificationInAll] = useState(null);
   const [filterType, setFilterType] = useState("all");
@@ -145,13 +144,13 @@ const NotificationPanel = ({ closeOtherDropdowns }) => {
   const unreadCount = (notificationList || []).filter((n) => n?.unread).length;
 
   const togglePanel = () => {
-    setIsOpen(!isOpen);
-    // if (isOpen) {
-    //   setShowAllNotifications(false); // Reset full view when closing
-    // }
     if (!isOpen) {
       closeOtherDropdowns(); // Close other dropdowns when opening
     }
+    setIsOpen(); // This will call the toggleNotification function from parent
+    // if (isOpen) {
+    //   setShowAllNotifications(false); // Reset full view when closing
+    // }
   };
 
   return (
@@ -418,6 +417,8 @@ const NotificationPanel = ({ closeOtherDropdowns }) => {
 };
 
 NotificationPanel.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  setIsOpen: PropTypes.func.isRequired,
   closeOtherDropdowns: PropTypes.func,
 };
 
