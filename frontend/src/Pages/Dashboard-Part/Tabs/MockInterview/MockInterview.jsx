@@ -197,7 +197,8 @@ const MockInterview = () => {
         interview?.technology,
         interview?.candidateName,
         interview?.Role,
-        interview?.rounds?.[0]?.status
+        interview?.rounds?.[0]?.status,
+        interview?.interviewer
       ].filter(Boolean);
 
       const matchesSearchQuery = 
@@ -477,11 +478,9 @@ const MockInterview = () => {
             {viewMode === "kanban" ? (
               <MockInterviewKanban
                 mockinterviews={currentFilteredRows}
-                mockinterviewData={mockinterviewData}
                 loading={isLoading}
-                mockinterviewDataView={setmockinterviewDataView}
-                onRescheduleClick={onRescheduleClick}
-                onCancel={onCancelClick}
+                onRescheduleClick={(mockinterview) => onRescheduleClick(mockinterview)}
+                onCancel={() => onCancelClick()}
               />
             ) : (
               <TableView

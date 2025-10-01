@@ -215,45 +215,11 @@ const EditInterviewDetails = ({
         }
     }, [formData, initialFormData, checkForChanges]);
 
-    // Changed: Updated useEffect to properly map all backend fields
+    // Changed: Updated useEffect to properly map all backend fields and fetch rate cards
     useEffect(() => {
         if (!userProfile || !userProfile._id) return;
 
-        // Create a clean version of the form data from userProfile
-        const cleanFormData = {
-            PreviousExperienceConductingInterviews: userProfile?.previousExperienceConductingInterviews || "",
-            PreviousExperienceConductingInterviewsYears: userProfile?.previousExperienceConductingInterviewsYears || "",
-            ExpertiseLevel_ConductingInterviews: userProfile?.expertiseLevelConductingInterviews || "",
-            hourlyRate: userProfile?.hourlyRate || "",
-            expectedRatePerMockInterview: userProfile?.expectedRatePerMockInterview || "",
-            mock_interview_discount: userProfile?.mock_interview_discount || "",
-            Technology: Array.isArray(userProfile?.technologies) ? userProfile.technologies : [],
-            skills: Array.isArray(userProfile?.skills) ? userProfile.skills : [],
-            NoShowPolicy: userProfile?.noShowPolicy || "",
-            professionalTitle: userProfile?.professionalTitle || "",
-            bio: userProfile?.bio || "",
-            interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer) ? userProfile.interviewFormatWeOffer : [],
-            yearsOfExperience: userProfile?.yearsOfExperience || 0,
-            rates: userProfile?.rates || {
-                junior: { usd: 0, inr: 0, isVisible: true },
-                mid: { usd: 0, inr: 0, isVisible: false },
-                senior: { usd: 0, inr: 0, isVisible: false }
-            }
-        };
-
-        // Set initial form data for comparison
-        setInitialFormData(cleanFormData);
-        setFormData(cleanFormData);
-
-        console.log("Setting form data from userProfile:", {
-            previousExperience: userProfile?.previousExperienceConductingInterviews,
-            previousExperienceYears: userProfile?.previousExperienceConductingInterviewsYears,
-            yearsOfExperience: userProfile?.yearsOfExperience,
-            expYears: expYears
-        });
-
         // Calculate which levels should be visible based on years of experience
-        // NEW LOGIC: Show multiple levels based on experience range
         const years = parseInt(userProfile?.previousExperienceConductingInterviewsYears) || 0;
         console.log("Years of experience for rate calculation:", years);
 
@@ -270,64 +236,68 @@ const EditInterviewDetails = ({
             senior: shouldShowSenior
         });
 
+        // Create the form data with proper rate visibility
         const newFormData = {
-            PreviousExperienceConductingInterviews:
-                userProfile?.previousExperienceConductingInterviews || "",
+            PreviousExperienceConductingInterviews: userProfile?.previousExperienceConductingInterviews || "",
             PreviousExperienceConductingInterviewsYears: years,
-            ExpertiseLevel_ConductingInterviews:
-                userProfile?.expertiseLevelConductingInterviews || "",
-            Technology: Array.isArray(userProfile?.technologies)
-                ? userProfile?.technologies
-                : [],
+            ExpertiseLevel_ConductingInterviews: userProfile?.expertiseLevelConductingInterviews || "",
+            hourlyRate: userProfile?.hourlyRate || "",
+            expectedRatePerMockInterview: userProfile?.expectedRatePerMockInterview || "",
+            mock_interview_discount: userProfile?.mock_interview_discount || "",
+            Technology: Array.isArray(userProfile?.technologies) ? userProfile.technologies : [],
+            skills: Array.isArray(userProfile?.skills) ? userProfile.skills : [],
             NoShowPolicy: userProfile?.noShowPolicy || "",
-            skills: Array.isArray(userProfile?.skills) ? userProfile?.skills : [],
-            interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer)
-                ? userProfile?.interviewFormatWeOffer
-                : [],
             professionalTitle: userProfile?.professionalTitle || "",
             bio: userProfile?.bio || "",
+            interviewFormatWeOffer: Array.isArray(userProfile?.interviewFormatWeOffer) 
+                ? userProfile.interviewFormatWeOffer 
+                : [],
             yearsOfExperience: userProfile?.yearsOfExperience || 0,
             id: userProfile?._id,
-            expectedRatePerMockInterview:
-                userProfile?.expectedRatePerMockInterview || "",
-            mock_interview_discount: userProfile?.mock_interview_discount || "",
-            hourlyRate: userProfile?.hourlyRate || "",
-            rates: {
-                junior: {
-                    usd: userProfile?.rates?.junior?.usd || 0,
-                    inr: userProfile?.rates?.junior?.inr || 0,
-                    isVisible: shouldShowJunior
+            rates: userProfile?.rates || {
+                junior: { 
+                    usd: 0, 
+                    inr: 0, 
+                    isVisible: shouldShowJunior 
                 },
-                mid: {
-                    usd: userProfile?.rates?.mid?.usd || 0,
-                    inr: userProfile?.rates?.mid?.inr || 0,
-                    isVisible: shouldShowMid
+                mid: { 
+                    usd: 0, 
+                    inr: 0, 
+                    isVisible: shouldShowMid 
                 },
-                senior: {
-                    usd: userProfile?.rates?.senior?.usd || 0,
-                    inr: userProfile?.rates?.senior?.inr || 0,
-                    isVisible: shouldShowSenior
+                senior: { 
+                    usd: 0, 
+                    inr: 0, 
+                    isVisible: shouldShowSenior 
                 }
             }
         };
 
-        console.log("New form data being set:", newFormData);
+        // Set initial form data for comparison
+        setInitialFormData(newFormData);
         setFormData(newFormData);
 
-        console.log('userProfile.expectedRatePerMockInterview :', userProfile.expectedRatePerMockInterview);
-        setIsMockInterviewSelected(
-            userProfile?.expectedRatePerMockInterview ? true : false
-        );
-        setSelectedSkills(
-            Array.isArray(userProfile?.skills) ? userProfile?.skills : []
-        );
-        setIsReady(userProfile?.IsReadyForMockInterviews === "yes");
+        // Set selected candidates for the UI
+        const selectedTechs = Array.isArray(userProfile?.technologies) ? userProfile.technologies : [];
         setSelectedCandidates(
-            userProfile?.technologies?.map((tech) => ({
+            selectedTechs.map(tech => ({
                 TechnologyMasterName: tech,
-            })) || []
+                _id: Math.random().toString(36).substr(2, 9) // Generate a temporary ID if needed
+            }))
         );
+
+        // Fetch rate cards for the first technology if available
+        if (selectedTechs.length > 0) {
+            fetchRateCards(selectedTechs[0]);
+        }
+
+        // Set other UI states
+        setIsMockInterviewSelected(!!userProfile?.expectedRatePerMockInterview);
+        setSelectedSkills(Array.isArray(userProfile?.skills) ? userProfile.skills : []);
+        setIsReady(userProfile?.IsReadyForMockInterviews === "yes");
         setErrors({});
+
+        console.log("Form data initialized:", newFormData);
     }, [resolvedId, userProfile, userProfile?._id, expYears]);
 
     const handleBioChange = (e) => {
@@ -470,21 +440,47 @@ const EditInterviewDetails = ({
 
     // Handle technology selection
     const handleSelectCandidate = (technology) => {
-        if (
-            !selectedCandidates.some(
-                (c) => c.TechnologyMasterName === technology.TechnologyMasterName
-            )
-        ) {
-            const updatedCandidates = [...selectedCandidates, technology];
+        if (!technology) return;
+        
+        const techName = technology.TechnologyMasterName || technology;
+        
+        if (!selectedCandidates.some(c => c.TechnologyMasterName === techName)) {
+            const newCandidate = {
+                TechnologyMasterName: techName,
+                _id: Math.random().toString(36).substr(2, 9)
+            };
+            
+            const updatedCandidates = [...selectedCandidates, newCandidate];
             setSelectedCandidates(updatedCandidates);
 
-            setFormData((prev) => ({
+            setFormData(prev => ({
                 ...prev,
                 Technology: updatedCandidates.map(t => t.TechnologyMasterName),
             }));
 
-            setErrors((prev) => ({ ...prev, technologies: "" }));
-            fetchRateCards(technology.TechnologyMasterName);
+            setErrors(prev => ({ ...prev, technologies: "" }));
+            
+            // Fetch rate cards for the selected technology
+            if (techName) {
+                fetchRateCards(techName).then(() => {
+                    // After fetching rate cards, update the form with the first technology's rates
+                    if (updatedCandidates.length === 1) {
+                        const years = parseInt(formData.PreviousExperienceConductingInterviewsYears) || 0;
+                        const shouldShowJunior = years <= 6;
+                        const shouldShowMid = years >= 3 && years <= 9;
+                        const shouldShowSenior = years >= 6;
+
+                        setFormData(prev => ({
+                            ...prev,
+                            rates: {
+                                junior: { ...prev.rates?.junior, isVisible: shouldShowJunior },
+                                mid: { ...prev.rates?.mid, isVisible: shouldShowMid },
+                                senior: { ...prev.rates?.senior, isVisible: shouldShowSenior }
+                            }
+                        }));
+                    }
+                });
+            }
         }
     };
 
@@ -804,41 +800,40 @@ const EditInterviewDetails = ({
         console.log('handleTechnologyChange called with:', selectedValue);
 
         if (selectedValue) {
-            console.log('Selected value:', selectedValue);
-            fetchRateCards(selectedValue);
-
+            // Find the technology from services or create a temporary one
             const technology = services.find((t) => t.TechnologyMasterName === selectedValue) || {
                 _id: Math.random().toString(36).substr(2, 9),
                 TechnologyMasterName: selectedValue
             };
 
+            // Update selected candidates
             setSelectedCandidates([technology]);
 
-            // Use the actual years from formData for rate visibility
+            // Get the years from the current form data or default to 0
             const years = parseInt(formData.PreviousExperienceConductingInterviewsYears) || 0;
+            
+            // Determine which levels should be visible
             const shouldShowJunior = years <= 6;
             const shouldShowMid = years >= 3 && years <= 9;
             const shouldShowSenior = years >= 6;
 
+            // Update form data with new technology and reset rates
             setFormData(prev => {
                 const newFormData = {
                     ...prev,
                     Technology: [selectedValue],
                     rates: {
                         junior: {
-                            ...prev.rates?.junior,
                             usd: 0,
                             inr: 0,
                             isVisible: shouldShowJunior
                         },
                         mid: {
-                            ...prev.rates?.mid,
                             usd: 0,
                             inr: 0,
                             isVisible: shouldShowMid
                         },
                         senior: {
-                            ...prev.rates?.senior,
                             usd: 0,
                             inr: 0,
                             isVisible: shouldShowSenior
@@ -849,6 +844,7 @@ const EditInterviewDetails = ({
                 return newFormData;
             });
 
+            // Clear any existing errors
             setErrors(prev => ({
                 ...prev,
                 technologies: '',
@@ -858,7 +854,15 @@ const EditInterviewDetails = ({
                     senior: { usd: '', inr: '' }
                 }
             }));
+
+            // Fetch rate cards for the selected technology
+            fetchRateCards(selectedValue).then(() => {
+                console.log('Rate cards fetched for:', selectedValue);
+            }).catch(error => {
+                console.error('Error fetching rate cards:', error);
+            });
         } else {
+            // Clear selection if no value is selected
             console.log('No value selected, clearing selection');
             setSelectedCandidates([]);
             setFormData(prev => ({
@@ -964,6 +968,7 @@ const EditInterviewDetails = ({
                                     <DropdownWithSearchField
                                         ref={skillsInputRef}
                                         value={null}
+                                        allowCreateOnEnter={true}
                                         options={skills?.filter(skill =>
                                             !selectedSkills.some(s => s.SkillName === skill.SkillName)
                                         ).map(skill => ({
@@ -982,42 +987,40 @@ const EditInterviewDetails = ({
                                             }
                                         }}
                                         onKeyDown={(e) => {
-                                            console.log('InterviewDetails onKeyDown triggered:', e.key, e.target.value);
-                                            if (e.key === 'Enter' && e.target.value && !e.target.readOnly) {
-                                                console.log('Enter key pressed with value:', e.target.value);
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                const newSkill = e.target.value.trim();
-                                                console.log('Trimmed skill name:', newSkill);
+                                            console.log('Key pressed:', e.key, 'Value:', e.target?.value);
+
+                                            // Handle the create action from the dropdown
+                                            if (e.key === 'Enter' && e.target?.action === 'create') {
+                                                const newSkill = e.target.value?.trim();
                                                 if (newSkill) {
-                                                    console.log('Adding skill:', newSkill);
+                                                    console.log('Adding new skill:', newSkill);
                                                     addSkill(newSkill);
-                                                    // Clear the input field using react-select's input
+
+                                                    // Clear the input field and close the dropdown
                                                     setTimeout(() => {
-                                                        console.log('Attempting to clear input and close dropdown');
-                                                        if (skillsInputRef.current) {
-                                                            const selectContainer = skillsInputRef.current.closest('.rs__control');
-                                                            console.log('Select container found:', !!selectContainer);
-                                                            if (selectContainer) {
-                                                                const inputElement = selectContainer.querySelector('input');
-                                                                console.log('Input element found:', !!inputElement);
-                                                                if (inputElement) {
-                                                                    console.log('Clearing input value from:', inputElement.value);
-                                                                    // Use the proper way to clear react-select input
-                                                                    inputElement.value = '';
-                                                                    // Trigger input event to update react-select's internal state
-                                                                    const event = new Event('input', { bubbles: true });
-                                                                    inputElement.dispatchEvent(event);
-                                                                    console.log('Input cleared and event dispatched');
-                                                                }
-                                                            }
-                                                            // Close dropdown
-                                                            console.log('Blurring to close dropdown');
-                                                            skillsInputRef.current.blur();
-                                                        } else {
-                                                            console.log('skillsInputRef.current is null');
+                                                        console.log('Attempting to close dropdown');
+                                                        // Blur any active element to close dropdowns
+                                                        if (document.activeElement) {
+                                                            document.activeElement.blur();
                                                         }
-                                                    }, 50); // Increased timeout for better reliability
+
+                                                        // Clear the input field
+                                                        if (skillsInputRef.current) {
+                                                            // Clear react-select value
+                                                            if (skillsInputRef.current.select) {
+                                                                skillsInputRef.current.select.clearValue();
+                                                                console.log('React-select value cleared');
+                                                            }
+
+                                                            // Find and clear the input
+                                                            const selectInput = skillsInputRef.current.querySelector('input');
+                                                            if (selectInput) {
+                                                                selectInput.value = '';
+                                                                const inputEvent = new Event('input', { bubbles: true });
+                                                                selectInput.dispatchEvent(inputEvent);
+                                                            }
+                                                        }
+                                                    }, 0);
                                                 }
                                             }
                                         }}
@@ -1141,7 +1144,7 @@ const EditInterviewDetails = ({
                                     Hourly Rates by Experience Level <span className="text-red-500">*</span>
                                 </label>
                                 {/* Exchange Rate Info - Simplified */}
-                                <div className="text-sm text-gray-600 mb-4">
+                                <div className="text-xs text-gray-600 mb-4">
                                     {isRateLoading ? (
                                         <span>Loading exchange rate...</span>
                                     ) : (

@@ -674,6 +674,7 @@ const InterviewDetails = ({
                         <DropdownWithSearchField
                             ref={skillsInputRef}
                             value={null}
+                            allowCreateOnEnter={true}
                             options={skills?.filter(skill =>
                                 !selectedSkills.some(s => s.SkillName === skill.SkillName)
                             ).map(skill => ({
@@ -682,52 +683,61 @@ const InterviewDetails = ({
                             })) || []}
                             onChange={(option) => {
                                 if (!option) return;
+                                // Handle both direct selection and custom creation
                                 const selectedOption = option?.target?.value ?
                                     { value: option.target.value } : option;
-                                if (selectedOption?.value) {
+                                // Only handle direct selections here (not create actions)
+                                if (selectedOption?.value && selectedOption.action !== 'create') {
                                     addSkill(selectedOption.value);
+                                    // Clear the input field
                                     if (skillsInputRef.current) {
-                                        skillsInputRef.current.value = '';
+                                        const selectContainer = skillsInputRef.current.closest('.rs__control');
+                                        if (selectContainer) {
+                                            const inputElement = selectContainer.querySelector('input');
+                                            if (inputElement) {
+                                                inputElement.value = '';
+                                                const event = new Event('input', { bubbles: true });
+                                                inputElement.dispatchEvent(event);
+                                            }
+                                        }
                                     }
                                 }
                             }}
                             onKeyDown={(e) => {
-                                console.log('InterviewDetails onKeyDown triggered:', e.key, e.target.value);
-                                if (e.key === 'Enter' && e.target.value && !e.target.readOnly) {
-                                    console.log('Enter key pressed with value:', e.target.value);
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    const newSkill = e.target.value.trim();
-                                    console.log('Trimmed skill name:', newSkill);
+                                console.log('Key pressed:', e.key, 'Value:', e.target?.value);
+                                
+                                // Handle the create action from the dropdown
+                                if (e.key === 'Enter' && e.target?.action === 'create') {
+                                    const newSkill = e.target.value?.trim();
                                     if (newSkill) {
-                                        console.log('Adding skill:', newSkill);
+                                        console.log('Adding new skill:', newSkill);
                                         addSkill(newSkill);
-                                        // Clear the input field using react-select's input
+                                        
+                                        // Clear the input field and close the dropdown
                                         setTimeout(() => {
-                                            console.log('Attempting to clear input and close dropdown');
-                                            if (skillsInputRef.current) {
-                                                const selectContainer = skillsInputRef.current.closest('.rs__control');
-                                                console.log('Select container found:', !!selectContainer);
-                                                if (selectContainer) {
-                                                    const inputElement = selectContainer.querySelector('input');
-                                                    console.log('Input element found:', !!inputElement);
-                                                    if (inputElement) {
-                                                        console.log('Clearing input value from:', inputElement.value);
-                                                        // Use the proper way to clear react-select input
-                                                        inputElement.value = '';
-                                                        // Trigger input event to update react-select's internal state
-                                                        const event = new Event('input', { bubbles: true });
-                                                        inputElement.dispatchEvent(event);
-                                                        console.log('Input cleared and event dispatched');
-                                                    }
-                                                }
-                                                // Close dropdown
-                                                console.log('Blurring to close dropdown');
-                                                skillsInputRef.current.blur();
-                                            } else {
-                                                console.log('skillsInputRef.current is null');
+                                            console.log('Attempting to close dropdown');
+                                            // Blur any active element to close dropdowns
+                                            if (document.activeElement) {
+                                                document.activeElement.blur();
                                             }
-                                        }, 50); // Increased timeout for better reliability
+                                            
+                                            // Clear the input field
+                                            if (skillsInputRef.current) {
+                                                // Clear react-select value
+                                                if (skillsInputRef.current.select) {
+                                                    skillsInputRef.current.select.clearValue();
+                                                    console.log('React-select value cleared');
+                                                }
+                                                
+                                                // Find and clear the input
+                                                const selectInput = skillsInputRef.current.querySelector('input');
+                                                if (selectInput) {
+                                                    selectInput.value = '';
+                                                    const inputEvent = new Event('input', { bubbles: true });
+                                                    selectInput.dispatchEvent(inputEvent);
+                                                }
+                                            }
+                                        }, 0);
                                     }
                                 }
                             }}
@@ -865,7 +875,7 @@ const InterviewDetails = ({
                         Hourly Rates by Experience Level <span className="text-red-500">*</span>
                     </label>
                     {/* Exchange Rate Info - Simplified */}
-                    <div className="text-sm text-gray-600 mb-4">
+                    <div className="text-xs text-gray-600 mb-4">
                         {isRateLoading ? (
                             <span>Loading exchange rate...</span>
                         ) : (

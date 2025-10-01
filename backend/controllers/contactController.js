@@ -435,7 +435,13 @@ const updateContactsDetails = async (req, res) => {
         const contactId = req.params.id;
         const { availability, yearsOfExperience, ...contactData } = req.body;
 
-        console.log("contactData", req.body);
+        console.log("Request body:", req.body);
+        console.log("Years of experience from request:", yearsOfExperience);
+        
+        // Add yearsOfExperience to contactData if it exists in the request
+        if (yearsOfExperience !== undefined) {
+            contactData.yearsOfExperience = yearsOfExperience;
+        }
 
         // If timeZone is an object (e.g., { label: "", value: "" }), extract value
         if (contactData.timeZone && typeof contactData.timeZone === "object") {

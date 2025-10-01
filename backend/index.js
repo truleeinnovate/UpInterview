@@ -34,10 +34,10 @@ app.use(cookieParser());
 
 const config = require("./config.js");
 
-console.log(
-  "from index config.REACT_APP_API_URL_FRONTEND",
-  config.REACT_APP_API_URL_FRONTEND
-);
+// console.log(
+//   "from index config.REACT_APP_API_URL_FRONTEND",
+//   config.REACT_APP_API_URL_FRONTEND
+// );
 
 // CORS configuration
 const allowedOrigins = [
@@ -60,14 +60,14 @@ const allowedOrigins = [
 // CORS middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  console.log(
-    "Request Method:",
-    req.method,
-    "Path:",
-    req.path,
-    "Origin:",
-    origin
-  );
+//   console.log(
+//     "Request Method:",
+//     req.method,
+//     "Path:",
+//     req.path,
+//     "Origin:",
+//     origin
+//   );
 
   const isAllowed = allowedOrigins.some(o =>
     typeof o === "string" ? o === origin : o.test(origin)
@@ -1303,7 +1303,7 @@ app.use("/tasks", taskRoutes);
 if (process.env.NODE_ENV !== 'production') {
   const notificationTestRoutes = require("./routes/pushNotificationTestRoutes");
   app.use("/notifications", notificationTestRoutes);
-  console.log('[NOTIFICATIONS] Test endpoints registered at /notifications/*');
+//   console.log('[NOTIFICATIONS] Test endpoints registered at /notifications/*');
 }
 
 //i am using this code for outsource interviewers we need to change his into contact controller
