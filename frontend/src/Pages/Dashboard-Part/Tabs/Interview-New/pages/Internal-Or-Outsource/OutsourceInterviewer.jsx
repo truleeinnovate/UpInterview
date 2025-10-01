@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  header border-b removed
 // v1.0.1  -  Venkatesh  -  interviewer if  wallet balance is less than hourlyrate then show wallet modal
 // v1.0.2  -  Ashok   -  Improved responsiveness and added common code to popups
+// v1.0.3  -  Ashok   -  Fixed issues in responsiveness
 
 import React, { useState, useRef, useEffect, useMemo } from "react"; //<----v1.0.1-----
 import {
@@ -58,34 +59,42 @@ const OutsourcedInterviewerCard = ({
           : "border-gray-200"
       } p-4 shadow-sm hover:shadow-md transition-all`}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex items-center">
-          <InterviewerAvatar interviewer={interviewer} size="lg" />
-          <div className="ml-3">
-            <h3 className="text-base font-medium text-gray-900">{fullName}</h3>
-            <p
-              className="text-sm text-gray-500 truncate max-w-[200px]"
-              title={professionalTitle}
-            >
-              {professionalTitle.length > 15
-                ? `${professionalTitle.substring(0, 15)}...`
-                : professionalTitle}
-            </p>
-            <p className="text-xs text-orange-600">{company}</p>
+      {/* v1.0.3 <----------------------------------------------------------------------- */}
+      <div className="w-full">
+        <div className="flex items-center gap-3 w-full">
+          <div>
+            <InterviewerAvatar interviewer={interviewer} size="lg" />
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center">
-            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-            <span className="ml-1 text-sm font-medium text-gray-700">
-              {rating}
-            </span>
+          <div className="flex sm:flex-col items-start sm:justify-start justify-between w-full">
+            <div className="sm:ml-0 ml-3">
+              <h3 className="text-base font-medium text-gray-900">
+                {fullName}
+              </h3>
+              <p
+                className="text-sm text-gray-500 truncate max-w-[200px]"
+                title={professionalTitle}
+              >
+                {professionalTitle.length > 15
+                  ? `${professionalTitle.substring(0, 15)}...`
+                  : professionalTitle}
+              </p>
+              <p className="text-xs text-orange-600">{company}</p>
+            </div>
+            <div className="flex items-center space-x-2 gap-2">
+              <div className="flex items-center">
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                <span className="ml-1 text-sm font-medium text-gray-700">
+                  {rating}
+                </span>
+              </div>
+              <span className="text-sm font-medium text-gray-700">
+                ${hourlyRate}/hr
+              </span>
+            </div>
           </div>
-          <span className="text-sm font-medium text-gray-700">
-            ${hourlyRate}/hr
-          </span>
         </div>
       </div>
+      {/* v1.0.3 -----------------------------------------------------------------------> */}
 
       <div className="mt-3">
         <div
@@ -598,7 +607,9 @@ function OutsourcedInterviewerModal({
         onClose={onClose}
         setIsFullscreen={setIsFullscreen}
       >
-        <div>
+        {/* v1.0.3 <------------------------- */}
+        <div className="pb-10">
+          {/* v1.0.3 -------------------------> */}
           {/* Fixed Search and Info Section */}
           {/* <------------------------------- v1.0.0  */}
           <div className="sm:px-2 px-6 py-4 bg-white z-10">
@@ -704,9 +715,10 @@ function OutsourcedInterviewerModal({
           </div>
 
           {/* Scrollable Data Section */}
+          {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
-              className={`grid gap-4 px-6 ${
+              className={`grid gap-4 ${
                 isFullscreen
                   ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
                   : "grid-cols-1"
@@ -734,8 +746,9 @@ function OutsourcedInterviewerModal({
                 />
               ))}
             </div>
+            {/* v1.0.3 ---------------------------------------------------------------------> */}
             {filteredInterviewers.length === 0 && (
-              <div className="flex justify-center pt-6 px-6 w-full">
+              <div className="flex justify-center pt-6 sm:px-0 px-6 w-full">
                 <p className="text-center">
                   No available interviewers found for the selected criteria.
                 </p>
