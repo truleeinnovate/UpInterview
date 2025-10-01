@@ -6,6 +6,7 @@
 // v1.0.3 - Ashok - Fixed issues at responsiveness
 // v1.0.4 - Ashok - Fixed style issue
 // v1.0.5 - Ranjith - rounds shown as horizontal stepper pathway
+// v1.0.6 - Ashok - Reduced horizontal padding (style issue)
 
 import { useEffect, useState, useRef } from "react";
 import AssessmentDetails from "./AssessmentType";
@@ -162,7 +163,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [selectedLevel, setSelectedLevel] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
 
-
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
     setSearchTerm("");
@@ -180,8 +180,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   }, [currentStage]);
 
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
-
-
 
   const isNextEnabled = () => {
     if (currentStep === 0) {
@@ -210,8 +208,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
     return false;
   };
-
-
 
   // Mapped options for shared DropdownWithSearchField
   const companyOptionsRS = (companies || [])
@@ -326,10 +322,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry
       );
       setEntries(updatedEntries);
@@ -381,7 +377,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     setSelectedLevel("");
     setCurrentStep(0);
     setIsModalOpen(false);
-    setShowSkillValidation(false);  // Reset validation flag
+    setShowSkillValidation(false); // Reset validation flag
 
     // setEditingIndex(null);
     // setAllSelectedSkills(entries.map(e => e.skill));
@@ -633,8 +629,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save position"
+          error.message ||
+          "Failed to save position"
       );
 
       if (error.response && error.response.status === 400) {
@@ -649,7 +645,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
   };
 
-
   // const handleClearField = (fieldName) => {
   //   setFormData(prev => ({ ...prev, [fieldName]: "" }));
 
@@ -658,7 +653,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   //     setErrors(prev => ({ ...prev, [fieldName]: "" }));
   //   }
   // };
-
 
   //v1.0.5 Ranjith <----------------------------------->
   const handleClearTemplate = () => {
@@ -1005,15 +999,17 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   );
 
   return (
-    <div className="flex items-center  justify-center">
+    <div className="flex items-center  justify-center w-full">
       {/* v1.0.4 <------------------------------------------------------- */}
       <div className="bg-white rounded-lg w-full flex flex-col mb-10">
         {/* v1.0.4 -------------------------------------------------------> */}
         {/* Modal Header */}
         <div className="mt-4">
-          <h2 className="text-2xl font-semibold px-[13%] sm:mt-5 sm:mb-2 sm:text-lg sm:px-[5%] md:mt-6 md:mb-2 md:text-xl md:px-[5%]">
+          {/* v1.0.6 <----------------------------------------------------------------------------- */}
+          <h2 className="text-2xl font-semibold px-[8%] sm:mt-5 sm:mb-2 sm:text-lg sm:px-[5%] md:mt-6 md:mb-2 md:text-xl md:px-[5%]">
             Position
           </h2>
+          {/* v1.0.6 -----------------------------------------------------------------------------> */}
           {/* NAVIGATION - PATH */}
           {renderStageIndicator()}
         </div>
@@ -1021,7 +1017,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         {/* // Inside your PositionForm component */}
         {/* v1.0.3 <----------------------------------------------------------------------------------------- */}
         {/* <div className="px-[13%] sm:px-[5%] md:px-[5%]"> */}
-        <div className="px-[13%] sm:px-[5%] md:px-[5%] mb-4">
+        {/* v1.0.6 <----------------------------------------------------------------------------- */}
+        <div className="px-[8%] sm:px-[5%] md:px-[5%] mb-4">
+          {/* v1.0.6 <-----------------------------------------------------------------------------> */}
           {/* v1.0.3 -----------------------------------------------------------------------------------------> */}
           <InfoGuide
             title="Position Creation Guidelines"
@@ -1082,8 +1080,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
             ]}
           />
         </div>
-
-        <div className="px-[13%] sm:px-[5%] md:px-[5%]">
+        {/* v1.0.6 <----------------------------------------------------------------------------- */}
+        <div className="px-[8%] sm:px-[5%] md:px-[5%]">
+          {/* v1.0.6 -----------------------------------------------------------------------------> */}
           {showAssessment ? (
             <>{renderInterviewComponent()}</>
           ) : (
@@ -1122,7 +1121,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           containerRef={fieldRefs.companyname}
                           label="Company Name"
                           name="companyName"
-                          
                           // required
                           isCustomName={isCustomCompany}
                           setIsCustomName={setIsCustomCompany}
@@ -1330,7 +1328,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         selectedLevel={selectedLevel}
                         setSelectedLevel={setSelectedLevel}
                         skills={skills}
-
                         isNextEnabled={isNextEnabled}
                         handleAddEntry={handleAddEntry}
                         skillpopupcancelbutton={skillpopupcancelbutton}
@@ -1341,7 +1338,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                     {/* Select Template */}
                     <div className="grid sm:grid-cols-1 grid-cols-2">
-
                       <div className="relative">
                         <DropdownWithSearchField
                           value={formData.template?._id || ""}
@@ -1361,7 +1357,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           required={false}
                           loading={isTemplatesFetching}
                         />
-{/* //v1.0.5 Ranjith <-----------------------------------> */}
+                        {/* //v1.0.5 Ranjith <-----------------------------------> */}
                         {formData.template?._id && (
                           <button
                             type="button"

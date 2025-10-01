@@ -2,12 +2,14 @@
 // v1.0.1 - Ashok - Changed checkbox colors to match brand (custom-blue) colors
 // v1.0.2 - Ashok - Improved responsiveness
 // v1.0.3 - Ashok - Separated standard and custom templates into tabs
+// v1.0.4 - Ashok - Added common kanban view
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Trash } from "lucide-react";
 import { Outlet, useNavigate } from "react-router-dom";
-import KanbanView from "./KanbanView";
+// import KanbanView from "./KanbanView";
+import KanbanView from "./StandardTemplates/StandardTemplateKanbanView.jsx";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import Header from "../../Components/Shared/Header/Header.jsx";
 import Toolbar from "../../Components/Shared/Toolbar/Toolbar.jsx";
@@ -112,8 +114,10 @@ const InterviewTemplates = () => {
   }, [templatesData]);
 
   // Dynamic counts for FilterTabs
-  const standardCount = templatesData?.filter((t) => t.type === "standard").length || 0;
-  const customCount = templatesData?.filter((t) => t.type === "custom").length || 0;
+  const standardCount =
+    templatesData?.filter((t) => t.type === "standard").length || 0;
+  const customCount =
+    templatesData?.filter((t) => t.type === "custom").length || 0;
   const totalCount = templatesData?.length || 0;
 
   useEffect(() => {
@@ -282,7 +286,10 @@ const InterviewTemplates = () => {
 
   const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredTemplates.length);
+  const endIndex = Math.min(
+    startIndex + itemsPerPage,
+    filteredTemplates.length
+  );
   const paginatedTemplates = filteredTemplates.slice(startIndex, endIndex);
 
   const handlePreviousPage = () => {
@@ -488,7 +495,9 @@ const InterviewTemplates = () => {
                         className="flex justify-between items-center cursor-pointer"
                         onClick={() => setIsStatusOpen(!isStatusOpen)}
                       >
-                        <span className="font-medium text-gray-700">Status</span>
+                        <span className="font-medium text-gray-700">
+                          Status
+                        </span>
                         {isStatusOpen ? (
                           <MdKeyboardArrowUp className="text-xl text-gray-700" />
                         ) : (
