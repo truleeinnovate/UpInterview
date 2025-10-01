@@ -59,7 +59,7 @@ const getWalletByOwnerId = async (req, res) => {
 // Create Razorpay order for wallet top-up
 const createTopupOrder = async (req, res) => {
   try {
-    const { amount, currency = "USD", ownerId, tenantId } = req.body;
+    const { amount, currency = "INR", ownerId, tenantId } = req.body;
 
     // Validate inputs
     if (!amount || amount <= 0) {
@@ -141,7 +141,7 @@ const walletVerifyPayment = async (req, res) => {
       ownerId,
       tenantId,
       amount,
-      currency = "USD",
+      currency = "INR",
       description = "Wallet Top-up via Razorpay",
     } = req.body;
 
@@ -378,7 +378,7 @@ const walletVerifyPayment = async (req, res) => {
           tenantId: tenantId || "default",
           ownerId,
           amount: parsedAmount,
-          currency: currency || "USD",
+          currency: currency || "INR",
           status: "captured",
           paymentMethod: "wallet",
           paymentGateway: "razorpay",

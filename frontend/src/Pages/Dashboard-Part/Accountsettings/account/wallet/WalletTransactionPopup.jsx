@@ -70,7 +70,7 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
               ${getTransactionTypeStyle(transaction?.type.toLowerCase()) }
               `}>
                 {transaction?.type === 'credit' ? '+' : '-'}
-                ${transaction?.amount.toFixed(2)}
+                ₹{transaction?.amount.toFixed(2)}
               </p>
             </div>
             <div>
