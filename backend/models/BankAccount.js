@@ -121,7 +121,7 @@ BankAccountSchema.statics.getActiveAccounts = async function(ownerId) {
   return this.find({ 
     ownerId, 
     isActive: true 
-  }).sort({ isDefault: -1, createdAt: -1 });
+  }).sort({ isDefault: -1, _id: -1 });
 };
 
 module.exports = mongoose.model("BankAccount", BankAccountSchema);

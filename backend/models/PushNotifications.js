@@ -31,6 +31,10 @@ const pushNotificationSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now
+  },
+  metadata: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   }
 }, { timestamps: true });
 

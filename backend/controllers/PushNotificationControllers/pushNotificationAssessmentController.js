@@ -360,14 +360,54 @@ const runAssessmentReminderJob = async () => {
     console.log(`[ASSESSMENT REMINDERS] Found ${expiredAssessments.length} expired assessments`);
     
     for (const assessment of expiredAssessments) {
-      // Update status to expired
-      assessment.status = 'expired';
-      await assessment.save();
+      console.log(`[ASSESSMENT REMINDERS] Processing expired assessment: ${assessment._id} (${assessment.order}), current status: ${assessment.status}`);
       
-      // Create notification for expiry
-      await createAssessmentStatusUpdateNotification(assessment, 'scheduled', 'expired');
+      // Check if we've already created an expired notification for this assessment
+      // First try with metadata (for new notifications)
+      let existingExpiryNotification = await PushNotification.findOne({
+        'metadata.scheduledAssessmentId': String(assessment._id),
+        'metadata.newStatus': 'expired',
+        'category': 'assessment_status_update'
+      });
       
-      console.log(`[ASSESSMENT REMINDERS] ✅ Marked assessment ${assessment._id} as expired`);
+      // Fallback: check by message content for older notifications without metadata
+      if (!existingExpiryNotification) {
+        existingExpiryNotification = await PushNotification.findOne({
+          'message': `Assessment "${assessment.order}" has expired`,
+          'category': 'assessment_status_update',
+          'ownerId': String(assessment.createdBy)
+        });
+      }
+      
+      console.log(`[ASSESSMENT REMINDERS] Existing notification check for ${assessment._id}: ${existingExpiryNotification ? 'FOUND' : 'NOT FOUND'}`);
+      
+      if (!existingExpiryNotification) {
+        // Update status to expired FIRST (this should prevent it from being picked up again)
+        const updateResult = await ScheduledAssessment.findByIdAndUpdate(
+          assessment._id,
+          { status: 'expired' },
+          { new: true }
+        );
+        
+        console.log(`[ASSESSMENT REMINDERS] Updated assessment ${assessment._id} status to: ${updateResult.status}`);
+        
+        // Create notification for expiry (only once)
+        await createAssessmentStatusUpdateNotification(updateResult, 'scheduled', 'expired');
+        
+        console.log(`[ASSESSMENT REMINDERS] ✅ Marked assessment ${assessment._id} (${assessment.order}) as expired and created notification`);
+      } else {
+        // If notification exists but status is still 'scheduled', update it
+        if (assessment.status === 'scheduled') {
+          const updateResult = await ScheduledAssessment.findByIdAndUpdate(
+            assessment._id,
+            { status: 'expired' },
+            { new: true }
+          );
+          console.log(`[ASSESSMENT REMINDERS] ⚠️ Assessment ${assessment._id} (${assessment.order}) already has notification, just updated status to: ${updateResult.status}`);
+        } else {
+          console.log(`[ASSESSMENT REMINDERS] ℹ️ Assessment ${assessment._id} (${assessment.order}) already processed (status: ${assessment.status}), skipping entirely`);
+        }
+      }
     }
     
     console.log('[ASSESSMENT REMINDERS] Job completed successfully');
@@ -405,6 +445,30 @@ if (mongoose.connection.readyState === 1) {
     runAssessmentReminderJob().catch(err => console.error('[ASSESSMENT REMINDERS] Initial run error:', err));
   });
 }
+
+// Manual test function to check for duplicate notifications
+// async function checkDuplicateNotifications(assessmentId) {
+//   try {
+//     const notifications = await PushNotification.find({
+//       $or: [
+//         { 'metadata.scheduledAssessmentId': String(assessmentId) },
+//         { 'metadata.assessmentId': String(assessmentId) }
+//       ],
+//       'category': 'assessment_status_update',
+//       'metadata.newStatus': 'expired'
+//     }).sort({ createdAt: -1 });
+    
+//     console.log(`[ASSESSMENT CHECK] Found ${notifications.length} expired notifications for assessment ${assessmentId}`);
+//     notifications.forEach((notif, index) => {
+//       console.log(`  ${index + 1}. Created at: ${notif.createdAt}, Message: ${notif.message}`);
+//     });
+    
+//     return notifications;
+//   } catch (error) {
+//     console.error('[ASSESSMENT CHECK] Error checking duplicates:', error);
+//     return [];
+//   }
+// }
 
 // Export functions for use in controllers
 module.exports = {

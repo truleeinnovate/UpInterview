@@ -243,10 +243,10 @@ const Wallet = () => {
             >
               Top Up
             </button>
-            <EditButton
+            {/* <EditButton
               onClick={() => alert("Edit wallet settings")}
               className="sm:px-2 sm:py-1 bg-gray-100 rounded-lg"
-            />
+            /> */}
           </div>
         </div>
 

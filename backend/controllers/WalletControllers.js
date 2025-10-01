@@ -707,7 +707,7 @@ const getBankAccounts = async (req, res) => {
     const bankAccounts = await BankAccount.find({
       ownerId,
       isActive: true
-    }).sort({ isDefault: -1, createdAt: -1 });
+    }).sort({ isDefault: -1, _id: -1 });
 
     res.status(200).json({
       success: true,
@@ -1275,7 +1275,7 @@ const getWithdrawalRequests = async (req, res) => {
 
     const withdrawalRequests = await WithdrawalRequest.find(query)
       .populate("bankAccountId", "bankName maskedAccountNumber accountHolderName")
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(skip));
 
