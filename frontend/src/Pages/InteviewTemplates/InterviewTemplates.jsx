@@ -1,7 +1,7 @@
 // v1.0.0 - Ashok - Added status badge common code
-// v1.0.1  -  Ashok   -  changed checkbox colors to match brand (custom-blue) colors
-// v1.0.2  -  Ashok   -  Improved responsiveness
-// v1.0.3  -  Ashok   -  Separated standard and custom templates into tabs
+// v1.0.1 - Ashok - Changed checkbox colors to match brand (custom-blue) colors
+// v1.0.2 - Ashok - Improved responsiveness
+// v1.0.3 - Ashok - Separated standard and custom templates into tabs
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -17,15 +17,11 @@ import { ReactComponent as MdKeyboardArrowDown } from "../../icons/MdKeyboardArr
 import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates.js";
 import { useMediaQuery } from "react-responsive";
 import { usePermissions } from "../../Context/PermissionsContext";
-// v1.0.0 <------------------------------------------------------------------------------------
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge.jsx";
-// v1.0.0 ------------------------------------------------------------------------------------>
 import { formatDateTime } from "../../utils/dateFormatter.js";
-// v1.0.3 <---------------------------------------------------------------------
 import StandardTemplates from "./StandardTemplates/StandardTemplates.jsx";
-// v1.0.3 --------------------------------------------------------------------->
 
-// v1.0.3 <--------------------------------------------------------------------
+// FilterTabs component for standard/custom tabs
 const FilterTabs = ({
   activeTab,
   onFilterChange,
@@ -34,43 +30,30 @@ const FilterTabs = ({
   totalCount,
 }) => {
   const tabs = [
-    // { id: 'all', label: 'All', count: totalCount },
     { id: "standard", label: "Standard", count: standardCount },
     { id: "custom", label: "Custom", count: customCount },
   ];
 
   return (
-    // <div className="filter-tabs">
-    //   {tabs.map((tab) => (
-    //     <button
-    //       key={tab.id}
-    //       className={`filter-tab ${activeFilter === tab.id ? "active" : ""}`}
-    //       onClick={() => onFilterChange(tab.id)}
-    //     >
-    //       {tab.label}
-    //       <span className="filter-count">{tab.count}</span>
-    //     </button>
-    //   ))}
-    // </div>
     <div className="flex gap-1.5 bg-gray-100 p-1 rounded-md border border-slate-200 px-2">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onFilterChange(tab.id)}
           className={`flex items-center gap-2 px-4 py-1.5 rounded-md font-semibold text-sm transition-all duration-200 
-        ${
-          activeTab === tab.id
-            ? "bg-custom-blue text-white shadow-md"
-            : "text-slate-600 hover:bg-[#2179891A] hover:text-custom-blue/90 bg-white/100"
-        }
-      `}
+            ${
+              activeTab === tab.id
+                ? "bg-custom-blue text-white shadow-md"
+                : "text-slate-600 hover:bg-[#2179891A] hover:text-custom-blue/90 bg-white/100"
+            }
+          `}
         >
           {tab.label}
           <span
             className={`
-          px-2 py-0.5 min-w-[20px] text-center text-xs font-semibold rounded-md
-          ${activeTab === tab.id ? "bg-white/30" : "bg-gray-100"}
-        `}
+              px-2 py-0.5 min-w-[20px] text-center text-xs font-semibold rounded-md
+              ${activeTab === tab.id ? "bg-white/30" : "bg-gray-100"}
+            `}
           >
             {tab.count}
           </span>
@@ -79,7 +62,6 @@ const FilterTabs = ({
     </div>
   );
 };
-// v1.0.3 -------------------------------------------------------------------->
 
 const InterviewTemplates = () => {
   const { effectivePermissions } = usePermissions();
@@ -94,8 +76,8 @@ const InterviewTemplates = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     rounds: { min: "", max: "" },
-    modifiedDate: "", // '', 'last7', 'last30', 'last90'
-    createdDate: "", // '', 'last7', 'last30', 'last90'
+    modifiedDate: "",
+    createdDate: "",
   });
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -107,21 +89,32 @@ const InterviewTemplates = () => {
   const [createdDatePreset, setCreatedDatePreset] = useState("");
   const filterIconRef = useRef(null);
   const itemsPerPage = 10;
-
   const [activeTab, setActiveTab] = useState("standard");
 
-  // const allTemplates = [...standardTemplates, ...customTemplates];
+  // Transform and filter templatesData for custom templates
+  const normalizedTemplates = useMemo(() => {
+    if (!templatesData || !Array.isArray(templatesData)) return [];
 
-  const getFilteredTemplates = () => {
-    switch (activeTab) {
-      case "standard":
-      // return standardTemplates;
-      case "custom":
-      // return customTemplates;
-      default:
-      // return allTemplates;
-    }
-  };
+    return templatesData
+      .filter((template) => template.type === "custom") // Filter for custom templates
+      .map((template) => ({
+        _id: template._id || `template-${Math.random()}`, // Keep _id for navigation
+        title: template.title || template.roundTitle || "Unnamed Template", // Map title or fallback to roundTitle
+        rounds: Array.isArray(template.rounds)
+          ? template.rounds
+          : template.sequence || [], // Keep rounds as array for TableView
+        bestFor: template.bestFor || "General roles",
+        format: template.format || "unknown",
+        status: template.status || "active",
+        updatedAt: template.updatedAt || new Date().toISOString(),
+        createdAt: template.createdAt || new Date().toISOString(),
+      }));
+  }, [templatesData]);
+
+  // Dynamic counts for FilterTabs
+  const standardCount = templatesData?.filter((t) => t.type === "standard").length || 0;
+  const customCount = templatesData?.filter((t) => t.type === "custom").length || 0;
+  const totalCount = templatesData?.length || 0;
 
   useEffect(() => {
     if (isTablet) {
@@ -138,7 +131,6 @@ const InterviewTemplates = () => {
       setRoundsRange(selectedFilters.rounds);
       setModifiedDatePreset(selectedFilters.modifiedDate);
       setCreatedDatePreset(selectedFilters.createdDate);
-      // Reset all open states
       setIsStatusOpen(false);
       setIsRoundsOpen(false);
       setIsModifiedDateOpen(false);
@@ -202,7 +194,7 @@ const InterviewTemplates = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (templatesData?.length !== 0) {
+    if (normalizedTemplates.length !== 0) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
@@ -212,15 +204,13 @@ const InterviewTemplates = () => {
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
 
   const filteredTemplates = useMemo(() => {
-    if (!templatesData || !Array.isArray(templatesData)) return [];
-    return templatesData.filter((template) => {
-      // Enhanced search across multiple fields
+    return normalizedTemplates.filter((template) => {
       const normalizedQuery = normalizeSpaces(searchQuery);
       const fieldsToSearch = [
-        template?.templateName,
-        template?.interviewTemplateCode,
-        template?.status,
-        template?.rounds?.length?.toString(),
+        template.title,
+        template.interviewTemplateCode,
+        template.status,
+        template.rounds?.length?.toString(),
       ].filter(Boolean);
 
       const matchesSearchQuery =
@@ -229,7 +219,6 @@ const InterviewTemplates = () => {
           normalizeSpaces(field).includes(normalizedQuery)
         );
 
-      // Status filter
       const matchesStatus =
         selectedFilters.status.length === 0 ||
         selectedFilters.status.includes(
@@ -238,22 +227,19 @@ const InterviewTemplates = () => {
             : "Active"
         );
 
-      // Rounds filter
-      const roundsCount = template?.rounds?.length || 0;
+      const roundsCount = template.rounds?.length || 0;
       const matchesRounds =
         (selectedFilters.rounds.min === "" ||
           roundsCount >= Number(selectedFilters.rounds.min)) &&
         (selectedFilters.rounds.max === "" ||
           roundsCount <= Number(selectedFilters.rounds.max));
 
-      // Modified date filter
       const matchesModifiedDate = () => {
         if (!selectedFilters.modifiedDate) return true;
         if (!template.updatedAt) return false;
         const modifiedAt = new Date(template.updatedAt);
         const now = new Date();
         const daysDiff = Math.floor((now - modifiedAt) / (1000 * 60 * 60 * 24));
-
         switch (selectedFilters.modifiedDate) {
           case "last7":
             return daysDiff <= 7;
@@ -266,14 +252,12 @@ const InterviewTemplates = () => {
         }
       };
 
-      // Created date filter
       const matchesCreatedDate = () => {
         if (!selectedFilters.createdDate) return true;
         if (!template.createdAt) return false;
         const createdAt = new Date(template.createdAt);
         const now = new Date();
         const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-
         switch (selectedFilters.createdDate) {
           case "last7":
             return daysDiff <= 7;
@@ -294,14 +278,11 @@ const InterviewTemplates = () => {
         matchesCreatedDate()
       );
     });
-  }, [templatesData, searchQuery, selectedFilters]);
+  }, [normalizedTemplates, searchQuery, selectedFilters]);
 
   const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
   const startIndex = currentPage * itemsPerPage;
-  const endIndex = Math.min(
-    startIndex + itemsPerPage,
-    filteredTemplates.length
-  );
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredTemplates.length);
   const paginatedTemplates = filteredTemplates.slice(startIndex, endIndex);
 
   const handlePreviousPage = () => {
@@ -328,29 +309,11 @@ const InterviewTemplates = () => {
     }
   };
 
-  // const formatRelativeDate = (dateString) => {
-  //   if (!dateString) return "";
-  //   const date = new Date(dateString);
-  //   const now = new Date();
-  //   const diffTime = Math.abs(now - date);
-  //   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  //   const diffMonths = Math.floor(diffDays / 30);
-  //   const diffYears = Math.floor(diffDays / 365);
-
-  //   if (date.toDateString() === now.toDateString()) return "Today";
-  //   const yesterday = new Date(now);
-  //   yesterday.setDate(yesterday.getDate() - 1);
-  //   if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-  //   if (diffDays < 30) return `${diffDays} Day${diffDays > 1 ? "s" : ""} ago`;
-  //   if (diffMonths < 12)
-  //     return `${diffMonths} Month${diffMonths > 1 ? "s" : ""} ago`;
-  //   return `${diffYears} Year${diffYears > 1 ? "s" : ""} ago`;
-  // };
-
   const capitalizeFirstLetter = (str) => {
     if (!str) return "";
-    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+    return str.charAt(0).toUpperCase() + str.slice(1);
   };
+
   const formatOptions = [
     { label: "Online / Virtual", value: "online" },
     { label: "Face to Face / Onsite", value: "offline" },
@@ -358,18 +321,6 @@ const InterviewTemplates = () => {
   ];
 
   const tableColumns = [
-    // {
-    //   key: "interviewTemplateCode",
-    //   header: "Template ID",
-    //   render: (value, row) => (
-    //     <div
-    //       className="text-sm font-medium text-custom-blue cursor-pointer"
-    //       onClick={() => handleView(row)}
-    //     >
-    //       {value || "N/A"}
-    //     </div>
-    //   ),
-    // },
     {
       key: "title",
       header: "Title",
@@ -410,26 +361,12 @@ const InterviewTemplates = () => {
       key: "status",
       header: "Status",
       render: (value) => {
-        // v1.0.0 <---------------------------------------------------------------------------
-        // <span
-        //   className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
-        //     value === "active"
-        //       ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
-        //       : value === "inactive"
-        //       ? "bg-amber-50 text-amber-700 border border-amber-200/60"
-        //       : "bg-slate-50 text-slate-700 border border-slate-200/60"
-        //   }`}
-        // >
-        //   {value ? value.charAt(0).toUpperCase() + value.slice(1) : "Active"}
-        // </span>
-
         return value ? (
           <StatusBadge status={capitalizeFirstLetter(value)} />
         ) : (
           <span className="text-gray-400 text-sm">N/A</span>
         );
       },
-      // v1.0.0 ----------------------------------------------------------------------------->
     },
     {
       key: "updatedAt",
@@ -473,11 +410,8 @@ const InterviewTemplates = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      {/* v1.0.3 <-------------------------------------------------------------------------- */}
       <div className="fixed mt-2 left-0 right-0 bg-background">
-        {/* v1.0.2 <--------------------------------------------------------------------- */}
         <main className="sm:px-4 px-6">
-          {/* v1.0.2 ---------------------------------------------------------------------> */}
           <div className="sm:px-0">
             <Header
               title="Interview Templates"
@@ -485,17 +419,15 @@ const InterviewTemplates = () => {
               addButtonText="New Template"
               canCreate={effectivePermissions.InterviewTemplates?.Create}
             />
-            {/* v1.0.3 <-------------------------------------------------------------------- */}
             <div className="flex justify-end mb-4">
               <FilterTabs
                 activeTab={activeTab}
                 onFilterChange={setActiveTab}
-                standardCount={"10"}
-                customCount={"10"}
-                totalCount={"10"}
+                standardCount={standardCount}
+                customCount={customCount}
+                totalCount={totalCount}
               />
             </div>
-            {/* v1.0.3 --------------------------------------------------------------------> */}
           </div>
         </main>
       </div>
@@ -515,7 +447,7 @@ const InterviewTemplates = () => {
                 onFilterClick={handleFilterIconClick}
                 isFilterActive={isFilterActive}
                 isFilterPopupOpen={isFilterPopupOpen}
-                dataLength={templatesData?.length}
+                dataLength={normalizedTemplates.length}
                 searchPlaceholder="Search Interview Templates..."
                 filterIconRef={filterIconRef}
               />
@@ -531,7 +463,6 @@ const InterviewTemplates = () => {
                     onEdit={handleEdit}
                   />
                 ) : (
-                  // v1.0.2 <--------------------------------------------------------------------------------
                   <div className="overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                     <TableView
                       data={paginatedTemplates}
@@ -542,7 +473,6 @@ const InterviewTemplates = () => {
                       className="table-fixed w-full"
                     />
                   </div>
-                  // v1.0.2 -------------------------------------------------------------------------------->
                 )}
                 <FilterPopup
                   isOpen={isFilterPopupOpen}
@@ -558,9 +488,7 @@ const InterviewTemplates = () => {
                         className="flex justify-between items-center cursor-pointer"
                         onClick={() => setIsStatusOpen(!isStatusOpen)}
                       >
-                        <span className="font-medium text-gray-700">
-                          Status
-                        </span>
+                        <span className="font-medium text-gray-700">Status</span>
                         {isStatusOpen ? (
                           <MdKeyboardArrowUp className="text-xl text-gray-700" />
                         ) : (
@@ -631,42 +559,6 @@ const InterviewTemplates = () => {
                       )}
                     </div>
 
-                    {/* Modified Date Filter */}
-                    {/* <div>
-                  <div
-                    className="flex justify-between items-center cursor-pointer"
-                    onClick={() => setIsModifiedDateOpen(!isModifiedDateOpen)}
-                  >
-                    <span className="font-medium text-gray-700">Last Modified</span>
-                    {isModifiedDateOpen ? (
-                      <MdKeyboardArrowUp className="text-xl text-gray-700" />
-                    ) : (
-                      <MdKeyboardArrowDown className="text-xl text-gray-700" />
-                    )}
-                  </div>
-                  {isModifiedDateOpen && (
-                    <div className="mt-2 pl-3 space-y-1">
-                      {[
-                        { value: "", label: "Any time" },
-                        { value: "last7", label: "Last 7 days" },
-                        { value: "last30", label: "Last 30 days" },
-                        { value: "last90", label: "Last 90 days" },
-                      ].map((option) => (
-                        <label key={option.value} className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            value={option.value}
-                            checked={modifiedDatePreset === option.value}
-                            onChange={(e) => setModifiedDatePreset(e.target.value)}
-                            className="h-4 w-4 accent-custom-blue focus:ring-custom-blue"
-                          />
-                          <span className="text-sm">{option.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div> */}
-
                     {/* Created Date Filter */}
                     <div>
                       <div
@@ -715,12 +607,9 @@ const InterviewTemplates = () => {
             </div>
           </div>
         ) : (
-          <>
-            <StandardTemplates />
-          </>
+          <StandardTemplates />
         )}
       </main>
-      {/* v1.0.3 --------------------------------------------------------------------------> */}
       <Outlet />
     </div>
   );

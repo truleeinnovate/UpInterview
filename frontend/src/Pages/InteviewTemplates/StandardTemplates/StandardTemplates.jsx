@@ -4,137 +4,65 @@ import StandardTemplateKanbanView from "./StandardTemplateKanbanView";
 import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup";
+import { useInterviewTemplates } from "../../../apiHooks/useInterviewTemplates.js";
 
-// Dummy data
-const standardTemplates = [
-  // Recommended (Online)
-  {
-    id: "template-3",
-    title: "Fully Remote Process",
-    description: "End-to-end online: assessment, technical, HR.",
-    rounds: "Assessment → Technical → HR",
-    bestFor: "Remote roles, distributed teams",
-    format: "Fully Online",
-    keyCharacteristic: "Location-independent, efficient",
-    type: "standard",
-    status: "active",
-    category: "Recommended (Online)",
-  },
-  {
-    id: "template-4",
-    title: "Assessment-First Screening",
-    description:
-      "Online test filters candidates before technical + HR interviews.",
-    rounds: "Assessment → Technical → HR",
-    bestFor: "High-volume, junior roles",
-    format: "Fully Online",
-    keyCharacteristic: "Scales well for bulk hiring",
-    type: "standard",
-    status: "active",
-    category: "Recommended (Online)",
-  },
-  {
-    id: "template-5",
-    title: "Express Remote Hiring",
-    description: "Quick 2-step online process for urgent or clear-fit roles.",
-    rounds: "Technical → HR",
-    bestFor: "Urgent hiring needs",
-    format: "Fully Online",
-    keyCharacteristic: "Fastest, streamlined process",
-    type: "standard",
-    status: "active",
-    category: "Recommended (Online)",
-  },
-  {
-    id: "template-6",
-    title: "Rapid Hiring Track",
-    description: "Short online assessment, technical & HR discussion.",
-    rounds: "Assessment → Technical → HR",
-    bestFor: "Fast hiring without compromises",
-    format: "Fully Online",
-    keyCharacteristic: "Speed + quality balance",
-    type: "standard",
-    status: "active",
-    category: "Recommended (Online)",
-  },
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
 
-  // Hybrid (Mix of Online & Onsite)
-  {
-    id: "template-1",
-    title: "Comprehensive Hybrid Process",
-    description: "Complete hiring with assessment, technical, managerial & HR.",
-    rounds: "Assessment → Technical → Managerial → HR",
-    bestFor: "Senior, critical roles",
-    format: "Hybrid (Online + Offline)",
-    keyCharacteristic: "Most thorough evaluation",
-    type: "standard",
-    status: "active",
-    category: "Hybrid (Mix of Online & Onsite)",
-  },
-  {
-    id: "template-2",
-    title: "Standard Full-Cycle Hybrid",
-    description:
-      "Balanced process: technical, managerial, HR with some onsite.",
-    rounds: "Technical (2) → Managerial → HR",
-    bestFor: "Mid-to-senior roles",
-    format: "Hybrid (Online + Offline)",
-    keyCharacteristic: "Balanced, flexible",
-    type: "standard",
-    status: "active",
-    category: "Hybrid (Mix of Online & Onsite)",
-  },
-  {
-    id: "template-7",
-    title: "Flexible Blended Process",
-    description:
-      "Start online (assessment, technical), finish onsite if needed.",
-    rounds: "Assessment → Technical → HR/Final (onsite)",
-    bestFor: "Flexible scheduling needs",
-    format: "Hybrid (Online + Offline)",
-    keyCharacteristic: "Online-first with in-person option",
-    type: "standard",
-    status: "active",
-    category: "Hybrid (Mix of Online & Onsite)",
-  },
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
 
-  // On-Site (Traditional)
-  {
-    id: "template-8",
-    title: "Traditional On-Site Loop",
-    description: "Entire process conducted face-to-face.",
-    rounds: "Technical (2) → Managerial → HR",
-    bestFor: "Roles requiring strong onsite",
-    format: "Fully On-Site",
-    keyCharacteristic: "Classic, in-depth assessment",
-    type: "standard",
-    status: "active",
-    category: "On-Site (Traditional)",
-  },
-  {
-    id: "template-9",
-    title: "Standard In-Person Process",
-    description: "Onsite technical + HR in one location.",
-    rounds: "Technical → HR",
-    bestFor: "Company culture-driven hiring",
-    format: "Fully On-Site",
-    keyCharacteristic: "Complete onsite day",
-    type: "standard",
-    status: "active",
-    category: "On-Site (Traditional)",
-  },
-];
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 text-red-600">
+          <h1>Something went wrong.</h1>
+          <p>{this.state.error?.message || "An unexpected error occurred."}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const StandardTemplates = () => {
-  // Toolbar & Filter state
-  const [view, setView] = useState("table"); // Table or Kanban view
-  const [searchQuery, setSearchQuery] = useState(""); // Search input
-  const [currentPage, setCurrentPage] = useState(0); // Pagination
-  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false); // Filter popup toggle
-  const [isFilterActive, setIsFilterActive] = useState(false); // Filter active indicator
-  const filterIconRef = useRef(null); // Reference for filter icon
+  const { templatesData, isLoading } = useInterviewTemplates();
 
-  // Filter states
+  // Transform API data to match the expected structure
+  const normalizedTemplates = useMemo(() => {
+    if (!templatesData || !Array.isArray(templatesData)) return [];
+
+    return templatesData
+      .filter((template) => template.type === "standard")
+      .map((template) => ({
+        _id: template._id || `template-${Math.random()}`,
+        title: template.title || template.roundTitle || "Unnamed Template",
+        description: template.description || "No description available",
+        rounds: Array.isArray(template.rounds)
+          ? template.rounds
+          : Array.isArray(template.sequence)
+          ? template.sequence
+          : [{ roundTitle: "Unknown round" }],
+        bestFor: template.bestFor || "General roles",
+        format: template.format || "Unknown format",
+        type: template.type || "standard",
+        status: template.status || "active",
+        category: template.category || "Uncategorized",
+        createdAt: template.createdAt || new Date().toISOString(),
+        updatedAt: template.updatedAt || new Date().toISOString(),
+      }));
+  }, [templatesData]);
+
+  // Toolbar & Filter state
+  const [view, setView] = useState("table");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const filterIconRef = useRef(null);
+
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     rounds: { min: "", max: "" },
@@ -149,18 +77,14 @@ const StandardTemplates = () => {
   const [isRoundsOpen, setIsRoundsOpen] = useState(false);
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
 
-  // Search normalization for filtering
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
 
   // Filtered templates based on search & filters
   const filteredTemplates = useMemo(() => {
-    if (!standardTemplates || !Array.isArray(standardTemplates)) return [];
-    return standardTemplates.filter((template) => {
+    return normalizedTemplates.filter((template) => {
       const normalizedQuery = normalizeSpaces(searchQuery);
-      const fieldsToSearch = [template?.template, template?.status].filter(
-        Boolean
-      );
+      const fieldsToSearch = [template.title, template.status].filter(Boolean);
 
       const matchesSearchQuery =
         searchQuery === "" ||
@@ -176,7 +100,7 @@ const StandardTemplates = () => {
             : "Active"
         );
 
-      const roundsCount = template?.rounds?.length || 0;
+      const roundsCount = template.rounds?.length || 0; // Fix: Use array length
       const matchesRounds =
         (selectedFilters.rounds.min === "" ||
           roundsCount >= Number(selectedFilters.rounds.min)) &&
@@ -227,11 +151,15 @@ const StandardTemplates = () => {
         matchesCreatedDate()
       );
     });
-  }, [searchQuery, selectedFilters]);
+  }, [searchQuery, selectedFilters, normalizedTemplates]);
 
   // Pagination
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
+  const paginatedTemplates = filteredTemplates.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
 
   // Toolbar handlers
   const handlePreviousPage = () => {
@@ -242,14 +170,12 @@ const StandardTemplates = () => {
     if (currentPage < totalPages - 1) setCurrentPage((prev) => prev + 1);
   };
 
-  // Filter popup toggle
   const handleFilterIconClick = () => {
-    if (standardTemplates?.length !== 0) {
+    if (normalizedTemplates.length !== 0) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
 
-  // Status filter toggle
   const handleStatusToggle = (status) => {
     setSelectedStatus((prev) =>
       prev.includes(status)
@@ -258,7 +184,6 @@ const StandardTemplates = () => {
     );
   };
 
-  // Rounds filter change
   const handleRoundsChange = (e, type) => {
     const value =
       e.target.value === ""
@@ -267,7 +192,6 @@ const StandardTemplates = () => {
     setRoundsRange((prev) => ({ ...prev, [type]: value }));
   };
 
-  // Apply filters
   const handleApplyFilters = () => {
     const filters = {
       status: selectedStatus,
@@ -287,7 +211,6 @@ const StandardTemplates = () => {
     setCurrentPage(0);
   };
 
-  // Clear all filters
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
@@ -305,6 +228,10 @@ const StandardTemplates = () => {
     setCurrentPage(0);
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
       <div className="sm:px-4 px-6">
@@ -320,7 +247,7 @@ const StandardTemplates = () => {
           onFilterClick={handleFilterIconClick}
           isFilterActive={isFilterActive}
           isFilterPopupOpen={isFilterPopupOpen}
-          dataLength={standardTemplates?.length}
+          dataLength={normalizedTemplates.length}
           searchPlaceholder="Search Interview Templates..."
           filterIconRef={filterIconRef}
         />
@@ -332,7 +259,6 @@ const StandardTemplates = () => {
           filterIconRef={filterIconRef}
         >
           <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-            {/* Status Filter */}
             <div>
               <div
                 className="flex justify-between items-center cursor-pointer"
@@ -361,8 +287,6 @@ const StandardTemplates = () => {
                 </div>
               )}
             </div>
-
-            {/* Rounds Filter */}
             <div>
               <div
                 className="flex justify-between items-center cursor-pointer"
@@ -403,8 +327,6 @@ const StandardTemplates = () => {
                 </div>
               )}
             </div>
-
-            {/* Created Date Filter */}
             <div>
               <div
                 className="flex justify-between items-center cursor-pointer"
@@ -448,11 +370,15 @@ const StandardTemplates = () => {
       <div>
         {view === "table" ? (
           <div className="w-full overflow-x-auto">
-            <StandardTemplateTableView standardTemplates={standardTemplates} />
+            <ErrorBoundary>
+              <StandardTemplateTableView templatesData={paginatedTemplates} />
+            </ErrorBoundary>
           </div>
         ) : (
           <div>
-            <StandardTemplateKanbanView standardTemplates={standardTemplates} />
+            <ErrorBoundary>
+              <StandardTemplateKanbanView templatesData={paginatedTemplates} />
+            </ErrorBoundary>
           </div>
         )}
       </div>
