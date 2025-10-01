@@ -22,6 +22,8 @@ import InterviewProgress from "./InterviewProgress";
 import { useInterviewTemplates } from "../../apiHooks/useInterviewTemplates";
 import { Switch } from "@headlessui/react";
 import Loading from "../../Components/Loading";
+import { formatDateTime } from "../../utils/dateFormatter.js";
+
 
 const TemplateDetail = () => {
   const { templatesData, saveTemplate } = useInterviewTemplates();
@@ -114,42 +116,6 @@ const TemplateDetail = () => {
       console.error("Failed to update status:", error);
       setIsActive((prev) => !prev); // ✅ Revert toggle on error
     }
-  };
-
-  const formatRelativeDate = (dateString) => {
-    if (!dateString) return "";
-
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffMonths = Math.floor(diffDays / 30);
-    const diffYears = Math.floor(diffDays / 365);
-
-    // Check if it's today
-    if (date.toDateString() === now.toDateString()) {
-      return "Today";
-    }
-
-    // Check if it's yesterday
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
-    }
-
-    // Days ago (up to 30 days)
-    if (diffDays < 30) {
-      return `${diffDays} Day${diffDays > 1 ? "s" : ""} ago`;
-    }
-
-    // Months ago (up to 12 months)
-    if (diffMonths < 12) {
-      return `${diffMonths} Month${diffMonths > 1 ? "s" : ""} ago`;
-    }
-
-    // Years ago
-    return `${diffYears} Year${diffYears > 1 ? "s" : ""} ago`;
   };
 
   const handleAddRound = () => {
@@ -274,7 +240,7 @@ const TemplateDetail = () => {
             <div className="flex sm:flex-col flex-row sm:items-start justify-between gap-4 sm:gap-0">
               {/* v1.0.3 <----------------------------- */}
               <div className="flex-1 w-full">
-              {/* v1.0.3 -----------------------------> */}
+                {/* v1.0.3 -----------------------------> */}
                 <div className="flex justify-between items-center">
                   <h3 className="sm:text-md md:text-md lg:text-xl xl:text-xl 2xl:text-xl mb-2 leading-6 font-medium text-gray-900">
                     Interview Details
@@ -282,13 +248,12 @@ const TemplateDetail = () => {
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex h-6 items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-medium 
-                      ${
-                        (template.status === "active" &&
+                      ${(template.status === "active" &&
                           "bg-emerald-50 text-emerald-700 border border-emerald-200/60") ||
                         (template.status === "inactive" &&
                           "bg-red-400 text-white border border-slate-200/60") ||
                         ""
-                      }`}
+                        }`}
                     >
                       {(template.status === "active" && "Active") ||
                         (template.status === "inactive" && "In Active")}
@@ -298,16 +263,14 @@ const TemplateDetail = () => {
                       <Switch
                         checked={isActive}
                         onChange={handleStatusChange}
-                        className={`${
-                          isActive ? "bg-custom-blue" : "bg-red-400"
-                        }
+                        className={`${isActive ? "bg-custom-blue" : "bg-red-400"
+                          }
                         relative inline-flex h-6 w-11 items-center rounded-full transition-colors
                         `}
                       >
                         <span
-                          className={`${
-                            isActive ? "translate-x-6" : "translate-x-1"
-                          }
+                          className={`${isActive ? "translate-x-6" : "translate-x-1"
+                            }
                         inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                         />
                       </Switch>
@@ -322,6 +285,12 @@ const TemplateDetail = () => {
                 <p className="text-sm text-gray-600 mb-4 break-all whitespace-normal">
                   {template.description}
                 </p>
+                <p className="text-sm text-gray-600 mb-4 break-all whitespace-normal">
+                  {template.bestFor}
+                </p>
+                <p className="text-sm text-gray-600 mb-4 break-all whitespace-normal">
+                  {template.format}
+                </p>
 
                 <div className="grid sm:grid-cols-1 grid-cols-2 gap-3 sm:gap-6">
                   <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded sm:rounded-xl">
@@ -331,7 +300,7 @@ const TemplateDetail = () => {
                         Modified
                       </p>
                       <p className="font-medium text-gray-900 text-sm sm:text-base">
-                        {formatRelativeDate(template.updatedAt)}
+                        {formatDateTime(template.updatedAt)}
                       </p>
                     </div>
                   </div>
@@ -340,7 +309,12 @@ const TemplateDetail = () => {
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">Rounds</p>
                       <p className="font-medium text-gray-900 text-sm sm:text-base">
-                        {template.rounds?.length || 0}
+                        {template.rounds.map((item, index) => (
+                          <span key={index}>
+                            {item.roundTitle}
+                            {index !== template.rounds.length - 1 && " → "}
+                          </span>
+                        ))}
                       </p>
                     </div>
                   </div>

@@ -47,80 +47,80 @@ exports.createInterviewTemplate = async (req, res) => {
 
 // Get all interview templates for a tenant
 // Get all interview templates based on organization or owner
-exports.getAllTemplates = async (req, res) => {
-  try {
-    const { tenantId, ownerId, organization } = req.query;
+// exports.getAllTemplates = async (req, res) => {
+//   try {
+//     const { tenantId, ownerId, organization } = req.query;
 
-    let filter = {};
+//     let filter = {};
 
-    if (organization === "true") {
-      if (!tenantId) {
-        console.error("Missing tenantId for organization");
-        return res.status(400).json({
-          success: false,
-          message: "tenantId is required for organization",
-        });
-      }
-      filter.tenantId = tenantId;
-    } else {
-      if (!ownerId) {
-        console.error("Missing ownerId for individual user");
-        return res.status(400).json({
-          success: false,
-          message: "ownerId is required for individual user",
-        });
-      }
-      filter.ownerId = ownerId;
-      console.log("Filtering by ownerId:", ownerId);
-    }
+//     if (organization === "true") {
+//       if (!tenantId) {
+//         console.error("Missing tenantId for organization");
+//         return res.status(400).json({
+//           success: false,
+//           message: "tenantId is required for organization",
+//         });
+//       }
+//       filter.tenantId = tenantId;
+//     } else {
+//       if (!ownerId) {
+//         console.error("Missing ownerId for individual user");
+//         return res.status(400).json({
+//           success: false,
+//           message: "ownerId is required for individual user",
+//         });
+//       }
+//       filter.ownerId = ownerId;
+//       console.log("Filtering by ownerId:", ownerId);
+//     }
 
-    // const templates = await InterviewTemplate.find(filter).populate('rounds.interviewers');
+//     // const templates = await InterviewTemplate.find(filter).populate('rounds.interviewers');
 
-    // Only populate firstName and lastName of interviewers
-    // Populate only firstName and lastName for interviewers
-    const templates = await InterviewTemplate.find(filter).populate({
-      path: "rounds.interviewers",
-      model: "Contacts",
-      select: "firstName lastName email",
-      // select: "firstName lastName _id", // limit fields
-    // v1.0.0 <-------------------------------------------------------------------------
-    }).sort({ _id: -1 }); // _id in MongoDB roughly reflects creation order
-    // v1.0.0 ------------------------------------------------------------------------->
+//     // Only populate firstName and lastName of interviewers
+//     // Populate only firstName and lastName for interviewers
+//     const templates = await InterviewTemplate.find(filter).populate({
+//       path: "rounds.interviewers",
+//       model: "Contacts",
+//       select: "firstName lastName email",
+//       // select: "firstName lastName _id", // limit fields
+//     // v1.0.0 <-------------------------------------------------------------------------
+//     }).sort({ _id: -1 }); // _id in MongoDB roughly reflects creation order
+//     // v1.0.0 ------------------------------------------------------------------------->
 
 
-    // Transform output: map interviewers to a single "name" field
-    const transformedTemplates = templates.map((template) => {
-      const templateObj = template.toObject();
-      // templateObj.rounds = templateObj.rounds.map((round) => {
-      //   if (Array.isArray(round.interviewers)) {
-      //     round.interviewers = round.interviewers.map((interviewer) => ({
-      //       _id: interviewer._id,
-      //       name: `${interviewer.firstName} ${interviewer.lastName}`.trim(),
-      //     }));
-      //   }
-      //   return round;
-      // });
+//     // Transform output: map interviewers to a single "name" field
+//     const transformedTemplates = templates.map((template) => {
+//       const templateObj = template.toObject();
+//       // templateObj.rounds = templateObj.rounds.map((round) => {
+//       //   if (Array.isArray(round.interviewers)) {
+//       //     round.interviewers = round.interviewers.map((interviewer) => ({
+//       //       _id: interviewer._id,
+//       //       name: `${interviewer.firstName} ${interviewer.lastName}`.trim(),
+//       //     }));
+//       //   }
+//       //   return round;
+//       // });
 
-      return templateObj;
-    });
+//       return templateObj;
+//     });
 
-    return res.status(200).json({
-      success: true,
-      data: transformedTemplates,
-    });
-  } catch (error) {
-    console.error(
-      "Error fetching interview templates:",
-      error.message,
-      error.stack
-    );
-    return res.status(500).json({
-      success: false,
-      message: "Server error. Please try again later.",
-      error: error.message,
-    });
-  }
-};
+//     return res.status(200).json({
+//       success: true,
+//       data: transformedTemplates,
+//     });
+//   } catch (error) {
+//     console.error(
+//       "Error fetching interview templates:",
+//       error.message,
+//       error.stack
+//     );
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error. Please try again later.",
+//       error: error.message,
+//     });
+//   }
+// };
 
 // Get template by ID
 // exports.getTemplateById = async (req, res) => {
