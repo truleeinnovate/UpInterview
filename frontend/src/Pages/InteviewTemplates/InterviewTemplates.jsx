@@ -312,36 +312,60 @@ const InterviewTemplates = () => {
     if (!str) return "";
     return str?.charAt(0)?.toUpperCase() + str?.slice(1);
   };
+  const formatOptions = [
+    { label: "Online / Virtual", value: "online" },
+    { label: "Face to Face / Onsite", value: "offline" },
+    { label: "Hybrid (Online + Offline)", value: "hybrid" },
+  ];
 
   const tableColumns = [
+    // {
+    //   key: "interviewTemplateCode",
+    //   header: "Template ID",
+    //   render: (value, row) => (
+    //     <div
+    //       className="text-sm font-medium text-custom-blue cursor-pointer"
+    //       onClick={() => handleView(row)}
+    //     >
+    //       {value || "N/A"}
+    //     </div>
+    //   ),
+    // },
     {
-      key: "interviewTemplateCode",
-      header: "Template ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => handleView(row)}
-        >
-          {value || "N/A"}
-        </div>
-      ),
-    },
-    {
-      key: "templateName",
-      header: "Template Name",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => handleView(row)}
-        >
-          {value.charAt(0).toUpperCase() + value.slice(1) || "N/A"}
-        </div>
-      ),
+      key: "title",
+      header: "Title",
+      render: (value, row) => {
+        const formattedValue = value
+          ? value.charAt(0).toUpperCase() + value.slice(1)
+          : "N/A";
+    
+        return (
+          <div
+            className="text-sm font-medium text-custom-blue cursor-pointer"
+            onClick={() => handleView(row)}
+          >
+            {formattedValue}
+          </div>
+        );
+      },
     },
     {
       key: "rounds",
       header: "Rounds",
       render: (value) => value?.length || 0,
+    },
+    {
+      key: "bestFor",
+      header: "Best For",
+      render: (value) => value || "N/A",
+    },
+    {
+      key: "format",
+      header: "Format",
+      render: (value) => {
+        const option = formatOptions.find((opt) => opt.value === value);
+        return option ? option.label : "N/A";
+      },
     },
     {
       key: "status",

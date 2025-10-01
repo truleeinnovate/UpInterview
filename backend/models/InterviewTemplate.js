@@ -7,7 +7,7 @@ const InterviewTemplateSchema = new mongoose.Schema(
     // <------------------------------- v1.0.0 
     interviewTemplateCode: { type: String },
     // ------------------------------ v1.0.0 >
-    templateName: { type: String, required: true }, // Template title
+    title: { type: String, required: true }, // Template title
     name: { type: String, required: true }, // Template name
     description: { type: String }, // Template purpose
     bestFor: { type: String, maxlength: 50, required: true }, // Best for description, max 50 chars
