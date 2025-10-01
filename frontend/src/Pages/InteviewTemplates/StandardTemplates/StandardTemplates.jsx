@@ -2,11 +2,13 @@
 
 import React, { useState, useRef, useMemo } from "react";
 import StandardTemplateTableView from "./StandardTemplateTableView";
-import StandardTemplateKanbanView from "./StandardTemplateKanbanView.jsx";
+import StandardTemplateKanbanView from "../KanbanView.jsx";
 import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup";
 import { useInterviewTemplates } from "../../../apiHooks/useInterviewTemplates.js";
+import { usePermissions } from "../../../Context/PermissionsContext";
+import { useNavigate } from "react-router-dom";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -31,6 +33,8 @@ class ErrorBoundary extends React.Component {
 
 const StandardTemplates = () => {
   const { templatesData, isLoading } = useInterviewTemplates();
+  const { effectivePermissions } = usePermissions();
+  const navigate = useNavigate();
 
   // Transform API data to match the expected structure
   const normalizedTemplates = useMemo(() => {
@@ -45,8 +49,8 @@ const StandardTemplates = () => {
         rounds: Array.isArray(template.rounds)
           ? template.rounds
           : Array.isArray(template.sequence)
-          ? template.sequence
-          : [{ roundTitle: "Unknown round" }],
+            ? template.sequence
+            : [{ roundTitle: "Unknown round" }],
         bestFor: template.bestFor || "General roles",
         format: template.format || "Unknown format",
         type: template.type || "standard",
@@ -204,10 +208,10 @@ const StandardTemplates = () => {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.rounds.min !== "" ||
-        filters.rounds.max !== "" ||
-        filters.modifiedDate !== "" ||
-        filters.createdDate !== ""
+      filters.rounds.min !== "" ||
+      filters.rounds.max !== "" ||
+      filters.modifiedDate !== "" ||
+      filters.createdDate !== ""
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -228,6 +232,11 @@ const StandardTemplates = () => {
     setIsFilterActive(false);
     setFilterPopupOpen(false);
     setCurrentPage(0);
+  };
+  const handleView = (template) => {
+    if (effectivePermissions.InterviewTemplates?.View) {
+      navigate(`/interview-templates/${template._id}`);
+    }
   };
 
   return (
@@ -375,7 +384,12 @@ const StandardTemplates = () => {
         ) : (
           <div>
             <ErrorBoundary>
-              <StandardTemplateKanbanView templatesData={paginatedTemplates} />
+              <StandardTemplateKanbanView templates={paginatedTemplates}
+                loading={isLoading}
+                effectivePermissions={effectivePermissions}
+                onView={handleView}
+                // onEdit={handleEdit}
+                 />
             </ErrorBoundary>
           </div>
         )}
