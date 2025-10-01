@@ -1,10 +1,18 @@
-import { motion } from 'framer-motion';
-import { Calendar, Layers } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { FaEye, FaPencilAlt } from 'react-icons/fa';
-import { formatDateTime } from '../../utils/dateFormatter';
+// v1.0.0 - Ashok - Improved responsiveness
 
-const KanbanView = ({ templates, loading = false, effectivePermissions, onView, onEdit }) => {
+import { motion } from "framer-motion";
+import { Calendar, Layers } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { FaEye, FaPencilAlt } from "react-icons/fa";
+import { formatDateTime } from "../../utils/dateFormatter";
+
+const KanbanView = ({
+  templates,
+  loading = false,
+  effectivePermissions,
+  onView,
+  onEdit,
+}) => {
   const navigate = useNavigate();
 
   console.log("templates--", templates);
@@ -36,7 +44,7 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
 
   if (loading) {
     return (
-      <motion.div 
+      <motion.div
         className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -46,7 +54,9 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
           <div className="h-8 w-1/3 bg-gray-200 skeleton-animation rounded"></div>
           <div className="h-8 w-24 bg-gray-200 skeleton-animation rounded"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+        {/* v1.0.0 <-------------------------------------------------------------------------------------------------- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5 pb-20">
+          {/* v1.0.0 --------------------------------------------------------------------------------------------------> */}
           {[...Array(6)].map((_, index) => (
             <motion.div
               key={index}
@@ -93,30 +103,34 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-y-auto pb-10"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <motion.div 
+      <motion.div
         className="flex items-center justify-between mb-6"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <h3 className="text-xl font-semibold text-gray-800">All Interview Templates</h3>
+        <h3 className="text-xl font-semibold text-gray-800">
+          All Interview Templates
+        </h3>
         <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
-          {templates.length} {templates.length <= 1 ? 'Template' : 'Templates'}
+          {templates.length} {templates.length <= 1 ? "Template" : "Templates"}
         </span>
       </motion.div>
       {templates.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-5">
+        // v1.0.0 <--------------------------------------------------------------------------------------------------
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5 pb-20">
+          {/* // v1.0.0 --------------------------------------------------------------------------------------------------> */}
           {templates.map((template, index) => (
             <motion.div
               key={template._id}
               className={`bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full ${
-                index >= templates.length - 5 ? 'mb-10' : ''
+                index >= templates.length - 5 ? "mb-10" : ""
               }`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -127,7 +141,10 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
               <div className="flex justify-between items-start mb-4 gap-2">
                 <motion.div
                   className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => effectivePermissions.InterviewTemplates?.View && onView(template)}
+                  onClick={() =>
+                    effectivePermissions.InterviewTemplates?.View &&
+                    onView(template)
+                  }
                   whileHover={{ x: 2 }}
                 >
                   <h4 className="text-xl font-medium text-gray-900 group-hover:text-custom-blue transition-colors duration-200 truncate">
@@ -160,58 +177,67 @@ const KanbanView = ({ templates, loading = false, effectivePermissions, onView, 
                       <FaPencilAlt className="w-4 h-4" />
                     </motion.button>
                   )}
-                  
                 </div>
               </div>
               <div className="mt-auto">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <motion.div 
+                    <motion.div
                       className="flex items-center gap-2"
                       whileHover={{ scale: 1.05 }}
                     >
                       <Layers className="h-4 w-4 text-custom-blue" />
-                      <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{template.rounds?.length || 0} {template.rounds?.length <= 1 ? 'Round' : 'Rounds'}</span>
+                      <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                        {template.rounds?.length || 0}{" "}
+                        {template.rounds?.length <= 1 ? "Round" : "Rounds"}
+                      </span>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="flex items-center gap-2"
                       whileHover={{ scale: 1.05 }}
                     >
                       <Calendar className="h-4 w-4 text-custom-blue" />
-                      <span className="text-sm font-medium text-gray-900 whitespace-nowrap">{formatDateTime(template.updatedAt)}</span>
+                      <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                        {formatDateTime(template.updatedAt)}
+                      </span>
                     </motion.div>
                   </div>
-                  <motion.span 
+                  <motion.span
                     className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded text-sm font-medium ${
-                      template.status === 'active' 
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' 
-                        : template.status === 'draft' 
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200/60' 
-                        : 'bg-slate-50 text-slate-700 border border-slate-200/60'
+                      template.status === "active"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                        : template.status === "draft"
+                        ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+                        : "bg-slate-50 text-slate-700 border border-slate-200/60"
                     }`}
                     whileHover={{ scale: 1.05 }}
                   >
-                    {template.status ? template.status.charAt(0).toUpperCase() + template.status.slice(1) : 'Active'}
+                    {template.status
+                      ? template.status.charAt(0).toUpperCase() +
+                        template.status.slice(1)
+                      : "Active"}
                   </motion.span>
                 </div>
                 {template.rounds?.length > 0 && (
-                  <motion.div 
+                  <motion.div
                     className="mt-4 space-y-2"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
                     {template.rounds?.slice(0, 2).map((round, index) => (
-                      <motion.div 
-                        key={index} 
+                      <motion.div
+                        key={index}
                         className="bg-gray-50 rounded-lg px-3 py-2 text-sm"
                         whileHover={{ x: 2 }}
                       >
-                        <span className="font-medium text-gray-900">{round.roundTitle}</span>
+                        <span className="font-medium text-gray-900">
+                          {round.roundTitle}
+                        </span>
                       </motion.div>
                     ))}
                     {template.rounds?.length > 2 && (
-                      <motion.div 
+                      <motion.div
                         className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-center text-gray-500"
                         whileHover={{ x: 2 }}
                       >
