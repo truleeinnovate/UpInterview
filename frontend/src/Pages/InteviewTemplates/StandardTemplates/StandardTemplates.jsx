@@ -1,6 +1,8 @@
+// v1.0.0 - Ashok - removed loading in this
+
 import React, { useState, useRef, useMemo } from "react";
 import StandardTemplateTableView from "./StandardTemplateTableView";
-import StandardTemplateKanbanView from "./StandardTemplateKanbanView";
+import StandardTemplateKanbanView from "./StandardTemplateKanbanView.jsx";
 import Toolbar from "../../../Components/Shared/Toolbar/Toolbar";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup";
@@ -227,10 +229,6 @@ const StandardTemplates = () => {
     setFilterPopupOpen(false);
     setCurrentPage(0);
   };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <>
