@@ -1375,7 +1375,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       </div>
                       {/* //v1.0.5 Ranjith <-----------------------------------> */}
 
-                      <DropdownWithSearchField
+                      {/* <DropdownWithSearchField
                         value={formData.template?._id || ""}
                         options={templateOptions}
                         onChange={(e) => {
@@ -1393,7 +1393,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         name="template"
                         required={false}
                         loading={isTemplatesFetching}
-                      />
+                      /> */}
                     </div>
                     {/* v1.0.2 ---------------------------------------------------> */}
                     <DescriptionField

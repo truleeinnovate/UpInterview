@@ -14,6 +14,7 @@ function AssessmentResultView({
   toggleStates,
   toggleArrow1,
   isFullscreen,
+  mode,
   assessmentQuestions, // assessmentQuestions come from AssessmentViewDetails.jsx
 }) {
   // <---------------------- v1.0.0
@@ -83,6 +84,7 @@ function AssessmentResultView({
     >
       {/* v1.0.2 ------------------------------------------------------------> */}
       {/* Back Button */}
+      {mode !== "interviewMode" && (
       <div className={`${isFullscreen ? "mb-2" : "mb-4"} flex items-center`}>
         <button
           onClick={onBack}
@@ -92,6 +94,7 @@ function AssessmentResultView({
           Back to Results
         </button>
       </div>
+      )}
 
       {/* Main Content */}
       {/* v1.0.2 <--------------------------------------------------------------- */}

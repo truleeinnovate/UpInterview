@@ -8,6 +8,7 @@ import RoundCard from "./RoundCard";
 import { Button } from "../../CommonCode-AllTabs/ui/button";
 import { Edit, ChevronDown, ChevronUp } from "lucide-react";
 import { Calendar, XCircle } from 'lucide-react';
+import { useAssessments } from "../../../../../apiHooks/useAssessments";
 
 const VerticalRoundsView = ({
   rounds,
@@ -16,8 +17,9 @@ const VerticalRoundsView = ({
   onEditRound,
   onInitiateAction
 }) => {
-  console.log('Received rounds:', rounds);
-  console.log('onInitiateAction prop:', onInitiateAction);
+  // console.log('Received rounds:', rounds);
+  // console.log('onInitiateAction prop:', onInitiateAction);
+    const {useScheduledAssessments } = useAssessments();
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
@@ -68,6 +70,46 @@ const VerticalRoundsView = ({
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
   // v1.0.0 ---------------------------------------------------------->
+  const [candidateAssessment, setCandidateAssessment] = useState(null);
+  const [currentScheduledAssessment, setCurrentScheduledAssessment] = useState(null);
+
+
+  // Assessment round status handling
+  const getAssessmentRoundStatus = (round) => {
+    if (round.roundTitle === "Assessment" && candidateAssessment) {
+      return candidateAssessment.status || 'Pending';
+    }
+    return round?.status;
+  };
+
+
+  // 🔑 Hook to fetch scheduled assessments
+  const { data: scheduledAssessments = [] } = useScheduledAssessments(
+    sortedRounds.some(r => r.roundTitle === "Assessment") 
+      ? sortedRounds.find(r => r.roundTitle === "Assessment")?.assessmentId 
+      : null
+  );
+
+  // 🔑 Whenever rounds/assessments change, extract candidate-specific data
+  useEffect(() => {
+    sortedRounds.forEach((round) => {
+      if (round.roundTitle === "Assessment" && round.scheduleAssessmentId && scheduledAssessments.length > 0) {
+        const filteredAssessment = scheduledAssessments.find(
+          assessment => assessment._id === round.scheduleAssessmentId
+        );
+        const candidateData = filteredAssessment?.candidates?.find(
+          candidate => candidate.candidateId?._id === interviewData?.candidateId?._id
+        );
+
+        if (filteredAssessment) {
+          setCurrentScheduledAssessment(filteredAssessment);
+        }
+        if (candidateData) {
+          setCandidateAssessment(candidateData);
+        }
+      }
+    });
+  }, [scheduledAssessments, sortedRounds, interviewData]);
 
   function getStatusBadgeColor(status) {
     switch (status) {
@@ -96,7 +138,11 @@ const VerticalRoundsView = ({
 
   return (
     <div className="space-y-4">
-      {sortedRounds.map((round) => (
+      {sortedRounds.map((round) => {
+         const roundStatus = round.roundTitle === "Assessment" 
+         ? getAssessmentRoundStatus(round)
+         : round?.status;
+      return (
         <div
           key={round._id}
           className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
@@ -117,7 +163,7 @@ const VerticalRoundsView = ({
                     {round?.roundTitle}
                   </h3>
                   <span className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(round?.status)}`}>
-                    {capitalizeFirstLetter(round?.status)}
+                    {capitalizeFirstLetter(roundStatus)}
                   </span>
                 </div>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
@@ -158,7 +204,9 @@ const VerticalRoundsView = ({
             </div>
           )}
         </div>
-      ))}
+      )
+    }
+      )}
     </div>
   );
 };
