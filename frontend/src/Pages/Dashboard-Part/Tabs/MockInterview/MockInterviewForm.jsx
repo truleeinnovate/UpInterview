@@ -37,6 +37,7 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 import InputField from "../../../../Components/FormFields/InputField";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
+import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField.jsx";
 
 // v1.0.1 ---------------------------------------------------------------->
 
@@ -693,6 +694,9 @@ const MockSchedulelater = () => {
   // };
 
   const handleNext = () => {
+    // Show skills validation when next is attempted
+    setShowSkillValidation(true);
+    
     const { formIsValid, newErrors } = validatePage1(formData, entries);
     setErrors(newErrors);
     // v1.0.1 <----------------------------------------------------------------
@@ -898,7 +902,7 @@ const MockSchedulelater = () => {
                         onMenuOpen={loadTechnologies}
                         loading={isTechnologiesFetching}
                       />
-                      <InputField
+                      <IncreaseAndDecreaseField
                         inputRef={fieldRefs.currentExperience}
                         type="number"
                         name="currentExperience"
