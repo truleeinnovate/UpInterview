@@ -145,7 +145,7 @@ const UserInvoiceDetails = () => {
                 {/* Changed from items-center to items-start */}
                 <span className="text-gray-700">Total Amount</span>
                 <p className="text-black font-medium">
-                  $ {invoiceData?.amount?.paid || 0}
+                ₹ {invoiceData?.amount?.paid || 0}
                 </p>
               </div>
             </div>

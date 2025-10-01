@@ -58,6 +58,7 @@ function AssessmentsTab({ assessment }) {
     useScheduledAssessments(assessment?._id);
   // ------------------------------v1.0.3 >
 
+  console.log("scheduledAssessments", scheduledAssessments);
   // Check if assessment has sections
   useEffect(() => {
     const checkAssessmentSections = async () => {

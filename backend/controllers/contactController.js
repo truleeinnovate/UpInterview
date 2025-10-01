@@ -433,7 +433,7 @@ const updateContactsDetails = async (req, res) => {
         }
 
         const contactId = req.params.id;
-        const { availability, yearsOfExperience, ...contactData } = req.body;
+        const { availability, ...contactData } = req.body;
 
         console.log("Request body:", req.body);
         console.log("Years of experience from request:", yearsOfExperience);
@@ -472,7 +472,7 @@ const updateContactsDetails = async (req, res) => {
             });
 
             // Set visibility based on years of experience if not explicitly set
-            const expYears = parseInt(yearsOfExperience || contactData.yearsOfExperience || 0, 10);
+            const expYears = parseInt(contactData.yearsOfExperience || 0, 10);
 
             const showJuniorLevel = expYears > 0;
             const showMidLevel = expYears >= 4;

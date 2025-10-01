@@ -51,13 +51,18 @@ export const selectBaseStyles = (hasError) => ({
     ...base,
     fontSize: "0.875rem",
     backgroundColor: state.isSelected
-      ? "#217989"
+      ? "#217989" // custom-blue for selected
       : state.isFocused
-      ? "#F0F9FB"
+      ? "rgba(33, 121, 137, 0.1)" // custom-blue/10 for hover
       : base.backgroundColor,
     color: state.isSelected ? "#ffffff" : base.color,
     fontWeight: state.data?.isCustomOption ? "600" : base.fontWeight,
     fontStyle: state.data?.isCustomOption ? "italic" : base.fontStyle,
+    "&:active": {
+      backgroundColor: state.isSelected
+        ? "#217989" // keep custom-blue if already selected
+        : "rgba(33, 121, 137, 0.5)", // custom-blue/50 for click
+    },
   }),
 });
 

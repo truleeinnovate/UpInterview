@@ -24,6 +24,7 @@ import {
   User,
   ExternalLink,
   Share2,
+  BarChart3,
 } from "lucide-react";
 
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
@@ -50,6 +51,7 @@ import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useInterviewerDetails } from "../../../../../utils/CommonFunctionRoundTemplates";
 import { notify } from "../../../../../services/toastService";
+import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
 
 const RoundCard = ({
   round,
@@ -61,18 +63,18 @@ const RoundCard = ({
   isExpanded,
   onInitiateAction,
 }) => {
-  console.log("round in the roound card page: ", round);
+  // console.log("round in the roound card page: ", round);
   // const {
   //   assessmentData,
-  //   sectionQuestions,
-  //   fetchQuestionsForAssessment,
-  //   questionsLoading,
-  //   questionsError,
-  //   setSectionQuestions,
+  //   // sectionQuestions,
+  //   // fetchQuestionsForAssessment,
+  //   // questionsLoading,
+  //   // questionsError,
+  //   // setSectionQuestions,
   // } = useCustomContext();
-  const { deleteRoundMutation, saveInterviewRound, updateInterviewRound } =
+  const { deleteRoundMutation, updateInterviewRound } =
     useInterviews();
-  const { fetchAssessmentQuestions } = useAssessments();
+  const { useScheduledAssessments, fetchAssessmentQuestions, fetchAssessmentResults, assessmentData } = useAssessments();
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [showRejectionModal, setShowRejectionModal] = useState(false);
@@ -104,6 +106,7 @@ const RoundCard = ({
   //  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
   const [showAssessmentCard, setShowAssessmentCard] = useState(false);
 
+  
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
@@ -117,6 +120,7 @@ const RoundCard = ({
       // setSectionQuestions(data)
       setQuestionsLoading(true);
       fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+        // console.log( "Assessment data", data);
         if (data) {
           setQuestionsLoading(false);
           setSectionQuestions(data?.sections);
@@ -136,10 +140,7 @@ const RoundCard = ({
     }
   }, [isExpanded, round?.assessmentId]);
 
-  // Remove console.log to prevent loops
-  // console.log("round", round);
-  console.log("interviewData", interviewData);
-  console.log("showAssessmentCard", showAssessmentCard);
+
 
   useEffect(() => {
     if (isExpanded) {
@@ -189,29 +190,6 @@ const RoundCard = ({
     setShowQuestions(!showQuestions);
   };
 
-  // const fetchQuestionsForSection = async (sectionId) => {
-  //   try {
-  //     const response = assessmentData.find(pos => pos._id === round.assessmentId)
-  //     // const response = await axios.get(`${config.REACT_APP_API_URL}/assessments/${assessmentTemplate.assessmentId}`);
-  //     const assessment = response;
-
-  //     const section = assessment.Sections.find(s => s._id === sectionId);
-  //     if (!section) {
-  //       throw new Error('Section not found');
-  //     }
-
-  //     setSectionQuestions(prev => ({
-  //       ...prev,
-  //       [sectionId]: section.Questions
-  //     }));
-  //   } catch (error) {
-  //     console.error('Error fetching questions:', error);
-  //     setSectionQuestions(prev => ({
-  //       ...prev,
-  //       [sectionId]: 'error'
-  //     }));
-  //   }
-  // };
 
   const interview = interviewData;
   const isInterviewCompleted =
@@ -229,6 +207,7 @@ const RoundCard = ({
       minute: "2-digit",
     });
   };
+
   const handleStatusChange = async (newStatus, reason = null) => {
     const roundData = {
       status: newStatus,
@@ -307,18 +286,62 @@ const RoundCard = ({
     // If scheduled within 30 minutes of creation, consider it instant
     return scheduledTime - creationTime < 30 * 60 * 1000;
   };
-  console.log("round", round);
 
-  console.log("sectionQuestions", sectionQuestions);
 
-  const handleShareClick = async (round) => {
-    console.log("round", round);
+  // New state for candidate assessment data
+  const [candidateAssessment, setCandidateAssessment] = useState(null);
+  const [currentScheduledAssessment, setCurrentScheduledAssessment] = useState(null);
+
+  // Always call hooks unconditionally at the top level
+  const { data: scheduledAssessments = [] } = useScheduledAssessments(
+    round.roundTitle === "Assessment" ? round?.assessmentId : null
+  );
+
+  // Filter scheduled assessments for Assessment rounds
+  useEffect(() => {
+    if (round.roundTitle === "Assessment" && round.scheduleAssessmentId && scheduledAssessments.length > 0) {
+      // Find the specific scheduled assessment
+      const filteredAssessment = scheduledAssessments.find(
+        assessment => assessment._id === round.scheduleAssessmentId
+      );
+      // console.log("filteredAssessment", filteredAssessment);
+      // Find the candidate-specific data
+      const candidateData = filteredAssessment?.candidates?.find(
+        candidate => candidate.candidateId?._id === interviewData?.candidateId?._id
+      );
+
+      if (filteredAssessment) {
+        setCurrentScheduledAssessment(filteredAssessment);
+      }
+      if (candidateData) {
+        setCandidateAssessment(candidateData);
+      }
+
+      console.log("Filtered scheduled assessment:", filteredAssessment);
+      console.log("Candidate assessment data:", candidateData);
+    }
+  }, [scheduledAssessments, round, interviewData]);
+
+  // console.log("candidateAssessment", candidateAssessment);
+  // console.log("currentScheduledAssessment", currentScheduledAssessment);
+
+  //  Resend Mail for assessment by Ranjith
+  const handleResendClick = async (round) => {
+    // console.log("round", round);
     if (!round?.assessmentId) {
       throw new Error("Unable to determine assessment ID for resend operation");
     }
+    // console.log("interviewData", interviewData);
+
+    // console.log("round", {
+    //   candidateAssessmentIds: [interviewData?.candidateId?._id],
+    //   userId,
+    //   organizationId: orgId,
+    //   assessmentId: round?.assessmentId
+    // });
 
     // Use the same API endpoint for both single and multiple candidates
-    const response = await axios.post(
+    let response = await axios.post(
       `${config.REACT_APP_API_URL}/emails/resend-link`,
       {
         // candidateAssessmentIds: selectedCandidates,
@@ -327,24 +350,361 @@ const RoundCard = ({
         // assessmentId,
 
         // candidateAssessmentId: interviewData?.candidateId,
-        candidateAssessmentIds: [interviewData?.candidateId?._id],
+        candidateAssessmentIds: [candidateAssessment?._id],
         userId,
         organizationId: orgId,
         assessmentId: round?.assessmentId,
       }
     );
+    // console.log("response", response);
+
+
 
     if (response?.data?.success) {
+
+      let roundData = {
+        ...round,
+        scheduleAssessmentId: response?.data?.scheduledAssessmentId,
+      };
+
+
+      let payload = {
+        interviewId: interview._id,
+        round: { ...roundData },
+        roundId: round._id,
+        isEditing: true,
+      };
+
       // React Query will handle data refresh automatically
       // No need to manually fetch data
-      notify.success("Assessment link resent successfully");
+
+
+
+      response = await updateInterviewRound(payload);
+      if (response.status === "ok") {
+        notify.success("Assessment link resend successfully");
+      }
+
     } else {
       notify.error(response?.message || "Failed to schedule assessment");
     }
     // setIsLoading(false);
   };
 
+  const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
+
+  //  Share Mail for assessment by Ranjith
+  // Share Mail for assessment by Ranjith - UPDATED VERSION
+  const handleShareClick = async (round) => {
+    if (!round?.assessmentId) {
+      throw new Error("Unable to determine assessment ID for share operation");
+    }
+
+    console.log("Sharing assessment for round:", round);
+    console.log("Candidate data:", interviewData?.candidateId);
+
+    try {
+      // Calculate link expiry days from assessment data
+      let linkExpiryDays = null;
+      if (sectionQuestions?.ExpiryDate) {
+        const expiryDate = new Date(sectionQuestions?.ExpiryDate);
+        const today = new Date();
+        const diffTime = expiryDate.getTime() - today.getTime();
+        linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+
+      // Use the shareAssessmentAPI function to create and share the assessment link
+      const result = await shareAssessmentAPI({
+        assessmentId: round?.assessmentId,
+        selectedCandidates: [interviewData?.candidateId],
+        linkExpiryDays,
+        organizationId: orgId,
+        queryClient,
+      });
+
+      console.log("Share assessment result:", result);
+
+      if (result.success) {
+        // Update the round with the scheduled assessment ID
+        const roundData = {
+          ...round,
+          status: "Scheduled", // Update status to Scheduled
+          scheduleAssessmentId: result?.data?.scheduledAssessmentId, // Use the ID from share result
+        };
+
+        const payload = {
+          interviewId: interview._id,
+          round: { ...roundData },
+          roundId: round._id,
+          isEditing: true,
+        };
+
+        // Update the round in the database
+        const response = await updateInterviewRound(payload);
+        console.log("Round update response:", response);
+
+        if (response?.status === "ok") {
+          notify.success("Assessment link shared successfully!");
+
+          // Optional: Refresh the data to show updated status
+          queryClient.invalidateQueries(['interview', interview._id]);
+        } else {
+          notify.error("Failed to update round status");
+        }
+      } else {
+        notify.error(result.message || "Failed to share assessment link");
+      }
+    } catch (error) {
+      console.error("Error sharing assessment:", error);
+      notify.error("An error occurred while sharing the assessment");
+    }
+  };
+
+
+  console.log("candidateAssessment", candidateAssessment);
+//  permissions for hide the share and result page view
+  const shouldShowResultButton = () => {
+    if (round.roundTitle !== "Assessment") return true;
+    
+    // For assessment rounds, check candidate assessment status
+    if (candidateAssessment) {
+      const hideStatuses = ['completed', 'cancelled','failed','pass','extended',"expired"];
+      return !hideStatuses.includes(candidateAssessment.status);
+    }
+    
+    return true;
+  };
+
+
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [assessmentQuestions, setAssessmentQuestions] = useState([]);
+  const [toggleStates, setToggleStates] = useState([]);
+  const [results, setResults] = useState([]);
+
+  const toggleArrow1 = (index) => {
+    setToggleStates((prevState) => {
+      const newState = [...prevState];
+      newState[index] = !newState[index];
+      return newState;
+    });
+  };
+
+  useEffect(() => {
+    const getResults = async () => {
+      const { data, error } = await fetchAssessmentResults(round?.assessmentId);
+
+      if (!error) {
+        setResults(data);
+      } else {
+        console.error("Error loading results:", error);
+      }
+    };
+
+    if (round?.assessmentId) {
+      getResults();
+    }
+  }, []);
+
+
+
+  
+
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [assessment, setAssessment] = useState(null);
+
+  // const [currentScheduledAssessment, setCurrentScheduledAssessment] = useState(null);
+
+  // Update the handleResultClick function
+  // const handleResultClick = async (round) => {
+  //   setShowResultModal(true);
+
+  //   // Set the current scheduled assessment data
+  //   if (currentScheduledAssessment) {
+  //     setCurrentScheduledAssessment(currentScheduledAssessment);
+  //   }
+
+  //   const candidateData = interviewData?.candidateId;
+
+
+
+  //     // Load assessment data using the useEffect logic you provided
+  //     const loadData = async () => {
+  //       const foundAssessment = assessmentData?.find((a) => a._id === round?.assessmentId);
+  //       if (foundAssessment) {
+  //         setAssessment(foundAssessment);
+  //         setIsModalOpen(true);
+  //       }
+  //     };
+
+  //     await loadData();
+
+  //   // Fetch assessment questions if needed
+  //   if (round?.assessmentId) {
+  //     fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+  //       if (data) {
+  //         setAssessmentQuestions(data);
+  //         setToggleStates((prev) => {
+  //           if (prev.length !== data.sections.length) {
+  //             return new Array(data.sections.length)
+  //               .fill(false)
+  //               .map((_, index) => index === 0);
+  //           }
+  //           return prev;
+  //         });
+  //       } else {
+  //         console.error("Error fetching assessment questions:", error);
+  //       }
+  //     });
+  //   }
+  // }
+
+  const handleResultClick = async (round) => {
+    setShowResultModal(true);
+
+    let candidateResultData = null;
+    let scheduleData = null;
+
+    if (scheduledAssessments.length > 0 && round.scheduleAssessmentId) {
+      // Find the specific scheduled assessment
+      scheduleData = scheduledAssessments.find(
+        assessment => assessment._id === round.scheduleAssessmentId
+      );
+
+      // Find the candidate-specific data
+      if (scheduleData && scheduleData.candidates) {
+        const candidateAssessment = scheduleData.candidates.find(
+          candidate => candidate.candidateId?._id === interviewData?.candidateId?._id
+        );
+
+
+        if (candidateAssessment) {
+          // Transform the data to match what ScheduledAssessmentResultView expects
+          candidateResultData = {
+            id: candidateAssessment?._id,
+            name: `${candidateAssessment?.candidateId?.FirstName || ''} ${candidateAssessment?.candidateId?.LastName || ''}`.trim(),
+            email: candidateAssessment?.candidateId?.Email,
+            answeredQuestions: candidateAssessment?.answeredQuestions || 0,
+            totalScore: candidateAssessment?.totalScore || 0,
+            result: candidateAssessment?.status ,
+            // status: candidateAssessment.status,
+            completionDate: candidateAssessment?.completionDate,
+            expiryAt: candidateAssessment?.expiryAt,
+            remainingTime: candidateAssessment?.remainingTime,
+            sections: candidateAssessment?.sections || [],
+            experience:candidateAssessment?.candidateId?.CurrentExperience,
+            // Include the full candidate assessment data for reference
+            candidateAssessment: candidateAssessment
+          };
+        }
+      }
+    }
+
+
+
+    // Set selected candidate and schedule for the result view
+    setSelectedCandidate(candidateResultData);
+    // setSelectedSchedule(scheduleData);
+
+    // Load assessment data
+    const loadData = async () => {
+      const foundAssessment = assessmentData?.find((a) => a._id === round?.assessmentId);
+      if (foundAssessment) {
+        setAssessment(foundAssessment);
+      }
+    };
+
+    await loadData();
+
+    // Fetch assessment questions if needed
+    if (round?.assessmentId) {
+      fetchAssessmentQuestions(round?.assessmentId).then(({ data, error }) => {
+        if (data) {
+          setAssessmentQuestions(data);
+          setToggleStates((prev) => {
+            if (prev.length !== data.sections.length) {
+              return new Array(data.sections.length)
+                .fill(false)
+                .map((_, index) => index === 0);
+            }
+            return prev;
+          });
+        } else {
+          console.error("Error fetching assessment questions:", error);
+        }
+      });
+    }
+  }
+
+
+  // const handleShareClick = async (round) => {
+  //   // console.log("round", round);
+  //   if (!round?.assessmentId) {
+  //     throw new Error("Unable to determine assessment ID for resend operation");
+  //   }
+  //   console.log("interviewData", interviewData);
+
+  //   console.log("round", {
+  //     candidateAssessmentIds: [interviewData?.candidateId?._id],
+  //     userId,
+  //     organizationId: orgId,
+  //     assessmentId: round?.assessmentId
+  //   });
+
+  //   // Use the same API endpoint for both single and multiple candidates
+  //   const response = await axios.post(
+  //     `${config.REACT_APP_API_URL}/emails/resend-link`,
+  //     {
+  //       // candidateAssessmentIds: selectedCandidates,
+  //       // userId,
+  //       // organizationId,
+  //       // assessmentId,
+
+  //       // candidateAssessmentId: interviewData?.candidateId,
+  //       candidateAssessmentIds: [candidateAssessment?._id],
+  //       userId,
+  //       organizationId: orgId,
+  //       assessmentId: round?.assessmentId,
+  //     }
+  //   );
+  //   console.log("response", response);
+
+
+
+  //   if (response?.data?.success) {
+
+  //     const roundData = {
+  //       ...round,
+  //       scheduleAssessmentId: response?.data?.scheduledAssessmentId,
+  //     };
+
+
+  //     const payload =   {
+  //       interviewId: interview._id,
+  //       round: { ...roundData },
+  //       roundId: round._id,
+  //       isEditing: true,
+  //     };
+
+  //     // React Query will handle data refresh automatically
+  //     // No need to manually fetch data
+
+
+
+  //     response = await updateInterviewRound(payload);
+  //     if  (response.status === "ok") {        
+  //       notify.success("Assessment link resend successfully");
+  //     }
+
+  //   } else {
+  //     notify.error(response?.message || "Failed to schedule assessment");
+  //   }
+  //   // setIsLoading(false);
+  // };
+
+
   // <----------------------- v1.0.4
+
+
   const handleActionClick = (action) => {
     setActionInProgress(true);
     if (
@@ -387,6 +747,8 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: false,
+      canResendLink: false,
+      canShareLink: true
     },
     RequestSent: {
       canEdit: true,
@@ -398,6 +760,8 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: false,
+      canResendLink: false,
+      canShareLink: false
     },
     Scheduled: {
       canEdit: false,
@@ -409,6 +773,8 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: false,
+      canShareLink: false,
+      canResendLink: true
     },
     Rescheduled: {
       canEdit: false,
@@ -420,6 +786,8 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
     },
     Completed: {
       canEdit: false,
@@ -431,6 +799,8 @@ const RoundCard = ({
       canReject: true,
       canSelect: true,
       canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
     },
     Cancelled: {
       canEdit: false,
@@ -442,6 +812,8 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
     },
     Rejected: {
       canEdit: false,
@@ -453,6 +825,8 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
     },
     Selected: {
       canEdit: false,
@@ -464,6 +838,8 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
     },
     InComplete: {
       canEdit: false,
@@ -475,6 +851,8 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
     },
     NoShow: {
       canEdit: false,
@@ -486,14 +864,17 @@ const RoundCard = ({
       canReject: false,
       canSelect: false,
       canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
     },
+
   };
 
   // Helper to get permissions for current round status
   const getRoundPermissions = (status) =>
     roundActionPermissions[status] || roundActionPermissions["Draft"];
 
-  console.log("status", round.status);
+  // console.log("status", round.status);
   const permissions = getRoundPermissions(round.status);
 
   // v1.0.4 -------------------------->
@@ -571,7 +952,7 @@ const RoundCard = ({
     //   toast.error(result.message || "Failed to schedule assessment");
     // }
   };
-
+  // console.log("round?.assessmentId", round?.assessmentId);
   return (
     <>
       <div
@@ -586,21 +967,19 @@ const RoundCard = ({
               <nav className="-mb-px flex space-x-4">
                 <button
                   onClick={() => setActiveTab("details")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "details"
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "details"
                       ? "border-custom-blue text-custom-blue"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   Round Details
                 </button>
                 <button
                   onClick={() => setActiveTab("feedback")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "feedback"
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "feedback"
                       ? "border-custom-blue text-custom-blue"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   Feedback
                 </button>
@@ -624,7 +1003,7 @@ const RoundCard = ({
                       </span>
                     )}
                   </div> */}
-                  {console.log("round below", round)}
+                  {/* {console.log("round below", round)} */}
                   {/* {round.dateTime && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-4 w-4 mr-1" />
@@ -905,26 +1284,25 @@ const RoundCard = ({
                                         {/* v1.0.5 --------------------------------> */}
                                         {sectionData?.sectionName
                                           ? sectionData?.sectionName
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                            sectionData?.sectionName.slice(1)
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                          sectionData?.sectionName.slice(1)
                                           : "Unnamed Section"}
                                       </span>
                                       <ChevronUp
                                         // v1.0.5 <----------------------------------------------
-                                        className={`h-4 w-4 transform transition-transform ${
-                                          expandedSections[sectionId]
+                                        className={`h-4 w-4 transform transition-transform ${expandedSections[sectionId]
                                             ? ""
                                             : "rotate-180"
-                                        }`}
-                                        // v1.0.5 ---------------------------------------------->
+                                          }`}
+                                      // v1.0.5 ---------------------------------------------->
                                       />
                                     </button>
 
                                     {expandedSections[sectionId] && (
                                       <div className="mt-4 space-y-3">
                                         {Array.isArray(sectionData.questions) &&
-                                        sectionData.questions.length > 0 ? (
+                                          sectionData.questions.length > 0 ? (
                                           sectionData.questions.map(
                                             (question, idx) => (
                                               <div
@@ -954,86 +1332,84 @@ const RoundCard = ({
                                                     </p>
                                                   </div>
                                                   <ChevronDown
-                                                    className={`w-5 h-5 text-gray-400 transition-transform ${
-                                                      expandedQuestions[
+                                                    className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
                                                         question._id
                                                       ]
                                                         ? "transform rotate-180"
                                                         : ""
-                                                    }`}
+                                                      }`}
                                                   />
                                                 </div>
 
                                                 {expandedQuestions[
                                                   question._id
                                                 ] && (
-                                                  <div className="px-4 py-3">
-                                                    <div className="flex justify-between mb-2">
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Type:
-                                                        </span>
-                                                        <span className="text-sm text-gray-700">
-                                                          {question.snapshot
-                                                            ?.questionType ||
-                                                            "Not specified"}
-                                                        </span>
-                                                      </div>
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Score:
-                                                        </span>
-                                                        <span className="text-sm text-gray-700">
-                                                          {question.snapshot
-                                                            ?.score || "0"}
-                                                        </span>
-                                                      </div>
-                                                    </div>
-
-                                                    {/* Display question options if MCQ */}
-                                                    {question.snapshot
-                                                      ?.questionType ===
-                                                      "MCQ" && (
-                                                      <div className="mt-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Options:
-                                                        </span>
-                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                          {question.snapshot?.options?.map(
-                                                            (
-                                                              option,
-                                                              optIdx
-                                                            ) => (
-                                                              <div
-                                                                key={optIdx}
-                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                className={`text-sm p-2 rounded border ${
-                                                                  option ===
-                                                                  question
-                                                                    .snapshot
-                                                                    .correctAnswer
-                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                    : "bg-gray-50 border-gray-200"
-                                                                }`}
-                                                              >
-                                                                {option}
-                                                                {option ===
-                                                                  question
-                                                                    .snapshot
-                                                                    .correctAnswer && (
-                                                                  <span className="ml-2 text-green-600">
-                                                                    ✓
-                                                                  </span>
-                                                                )}
-                                                              </div>
-                                                            )
-                                                          )}
+                                                    <div className="px-4 py-3">
+                                                      <div className="flex justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                          <span className="text-sm font-medium text-gray-500">
+                                                            Type:
+                                                          </span>
+                                                          <span className="text-sm text-gray-700">
+                                                            {question.snapshot
+                                                              ?.questionType ||
+                                                              "Not specified"}
+                                                          </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                          <span className="text-sm font-medium text-gray-500">
+                                                            Score:
+                                                          </span>
+                                                          <span className="text-sm text-gray-700">
+                                                            {question.snapshot
+                                                              ?.score || "0"}
+                                                          </span>
                                                         </div>
                                                       </div>
-                                                    )}
 
-                                                    {/* Display correct answer */}
-                                                    {/* <div className="mt-2">
+                                                      {/* Display question options if MCQ */}
+                                                      {question.snapshot
+                                                        ?.questionType ===
+                                                        "MCQ" && (
+                                                          <div className="mt-2">
+                                                            <span className="text-sm font-medium text-gray-500">
+                                                              Options:
+                                                            </span>
+                                                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                                              {question.snapshot?.options?.map(
+                                                                (
+                                                                  option,
+                                                                  optIdx
+                                                                ) => (
+                                                                  <div
+                                                                    key={optIdx}
+                                                                    //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                    className={`text-sm p-2 rounded border ${option ===
+                                                                        question
+                                                                          .snapshot
+                                                                          .correctAnswer
+                                                                        ? "bg-green-50 border-green-200 text-green-800"
+                                                                        : "bg-gray-50 border-gray-200"
+                                                                      }`}
+                                                                  >
+                                                                    {option}
+                                                                    {option ===
+                                                                      question
+                                                                        .snapshot
+                                                                        .correctAnswer && (
+                                                                        <span className="ml-2 text-green-600">
+                                                                          ✓
+                                                                        </span>
+                                                                      )}
+                                                                  </div>
+                                                                )
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        )}
+
+                                                      {/* Display correct answer */}
+                                                      {/* <div className="mt-2">
                                                                                    <span className="text-sm font-medium text-gray-500">
                                                                                      Correct Answer:
                                                                                    </span>
@@ -1042,31 +1418,31 @@ const RoundCard = ({
                                                                                    </div>
                                                                                  </div> */}
 
-                                                    {/* Additional question metadata */}
-                                                    <div className="grid grid-cols-2 gap-4 mt-3">
-                                                      <div>
-                                                        <span className="text-xs font-medium text-gray-500">
-                                                          Difficulty:
-                                                        </span>
-                                                        <span className="text-xs text-gray-700 ml-1">
-                                                          {question.snapshot
-                                                            ?.difficultyLevel ||
-                                                            "Not specified"}
-                                                        </span>
-                                                      </div>
-                                                      <div>
-                                                        <span className="text-xs font-medium text-gray-500">
-                                                          Skills:
-                                                        </span>
-                                                        <span className="text-xs text-gray-700 ml-1">
-                                                          {question.snapshot?.skill?.join(
-                                                            ", "
-                                                          ) || "None"}
-                                                        </span>
+                                                      {/* Additional question metadata */}
+                                                      <div className="grid grid-cols-2 gap-4 mt-3">
+                                                        <div>
+                                                          <span className="text-xs font-medium text-gray-500">
+                                                            Difficulty:
+                                                          </span>
+                                                          <span className="text-xs text-gray-700 ml-1">
+                                                            {question.snapshot
+                                                              ?.difficultyLevel ||
+                                                              "Not specified"}
+                                                          </span>
+                                                        </div>
+                                                        <div>
+                                                          <span className="text-xs font-medium text-gray-500">
+                                                            Skills:
+                                                          </span>
+                                                          <span className="text-xs text-gray-700 ml-1">
+                                                            {question.snapshot?.skill?.join(
+                                                              ", "
+                                                            ) || "None"}
+                                                          </span>
+                                                        </div>
                                                       </div>
                                                     </div>
-                                                  </div>
-                                                )}
+                                                  )}
                                               </div>
                                             )
                                           )
@@ -1220,7 +1596,7 @@ const RoundCard = ({
                       </button>
                     )}
                   {/* Cancel */}
-                  {permissions.canCancel && (
+                  {permissions.canCancel && round.roundTitle !== "Assessment" && (
                     <button
                       onClick={() => {
                         setActionInProgress(true);
@@ -1251,7 +1627,7 @@ const RoundCard = ({
                     </button>
                   )}
                   {/* Mark Scheduled */}
-                  {permissions.canMarkScheduled && (
+                  {permissions.canMarkScheduled && round.roundTitle !== "Assessment" && (
                     <button
                       onClick={() => handleActionClick("Scheduled")}
                       className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
@@ -1260,7 +1636,7 @@ const RoundCard = ({
                     </button>
                   )}
                   {/* Complete */}
-                  {permissions.canComplete && (
+                  {permissions.canComplete && round.roundTitle !== "Assessment" && (
                     <button
                       onClick={() => handleActionClick("Completed")}
                       className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
@@ -1299,15 +1675,45 @@ const RoundCard = ({
                       <MessageSquare className="h-4 w-4 mr-1" /> Feedback
                     </button>
                   )}
+
                   {/* Share (always for Assessment) */}
-                  {round.roundTitle === "Assessment" && (
+                  {permissions.canResendLink && round.roundTitle === "Assessment" 
+                  && round?.scheduleAssessmentId 
+                  && shouldShowResultButton()
+                   && (
                     <button
-                      onClick={handleShareClick}
+                      onClick={() => handleResendClick(round)}
+                      // onClick={ handleShareClick}
                       className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
                     >
-                      <Share2 className="h-4 w-4 mr-1" /> Share
+                      <Share2 className="h-4 w-4 mr-1" />Resend Link
                     </button>
                   )}
+
+
+                  {/* Share (always for Assessment) */}
+                  {permissions.canShareLink && round.roundTitle === "Assessment" && !round?.scheduleAssessmentId && (
+                    <button
+                      onClick={() => handleShareClick(round)}
+                      // onClick={ handleShareClick}
+                      className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                    >
+                      <Share2 className="h-4 w-4 mr-1" />Share
+                    </button>
+                  )}
+
+                  {/* Share (always for Assessment) */}
+                  {/* {permissions.canShareLink && round.roundTitle === "  Assessment" &&  !round?.scheduleAssessmentId 
+                  && shouldShowResultButton()
+                  && ( */}
+                  <button
+                    onClick={() => handleResultClick(round)}
+                    // onClick={ handleShareClick}
+                    className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-custom-blue-700 bg-blue-50 hover:bg-blue-100 "
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />Result
+                  </button>
+                  {/* )} */}
                 </div>
               </div>
               {/* v1.0.5 -----------------------------------------------------------------> */}
@@ -1383,6 +1789,51 @@ const RoundCard = ({
           roundId={round.id}
         />
       )}
+
+
+
+      {showResultModal && createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl h-full max-h-[95vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex justify-between items-center p-4  bg-gray-50">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Assessment Results</h3>
+                <p className="text-sm text-gray-600">
+                  {interviewData?.candidateId?.FirstName} {interviewData?.candidateId?.LastName} - {round?.roundTitle}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowResultModal(false)}
+                className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-200"
+              >
+                <XCircle className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-auto p-4">
+
+              <ScheduledAssessmentResultView
+                candidate={selectedCandidate}
+                // schedule={selectedSchedule}
+                assessment={assessment}
+                // onBack={closeResultView}
+                onClose={() => setShowResultModal(false)}
+                toggleStates={toggleStates}
+                toggleArrow1={toggleArrow1}
+                // isFullscreen={isFullscreen}
+                assessmentQuestions={assessmentQuestions}
+                mode="interviewMode"
+              />
+
+
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </>
   );
 };

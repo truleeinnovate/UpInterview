@@ -47,6 +47,7 @@ const InterviewSlideover = ({ mode }) => {
     rounds: [],
     bestFor: "",
     format: "",
+    type: "custom",
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -137,31 +138,48 @@ const InterviewSlideover = ({ mode }) => {
   //     return Object.keys(validationErrors).length === 0;
   //   };
 
-  const handleTitleChange = (e) => {
-    if (isLoading) return;
+// Handler for template title
+const handleTitleChange = (e) => {
+  if (isLoading) return;
 
-    const value = e.target.value;
-    // Less restrictive filtering - allow most characters but still create a safe label
-    // const sanitizedValue = value; // Remove filtering or make it less restrictive
-    // const label = value.trim().replace(/[^a-zA-Z0-9_]/g, '_').replace(/\s+/g, '_');
-    const sanitizedValue = value.replace(/[^a-zA-Z0-9_ ]/g, "");
-    const name = sanitizedValue.trim().replace(/\s+/g, "_");
+  const value = e.target.value;
+  // Allow alphabets, numbers, and spaces only
+  const sanitizedValue = value.replace(/[^a-zA-Z0-9 ]/g, "");
 
-    setNewTemplate((prev) => ({
+  setNewTemplate((prev) => ({
+    ...prev,
+    templateTitle: sanitizedValue,
+  }));
+
+  if (isSubmitted) {
+    setErrors((prev) => ({
       ...prev,
-      templateTitle: sanitizedValue,
-      name,
+      templateTitle: "",
     }));
+  }
+};
 
-    // Clear errors when user starts typing
-    if (isSubmitted) {
-      setErrors((prev) => ({
-        ...prev,
-        templateTitle: "",
-        name: "",
-      }));
-    }
-  };
+// Handler for name
+const handleNameChange = (e) => {
+  if (isLoading) return;
+
+  const value = e.target.value;
+  // Allow alphabets, numbers, and underscores only
+  const sanitizedValue = value.replace(/[^a-zA-Z0-9_]/g, "");
+
+  setNewTemplate((prev) => ({
+    ...prev,
+    name: sanitizedValue,
+  }));
+
+  if (isSubmitted) {
+    setErrors((prev) => ({
+      ...prev,
+      name: "",
+    }));
+  }
+};
+
 
   const handleDescriptionChange = (e) => {
     if (isLoading) return;
@@ -240,7 +258,7 @@ const InterviewSlideover = ({ mode }) => {
 
     try {
       const templateData = {
-        templateName: newTemplate.templateTitle,
+        title: newTemplate.templateTitle,
         name: newTemplate.name,
         description: newTemplate.description,
         status: newTemplate.status,
@@ -351,7 +369,7 @@ const InterviewSlideover = ({ mode }) => {
                   name="name"
                   placeholder="Senior_Frontend_Developer"
                   value={newTemplate.name}
-                  readOnly
+                  onChange={handleNameChange}
                   onFocus={() => handleBlur("name")}
                   error={errors.name}
                   required
@@ -396,9 +414,9 @@ const InterviewSlideover = ({ mode }) => {
                   name="format"
                   value={newTemplate.format}
                   options={[
-                    { label: "Fully Online", value: "fully online" },
-                    { label: "Hybrid", value: "hybrid" },
-                    { label: "Offline", value: "offline" },
+                    { label: "Online / Virtual", value: "online" },
+                    { label: "Face to Face / Onsite", value: "offline" },
+                    { label: "Hybrid (Online + Offline)", value: "hybrid" },
                   ]}
                   onChange={(e) => {
                     setNewTemplate((prev) => ({
