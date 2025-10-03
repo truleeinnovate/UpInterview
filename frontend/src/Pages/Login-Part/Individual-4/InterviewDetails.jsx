@@ -44,11 +44,40 @@ const InterviewDetails = ({
     const [isSkillsMenuOpen, setIsSkillsMenuOpen] = useState(false);
     const skillsMenuRef = useRef(null);
 
-    // Debug selectedSkills changes and initialization
+    // Initialize form data when component mounts or interviewDetailsData changes
     useEffect(() => {
-        console.log('selectedSkills updated:', selectedSkills);
+        console.log('Initializing InterviewDetails with data:', interviewDetailsData);
+        
+        // Initialize rates if they don't exist
+        if (!interviewDetailsData.rates) {
+            setInterviewDetailsData(prev => ({
+                ...prev,
+                rates: {
+                    junior: { usd: 0, inr: 0, isVisible: showJuniorLevel },
+                    mid: { usd: 0, inr: 0, isVisible: showMidLevel },
+                    senior: { usd: 0, inr: 0, isVisible: showSeniorLevel }
+                }
+            }));
+        }
 
-        // Check if we need to initialize selectedSkills from interviewDetailsData
+        // Initialize interview formats if they don't exist
+        if (!interviewDetailsData.interviewFormatWeOffer) {
+            setInterviewDetailsData(prev => ({
+                ...prev,
+                interviewFormatWeOffer: []
+            }));
+        }
+
+        // Initialize previous interview experience if it doesn't exist
+        if (interviewDetailsData.PreviousExperienceConductingInterviews === undefined) {
+            setInterviewDetailsData(prev => ({
+                ...prev,
+                PreviousExperienceConductingInterviews: "",
+                PreviousExperienceConductingInterviewsYears: ""
+            }));
+        }
+
+        // Initialize skills if they exist in interviewDetailsData but not in selectedSkills
         if (interviewDetailsData?.skills?.length > 0 && (!selectedSkills || selectedSkills.length === 0)) {
             console.log('Initializing skills from interviewDetailsData:', interviewDetailsData.skills);
             const initialSkills = interviewDetailsData.skills.map(skill => ({
@@ -57,7 +86,7 @@ const InterviewDetails = ({
             }));
             setSelectedSkills(initialSkills);
         }
-    }, [selectedSkills, interviewDetailsData, setSelectedSkills]);
+    }, [interviewDetailsData, selectedSkills, setSelectedSkills, showJuniorLevel, showMidLevel, showSeniorLevel]);
     const [exchangeRate, setExchangeRate] = useState(83.5); // Default fallback rate
     const [isRateLoading, setIsRateLoading] = useState(false);
     const [lastRateUpdate, setLastRateUpdate] = useState('');

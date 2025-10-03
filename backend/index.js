@@ -190,6 +190,18 @@ const connectWithRetry = (retries = 5, delay = 5000) => {
 // Initialize MongoDB connection
 const dbConnection = connectWithRetry();
 
+// Initialize interview status service
+const { setupInterviewStatusCronJob } = require('./services/interviewStatusService');
+
+// Set up the cron job when database is connected
+dbConnection.then(() => {
+  if (process.env.NODE_ENV !== 'test') {
+    setupInterviewStatusCronJob();
+  }
+}).catch(err => {
+  console.error('Failed to set up interview status cron job:', err);
+});
+
 // Export the MongoDB connection promise for other modules to use
 app.locals.dbConnection = dbConnection;
 

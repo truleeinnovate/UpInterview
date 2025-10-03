@@ -11,6 +11,7 @@ const {
   getAllInterviews,
   updateInterview,
   updateInterviewRound,
+  updateInterviewStatus,
 } = require("../controllers/interviewController");
 
 // router.get('/', getAllInterviews);
@@ -34,5 +35,7 @@ router.get("/all-interviews", getInterviews); // SUPER ADMIN Added by Ashok
 // v1.0.0 <-------------------------------------------------------------
 router.get("/interviews", getAllInterviews);
 // v1.0.0 ------------------------------------------------------------->
+
+router.patch('/status/:interviewId/:status', updateInterviewStatus);
 
 module.exports = router;
