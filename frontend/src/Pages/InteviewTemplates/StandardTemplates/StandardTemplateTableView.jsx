@@ -1,22 +1,20 @@
 // v1.0.0 - Ashok - Fixed style issues and added loading view
+// v1.0.1 - Ashok - Adjusted table height
 
 import React, { useEffect, useState } from "react";
 import TemplateModal from "./TemplateModal";
-import { Eye,FileText } from "lucide-react";
+import { Eye, FileText } from "lucide-react";
 import { usePermissions } from "../../../Context/PermissionsContext";
 import { useNavigate } from "react-router-dom";
 // v1.0.0 <---------------------------------------------------------------------------------
 import { ReactComponent as FiMoreHorizontal } from "../../../icons/FiMoreHorizontal.svg";
 // v1.0.0 --------------------------------------------------------------------------------->
 
-
 const formatOptions = [
   { label: "Online / Virtual", value: "online" },
   { label: "Face to Face / Onsite", value: "offline" },
   { label: "Hybrid (Online + Offline)", value: "hybrid" },
 ];
-
-
 
 const StandardTemplateTableView = ({ templatesData, handleClone }) => {
   const { effectivePermissions } = usePermissions();
@@ -175,12 +173,13 @@ const StandardTemplateTableView = ({ templatesData, handleClone }) => {
   };
   // v1.0.0 ---------------------------------------------------------------------------->
 
-
   return (
     <>
       <div className="w-full">
         <div className="inline-block min-w-full align-middle">
-          <div className="h-[calc(100vh-12rem)] overflow-y-auto pb-6 scrollbar-thin category-section">
+          {/* v1.0.1 <---------------------------------------------------------------------------------------- */}
+          <div className="h-[calc(100vh-15.6rem)] overflow-y-auto pb-6 scrollbar-thin category-section">
+          {/* v1.0.1 ----------------------------------------------------------------------------------------> */}
             {loading ? (
               <LoadingView />
             ) : (

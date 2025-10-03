@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Improved responsiveness
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   DocumentTextIcon,
   ArrowUpTrayIcon,
@@ -38,6 +39,15 @@ export function DocumentsSection({ documents, onUpdate }) {
 
   const [uploadingType, setUploadingType] = useState(null);
   const [deletingType, setDeletingType] = useState(null);
+
+  const [confirmDelete, setConfirmDelete] = useState({
+    open: false,
+    type: null,
+  });
+
+  const handleRemoveDocument = (type) => {
+    setConfirmDelete({ open: true, type });
+  };
 
   const handleDrag = (e, type) => {
     e.preventDefault();
@@ -274,29 +284,29 @@ export function DocumentsSection({ documents, onUpdate }) {
     }
   };
 
-  const handleRemoveDocument = async (type) => {
-    // eslint-disable-next-line no-restricted-globals
-    if (confirm("Are you sure you want to remove this document?")) {
-      // const updatedDocuments = { ...documents };
-      // delete updatedDocuments[type];
-      // onUpdate(updatedDocuments);
-      setDeletingType(type); // Start loader
-      try {
-        const contactId = userProfile?.contactId;
-        await uploadFile(null, type, "contact", contactId); // this deletes file
+  // const handleRemoveDocument = async (type) => {
+  //   // eslint-disable-next-line no-restricted-globals
+  //   if (confirm("Are you sure you want to remove this document?")) {
+  //     // const updatedDocuments = { ...documents };
+  //     // delete updatedDocuments[type];
+  //     // onUpdate(updatedDocuments);
+  //     setDeletingType(type); // Start loader
+  //     try {
+  //       const contactId = userProfile?.contactId;
+  //       await uploadFile(null, type, "contact", contactId); // this deletes file
 
-        const updatedDocuments = { ...documents };
-        delete updatedDocuments[type];
-        onUpdate(updatedDocuments); // optional: update local state/UI
+  //       const updatedDocuments = { ...documents };
+  //       delete updatedDocuments[type];
+  //       onUpdate(updatedDocuments); // optional: update local state/UI
 
-        console.log(`${type} deleted successfully`);
-      } catch (error) {
-        console.error(`Failed to delete ${type}:`, error);
-      } finally {
-        setDeletingType(null); // Start loader
-      }
-    }
-  };
+  //       console.log(`${type} deleted successfully`);
+  //     } catch (error) {
+  //       console.error(`Failed to delete ${type}:`, error);
+  //     } finally {
+  //       setDeletingType(null); // Start loader
+  //     }
+  //   }
+  // };
 
   const handleCoverLetterTypeChange = (type) => {
     const updatedDocuments = {
@@ -332,7 +342,6 @@ export function DocumentsSection({ documents, onUpdate }) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
-
 
   const renderFileUploadArea = (type, title) => (
     <div className="space-y-4">
@@ -655,7 +664,7 @@ export function DocumentsSection({ documents, onUpdate }) {
   return (
     // v1.0.0 <--------------------------------
     <div className="sm:mx-2 space-y-8">
-    {/* v1.0.0 <-------------------------------- */}
+      {/* v1.0.0 <-------------------------------- */}
       <div className="flex items-center mt-6">
         <div className="sm:text-sm text-md text-gray-600 italic">
           Keep your documents up to date for better interview opportunities
@@ -681,6 +690,72 @@ export function DocumentsSection({ documents, onUpdate }) {
           <li>• Use clear, professional formatting</li>
         </ul>
       </div>
+
+      {/* v1.0.2 <----------------------------------------------------------------------------- */}
+      {confirmDelete.open &&
+        createPortal(
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Confirm Deletion
+              </h2>
+              <p className="mt-2 text-gray-600 text-sm">
+                Are you sure you want to delete your
+                <span className="font-bold text-custom-blue ml-1 mr-1">
+                  {confirmDelete.type}
+                </span>
+                document? This action cannot be undone.
+              </p>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setConfirmDelete({ open: false, type: null })}
+                  disabled={deletingType !== null}
+                  className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={async () => {
+                    setDeletingType(confirmDelete.type);
+                    try {
+                      const contactId = userProfile?.contactId;
+                      await uploadFile(
+                        null,
+                        confirmDelete.type,
+                        "contact",
+                        contactId
+                      );
+
+                      const updatedDocuments = { ...documents };
+                      delete updatedDocuments[confirmDelete.type];
+                      onUpdate(updatedDocuments);
+
+                      console.log(`${confirmDelete.type} deleted successfully`);
+                    } catch (error) {
+                      console.error(
+                        `Failed to delete ${confirmDelete.type}:`,
+                        error
+                      );
+                    } finally {
+                      setDeletingType(null);
+                      setConfirmDelete({ open: false, type: null });
+                    }
+                  }}
+                  disabled={deletingType !== null}
+                  className="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deletingType === confirmDelete.type
+                    ? "Deleting..."
+                    : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      {/* v1.0.2 <----------------------------------------------------------------------------- */}
     </div>
   );
 }
