@@ -9,7 +9,7 @@
 // v1.0.6 - Ashok - Fixed alignment issues
 // v1.0.7 - Ashok - Fixed responsive issues
 
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import { Tooltip } from "@mui/material";
 import { ChevronUp, ChevronDown, Search, X, Plus } from "lucide-react";
@@ -203,7 +203,7 @@ const SuggestedQuestionsComponent = ({
   }, [suggestedQuestions]);
 
   // Build default filter section metadata
-  const buildDefaultFiltrationData = () => {
+  const buildDefaultFiltrationData = useCallback(() => {
     const sections = [];
     if (showQuestionTypeFilter) {
       sections.push({
@@ -243,7 +243,7 @@ const SuggestedQuestionsComponent = ({
       options: uniqueTechnologies.map((t) => ({ value: t, isChecked: false })),
     });
     return sections;
-  };
+  }, [showQuestionTypeFilter, uniqueCategories, uniqueTechnologies]);
   //------v1.0.4-------->
 
   const [filtrationData, setFiltrationData] = useState([
@@ -275,8 +275,15 @@ const SuggestedQuestionsComponent = ({
   //<------v1.0.4--------
   // Keep filtration sections in sync with dropdown selection and available data
   useEffect(() => {
-    setFiltrationData(buildDefaultFiltrationData());
-  }, [showQuestionTypeFilter, uniqueCategories, uniqueTechnologies]);
+    const newFiltrationData = buildDefaultFiltrationData();
+    setFiltrationData((prevData) => {
+      // Only update if the data structure has actually changed
+      if (JSON.stringify(prevData) !== JSON.stringify(newFiltrationData)) {
+        return newFiltrationData;
+      }
+      return prevData;
+    });
+  }, [showQuestionTypeFilter, uniqueCategories.length, uniqueTechnologies.length]);
 
   const [questionTypeFilterItems, setQuestionTypeFilterItems] = useState([]);
   const [difficultyLevelFilterItems, setDifficultyLevelFilterItems] = useState(
@@ -806,7 +813,7 @@ const SuggestedQuestionsComponent = ({
     setTempSelectedSkills(selectedSkills);
     setTempSkillInput(skillInput);
     setTempFiltrationData(
-      JSON.parse(JSON.stringify(buildDefaultFiltrationData()))
+      JSON.parse(JSON.stringify(filtrationData))
     );
     setIsPopupOpen(!isPopupOpen);
   };
